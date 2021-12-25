@@ -88,7 +88,8 @@ class LocationService(val context: Context) {
      * Indicates whether Google Play Services is available.
      * More detailed information can be obtained at [googlePlayServicesStatus].
      */
-    val googlePlayServicesAvailable = googlePlayServicesStatus == GooglePlayStatus.SUCCESS
+    val googlePlayServicesAvailable
+        get() = googlePlayServicesStatus == GooglePlayStatus.SUCCESS
 
     /**
      * Indicates whether location is enabled on current device.

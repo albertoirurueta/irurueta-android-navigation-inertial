@@ -344,6 +344,8 @@ class LocationPermissionServiceTest {
                 Manifest.permission.ACCESS_FINE_LOCATION
             )
         }
+
+        unmockkStatic(ActivityCompat::class)
     }
 
     @Test(expected = IllegalStateException::class)
@@ -374,6 +376,8 @@ class LocationPermissionServiceTest {
                 Manifest.permission.ACCESS_COARSE_LOCATION
             )
         }
+
+        unmockkStatic(ActivityCompat::class)
     }
 
     @Config(sdk = [Build.VERSION_CODES.Q])
@@ -406,6 +410,8 @@ class LocationPermissionServiceTest {
                 Manifest.permission.ACCESS_BACKGROUND_LOCATION
             )
         }
+
+        unmockkStatic(ActivityCompat::class)
     }
 
     @Config(sdk = [Build.VERSION_CODES.P])
@@ -480,7 +486,14 @@ class LocationPermissionServiceTest {
                 any<ActivityResultContracts.RequestMultiplePermissions>(),
                 any()
             )
-        }.returns(launcher)
+        }.answers { answer ->
+            val permissions = mapOf(Manifest.permission.ACCESS_FINE_LOCATION to true)
+
+            @Suppress("UNCHECKED_CAST")
+            val callback = answer.invocation.args[1] as ActivityResultCallback<Map<String, Boolean>>
+            callback.onActivityResult(permissions)
+            return@answers launcher
+        }
 
         val service = LocationPermissionService(activity)
         service.requestFineLocationPermission()
@@ -607,7 +620,14 @@ class LocationPermissionServiceTest {
                 any<ActivityResultContracts.RequestMultiplePermissions>(),
                 any()
             )
-        }.returns(launcher)
+        }.answers { answer ->
+            val permissions = mapOf(Manifest.permission.ACCESS_COARSE_LOCATION to true)
+
+            @Suppress("UNCHECKED_CAST")
+            val callback = answer.invocation.args[1] as ActivityResultCallback<Map<String, Boolean>>
+            callback.onActivityResult(permissions)
+            return@answers launcher
+        }
 
         val service = LocationPermissionService(activity)
         service.requestCoarseLocationPermission()
@@ -742,7 +762,17 @@ class LocationPermissionServiceTest {
                 any<ActivityResultContracts.RequestMultiplePermissions>(),
                 any()
             )
-        }.returns(launcher)
+        }.answers { answer ->
+            val permissions = mapOf(
+                Manifest.permission.ACCESS_FINE_LOCATION to true,
+                Manifest.permission.ACCESS_BACKGROUND_LOCATION to true
+            )
+
+            @Suppress("UNCHECKED_CAST")
+            val callback = answer.invocation.args[1] as ActivityResultCallback<Map<String, Boolean>>
+            callback.onActivityResult(permissions)
+            return@answers launcher
+        }
 
         val service = LocationPermissionService(activity)
         service.requestBackgroundFineLocationPermission()
@@ -902,7 +932,14 @@ class LocationPermissionServiceTest {
                 any<ActivityResultContracts.RequestMultiplePermissions>(),
                 any()
             )
-        }.returns(launcher)
+        }.answers { answer ->
+            val permissions = mapOf(Manifest.permission.ACCESS_FINE_LOCATION to true)
+
+            @Suppress("UNCHECKED_CAST")
+            val callback = answer.invocation.args[1] as ActivityResultCallback<Map<String, Boolean>>
+            callback.onActivityResult(permissions)
+            return@answers launcher
+        }
 
         val service = LocationPermissionService(activity)
         service.requestBackgroundFineLocationPermission()
@@ -1041,7 +1078,14 @@ class LocationPermissionServiceTest {
                 any<ActivityResultContracts.RequestMultiplePermissions>(),
                 any()
             )
-        }.returns(launcher)
+        }.answers { answer ->
+            val permissions = emptyMap<String, Boolean>()
+
+            @Suppress("UNCHECKED_CAST")
+            val callback = answer.invocation.args[1] as ActivityResultCallback<Map<String, Boolean>>
+            callback.onActivityResult(permissions)
+            return@answers launcher
+        }
 
         val service = LocationPermissionService(activity)
         service.requestBackgroundCoarseLocationPermission()
@@ -1201,7 +1245,14 @@ class LocationPermissionServiceTest {
                 any<ActivityResultContracts.RequestMultiplePermissions>(),
                 any()
             )
-        }.returns(launcher)
+        }.answers { answer ->
+            val permissions = emptyMap<String, Boolean>()
+
+            @Suppress("UNCHECKED_CAST")
+            val callback = answer.invocation.args[1] as ActivityResultCallback<Map<String, Boolean>>
+            callback.onActivityResult(permissions)
+            return@answers launcher
+        }
 
         val service = LocationPermissionService(activity)
         service.requestBackgroundCoarseLocationPermission()
