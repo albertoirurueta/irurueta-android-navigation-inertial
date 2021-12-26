@@ -6,6 +6,7 @@ import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Build
 import android.os.CancellationSignal
+import android.os.Looper
 import androidx.test.core.app.ApplicationProvider
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
@@ -988,5 +989,64 @@ class LocationServiceTest {
         updatesListener.onLocationChanged(location)
 
         verify(exactly = 1) { listener.onLocationChanged(location) }
+    }
+
+    @Test
+    fun getLooper_whenNoLooperOnCurrentThread_getsMainLooper() {
+        mockkStatic(Looper::class)
+        every { Looper.myLooper() }.returns(null)
+
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val service = LocationService(context)
+
+        val fusedLocationClient: FusedLocationProviderClient? =
+            service.getPrivateProperty("fusedLocationClient")
+        val cancellationTokenSource: CancellationTokenSource? =
+            service.getPrivateProperty("cancellationTokenSource")
+
+        assertNull(fusedLocationClient)
+        assertNull(cancellationTokenSource)
+
+        val locationManager: LocationManager? = service.getPrivateProperty("locationManager")
+        requireNotNull(locationManager)
+        val locationManagerSpy = spyk(locationManager)
+        service.setPrivateProperty("locationManager", locationManagerSpy)
+
+        service.requestLocationUpdates()
+
+        verify(exactly = 1) { Looper.myLooper() }
+        verify(exactly = 1) { Looper.getMainLooper() }
+
+        unmockkStatic(Looper::class)
+    }
+
+    @Test
+    fun getLooper_whenLooperOnCurrentThread_getsMainLooper() {
+        mockkStatic(Looper::class)
+        val looper = mockk<Looper>()
+        every { Looper.myLooper() }.returns(looper)
+
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val service = LocationService(context)
+
+        val fusedLocationClient: FusedLocationProviderClient? =
+            service.getPrivateProperty("fusedLocationClient")
+        val cancellationTokenSource: CancellationTokenSource? =
+            service.getPrivateProperty("cancellationTokenSource")
+
+        assertNull(fusedLocationClient)
+        assertNull(cancellationTokenSource)
+
+        val locationManager: LocationManager? = service.getPrivateProperty("locationManager")
+        requireNotNull(locationManager)
+        val locationManagerSpy = spyk(locationManager)
+        service.setPrivateProperty("locationManager", locationManagerSpy)
+
+        service.requestLocationUpdates()
+
+        verify(exactly = 1) { Looper.myLooper() }
+        verify(exactly = 0) { Looper.getMainLooper() }
+
+        unmockkStatic(Looper::class)
     }
 }
