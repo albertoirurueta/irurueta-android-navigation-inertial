@@ -14,6 +14,7 @@ import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.gms.location.*
 import com.google.android.gms.tasks.CancellationTokenSource
 import java.util.concurrent.Executors
+import kotlin.coroutines.Continuation
 
 /**
  * Service to obtain device location.
@@ -178,6 +179,8 @@ class LocationService(val context: Context) {
     fun cancelCurrentLocation() {
         cancellationTokenSource?.cancel()
         cancellationSignal?.cancel()
+
+        cancellationSignal = null
     }
 
     /**
@@ -232,7 +235,6 @@ class LocationService(val context: Context) {
     fun requestLocationUpdates() {
         val fusedLocationClient = this.fusedLocationClient
         if (fusedLocationClient != null) {
-            fusedLocationClient.removeLocationUpdates(updatesCallback)
             fusedLocationClient.requestLocationUpdates(
                 LocationRequest.create().setSmallestDisplacement(smallestDisplacement)
                     .setInterval(updateInterval),
