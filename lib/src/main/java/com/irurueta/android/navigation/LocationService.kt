@@ -14,7 +14,6 @@ import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.gms.location.*
 import com.google.android.gms.tasks.CancellationTokenSource
 import java.util.concurrent.Executors
-import kotlin.coroutines.Continuation
 
 /**
  * Service to obtain device location.
@@ -267,7 +266,7 @@ class LocationService(val context: Context) {
      * Initializes internal location clients.
      */
     init {
-        locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager?
         if (googlePlayServicesAvailable) {
             fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
             cancellationTokenSource = CancellationTokenSource()
