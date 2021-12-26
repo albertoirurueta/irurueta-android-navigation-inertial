@@ -117,8 +117,9 @@ class LocationService(val context: Context) {
      */
     @RequiresPermission(anyOf = [permission.ACCESS_COARSE_LOCATION, permission.ACCESS_FINE_LOCATION])
     fun getLastKnownLocation(): Location? {
+        val locationManager = locationManager
         return if (locationManager?.isProviderEnabled(FUSED_PROVIDER) == true) {
-            locationManager?.getLastKnownLocation(FUSED_PROVIDER)
+            locationManager.getLastKnownLocation(FUSED_PROVIDER)
         } else {
             null
         }
@@ -149,6 +150,10 @@ class LocationService(val context: Context) {
                 }
         } else {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                // cancel previous request if any
+                cancellationSignal?.cancel()
+
+                // request a new location update
                 cancellationSignal = CancellationSignal()
                 locationManager?.getCurrentLocation(
                     FUSED_PROVIDER,
