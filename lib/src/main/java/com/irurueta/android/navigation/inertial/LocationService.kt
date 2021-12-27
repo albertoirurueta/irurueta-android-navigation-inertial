@@ -1,4 +1,4 @@
-package com.irurueta.android.navigation
+package com.irurueta.android.navigation.inertial
 
 import android.Manifest.permission
 import android.content.Context

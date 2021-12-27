@@ -1,4 +1,4 @@
-package com.irurueta.android.navigation
+package com.irurueta.android.navigation.inertial
 
 import kotlin.reflect.KMutableProperty
 import kotlin.reflect.full.declaredFunctions

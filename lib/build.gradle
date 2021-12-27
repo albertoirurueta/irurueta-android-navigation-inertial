@@ -139,5 +139,6 @@ dependencies {
     testImplementation "org.robolectric:robolectric:$robolectric_version"
     androidTestImplementation "androidx.test.ext:junit:$ext_junit_version"
     androidTestImplementation "androidx.test:rules:$rules_version"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$espresso_core_version"
     androidTestImplementation "io.mockk:mockk-android:$mockk_version"
 }
