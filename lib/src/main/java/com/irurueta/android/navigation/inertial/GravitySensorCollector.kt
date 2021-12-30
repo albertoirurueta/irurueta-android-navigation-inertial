@@ -24,39 +24,24 @@ import kotlin.math.pow
 import kotlin.math.sqrt
 
 /**
- * Manages gravity sensor.
+ * Manages and collects gravity sensor measurements.
  *
  * @property context Android context.
  * @property sensorDelay Delay of sensor between samples.
- * @property gravityMeasurementListener listener to notify new gravity measurements.
- * @property gravityAccuracyChangedListener listener to notify changes in gravity sensor accuracy.
+ * @property measurementListener listener to notify new gravity measurements.
+ * @property accuracyChangedListener listener to notify changes in gravity sensor accuracy.
  */
-class GravitySensor(
+class GravitySensorCollector(
     val context: Context,
     val sensorDelay: SensorDelay = SensorDelay.FASTEST,
-    var gravityMeasurementListener: OnGravityMeasurementListener? = null,
-    var gravityAccuracyChangedListener: OnGravityAccuracyChangedListener? = null
+    var measurementListener: OnMeasurementListener? = null,
+    var accuracyChangedListener: OnAccuracyChangedListener? = null
 ) {
     /**
      * System sensor manager.
      */
     private val sensorManager: SensorManager? by lazy {
         context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
-    }
-
-    /**
-     * Sensor being used to obtain measurements or null if not available.
-     * This can be used to obtain additional information about the sensor.
-     * @see sensorAvailable
-     */
-    val sensor: Sensor? by lazy { sensorManager?.getDefaultSensor(Sensor.TYPE_GRAVITY) }
-
-    /**
-     * Indicates whether requested sensor is available or not.
-     */
-    val sensorAvailable: Boolean by lazy {
-        val availabilityService = SensorAvailabilityService(context)
-        availabilityService.hasSensor(SensorAvailabilityService.SensorType.GRAVITY)
     }
 
     /**
@@ -80,7 +65,7 @@ class GravitySensor(
 
             val g = sqrt(gx.toDouble().pow(2.0) + gy.toDouble().pow(2.0) + gz.toDouble().pow(2.0))
 
-            gravityMeasurementListener?.onGravityMeasurement(
+            measurementListener?.onMeasurement(
                 gx,
                 gy,
                 gz,
@@ -99,9 +84,24 @@ class GravitySensor(
             }
 
             val sensorAccuracy = SensorAccuracy.from(accuracy)
-            gravityAccuracyChangedListener?.onGravityAccuracyChanged(sensorAccuracy)
+            accuracyChangedListener?.onAccuracyChanged(sensorAccuracy)
         }
 
+    }
+
+    /**
+     * Sensor being used to obtain measurements or null if not available.
+     * This can be used to obtain additional information about the sensor.
+     * @see sensorAvailable
+     */
+    val sensor: Sensor? by lazy { sensorManager?.getDefaultSensor(Sensor.TYPE_GRAVITY) }
+
+    /**
+     * Indicates whether requested sensor is available or not.
+     */
+    val sensorAvailable: Boolean by lazy {
+        val availabilityService = SensorAvailabilityService(context)
+        availabilityService.hasSensor(SensorAvailabilityService.SensorType.GRAVITY)
     }
 
     /**
@@ -125,7 +125,7 @@ class GravitySensor(
     /**
      * Interface to notify when a new gravity measurement is available.
      */
-    interface OnGravityMeasurementListener {
+    interface OnMeasurementListener {
 
         /**
          * Called when a new gravity measurement is available.
@@ -143,7 +143,7 @@ class GravitySensor(
          * [android.os.SystemClock.elapsedRealtimeNanos].
          * @param accuracy gravity sensor accuracy.
          */
-        fun onGravityMeasurement(
+        fun onMeasurement(
             gx: Float,
             gy: Float,
             gz: Float,
@@ -156,12 +156,12 @@ class GravitySensor(
     /**
      * Interface to notify when gravity sensor accuracy changes.
      */
-    interface OnGravityAccuracyChangedListener {
+    interface OnAccuracyChangedListener {
         /**
          * Called when gravity sensor accuracy changes.
          *
          * @param accuracy new gravity sensor accuracy.
          */
-        fun onGravityAccuracyChanged(accuracy: SensorAccuracy?)
+        fun onAccuracyChanged(accuracy: SensorAccuracy?)
     }
 }

@@ -20,262 +20,289 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import io.mockk.*
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
-class MagnetometerSensorTest {
+class AccelerometerSensorCollectorTest {
 
     @Test
     fun constructor_whenContext_setsDefaultValues() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val sensor = MagnetometerSensor(context)
+        val collector = AccelerometerSensorCollector(context)
 
         // check values
-        assertSame(context, sensor.context)
-        assertEquals(MagnetometerSensor.MagnetometerSensorType.MAGNETOMETER, sensor.sensorType)
-        assertEquals(SensorDelay.FASTEST, sensor.sensorDelay)
-        assertNull(sensor.magnetometerMeasurementListener)
-        assertNull(sensor.magnetometerAccuracyChangedListener)
-        assertNull(sensor.sensor)
-        assertFalse(sensor.sensorAvailable)
+        assertSame(context, collector.context)
+        assertEquals(AccelerometerSensorCollector.SensorType.ACCELEROMETER, collector.sensorType)
+        assertEquals(SensorDelay.FASTEST, collector.sensorDelay)
+        assertNull(collector.measurementListener)
+        assertNull(collector.accuracyChangedListener)
+        assertNull(collector.sensor)
+        assertFalse(collector.sensorAvailable)
 
-        val sensorManager: SensorManager? = sensor.getPrivateProperty("sensorManager")
+        val sensorManager: SensorManager? = collector.getPrivateProperty("sensorManager")
         assertNotNull(sensorManager)
     }
 
     @Test
-    fun constructor_whenSensorType_setsExpectedValues() {
+    fun constructor_whenSensorType_setExpectedValues() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val sensor = MagnetometerSensor(
+        val collector = AccelerometerSensorCollector(
             context,
-            MagnetometerSensor.MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
         )
 
         // check values
-        assertSame(context, sensor.context)
+        assertSame(context, collector.context)
         assertEquals(
-            MagnetometerSensor.MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED,
-            sensor.sensorType
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            collector.sensorType
         )
-        assertEquals(SensorDelay.FASTEST, sensor.sensorDelay)
-        assertNull(sensor.magnetometerMeasurementListener)
-        assertNull(sensor.magnetometerAccuracyChangedListener)
-        assertNull(sensor.sensor)
-        assertFalse(sensor.sensorAvailable)
+        assertEquals(SensorDelay.FASTEST, collector.sensorDelay)
+        assertNull(collector.measurementListener)
+        assertNull(collector.accuracyChangedListener)
+        assertNull(collector.sensor)
+        assertFalse(collector.sensorAvailable)
 
-        val sensorManager: SensorManager? = sensor.getPrivateProperty("sensorManager")
+        val sensorManager: SensorManager? = collector.getPrivateProperty("sensorManager")
         assertNotNull(sensorManager)
     }
 
     @Test
-    fun constructor_whenSensorDelay_setsExpectedValue() {
+    fun constructor_whenSensorDelay_setsExpectedValues() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val sensor = MagnetometerSensor(
+        val collector = AccelerometerSensorCollector(
             context,
-            MagnetometerSensor.MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             SensorDelay.NORMAL
         )
 
         // check values
-        assertSame(context, sensor.context)
+        assertSame(context, collector.context)
         assertEquals(
-            MagnetometerSensor.MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED,
-            sensor.sensorType
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            collector.sensorType
         )
-        assertEquals(SensorDelay.NORMAL, sensor.sensorDelay)
-        assertNull(sensor.magnetometerMeasurementListener)
-        assertNull(sensor.magnetometerAccuracyChangedListener)
-        assertNull(sensor.sensor)
-        assertFalse(sensor.sensorAvailable)
+        assertEquals(SensorDelay.NORMAL, collector.sensorDelay)
+        assertNull(collector.measurementListener)
+        assertNull(collector.accuracyChangedListener)
+        assertNull(collector.sensor)
+        assertFalse(collector.sensorAvailable)
 
-        val sensorManager: SensorManager? = sensor.getPrivateProperty("sensorManager")
+        val sensorManager: SensorManager? = collector.getPrivateProperty("sensorManager")
         assertNotNull(sensorManager)
     }
 
     @Test
-    fun constructor_whenMeasurementListener_setsExpectedValue() {
+    fun constructor_whenMeasurementListener_setsExpectedValues() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val magnetometerMeasurementListener =
-            mockk<MagnetometerSensor.OnMagnetometerMeasurementListener>()
-        val sensor = MagnetometerSensor(
+        val measurementListener = mockk<AccelerometerSensorCollector.OnMeasurementListener>()
+        val collector = AccelerometerSensorCollector(
             context,
-            MagnetometerSensor.MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             SensorDelay.NORMAL,
-            magnetometerMeasurementListener
+            measurementListener
         )
 
         // check values
-        assertSame(context, sensor.context)
+        assertSame(context, collector.context)
         assertEquals(
-            MagnetometerSensor.MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED,
-            sensor.sensorType
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            collector.sensorType
         )
-        assertEquals(SensorDelay.NORMAL, sensor.sensorDelay)
-        assertSame(magnetometerMeasurementListener, sensor.magnetometerMeasurementListener)
-        assertNull(sensor.magnetometerAccuracyChangedListener)
-        assertNull(sensor.sensor)
-        assertFalse(sensor.sensorAvailable)
+        assertEquals(SensorDelay.NORMAL, collector.sensorDelay)
+        assertSame(measurementListener, collector.measurementListener)
+        assertNull(collector.accuracyChangedListener)
+        assertNull(collector.sensor)
+        assertFalse(collector.sensorAvailable)
 
-        val sensorManager: SensorManager? = sensor.getPrivateProperty("sensorManager")
+        val sensorManager: SensorManager? = collector.getPrivateProperty("sensorManager")
         assertNotNull(sensorManager)
     }
 
     @Test
     fun constructor_whenAccuracyListener_setsExpectedValues() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val magnetometerMeasurementListener =
-            mockk<MagnetometerSensor.OnMagnetometerMeasurementListener>()
-        val magnetometerAccuracyChangedListener =
-            mockk<MagnetometerSensor.OnMagnetometerAccuracyChangedListener>()
-        val sensor = MagnetometerSensor(
+        val measurementListener = mockk<AccelerometerSensorCollector.OnMeasurementListener>()
+        val accuracyChangedListener =
+            mockk<AccelerometerSensorCollector.OnAccuracyChangedListener>()
+        val collector = AccelerometerSensorCollector(
             context,
-            MagnetometerSensor.MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             SensorDelay.NORMAL,
-            magnetometerMeasurementListener,
-            magnetometerAccuracyChangedListener
+            measurementListener,
+            accuracyChangedListener
         )
 
         // check values
-        assertSame(context, sensor.context)
+        assertSame(context, collector.context)
         assertEquals(
-            MagnetometerSensor.MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED,
-            sensor.sensorType
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            collector.sensorType
         )
-        assertEquals(SensorDelay.NORMAL, sensor.sensorDelay)
-        assertSame(magnetometerMeasurementListener, sensor.magnetometerMeasurementListener)
-        assertSame(magnetometerAccuracyChangedListener, sensor.magnetometerAccuracyChangedListener)
-        assertNull(sensor.sensor)
-        assertFalse(sensor.sensorAvailable)
+        assertEquals(SensorDelay.NORMAL, collector.sensorDelay)
+        assertSame(measurementListener, collector.measurementListener)
+        assertSame(
+            accuracyChangedListener,
+            collector.accuracyChangedListener
+        )
+        assertNull(collector.sensor)
+        assertFalse(collector.sensorAvailable)
 
-        val sensorManager: SensorManager? = sensor.getPrivateProperty("sensorManager")
+        val sensorManager: SensorManager? = collector.getPrivateProperty("sensorManager")
         assertNotNull(sensorManager)
     }
 
     @Test
-    fun magnetometerMeasurementListener_setsExpectedValue() {
+    fun measurementListener_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val sensor = MagnetometerSensor(context)
+        val collector = AccelerometerSensorCollector(context)
 
-        assertNull(sensor.magnetometerMeasurementListener)
+        assertNull(collector.measurementListener)
 
         // set new value
-        val magnetometerMeasurementListener =
-            mockk<MagnetometerSensor.OnMagnetometerMeasurementListener>()
-        sensor.magnetometerMeasurementListener = magnetometerMeasurementListener
+        val measurementListener = mockk<AccelerometerSensorCollector.OnMeasurementListener>()
+        collector.measurementListener = measurementListener
 
         // check
-        assertSame(magnetometerMeasurementListener, sensor.magnetometerMeasurementListener)
+        assertSame(measurementListener, collector.measurementListener)
     }
 
     @Test
-    fun magnetometerAccuracyChangedListener_setsExpectedValue() {
+    fun accuracyChangedListener_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val sensor = MagnetometerSensor(context)
+        val collector = AccelerometerSensorCollector(context)
 
-        assertNull(sensor.magnetometerAccuracyChangedListener)
+        assertNull(collector.accuracyChangedListener)
 
         // set new value
-        val magnetometerAccuracyChangedListener =
-            mockk<MagnetometerSensor.OnMagnetometerAccuracyChangedListener>()
-        sensor.magnetometerAccuracyChangedListener = magnetometerAccuracyChangedListener
+        val accuracyChangedListener =
+            mockk<AccelerometerSensorCollector.OnAccuracyChangedListener>()
+        collector.accuracyChangedListener = accuracyChangedListener
 
         // check
-        assertSame(magnetometerAccuracyChangedListener, sensor.magnetometerAccuracyChangedListener)
+        assertSame(accuracyChangedListener, collector.accuracyChangedListener)
     }
 
     @Test
-    fun sensor_whenSensorTypeMagnetometer_returnsExpectedValue() {
+    fun sensor_whenSensorTypeAccelerometer_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val sensorManager: SensorManager? =
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
         val sensorMock = mockk<Sensor>()
-        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD) }.returns(sensorMock)
+        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) }.returns(sensorMock)
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
-        val sensor =
-            MagnetometerSensor(contextSpy, MagnetometerSensor.MagnetometerSensorType.MAGNETOMETER)
-
-        assertSame(sensorMock, sensor.sensor)
-        verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
-        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD) }
-    }
-
-    @Test
-    fun sensor_whenSensorTypeMagnetometerUncalibrated_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val sensorManager: SensorManager? =
-            context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
-        requireNotNull(sensorManager)
-        val sensorManagerSpy = spyk(sensorManager)
-        val sensorMock = mockk<Sensor>()
-        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED) }.returns(
-            sensorMock
-        )
-        val contextSpy = spyk(context)
-        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
-
-        val sensor = MagnetometerSensor(
+        val collector = AccelerometerSensorCollector(
             contextSpy,
-            MagnetometerSensor.MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER
         )
 
-        assertSame(sensorMock, sensor.sensor)
+        assertSame(sensorMock, collector.sensor)
         verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
-        verify(exactly = 1) {
-            sensorManagerSpy.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED)
-        }
+        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) }
     }
 
     @Test
-    fun sensorAvailable_whenSensorTypeMagnetometer_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val sensorManager: SensorManager? =
-            context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
-        requireNotNull(sensorManager)
-        val sensorManagerSpy = spyk(sensorManager)
-        val contextSpy = spyk(context)
-        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
-
-        val sensor =
-            MagnetometerSensor(contextSpy, MagnetometerSensor.MagnetometerSensorType.MAGNETOMETER)
-
-        assertFalse(sensor.sensorAvailable)
-        verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
-        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD) }
-    }
-
-    @Test
-    fun sensorAvailable_whenSensorTypeMagnetometerUncalibrated_returnsExpectedValue() {
+    fun sensor_whenSensorTypeAccelerometerUncalibrated_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val sensorManager: SensorManager? =
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
         val sensorMock = mockk<Sensor>()
-        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED) }
+        every { sensorManagerSpy.getDefaultSensor(TYPE_ACCELEROMETER_UNCALIBRATED) }
             .returns(sensorMock)
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
-        val sensor =
-            MagnetometerSensor(
-                contextSpy,
-                MagnetometerSensor.MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED
-            )
+        val collector = AccelerometerSensorCollector(
+            contextSpy,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+        )
 
-        assertTrue(sensor.sensorAvailable)
+        assertSame(sensorMock, collector.sensor)
         verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
         verify(exactly = 1) {
-            sensorManagerSpy.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED)
+            sensorManagerSpy.getDefaultSensor(TYPE_ACCELEROMETER_UNCALIBRATED)
         }
+    }
+
+    @Test
+    fun sensorAvailable_whenSensorTypeAccelerometer_returnsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val sensorManager: SensorManager? =
+            context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
+        requireNotNull(sensorManager)
+        val sensorManagerSpy = spyk(sensorManager)
+        val contextSpy = spyk(context)
+        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
+
+        val collector = AccelerometerSensorCollector(
+            contextSpy,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER
+        )
+
+        assertFalse(collector.sensorAvailable)
+        verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
+        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) }
+    }
+
+    @Config(sdk = [Build.VERSION_CODES.O])
+    @Test
+    fun sensorAvailable_whenSensorTypeAccelerometerUncalibratedSdkO_returnsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val sensorManager: SensorManager? =
+            context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
+        requireNotNull(sensorManager)
+        val sensorManagerSpy = spyk(sensorManager)
+        val sensorMock = mockk<Sensor>()
+        every { sensorManagerSpy.getDefaultSensor(TYPE_ACCELEROMETER_UNCALIBRATED) }
+            .returns(sensorMock)
+        val contextSpy = spyk(context)
+        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
+
+        val collector = AccelerometerSensorCollector(
+            contextSpy,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+        )
+
+        assertTrue(collector.sensorAvailable)
+        verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
+        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(TYPE_ACCELEROMETER_UNCALIBRATED) }
+    }
+
+    @Config(sdk = [Build.VERSION_CODES.N])
+    @Test
+    fun sensorAvailable_whenSensorTypeAccelerometerUncalibratedSdkN_returnsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val sensorManager: SensorManager? =
+            context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
+        requireNotNull(sensorManager)
+        val sensorManagerSpy = spyk(sensorManager)
+        val sensorMock = mockk<Sensor>()
+        every { sensorManagerSpy.getDefaultSensor(TYPE_ACCELEROMETER_UNCALIBRATED) }
+            .returns(sensorMock)
+        val contextSpy = spyk(context)
+        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
+
+        val collector = AccelerometerSensorCollector(
+            contextSpy,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+        )
+
+        assertFalse(collector.sensorAvailable)
+        verify(exactly = 0) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
+        verify(exactly = 0) { sensorManagerSpy.getDefaultSensor(TYPE_ACCELEROMETER_UNCALIBRATED) }
     }
 
     @Test
@@ -284,8 +311,8 @@ class MagnetometerSensorTest {
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(null)
 
-        val sensor = MagnetometerSensor(contextSpy)
-        assertFalse(sensor.start())
+        val collector = AccelerometerSensorCollector(contextSpy)
+        assertFalse(collector.start())
 
         verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
     }
@@ -297,20 +324,21 @@ class MagnetometerSensorTest {
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
-        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD) }.returns(null)
+        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) }
+            .returns(null)
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
-        val sensor = MagnetometerSensor(contextSpy)
-        assertFalse(sensor.start())
+        val collector = AccelerometerSensorCollector(contextSpy)
+        assertFalse(collector.start())
 
         verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
         verify(exactly = 0) {
             sensorManagerSpy.registerListener(
                 any(),
                 any<Sensor>(),
-                sensor.sensorDelay.value
+                collector.sensorDelay.value
             )
         }
     }
@@ -323,13 +351,14 @@ class MagnetometerSensorTest {
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
         val sensorMock = mockk<Sensor>()
-        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD) }.returns(sensorMock)
+        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) }
+            .returns(sensorMock)
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
-        val sensor = MagnetometerSensor(contextSpy)
-        assertTrue(sensor.start())
+        val collector = AccelerometerSensorCollector(contextSpy)
+        assertTrue(collector.start())
 
         verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
         val slot = slot<SensorEventListener>()
@@ -337,7 +366,7 @@ class MagnetometerSensorTest {
             sensorManagerSpy.registerListener(
                 capture(slot),
                 sensorMock,
-                sensor.sensorDelay.value
+                collector.sensorDelay.value
             )
         }
 
@@ -351,8 +380,8 @@ class MagnetometerSensorTest {
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(null)
 
-        val sensor = MagnetometerSensor(contextSpy)
-        sensor.stop()
+        val collector = AccelerometerSensorCollector(contextSpy)
+        collector.stop()
     }
 
     @Test
@@ -363,13 +392,14 @@ class MagnetometerSensorTest {
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
         val sensorMock = mockk<Sensor>()
-        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD) }.returns(sensorMock)
+        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) }
+            .returns(sensorMock)
         justRun { sensorManagerSpy.unregisterListener(any(), any<Sensor>()) }
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
-        val sensor = MagnetometerSensor(contextSpy)
-        sensor.stop()
+        val collector = AccelerometerSensorCollector(contextSpy)
+        collector.stop()
 
         verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
         val slot = slot<SensorEventListener>()
@@ -387,32 +417,32 @@ class MagnetometerSensorTest {
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
         val sensorMock = mockk<Sensor>()
-        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD) }.returns(sensorMock)
+        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) }
+            .returns(sensorMock)
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
-        val magnetometerMeasurementListener =
-            mockk<MagnetometerSensor.OnMagnetometerMeasurementListener>()
-        val sensor = MagnetometerSensor(
+        val measurementListener = mockk<AccelerometerSensorCollector.OnMeasurementListener>()
+        val collector = AccelerometerSensorCollector(
             contextSpy,
-            magnetometerMeasurementListener = magnetometerMeasurementListener
+            measurementListener = measurementListener
         )
-        assertTrue(sensor.start())
+        assertTrue(collector.start())
 
         val slot = slot<SensorEventListener>()
         verify(exactly = 1) {
             sensorManagerSpy.registerListener(
                 capture(slot),
                 sensorMock,
-                sensor.sensorDelay.value
+                collector.sensorDelay.value
             )
         }
 
         val eventListener = slot.captured
 
         eventListener.onSensorChanged(null)
-        verify { magnetometerMeasurementListener wasNot Called }
+        verify { measurementListener wasNot Called }
     }
 
     @Test
@@ -423,25 +453,25 @@ class MagnetometerSensorTest {
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
         val sensorMock = mockk<Sensor>()
-        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD) }.returns(sensorMock)
+        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) }
+            .returns(sensorMock)
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
-        val magnetometerMeasurementListener =
-            mockk<MagnetometerSensor.OnMagnetometerMeasurementListener>()
-        val sensor = MagnetometerSensor(
+        val measurementListener = mockk<AccelerometerSensorCollector.OnMeasurementListener>()
+        val collector = AccelerometerSensorCollector(
             contextSpy,
-            magnetometerMeasurementListener = magnetometerMeasurementListener
+            measurementListener = measurementListener
         )
-        assertTrue(sensor.start())
+        assertTrue(collector.start())
 
         val slot = slot<SensorEventListener>()
         verify(exactly = 1) {
             sensorManagerSpy.registerListener(
                 capture(slot),
                 sensorMock,
-                sensor.sensorDelay.value
+                collector.sensorDelay.value
             )
         }
 
@@ -452,7 +482,7 @@ class MagnetometerSensorTest {
         event.sensor = sensorMock
         eventListener.onSensorChanged(event)
 
-        verify { magnetometerMeasurementListener wasNot Called }
+        verify { measurementListener wasNot Called }
     }
 
     @Test
@@ -463,27 +493,28 @@ class MagnetometerSensorTest {
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
         val sensorMock = mockk<Sensor>()
-        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD) }.returns(sensorMock)
+        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) }
+            .returns(sensorMock)
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
-        val sensor = MagnetometerSensor(contextSpy)
-        assertTrue(sensor.start())
+        val collector = AccelerometerSensorCollector(contextSpy)
+        assertTrue(collector.start())
 
         val slot = slot<SensorEventListener>()
         verify(exactly = 1) {
             sensorManagerSpy.registerListener(
                 capture(slot),
                 sensorMock,
-                sensor.sensorDelay.value
+                collector.sensorDelay.value
             )
         }
 
         val eventListener = slot.captured
 
         every { sensorMock.type }
-            .returns(MagnetometerSensor.MagnetometerSensorType.MAGNETOMETER.value)
+            .returns(AccelerometerSensorCollector.SensorType.ACCELEROMETER.value)
         val event = mockk<SensorEvent>()
         event.sensor = sensorMock
         event.timestamp = System.nanoTime()
@@ -496,98 +527,40 @@ class MagnetometerSensorTest {
     }
 
     @Test
-    fun onSensorChanged_whenListenerMagnetometerSensor_notifiesEvent() {
+    fun onSensorChanged_whenListenerAccelerometerSensor_notifiesEvent() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val sensorManager: SensorManager? =
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
         val sensorMock = mockk<Sensor>()
-        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD) }.returns(sensorMock)
-        every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
-        val contextSpy = spyk(context)
-        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
-
-        val magnetometerMeasurementListener =
-            mockk<MagnetometerSensor.OnMagnetometerMeasurementListener>(relaxUnitFun = true)
-        val sensor = MagnetometerSensor(
-            contextSpy,
-            magnetometerMeasurementListener = magnetometerMeasurementListener
-        )
-        assertTrue(sensor.start())
-
-        val slot = slot<SensorEventListener>()
-        verify(exactly = 1) {
-            sensorManagerSpy.registerListener(
-                capture(slot),
-                sensorMock,
-                sensor.sensorDelay.value
-            )
-        }
-
-        val eventListener = slot.captured
-
-        every { sensorMock.type }
-            .returns(MagnetometerSensor.MagnetometerSensorType.MAGNETOMETER.value)
-        val event = mockk<SensorEvent>()
-        event.sensor = sensorMock
-        event.timestamp = System.nanoTime()
-        event.accuracy = SensorAccuracy.HIGH.value
-        val valuesField = SensorEvent::class.java.getDeclaredField("values")
-        valuesField.isAccessible = true
-        valuesField.set(event, floatArrayOf(1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f))
-        eventListener.onSensorChanged(event)
-
-        verify(exactly = 1) {
-            magnetometerMeasurementListener.onMagnetometerMeasurement(
-                1.0f,
-                2.0f,
-                3.0f,
-                null,
-                null,
-                null,
-                event.timestamp,
-                SensorAccuracy.HIGH
-            )
-        }
-    }
-
-    @Test
-    fun onSensorChanged_whenListenerMagnetometerUncalibratedSensor_notifiesEvent() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val sensorManager: SensorManager? =
-            context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
-        requireNotNull(sensorManager)
-        val sensorManagerSpy = spyk(sensorManager)
-        val sensorMock = mockk<Sensor>()
-        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED) }
+        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) }
             .returns(sensorMock)
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
-        val magnetometerMeasurementListener =
-            mockk<MagnetometerSensor.OnMagnetometerMeasurementListener>(relaxUnitFun = true)
-        val sensor = MagnetometerSensor(
+        val measurementListener =
+            mockk<AccelerometerSensorCollector.OnMeasurementListener>(relaxUnitFun = true)
+        val collector = AccelerometerSensorCollector(
             contextSpy,
-            MagnetometerSensor.MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED,
-            magnetometerMeasurementListener = magnetometerMeasurementListener
+            measurementListener = measurementListener
         )
-        assertTrue(sensor.start())
+        assertTrue(collector.start())
 
         val slot = slot<SensorEventListener>()
         verify(exactly = 1) {
             sensorManagerSpy.registerListener(
                 capture(slot),
                 sensorMock,
-                sensor.sensorDelay.value
+                collector.sensorDelay.value
             )
         }
 
         val eventListener = slot.captured
 
         every { sensorMock.type }
-            .returns(MagnetometerSensor.MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value)
+            .returns(AccelerometerSensorCollector.SensorType.ACCELEROMETER.value)
         val event = mockk<SensorEvent>()
         event.sensor = sensorMock
         event.timestamp = System.nanoTime()
@@ -598,15 +571,60 @@ class MagnetometerSensorTest {
         eventListener.onSensorChanged(event)
 
         verify(exactly = 1) {
-            magnetometerMeasurementListener.onMagnetometerMeasurement(
-                1.0f,
-                2.0f,
-                3.0f,
-                4.0f,
-                5.0f,
-                6.0f,
-                event.timestamp,
-                SensorAccuracy.HIGH
+            measurementListener.onMeasurement(
+                1.0f, 2.0f, 3.0f, null, null, null, event.timestamp, SensorAccuracy.HIGH
+            )
+        }
+    }
+
+    @Test
+    fun onSensorChanged_whenListenerAccelerometerUncalibratedSensor_notifiesEvent() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val sensorManager: SensorManager? =
+            context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
+        requireNotNull(sensorManager)
+        val sensorManagerSpy = spyk(sensorManager)
+        val sensorMock = mockk<Sensor>()
+        every { sensorManagerSpy.getDefaultSensor(TYPE_ACCELEROMETER_UNCALIBRATED) }
+            .returns(sensorMock)
+        every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
+        val contextSpy = spyk(context)
+        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
+
+        val measurementListener =
+            mockk<AccelerometerSensorCollector.OnMeasurementListener>(relaxUnitFun = true)
+        val collector = AccelerometerSensorCollector(
+            contextSpy,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            measurementListener = measurementListener
+        )
+        assertTrue(collector.start())
+
+        val slot = slot<SensorEventListener>()
+        verify(exactly = 1) {
+            sensorManagerSpy.registerListener(
+                capture(slot),
+                sensorMock,
+                collector.sensorDelay.value
+            )
+        }
+
+        val eventListener = slot.captured
+
+        every { sensorMock.type }
+            .returns(AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED.value)
+        val event = mockk<SensorEvent>()
+        event.sensor = sensorMock
+        event.timestamp = System.nanoTime()
+        event.accuracy = SensorAccuracy.HIGH.value
+        val valuesField = SensorEvent::class.java.getDeclaredField("values")
+        valuesField.isAccessible = true
+        valuesField.set(event, floatArrayOf(1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f))
+        eventListener.onSensorChanged(event)
+
+        verify(exactly = 1) {
+            measurementListener.onMeasurement(
+                1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, event.timestamp, SensorAccuracy.HIGH
             )
         }
     }
@@ -619,29 +637,34 @@ class MagnetometerSensorTest {
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
         val sensorMock = mockk<Sensor>()
-        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD) }.returns(sensorMock)
+        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) }
+            .returns(sensorMock)
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
-        val magnetometerAccuracyChangedListener =
-            mockk<MagnetometerSensor.OnMagnetometerAccuracyChangedListener>(relaxUnitFun = true)
-        val sensor = MagnetometerSensor(
+        val accuracyChangedListener =
+            mockk<AccelerometerSensorCollector.OnAccuracyChangedListener>(relaxUnitFun = true)
+        val collector = AccelerometerSensorCollector(
             contextSpy,
-            magnetometerAccuracyChangedListener = magnetometerAccuracyChangedListener
+            accuracyChangedListener = accuracyChangedListener
         )
-        assertTrue(sensor.start())
+        assertTrue(collector.start())
 
         val slot = slot<SensorEventListener>()
-        verify {
-            sensorManagerSpy.registerListener(capture(slot), sensorMock, sensor.sensorDelay.value)
+        verify(exactly = 1) {
+            sensorManagerSpy.registerListener(
+                capture(slot),
+                sensorMock,
+                collector.sensorDelay.value
+            )
         }
 
         val eventListener = slot.captured
 
         eventListener.onAccuracyChanged(null, SensorAccuracy.HIGH.value)
 
-        verify { magnetometerAccuracyChangedListener wasNot Called }
+        verify { accuracyChangedListener wasNot Called }
     }
 
     @Test
@@ -652,25 +675,26 @@ class MagnetometerSensorTest {
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
         val sensorMock = mockk<Sensor>()
-        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD) }.returns(sensorMock)
+        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) }
+            .returns(sensorMock)
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
-        val magnetometerAccuracyChangedListener =
-            mockk<MagnetometerSensor.OnMagnetometerAccuracyChangedListener>(relaxUnitFun = true)
-        val sensor = MagnetometerSensor(
+        val accuracyChangedListener =
+            mockk<AccelerometerSensorCollector.OnAccuracyChangedListener>(relaxUnitFun = true)
+        val collector = AccelerometerSensorCollector(
             contextSpy,
-            magnetometerAccuracyChangedListener = magnetometerAccuracyChangedListener
+            accuracyChangedListener = accuracyChangedListener
         )
-        assertTrue(sensor.start())
+        assertTrue(collector.start())
 
         val slot = slot<SensorEventListener>()
         verify(exactly = 1) {
             sensorManagerSpy.registerListener(
                 capture(slot),
                 sensorMock,
-                sensor.sensorDelay.value
+                collector.sensorDelay.value
             )
         }
 
@@ -679,7 +703,7 @@ class MagnetometerSensorTest {
         every { sensorMock.type }.returns(-1)
         eventListener.onAccuracyChanged(sensorMock, SensorAccuracy.HIGH.value)
 
-        verify { magnetometerAccuracyChangedListener wasNot Called }
+        verify { accuracyChangedListener wasNot Called }
     }
 
     @Test
@@ -690,51 +714,68 @@ class MagnetometerSensorTest {
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
         val sensorMock = mockk<Sensor>()
-        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD) }.returns(sensorMock)
+        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) }
+            .returns(sensorMock)
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
-        val magnetometerAccuracyChangedListener =
-            mockk<MagnetometerSensor.OnMagnetometerAccuracyChangedListener>(relaxUnitFun = true)
-        val sensor = MagnetometerSensor(
+        val accuracyChangedListener =
+            mockk<AccelerometerSensorCollector.OnAccuracyChangedListener>(relaxUnitFun = true)
+        val collector = AccelerometerSensorCollector(
             contextSpy,
-            magnetometerAccuracyChangedListener = magnetometerAccuracyChangedListener
+            accuracyChangedListener = accuracyChangedListener
         )
-        assertTrue(sensor.start())
+        assertTrue(collector.start())
 
         val slot = slot<SensorEventListener>()
         verify(exactly = 1) {
             sensorManagerSpy.registerListener(
                 capture(slot),
                 sensorMock,
-                sensor.sensorDelay.value
+                collector.sensorDelay.value
             )
         }
 
         val eventListener = slot.captured
 
         every { sensorMock.type }
-            .returns(MagnetometerSensor.MagnetometerSensorType.MAGNETOMETER.value)
+            .returns(AccelerometerSensorCollector.SensorType.ACCELEROMETER.value)
         eventListener.onAccuracyChanged(sensorMock, SensorAccuracy.HIGH.value)
 
         verify(exactly = 1) {
-            magnetometerAccuracyChangedListener.onMagnetometerAccuracyChanged(
-                SensorAccuracy.HIGH
-            )
+            accuracyChangedListener.onAccuracyChanged(SensorAccuracy.HIGH)
         }
     }
 
+    @Config(sdk = [Build.VERSION_CODES.O])
     @Test
-    fun magnetometerSensorType_fromValues_returnsExpected() {
-        assertEquals(2, MagnetometerSensor.MagnetometerSensorType.values().size)
+    fun sensorType_fromValueSdkO_returnsExpected() {
+        assertEquals(2, AccelerometerSensorCollector.SensorType.values().size)
         assertEquals(
-            MagnetometerSensor.MagnetometerSensorType.MAGNETOMETER,
-            MagnetometerSensor.MagnetometerSensorType.from(Sensor.TYPE_MAGNETIC_FIELD)
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorCollector.SensorType.from(Sensor.TYPE_ACCELEROMETER)
         )
         assertEquals(
-            MagnetometerSensor.MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED,
-            MagnetometerSensor.MagnetometerSensorType.from(Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED)
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.from(TYPE_ACCELEROMETER_UNCALIBRATED)
         )
+    }
+
+    @Config(sdk = [Build.VERSION_CODES.N])
+    @Test
+    fun sensorType_fromValueSdkN_returnsExpected() {
+        assertEquals(2, AccelerometerSensorCollector.SensorType.values().size)
+        assertEquals(
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorCollector.SensorType.from(Sensor.TYPE_ACCELEROMETER)
+        )
+        assertNull(
+            AccelerometerSensorCollector.SensorType.from(TYPE_ACCELEROMETER_UNCALIBRATED)
+        )
+    }
+
+    companion object {
+        const val TYPE_ACCELEROMETER_UNCALIBRATED = 35
     }
 }

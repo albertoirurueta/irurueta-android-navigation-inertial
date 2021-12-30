@@ -27,20 +27,20 @@ import com.irurueta.navigation.frames.CoordinateTransformation
 import com.irurueta.navigation.frames.FrameType
 
 /**
- * Handles attitude sensor to obtain device orientation measurements.
+ * Handles attitude sensor to collect device orientation measurements.
  *
  * @property context Android context.
  * @property sensorType One of the supported attitude sensor types.
  * @property sensorDelay Delay of sensor between samples.
- * @property attitudeMeasurementListener listener to notify new attitude measurements.
- * @property attitudeAccuracyChangedListener listener to notify changes in sensor accuracy.
+ * @property measurementListener listener to notify new attitude measurements.
+ * @property accuracyChangedListener listener to notify changes in sensor accuracy.
  */
-class AttitudeSensor(
+class AttitudeSensorCollector(
     val context: Context,
-    val sensorType: AttitudeSensorType = AttitudeSensorType.ABSOLUTE_ATTITUDE,
+    val sensorType: SensorType = SensorType.ABSOLUTE_ATTITUDE,
     val sensorDelay: SensorDelay = SensorDelay.FASTEST,
-    var attitudeMeasurementListener: OnAttitudeMeasurementListener? = null,
-    var attitudeAccuracyChangedListener: OnAttitudeAccuracyChangedListener? = null
+    var measurementListener: OnMeasurementListener? = null,
+    var accuracyChangedListener: OnAccuracyChangedListener? = null
 ) {
     /**
      * Internal quaternion reused for efficiency reasons containing measured orientation.
@@ -74,7 +74,7 @@ class AttitudeSensor(
             if (event == null) {
                 return
             }
-            if (AttitudeSensorType.from(event.sensor.type) == null) {
+            if (SensorType.from(event.sensor.type) == null) {
                 return
             }
 
@@ -102,7 +102,7 @@ class AttitudeSensor(
 
             coordinateTransformation.matrix = rotationMatrix
 
-            attitudeMeasurementListener?.onAttitudeMeasurement(
+            measurementListener?.onMeasurement(
                 quaternion,
                 coordinateTransformation,
                 headingAccuracyRadians,
@@ -115,12 +115,12 @@ class AttitudeSensor(
             if (sensor == null) {
                 return
             }
-            if (AttitudeSensorType.from(sensor.type) == null) {
+            if (SensorType.from(sensor.type) == null) {
                 return
             }
 
             val sensorAccuracy = SensorAccuracy.from(accuracy)
-            attitudeAccuracyChangedListener?.onAttitudeAccuracyChanged(sensorAccuracy)
+            accuracyChangedListener?.onAccuracyChanged(sensorAccuracy)
         }
     }
 
@@ -167,7 +167,7 @@ class AttitudeSensor(
      *
      * @property value numerical value representing orientation sensor type.
      */
-    enum class AttitudeSensorType(val value: Int) {
+    enum class SensorType(val value: Int) {
         /**
          * Absolute attitude.
          * This sensor requires a magnetometer and returns absolute device orientation respect to
@@ -189,7 +189,7 @@ class AttitudeSensor(
              * @param value numerical value representing attitude sensor type.
              * @return attitude sensor type as an enum or null if value has no match.
              */
-            fun from(value: Int): AttitudeSensorType? {
+            fun from(value: Int): SensorType? {
                 return values().find { it.value == value }
             }
         }
@@ -198,7 +198,7 @@ class AttitudeSensor(
     /**
      * Interface to notify when a new attitude measurement is available.
      */
-    interface OnAttitudeMeasurementListener {
+    interface OnMeasurementListener {
         /**
          * Called when a new attitude measurement is available.
          *
@@ -212,7 +212,7 @@ class AttitudeSensor(
          * [android.os.SystemClock.elapsedRealtimeNanos].
          * @param accuracy attitude sensor accuracy.
          */
-        fun onAttitudeMeasurement(
+        fun onMeasurement(
             rotation: Rotation3D,
             coordinationTransformation: CoordinateTransformation,
             headingAccuracyRadians: Float?,
@@ -224,12 +224,12 @@ class AttitudeSensor(
     /**
      * Interface to notify when attitude sensor accuracy changes.
      */
-    interface OnAttitudeAccuracyChangedListener {
+    interface OnAccuracyChangedListener {
         /**
          * Called when attitude accuracy changes.
          *
          * @param accuracy new attitude accuracy.
          */
-        fun onAttitudeAccuracyChanged(accuracy: SensorAccuracy?)
+        fun onAccuracyChanged(accuracy: SensorAccuracy?)
     }
 }

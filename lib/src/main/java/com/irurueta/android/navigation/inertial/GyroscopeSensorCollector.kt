@@ -22,20 +22,20 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 
 /**
- * Manages gyroscope sensor.
+ * Manages and collects gyroscope sensor measurements.
  *
  * @property context Android context.
  * @property sensorType One of the supported gyroscope sensor types.
  * @property sensorDelay Delay of sensor between samples.
- * @property gyroscopeMeasurementListener listener to notify new gyroscope measurements.
- * @property gyroscopeAccuracyChangedListener listener to notify changes in gyroscope accuracy.
+ * @property measurementListener listener to notify new gyroscope measurements.
+ * @property accuracyChangedListener listener to notify changes in gyroscope accuracy.
  */
-class GyroscopeSensor(
+class GyroscopeSensorCollector(
     val context: Context,
-    val sensorType: GyroscopeSensorType = GyroscopeSensorType.GYROSCOPE,
+    val sensorType: SensorType = SensorType.GYROSCOPE,
     val sensorDelay: SensorDelay = SensorDelay.FASTEST,
-    var gyroscopeMeasurementListener: OnGyroscopeMeasurementListener? = null,
-    var gyroscopeAccuracyChangedListener: OnGyroscopeAccuracyChangedListener? = null
+    var measurementListener: OnMeasurementListener? = null,
+    var accuracyChangedListener: OnAccuracyChangedListener? = null
 ) {
     /**
      * System sensor manager.
@@ -52,7 +52,7 @@ class GyroscopeSensor(
             if (event == null) {
                 return
             }
-            val sensorType = GyroscopeSensorType.from(event.sensor.type) ?: return
+            val sensorType = SensorType.from(event.sensor.type) ?: return
 
             val sensorAccuracy = SensorAccuracy.from(event.accuracy)
             val timestamp = event.timestamp
@@ -63,13 +63,13 @@ class GyroscopeSensor(
             var bx: Float? = null
             var by: Float? = null
             var bz: Float? = null
-            if (sensorType == GyroscopeSensorType.GYROSCOPE_UNCALIBRATED) {
+            if (sensorType == SensorType.GYROSCOPE_UNCALIBRATED) {
                 bx = event.values[3]
                 by = event.values[4]
                 bz = event.values[5]
             }
 
-            gyroscopeMeasurementListener?.onGyroscopeMeasurement(
+            measurementListener?.onMeasurement(
                 wx,
                 wy,
                 wz,
@@ -85,12 +85,12 @@ class GyroscopeSensor(
             if (sensor == null) {
                 return
             }
-            if (GyroscopeSensorType.from(sensor.type) == null) {
+            if (SensorType.from(sensor.type) == null) {
                 return
             }
 
             val sensorAccuracy = SensorAccuracy.from(accuracy)
-            gyroscopeAccuracyChangedListener?.onGyroscopeAccuracyChanged(sensorAccuracy)
+            accuracyChangedListener?.onAccuracyChanged(sensorAccuracy)
         }
     }
 
@@ -135,7 +135,7 @@ class GyroscopeSensor(
     /**
      * Indicates the gyroscope types supported by this gyroscope sensor.
      */
-    enum class GyroscopeSensorType(val value: Int) {
+    enum class SensorType(val value: Int) {
         /**
          * Gyroscope sensor.
          * Returns angular speed measurements.
@@ -155,7 +155,7 @@ class GyroscopeSensor(
              * @param value numerical value representing gyroscope sensor type.
              * @return gyroscope sensor type as an enum or null if value has no match.
              */
-            fun from(value: Int): GyroscopeSensorType? {
+            fun from(value: Int): SensorType? {
                 return values().find { it.value == value }
             }
         }
@@ -164,7 +164,7 @@ class GyroscopeSensor(
     /**
      * Interface to notify when a new gyroscope measurement is available.
      */
-    interface OnGyroscopeMeasurementListener {
+    interface OnMeasurementListener {
         /**
          * Called when a new gyroscope measurement is available.
          *
@@ -172,17 +172,17 @@ class GyroscopeSensor(
          * @param wy angular speed around device y-axis expressed in radians per second (rad/s).
          * @param wz angular speed around device z-axis expressed in radians per second (rad/s).
          * @param bx estimated drift around device x-axis expressed in radians per second (rad/s).
-         * Only available when using [GyroscopeSensorType.GYROSCOPE_UNCALIBRATED].
+         * Only available when using [SensorType.GYROSCOPE_UNCALIBRATED].
          * @param by estimated drift around device y-axis expressed in radians per second (rad/s).
-         * Only available when using [GyroscopeSensorType.GYROSCOPE_UNCALIBRATED].
+         * Only available when using [SensorType.GYROSCOPE_UNCALIBRATED].
          * @param bz estimated drift around device z-axis expressed in radians per second (rad/s).
-         * Only available when using [GyroscopeSensorType.GYROSCOPE_UNCALIBRATED].
+         * Only available when using [SensorType.GYROSCOPE_UNCALIBRATED].
          * @param timestamp time in nanoseconds at which the measurement was made. Each measurement
          * wil be monotonically increasing using the same time base as
          * [android.os.SystemClock.elapsedRealtimeNanos].
          * @param accuracy gyroscope sensor accuracy.
          */
-        fun onGyroscopeMeasurement(
+        fun onMeasurement(
             wx: Float,
             wy: Float,
             wz: Float,
@@ -197,12 +197,12 @@ class GyroscopeSensor(
     /**
      * Interface to notify when gyroscope sensor accuracy changes.
      */
-    interface OnGyroscopeAccuracyChangedListener {
+    interface OnAccuracyChangedListener {
         /**
          * Called when gyroscope accuracy changes.
          *
          * @param accuracy new gyroscope accuracy.
          */
-        fun onGyroscopeAccuracyChanged(accuracy: SensorAccuracy?)
+        fun onAccuracyChanged(accuracy: SensorAccuracy?)
     }
 }

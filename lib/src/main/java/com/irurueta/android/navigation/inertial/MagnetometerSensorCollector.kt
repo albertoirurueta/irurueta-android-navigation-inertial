@@ -22,21 +22,21 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 
 /**
- * Manages magnetometer sensor.
+ * Manages and collects magnetometer sensor measurements.
  *
  * @property context Android context.
  * @property sensorType One of the supported magnetometer sensor types.
  * @property sensorDelay Delay of sensor between samples.
- * @property magnetometerMeasurementListener listener to notify new magnetometer measurements.
- * @property magnetometerAccuracyChangedListener listener to notify changes in magnetometer
+ * @property measurementListener listener to notify new magnetometer measurements.
+ * @property accuracyChangedListener listener to notify changes in magnetometer
  * accuracy.
  */
-class MagnetometerSensor(
+class MagnetometerSensorCollector(
     val context: Context,
-    val sensorType: MagnetometerSensorType = MagnetometerSensorType.MAGNETOMETER,
+    val sensorType: SensorType = SensorType.MAGNETOMETER,
     val sensorDelay: SensorDelay = SensorDelay.FASTEST,
-    var magnetometerMeasurementListener: OnMagnetometerMeasurementListener? = null,
-    var magnetometerAccuracyChangedListener: OnMagnetometerAccuracyChangedListener? = null
+    var measurementListener: OnMeasurementListener? = null,
+    var accuracyChangedListener: OnAccuracyChangedListener? = null
 ) {
     /**
      * System sensor manager.
@@ -54,7 +54,7 @@ class MagnetometerSensor(
             if (event == null) {
                 return
             }
-            val sensorType = MagnetometerSensorType.from(event.sensor.type) ?: return
+            val sensorType = SensorType.from(event.sensor.type) ?: return
 
             val sensorAccuracy = SensorAccuracy.from(event.accuracy)
             val timestamp = event.timestamp
@@ -65,13 +65,13 @@ class MagnetometerSensor(
             var hardIronX: Float? = null
             var hardIronY: Float? = null
             var hardIronZ: Float? = null
-            if (sensorType == MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED) {
+            if (sensorType == SensorType.MAGNETOMETER_UNCALIBRATED) {
                 hardIronX = event.values[3]
                 hardIronY = event.values[4]
                 hardIronZ = event.values[5]
             }
 
-            magnetometerMeasurementListener?.onMagnetometerMeasurement(
+            measurementListener?.onMeasurement(
                 bx,
                 by,
                 bz,
@@ -87,12 +87,12 @@ class MagnetometerSensor(
             if (sensor == null) {
                 return
             }
-            if (MagnetometerSensorType.from(sensor.type) == null) {
+            if (SensorType.from(sensor.type) == null) {
                 return
             }
 
             val sensorAccuracy = SensorAccuracy.from(accuracy)
-            magnetometerAccuracyChangedListener?.onMagnetometerAccuracyChanged(sensorAccuracy)
+            accuracyChangedListener?.onAccuracyChanged(sensorAccuracy)
         }
     }
 
@@ -140,7 +140,7 @@ class MagnetometerSensor(
      * @property value numerical value representing magnetometer sensor type.
      */
 
-    enum class MagnetometerSensorType(val value: Int) {
+    enum class SensorType(val value: Int) {
         /**
          * Magnetometer.
          * Returns magnetic field measurements.
@@ -154,7 +154,7 @@ class MagnetometerSensor(
         MAGNETOMETER_UNCALIBRATED(Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED);
 
         companion object {
-            fun from(value: Int): MagnetometerSensorType? {
+            fun from(value: Int): SensorType? {
                 return values().find { it.value == value }
             }
         }
@@ -163,7 +163,7 @@ class MagnetometerSensor(
     /**
      * Interface to notify when a new magnetometer measurement is available.
      */
-    interface OnMagnetometerMeasurementListener {
+    interface OnMeasurementListener {
         /**
          * Called when a new magnetometer measurement is available.
          *
@@ -171,17 +171,17 @@ class MagnetometerSensor(
          * @param by magnetic field on device y-axis expressed in micro-Teslas (µT).
          * @param bz magnetic field on device z-axis expressed in micro-Teslas (µT).
          * @param hardIronX hard iron on device x-axis expressed in micro-Teslas (µT). Only
-         * available when using [MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED].
+         * available when using [SensorType.MAGNETOMETER_UNCALIBRATED].
          * @param hardIronY hard iron on device y-axis expressed in micro-Teslas (µT). Only
-         * available when using [MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED].
+         * available when using [SensorType.MAGNETOMETER_UNCALIBRATED].
          * @param hardIronZ hard iron on device y-axis expressed in micro-Teslas (µT). Only
-         * available when using [MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED].
+         * available when using [SensorType.MAGNETOMETER_UNCALIBRATED].
          * @param timestamp time in nanoseconds at which the measurement was made. Each measurement
          * will be monotonically increasing using the same time base as
          * [android.os.SystemClock.elapsedRealtimeNanos].
          * @param accuracy accelerometer sensor accuracy.
          */
-        fun onMagnetometerMeasurement(
+        fun onMeasurement(
             bx: Float,
             by: Float,
             bz: Float,
@@ -196,12 +196,12 @@ class MagnetometerSensor(
     /**
      * Interface to notify when magnetometer sensor accuracy changes.
      */
-    interface OnMagnetometerAccuracyChangedListener {
+    interface OnAccuracyChangedListener {
         /**
          * Called when magnetometer accuracy changes.
          *
          * @param accuracy new magnetometer accuracy.
          */
-        fun onMagnetometerAccuracyChanged(accuracy: SensorAccuracy?)
+        fun onAccuracyChanged(accuracy: SensorAccuracy?)
     }
 }

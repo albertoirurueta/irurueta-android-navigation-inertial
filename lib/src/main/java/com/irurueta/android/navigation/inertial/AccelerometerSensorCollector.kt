@@ -23,21 +23,21 @@ import android.hardware.SensorManager
 import android.os.Build
 
 /**
- * Manages accelerometer sensor.
+ * Manages and collects accelerometer sensor measurements.
  *
  * @property context Android context.
  * @property sensorType One of the supported accelerometer sensor types.
  * @property sensorDelay Delay of sensor between samples.
- * @property accelerometerMeasurementListener listener to notify new accelerometer measurements.
- * @property accelerometerAccuracyChangedListener listener to notify changes in accelerometer
+ * @property measurementListener listener to notify new accelerometer measurements.
+ * @property accuracyChangedListener listener to notify changes in accelerometer
  * accuracy.
  */
-class AccelerometerSensor(
+class AccelerometerSensorCollector(
     val context: Context,
-    val sensorType: AccelerometerSensorType = AccelerometerSensorType.ACCELEROMETER,
+    val sensorType: SensorType = SensorType.ACCELEROMETER,
     val sensorDelay: SensorDelay = SensorDelay.FASTEST,
-    var accelerometerMeasurementListener: OnAccelerometerMeasurementListener? = null,
-    var accelerometerAccuracyChangedListener: OnAccelerometerAccuracyChangedListener? = null
+    var measurementListener: OnMeasurementListener? = null,
+    var accuracyChangedListener: OnAccuracyChangedListener? = null
 ) {
     /**
      * System sensor manager.
@@ -54,7 +54,7 @@ class AccelerometerSensor(
             if (event == null) {
                 return
             }
-            val sensorType = AccelerometerSensorType.from(event.sensor.type) ?: return
+            val sensorType = SensorType.from(event.sensor.type) ?: return
 
             val sensorAccuracy = SensorAccuracy.from(event.accuracy)
             val timestamp = event.timestamp
@@ -65,13 +65,13 @@ class AccelerometerSensor(
             var bx: Float? = null
             var by: Float? = null
             var bz: Float? = null
-            if (sensorType == AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED) {
+            if (sensorType == SensorType.ACCELEROMETER_UNCALIBRATED) {
                 bx = event.values[3]
                 by = event.values[4]
                 bz = event.values[5]
             }
 
-            accelerometerMeasurementListener?.onAccelerometerMeasurement(
+            measurementListener?.onMeasurement(
                 ax,
                 ay,
                 az,
@@ -87,12 +87,12 @@ class AccelerometerSensor(
             if (sensor == null) {
                 return
             }
-            if (AccelerometerSensorType.from(sensor.type) == null) {
+            if (SensorType.from(sensor.type) == null) {
                 return
             }
 
             val sensorAccuracy = SensorAccuracy.from(accuracy)
-            accelerometerAccuracyChangedListener?.onAccelerometerAccuracyChanged(sensorAccuracy)
+            accuracyChangedListener?.onAccuracyChanged(sensorAccuracy)
         }
     }
 
@@ -149,7 +149,7 @@ class AccelerometerSensor(
      *
      * @property value numerical value representing accelerometer sensor type.
      */
-    enum class AccelerometerSensorType(val value: Int) {
+    enum class SensorType(val value: Int) {
         /**
          * Accelerometer sensor.
          * Returns acceleration including gravity.
@@ -170,7 +170,7 @@ class AccelerometerSensor(
              * @param value numerical value representing accelerometer sensor type.
              * @return accelerometer sensor type as an enum or null if value has no match.
              */
-            fun from(value: Int): AccelerometerSensorType? {
+            fun from(value: Int): SensorType? {
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O
                     && value == TYPE_ACCELEROMETER_UNCALIBRATED
                 ) {
@@ -184,7 +184,7 @@ class AccelerometerSensor(
     /**
      * Interface to notify when a new accelerometer measurement is available.
      */
-    interface OnAccelerometerMeasurementListener {
+    interface OnMeasurementListener {
         /**
          * Called when a new accelerometer measurement is available.
          *
@@ -192,17 +192,17 @@ class AccelerometerSensor(
          * @param ay acceleration on device y-axis expressed in meters per squared second (m/s^2).
          * @param az acceleration on device z-axis expressed in meters per squared second (m/s^2).
          * @param bx bias on device x-axis expressed in meters per squared second (m/s^2). Only
-         * available when using [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED].
+         * available when using [SensorType.ACCELEROMETER_UNCALIBRATED].
          * @param by bias on device y-axis expressed in meters per squared second (m/s^2). Only
-         * available when using [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED].
+         * available when using [SensorType.ACCELEROMETER_UNCALIBRATED].
          * @param bz bias on device z-axis expressed in meters per squared second (m/s^2). Only
-         * available when using [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED].
+         * available when using [SensorType.ACCELEROMETER_UNCALIBRATED].
          * @param timestamp time in nanoseconds at which the measurement was made. Each measurement
          * will be monotonically increasing using the same time base as
          * [android.os.SystemClock.elapsedRealtimeNanos].
          * @param accuracy accelerometer sensor accuracy.
          */
-        fun onAccelerometerMeasurement(
+        fun onMeasurement(
             ax: Float,
             ay: Float,
             az: Float,
@@ -217,12 +217,12 @@ class AccelerometerSensor(
     /**
      * Interface to notify when accelerometer sensor accuracy changes.
      */
-    interface OnAccelerometerAccuracyChangedListener {
+    interface OnAccuracyChangedListener {
         /**
          * Called when accelerometer accuracy changes.
          *
          * @param accuracy new accelerometer accuracy.
          */
-        fun onAccelerometerAccuracyChanged(accuracy: SensorAccuracy?)
+        fun onAccuracyChanged(accuracy: SensorAccuracy?)
     }
 }
