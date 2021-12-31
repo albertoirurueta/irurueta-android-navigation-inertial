@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.irurueta.android.navigation.inertial
+package com.irurueta.android.navigation.inertial.collectors
 
 import android.content.Context
 import android.hardware.Sensor
@@ -100,7 +100,7 @@ class AccelerometerSensorCollector(
      * Indicates whether requested accelerometer sensor is available or not.
      */
     override val sensorAvailable: Boolean by lazy {
-        SensorAvailabilityService.SensorType.from(sensorType.value) != null && super.sensorAvailable
+        SensorType.from(sensorType.value) != null && super.sensorAvailable
     }
 
     private companion object {
