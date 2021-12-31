@@ -128,7 +128,7 @@ class MagnetometerSensorCollectorTest {
     fun constructor_whenAccuracyListener_setsExpectedValues() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val measurementListener = mockk<MagnetometerSensorCollector.OnMeasurementListener>()
-        val accuracyChangedListener = mockk<MagnetometerSensorCollector.OnAccuracyChangedListener>()
+        val accuracyChangedListener = mockk<SensorCollector.OnAccuracyChangedListener>()
         val collector = MagnetometerSensorCollector(
             context,
             MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
@@ -176,7 +176,7 @@ class MagnetometerSensorCollectorTest {
         assertNull(collector.accuracyChangedListener)
 
         // set new value
-        val accuracyChangedListener = mockk<MagnetometerSensorCollector.OnAccuracyChangedListener>()
+        val accuracyChangedListener = mockk<SensorCollector.OnAccuracyChangedListener>()
         collector.accuracyChangedListener = accuracyChangedListener
 
         // check
@@ -622,7 +622,7 @@ class MagnetometerSensorCollectorTest {
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val accuracyChangedListener =
-            mockk<MagnetometerSensorCollector.OnAccuracyChangedListener>(relaxUnitFun = true)
+            mockk<SensorCollector.OnAccuracyChangedListener>(relaxUnitFun = true)
         val collector = MagnetometerSensorCollector(
             contextSpy,
             accuracyChangedListener = accuracyChangedListener
@@ -659,7 +659,7 @@ class MagnetometerSensorCollectorTest {
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val accuracyChangedListener =
-            mockk<MagnetometerSensorCollector.OnAccuracyChangedListener>(relaxUnitFun = true)
+            mockk<SensorCollector.OnAccuracyChangedListener>(relaxUnitFun = true)
         val collector = MagnetometerSensorCollector(
             contextSpy,
             accuracyChangedListener = accuracyChangedListener
@@ -697,7 +697,7 @@ class MagnetometerSensorCollectorTest {
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val accuracyChangedListener =
-            mockk<MagnetometerSensorCollector.OnAccuracyChangedListener>(relaxUnitFun = true)
+            mockk<SensorCollector.OnAccuracyChangedListener>(relaxUnitFun = true)
         val collector = MagnetometerSensorCollector(
             contextSpy,
             accuracyChangedListener = accuracyChangedListener

@@ -131,7 +131,7 @@ class AccelerometerSensorCollectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val measurementListener = mockk<AccelerometerSensorCollector.OnMeasurementListener>()
         val accuracyChangedListener =
-            mockk<AccelerometerSensorCollector.OnAccuracyChangedListener>()
+            mockk<SensorCollector.OnAccuracyChangedListener>()
         val collector = AccelerometerSensorCollector(
             context,
             AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
@@ -183,7 +183,7 @@ class AccelerometerSensorCollectorTest {
 
         // set new value
         val accuracyChangedListener =
-            mockk<AccelerometerSensorCollector.OnAccuracyChangedListener>()
+            mockk<SensorCollector.OnAccuracyChangedListener>()
         collector.accuracyChangedListener = accuracyChangedListener
 
         // check
@@ -644,7 +644,7 @@ class AccelerometerSensorCollectorTest {
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val accuracyChangedListener =
-            mockk<AccelerometerSensorCollector.OnAccuracyChangedListener>(relaxUnitFun = true)
+            mockk<SensorCollector.OnAccuracyChangedListener>(relaxUnitFun = true)
         val collector = AccelerometerSensorCollector(
             contextSpy,
             accuracyChangedListener = accuracyChangedListener
@@ -682,7 +682,7 @@ class AccelerometerSensorCollectorTest {
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val accuracyChangedListener =
-            mockk<AccelerometerSensorCollector.OnAccuracyChangedListener>(relaxUnitFun = true)
+            mockk<SensorCollector.OnAccuracyChangedListener>(relaxUnitFun = true)
         val collector = AccelerometerSensorCollector(
             contextSpy,
             accuracyChangedListener = accuracyChangedListener
@@ -721,7 +721,7 @@ class AccelerometerSensorCollectorTest {
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val accuracyChangedListener =
-            mockk<AccelerometerSensorCollector.OnAccuracyChangedListener>(relaxUnitFun = true)
+            mockk<SensorCollector.OnAccuracyChangedListener>(relaxUnitFun = true)
         val collector = AccelerometerSensorCollector(
             contextSpy,
             accuracyChangedListener = accuracyChangedListener

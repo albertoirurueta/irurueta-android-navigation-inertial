@@ -127,7 +127,7 @@ class GyroscopeSensorCollectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val measurementListener = mockk<GyroscopeSensorCollector.OnMeasurementListener>()
         val accuracyChangedListener =
-            mockk<GyroscopeSensorCollector.OnAccuracyChangedListener>()
+            mockk<SensorCollector.OnAccuracyChangedListener>()
         val collector = GyroscopeSensorCollector(
             context, GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
             SensorDelay.NORMAL, measurementListener, accuracyChangedListener
@@ -172,7 +172,7 @@ class GyroscopeSensorCollectorTest {
         assertNull(collector.accuracyChangedListener)
 
         // set new value
-        val accuracyChangedListener = mockk<GyroscopeSensorCollector.OnAccuracyChangedListener>()
+        val accuracyChangedListener = mockk<SensorCollector.OnAccuracyChangedListener>()
         collector.accuracyChangedListener = accuracyChangedListener
 
         // check
@@ -610,7 +610,7 @@ class GyroscopeSensorCollectorTest {
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
-        val accuracyChangedListener = mockk<GyroscopeSensorCollector.OnAccuracyChangedListener>()
+        val accuracyChangedListener = mockk<SensorCollector.OnAccuracyChangedListener>()
         val collector = GyroscopeSensorCollector(
             contextSpy,
             accuracyChangedListener = accuracyChangedListener
@@ -647,7 +647,7 @@ class GyroscopeSensorCollectorTest {
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
-        val accuracyChangedListener = mockk<GyroscopeSensorCollector.OnAccuracyChangedListener>()
+        val accuracyChangedListener = mockk<SensorCollector.OnAccuracyChangedListener>()
         val collector = GyroscopeSensorCollector(
             contextSpy,
             accuracyChangedListener = accuracyChangedListener
@@ -686,7 +686,7 @@ class GyroscopeSensorCollectorTest {
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val accuracyChangedListener =
-            mockk<GyroscopeSensorCollector.OnAccuracyChangedListener>(relaxUnitFun = true)
+            mockk<SensorCollector.OnAccuracyChangedListener>(relaxUnitFun = true)
         val collector = GyroscopeSensorCollector(
             contextSpy,
             accuracyChangedListener = accuracyChangedListener

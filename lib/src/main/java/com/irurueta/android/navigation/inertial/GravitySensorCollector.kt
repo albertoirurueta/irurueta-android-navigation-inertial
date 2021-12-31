@@ -32,22 +32,16 @@ import kotlin.math.sqrt
  * @property accuracyChangedListener listener to notify changes in gravity sensor accuracy.
  */
 class GravitySensorCollector(
-    val context: Context,
-    val sensorDelay: SensorDelay = SensorDelay.FASTEST,
+    context: Context,
+    sensorDelay: SensorDelay = SensorDelay.FASTEST,
     var measurementListener: OnMeasurementListener? = null,
-    var accuracyChangedListener: OnAccuracyChangedListener? = null
-) {
-    /**
-     * System sensor manager.
-     */
-    private val sensorManager: SensorManager? by lazy {
-        context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
-    }
+    accuracyChangedListener: OnAccuracyChangedListener? = null
+) : SensorCollector(context, sensorDelay, accuracyChangedListener) {
 
     /**
      * Internal listener to handle sensor events.
      */
-    private val sensorEventListener = object : SensorEventListener {
+    override val sensorEventListener = object : SensorEventListener {
         override fun onSensorChanged(event: SensorEvent?) {
             if (event == null) {
                 return
@@ -94,33 +88,7 @@ class GravitySensorCollector(
      * This can be used to obtain additional information about the sensor.
      * @see sensorAvailable
      */
-    val sensor: Sensor? by lazy { sensorManager?.getDefaultSensor(Sensor.TYPE_GRAVITY) }
-
-    /**
-     * Indicates whether requested sensor is available or not.
-     */
-    val sensorAvailable: Boolean by lazy {
-        val availabilityService = SensorAvailabilityService(context)
-        availabilityService.hasSensor(SensorAvailabilityService.SensorType.GRAVITY)
-    }
-
-    /**
-     * Starts collecting gravity measurements.
-     *
-     * @return true if sensor is available and was successfully enabled.
-     */
-    fun start(): Boolean {
-        val sensor = this.sensor ?: return false
-        return sensorManager?.registerListener(sensorEventListener, sensor, sensorDelay.value)
-            ?: false
-    }
-
-    /**
-     * Stops collecting gravity measurements.
-     */
-    fun stop() {
-        sensorManager?.unregisterListener(sensorEventListener, sensor)
-    }
+    override val sensor: Sensor? by lazy { sensorManager?.getDefaultSensor(Sensor.TYPE_GRAVITY) }
 
     /**
      * Interface to notify when a new gravity measurement is available.
@@ -151,17 +119,5 @@ class GravitySensorCollector(
             timestamp: Long,
             accuracy: SensorAccuracy?
         )
-    }
-
-    /**
-     * Interface to notify when gravity sensor accuracy changes.
-     */
-    interface OnAccuracyChangedListener {
-        /**
-         * Called when gravity sensor accuracy changes.
-         *
-         * @param accuracy new gravity sensor accuracy.
-         */
-        fun onAccuracyChanged(accuracy: SensorAccuracy?)
     }
 }

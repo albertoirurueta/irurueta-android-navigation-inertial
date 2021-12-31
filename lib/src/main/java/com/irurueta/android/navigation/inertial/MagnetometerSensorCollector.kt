@@ -19,7 +19,6 @@ import android.content.Context
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
-import android.hardware.SensorManager
 
 /**
  * Manages and collects magnetometer sensor measurements.
@@ -32,24 +31,17 @@ import android.hardware.SensorManager
  * accuracy.
  */
 class MagnetometerSensorCollector(
-    val context: Context,
+    context: Context,
     val sensorType: SensorType = SensorType.MAGNETOMETER,
-    val sensorDelay: SensorDelay = SensorDelay.FASTEST,
+    sensorDelay: SensorDelay = SensorDelay.FASTEST,
     var measurementListener: OnMeasurementListener? = null,
-    var accuracyChangedListener: OnAccuracyChangedListener? = null
-) {
-    /**
-     * System sensor manager.
-     */
-    private val sensorManager: SensorManager? by lazy {
-        context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
-    }
-
+    accuracyChangedListener: OnAccuracyChangedListener? = null
+) : SensorCollector(context, sensorDelay, accuracyChangedListener) {
 
     /**
      * Internal listener to handle sensor events.
      */
-    private val sensorEventListener = object : SensorEventListener {
+    override val sensorEventListener = object : SensorEventListener {
         override fun onSensorChanged(event: SensorEvent?) {
             if (event == null) {
                 return
@@ -101,38 +93,7 @@ class MagnetometerSensorCollector(
      * This can be used to obtain additional information about the sensor.
      * @see sensorAvailable
      */
-    val sensor: Sensor? by lazy { sensorManager?.getDefaultSensor(sensorType.value) }
-
-    /**
-     * Indicates whether requested magnetometer sensor is available or not.
-     */
-    val sensorAvailable: Boolean by lazy {
-        val type = SensorAvailabilityService.SensorType.from(sensorType.value)
-        if (type != null) {
-            val availabilityService = SensorAvailabilityService(context)
-            availabilityService.hasSensor(type)
-        } else {
-            false
-        }
-    }
-
-    /**
-     * Starts collecting magnetometer measurements.
-     *
-     * @return true if sensor is available and was successfully enabled.
-     */
-    fun start(): Boolean {
-        val sensor = this.sensor ?: return false
-        return sensorManager?.registerListener(sensorEventListener, sensor, sensorDelay.value)
-            ?: false
-    }
-
-    /**
-     * Stops collecting magnetometer measurements.
-     */
-    fun stop() {
-        sensorManager?.unregisterListener(sensorEventListener, sensor)
-    }
+    override val sensor: Sensor? by lazy { sensorManager?.getDefaultSensor(sensorType.value) }
 
     /**
      * Indicates the magnetometer types supported by this magnetometer sensor.
@@ -191,17 +152,5 @@ class MagnetometerSensorCollector(
             timestamp: Long,
             accuracy: SensorAccuracy?
         )
-    }
-
-    /**
-     * Interface to notify when magnetometer sensor accuracy changes.
-     */
-    interface OnAccuracyChangedListener {
-        /**
-         * Called when magnetometer accuracy changes.
-         *
-         * @param accuracy new magnetometer accuracy.
-         */
-        fun onAccuracyChanged(accuracy: SensorAccuracy?)
     }
 }

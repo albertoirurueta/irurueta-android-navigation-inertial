@@ -19,7 +19,6 @@ import android.content.Context
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
-import android.hardware.SensorManager
 
 /**
  * Manages and collects gyroscope sensor measurements.
@@ -31,23 +30,17 @@ import android.hardware.SensorManager
  * @property accuracyChangedListener listener to notify changes in gyroscope accuracy.
  */
 class GyroscopeSensorCollector(
-    val context: Context,
+    context: Context,
     val sensorType: SensorType = SensorType.GYROSCOPE,
-    val sensorDelay: SensorDelay = SensorDelay.FASTEST,
+    sensorDelay: SensorDelay = SensorDelay.FASTEST,
     var measurementListener: OnMeasurementListener? = null,
-    var accuracyChangedListener: OnAccuracyChangedListener? = null
-) {
-    /**
-     * System sensor manager.
-     */
-    private val sensorManager: SensorManager? by lazy {
-        context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
-    }
+    accuracyChangedListener: OnAccuracyChangedListener? = null
+) : SensorCollector(context, sensorDelay, accuracyChangedListener) {
 
     /**
      * Internal listener to handle sensor events.
      */
-    private val sensorEventListener = object : SensorEventListener {
+    override val sensorEventListener = object : SensorEventListener {
         override fun onSensorChanged(event: SensorEvent?) {
             if (event == null) {
                 return
@@ -99,38 +92,7 @@ class GyroscopeSensorCollector(
      * This can be used to obtain additional information about the sensor.
      * @see sensorAvailable
      */
-    val sensor: Sensor? by lazy { sensorManager?.getDefaultSensor(sensorType.value) }
-
-    /**
-     * Indicates whether requested gyroscope sensor is available or not.
-     */
-    val sensorAvailable: Boolean by lazy {
-        val type = SensorAvailabilityService.SensorType.from(sensorType.value)
-        if (type != null) {
-            val availabilityService = SensorAvailabilityService(context)
-            availabilityService.hasSensor(type)
-        } else {
-            false
-        }
-    }
-
-    /**
-     * Starts collecting gyroscope measurements.
-     *
-     * @return true if sensor is available and was successfully enabled.
-     */
-    fun start() : Boolean {
-        val sensor = this.sensor ?: return false
-        return sensorManager?.registerListener(sensorEventListener, sensor, sensorDelay.value)
-            ?: false
-    }
-
-    /**
-     * Stops collecting gyroscope measurements.
-     */
-    fun stop() {
-        sensorManager?.unregisterListener(sensorEventListener, sensor)
-    }
+    override val sensor: Sensor? by lazy { sensorManager?.getDefaultSensor(sensorType.value) }
 
     /**
      * Indicates the gyroscope types supported by this gyroscope sensor.
@@ -192,17 +154,5 @@ class GyroscopeSensorCollector(
             timestamp: Long,
             accuracy: SensorAccuracy?
         )
-    }
-
-    /**
-     * Interface to notify when gyroscope sensor accuracy changes.
-     */
-    interface OnAccuracyChangedListener {
-        /**
-         * Called when gyroscope accuracy changes.
-         *
-         * @param accuracy new gyroscope accuracy.
-         */
-        fun onAccuracyChanged(accuracy: SensorAccuracy?)
     }
 }

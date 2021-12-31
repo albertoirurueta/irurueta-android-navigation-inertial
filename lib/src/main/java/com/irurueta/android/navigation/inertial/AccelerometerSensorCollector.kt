@@ -19,7 +19,6 @@ import android.content.Context
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
-import android.hardware.SensorManager
 import android.os.Build
 
 /**
@@ -33,23 +32,17 @@ import android.os.Build
  * accuracy.
  */
 class AccelerometerSensorCollector(
-    val context: Context,
+    context: Context,
     val sensorType: SensorType = SensorType.ACCELEROMETER,
-    val sensorDelay: SensorDelay = SensorDelay.FASTEST,
+    sensorDelay: SensorDelay = SensorDelay.FASTEST,
     var measurementListener: OnMeasurementListener? = null,
-    var accuracyChangedListener: OnAccuracyChangedListener? = null
-) {
-    /**
-     * System sensor manager.
-     */
-    private val sensorManager: SensorManager? by lazy {
-        context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
-    }
+    accuracyChangedListener: OnAccuracyChangedListener? = null
+) : SensorCollector(context, sensorDelay, accuracyChangedListener) {
 
     /**
      * Internal listener to handle sensor events.
      */
-    private val sensorEventListener = object : SensorEventListener {
+    override val sensorEventListener = object : SensorEventListener {
         override fun onSensorChanged(event: SensorEvent?) {
             if (event == null) {
                 return
@@ -101,37 +94,13 @@ class AccelerometerSensorCollector(
      * This can be used to obtain additional information about the sensor.
      * @see sensorAvailable
      */
-    val sensor: Sensor? by lazy { sensorManager?.getDefaultSensor(sensorType.value) }
+    override val sensor: Sensor? by lazy { sensorManager?.getDefaultSensor(sensorType.value) }
 
     /**
      * Indicates whether requested accelerometer sensor is available or not.
      */
-    val sensorAvailable: Boolean by lazy {
-        val type = SensorAvailabilityService.SensorType.from(sensorType.value)
-        if (type != null) {
-            val availabilityService = SensorAvailabilityService(context)
-            availabilityService.hasSensor(type)
-        } else {
-            false
-        }
-    }
-
-    /**
-     * Starts collecting accelerometer measurements.
-     *
-     * @return true if sensor is available and was successfully enabled.
-     */
-    fun start(): Boolean {
-        val sensor = this.sensor ?: return false
-        return sensorManager?.registerListener(sensorEventListener, sensor, sensorDelay.value)
-            ?: false
-    }
-
-    /**
-     * Stops collecting accelerometer measurements.
-     */
-    fun stop() {
-        sensorManager?.unregisterListener(sensorEventListener, sensor)
+    override val sensorAvailable: Boolean by lazy {
+        SensorAvailabilityService.SensorType.from(sensorType.value) != null && super.sensorAvailable
     }
 
     private companion object {
@@ -212,17 +181,5 @@ class AccelerometerSensorCollector(
             timestamp: Long,
             accuracy: SensorAccuracy?
         )
-    }
-
-    /**
-     * Interface to notify when accelerometer sensor accuracy changes.
-     */
-    interface OnAccuracyChangedListener {
-        /**
-         * Called when accelerometer accuracy changes.
-         *
-         * @param accuracy new accelerometer accuracy.
-         */
-        fun onAccuracyChanged(accuracy: SensorAccuracy?)
     }
 }

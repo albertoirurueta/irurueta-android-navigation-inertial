@@ -120,7 +120,7 @@ class AttitudeSensorCollectorTest {
     fun constructor_whenAccuracyListener_setsExpectedValues() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val measurementListener = mockk<AttitudeSensorCollector.OnMeasurementListener>()
-        val accuracyChangedListener = mockk<AttitudeSensorCollector.OnAccuracyChangedListener>()
+        val accuracyChangedListener = mockk<SensorCollector.OnAccuracyChangedListener>()
         val collector = AttitudeSensorCollector(
             context,
             AttitudeSensorCollector.SensorType.RELATIVE_ATTITUDE,
@@ -165,7 +165,7 @@ class AttitudeSensorCollectorTest {
         assertNull(collector.accuracyChangedListener)
 
         // set new value
-        val accuracyChangedListener = mockk<AttitudeSensorCollector.OnAccuracyChangedListener>()
+        val accuracyChangedListener = mockk<SensorCollector.OnAccuracyChangedListener>()
         collector.accuracyChangedListener = accuracyChangedListener
 
         // check
@@ -635,7 +635,7 @@ class AttitudeSensorCollectorTest {
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val accuracyChangedListener =
-            mockk<AttitudeSensorCollector.OnAccuracyChangedListener>(relaxUnitFun = true)
+            mockk<SensorCollector.OnAccuracyChangedListener>(relaxUnitFun = true)
         val collector = AttitudeSensorCollector(
             contextSpy,
             accuracyChangedListener = accuracyChangedListener
@@ -672,7 +672,7 @@ class AttitudeSensorCollectorTest {
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val accuracyChangedListener =
-            mockk<AttitudeSensorCollector.OnAccuracyChangedListener>(relaxUnitFun = true)
+            mockk<SensorCollector.OnAccuracyChangedListener>(relaxUnitFun = true)
         val collector = AttitudeSensorCollector(
             contextSpy,
             accuracyChangedListener = accuracyChangedListener
@@ -710,7 +710,7 @@ class AttitudeSensorCollectorTest {
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val accuracyChangedListener =
-            mockk<AttitudeSensorCollector.OnAccuracyChangedListener>(relaxUnitFun = true)
+            mockk<SensorCollector.OnAccuracyChangedListener>(relaxUnitFun = true)
         val collector = AttitudeSensorCollector(
             contextSpy,
             accuracyChangedListener = accuracyChangedListener

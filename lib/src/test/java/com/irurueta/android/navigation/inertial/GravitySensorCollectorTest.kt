@@ -87,7 +87,7 @@ class GravitySensorCollectorTest {
     fun constructor_whenAccuracyListener_setsExpectedValues() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val measurementListener = mockk<GravitySensorCollector.OnMeasurementListener>()
-        val accuracyListener = mockk<GravitySensorCollector.OnAccuracyChangedListener>()
+        val accuracyListener = mockk<SensorCollector.OnAccuracyChangedListener>()
         val collector = GravitySensorCollector(
             context,
             SensorDelay.FASTEST,
@@ -130,7 +130,7 @@ class GravitySensorCollectorTest {
         assertNull(collector.accuracyChangedListener)
 
         // set new value
-        val accuracyChangedListener = mockk<GravitySensorCollector.OnAccuracyChangedListener>()
+        val accuracyChangedListener = mockk<SensorCollector.OnAccuracyChangedListener>()
         collector.accuracyChangedListener = accuracyChangedListener
 
         // check
@@ -449,7 +449,7 @@ class GravitySensorCollectorTest {
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val accuracyChangedListener =
-            mockk<GravitySensorCollector.OnAccuracyChangedListener>(relaxUnitFun = true)
+            mockk<SensorCollector.OnAccuracyChangedListener>(relaxUnitFun = true)
         val collector = GravitySensorCollector(
             contextSpy,
             accuracyChangedListener = accuracyChangedListener
@@ -486,7 +486,7 @@ class GravitySensorCollectorTest {
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val accuracyChangedListener =
-            mockk<GravitySensorCollector.OnAccuracyChangedListener>(relaxUnitFun = true)
+            mockk<SensorCollector.OnAccuracyChangedListener>(relaxUnitFun = true)
         val collector = GravitySensorCollector(
             contextSpy,
             accuracyChangedListener = accuracyChangedListener
@@ -524,7 +524,7 @@ class GravitySensorCollectorTest {
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val accuracyChangedListener =
-            mockk<GravitySensorCollector.OnAccuracyChangedListener>(relaxUnitFun = true)
+            mockk<SensorCollector.OnAccuracyChangedListener>(relaxUnitFun = true)
         val collector = GravitySensorCollector(
             contextSpy,
             accuracyChangedListener = accuracyChangedListener

@@ -19,7 +19,6 @@ import android.content.Context
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
-import android.hardware.SensorManager
 import com.irurueta.algebra.Matrix
 import com.irurueta.geometry.Quaternion
 import com.irurueta.geometry.Rotation3D
@@ -36,12 +35,12 @@ import com.irurueta.navigation.frames.FrameType
  * @property accuracyChangedListener listener to notify changes in sensor accuracy.
  */
 class AttitudeSensorCollector(
-    val context: Context,
+    context: Context,
     val sensorType: SensorType = SensorType.ABSOLUTE_ATTITUDE,
-    val sensorDelay: SensorDelay = SensorDelay.FASTEST,
+    sensorDelay: SensorDelay = SensorDelay.FASTEST,
     var measurementListener: OnMeasurementListener? = null,
-    var accuracyChangedListener: OnAccuracyChangedListener? = null
-) {
+    accuracyChangedListener: OnAccuracyChangedListener? = null
+) : SensorCollector(context, sensorDelay, accuracyChangedListener) {
     /**
      * Internal quaternion reused for efficiency reasons containing measured orientation.
      */
@@ -60,16 +59,9 @@ class AttitudeSensorCollector(
         CoordinateTransformation(FrameType.LOCAL_NAVIGATION_FRAME, FrameType.BODY_FRAME)
 
     /**
-     * System sensor manager.
-     */
-    private val sensorManager: SensorManager? by lazy {
-        context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
-    }
-
-    /**
      * Internal listener to handle sensor events.
      */
-    private val sensorEventListener = object : SensorEventListener {
+    override val sensorEventListener = object : SensorEventListener {
         override fun onSensorChanged(event: SensorEvent?) {
             if (event == null) {
                 return
@@ -129,38 +121,7 @@ class AttitudeSensorCollector(
      * This can be used to obtain additional information about the sensor.
      * @see sensorAvailable
      */
-    val sensor: Sensor? by lazy { sensorManager?.getDefaultSensor(sensorType.value) }
-
-    /**
-     * Indicates whether requested orientation sensor is available or not.
-     */
-    val sensorAvailable: Boolean by lazy {
-        val type = SensorAvailabilityService.SensorType.from(sensorType.value)
-        if (type != null) {
-            val availabilityService = SensorAvailabilityService(context)
-            availabilityService.hasSensor(type)
-        } else {
-            false
-        }
-    }
-
-    /**
-     * Starts collecting orientation measurements.
-     *
-     * @return true if sensor is available and was successfully enabled.
-     */
-    fun start() : Boolean {
-        val sensor = this.sensor ?: return false
-        return sensorManager?.registerListener(sensorEventListener, sensor, sensorDelay.value)
-            ?: false
-    }
-
-    /**
-     * Stops collecting orientation measurements.
-     */
-    fun stop() {
-        sensorManager?.unregisterListener(sensorEventListener, sensor)
-    }
+    override val sensor: Sensor? by lazy { sensorManager?.getDefaultSensor(sensorType.value) }
 
     /**
      * Indicates the orientation types supported by this sensor.
@@ -219,17 +180,5 @@ class AttitudeSensorCollector(
             timestamp: Long,
             accuracy: SensorAccuracy?
         )
-    }
-
-    /**
-     * Interface to notify when attitude sensor accuracy changes.
-     */
-    interface OnAccuracyChangedListener {
-        /**
-         * Called when attitude accuracy changes.
-         *
-         * @param accuracy new attitude accuracy.
-         */
-        fun onAccuracyChanged(accuracy: SensorAccuracy?)
     }
 }
