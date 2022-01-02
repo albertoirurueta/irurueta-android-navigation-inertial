@@ -18,6 +18,7 @@ package com.irurueta.android.navigation.inertial.test.collectors
 import android.hardware.Sensor
 import android.hardware.SensorDirectChannel
 import android.util.Log
+import androidx.test.filters.RequiresDevice
 import androidx.test.platform.app.InstrumentationRegistry
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
@@ -52,6 +53,7 @@ class GyroscopeSensorCollectorTest {
         logSensor(sensor)
     }
 
+    @RequiresDevice
     @Test
     fun sensor_whenGyroscopeUncalibratedSensorType_returnsSensor() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -75,6 +77,7 @@ class GyroscopeSensorCollectorTest {
         assertTrue(collector.sensorAvailable)
     }
 
+    @RequiresDevice
     @Test
     fun sensorAvailable_whenGyroscopeUncalibratedSensorType_returnsTrue() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -133,6 +136,7 @@ class GyroscopeSensorCollectorTest {
         assertTrue(measured > 0)
     }
 
+    @RequiresDevice
     @Test
     fun startAndStop_whenGyroscopeUncalibratedSensorType_collectsMeasurements() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
