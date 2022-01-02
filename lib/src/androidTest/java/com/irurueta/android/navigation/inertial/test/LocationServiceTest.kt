@@ -62,7 +62,7 @@ class LocationServiceTest {
 
     @Test
     fun googlePlayServicesStatus_returnsExpectedValue() {
-        val scenario = ActivityScenario.launch(LocationServiceActivity::class.java).use {
+        val scenario = ActivityScenario.launch(LocationActivity::class.java).use {
             it.onActivity { activity ->
                 val service = LocationService(activity)
 
@@ -82,7 +82,7 @@ class LocationServiceTest {
 
     @Test
     fun googlePlayServicesAvailable_returnsExpectedValue() {
-        val scenario = ActivityScenario.launch(LocationServiceActivity::class.java).use {
+        val scenario = ActivityScenario.launch(LocationActivity::class.java).use {
             it.onActivity { activity ->
                 val service = LocationService(activity)
                 googlePlayServicesAvailable = service.googlePlayServicesAvailable
@@ -100,7 +100,7 @@ class LocationServiceTest {
 
     @Test
     fun isLocationEnabled_returnsExpectedValue() {
-        val scenario = ActivityScenario.launch(LocationServiceActivity::class.java).use {
+        val scenario = ActivityScenario.launch(LocationActivity::class.java).use {
             it.onActivity { activity ->
                 val service = LocationService(activity)
 
@@ -122,7 +122,7 @@ class LocationServiceTest {
     @RequiresDevice
     @Test
     fun getLastKnownLocation_whenCurrentLocationIsKnown_returnsExpectedValue() {
-        val scenario = ActivityScenario.launch(LocationServiceActivity::class.java).use {
+        val scenario = ActivityScenario.launch(LocationActivity::class.java).use {
             it.onActivity { activity ->
                 val service = LocationService(activity)
 
@@ -157,7 +157,7 @@ class LocationServiceTest {
     @RequiresDevice
     @Test
     fun getCurrentLocation_returnsExpectedValue() {
-        val scenario = ActivityScenario.launch(LocationServiceActivity::class.java).use {
+        val scenario = ActivityScenario.launch(LocationActivity::class.java).use {
             it.onActivity { activity ->
                 val service = LocationService(activity)
 
@@ -189,7 +189,7 @@ class LocationServiceTest {
     @RequiresDevice
     @Test
     fun cancelCurrentLocation_cancelsRequest() {
-        val scenario = ActivityScenario.launch(LocationServiceActivity::class.java).use {
+        val scenario = ActivityScenario.launch(LocationActivity::class.java).use {
             it.onActivity { activity ->
                 val service = LocationService(activity)
 
@@ -214,7 +214,7 @@ class LocationServiceTest {
     @RequiresDevice
     @Test
     fun requestLocationUpdates_obtainsMultipleLocationUpdates() {
-        val scenario = ActivityScenario.launch(LocationServiceActivity::class.java).use {
+        val scenario = ActivityScenario.launch(LocationActivity::class.java).use {
             it.onActivity { activity ->
                 val service = LocationService(activity)
 

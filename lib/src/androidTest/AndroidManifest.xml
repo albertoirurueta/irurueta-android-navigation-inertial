@@ -7,11 +7,13 @@
         android:icon="@mipmap/ic_launcher_test"
         android:label="navigation inertial test">
 
-        <activity android:name="com.irurueta.android.navigation.inertial.test.LocationPermissionServiceActivity"
-            android:label="LocationPermissionService"
-            android:theme="@style/Theme.AppCompat"/>
-        <activity android:name="com.irurueta.android.navigation.inertial.test.LocationServiceActivity"
-            android:label="LocationServiceActivity"
-            android:theme="@style/Theme.AppCompat"/>
+        <activity
+            android:name="com.irurueta.android.navigation.inertial.test.LocationActivity"
+            android:label="LocationActivity"
+            android:theme="@style/Theme.AppCompat" />
+        <activity
+            android:name="com.irurueta.android.navigation.inertial.test.collectors.CollectorsActivity"
+            android:label="CollectorsActivity"
+            android:theme="@style/Theme.AppCompat" />
     </application>
 </manifest>

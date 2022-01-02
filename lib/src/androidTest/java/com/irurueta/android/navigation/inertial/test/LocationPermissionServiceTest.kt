@@ -67,7 +67,7 @@ class LocationPermissionServiceTest {
 
     @Test
     fun shouldShowRequestFineLocationPermissionRationale_returnsExpectedValue() {
-        val scenario = ActivityScenario.launch(LocationPermissionServiceActivity::class.java).use {
+        val scenario = ActivityScenario.launch(LocationActivity::class.java).use {
             it.onActivity { activity ->
                 val service = LocationPermissionService(activity)
 
@@ -79,7 +79,7 @@ class LocationPermissionServiceTest {
 
     @Test
     fun shouldShowRequestCoarseLocationPermissionRationale_returnsExpectedValue() {
-        val scenario = ActivityScenario.launch(LocationPermissionServiceActivity::class.java).use {
+        val scenario = ActivityScenario.launch(LocationActivity::class.java).use {
             it.onActivity { activity ->
                 val service = LocationPermissionService(activity)
 
@@ -91,7 +91,7 @@ class LocationPermissionServiceTest {
 
     @Test
     fun shouldShowRequestBackgroundLocationPermissionRationale_returnsExpectedValue() {
-        val scenario = ActivityScenario.launch(LocationPermissionServiceActivity::class.java).use {
+        val scenario = ActivityScenario.launch(LocationActivity::class.java).use {
             it.onActivity { activity ->
                 val service = LocationPermissionService(activity)
 
@@ -117,7 +117,7 @@ class LocationPermissionServiceTest {
         }
         registry.addLifecycleCallback(callback)
 
-        val scenario = ActivityScenario.launch(LocationPermissionServiceActivity::class.java).use {
+        val scenario = ActivityScenario.launch(LocationActivity::class.java).use {
             it.onActivity { activity ->
                 registry.removeLifecycleCallback(callback)
                 val service = LocationPermissionService(activity, listener)
@@ -143,7 +143,7 @@ class LocationPermissionServiceTest {
         }
         registry.addLifecycleCallback(callback)
 
-        val scenario = ActivityScenario.launch(LocationPermissionServiceActivity::class.java).use {
+        val scenario = ActivityScenario.launch(LocationActivity::class.java).use {
             it.onActivity { activity ->
                 registry.removeLifecycleCallback(callback)
                 val service = LocationPermissionService(activity, listener)
@@ -170,7 +170,7 @@ class LocationPermissionServiceTest {
         }
         registry.addLifecycleCallback(callback)
 
-        val scenario = ActivityScenario.launch(LocationPermissionServiceActivity::class.java).use {
+        val scenario = ActivityScenario.launch(LocationActivity::class.java).use {
             it.onActivity { activity ->
                 registry.removeLifecycleCallback(callback)
                 val service = LocationPermissionService(activity, listener)
@@ -198,7 +198,7 @@ class LocationPermissionServiceTest {
         }
         registry.addLifecycleCallback(callback)
 
-        val scenario = ActivityScenario.launch(LocationPermissionServiceActivity::class.java).use {
+        val scenario = ActivityScenario.launch(LocationActivity::class.java).use {
             it.onActivity { activity ->
                 registry.removeLifecycleCallback(callback)
                 val service = LocationPermissionService(activity, listener)

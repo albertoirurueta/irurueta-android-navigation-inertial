@@ -73,7 +73,7 @@ class AttitudeSensorCollector(
             val sensorAccuracy = SensorAccuracy.from(event.accuracy)
             val timestamp = event.timestamp
 
-            val headingAccuracyAvailable = event.values[4] != -1.0f
+            val headingAccuracyAvailable = event.values.size >= 5 && event.values[4] != -1.0f
             val headingAccuracyRadians = if (headingAccuracyAvailable) {
                 event.values[4]
             } else {

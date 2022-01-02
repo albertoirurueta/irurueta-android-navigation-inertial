@@ -132,11 +132,14 @@ class MagnetometerSensorCollector(
          * @param by magnetic field on device y-axis expressed in micro-Teslas (µT).
          * @param bz magnetic field on device z-axis expressed in micro-Teslas (µT).
          * @param hardIronX hard iron on device x-axis expressed in micro-Teslas (µT). Only
-         * available when using [SensorType.MAGNETOMETER_UNCALIBRATED].
+         * available when using [SensorType.MAGNETOMETER_UNCALIBRATED]. If available, this value
+         * remains constant with calibrated bias value.
          * @param hardIronY hard iron on device y-axis expressed in micro-Teslas (µT). Only
-         * available when using [SensorType.MAGNETOMETER_UNCALIBRATED].
+         * available when using [SensorType.MAGNETOMETER_UNCALIBRATED]. If available, this value
+         * remains constant with calibrated bias value.
          * @param hardIronZ hard iron on device y-axis expressed in micro-Teslas (µT). Only
-         * available when using [SensorType.MAGNETOMETER_UNCALIBRATED].
+         * available when using [SensorType.MAGNETOMETER_UNCALIBRATED]. If available, this value
+         * remains constant with calibrated bias value.
          * @param timestamp time in nanoseconds at which the measurement was made. Each measurement
          * will be monotonically increasing using the same time base as
          * [android.os.SystemClock.elapsedRealtimeNanos].

@@ -134,11 +134,14 @@ class GyroscopeSensorCollector(
          * @param wy angular speed around device y-axis expressed in radians per second (rad/s).
          * @param wz angular speed around device z-axis expressed in radians per second (rad/s).
          * @param bx estimated drift around device x-axis expressed in radians per second (rad/s).
-         * Only available when using [SensorType.GYROSCOPE_UNCALIBRATED].
+         * Only available when using [SensorType.GYROSCOPE_UNCALIBRATED]. If available, this value
+         * remains constant with calibrated bias value.
          * @param by estimated drift around device y-axis expressed in radians per second (rad/s).
-         * Only available when using [SensorType.GYROSCOPE_UNCALIBRATED].
+         * Only available when using [SensorType.GYROSCOPE_UNCALIBRATED]. If available, this value
+         * remains constant with calibrated bias value.
          * @param bz estimated drift around device z-axis expressed in radians per second (rad/s).
-         * Only available when using [SensorType.GYROSCOPE_UNCALIBRATED].
+         * Only available when using [SensorType.GYROSCOPE_UNCALIBRATED]. If available, this value
+         * remains constant with calibrated bias value.
          * @param timestamp time in nanoseconds at which the measurement was made. Each measurement
          * wil be monotonically increasing using the same time base as
          * [android.os.SystemClock.elapsedRealtimeNanos].
