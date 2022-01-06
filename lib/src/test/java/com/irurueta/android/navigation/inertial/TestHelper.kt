@@ -15,50 +15,91 @@
  */
 package com.irurueta.android.navigation.inertial
 
+import kotlin.reflect.KClass
 import kotlin.reflect.KMutableProperty
 import kotlin.reflect.full.declaredFunctions
 import kotlin.reflect.full.declaredMemberFunctions
-import kotlin.reflect.full.memberProperties
+import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.jvm.isAccessible
 import kotlin.reflect.jvm.javaField
 
 @Suppress("UNCHECKED_CAST")
+inline fun <reified T : Any, R> callPrivateFuncWithResult(
+    c: KClass<T>,
+    obj: T,
+    name: String,
+    vararg args: Any?
+): R? {
+    return callPrivateFunc(c, obj, name, *args) as? R
+}
+
 inline fun <reified T : Any, R> T.callPrivateFuncWithResult(name: String, vararg args: Any?): R? =
-    callPrivateFunc(name, *args) as? R
+    callPrivateFuncWithResult(T::class, this, name, *args)
 
 @Suppress("UNCHECKED_CAST")
+inline fun <reified T : Any, R> callPrivateStaticFuncWithResult(
+    c: KClass<T>, obj: T, name: String,
+    vararg args: Any?
+): R? {
+    return callPrivateStaticFunc(c, obj, name, *args) as? R
+}
+
 inline fun <reified T : Any, R> T.callPrivateStaticFuncWithResult(
     name: String,
     vararg args: Any?
-): R? = callPrivateStaticFunc(name, *args) as? R
+): R? = callPrivateStaticFuncWithResult(T::class, this, name, *args)
+
+inline fun <reified T : Any> callPrivateFunc(
+    c: KClass<T>,
+    obj: T,
+    name: String,
+    vararg args: Any?
+): Any? {
+    return c.declaredMemberFunctions
+        .firstOrNull { it.name == name }
+        ?.apply { isAccessible = true }
+        ?.call(obj, *args)
+}
 
 inline fun <reified T : Any> T.callPrivateFunc(name: String, vararg args: Any?): Any? =
-    T::class.declaredMemberFunctions
+    callPrivateFunc(T::class, this, name, args)
+
+inline fun <reified T : Any> callPrivateStaticFunc(
+    c: KClass<T>, obj: T, name: String,
+    vararg args: Any?
+): Any? {
+    return c.declaredFunctions
         .firstOrNull { it.name == name }
         ?.apply { isAccessible = true }
-        ?.call(this, *args)
+        ?.call(obj, *args)
+}
 
 inline fun <reified T : Any> T.callPrivateStaticFunc(name: String, vararg args: Any?): Any? =
-    T::class.declaredFunctions
-        .firstOrNull { it.name == name }
-        ?.apply { isAccessible = true }
-        ?.call(this, *args)
+    callPrivateStaticFunc(T::class, this, name, args)
 
 @Suppress("UNCHECKED_CAST")
-inline fun <reified T : Any, R> T.getPrivateProperty(name: String): R? =
-    T::class.memberProperties
+inline fun <reified T : Any, R> getPrivateProperty(c: KClass<T>, obj: T, name: String): R? {
+    return c.declaredMemberProperties
         .firstOrNull { it.name == name }
         ?.apply { isAccessible = true }
-        ?.get(this) as? R
+        ?.get(obj) as? R
+}
 
-inline fun <reified T : Any, R> T.setPrivateProperty(name: String, value: R?) {
-    val property = T::class.memberProperties.find { it.name == name }
+inline fun <reified T : Any, R> T.getPrivateProperty(name: String): R? =
+    getPrivateProperty(T::class, this, name)
+
+inline fun <reified T : Any, R> setPrivateProperty(c: KClass<T>, obj: T, name: String, value: R?) {
+    val property = c.declaredMemberProperties.find { it.name == name }
     if (property is KMutableProperty<*>) {
         property.isAccessible = true
-        property.setter.call(this, value)
+        property.setter.call(obj, value)
     } else {
         property?.isAccessible = true
         property?.javaField?.isAccessible = true
-        property?.javaField?.set(this, value)
+        property?.javaField?.set(obj, value)
     }
+}
+
+inline fun <reified T : Any, R> T.setPrivateProperty(name: String, value: R?) {
+    setPrivateProperty(T::class, this, name, value)
 }

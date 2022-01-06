@@ -1,18 +1,3 @@
-/*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *         http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.irurueta.android.navigation.inertial.test.estimators
 
 import android.location.Location
@@ -23,8 +8,8 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
 import com.irurueta.android.navigation.inertial.LocationService
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
-import com.irurueta.android.navigation.inertial.estimators.AccumulatedMeasurementEstimator
-import com.irurueta.android.navigation.inertial.estimators.GravityNormEstimator
+import com.irurueta.android.navigation.inertial.estimators.AccelerometerNoiseEstimator
+import com.irurueta.android.navigation.inertial.estimators.AccumulatedTriadEstimator
 import com.irurueta.android.navigation.inertial.test.LocationActivity
 import com.irurueta.android.navigation.inertial.toNEDPosition
 import com.irurueta.navigation.frames.ECEFPosition
@@ -42,7 +27,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
-class GravityNormEstimatorTest {
+class AccelerometerNoiseEstimatorTest {
 
     @get:Rule
     val permissionRule: GrantPermissionRule = GrantPermissionRule.grant(
@@ -64,23 +49,21 @@ class GravityNormEstimatorTest {
     }
 
     @Test
-    fun startAndStop_estimatesGravity() {
+    fun startAndStop_estimatesAccelerometerNoise() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val estimator = GravityNormEstimator(context,
-            completedListener = object : AccumulatedMeasurementEstimator
-            .OnEstimationCompletedListener<GravityNormEstimator> {
-
-                override fun onEstimationCompleted(estimator: GravityNormEstimator) {
+        val estimator = AccelerometerNoiseEstimator(context,
+            completedListener = object : AccumulatedTriadEstimator
+            .OnEstimationCompletedListener<AccelerometerNoiseEstimator> {
+                override fun onEstimationCompleted(estimator: AccelerometerNoiseEstimator) {
                     assertFalse(estimator.running)
 
                     syncHelper.notifyAll { completed++ }
                 }
             },
-            unreliableListener = object : AccumulatedMeasurementEstimator
-            .OnUnreliableListener<GravityNormEstimator> {
-
-                override fun onUnreliable(estimator: GravityNormEstimator) {
-                    Log.d("GravityNormEstimatorTest", "Sensor is unreliable")
+            unreliableListener = object :
+                AccumulatedTriadEstimator.OnUnreliableListener<AccelerometerNoiseEstimator> {
+                override fun onUnreliable(estimator: AccelerometerNoiseEstimator) {
+                    Log.d("AccelerometerNoiseEstimatorTest", "Sensor is unreliable")
                     assertFalse(estimator.running)
                 }
             }
@@ -104,31 +87,35 @@ class GravityNormEstimatorTest {
         assertEquals(averageNorm1, averageNorm2)
         assertEquals(averageNorm, averageNorm1.value.toDouble(), 0.0)
 
-        val normVariance = estimator.normVariance
-        requireNotNull(normVariance)
-        assertTrue(normVariance > 0.0)
+        val standardDeviationNorm = estimator.standardDeviationNorm
+        requireNotNull(standardDeviationNorm)
+        assertTrue(standardDeviationNorm > 0.0)
+        val standardDeviationNorm1 = estimator.standardDeviationNormAsMeasurement
+        requireNotNull(standardDeviationNorm1)
+        val standardDeviationNorm2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        estimator.getStandardDeviationNormAsMeasurement(standardDeviationNorm2)
+        assertEquals(standardDeviationNorm1, standardDeviationNorm2)
+        assertEquals(standardDeviationNorm, standardDeviationNorm1.value.toDouble(), 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, standardDeviationNorm1.unit)
 
-        val normStandardDeviation = estimator.normStandardDeviation
-        requireNotNull(normStandardDeviation)
-        assertTrue(normStandardDeviation > 0.0)
-        val normStandardDeviation1 = estimator.normStandardDeviationAsMeasurement
-        requireNotNull(normStandardDeviation1)
-        val normStandardDeviation2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        estimator.getNormStandardDeviationAsMeasurement(normStandardDeviation2)
-        assertEquals(normStandardDeviation1, normStandardDeviation2)
-        assertEquals(
-            normStandardDeviation,
-            normStandardDeviation1.value.toDouble(),
-            0.0
-        )
+        val averageStandardDeviation = estimator.averageStandardDeviation
+        requireNotNull(averageStandardDeviation)
+        assertTrue(averageStandardDeviation > 0.0)
+        val averageStandardDeviation1 = estimator.averageStandardDeviationAsMeasurement
+        requireNotNull(averageStandardDeviation1)
+        val averageStandardDeviation2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        estimator.getAverageStandardDeviationAsMeasurement(averageStandardDeviation2)
+        assertEquals(averageStandardDeviation1, averageStandardDeviation2)
+        assertEquals(averageStandardDeviation, averageStandardDeviation1.value.toDouble(), 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, averageStandardDeviation1.unit)
 
-        val psd = estimator.psd
-        requireNotNull(psd)
-        assertTrue(psd > 0.0)
+        val averageNoisePsd = estimator.averageNoisePsd
+        requireNotNull(averageNoisePsd)
+        assertTrue(averageNoisePsd > 0.0)
 
-        val rootPsd = estimator.rootPsd
-        requireNotNull(rootPsd)
-        assertTrue(rootPsd > 0.0)
+        val noiseRootPsdNorm = estimator.noiseRootPsdNorm
+        requireNotNull(noiseRootPsdNorm)
+        assertTrue(noiseRootPsdNorm > 0.0)
 
         val averageTimeInterval = estimator.averageTimeInterval
         requireNotNull(averageTimeInterval)
@@ -169,23 +156,21 @@ class GravityNormEstimatorTest {
 
     @RequiresDevice
     @Test
-    fun estimatedResult_returnsValueCloseToExpectedGravity() {
+    fun estimatedResult_whenDeviceStatic_returnsValueCloseToExpectedGravity() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val estimator = GravityNormEstimator(context,
-            completedListener = object : AccumulatedMeasurementEstimator
-            .OnEstimationCompletedListener<GravityNormEstimator> {
-
-                override fun onEstimationCompleted(estimator: GravityNormEstimator) {
+        val estimator = AccelerometerNoiseEstimator(context,
+            completedListener = object : AccumulatedTriadEstimator
+            .OnEstimationCompletedListener<AccelerometerNoiseEstimator> {
+                override fun onEstimationCompleted(estimator: AccelerometerNoiseEstimator) {
                     assertFalse(estimator.running)
 
                     syncHelper.notifyAll { completed++ }
                 }
             },
-            unreliableListener = object : AccumulatedMeasurementEstimator
-            .OnUnreliableListener<GravityNormEstimator> {
-
-                override fun onUnreliable(estimator: GravityNormEstimator) {
-                    Log.d("GravityNormEstimatorTest", "Sensor is unreliable")
+            unreliableListener = object :
+                AccumulatedTriadEstimator.OnUnreliableListener<AccelerometerNoiseEstimator> {
+                override fun onUnreliable(estimator: AccelerometerNoiseEstimator) {
+                    Log.d("AccelerometerNoiseEstimatorTest", "Sensor is unreliable")
                     assertFalse(estimator.running)
                 }
             }
@@ -198,6 +183,10 @@ class GravityNormEstimatorTest {
         // obtain results
         val measuredNorm = estimator.averageNorm
         requireNotNull(measuredNorm)
+        val standardDeviationNorm = estimator.standardDeviationNorm
+        requireNotNull(standardDeviationNorm)
+        val averageStandardDeviation = estimator.averageStandardDeviation
+        requireNotNull(averageStandardDeviation)
 
         completed = 0
 
@@ -214,7 +203,7 @@ class GravityNormEstimatorTest {
                     spyk(object : LocationService.OnCurrentLocationListener {
                         override fun onCurrentLocation(location: Location) {
                             assertNotNull(location)
-                            this@GravityNormEstimatorTest.location = location
+                            this@AccelerometerNoiseEstimatorTest.location = location
 
                             syncHelper.notifyAll { completed++ }
                         }
@@ -247,8 +236,10 @@ class GravityNormEstimatorTest {
         val gravity = ecefGravity.norm
 
         Log.d(
-            "GravityNormEstimatorTest",
-            "measuredGravity: $measuredNorm m/s^2 - gravity: $gravity m/s^2"
+            "AccelerometerNoiseEstimatorTest",
+            "measuredGravity: $measuredNorm m/s^2 - gravity: $gravity m/s^2, "
+                    + "standardDeviationNorm: $standardDeviationNorm m/s^2, "
+                    + "averageStandardDeviation: $averageStandardDeviation m/s^2"
         )
     }
 }

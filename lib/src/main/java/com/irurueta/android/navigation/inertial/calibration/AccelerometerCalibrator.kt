@@ -1,12 +1,12 @@
 package com.irurueta.android.navigation.inertial.calibration
 
 import android.content.Context
-import android.location.Location
+/*import android.location.Location
 import com.irurueta.android.navigation.inertial.collectors.GravitySensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
 import com.irurueta.android.navigation.inertial.collectors.SensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
-import com.irurueta.navigation.inertial.calibration.AccelerationTriad
+import com.irurueta.navigation.inertial.calibration.AccelerationTriad*/
 
 class AccelerometerCalibrator(val context: Context) {
 
