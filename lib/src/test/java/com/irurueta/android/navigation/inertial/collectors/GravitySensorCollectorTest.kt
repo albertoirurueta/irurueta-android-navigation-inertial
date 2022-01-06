@@ -45,7 +45,8 @@ class GravitySensorCollectorTest {
         assertNull(collector.sensor)
         assertFalse(collector.sensorAvailable)
 
-        val sensorManager: SensorManager? = collector.getPrivateProperty("sensorManager")
+        val sensorManager: SensorManager? =
+            getPrivateProperty(SensorCollector::class, collector, "sensorManager")
         assertNotNull(sensorManager)
     }
 
@@ -62,7 +63,8 @@ class GravitySensorCollectorTest {
         assertNull(collector.sensor)
         assertFalse(collector.sensorAvailable)
 
-        val sensorManager: SensorManager? = collector.getPrivateProperty("sensorManager")
+        val sensorManager: SensorManager? =
+            getPrivateProperty(SensorCollector::class, collector, "sensorManager")
         assertNotNull(sensorManager)
     }
 
@@ -80,7 +82,8 @@ class GravitySensorCollectorTest {
         assertNull(collector.sensor)
         assertFalse(collector.sensorAvailable)
 
-        val sensorManager: SensorManager? = collector.getPrivateProperty("sensorManager")
+        val sensorManager: SensorManager? =
+            getPrivateProperty(SensorCollector::class, collector, "sensorManager")
         assertNotNull(sensorManager)
     }
 
@@ -104,7 +107,8 @@ class GravitySensorCollectorTest {
         assertNull(collector.sensor)
         assertFalse(collector.sensorAvailable)
 
-        val sensorManager: SensorManager? = collector.getPrivateProperty("sensorManager")
+        val sensorManager: SensorManager? =
+            getPrivateProperty(SensorCollector::class, collector, "sensorManager")
         assertNotNull(sensorManager)
     }
 
