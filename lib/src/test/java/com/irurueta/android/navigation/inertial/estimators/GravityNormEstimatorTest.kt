@@ -57,9 +57,9 @@ class GravityNormEstimatorTest {
         // check default values
         assertSame(context, estimator.context)
         assertEquals(SensorDelay.FASTEST, estimator.sensorDelay)
-        assertEquals(AccumulatedMeasurementEstimator.DEFAULT_MAX_SAMPLES, estimator.maxSamples)
+        assertEquals(BaseAccumulatedEstimator.DEFAULT_MAX_SAMPLES, estimator.maxSamples)
         assertEquals(
-            AccumulatedMeasurementEstimator.DEFAULT_MAX_DURATION_MILLIS,
+            BaseAccumulatedEstimator.DEFAULT_MAX_DURATION_MILLIS,
             estimator.maxDurationMillis
         )
         assertEquals(StopMode.MAX_SAMPLES_OR_DURATION, estimator.stopMode)
@@ -102,9 +102,9 @@ class GravityNormEstimatorTest {
         // check values
         assertSame(context, estimator.context)
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
-        assertEquals(AccumulatedMeasurementEstimator.DEFAULT_MAX_SAMPLES, estimator.maxSamples)
+        assertEquals(BaseAccumulatedEstimator.DEFAULT_MAX_SAMPLES, estimator.maxSamples)
         assertEquals(
-            AccumulatedMeasurementEstimator.DEFAULT_MAX_DURATION_MILLIS,
+            BaseAccumulatedEstimator.DEFAULT_MAX_DURATION_MILLIS,
             estimator.maxDurationMillis
         )
         assertEquals(StopMode.MAX_SAMPLES_OR_DURATION, estimator.stopMode)
@@ -155,7 +155,7 @@ class GravityNormEstimatorTest {
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
         assertEquals(MAX_SAMPLES, estimator.maxSamples)
         assertEquals(
-            AccumulatedMeasurementEstimator.DEFAULT_MAX_DURATION_MILLIS,
+            BaseAccumulatedEstimator.DEFAULT_MAX_DURATION_MILLIS,
             estimator.maxDurationMillis
         )
         assertEquals(StopMode.MAX_SAMPLES_OR_DURATION, estimator.stopMode)
@@ -466,14 +466,14 @@ class GravityNormEstimatorTest {
         estimator.setPrivateProperty("noiseEstimator", noiseEstimatorSpy)
 
         val timeIntervalEstimator: TimeIntervalEstimator? = getPrivateProperty(
-            AccumulatedMeasurementEstimator::class,
+            BaseAccumulatedEstimator::class,
             estimator,
             "timeIntervalEstimator"
         )
         requireNotNull(timeIntervalEstimator)
         val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
         setPrivateProperty(
-            AccumulatedMeasurementEstimator::class,
+            BaseAccumulatedEstimator::class,
             estimator,
             "timeIntervalEstimator",
             timeIntervalEstimatorSpy
@@ -507,12 +507,12 @@ class GravityNormEstimatorTest {
         estimator.setPrivateProperty("noiseEstimator", noiseEstimatorSpy)
 
         val timeIntervalEstimator: TimeIntervalEstimator? = getPrivateProperty(
-            AccumulatedMeasurementEstimator::class, estimator, "timeIntervalEstimator"
+            BaseAccumulatedEstimator::class, estimator, "timeIntervalEstimator"
         )
         requireNotNull(timeIntervalEstimator)
         val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
         setPrivateProperty(
-            AccumulatedMeasurementEstimator::class,
+            BaseAccumulatedEstimator::class,
             estimator,
             "timeIntervalEstimator",
             timeIntervalEstimatorSpy
@@ -537,7 +537,7 @@ class GravityNormEstimatorTest {
         val estimator = GravityNormEstimator(context)
 
         setPrivateProperty(
-            AccumulatedMeasurementEstimator::class,
+            BaseAccumulatedEstimator::class,
             estimator,
             "resultUnreliable",
             true
@@ -653,7 +653,7 @@ class GravityNormEstimatorTest {
         val estimator = GravityNormEstimator(context)
 
         val initialTimestampNanos1: Long? = getPrivateProperty(
-            AccumulatedMeasurementEstimator::class,
+            BaseAccumulatedEstimator::class,
             estimator,
             "initialTimestampNanos"
         )
@@ -677,7 +677,7 @@ class GravityNormEstimatorTest {
         measurementListener.onMeasurement(gx, gy, gz, g, timestamp1, accuracy)
 
         val initialTimestampNanos2: Long? = getPrivateProperty(
-            AccumulatedMeasurementEstimator::class,
+            BaseAccumulatedEstimator::class,
             estimator,
             "initialTimestampNanos"
         )
@@ -688,7 +688,7 @@ class GravityNormEstimatorTest {
         measurementListener.onMeasurement(gx, gy, gz, g, timestamp2, accuracy)
 
         val initialTimestampNanos3: Long? = getPrivateProperty(
-            AccumulatedMeasurementEstimator::class,
+            BaseAccumulatedEstimator::class,
             estimator,
             "initialTimestampNanos"
         )
@@ -709,14 +709,14 @@ class GravityNormEstimatorTest {
 
         val timeIntervalEstimator: TimeIntervalEstimator? =
             getPrivateProperty(
-                AccumulatedMeasurementEstimator::class,
+                BaseAccumulatedEstimator::class,
                 estimator,
                 "timeIntervalEstimator"
             )
         requireNotNull(timeIntervalEstimator)
         val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
         setPrivateProperty(
-            AccumulatedMeasurementEstimator::class,
+            BaseAccumulatedEstimator::class,
             estimator,
             "timeIntervalEstimator",
             timeIntervalEstimatorSpy
@@ -747,7 +747,7 @@ class GravityNormEstimatorTest {
         val estimator = GravityNormEstimator(context)
 
         val endTimestampNanos1: Long? = getPrivateProperty(
-            AccumulatedMeasurementEstimator::class,
+            BaseAccumulatedEstimator::class,
             estimator,
             "endTimestampNanos"
         )
@@ -770,7 +770,7 @@ class GravityNormEstimatorTest {
         measurementListener.onMeasurement(gx, gy, gz, g, timestamp, accuracy)
 
         val endTimestampNanos2: Long? = getPrivateProperty(
-            AccumulatedMeasurementEstimator::class,
+            BaseAccumulatedEstimator::class,
             estimator,
             "endTimestampNanos"
         )
@@ -1148,7 +1148,7 @@ class GravityNormEstimatorTest {
 
         val accuracyChangedListener: SensorCollector.OnAccuracyChangedListener? =
             getPrivateProperty(
-                AccumulatedMeasurementEstimator::class,
+                BaseAccumulatedEstimator::class,
                 estimator,
                 "accuracyChangedListener"
             )
@@ -1173,7 +1173,7 @@ class GravityNormEstimatorTest {
 
         val accuracyChangedListener: SensorCollector.OnAccuracyChangedListener? =
             getPrivateProperty(
-                AccumulatedMeasurementEstimator::class,
+                BaseAccumulatedEstimator::class,
                 estimator,
                 "accuracyChangedListener"
             )
@@ -1199,7 +1199,7 @@ class GravityNormEstimatorTest {
 
         val accuracyChangedListener: SensorCollector.OnAccuracyChangedListener? =
             getPrivateProperty(
-                AccumulatedMeasurementEstimator::class,
+                BaseAccumulatedEstimator::class,
                 estimator,
                 "accuracyChangedListener"
             )

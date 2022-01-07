@@ -60,9 +60,9 @@ class AccelerometerNormEstimatorTest {
         assertSame(context, estimator.context)
         assertEquals(AccelerometerSensorCollector.SensorType.ACCELEROMETER, estimator.sensorType)
         assertEquals(SensorDelay.FASTEST, estimator.sensorDelay)
-        assertEquals(AccumulatedMeasurementEstimator.DEFAULT_MAX_SAMPLES, estimator.maxSamples)
+        assertEquals(BaseAccumulatedEstimator.DEFAULT_MAX_SAMPLES, estimator.maxSamples)
         assertEquals(
-            AccumulatedMeasurementEstimator.DEFAULT_MAX_DURATION_MILLIS,
+            BaseAccumulatedEstimator.DEFAULT_MAX_DURATION_MILLIS,
             estimator.maxDurationMillis
         )
         assertEquals(StopMode.MAX_SAMPLES_OR_DURATION, estimator.stopMode)
@@ -112,9 +112,9 @@ class AccelerometerNormEstimatorTest {
             estimator.sensorType
         )
         assertEquals(SensorDelay.FASTEST, estimator.sensorDelay)
-        assertEquals(AccumulatedMeasurementEstimator.DEFAULT_MAX_SAMPLES, estimator.maxSamples)
+        assertEquals(BaseAccumulatedEstimator.DEFAULT_MAX_SAMPLES, estimator.maxSamples)
         assertEquals(
-            AccumulatedMeasurementEstimator.DEFAULT_MAX_DURATION_MILLIS,
+            BaseAccumulatedEstimator.DEFAULT_MAX_DURATION_MILLIS,
             estimator.maxDurationMillis
         )
         assertEquals(StopMode.MAX_SAMPLES_OR_DURATION, estimator.stopMode)
@@ -162,9 +162,9 @@ class AccelerometerNormEstimatorTest {
         assertSame(context, estimator.context)
         assertEquals(AccelerometerSensorCollector.SensorType.ACCELEROMETER, estimator.sensorType)
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
-        assertEquals(AccumulatedMeasurementEstimator.DEFAULT_MAX_SAMPLES, estimator.maxSamples)
+        assertEquals(BaseAccumulatedEstimator.DEFAULT_MAX_SAMPLES, estimator.maxSamples)
         assertEquals(
-            AccumulatedMeasurementEstimator.DEFAULT_MAX_DURATION_MILLIS,
+            BaseAccumulatedEstimator.DEFAULT_MAX_DURATION_MILLIS,
             estimator.maxDurationMillis
         )
         assertEquals(StopMode.MAX_SAMPLES_OR_DURATION, estimator.stopMode)
@@ -230,7 +230,7 @@ class AccelerometerNormEstimatorTest {
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
         assertEquals(MAX_SAMPLES, estimator.maxSamples)
         assertEquals(
-            AccumulatedMeasurementEstimator.DEFAULT_MAX_DURATION_MILLIS,
+            BaseAccumulatedEstimator.DEFAULT_MAX_DURATION_MILLIS,
             estimator.maxDurationMillis
         )
         assertEquals(StopMode.MAX_SAMPLES_OR_DURATION, estimator.stopMode)
@@ -559,14 +559,14 @@ class AccelerometerNormEstimatorTest {
         estimator.setPrivateProperty("noiseEstimator", noiseEstimatorSpy)
 
         val timeIntervalEstimator: TimeIntervalEstimator? = getPrivateProperty(
-            AccumulatedMeasurementEstimator::class,
+            BaseAccumulatedEstimator::class,
             estimator,
             "timeIntervalEstimator"
         )
         requireNotNull(timeIntervalEstimator)
         val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
         setPrivateProperty(
-            AccumulatedMeasurementEstimator::class,
+            BaseAccumulatedEstimator::class,
             estimator,
             "timeIntervalEstimator",
             timeIntervalEstimatorSpy
@@ -597,14 +597,14 @@ class AccelerometerNormEstimatorTest {
         estimator.setPrivateProperty("noiseEstimator", noiseEstimatorSpy)
 
         val timeIntervalEstimator: TimeIntervalEstimator? = getPrivateProperty(
-            AccumulatedMeasurementEstimator::class,
+            BaseAccumulatedEstimator::class,
             estimator,
             "timeIntervalEstimator"
         )
         requireNotNull(timeIntervalEstimator)
         val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
         setPrivateProperty(
-            AccumulatedMeasurementEstimator::class,
+            BaseAccumulatedEstimator::class,
             estimator,
             "timeIntervalEstimator",
             timeIntervalEstimatorSpy
@@ -629,7 +629,7 @@ class AccelerometerNormEstimatorTest {
         val estimator = AccelerometerNormEstimator(context)
 
         setPrivateProperty(
-            AccumulatedMeasurementEstimator::class,
+            BaseAccumulatedEstimator::class,
             estimator,
             "resultUnreliable",
             true
@@ -746,7 +746,7 @@ class AccelerometerNormEstimatorTest {
         val estimator = AccelerometerNormEstimator(context)
 
         val initialTimestampNanos1: Long? = getPrivateProperty(
-            AccumulatedMeasurementEstimator::class,
+            BaseAccumulatedEstimator::class,
             estimator,
             "initialTimestampNanos"
         )
@@ -769,7 +769,7 @@ class AccelerometerNormEstimatorTest {
         measurementListener.onMeasurement(ax, ay, az, null, null, null, timestamp1, accuracy)
 
         val initialTimestampNanos2: Long? = getPrivateProperty(
-            AccumulatedMeasurementEstimator::class,
+            BaseAccumulatedEstimator::class,
             estimator,
             "initialTimestampNanos"
         )
@@ -780,7 +780,7 @@ class AccelerometerNormEstimatorTest {
         measurementListener.onMeasurement(ax, ay, az, null, null, null, timestamp2, accuracy)
 
         val initialTimestampNanos3: Long? = getPrivateProperty(
-            AccumulatedMeasurementEstimator::class,
+            BaseAccumulatedEstimator::class,
             estimator,
             "initialTimestampNanos"
         )
@@ -801,14 +801,14 @@ class AccelerometerNormEstimatorTest {
 
         val timeIntervalEstimator: TimeIntervalEstimator? =
             getPrivateProperty(
-                AccumulatedMeasurementEstimator::class,
+                BaseAccumulatedEstimator::class,
                 estimator,
                 "timeIntervalEstimator"
             )
         requireNotNull(timeIntervalEstimator)
         val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
         setPrivateProperty(
-            AccumulatedMeasurementEstimator::class,
+            BaseAccumulatedEstimator::class,
             estimator,
             "timeIntervalEstimator",
             timeIntervalEstimatorSpy
@@ -839,7 +839,7 @@ class AccelerometerNormEstimatorTest {
         val estimator = AccelerometerNormEstimator(context)
 
         val endTimestampNanos1: Long? = getPrivateProperty(
-            AccumulatedMeasurementEstimator::class,
+            BaseAccumulatedEstimator::class,
             estimator,
             "endTimestampNanos"
         )
@@ -861,7 +861,7 @@ class AccelerometerNormEstimatorTest {
         measurementListener.onMeasurement(ax, ay, az, null, null, null, timestamp, accuracy)
 
         val endTimestampNanos2: Long? = getPrivateProperty(
-            AccumulatedMeasurementEstimator::class,
+            BaseAccumulatedEstimator::class,
             estimator,
             "endTimestampNanos"
         )
@@ -1237,7 +1237,7 @@ class AccelerometerNormEstimatorTest {
 
         val accuracyChangedListener: SensorCollector.OnAccuracyChangedListener? =
             getPrivateProperty(
-                AccumulatedMeasurementEstimator::class,
+                BaseAccumulatedEstimator::class,
                 estimator,
                 "accuracyChangedListener"
             )
@@ -1263,7 +1263,7 @@ class AccelerometerNormEstimatorTest {
 
         val accuracyChangedListener: SensorCollector.OnAccuracyChangedListener? =
             getPrivateProperty(
-                AccumulatedMeasurementEstimator::class,
+                BaseAccumulatedEstimator::class,
                 estimator,
                 "accuracyChangedListener"
             )
@@ -1290,7 +1290,7 @@ class AccelerometerNormEstimatorTest {
 
         val accuracyChangedListener: SensorCollector.OnAccuracyChangedListener? =
             getPrivateProperty(
-                AccumulatedMeasurementEstimator::class,
+                BaseAccumulatedEstimator::class,
                 estimator,
                 "accuracyChangedListener"
             )

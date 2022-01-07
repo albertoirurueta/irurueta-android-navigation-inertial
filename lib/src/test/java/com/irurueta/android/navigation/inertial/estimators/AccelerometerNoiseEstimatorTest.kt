@@ -59,9 +59,9 @@ class AccelerometerNoiseEstimatorTest {
         assertSame(context, estimator.context)
         assertEquals(AccelerometerSensorCollector.SensorType.ACCELEROMETER, estimator.sensorType)
         assertEquals(SensorDelay.FASTEST, estimator.sensorDelay)
-        assertEquals(AccumulatedTriadEstimator.DEFAULT_MAX_SAMPLES, estimator.maxSamples)
+        assertEquals(BaseAccumulatedEstimator.DEFAULT_MAX_SAMPLES, estimator.maxSamples)
         assertEquals(
-            AccumulatedTriadEstimator.DEFAULT_MAX_DURATION_MILLIS,
+            BaseAccumulatedEstimator.DEFAULT_MAX_DURATION_MILLIS,
             estimator.maxDurationMillis
         )
         assertEquals(StopMode.MAX_SAMPLES_OR_DURATION, estimator.stopMode)
@@ -145,9 +145,9 @@ class AccelerometerNoiseEstimatorTest {
             estimator.sensorType
         )
         assertEquals(SensorDelay.FASTEST, estimator.sensorDelay)
-        assertEquals(AccumulatedTriadEstimator.DEFAULT_MAX_SAMPLES, estimator.maxSamples)
+        assertEquals(BaseAccumulatedEstimator.DEFAULT_MAX_SAMPLES, estimator.maxSamples)
         assertEquals(
-            AccumulatedTriadEstimator.DEFAULT_MAX_DURATION_MILLIS,
+            BaseAccumulatedEstimator.DEFAULT_MAX_DURATION_MILLIS,
             estimator.maxDurationMillis
         )
         assertEquals(StopMode.MAX_SAMPLES_OR_DURATION, estimator.stopMode)
@@ -232,9 +232,9 @@ class AccelerometerNoiseEstimatorTest {
             estimator.sensorType
         )
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
-        assertEquals(AccumulatedTriadEstimator.DEFAULT_MAX_SAMPLES, estimator.maxSamples)
+        assertEquals(BaseAccumulatedEstimator.DEFAULT_MAX_SAMPLES, estimator.maxSamples)
         assertEquals(
-            AccumulatedTriadEstimator.DEFAULT_MAX_DURATION_MILLIS,
+            BaseAccumulatedEstimator.DEFAULT_MAX_DURATION_MILLIS,
             estimator.maxDurationMillis
         )
         assertEquals(StopMode.MAX_SAMPLES_OR_DURATION, estimator.stopMode)
@@ -333,7 +333,7 @@ class AccelerometerNoiseEstimatorTest {
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
         assertEquals(MAX_SAMPLES, estimator.maxSamples)
         assertEquals(
-            AccumulatedTriadEstimator.DEFAULT_MAX_DURATION_MILLIS,
+            BaseAccumulatedEstimator.DEFAULT_MAX_DURATION_MILLIS,
             estimator.maxDurationMillis
         )
         assertEquals(StopMode.MAX_SAMPLES_OR_DURATION, estimator.stopMode)
@@ -841,14 +841,14 @@ class AccelerometerNoiseEstimatorTest {
         estimator.setPrivateProperty("noiseEstimator", noiseEstimatorSpy)
 
         val timeIntervalEstimator: TimeIntervalEstimator? = getPrivateProperty(
-            AccumulatedTriadEstimator::class,
+            BaseAccumulatedEstimator::class,
             estimator,
             "timeIntervalEstimator"
         )
         requireNotNull(timeIntervalEstimator)
         val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
         setPrivateProperty(
-            AccumulatedTriadEstimator::class,
+            BaseAccumulatedEstimator::class,
             estimator,
             "timeIntervalEstimator",
             timeIntervalEstimatorSpy
@@ -879,14 +879,14 @@ class AccelerometerNoiseEstimatorTest {
         estimator.setPrivateProperty("noiseEstimator", noiseEstimatorSpy)
 
         val timeIntervalEstimator: TimeIntervalEstimator? = getPrivateProperty(
-            AccumulatedTriadEstimator::class,
+            BaseAccumulatedEstimator::class,
             estimator,
             "timeIntervalEstimator"
         )
         requireNotNull(timeIntervalEstimator)
         val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
         setPrivateProperty(
-            AccumulatedTriadEstimator::class,
+            BaseAccumulatedEstimator::class,
             estimator,
             "timeIntervalEstimator",
             timeIntervalEstimatorSpy
@@ -910,7 +910,7 @@ class AccelerometerNoiseEstimatorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = AccelerometerNoiseEstimator(context)
 
-        setPrivateProperty(AccumulatedTriadEstimator::class, estimator, "resultUnreliable", true)
+        setPrivateProperty(BaseAccumulatedEstimator::class, estimator, "resultUnreliable", true)
         assertTrue(estimator.resultUnreliable)
 
         assertFalse(estimator.running)
@@ -1023,7 +1023,7 @@ class AccelerometerNoiseEstimatorTest {
         val estimator = AccelerometerNoiseEstimator(context)
 
         val initialTimestampNanos1: Long? =
-            getPrivateProperty(AccumulatedTriadEstimator::class, estimator, "initialTimestampNanos")
+            getPrivateProperty(BaseAccumulatedEstimator::class, estimator, "initialTimestampNanos")
         requireNotNull(initialTimestampNanos1)
         assertEquals(0L, initialTimestampNanos1)
 
@@ -1043,7 +1043,7 @@ class AccelerometerNoiseEstimatorTest {
         measurementListener.onMeasurement(ax, ay, az, null, null, null, timestamp1, accuracy)
 
         val initialTimestampNanos2: Long? =
-            getPrivateProperty(AccumulatedTriadEstimator::class, estimator, "initialTimestampNanos")
+            getPrivateProperty(BaseAccumulatedEstimator::class, estimator, "initialTimestampNanos")
         requireNotNull(initialTimestampNanos2)
         assertEquals(timestamp1, initialTimestampNanos2)
 
@@ -1051,7 +1051,7 @@ class AccelerometerNoiseEstimatorTest {
         measurementListener.onMeasurement(ax, ay, az, null, null, null, timestamp2, accuracy)
 
         val initialTimestampNanos3: Long? =
-            getPrivateProperty(AccumulatedTriadEstimator::class, estimator, "initialTimestampNanos")
+            getPrivateProperty(BaseAccumulatedEstimator::class, estimator, "initialTimestampNanos")
         requireNotNull(initialTimestampNanos3)
         assertEquals(timestamp1, initialTimestampNanos3)
     }
@@ -1068,11 +1068,11 @@ class AccelerometerNoiseEstimatorTest {
         estimator.setPrivateProperty("noiseEstimator", noiseEstimatorSpy)
 
         val timeIntervalEstimator: TimeIntervalEstimator? =
-            getPrivateProperty(AccumulatedTriadEstimator::class, estimator, "timeIntervalEstimator")
+            getPrivateProperty(BaseAccumulatedEstimator::class, estimator, "timeIntervalEstimator")
         requireNotNull(timeIntervalEstimator)
         val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
         setPrivateProperty(
-            AccumulatedTriadEstimator::class,
+            BaseAccumulatedEstimator::class,
             estimator,
             "timeIntervalEstimator",
             timeIntervalEstimatorSpy
@@ -1108,7 +1108,7 @@ class AccelerometerNoiseEstimatorTest {
         val estimator = AccelerometerNoiseEstimator(context)
 
         val endTimestampNanos1: Long? =
-            getPrivateProperty(AccumulatedTriadEstimator::class, estimator, "endTimestampNanos")
+            getPrivateProperty(BaseAccumulatedEstimator::class, estimator, "endTimestampNanos")
         requireNotNull(endTimestampNanos1)
         assertEquals(0L, endTimestampNanos1)
 
@@ -1127,7 +1127,7 @@ class AccelerometerNoiseEstimatorTest {
         measurementListener.onMeasurement(ax, ay, az, null, null, null, timestamp, accuracy)
 
         val endTimestampNanos2: Long? =
-            getPrivateProperty(AccumulatedTriadEstimator::class, estimator, "endTimestampNanos")
+            getPrivateProperty(BaseAccumulatedEstimator::class, estimator, "endTimestampNanos")
         requireNotNull(endTimestampNanos2)
         assertEquals(timestamp, endTimestampNanos2)
     }
@@ -1486,7 +1486,7 @@ class AccelerometerNoiseEstimatorTest {
 
         val accuracyChangedListener: SensorCollector.OnAccuracyChangedListener? =
             getPrivateProperty(
-                AccumulatedTriadEstimator::class,
+                BaseAccumulatedEstimator::class,
                 estimator,
                 "accuracyChangedListener"
             )
@@ -1514,7 +1514,7 @@ class AccelerometerNoiseEstimatorTest {
 
         val accuracyChangedListener: SensorCollector.OnAccuracyChangedListener? =
             getPrivateProperty(
-                AccumulatedTriadEstimator::class,
+                BaseAccumulatedEstimator::class,
                 estimator,
                 "accuracyChangedListener"
             )
@@ -1543,7 +1543,7 @@ class AccelerometerNoiseEstimatorTest {
 
         val accuracyChangedListener: SensorCollector.OnAccuracyChangedListener? =
             getPrivateProperty(
-                AccumulatedTriadEstimator::class,
+                BaseAccumulatedEstimator::class,
                 estimator,
                 "accuracyChangedListener"
             )

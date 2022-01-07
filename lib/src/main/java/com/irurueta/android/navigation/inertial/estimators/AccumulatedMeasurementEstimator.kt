@@ -19,12 +19,8 @@ import android.content.Context
 import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
 import com.irurueta.android.navigation.inertial.collectors.SensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
-import com.irurueta.navigation.inertial.calibration.TimeIntervalEstimator
 import com.irurueta.navigation.inertial.calibration.noise.AccumulatedMeasurementNoiseEstimator
 import com.irurueta.units.Measurement
-import com.irurueta.units.Time
-import com.irurueta.units.TimeConverter
-import com.irurueta.units.TimeUnit
 
 /**
  * Estimates the accumulated mean value of a measurement.
@@ -37,86 +33,28 @@ import com.irurueta.units.TimeUnit
  *
  * @property context Android context.
  * @property sensorDelay Delay of sensor between samples.
- * @property stopMode Determines when this estimator will consider its estimation completed.
+ * @param maxSamples Maximum number of samples to take into account before completion. This is
+ * only taken into account if using either [StopMode.MAX_SAMPLES_ONLY] or
+ * [StopMode.MAX_SAMPLES_OR_DURATION].
+ * @param maxDurationMillis Maximum duration expressed in milliseconds to take into account
+ * before completion. This is only taken into account if using either
+ * [StopMode.MAX_DURATION_ONLY] or [StopMode.MAX_SAMPLES_OR_DURATION].
+ * @param stopMode Determines when this estimator will consider its estimation completed.
  * @property completedListener Listener to notify when estimation is complete.
  * @property unreliableListener Listener to notify when sensor becomes unreliable, and thus,
  * estimation must be discarded.
  */
 abstract class AccumulatedMeasurementEstimator<A : AccumulatedMeasurementEstimator<A, N, C, U, M>,
         N : AccumulatedMeasurementNoiseEstimator<U, M, *, *>, C : SensorCollector,
-        U : Enum<*>, M : Measurement<U>> private constructor(
+        U : Enum<*>, M : Measurement<U>>(
     val context: Context,
     val sensorDelay: SensorDelay = SensorDelay.FASTEST,
-    val stopMode: StopMode = StopMode.MAX_SAMPLES_OR_DURATION,
+    maxSamples: Int = DEFAULT_MAX_SAMPLES,
+    maxDurationMillis: Long = DEFAULT_MAX_DURATION_MILLIS,
+    stopMode: StopMode = StopMode.MAX_SAMPLES_OR_DURATION,
     var completedListener: OnEstimationCompletedListener<A>? = null,
     var unreliableListener: OnUnreliableListener<A>? = null
-) {
-    /**
-     * Constructor.
-     *
-     * @param context Android context.
-     * @param sensorDelay Delay of sensor between samples.
-     * @param maxSamples Maximum number of samples to take into account before completion. This is
-     * only taken into account if using either [StopMode.MAX_SAMPLES_ONLY] or
-     * [StopMode.MAX_SAMPLES_OR_DURATION].
-     * @param maxDurationMillis Maximum duration expressed in milliseconds to take into account
-     * before completion. This is only taken into account if using either
-     * [StopMode.MAX_DURATION_ONLY] or [StopMode.MAX_SAMPLES_OR_DURATION].
-     * @param stopMode Determines when this estimator will consider its estimation completed.
-     * @property completedListener Listener to notify when estimation is complete.
-     * @property unreliableListener Listener to notify when sensor becomes unreliable, and thus,
-     * estimation must be discarded.
-     * @throws IllegalArgumentException when either [maxSamples] or [maxDurationMillis] is negative.
-     */
-    @Throws(IllegalArgumentException::class)
-    constructor(
-        context: Context,
-        sensorDelay: SensorDelay = SensorDelay.FASTEST,
-        maxSamples: Int = DEFAULT_MAX_SAMPLES,
-        maxDurationMillis: Long = DEFAULT_MAX_DURATION_MILLIS,
-        stopMode: StopMode = StopMode.MAX_SAMPLES_OR_DURATION,
-        completedListener: OnEstimationCompletedListener<A>? = null,
-        unreliableListener: OnUnreliableListener<A>? = null
-    ) : this(context, sensorDelay, stopMode, completedListener, unreliableListener) {
-
-        require(maxSamples >= 0)
-        require(maxDurationMillis >= 0)
-
-        this.maxSamples = maxSamples
-        this.maxDurationMillis = maxDurationMillis
-    }
-
-    /**
-     * Contains timestamp when estimator started.
-     * This is based on [android.os.SystemClock.elapsedRealtimeNanos].
-     */
-    private var initialTimestampNanos: Long = 0
-
-    /**
-     * Contains timestamp of last measurement.
-     * This is based on [android.os.SystemClock.elapsedRealtimeNanos].
-     */
-    private var endTimestampNanos: Long = 0
-
-    /**
-     * Internal time estimator.
-     * This can be used to estimate statistics about time intervals of measurements.
-     */
-    private val timeIntervalEstimator = TimeIntervalEstimator()
-
-    /**
-     * Listener to handle changes of accuracy in gravity sensor.
-     */
-    protected val accuracyChangedListener =
-        object : SensorCollector.OnAccuracyChangedListener {
-            override fun onAccuracyChanged(accuracy: SensorAccuracy?) {
-                if (accuracy == SensorAccuracy.UNRELIABLE) {
-                    resultUnreliable = true
-                    @Suppress("UNCHECKED_CAST")
-                    unreliableListener?.onUnreliable(this@AccumulatedMeasurementEstimator as A)
-                }
-            }
-        }
+) : BaseAccumulatedEstimator(maxSamples, maxDurationMillis, stopMode) {
 
     /**
      * Internal noise estimator of magnitude measurements.
@@ -130,44 +68,9 @@ abstract class AccumulatedMeasurementEstimator<A : AccumulatedMeasurementEstimat
     protected abstract val collector: C
 
     /**
-     * Gets maximum number of samples to take into account before completion. This is
-     * only taken into account if using either [StopMode.MAX_SAMPLES_ONLY] or
-     * [StopMode.MAX_SAMPLES_OR_DURATION].
-     */
-    var maxSamples: Int = DEFAULT_MAX_SAMPLES
-        private set
-
-    /**
-     * Gets maximum duration expressed in milliseconds to take into account
-     * before completion. This is only taken into account if using either
-     * [StopMode.MAX_DURATION_ONLY] or [StopMode.MAX_SAMPLES_OR_DURATION].
-     */
-    var maxDurationMillis: Long = DEFAULT_MAX_DURATION_MILLIS
-        private set
-
-    /**
      * Indicates whether this estimator is already running.
      */
     var running = false
-        private set
-
-    /**
-     * Number of measurements that have been processed.
-     */
-    var numberOfProcessedMeasurements: Int = 0
-        private set
-
-    /**
-     * Indicates whether estimated average and time interval between measurements are available
-     * or not.
-     */
-    var resultAvailable: Boolean = false
-        private set
-
-    /**
-     * Indicates whether estimated result is unreliable or not.
-     */
-    var resultUnreliable: Boolean = false
         private set
 
     /**
@@ -288,115 +191,6 @@ abstract class AccumulatedMeasurementEstimator<A : AccumulatedMeasurementEstimat
         }
 
     /**
-     * Gets average time interval between measurements expressed in seconds (s).
-     * This is only available when estimation completes successfully and [resultAvailable] is true.
-     */
-    val averageTimeInterval
-        get() = if (resultAvailable) {
-            timeIntervalEstimator.averageTimeInterval
-        } else {
-            null
-        }
-
-    /**
-     * Gets average time interval between measurements.
-     * This is only available when estimation completes successfully and [resultAvailable] is true.
-     */
-    val averageTimeIntervalAsTime
-        get() = if (resultAvailable) {
-            timeIntervalEstimator.averageTimeIntervalAsTime
-        } else {
-            null
-        }
-
-    /**
-     * Gets average time interval between measurements.
-     * This is only available when estimation completes successfully and [resultAvailable] is true.
-     *
-     * @param result instance where result will be stored.
-     * @return true if result is available, false otherwise.
-     */
-    fun getAverageTimeIntervalAsTime(result: Time): Boolean {
-        return if (resultAvailable) {
-            timeIntervalEstimator.getAverageTimeIntervalAsTime(result)
-            true
-        } else {
-            false
-        }
-    }
-
-    /**
-     * Gets estimated variance of time interval between measurements expressed in squared
-     * seconds (s^2).
-     * This is only available when estimation completes successfully and [resultAvailable] is true.
-     */
-    val timeIntervalVariance
-        get() = if (resultAvailable) {
-            timeIntervalEstimator.timeIntervalVariance
-        } else {
-            null
-        }
-
-    /**
-     * Gets estimated standard deviation of time interval between measurements expressed in
-     * seconds (s).
-     * This is only available when estimation completes successfully and [resultAvailable] is true.
-     */
-    val timeIntervalStandardDeviation
-        get() = if (resultAvailable) {
-            timeIntervalEstimator.timeIntervalStandardDeviation
-        } else {
-            null
-        }
-
-    /**
-     * Gets estimated standard deviation of time interval between measurements.
-     * This is only available when estimation completes successfully and [resultAvailable] is true.
-     */
-    val timeIntervalStandardDeviationAsTime
-        get() = if (resultAvailable) {
-            timeIntervalEstimator.timeIntervalStandardDeviationAsTime
-        } else {
-            null
-        }
-
-    /**
-     * Gets estimated standard deviation of time interval between measurements.
-     * This is only available when estimation completes successfully and [resultAvailable] is true.
-     */
-    fun getTimeIntervalStandardDeviationAsTime(result: Time): Boolean {
-        return if (resultAvailable) {
-            timeIntervalEstimator.getTimeIntervalStandardDeviationAsTime(result)
-            true
-        } else {
-            false
-        }
-    }
-
-    /**
-     * Gets amount of elapsed time to compute norm estimation expressed in nanoseconds (ns),
-     * either if computation succeeds or not.
-     */
-    val elapsedTimeNanos
-        get() = endTimestampNanos - initialTimestampNanos
-
-    /**
-     * Gets amount of elapsed time to compute norm, either if computation succeeds or not.
-     */
-    val elapsedTime
-        get() = Time(elapsedTimeNanos.toDouble(), TimeUnit.NANOSECOND)
-
-    /**
-     * Gets amount of time elapsed, either if computation succeeds or not.
-     *
-     * @param result instance where result will be stored.
-     */
-    fun getElapsedTime(result: Time) {
-        result.unit = TimeUnit.NANOSECOND
-        result.value = elapsedTimeNanos.toDouble()
-    }
-
-    /**
      * Starts collection of sensor norm measurements.
      *
      * @throws IllegalStateException if estimator is already running.
@@ -420,6 +214,14 @@ abstract class AccumulatedMeasurementEstimator<A : AccumulatedMeasurementEstimat
     }
 
     /**
+     * Notifies unreliable listener.
+     */
+    override fun notifyUnreliableListener() {
+        @Suppress("UNCHECKED_CAST")
+        unreliableListener?.onUnreliable(this as A)
+    }
+
+    /**
      * Handles a magnitude measurement
      *
      * @param value value of measurement expressed in sensor unit.
@@ -439,11 +241,7 @@ abstract class AccumulatedMeasurementEstimator<A : AccumulatedMeasurementEstimat
 
         noiseEstimator.addMeasurement(value)
 
-        val diff = timestamp - initialTimestampNanos
-        val diffSeconds = TimeConverter.nanosecondToSecond(diff.toDouble())
-        timeIntervalEstimator.addTimestamp(diffSeconds)
-
-        endTimestampNanos = timestamp
+        handleTimestamp(timestamp)
         numberOfProcessedMeasurements++
 
         if (isComplete()) {
@@ -460,66 +258,13 @@ abstract class AccumulatedMeasurementEstimator<A : AccumulatedMeasurementEstimat
     }
 
     /**
-     * Indicates whether estimation is complete.
-     *
-     * @return true if estimation is complete, false otherwise.
-     */
-    private fun isComplete(): Boolean {
-        return when (stopMode) {
-            StopMode.MAX_DURATION_ONLY -> {
-                val elapsedMillis = (elapsedTimeNanos / NANOS_TO_MILLIS)
-                elapsedMillis >= maxDurationMillis
-            }
-            StopMode.MAX_SAMPLES_ONLY -> {
-                numberOfProcessedMeasurements >= maxSamples
-            }
-            StopMode.MAX_SAMPLES_OR_DURATION -> {
-                val elapsedMillis = (elapsedTimeNanos / NANOS_TO_MILLIS)
-                (elapsedMillis >= maxDurationMillis
-                        || numberOfProcessedMeasurements >= maxSamples)
-            }
-        }
-    }
-
-    /**
      * Resets internal estimators.
      */
-    private fun reset() {
+    override fun reset() {
         noiseEstimator.reset()
         noiseEstimator.timeInterval = 0.0
 
-        timeIntervalEstimator.reset()
-        if (stopMode == StopMode.MAX_DURATION_ONLY) {
-            timeIntervalEstimator.totalSamples = Integer.MAX_VALUE
-        } else {
-            timeIntervalEstimator.totalSamples = maxSamples
-        }
-
-        initialTimestampNanos = 0
-        endTimestampNanos = 0
-        numberOfProcessedMeasurements = 0
-        resultAvailable = false
-        resultUnreliable = false
-    }
-
-    companion object {
-        /**
-         * Most sensors at maximum speed work at 50 Hz or 100 Hz, so using this value should require
-         * approximately between 10 to 20 seconds to complete.
-         * This is hardware dependant, since different sensors might achieve different maximum
-         * sampling rates.
-         */
-        const val DEFAULT_MAX_SAMPLES = 1000
-
-        /**
-         * Maximum duration to keep sampling measurements until estimation is completed.
-         */
-        const val DEFAULT_MAX_DURATION_MILLIS = 20000L
-
-        /**
-         * Constant to convert nanoseconds to milliseconds.
-         */
-        private const val NANOS_TO_MILLIS = 1000000L
+        super.reset()
     }
 
     /**
