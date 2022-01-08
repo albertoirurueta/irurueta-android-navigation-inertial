@@ -58,6 +58,7 @@ class GyroscopeNoiseEstimatorTest {
         completed = 0
     }
 
+    @RequiresDevice
     @Test
     fun startAndStop_estimatesAccelerometerNoise() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
