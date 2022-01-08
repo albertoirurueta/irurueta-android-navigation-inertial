@@ -823,14 +823,21 @@ class AccelerometerNormEstimatorTest {
         val ay = gravity.gy.toFloat()
         val az = gravity.gz.toFloat()
         val a = sqrt(ax.toDouble().pow(2.0) + ay.toDouble().pow(2.0) + az.toDouble().pow(2.0))
-        val timestamp = SystemClock.elapsedRealtimeNanos()
+        val timestamp1 = SystemClock.elapsedRealtimeNanos()
         val accuracy = SensorAccuracy.MEDIUM
 
         // set measurement
-        measurementListener.onMeasurement(ax, ay, az, null, null, null, timestamp, accuracy)
+        measurementListener.onMeasurement(ax, ay, az, null, null, null, timestamp1, accuracy)
 
         verify(exactly = 1) { noiseEstimatorSpy.addMeasurement(a) }
-        verify(exactly = 1) { timeIntervalEstimatorSpy.addTimestamp(0.0) }
+        verify(exactly = 0) { timeIntervalEstimatorSpy.addTimestamp(any<Double>()) }
+
+        // set another measurement
+        val timestamp2 = timestamp1 + TIME_INTERVAL_MILLIS * MILLIS_TO_NANOS
+        measurementListener.onMeasurement(ax, ay, az, null, null, null, timestamp2, accuracy)
+
+        verify(exactly = 2) { noiseEstimatorSpy.addMeasurement(a) }
+        verify(exactly = 1) { timeIntervalEstimatorSpy.addTimestamp(any<Double>()) }
     }
 
     @Test
@@ -1045,12 +1052,18 @@ class AccelerometerNormEstimatorTest {
         assertEquals(1, estimator.numberOfProcessedMeasurements)
         assertFalse(estimator.resultAvailable)
 
-        // add another measurement after max duration
-        val timestamp2 = timestamp1 + maxDurationMillis * MILLIS_TO_NANOS
-
+        val timestamp2 = timestamp1 + TIME_INTERVAL_MILLIS * MILLIS_TO_NANOS
         measurementListener.onMeasurement(ax, ay, az, null, null, null, timestamp2, accuracy)
 
         assertEquals(2, estimator.numberOfProcessedMeasurements)
+        assertFalse(estimator.resultAvailable)
+
+        // add another measurement after max duration
+        val timestamp3 = timestamp1 + maxDurationMillis * MILLIS_TO_NANOS
+
+        measurementListener.onMeasurement(ax, ay, az, null, null, null, timestamp3, accuracy)
+
+        assertEquals(3, estimator.numberOfProcessedMeasurements)
         assertTrue(estimator.resultAvailable)
 
         // check that after completion, collector was stopped
@@ -1101,12 +1114,18 @@ class AccelerometerNormEstimatorTest {
         assertEquals(1, estimator.numberOfProcessedMeasurements)
         assertFalse(estimator.resultAvailable)
 
-        // add another measurement after max duration
-        val timestamp2 = timestamp1 + maxDurationMillis * MILLIS_TO_NANOS
-
+        val timestamp2 = timestamp1 + TIME_INTERVAL_MILLIS * MILLIS_TO_NANOS
         measurementListener.onMeasurement(ax, ay, az, null, null, null, timestamp2, accuracy)
 
         assertEquals(2, estimator.numberOfProcessedMeasurements)
+        assertFalse(estimator.resultAvailable)
+
+        // add another measurement after max duration
+        val timestamp3 = timestamp1 + maxDurationMillis * MILLIS_TO_NANOS
+
+        measurementListener.onMeasurement(ax, ay, az, null, null, null, timestamp3, accuracy)
+
+        assertEquals(3, estimator.numberOfProcessedMeasurements)
         assertTrue(estimator.resultAvailable)
 
         // check that after completion, collector was stopped
@@ -1153,12 +1172,18 @@ class AccelerometerNormEstimatorTest {
         assertEquals(1, estimator.numberOfProcessedMeasurements)
         assertFalse(estimator.resultAvailable)
 
-        // add another measurement after max duration
-        val timestamp2 = timestamp1 + maxDurationMillis * MILLIS_TO_NANOS
-
+        val timestamp2 = timestamp1 + TIME_INTERVAL_MILLIS * MILLIS_TO_NANOS
         measurementListener.onMeasurement(ax, ay, az, null, null, null, timestamp2, accuracy)
 
         assertEquals(2, estimator.numberOfProcessedMeasurements)
+        assertFalse(estimator.resultAvailable)
+
+        // add another measurement after max duration
+        val timestamp3 = timestamp1 + maxDurationMillis * MILLIS_TO_NANOS
+
+        measurementListener.onMeasurement(ax, ay, az, null, null, null, timestamp3, accuracy)
+
+        assertEquals(3, estimator.numberOfProcessedMeasurements)
         assertTrue(estimator.resultAvailable)
 
         // check that after completion, collector was stopped
@@ -1209,12 +1234,18 @@ class AccelerometerNormEstimatorTest {
         assertEquals(1, estimator.numberOfProcessedMeasurements)
         assertFalse(estimator.resultAvailable)
 
-        // add another measurement after max duration
-        val timestamp2 = timestamp1 + maxDurationMillis * MILLIS_TO_NANOS
-
+        val timestamp2 = timestamp1 + TIME_INTERVAL_MILLIS * MILLIS_TO_NANOS
         measurementListener.onMeasurement(ax, ay, az, null, null, null, timestamp2, accuracy)
 
         assertEquals(2, estimator.numberOfProcessedMeasurements)
+        assertFalse(estimator.resultAvailable)
+
+        // add another measurement after max duration
+        val timestamp3 = timestamp1 + maxDurationMillis * MILLIS_TO_NANOS
+
+        measurementListener.onMeasurement(ax, ay, az, null, null, null, timestamp3, accuracy)
+
+        assertEquals(3, estimator.numberOfProcessedMeasurements)
         assertTrue(estimator.resultAvailable)
 
         // check that after completion, collector was stopped
@@ -1318,6 +1349,7 @@ class AccelerometerNormEstimatorTest {
         assertTrue(estimator.getAverageNormAsMeasurement(averageNorm2))
         assertEquals(averageNorm1, averageNorm2)
         assertEquals(averageNorm, averageNorm1.value.toDouble(), 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, averageNorm1.unit)
 
         val normVariance = estimator.normVariance
         requireNotNull(normVariance)
@@ -1337,6 +1369,7 @@ class AccelerometerNormEstimatorTest {
             normStandardDeviation1.value.toDouble(),
             0.0
         )
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, normStandardDeviation1.unit)
 
         val psd = estimator.psd
         requireNotNull(psd)
@@ -1355,6 +1388,7 @@ class AccelerometerNormEstimatorTest {
         assertTrue(estimator.getAverageTimeIntervalAsTime(averageTimeInterval2))
         assertEquals(averageTimeInterval1, averageTimeInterval2)
         assertEquals(averageTimeInterval, averageTimeInterval1.value.toDouble(), 0.0)
+        assertEquals(TimeUnit.SECOND, averageTimeInterval1.unit)
 
         val timeIntervalVariance = estimator.timeIntervalVariance
         requireNotNull(timeIntervalVariance)
@@ -1373,6 +1407,7 @@ class AccelerometerNormEstimatorTest {
             timeIntervalStandardDeviation1.value.toDouble(),
             0.0
         )
+        assertEquals(TimeUnit.SECOND, timeIntervalStandardDeviation1.unit)
 
         val elapsedTimeNanos = estimator.elapsedTimeNanos
         assertTrue(elapsedTimeNanos > 0L)
@@ -1399,6 +1434,7 @@ class AccelerometerNormEstimatorTest {
         assertTrue(estimator.getAverageNormAsMeasurement(averageNorm2))
         assertEquals(averageNorm1, averageNorm2)
         assertEquals(averageNorm, averageNorm1.value.toDouble(), 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, averageNorm1.unit)
 
         val normVariance = estimator.normVariance
         requireNotNull(normVariance)
@@ -1418,6 +1454,7 @@ class AccelerometerNormEstimatorTest {
             normStandardDeviation1.value.toDouble(),
             0.0
         )
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, normStandardDeviation1.unit)
 
         val psd = estimator.psd
         requireNotNull(psd)
@@ -1436,6 +1473,7 @@ class AccelerometerNormEstimatorTest {
         assertTrue(estimator.getAverageTimeIntervalAsTime(averageTimeInterval2))
         assertEquals(averageTimeInterval1, averageTimeInterval2)
         assertEquals(averageTimeInterval, averageTimeInterval1.value.toDouble(), 0.0)
+        assertEquals(TimeUnit.SECOND, averageTimeInterval1.unit)
 
         val timeIntervalVariance = estimator.timeIntervalVariance
         requireNotNull(timeIntervalVariance)
@@ -1454,6 +1492,7 @@ class AccelerometerNormEstimatorTest {
             timeIntervalStandardDeviation1.value.toDouble(),
             0.0
         )
+        assertEquals(TimeUnit.SECOND, timeIntervalStandardDeviation1.unit)
 
         val elapsedTimeNanos = estimator.elapsedTimeNanos
         assertTrue(elapsedTimeNanos > 0L)
@@ -1500,6 +1539,8 @@ class AccelerometerNormEstimatorTest {
 
         const val MIN_HEIGHT = -50.0
         const val MAX_HEIGHT = 400.0
+
+        const val TIME_INTERVAL_MILLIS = 20L
 
         const val MILLIS_TO_NANOS = 1000000
 

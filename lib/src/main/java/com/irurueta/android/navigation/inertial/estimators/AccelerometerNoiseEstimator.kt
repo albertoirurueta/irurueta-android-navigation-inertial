@@ -26,13 +26,13 @@ import com.irurueta.units.*
 /**
  * Estimates accelerometer noise.
  * This estimator takes a given number of accelerometer measurements during a given duration of time
- * to estimate accelerometer average, standard deviation and variance, as well as average time
- * interval between measurements.
+ * to estimate accelerometer measurements average, standard deviation and variance, as well as
+ * average time interval between measurements.
  * To be able to measure accelerometer noise, device should remain static so that average
  * accelerometer measurements are constant and their standard deviations reflect actual sensor
  * noise.
  *
- * @param context Android context
+ * @param context Android context.
  * @property sensorType One of the supported accelerometer sensor types.
  * @param sensorDelay Delay of sensor between samples.
  * @param maxSamples Maximum number of samples to take into account before completion. This is
@@ -65,7 +65,7 @@ class AccelerometerNoiseEstimator(
 ) {
     /**
      * Internal noise estimator of accelerometer measurements.
-     * This can be used to estimate statistics abour accelerometer noise measurements.
+     * This can be used to estimate statistics about accelerometer noise measurements.
      */
     override val noiseEstimator = AccumulatedAccelerationTriadNoiseEstimator()
 

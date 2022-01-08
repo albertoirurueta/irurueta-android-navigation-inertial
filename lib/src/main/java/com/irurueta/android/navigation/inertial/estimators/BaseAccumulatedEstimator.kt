@@ -42,9 +42,10 @@ abstract class BaseAccumulatedEstimator private constructor(
      * [StopMode.MAX_DURATION_ONLY] or [StopMode.MAX_SAMPLES_OR_DURATION].
      * @param stopMode Determines when this estimator will consider its estimation completed.
      */
-    constructor(maxSamples: Int = DEFAULT_MAX_SAMPLES,
-                maxDurationMillis: Long = DEFAULT_MAX_DURATION_MILLIS,
-                stopMode: StopMode = StopMode.MAX_SAMPLES_OR_DURATION,
+    constructor(
+        maxSamples: Int = DEFAULT_MAX_SAMPLES,
+        maxDurationMillis: Long = DEFAULT_MAX_DURATION_MILLIS,
+        stopMode: StopMode = StopMode.MAX_SAMPLES_OR_DURATION,
     ) : this(stopMode) {
 
         require(maxSamples >= 0)
@@ -234,9 +235,11 @@ abstract class BaseAccumulatedEstimator private constructor(
      * Handles new timestamp.
      */
     protected fun handleTimestamp(timestamp: Long) {
-        val diff = timestamp - initialTimestampNanos
-        val diffSeconds = TimeConverter.nanosecondToSecond(diff.toDouble())
-        timeIntervalEstimator.addTimestamp(diffSeconds)
+        if (numberOfProcessedMeasurements > 0) {
+            val diff = timestamp - initialTimestampNanos
+            val diffSeconds = TimeConverter.nanosecondToSecond(diff.toDouble())
+            timeIntervalEstimator.addTimestamp(diffSeconds)
+        }
 
         endTimestampNanos = timestamp
     }

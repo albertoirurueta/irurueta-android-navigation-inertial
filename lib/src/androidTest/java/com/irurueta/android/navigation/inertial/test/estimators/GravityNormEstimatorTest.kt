@@ -103,6 +103,7 @@ class GravityNormEstimatorTest {
         estimator.getAverageNormAsMeasurement(averageNorm2)
         assertEquals(averageNorm1, averageNorm2)
         assertEquals(averageNorm, averageNorm1.value.toDouble(), 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, averageNorm1.unit)
 
         val normVariance = estimator.normVariance
         requireNotNull(normVariance)
@@ -121,6 +122,7 @@ class GravityNormEstimatorTest {
             normStandardDeviation1.value.toDouble(),
             0.0
         )
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, normStandardDeviation1.unit)
 
         val psd = estimator.psd
         requireNotNull(psd)
@@ -139,6 +141,7 @@ class GravityNormEstimatorTest {
         estimator.getAverageTimeIntervalAsTime(averageTimeInterval2)
         assertEquals(averageTimeInterval1, averageTimeInterval2)
         assertEquals(averageTimeInterval, averageTimeInterval1.value.toDouble(), 0.0)
+        assertEquals(TimeUnit.SECOND, averageTimeInterval1.unit)
 
         val timeIntervalVariance = estimator.timeIntervalVariance
         requireNotNull(timeIntervalVariance)
@@ -157,6 +160,7 @@ class GravityNormEstimatorTest {
             timeIntervalStandardDeviation1.value.toDouble(),
             0.0
         )
+        assertEquals(TimeUnit.SECOND, timeIntervalStandardDeviation1.unit)
 
         val elapsedTime = estimator.elapsedTimeNanos
         assertTrue(elapsedTime > 0L)
@@ -165,6 +169,7 @@ class GravityNormEstimatorTest {
         estimator.getElapsedTime(elapsedTime2)
         assertEquals(elapsedTime1, elapsedTime2)
         assertEquals(elapsedTime.toDouble(), elapsedTime1.value.toDouble(), 0.0)
+        assertEquals(TimeUnit.NANOSECOND, elapsedTime1.unit)
     }
 
     @RequiresDevice
