@@ -13,28 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.irurueta.android.navigation.inertial
+package com.irurueta.android.navigation.inertial.estimators
 
 import android.content.Context
 import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
-import com.irurueta.android.navigation.inertial.estimators.AccumulatedTriadEstimator
-import com.irurueta.android.navigation.inertial.estimators.StopMode
-import com.irurueta.navigation.inertial.calibration.MagneticFluxDensityTriad
-import com.irurueta.navigation.inertial.calibration.noise.AccumulatedMagneticFluxDensityTriadNoiseEstimator
+import com.irurueta.navigation.inertial.calibration.noise.AccumulatedMagneticFluxDensityMeasurementNoiseEstimator
 import com.irurueta.units.MagneticFluxDensity
 import com.irurueta.units.MagneticFluxDensityConverter
 import com.irurueta.units.MagneticFluxDensityUnit
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 /**
- * Estimates magnetometer noise.
+ * Estimates magnetometer measurement norm.
  * This estimator takes a given number of magnetometer measurements during a given duration of time
- * to estimate magnetometer measurements average, standard deviation and variance, as well as
- * average time interval between measurements.
- * To be able to measure magnetometer noise, device should remain static so that average
- * magnetometer measurements are constant and their standard deviation reflect actual sensor noise,
- * otherwise only norm values will be reliable.
+ * to estimate magnetometer norm average, standard deviation and variance, as well as average time
+ * interval between measurements.
+ * For best accuracy of estimated results, device should remain static while data is being
+ * collected. In such case, average magnetometer norm should match expected Earth magnetic flux
+ * density magnitude at current location and timestamp.
  *
  * @param context Android context.
  * @property sensorType One of the supported magnetometer sensor types.
@@ -51,7 +50,7 @@ import com.irurueta.units.MagneticFluxDensityUnit
  * estimation must be discarded.
  * @throws IllegalArgumentException when either [maxSamples] or [maxDurationMillis] is negative.
  */
-class MagnetometerNoiseEstimator(
+class MagnetometerNormEstimator(
     context: Context,
     val sensorType: MagnetometerSensorCollector.SensorType =
         MagnetometerSensorCollector.SensorType.MAGNETOMETER,
@@ -59,11 +58,11 @@ class MagnetometerNoiseEstimator(
     maxSamples: Int = DEFAULT_MAX_SAMPLES,
     maxDurationMillis: Long = DEFAULT_MAX_DURATION_MILLIS,
     stopMode: StopMode = StopMode.MAX_SAMPLES_OR_DURATION,
-    completedListener: OnEstimationCompletedListener<MagnetometerNoiseEstimator>? = null,
-    unreliableListener: OnUnreliableListener<MagnetometerNoiseEstimator>? = null
-) : AccumulatedTriadEstimator<MagnetometerNoiseEstimator,
-        AccumulatedMagneticFluxDensityTriadNoiseEstimator, MagnetometerSensorCollector,
-        MagneticFluxDensityUnit, MagneticFluxDensity, MagneticFluxDensityTriad>(
+    completedListener: OnEstimationCompletedListener<MagnetometerNormEstimator>? = null,
+    unreliableListener: OnUnreliableListener<MagnetometerNormEstimator>? = null
+) : AccumulatedMeasurementEstimator<MagnetometerNormEstimator,
+        AccumulatedMagneticFluxDensityMeasurementNoiseEstimator, MagnetometerSensorCollector,
+        MagneticFluxDensityUnit, MagneticFluxDensity>(
     context,
     sensorDelay,
     maxSamples,
@@ -72,12 +71,6 @@ class MagnetometerNoiseEstimator(
     completedListener,
     unreliableListener
 ) {
-    /**
-     * Internal noise estimator of magnetometer measurements.
-     * This can be used to estimate statistics about magnetometer noise measurements.
-     */
-    override val noiseEstimator = AccumulatedMagneticFluxDensityTriadNoiseEstimator()
-
     /**
      * Listener to handle magnetometer measurements.
      */
@@ -92,25 +85,22 @@ class MagnetometerNoiseEstimator(
             timestamp: Long,
             accuracy: SensorAccuracy?
         ) {
-            val bxT = MagneticFluxDensityConverter.convert(
-                bx.toDouble(),
+            val norm =
+                sqrt(bx.toDouble().pow(2.0) + by.toDouble().pow(2.0) + bz.toDouble().pow(2.0))
+            val normT = MagneticFluxDensityConverter.convert(
+                norm,
                 MagneticFluxDensityUnit.MICROTESLA,
                 MagneticFluxDensityUnit.TESLA
             )
-            val byT = MagneticFluxDensityConverter.convert(
-                by.toDouble(),
-                MagneticFluxDensityUnit.MICROTESLA,
-                MagneticFluxDensityUnit.TESLA
-            )
-            val bzT = MagneticFluxDensityConverter.convert(
-                bz.toDouble(),
-                MagneticFluxDensityUnit.MICROTESLA,
-                MagneticFluxDensityUnit.TESLA
-            )
-
-            handleMeasurement(bxT, byT, bzT, timestamp, accuracy)
+            handleMeasurement(normT, timestamp, accuracy)
         }
     }
+
+    /**
+     * Internal noise estimator of magnetometer magnitude measurements.
+     * This can be used to estimate statistics about a given measurement magnitude.
+     */
+    override val noiseEstimator = AccumulatedMagneticFluxDensityMeasurementNoiseEstimator()
 
     /**
      * Collector for magnetometer measurements.

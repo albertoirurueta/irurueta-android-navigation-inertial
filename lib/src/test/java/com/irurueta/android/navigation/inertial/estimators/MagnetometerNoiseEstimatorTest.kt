@@ -18,7 +18,6 @@ package com.irurueta.android.navigation.inertial.estimators
 import android.content.Context
 import android.os.SystemClock
 import androidx.test.core.app.ApplicationProvider
-import com.irurueta.android.navigation.inertial.MagnetometerNoiseEstimator
 import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
 import com.irurueta.android.navigation.inertial.collectors.SensorCollector
