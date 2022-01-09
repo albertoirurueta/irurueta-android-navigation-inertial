@@ -30,9 +30,23 @@ import com.irurueta.units.AngularSpeedUnit
  * to estimate gyroscope measurements average, standard deviation and variance, as well as average
  * time interval between measurements.
  * To be able to measure gyroscope noise, device should remain static so that average gyroscope
- * measurements are constant and their standard deviations reflect actual sensor noise.
+ * measurements are constant and their standard deviations reflect actual sensor noise, otherwise
+ * only norm values will be reliable.
  *
  * @param context Android context.
+ * @property sensorType One of the supported gyroscope sensor types.
+ * @param sensorDelay Delay of sensor between samples.
+ * @param maxSamples Maximum number of samples to take into account before completion. This is
+ * only taken into account if using either [StopMode.MAX_SAMPLES_ONLY] or
+ * [StopMode.MAX_SAMPLES_OR_DURATION].
+ * @param maxDurationMillis Maximum duration expressed in milliseconds to take into account
+ * before completion. This is only taken into account if using either
+ * [StopMode.MAX_DURATION_ONLY] or [StopMode.MAX_SAMPLES_OR_DURATION].
+ * @param stopMode Determines when this estimator will consider its estimation completed.
+ * @param completedListener Listener to notify when estimation is complete.
+ * @param unreliableListener Listener to notify when sensor becomes unreliable, and thus,
+ * estimation must be discarded.
+ * @throws IllegalArgumentException when either [maxSamples] or [maxDurationMillis] is negative.
  */
 class GyroscopeNoiseEstimator(
     context: Context,

@@ -1,0 +1,272 @@
+/*
+ * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.irurueta.android.navigation.inertial.test.estimators
+
+import android.location.Location
+import android.util.Log
+import androidx.test.core.app.ActivityScenario
+import androidx.test.filters.RequiresDevice
+import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.rule.GrantPermissionRule
+import com.irurueta.android.navigation.inertial.LocationService
+import com.irurueta.android.navigation.inertial.MagnetometerNoiseEstimator
+import com.irurueta.android.navigation.inertial.ThreadSyncHelper
+import com.irurueta.android.navigation.inertial.estimators.AccumulatedTriadEstimator
+import com.irurueta.android.navigation.inertial.test.LocationActivity
+import com.irurueta.android.navigation.inertial.toNEDPosition
+import com.irurueta.navigation.frames.*
+import com.irurueta.navigation.frames.converters.NEDtoECEFPositionVelocityConverter
+import com.irurueta.navigation.inertial.estimators.BodyMagneticFluxDensityEstimator
+import com.irurueta.navigation.inertial.wmm.WMMEarthMagneticFluxDensityEstimator
+import com.irurueta.units.*
+import io.mockk.spyk
+import org.junit.Assert.*
+import org.junit.Before
+import org.junit.Rule
+import org.junit.Test
+import java.util.*
+
+class MagnetometerNoiseEstimatorTest {
+
+    @get:Rule
+    val permissionRule: GrantPermissionRule = GrantPermissionRule.grant(
+        android.Manifest.permission.ACCESS_COARSE_LOCATION,
+        android.Manifest.permission.ACCESS_FINE_LOCATION,
+        android.Manifest.permission.ACCESS_BACKGROUND_LOCATION
+    )
+
+    private val syncHelper = ThreadSyncHelper()
+
+    @Volatile
+    private var completed = 0
+
+    private var location: Location? = null
+
+    @Before
+    fun setUp() {
+        completed = 0
+    }
+
+    @RequiresDevice
+    @Test
+    fun startAndStop_estimatesAccelerometerNoise() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val estimator = MagnetometerNoiseEstimator(context,
+            completedListener = object : AccumulatedTriadEstimator
+            .OnEstimationCompletedListener<MagnetometerNoiseEstimator> {
+                override fun onEstimationCompleted(estimator: MagnetometerNoiseEstimator) {
+                    assertFalse(estimator.running)
+
+                    syncHelper.notifyAll { completed++ }
+                }
+            },
+            unreliableListener = object :
+                AccumulatedTriadEstimator.OnUnreliableListener<MagnetometerNoiseEstimator> {
+                override fun onUnreliable(estimator: MagnetometerNoiseEstimator) {
+                    Log.d("MagnetometerNoiseEstimatorTest", "Sensor is unreliable")
+                    assertFalse(estimator.running)
+                }
+            }
+        )
+
+        estimator.start()
+
+        syncHelper.waitOnCondition({ completed < 1 }, timeout = 2L * estimator.maxDurationMillis)
+
+        // obtain results
+        assertFalse(estimator.running)
+        assertTrue(estimator.numberOfProcessedMeasurements > 0)
+        assertTrue(estimator.resultAvailable)
+
+        val averageNorm = estimator.averageNorm
+        requireNotNull(averageNorm)
+        val averageNorm1 = estimator.averageNormAsMeasurement
+        requireNotNull(averageNorm1)
+        val averageNorm2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        estimator.getAverageNormAsMeasurement(averageNorm2)
+        assertEquals(averageNorm1, averageNorm2)
+        assertEquals(averageNorm, averageNorm1.value.toDouble(), 0.0)
+        assertEquals(MagneticFluxDensityUnit.TESLA, averageNorm1.unit)
+
+        val standardDeviationNorm = estimator.standardDeviationNorm
+        requireNotNull(standardDeviationNorm)
+        assertTrue(standardDeviationNorm > 0.0)
+        val standardDeviationNorm1 = estimator.standardDeviationNormAsMeasurement
+        requireNotNull(standardDeviationNorm1)
+        val standardDeviationNorm2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        estimator.getStandardDeviationNormAsMeasurement(standardDeviationNorm2)
+        assertEquals(standardDeviationNorm1, standardDeviationNorm2)
+        assertEquals(standardDeviationNorm, standardDeviationNorm1.value.toDouble(), 0.0)
+        assertEquals(MagneticFluxDensityUnit.TESLA, standardDeviationNorm1.unit)
+
+        val averageStandardDeviation = estimator.averageStandardDeviation
+        requireNotNull(averageStandardDeviation)
+        assertTrue(averageStandardDeviation > 0.0)
+        val averageStandardDeviation1 = estimator.averageStandardDeviationAsMeasurement
+        requireNotNull(averageStandardDeviation1)
+        val averageStandardDeviation2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        estimator.getAverageStandardDeviationAsMeasurement(averageStandardDeviation2)
+        assertEquals(averageStandardDeviation1, averageStandardDeviation2)
+        assertEquals(
+            averageStandardDeviation,
+            averageStandardDeviation1.value.toDouble(),
+            0.0
+        )
+        assertEquals(
+            MagneticFluxDensityUnit.TESLA,
+            averageStandardDeviation1.unit
+        )
+
+        val averageNoisePsd = estimator.averageNoisePsd
+        requireNotNull(averageNoisePsd)
+        assertTrue(averageNoisePsd > 0.0)
+
+        val noiseRootPsdNorm = estimator.noiseRootPsdNorm
+        requireNotNull(noiseRootPsdNorm)
+        assertTrue(noiseRootPsdNorm > 0.0)
+
+        val averageTimeInterval = estimator.averageTimeInterval
+        requireNotNull(averageTimeInterval)
+        assertTrue(averageTimeInterval > 0.0)
+        val averageTimeInterval1 = estimator.averageTimeIntervalAsTime
+        requireNotNull(averageTimeInterval1)
+        val averageTimeInterval2 = Time(0.0, TimeUnit.SECOND)
+        estimator.getAverageTimeIntervalAsTime(averageTimeInterval2)
+        assertEquals(averageTimeInterval1, averageTimeInterval2)
+        assertEquals(averageTimeInterval, averageTimeInterval1.value.toDouble(), 0.0)
+        assertEquals(TimeUnit.SECOND, averageTimeInterval1.unit)
+
+        val timeIntervalVariance = estimator.timeIntervalVariance
+        requireNotNull(timeIntervalVariance)
+        assertTrue(timeIntervalVariance > 0.0)
+
+        val timeIntervalStandardDeviation = estimator.timeIntervalStandardDeviation
+        requireNotNull(timeIntervalStandardDeviation)
+        assertTrue(timeIntervalStandardDeviation > 0.0)
+        val timeIntervalStandardDeviation1 = estimator.timeIntervalStandardDeviationAsTime
+        requireNotNull(timeIntervalStandardDeviation1)
+        val timeIntervalStandardDeviation2 = Time(0.0, TimeUnit.SECOND)
+        estimator.getTimeIntervalStandardDeviationAsTime(timeIntervalStandardDeviation2)
+        assertEquals(timeIntervalStandardDeviation1, timeIntervalStandardDeviation2)
+        assertEquals(
+            timeIntervalStandardDeviation,
+            timeIntervalStandardDeviation1.value.toDouble(),
+            0.0
+        )
+        assertEquals(TimeUnit.SECOND, timeIntervalStandardDeviation1.unit)
+
+        val elapsedTime = estimator.elapsedTimeNanos
+        assertTrue(elapsedTime > 0L)
+        val elapsedTime1 = estimator.elapsedTime
+        val elapsedTime2 = Time(0.0, TimeUnit.NANOSECOND)
+        estimator.getElapsedTime(elapsedTime2)
+        assertEquals(elapsedTime1, elapsedTime2)
+        assertEquals(elapsedTime.toDouble(), elapsedTime1.value.toDouble(), 0.0)
+    }
+
+    @RequiresDevice
+    @Test
+    fun estimatedResult_whenDeviceStatic_returnsValueCloseToExpectedGravity() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val estimator = MagnetometerNoiseEstimator(context,
+            completedListener = object : AccumulatedTriadEstimator
+            .OnEstimationCompletedListener<MagnetometerNoiseEstimator> {
+                override fun onEstimationCompleted(estimator: MagnetometerNoiseEstimator) {
+                    assertFalse(estimator.running)
+
+                    syncHelper.notifyAll { completed++ }
+                }
+            },
+            unreliableListener = object :
+                AccumulatedTriadEstimator.OnUnreliableListener<MagnetometerNoiseEstimator> {
+                override fun onUnreliable(estimator: MagnetometerNoiseEstimator) {
+                    Log.d("MagnetometerNoiseEstimatorTest", "Sensor is unreliable")
+                    assertFalse(estimator.running)
+                }
+            }
+        )
+
+        estimator.start()
+
+        syncHelper.waitOnCondition({ completed < 1 }, timeout = 2L * estimator.maxDurationMillis)
+
+        // obtain results
+        val measuredNorm = estimator.averageNorm
+        requireNotNull(measuredNorm)
+        val standardDeviationNorm = estimator.standardDeviationNorm
+        requireNotNull(standardDeviationNorm)
+        val averageStandardDeviation = estimator.averageStandardDeviation
+        requireNotNull(averageStandardDeviation)
+
+        completed = 0
+
+        // obtain current location
+        val scenario = ActivityScenario.launch(LocationActivity::class.java).use {
+            it.onActivity { activity ->
+                val service = LocationService(activity)
+
+                val enabled = service.locationEnabled
+                requireNotNull(enabled)
+                assertTrue(enabled)
+
+                val currentLocationListener =
+                    spyk(object : LocationService.OnCurrentLocationListener {
+                        override fun onCurrentLocation(location: Location) {
+                            assertNotNull(location)
+                            this@MagnetometerNoiseEstimatorTest.location = location
+
+                            syncHelper.notifyAll { completed++ }
+                        }
+                    })
+
+                service.getCurrentLocation(currentLocationListener)
+            }
+        }
+        assertNotNull(scenario)
+
+        syncHelper.waitOnCondition({ completed < 1 })
+        assertEquals(1, completed)
+
+        val location = this.location
+        requireNotNull(location)
+        val nedPosition = location.toNEDPosition()
+        val nedVelocity = NEDVelocity()
+        val ecefPosition = ECEFPosition()
+        val ecefVelocity = ECEFVelocity()
+        NEDtoECEFPositionVelocityConverter.convertNEDtoECEF(
+            nedPosition, nedVelocity,
+            ecefPosition, ecefVelocity
+        )
+
+        val earthMagneticFluxDensityEstimator = WMMEarthMagneticFluxDensityEstimator()
+        val now = Date()
+        val earthB = earthMagneticFluxDensityEstimator.estimate(nedPosition, now)
+
+        val c = CoordinateTransformation(
+            FrameType.BODY_FRAME,
+            FrameType.EARTH_CENTERED_EARTH_FIXED_FRAME
+        )
+        val b = BodyMagneticFluxDensityEstimator.estimate(earthB, c)
+
+        Log.d(
+            "MagnetometerNoiseEstimatorTest",
+            "measuredAngularRate: $measuredNorm T - "
+                    + "angularRate: ${b.norm} T, "
+                    + "standardDeviationNorm: $standardDeviationNorm T, "
+                    + "averageStandardDeviation: $averageStandardDeviation T"
+        )
+    }
+}
