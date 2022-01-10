@@ -13,25 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.irurueta.android.navigation.inertial.estimators
+package com.irurueta.android.navigation.inertial.calibration.noise
 
 import android.content.Context
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
-import com.irurueta.navigation.inertial.calibration.noise.AccumulatedAngularSpeedMeasurementNoiseEstimator
+import com.irurueta.navigation.inertial.calibration.AngularSpeedTriad
+import com.irurueta.navigation.inertial.calibration.noise.AccumulatedAngularSpeedTriadNoiseEstimator
 import com.irurueta.units.AngularSpeed
 import com.irurueta.units.AngularSpeedUnit
-import kotlin.math.pow
-import kotlin.math.sqrt
 
 /**
- * Estimates gyroscope measurement norm.
+ * Estimates gyroscope noise.
  * This estimator takes a given number of gyroscope measurements during a given duration of time
- * to estimate gyroscope norm average, standard deviation and variance, as well as average time
- * interval between measurements.
- * For best accuracy of estimated results, device should remain static while data is being
- * collected. In such case, average gyroscope norm should match expected Earth rotation rate.
+ * to estimate gyroscope measurements average, standard deviation and variance, as well as average
+ * time interval between measurements.
+ * To be able to measure gyroscope noise, device should remain static so that average gyroscope
+ * measurements are constant and their standard deviations reflect actual sensor noise, otherwise
+ * only norm values will be reliable.
  *
  * @param context Android context.
  * @property sensorType One of the supported gyroscope sensor types.
@@ -48,7 +48,7 @@ import kotlin.math.sqrt
  * estimation must be discarded.
  * @throws IllegalArgumentException when either [maxSamples] or [maxDurationMillis] is negative.
  */
-class GyroscopeNormEstimator(
+class GyroscopeNoiseEstimator(
     context: Context,
     val sensorType: GyroscopeSensorCollector.SensorType =
         GyroscopeSensorCollector.SensorType.GYROSCOPE,
@@ -56,11 +56,10 @@ class GyroscopeNormEstimator(
     maxSamples: Int = DEFAULT_MAX_SAMPLES,
     maxDurationMillis: Long = DEFAULT_MAX_DURATION_MILLIS,
     stopMode: StopMode = StopMode.MAX_SAMPLES_OR_DURATION,
-    completedListener: OnEstimationCompletedListener<GyroscopeNormEstimator>? = null,
-    unreliableListener: OnUnreliableListener<GyroscopeNormEstimator>? = null
-) : AccumulatedMeasurementEstimator<GyroscopeNormEstimator,
-        AccumulatedAngularSpeedMeasurementNoiseEstimator, GyroscopeSensorCollector,
-        AngularSpeedUnit, AngularSpeed>(
+    completedListener: OnEstimationCompletedListener<GyroscopeNoiseEstimator>? = null,
+    unreliableListener: OnUnreliableListener<GyroscopeNoiseEstimator>? = null
+) : AccumulatedTriadEstimator<GyroscopeNoiseEstimator, AccumulatedAngularSpeedTriadNoiseEstimator,
+        GyroscopeSensorCollector, AngularSpeedUnit, AngularSpeed, AngularSpeedTriad>(
     context,
     sensorDelay,
     maxSamples,
@@ -69,6 +68,12 @@ class GyroscopeNormEstimator(
     completedListener,
     unreliableListener
 ) {
+    /**
+     * Internal noise estimator of gyroscope measurements.
+     * This can be used to estimate statistics about gyroscope noise measurements.
+     */
+    override val noiseEstimator = AccumulatedAngularSpeedTriadNoiseEstimator()
+
     /**
      * Listener to handle gyroscope measurements.
      */
@@ -83,17 +88,10 @@ class GyroscopeNormEstimator(
             timestamp: Long,
             accuracy: SensorAccuracy?
         ) {
-            val norm =
-                sqrt(wx.toDouble().pow(2.0) + wy.toDouble().pow(2.0) + wz.toDouble().pow(2.0))
-            handleMeasurement(norm, timestamp, accuracy)
+            handleMeasurement(wx.toDouble(), wy.toDouble(), wz.toDouble(), timestamp, accuracy)
         }
-    }
 
-    /**
-     * Internal noise estimator of gyroscope magnitude measurements.
-     * This can be used to estimate statistics about a given measurement magnitude.
-     */
-    override val noiseEstimator = AccumulatedAngularSpeedMeasurementNoiseEstimator()
+    }
 
     /**
      * Collector for gyroscope measurements.

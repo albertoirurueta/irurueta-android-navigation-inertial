@@ -13,15 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.irurueta.android.navigation.inertial.estimators
+package com.irurueta.android.navigation.inertial.calibration.noise
 
-import org.junit.Assert.assertEquals
-import org.junit.Test
+/**
+ * Mode to use to stop the an estimator.
+ */
+enum class StopMode {
+    /**
+     * Takes into account maximum number of samples to be processed only.
+     */
+    MAX_SAMPLES_ONLY,
 
-class StopModeTest {
+    /**
+     * Takes into account maximum duration to take measurements only.
+     */
+    MAX_DURATION_ONLY,
 
-    @Test
-    fun stopMode_hasExpectedNumberOfElements() {
-        assertEquals(3, StopMode.values().size)
-    }
+    /**
+     * Takes into account maximum number of samples to be processed or maximum duration,
+     * whichever comes first.
+     */
+    MAX_SAMPLES_OR_DURATION
 }

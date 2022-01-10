@@ -13,30 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.irurueta.android.navigation.inertial.estimators
+package com.irurueta.android.navigation.inertial.calibration.noise
 
 import android.content.Context
-import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
-import com.irurueta.navigation.inertial.calibration.noise.AccumulatedMagneticFluxDensityMeasurementNoiseEstimator
-import com.irurueta.units.MagneticFluxDensity
-import com.irurueta.units.MagneticFluxDensityConverter
-import com.irurueta.units.MagneticFluxDensityUnit
+import com.irurueta.navigation.inertial.calibration.noise.AccumulatedAccelerationMeasurementNoiseEstimator
+import com.irurueta.units.Acceleration
+import com.irurueta.units.AccelerationUnit
 import kotlin.math.pow
 import kotlin.math.sqrt
 
 /**
- * Estimates magnetometer measurement norm.
- * This estimator takes a given number of magnetometer measurements during a given duration of time
- * to estimate magnetometer norm average, standard deviation and variance, as well as average time
+ * Estimates accelerometer norm.
+ * This estimator takes a given number of measurements during a given duration of time
+ * to estimate accelerometer norm average, standard deviation and variance, as well as average time
  * interval between measurements.
  * For best accuracy of estimated results, device should remain static while data is being
- * collected. In such case, average magnetometer norm should match expected Earth magnetic flux
- * density magnitude at current location and timestamp.
+ * collected. In such case, average accelerometer norm should match gravity norm at current
+ * location.
  *
- * @param context Android context.
- * @property sensorType One of the supported magnetometer sensor types.
+ * @param context Android context
+ * @property sensorType One of the supported accelerometer sensor types.
  * @param sensorDelay Delay of sensor between samples.
  * @param maxSamples Maximum number of samples to take into account before completion. This is
  * only taken into account if using either [StopMode.MAX_SAMPLES_ONLY] or
@@ -50,19 +49,19 @@ import kotlin.math.sqrt
  * estimation must be discarded.
  * @throws IllegalArgumentException when either [maxSamples] or [maxDurationMillis] is negative.
  */
-class MagnetometerNormEstimator(
+class AccelerometerNormEstimator(
     context: Context,
-    val sensorType: MagnetometerSensorCollector.SensorType =
-        MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+    val sensorType: AccelerometerSensorCollector.SensorType =
+        AccelerometerSensorCollector.SensorType.ACCELEROMETER,
     sensorDelay: SensorDelay = SensorDelay.FASTEST,
     maxSamples: Int = DEFAULT_MAX_SAMPLES,
     maxDurationMillis: Long = DEFAULT_MAX_DURATION_MILLIS,
     stopMode: StopMode = StopMode.MAX_SAMPLES_OR_DURATION,
-    completedListener: OnEstimationCompletedListener<MagnetometerNormEstimator>? = null,
-    unreliableListener: OnUnreliableListener<MagnetometerNormEstimator>? = null
-) : AccumulatedMeasurementEstimator<MagnetometerNormEstimator,
-        AccumulatedMagneticFluxDensityMeasurementNoiseEstimator, MagnetometerSensorCollector,
-        MagneticFluxDensityUnit, MagneticFluxDensity>(
+    completedListener: OnEstimationCompletedListener<AccelerometerNormEstimator>? = null,
+    unreliableListener: OnUnreliableListener<AccelerometerNormEstimator>? = null
+) : AccumulatedMeasurementEstimator<AccelerometerNormEstimator,
+        AccumulatedAccelerationMeasurementNoiseEstimator, AccelerometerSensorCollector,
+        AccelerationUnit, Acceleration>(
     context,
     sensorDelay,
     maxSamples,
@@ -71,41 +70,36 @@ class MagnetometerNormEstimator(
     completedListener,
     unreliableListener
 ) {
+
     /**
-     * Listener to handle magnetometer measurements.
+     * Listener to handle accelerometer measurements.
      */
-    private val measurementListener = object : MagnetometerSensorCollector.OnMeasurementListener {
+    private val measurementListener = object : AccelerometerSensorCollector.OnMeasurementListener {
         override fun onMeasurement(
-            bx: Float,
-            by: Float,
-            bz: Float,
-            hardIronX: Float?,
-            hardIronY: Float?,
-            hardIronZ: Float?,
+            ax: Float,
+            ay: Float,
+            az: Float,
+            bx: Float?,
+            by: Float?,
+            bz: Float?,
             timestamp: Long,
             accuracy: SensorAccuracy?
         ) {
-            val norm =
-                sqrt(bx.toDouble().pow(2.0) + by.toDouble().pow(2.0) + bz.toDouble().pow(2.0))
-            val normT = MagneticFluxDensityConverter.convert(
-                norm,
-                MagneticFluxDensityUnit.MICROTESLA,
-                MagneticFluxDensityUnit.TESLA
-            )
-            handleMeasurement(normT, timestamp, accuracy)
+            val a = sqrt(ax.toDouble().pow(2.0) + ay.toDouble().pow(2.0) + az.toDouble().pow(2.0))
+            handleMeasurement(a, timestamp, accuracy)
         }
     }
 
     /**
-     * Internal noise estimator of magnetometer magnitude measurements.
+     * Internal noise estimator of acceleration magnitude measurements.
      * This can be used to estimate statistics about a given measurement magnitude.
      */
-    override val noiseEstimator = AccumulatedMagneticFluxDensityMeasurementNoiseEstimator()
+    override val noiseEstimator = AccumulatedAccelerationMeasurementNoiseEstimator()
 
     /**
-     * Collector for magnetometer measurements.
+     * Collector for accelerometer measurements.
      */
-    override val collector = MagnetometerSensorCollector(
+    override val collector = AccelerometerSensorCollector(
         context,
         sensorType,
         sensorDelay,

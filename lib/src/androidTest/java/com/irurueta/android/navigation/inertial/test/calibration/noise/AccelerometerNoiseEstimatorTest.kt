@@ -1,19 +1,4 @@
-/*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *         http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-package com.irurueta.android.navigation.inertial.test.estimators
+package com.irurueta.android.navigation.inertial.test.calibration.noise
 
 import android.location.Location
 import android.util.Log
@@ -23,23 +8,26 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
 import com.irurueta.android.navigation.inertial.LocationService
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
-import com.irurueta.android.navigation.inertial.estimators.AccumulatedTriadEstimator
-import com.irurueta.android.navigation.inertial.estimators.MagnetometerNoiseEstimator
+import com.irurueta.android.navigation.inertial.calibration.noise.AccelerometerNoiseEstimator
+import com.irurueta.android.navigation.inertial.calibration.noise.AccumulatedTriadEstimator
 import com.irurueta.android.navigation.inertial.test.LocationActivity
 import com.irurueta.android.navigation.inertial.toNEDPosition
-import com.irurueta.navigation.frames.*
+import com.irurueta.navigation.frames.ECEFPosition
+import com.irurueta.navigation.frames.ECEFVelocity
+import com.irurueta.navigation.frames.NEDVelocity
 import com.irurueta.navigation.frames.converters.NEDtoECEFPositionVelocityConverter
-import com.irurueta.navigation.inertial.estimators.BodyMagneticFluxDensityEstimator
-import com.irurueta.navigation.inertial.wmm.WMMEarthMagneticFluxDensityEstimator
-import com.irurueta.units.*
+import com.irurueta.navigation.inertial.estimators.ECEFGravityEstimator
+import com.irurueta.units.Acceleration
+import com.irurueta.units.AccelerationUnit
+import com.irurueta.units.Time
+import com.irurueta.units.TimeUnit
 import io.mockk.spyk
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import java.util.*
 
-class MagnetometerNoiseEstimatorTest {
+class AccelerometerNoiseEstimatorTest {
 
     @get:Rule
     val permissionRule: GrantPermissionRule = GrantPermissionRule.grant(
@@ -60,23 +48,22 @@ class MagnetometerNoiseEstimatorTest {
         completed = 0
     }
 
-    @RequiresDevice
     @Test
     fun startAndStop_estimatesAccelerometerNoise() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val estimator = MagnetometerNoiseEstimator(context,
+        val estimator = AccelerometerNoiseEstimator(context,
             completedListener = object : AccumulatedTriadEstimator
-            .OnEstimationCompletedListener<MagnetometerNoiseEstimator> {
-                override fun onEstimationCompleted(estimator: MagnetometerNoiseEstimator) {
+            .OnEstimationCompletedListener<AccelerometerNoiseEstimator> {
+                override fun onEstimationCompleted(estimator: AccelerometerNoiseEstimator) {
                     assertFalse(estimator.running)
 
                     syncHelper.notifyAll { completed++ }
                 }
             },
             unreliableListener = object :
-                AccumulatedTriadEstimator.OnUnreliableListener<MagnetometerNoiseEstimator> {
-                override fun onUnreliable(estimator: MagnetometerNoiseEstimator) {
-                    Log.d("MagnetometerNoiseEstimatorTest", "Sensor is unreliable")
+                AccumulatedTriadEstimator.OnUnreliableListener<AccelerometerNoiseEstimator> {
+                override fun onUnreliable(estimator: AccelerometerNoiseEstimator) {
+                    Log.d("AccelerometerNoiseEstimatorTest", "Sensor is unreliable")
                     assertFalse(estimator.running)
                 }
             }
@@ -95,40 +82,33 @@ class MagnetometerNoiseEstimatorTest {
         requireNotNull(averageNorm)
         val averageNorm1 = estimator.averageNormAsMeasurement
         requireNotNull(averageNorm1)
-        val averageNorm2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        val averageNorm2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
         estimator.getAverageNormAsMeasurement(averageNorm2)
         assertEquals(averageNorm1, averageNorm2)
         assertEquals(averageNorm, averageNorm1.value.toDouble(), 0.0)
-        assertEquals(MagneticFluxDensityUnit.TESLA, averageNorm1.unit)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, averageNorm1.unit)
 
         val standardDeviationNorm = estimator.standardDeviationNorm
         requireNotNull(standardDeviationNorm)
         assertTrue(standardDeviationNorm > 0.0)
         val standardDeviationNorm1 = estimator.standardDeviationNormAsMeasurement
         requireNotNull(standardDeviationNorm1)
-        val standardDeviationNorm2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        val standardDeviationNorm2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
         estimator.getStandardDeviationNormAsMeasurement(standardDeviationNorm2)
         assertEquals(standardDeviationNorm1, standardDeviationNorm2)
         assertEquals(standardDeviationNorm, standardDeviationNorm1.value.toDouble(), 0.0)
-        assertEquals(MagneticFluxDensityUnit.TESLA, standardDeviationNorm1.unit)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, standardDeviationNorm1.unit)
 
         val averageStandardDeviation = estimator.averageStandardDeviation
         requireNotNull(averageStandardDeviation)
         assertTrue(averageStandardDeviation > 0.0)
         val averageStandardDeviation1 = estimator.averageStandardDeviationAsMeasurement
         requireNotNull(averageStandardDeviation1)
-        val averageStandardDeviation2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        val averageStandardDeviation2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
         estimator.getAverageStandardDeviationAsMeasurement(averageStandardDeviation2)
         assertEquals(averageStandardDeviation1, averageStandardDeviation2)
-        assertEquals(
-            averageStandardDeviation,
-            averageStandardDeviation1.value.toDouble(),
-            0.0
-        )
-        assertEquals(
-            MagneticFluxDensityUnit.TESLA,
-            averageStandardDeviation1.unit
-        )
+        assertEquals(averageStandardDeviation, averageStandardDeviation1.value.toDouble(), 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, averageStandardDeviation1.unit)
 
         val averageNoisePsd = estimator.averageNoisePsd
         requireNotNull(averageNoisePsd)
@@ -175,25 +155,26 @@ class MagnetometerNoiseEstimatorTest {
         estimator.getElapsedTime(elapsedTime2)
         assertEquals(elapsedTime1, elapsedTime2)
         assertEquals(elapsedTime.toDouble(), elapsedTime1.value.toDouble(), 0.0)
+        assertEquals(TimeUnit.NANOSECOND, elapsedTime1.unit)
     }
 
     @RequiresDevice
     @Test
     fun estimatedResult_whenDeviceStatic_returnsValueCloseToExpectedGravity() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val estimator = MagnetometerNoiseEstimator(context,
+        val estimator = AccelerometerNoiseEstimator(context,
             completedListener = object : AccumulatedTriadEstimator
-            .OnEstimationCompletedListener<MagnetometerNoiseEstimator> {
-                override fun onEstimationCompleted(estimator: MagnetometerNoiseEstimator) {
+            .OnEstimationCompletedListener<AccelerometerNoiseEstimator> {
+                override fun onEstimationCompleted(estimator: AccelerometerNoiseEstimator) {
                     assertFalse(estimator.running)
 
                     syncHelper.notifyAll { completed++ }
                 }
             },
             unreliableListener = object :
-                AccumulatedTriadEstimator.OnUnreliableListener<MagnetometerNoiseEstimator> {
-                override fun onUnreliable(estimator: MagnetometerNoiseEstimator) {
-                    Log.d("MagnetometerNoiseEstimatorTest", "Sensor is unreliable")
+                AccumulatedTriadEstimator.OnUnreliableListener<AccelerometerNoiseEstimator> {
+                override fun onUnreliable(estimator: AccelerometerNoiseEstimator) {
+                    Log.d("AccelerometerNoiseEstimatorTest", "Sensor is unreliable")
                     assertFalse(estimator.running)
                 }
             }
@@ -226,7 +207,7 @@ class MagnetometerNoiseEstimatorTest {
                     spyk(object : LocationService.OnCurrentLocationListener {
                         override fun onCurrentLocation(location: Location) {
                             assertNotNull(location)
-                            this@MagnetometerNoiseEstimatorTest.location = location
+                            this@AccelerometerNoiseEstimatorTest.location = location
 
                             syncHelper.notifyAll { completed++ }
                         }
@@ -251,22 +232,18 @@ class MagnetometerNoiseEstimatorTest {
             ecefPosition, ecefVelocity
         )
 
-        val earthMagneticFluxDensityEstimator = WMMEarthMagneticFluxDensityEstimator()
-        val now = Date()
-        val earthB = earthMagneticFluxDensityEstimator.estimate(nedPosition, now)
-
-        val c = CoordinateTransformation(
-            FrameType.BODY_FRAME,
-            FrameType.EARTH_CENTERED_EARTH_FIXED_FRAME
+        val ecefGravity = ECEFGravityEstimator.estimateGravityAndReturnNew(
+            ecefPosition.x,
+            ecefPosition.y,
+            ecefPosition.z
         )
-        val b = BodyMagneticFluxDensityEstimator.estimate(earthB, c)
+        val gravity = ecefGravity.norm
 
         Log.d(
-            "MagnetometerNoiseEstimatorTest",
-            "measuredMagneticFluxDensity: $measuredNorm T - "
-                    + "magneticFluxDensity: ${b.norm} T, "
-                    + "standardDeviationNorm: $standardDeviationNorm T, "
-                    + "averageStandardDeviation: $averageStandardDeviation T"
+            "AccelerometerNoiseEstimatorTest",
+            "measuredGravity: $measuredNorm m/s^2 - gravity: $gravity m/s^2, "
+                    + "standardDeviationNorm: $standardDeviationNorm m/s^2, "
+                    + "averageStandardDeviation: $averageStandardDeviation m/s^2"
         )
     }
 }

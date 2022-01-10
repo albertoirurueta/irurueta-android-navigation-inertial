@@ -13,28 +13,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.irurueta.android.navigation.inertial.estimators
+package com.irurueta.android.navigation.inertial.calibration.noise
 
 import android.content.Context
 import android.os.SystemClock
 import androidx.test.core.app.ApplicationProvider
-import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
 import com.irurueta.android.navigation.inertial.collectors.SensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.android.navigation.inertial.getPrivateProperty
 import com.irurueta.android.navigation.inertial.setPrivateProperty
-import com.irurueta.navigation.frames.*
+import com.irurueta.navigation.frames.ECEFPosition
+import com.irurueta.navigation.frames.ECEFVelocity
+import com.irurueta.navigation.frames.NEDPosition
+import com.irurueta.navigation.frames.NEDVelocity
 import com.irurueta.navigation.frames.converters.NEDtoECEFPositionVelocityConverter
-import com.irurueta.navigation.inertial.BodyMagneticFluxDensity
-import com.irurueta.navigation.inertial.calibration.MagneticFluxDensityTriad
+import com.irurueta.navigation.inertial.ECEFGravity
+import com.irurueta.navigation.inertial.calibration.AccelerationTriad
 import com.irurueta.navigation.inertial.calibration.TimeIntervalEstimator
-import com.irurueta.navigation.inertial.calibration.noise.AccumulatedMagneticFluxDensityTriadNoiseEstimator
-import com.irurueta.navigation.inertial.estimators.BodyMagneticFluxDensityEstimator
-import com.irurueta.navigation.inertial.wmm.NEDMagneticFluxDensity
-import com.irurueta.navigation.inertial.wmm.WMMEarthMagneticFluxDensityEstimator
+import com.irurueta.navigation.inertial.calibration.noise.AccumulatedAccelerationTriadNoiseEstimator
+import com.irurueta.navigation.inertial.estimators.ECEFGravityEstimator
 import com.irurueta.statistics.UniformRandomizer
-import com.irurueta.units.*
+import com.irurueta.units.Acceleration
+import com.irurueta.units.AccelerationUnit
+import com.irurueta.units.Time
+import com.irurueta.units.TimeUnit
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
@@ -42,19 +46,18 @@ import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import java.util.*
 
 @RunWith(RobolectricTestRunner::class)
-class MagnetometerNoiseEstimatorTest {
+class AccelerometerNoiseEstimatorTest {
 
     @Test
     fun constructor_whenContext_setsDefaultValues() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = MagnetometerNoiseEstimator(context)
+        val estimator = AccelerometerNoiseEstimator(context)
 
         // check default values
         assertSame(context, estimator.context)
-        assertEquals(MagnetometerSensorCollector.SensorType.MAGNETOMETER, estimator.sensorType)
+        assertEquals(AccelerometerSensorCollector.SensorType.ACCELEROMETER, estimator.sensorType)
         assertEquals(SensorDelay.FASTEST, estimator.sensorDelay)
         assertEquals(BaseAccumulatedEstimator.DEFAULT_MAX_SAMPLES, estimator.maxSamples)
         assertEquals(
@@ -70,40 +73,40 @@ class MagnetometerNoiseEstimatorTest {
         assertFalse(estimator.resultUnreliable)
         assertNull(estimator.averageX)
         assertNull(estimator.averageXAsMeasurement)
-        val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        assertFalse(estimator.getAverageXAsMeasurement(magneticFluxDensity))
+        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        assertFalse(estimator.getAverageXAsMeasurement(acceleration))
         assertNull(estimator.averageY)
         assertNull(estimator.averageYAsMeasurement)
-        assertFalse(estimator.getAverageYAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getAverageYAsMeasurement(acceleration))
         assertNull(estimator.averageZ)
         assertNull(estimator.averageZAsMeasurement)
-        assertFalse(estimator.getAverageZAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getAverageZAsMeasurement(acceleration))
         assertNull(estimator.averageTriad)
-        val triad = MagneticFluxDensityTriad()
+        val triad = AccelerationTriad()
         assertFalse(estimator.getAverageTriad(triad))
         assertNull(estimator.averageNorm)
         assertNull(estimator.averageNormAsMeasurement)
-        assertFalse(estimator.getAverageNormAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getAverageNormAsMeasurement(acceleration))
         assertNull(estimator.varianceX)
         assertNull(estimator.varianceY)
         assertNull(estimator.varianceZ)
         assertNull(estimator.standardDeviationX)
         assertNull(estimator.standardDeviationXAsMeasurement)
-        assertFalse(estimator.getStandardDeviationXAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getStandardDeviationXAsMeasurement(acceleration))
         assertNull(estimator.standardDeviationY)
         assertNull(estimator.standardDeviationYAsMeasurement)
-        assertFalse(estimator.getStandardDeviationYAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getStandardDeviationYAsMeasurement(acceleration))
         assertNull(estimator.standardDeviationZ)
         assertNull(estimator.standardDeviationZAsMeasurement)
-        assertFalse(estimator.getStandardDeviationZAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getStandardDeviationZAsMeasurement(acceleration))
         assertNull(estimator.standardDeviationTriad)
         assertFalse(estimator.getStandardDeviationTriad(triad))
         assertNull(estimator.standardDeviationNorm)
         assertNull(estimator.standardDeviationNormAsMeasurement)
-        assertFalse(estimator.getStandardDeviationNormAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getStandardDeviationNormAsMeasurement(acceleration))
         assertNull(estimator.averageStandardDeviation)
         assertNull(estimator.averageStandardDeviationAsMeasurement)
-        assertFalse(estimator.getAverageStandardDeviationAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getAverageStandardDeviationAsMeasurement(acceleration))
         assertNull(estimator.psdX)
         assertNull(estimator.psdY)
         assertNull(estimator.psdZ)
@@ -130,15 +133,15 @@ class MagnetometerNoiseEstimatorTest {
     @Test
     fun constructor_whenSensorType_setsExpectedValues() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = MagnetometerNoiseEstimator(
+        val estimator = AccelerometerNoiseEstimator(
             context,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
         )
 
         // check default values
         assertSame(context, estimator.context)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             estimator.sensorType
         )
         assertEquals(SensorDelay.FASTEST, estimator.sensorDelay)
@@ -156,40 +159,40 @@ class MagnetometerNoiseEstimatorTest {
         assertFalse(estimator.resultUnreliable)
         assertNull(estimator.averageX)
         assertNull(estimator.averageXAsMeasurement)
-        val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        assertFalse(estimator.getAverageXAsMeasurement(magneticFluxDensity))
+        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        assertFalse(estimator.getAverageXAsMeasurement(acceleration))
         assertNull(estimator.averageY)
         assertNull(estimator.averageYAsMeasurement)
-        assertFalse(estimator.getAverageYAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getAverageYAsMeasurement(acceleration))
         assertNull(estimator.averageZ)
         assertNull(estimator.averageZAsMeasurement)
-        assertFalse(estimator.getAverageZAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getAverageZAsMeasurement(acceleration))
         assertNull(estimator.averageTriad)
-        val triad = MagneticFluxDensityTriad()
+        val triad = AccelerationTriad()
         assertFalse(estimator.getAverageTriad(triad))
         assertNull(estimator.averageNorm)
         assertNull(estimator.averageNormAsMeasurement)
-        assertFalse(estimator.getAverageNormAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getAverageNormAsMeasurement(acceleration))
         assertNull(estimator.varianceX)
         assertNull(estimator.varianceY)
         assertNull(estimator.varianceZ)
         assertNull(estimator.standardDeviationX)
         assertNull(estimator.standardDeviationXAsMeasurement)
-        assertFalse(estimator.getStandardDeviationXAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getStandardDeviationXAsMeasurement(acceleration))
         assertNull(estimator.standardDeviationY)
         assertNull(estimator.standardDeviationYAsMeasurement)
-        assertFalse(estimator.getStandardDeviationYAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getStandardDeviationYAsMeasurement(acceleration))
         assertNull(estimator.standardDeviationZ)
         assertNull(estimator.standardDeviationZAsMeasurement)
-        assertFalse(estimator.getStandardDeviationZAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getStandardDeviationZAsMeasurement(acceleration))
         assertNull(estimator.standardDeviationTriad)
         assertFalse(estimator.getStandardDeviationTriad(triad))
         assertNull(estimator.standardDeviationNorm)
         assertNull(estimator.standardDeviationNormAsMeasurement)
-        assertFalse(estimator.getStandardDeviationNormAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getStandardDeviationNormAsMeasurement(acceleration))
         assertNull(estimator.averageStandardDeviation)
         assertNull(estimator.averageStandardDeviationAsMeasurement)
-        assertFalse(estimator.getAverageStandardDeviationAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getAverageStandardDeviationAsMeasurement(acceleration))
         assertNull(estimator.psdX)
         assertNull(estimator.psdY)
         assertNull(estimator.psdZ)
@@ -216,16 +219,16 @@ class MagnetometerNoiseEstimatorTest {
     @Test
     fun constructor_whenSensorDelay_setsExpectedValues() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = MagnetometerNoiseEstimator(
+        val estimator = AccelerometerNoiseEstimator(
             context,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             SensorDelay.NORMAL
         )
 
         // check default values
         assertSame(context, estimator.context)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             estimator.sensorType
         )
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
@@ -243,40 +246,40 @@ class MagnetometerNoiseEstimatorTest {
         assertFalse(estimator.resultUnreliable)
         assertNull(estimator.averageX)
         assertNull(estimator.averageXAsMeasurement)
-        val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        assertFalse(estimator.getAverageXAsMeasurement(magneticFluxDensity))
+        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        assertFalse(estimator.getAverageXAsMeasurement(acceleration))
         assertNull(estimator.averageY)
         assertNull(estimator.averageYAsMeasurement)
-        assertFalse(estimator.getAverageYAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getAverageYAsMeasurement(acceleration))
         assertNull(estimator.averageZ)
         assertNull(estimator.averageZAsMeasurement)
-        assertFalse(estimator.getAverageZAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getAverageZAsMeasurement(acceleration))
         assertNull(estimator.averageTriad)
-        val triad = MagneticFluxDensityTriad()
+        val triad = AccelerationTriad()
         assertFalse(estimator.getAverageTriad(triad))
         assertNull(estimator.averageNorm)
         assertNull(estimator.averageNormAsMeasurement)
-        assertFalse(estimator.getAverageNormAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getAverageNormAsMeasurement(acceleration))
         assertNull(estimator.varianceX)
         assertNull(estimator.varianceY)
         assertNull(estimator.varianceZ)
         assertNull(estimator.standardDeviationX)
         assertNull(estimator.standardDeviationXAsMeasurement)
-        assertFalse(estimator.getStandardDeviationXAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getStandardDeviationXAsMeasurement(acceleration))
         assertNull(estimator.standardDeviationY)
         assertNull(estimator.standardDeviationYAsMeasurement)
-        assertFalse(estimator.getStandardDeviationYAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getStandardDeviationYAsMeasurement(acceleration))
         assertNull(estimator.standardDeviationZ)
         assertNull(estimator.standardDeviationZAsMeasurement)
-        assertFalse(estimator.getStandardDeviationZAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getStandardDeviationZAsMeasurement(acceleration))
         assertNull(estimator.standardDeviationTriad)
         assertFalse(estimator.getStandardDeviationTriad(triad))
         assertNull(estimator.standardDeviationNorm)
         assertNull(estimator.standardDeviationNormAsMeasurement)
-        assertFalse(estimator.getStandardDeviationNormAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getStandardDeviationNormAsMeasurement(acceleration))
         assertNull(estimator.averageStandardDeviation)
         assertNull(estimator.averageStandardDeviationAsMeasurement)
-        assertFalse(estimator.getAverageStandardDeviationAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getAverageStandardDeviationAsMeasurement(acceleration))
         assertNull(estimator.psdX)
         assertNull(estimator.psdY)
         assertNull(estimator.psdZ)
@@ -303,9 +306,9 @@ class MagnetometerNoiseEstimatorTest {
     @Test(expected = IllegalArgumentException::class)
     fun constructor_whenNegativeMaxSamples_throwsIllegalArgumentException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        MagnetometerNoiseEstimator(
+        AccelerometerNoiseEstimator(
             context,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
             -1
         )
@@ -314,9 +317,9 @@ class MagnetometerNoiseEstimatorTest {
     @Test
     fun constructor_whenMaxSamples_setsExpectedValues() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = MagnetometerNoiseEstimator(
+        val estimator = AccelerometerNoiseEstimator(
             context,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             SensorDelay.NORMAL,
             MAX_SAMPLES
         )
@@ -324,7 +327,7 @@ class MagnetometerNoiseEstimatorTest {
         // check default values
         assertSame(context, estimator.context)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             estimator.sensorType
         )
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
@@ -342,40 +345,40 @@ class MagnetometerNoiseEstimatorTest {
         assertFalse(estimator.resultUnreliable)
         assertNull(estimator.averageX)
         assertNull(estimator.averageXAsMeasurement)
-        val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        assertFalse(estimator.getAverageXAsMeasurement(magneticFluxDensity))
+        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        assertFalse(estimator.getAverageXAsMeasurement(acceleration))
         assertNull(estimator.averageY)
         assertNull(estimator.averageYAsMeasurement)
-        assertFalse(estimator.getAverageYAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getAverageYAsMeasurement(acceleration))
         assertNull(estimator.averageZ)
         assertNull(estimator.averageZAsMeasurement)
-        assertFalse(estimator.getAverageZAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getAverageZAsMeasurement(acceleration))
         assertNull(estimator.averageTriad)
-        val triad = MagneticFluxDensityTriad()
+        val triad = AccelerationTriad()
         assertFalse(estimator.getAverageTriad(triad))
         assertNull(estimator.averageNorm)
         assertNull(estimator.averageNormAsMeasurement)
-        assertFalse(estimator.getAverageNormAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getAverageNormAsMeasurement(acceleration))
         assertNull(estimator.varianceX)
         assertNull(estimator.varianceY)
         assertNull(estimator.varianceZ)
         assertNull(estimator.standardDeviationX)
         assertNull(estimator.standardDeviationXAsMeasurement)
-        assertFalse(estimator.getStandardDeviationXAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getStandardDeviationXAsMeasurement(acceleration))
         assertNull(estimator.standardDeviationY)
         assertNull(estimator.standardDeviationYAsMeasurement)
-        assertFalse(estimator.getStandardDeviationYAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getStandardDeviationYAsMeasurement(acceleration))
         assertNull(estimator.standardDeviationZ)
         assertNull(estimator.standardDeviationZAsMeasurement)
-        assertFalse(estimator.getStandardDeviationZAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getStandardDeviationZAsMeasurement(acceleration))
         assertNull(estimator.standardDeviationTriad)
         assertFalse(estimator.getStandardDeviationTriad(triad))
         assertNull(estimator.standardDeviationNorm)
         assertNull(estimator.standardDeviationNormAsMeasurement)
-        assertFalse(estimator.getStandardDeviationNormAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getStandardDeviationNormAsMeasurement(acceleration))
         assertNull(estimator.averageStandardDeviation)
         assertNull(estimator.averageStandardDeviationAsMeasurement)
-        assertFalse(estimator.getAverageStandardDeviationAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getAverageStandardDeviationAsMeasurement(acceleration))
         assertNull(estimator.psdX)
         assertNull(estimator.psdY)
         assertNull(estimator.psdZ)
@@ -402,9 +405,9 @@ class MagnetometerNoiseEstimatorTest {
     @Test(expected = IllegalArgumentException::class)
     fun constructor_whenNegativeMaxDurationMillis_throwsIllegalArgumentException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        MagnetometerNoiseEstimator(
+        AccelerometerNoiseEstimator(
             context,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
             MAX_SAMPLES,
             -1L
@@ -414,9 +417,9 @@ class MagnetometerNoiseEstimatorTest {
     @Test
     fun constructor_whenMaxDurationMillis_setsExpectedValues() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = MagnetometerNoiseEstimator(
+        val estimator = AccelerometerNoiseEstimator(
             context,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             SensorDelay.NORMAL,
             MAX_SAMPLES,
             MAX_DURATION_MILLIS
@@ -425,7 +428,7 @@ class MagnetometerNoiseEstimatorTest {
         // check default values
         assertSame(context, estimator.context)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             estimator.sensorType
         )
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
@@ -440,40 +443,40 @@ class MagnetometerNoiseEstimatorTest {
         assertFalse(estimator.resultUnreliable)
         assertNull(estimator.averageX)
         assertNull(estimator.averageXAsMeasurement)
-        val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        assertFalse(estimator.getAverageXAsMeasurement(magneticFluxDensity))
+        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        assertFalse(estimator.getAverageXAsMeasurement(acceleration))
         assertNull(estimator.averageY)
         assertNull(estimator.averageYAsMeasurement)
-        assertFalse(estimator.getAverageYAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getAverageYAsMeasurement(acceleration))
         assertNull(estimator.averageZ)
         assertNull(estimator.averageZAsMeasurement)
-        assertFalse(estimator.getAverageZAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getAverageZAsMeasurement(acceleration))
         assertNull(estimator.averageTriad)
-        val triad = MagneticFluxDensityTriad()
+        val triad = AccelerationTriad()
         assertFalse(estimator.getAverageTriad(triad))
         assertNull(estimator.averageNorm)
         assertNull(estimator.averageNormAsMeasurement)
-        assertFalse(estimator.getAverageNormAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getAverageNormAsMeasurement(acceleration))
         assertNull(estimator.varianceX)
         assertNull(estimator.varianceY)
         assertNull(estimator.varianceZ)
         assertNull(estimator.standardDeviationX)
         assertNull(estimator.standardDeviationXAsMeasurement)
-        assertFalse(estimator.getStandardDeviationXAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getStandardDeviationXAsMeasurement(acceleration))
         assertNull(estimator.standardDeviationY)
         assertNull(estimator.standardDeviationYAsMeasurement)
-        assertFalse(estimator.getStandardDeviationYAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getStandardDeviationYAsMeasurement(acceleration))
         assertNull(estimator.standardDeviationZ)
         assertNull(estimator.standardDeviationZAsMeasurement)
-        assertFalse(estimator.getStandardDeviationZAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getStandardDeviationZAsMeasurement(acceleration))
         assertNull(estimator.standardDeviationTriad)
         assertFalse(estimator.getStandardDeviationTriad(triad))
         assertNull(estimator.standardDeviationNorm)
         assertNull(estimator.standardDeviationNormAsMeasurement)
-        assertFalse(estimator.getStandardDeviationNormAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getStandardDeviationNormAsMeasurement(acceleration))
         assertNull(estimator.averageStandardDeviation)
         assertNull(estimator.averageStandardDeviationAsMeasurement)
-        assertFalse(estimator.getAverageStandardDeviationAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getAverageStandardDeviationAsMeasurement(acceleration))
         assertNull(estimator.psdX)
         assertNull(estimator.psdY)
         assertNull(estimator.psdZ)
@@ -500,9 +503,9 @@ class MagnetometerNoiseEstimatorTest {
     @Test
     fun constructor_whenStopMode_setsExpectedValues() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = MagnetometerNoiseEstimator(
+        val estimator = AccelerometerNoiseEstimator(
             context,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             SensorDelay.NORMAL,
             MAX_SAMPLES,
             MAX_DURATION_MILLIS,
@@ -512,7 +515,7 @@ class MagnetometerNoiseEstimatorTest {
         // check default values
         assertSame(context, estimator.context)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             estimator.sensorType
         )
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
@@ -527,40 +530,40 @@ class MagnetometerNoiseEstimatorTest {
         assertFalse(estimator.resultUnreliable)
         assertNull(estimator.averageX)
         assertNull(estimator.averageXAsMeasurement)
-        val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        assertFalse(estimator.getAverageXAsMeasurement(magneticFluxDensity))
+        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        assertFalse(estimator.getAverageXAsMeasurement(acceleration))
         assertNull(estimator.averageY)
         assertNull(estimator.averageYAsMeasurement)
-        assertFalse(estimator.getAverageYAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getAverageYAsMeasurement(acceleration))
         assertNull(estimator.averageZ)
         assertNull(estimator.averageZAsMeasurement)
-        assertFalse(estimator.getAverageZAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getAverageZAsMeasurement(acceleration))
         assertNull(estimator.averageTriad)
-        val triad = MagneticFluxDensityTriad()
+        val triad = AccelerationTriad()
         assertFalse(estimator.getAverageTriad(triad))
         assertNull(estimator.averageNorm)
         assertNull(estimator.averageNormAsMeasurement)
-        assertFalse(estimator.getAverageNormAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getAverageNormAsMeasurement(acceleration))
         assertNull(estimator.varianceX)
         assertNull(estimator.varianceY)
         assertNull(estimator.varianceZ)
         assertNull(estimator.standardDeviationX)
         assertNull(estimator.standardDeviationXAsMeasurement)
-        assertFalse(estimator.getStandardDeviationXAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getStandardDeviationXAsMeasurement(acceleration))
         assertNull(estimator.standardDeviationY)
         assertNull(estimator.standardDeviationYAsMeasurement)
-        assertFalse(estimator.getStandardDeviationYAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getStandardDeviationYAsMeasurement(acceleration))
         assertNull(estimator.standardDeviationZ)
         assertNull(estimator.standardDeviationZAsMeasurement)
-        assertFalse(estimator.getStandardDeviationZAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getStandardDeviationZAsMeasurement(acceleration))
         assertNull(estimator.standardDeviationTriad)
         assertFalse(estimator.getStandardDeviationTriad(triad))
         assertNull(estimator.standardDeviationNorm)
         assertNull(estimator.standardDeviationNormAsMeasurement)
-        assertFalse(estimator.getStandardDeviationNormAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getStandardDeviationNormAsMeasurement(acceleration))
         assertNull(estimator.averageStandardDeviation)
         assertNull(estimator.averageStandardDeviationAsMeasurement)
-        assertFalse(estimator.getAverageStandardDeviationAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getAverageStandardDeviationAsMeasurement(acceleration))
         assertNull(estimator.psdX)
         assertNull(estimator.psdY)
         assertNull(estimator.psdZ)
@@ -587,11 +590,11 @@ class MagnetometerNoiseEstimatorTest {
     @Test
     fun constructor_whenCompletedListener_setsExpectedValues() {
         val completedListener = mockk<AccumulatedTriadEstimator
-        .OnEstimationCompletedListener<MagnetometerNoiseEstimator>>()
+        .OnEstimationCompletedListener<AccelerometerNoiseEstimator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = MagnetometerNoiseEstimator(
+        val estimator = AccelerometerNoiseEstimator(
             context,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             SensorDelay.NORMAL,
             MAX_SAMPLES,
             MAX_DURATION_MILLIS,
@@ -602,7 +605,7 @@ class MagnetometerNoiseEstimatorTest {
         // check default values
         assertSame(context, estimator.context)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             estimator.sensorType
         )
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
@@ -617,40 +620,40 @@ class MagnetometerNoiseEstimatorTest {
         assertFalse(estimator.resultUnreliable)
         assertNull(estimator.averageX)
         assertNull(estimator.averageXAsMeasurement)
-        val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        assertFalse(estimator.getAverageXAsMeasurement(magneticFluxDensity))
+        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        assertFalse(estimator.getAverageXAsMeasurement(acceleration))
         assertNull(estimator.averageY)
         assertNull(estimator.averageYAsMeasurement)
-        assertFalse(estimator.getAverageYAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getAverageYAsMeasurement(acceleration))
         assertNull(estimator.averageZ)
         assertNull(estimator.averageZAsMeasurement)
-        assertFalse(estimator.getAverageZAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getAverageZAsMeasurement(acceleration))
         assertNull(estimator.averageTriad)
-        val triad = MagneticFluxDensityTriad()
+        val triad = AccelerationTriad()
         assertFalse(estimator.getAverageTriad(triad))
         assertNull(estimator.averageNorm)
         assertNull(estimator.averageNormAsMeasurement)
-        assertFalse(estimator.getAverageNormAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getAverageNormAsMeasurement(acceleration))
         assertNull(estimator.varianceX)
         assertNull(estimator.varianceY)
         assertNull(estimator.varianceZ)
         assertNull(estimator.standardDeviationX)
         assertNull(estimator.standardDeviationXAsMeasurement)
-        assertFalse(estimator.getStandardDeviationXAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getStandardDeviationXAsMeasurement(acceleration))
         assertNull(estimator.standardDeviationY)
         assertNull(estimator.standardDeviationYAsMeasurement)
-        assertFalse(estimator.getStandardDeviationYAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getStandardDeviationYAsMeasurement(acceleration))
         assertNull(estimator.standardDeviationZ)
         assertNull(estimator.standardDeviationZAsMeasurement)
-        assertFalse(estimator.getStandardDeviationZAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getStandardDeviationZAsMeasurement(acceleration))
         assertNull(estimator.standardDeviationTriad)
         assertFalse(estimator.getStandardDeviationTriad(triad))
         assertNull(estimator.standardDeviationNorm)
         assertNull(estimator.standardDeviationNormAsMeasurement)
-        assertFalse(estimator.getStandardDeviationNormAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getStandardDeviationNormAsMeasurement(acceleration))
         assertNull(estimator.averageStandardDeviation)
         assertNull(estimator.averageStandardDeviationAsMeasurement)
-        assertFalse(estimator.getAverageStandardDeviationAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getAverageStandardDeviationAsMeasurement(acceleration))
         assertNull(estimator.psdX)
         assertNull(estimator.psdY)
         assertNull(estimator.psdZ)
@@ -677,13 +680,13 @@ class MagnetometerNoiseEstimatorTest {
     @Test
     fun constructor_whenUnreliableListener_setsExpectedValues() {
         val completedListener = mockk<AccumulatedTriadEstimator
-        .OnEstimationCompletedListener<MagnetometerNoiseEstimator>>()
+        .OnEstimationCompletedListener<AccelerometerNoiseEstimator>>()
         val unreliableListener =
-            mockk<AccumulatedTriadEstimator.OnUnreliableListener<MagnetometerNoiseEstimator>>()
+            mockk<AccumulatedTriadEstimator.OnUnreliableListener<AccelerometerNoiseEstimator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = MagnetometerNoiseEstimator(
+        val estimator = AccelerometerNoiseEstimator(
             context,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             SensorDelay.NORMAL,
             MAX_SAMPLES,
             MAX_DURATION_MILLIS,
@@ -695,7 +698,7 @@ class MagnetometerNoiseEstimatorTest {
         // check default values
         assertSame(context, estimator.context)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             estimator.sensorType
         )
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
@@ -710,40 +713,40 @@ class MagnetometerNoiseEstimatorTest {
         assertFalse(estimator.resultUnreliable)
         assertNull(estimator.averageX)
         assertNull(estimator.averageXAsMeasurement)
-        val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        assertFalse(estimator.getAverageXAsMeasurement(magneticFluxDensity))
+        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        assertFalse(estimator.getAverageXAsMeasurement(acceleration))
         assertNull(estimator.averageY)
         assertNull(estimator.averageYAsMeasurement)
-        assertFalse(estimator.getAverageYAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getAverageYAsMeasurement(acceleration))
         assertNull(estimator.averageZ)
         assertNull(estimator.averageZAsMeasurement)
-        assertFalse(estimator.getAverageZAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getAverageZAsMeasurement(acceleration))
         assertNull(estimator.averageTriad)
-        val triad = MagneticFluxDensityTriad()
+        val triad = AccelerationTriad()
         assertFalse(estimator.getAverageTriad(triad))
         assertNull(estimator.averageNorm)
         assertNull(estimator.averageNormAsMeasurement)
-        assertFalse(estimator.getAverageNormAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getAverageNormAsMeasurement(acceleration))
         assertNull(estimator.varianceX)
         assertNull(estimator.varianceY)
         assertNull(estimator.varianceZ)
         assertNull(estimator.standardDeviationX)
         assertNull(estimator.standardDeviationXAsMeasurement)
-        assertFalse(estimator.getStandardDeviationXAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getStandardDeviationXAsMeasurement(acceleration))
         assertNull(estimator.standardDeviationY)
         assertNull(estimator.standardDeviationYAsMeasurement)
-        assertFalse(estimator.getStandardDeviationYAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getStandardDeviationYAsMeasurement(acceleration))
         assertNull(estimator.standardDeviationZ)
         assertNull(estimator.standardDeviationZAsMeasurement)
-        assertFalse(estimator.getStandardDeviationZAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getStandardDeviationZAsMeasurement(acceleration))
         assertNull(estimator.standardDeviationTriad)
         assertFalse(estimator.getStandardDeviationTriad(triad))
         assertNull(estimator.standardDeviationNorm)
         assertNull(estimator.standardDeviationNormAsMeasurement)
-        assertFalse(estimator.getStandardDeviationNormAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getStandardDeviationNormAsMeasurement(acceleration))
         assertNull(estimator.averageStandardDeviation)
         assertNull(estimator.averageStandardDeviationAsMeasurement)
-        assertFalse(estimator.getAverageStandardDeviationAsMeasurement(magneticFluxDensity))
+        assertFalse(estimator.getAverageStandardDeviationAsMeasurement(acceleration))
         assertNull(estimator.psdX)
         assertNull(estimator.psdY)
         assertNull(estimator.psdZ)
@@ -770,14 +773,14 @@ class MagnetometerNoiseEstimatorTest {
     @Test
     fun completedListener_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = MagnetometerNoiseEstimator(context)
+        val estimator = AccelerometerNoiseEstimator(context)
 
         // check default value
         assertNull(estimator.completedListener)
 
         // set new value
         val completedListener = mockk<AccumulatedTriadEstimator
-        .OnEstimationCompletedListener<MagnetometerNoiseEstimator>>()
+        .OnEstimationCompletedListener<AccelerometerNoiseEstimator>>()
         estimator.completedListener = completedListener
 
         // check
@@ -787,14 +790,14 @@ class MagnetometerNoiseEstimatorTest {
     @Test
     fun unreliableListener_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = MagnetometerNoiseEstimator(context)
+        val estimator = AccelerometerNoiseEstimator(context)
 
         // check default value
         assertNull(estimator.unreliableListener)
 
         // set new value
         val unreliableListener =
-            mockk<AccumulatedTriadEstimator.OnUnreliableListener<MagnetometerNoiseEstimator>>()
+            mockk<AccumulatedTriadEstimator.OnUnreliableListener<AccelerometerNoiseEstimator>>()
         estimator.unreliableListener = unreliableListener
 
         // check
@@ -804,9 +807,9 @@ class MagnetometerNoiseEstimatorTest {
     @Test
     fun start_startsCollector() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = MagnetometerNoiseEstimator(context)
+        val estimator = AccelerometerNoiseEstimator(context)
 
-        val collector: MagnetometerSensorCollector? =
+        val collector: AccelerometerSensorCollector? =
             estimator.getPrivateProperty("collector")
         requireNotNull(collector)
         assertSame(context, collector.context)
@@ -829,16 +832,19 @@ class MagnetometerNoiseEstimatorTest {
     @Test
     fun start_whenDefaultStopMode_resets() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = MagnetometerNoiseEstimator(context)
+        val estimator = AccelerometerNoiseEstimator(context)
 
-        val noiseEstimator: AccumulatedMagneticFluxDensityTriadNoiseEstimator? =
+        val noiseEstimator: AccumulatedAccelerationTriadNoiseEstimator? =
             estimator.getPrivateProperty("noiseEstimator")
         requireNotNull(noiseEstimator)
         val noiseEstimatorSpy = spyk(noiseEstimator)
         estimator.setPrivateProperty("noiseEstimator", noiseEstimatorSpy)
 
-        val timeIntervalEstimator: TimeIntervalEstimator? =
-            getPrivateProperty(BaseAccumulatedEstimator::class, estimator, "timeIntervalEstimator")
+        val timeIntervalEstimator: TimeIntervalEstimator? = getPrivateProperty(
+            BaseAccumulatedEstimator::class,
+            estimator,
+            "timeIntervalEstimator"
+        )
         requireNotNull(timeIntervalEstimator)
         val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
         setPrivateProperty(
@@ -864,16 +870,19 @@ class MagnetometerNoiseEstimatorTest {
     @Test
     fun start_whenMaxDurationOnlyStopMode_resets() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = MagnetometerNoiseEstimator(context, stopMode = StopMode.MAX_DURATION_ONLY)
+        val estimator = AccelerometerNoiseEstimator(context, stopMode = StopMode.MAX_DURATION_ONLY)
 
-        val noiseEstimator: AccumulatedMagneticFluxDensityTriadNoiseEstimator? =
+        val noiseEstimator: AccumulatedAccelerationTriadNoiseEstimator? =
             estimator.getPrivateProperty("noiseEstimator")
         requireNotNull(noiseEstimator)
         val noiseEstimatorSpy = spyk(noiseEstimator)
         estimator.setPrivateProperty("noiseEstimator", noiseEstimatorSpy)
 
-        val timeIntervalEstimator: TimeIntervalEstimator? =
-            getPrivateProperty(BaseAccumulatedEstimator::class, estimator, "timeIntervalEstimator")
+        val timeIntervalEstimator: TimeIntervalEstimator? = getPrivateProperty(
+            BaseAccumulatedEstimator::class,
+            estimator,
+            "timeIntervalEstimator"
+        )
         requireNotNull(timeIntervalEstimator)
         val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
         setPrivateProperty(
@@ -899,7 +908,7 @@ class MagnetometerNoiseEstimatorTest {
     @Test
     fun start_whenResultUnreliable_resets() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = MagnetometerNoiseEstimator(context)
+        val estimator = AccelerometerNoiseEstimator(context)
 
         setPrivateProperty(BaseAccumulatedEstimator::class, estimator, "resultUnreliable", true)
         assertTrue(estimator.resultUnreliable)
@@ -916,7 +925,7 @@ class MagnetometerNoiseEstimatorTest {
     @Test(expected = IllegalStateException::class)
     fun start_whenAlreadyRunning_throwsIllegalStateException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = MagnetometerNoiseEstimator(context)
+        val estimator = AccelerometerNoiseEstimator(context)
 
         assertFalse(estimator.running)
 
@@ -931,9 +940,9 @@ class MagnetometerNoiseEstimatorTest {
     @Test
     fun stop_whenAlreadyStarted_stopsSensorCollector() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = MagnetometerNoiseEstimator(context)
+        val estimator = AccelerometerNoiseEstimator(context)
 
-        val collector: MagnetometerSensorCollector? =
+        val collector: AccelerometerSensorCollector? =
             estimator.getPrivateProperty("collector")
         requireNotNull(collector)
         assertSame(context, collector.context)
@@ -962,9 +971,9 @@ class MagnetometerNoiseEstimatorTest {
     @Test
     fun stop_whenNotAlreadyStarted_stopsSensorCollector() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = MagnetometerNoiseEstimator(context)
+        val estimator = AccelerometerNoiseEstimator(context)
 
-        val collector: MagnetometerSensorCollector? =
+        val collector: AccelerometerSensorCollector? =
             estimator.getPrivateProperty("collector")
         requireNotNull(collector)
         assertSame(context, collector.context)
@@ -988,77 +997,50 @@ class MagnetometerNoiseEstimatorTest {
     @Test
     fun onMeasurement_whenUnreliableAccuracy_makesResultUnreliable() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = MagnetometerNoiseEstimator(context)
+        val estimator = AccelerometerNoiseEstimator(context)
 
         assertFalse(estimator.resultUnreliable)
 
-        val measurementListener: MagnetometerSensorCollector.OnMeasurementListener? =
+        val measurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
             estimator.getPrivateProperty("measurementListener")
         requireNotNull(measurementListener)
 
-        val earthB = getEarthMagneticFluxDensity()
-        val b = getBodyMagneticFluxDensity(earthB)
-        val bx = MagneticFluxDensityConverter.convert(
-            b.bx,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
-        val by = MagneticFluxDensityConverter.convert(
-            b.by,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
-        val bz = MagneticFluxDensityConverter.convert(
-            b.bz,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
+        val gravity = getGravity()
+        val ax = gravity.gx.toFloat()
+        val ay = gravity.gy.toFloat()
+        val az = gravity.gz.toFloat()
         val timestamp = SystemClock.elapsedRealtimeNanos()
         val accuracy = SensorAccuracy.UNRELIABLE
 
-        measurementListener.onMeasurement(bx, by, bz, null, null, null, timestamp, accuracy)
+        measurementListener.onMeasurement(ax, ay, az, null, null, null, timestamp, accuracy)
 
         assertTrue(estimator.resultUnreliable)
-        assertEquals(earthB.norm, b.norm, 0.0)
     }
 
     @Test
     fun onMeasurement_whenFirstMeasurement_setsInitialTimestamp() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = MagnetometerNoiseEstimator(context)
+        val estimator = AccelerometerNoiseEstimator(context)
 
         val initialTimestampNanos1: Long? =
             getPrivateProperty(BaseAccumulatedEstimator::class, estimator, "initialTimestampNanos")
         requireNotNull(initialTimestampNanos1)
         assertEquals(0L, initialTimestampNanos1)
 
-        val measurementListener: MagnetometerSensorCollector.OnMeasurementListener? =
+        val measurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
             estimator.getPrivateProperty("measurementListener")
         requireNotNull(measurementListener)
 
-        val earthB = getEarthMagneticFluxDensity()
-        val b = getBodyMagneticFluxDensity(earthB)
-        val bx = MagneticFluxDensityConverter.convert(
-            b.bx,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
-        val by = MagneticFluxDensityConverter.convert(
-            b.by,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
-        val bz = MagneticFluxDensityConverter.convert(
-            b.bz,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
+        val gravity = getGravity()
+        val ax = gravity.gx.toFloat()
+        val ay = gravity.gy.toFloat()
+        val az = gravity.gz.toFloat()
         val timestamp1 = SystemClock.elapsedRealtimeNanos()
         val timestamp2 = timestamp1 + TIME_INTERVAL_MILLIS * MILLIS_TO_NANOS
-        val accuracy = SensorAccuracy.HIGH
+        val accuracy = SensorAccuracy.MEDIUM
 
         // set measurement
-        measurementListener.onMeasurement(bx, by, bz, null, null, null, timestamp1, accuracy)
+        measurementListener.onMeasurement(ax, ay, az, null, null, null, timestamp1, accuracy)
 
         val initialTimestampNanos2: Long? =
             getPrivateProperty(BaseAccumulatedEstimator::class, estimator, "initialTimestampNanos")
@@ -1066,7 +1048,7 @@ class MagnetometerNoiseEstimatorTest {
         assertEquals(timestamp1, initialTimestampNanos2)
 
         // calling again with another timestamp, makes no effect
-        measurementListener.onMeasurement(bx, by, bz, null, null, null, timestamp2, accuracy)
+        measurementListener.onMeasurement(ax, ay, az, null, null, null, timestamp2, accuracy)
 
         val initialTimestampNanos3: Long? =
             getPrivateProperty(BaseAccumulatedEstimator::class, estimator, "initialTimestampNanos")
@@ -1077,9 +1059,9 @@ class MagnetometerNoiseEstimatorTest {
     @Test
     fun onMeasurement_addsMeasurementToNoiseAndTimeIntervalEstimators() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = MagnetometerNoiseEstimator(context)
+        val estimator = AccelerometerNoiseEstimator(context)
 
-        val noiseEstimator: AccumulatedMagneticFluxDensityTriadNoiseEstimator? =
+        val noiseEstimator: AccumulatedAccelerationTriadNoiseEstimator? =
             estimator.getPrivateProperty("noiseEstimator")
         requireNotNull(noiseEstimator)
         val noiseEstimatorSpy = spyk(noiseEstimator)
@@ -1096,97 +1078,66 @@ class MagnetometerNoiseEstimatorTest {
             timeIntervalEstimatorSpy
         )
 
-        val measurementListener: MagnetometerSensorCollector.OnMeasurementListener? =
+        val measurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
             estimator.getPrivateProperty("measurementListener")
         requireNotNull(measurementListener)
 
-        val earthB = getEarthMagneticFluxDensity()
-        val b = getBodyMagneticFluxDensity(earthB)
-        val bx = MagneticFluxDensityConverter.convert(
-            b.bx,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
-        val by = MagneticFluxDensityConverter.convert(
-            b.by,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
-        val bz = MagneticFluxDensityConverter.convert(
-            b.bz,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
+        val gravity = getGravity()
+        val ax = gravity.gx.toFloat()
+        val ay = gravity.gy.toFloat()
+        val az = gravity.gz.toFloat()
         val timestamp1 = SystemClock.elapsedRealtimeNanos()
-        val accuracy = SensorAccuracy.HIGH
+        val accuracy = SensorAccuracy.MEDIUM
 
         // set measurement
-        measurementListener.onMeasurement(bx, by, bz, null, null, null, timestamp1, accuracy)
+        measurementListener.onMeasurement(ax, ay, az, null, null, null, timestamp1, accuracy)
 
-        val bxT = MagneticFluxDensityConverter.convert(
-            bx.toDouble(),
-            MagneticFluxDensityUnit.MICROTESLA,
-            MagneticFluxDensityUnit.TESLA
-        )
-        val byT = MagneticFluxDensityConverter.convert(
-            by.toDouble(),
-            MagneticFluxDensityUnit.MICROTESLA,
-            MagneticFluxDensityUnit.TESLA
-        )
-        val bzT = MagneticFluxDensityConverter.convert(
-            bz.toDouble(),
-            MagneticFluxDensityUnit.MICROTESLA,
-            MagneticFluxDensityUnit.TESLA
-        )
-        verify(exactly = 1) { noiseEstimatorSpy.addTriad(bxT, byT, bzT) }
+        verify(exactly = 1) {
+            noiseEstimatorSpy.addTriad(
+                ax.toDouble(),
+                ay.toDouble(),
+                az.toDouble()
+            )
+        }
         verify(exactly = 0) { timeIntervalEstimatorSpy.addTimestamp(any<Double>()) }
 
         // set another measurement
         val timestamp2 = timestamp1 + TIME_INTERVAL_MILLIS * MILLIS_TO_NANOS
-        measurementListener.onMeasurement(bx, by, bz, null, null, null, timestamp2, accuracy)
+        measurementListener.onMeasurement(ax, ay, az, null, null, null, timestamp2, accuracy)
 
-        verify(exactly = 2) { noiseEstimatorSpy.addTriad(bxT, byT, bzT) }
+        verify(exactly = 2) {
+            noiseEstimatorSpy.addTriad(
+                ax.toDouble(),
+                ay.toDouble(),
+                az.toDouble()
+            )
+        }
         verify(exactly = 1) { timeIntervalEstimatorSpy.addTimestamp(any<Double>()) }
-
-        assertEquals(earthB.norm, b.norm, 0.0)
     }
 
     @Test
     fun onMeasurement_updatesEndTimestampNanos() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = MagnetometerNoiseEstimator(context)
+        val estimator = AccelerometerNoiseEstimator(context)
 
         val endTimestampNanos1: Long? =
             getPrivateProperty(BaseAccumulatedEstimator::class, estimator, "endTimestampNanos")
         requireNotNull(endTimestampNanos1)
         assertEquals(0L, endTimestampNanos1)
 
-        val measurementListener: MagnetometerSensorCollector.OnMeasurementListener? =
+        val measurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
             estimator.getPrivateProperty("measurementListener")
         requireNotNull(measurementListener)
 
-        val earthB = getEarthMagneticFluxDensity()
-        val b = getBodyMagneticFluxDensity(earthB)
-        val bx = MagneticFluxDensityConverter.convert(
-            b.bx,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
-        val by = MagneticFluxDensityConverter.convert(
-            b.by,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
-        val bz = MagneticFluxDensityConverter.convert(
-            b.bz,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
+        val gravity = getGravity()
+        val ax = gravity.gx.toFloat()
+        val ay = gravity.gy.toFloat()
+        val az = gravity.gz.toFloat()
         val timestamp = SystemClock.elapsedRealtimeNanos()
-        val accuracy = SensorAccuracy.HIGH
+        val accuracy = SensorAccuracy.MEDIUM
 
         // set measurement
-        measurementListener.onMeasurement(bx, by, bz, null, null, null, timestamp, accuracy)
+        measurementListener.onMeasurement(ax, ay, az, null, null, null, timestamp, accuracy)
 
         val endTimestampNanos2: Long? =
             getPrivateProperty(BaseAccumulatedEstimator::class, estimator, "endTimestampNanos")
@@ -1197,37 +1148,24 @@ class MagnetometerNoiseEstimatorTest {
     @Test
     fun onMeasurement_increasesNumberOfProcessedMeasurements() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = MagnetometerNoiseEstimator(context)
+        val estimator = AccelerometerNoiseEstimator(context)
 
         // check default value
         assertEquals(0, estimator.numberOfProcessedMeasurements)
 
-        val measurementListener: MagnetometerSensorCollector.OnMeasurementListener? =
+        val measurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
             estimator.getPrivateProperty("measurementListener")
         requireNotNull(measurementListener)
 
-        val earthB = getEarthMagneticFluxDensity()
-        val b = getBodyMagneticFluxDensity(earthB)
-        val bx = MagneticFluxDensityConverter.convert(
-            b.bx,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
-        val by = MagneticFluxDensityConverter.convert(
-            b.by,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
-        val bz = MagneticFluxDensityConverter.convert(
-            b.bz,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
+        val gravity = getGravity()
+        val ax = gravity.gx.toFloat()
+        val ay = gravity.gy.toFloat()
+        val az = gravity.gz.toFloat()
         val timestamp = SystemClock.elapsedRealtimeNanos()
-        val accuracy = SensorAccuracy.HIGH
+        val accuracy = SensorAccuracy.MEDIUM
 
         // set measurement
-        measurementListener.onMeasurement(bx, by, bz, null, null, null, timestamp, accuracy)
+        measurementListener.onMeasurement(ax, ay, az, null, null, null, timestamp, accuracy)
 
         // check
         assertEquals(1, estimator.numberOfProcessedMeasurements)
@@ -1236,9 +1174,9 @@ class MagnetometerNoiseEstimatorTest {
     @Test
     fun onMeasurement_whenIsCompleteMaxSamplesOnlyAndNoListener() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = MagnetometerNoiseEstimator(context, stopMode = StopMode.MAX_SAMPLES_ONLY)
+        val estimator = AccelerometerNoiseEstimator(context, stopMode = StopMode.MAX_SAMPLES_ONLY)
 
-        val collector: MagnetometerSensorCollector? =
+        val collector: AccelerometerSensorCollector? =
             estimator.getPrivateProperty("collector")
         requireNotNull(collector)
         val collectorSpy = spyk(collector)
@@ -1249,35 +1187,22 @@ class MagnetometerNoiseEstimatorTest {
         assertEquals(0, estimator.numberOfProcessedMeasurements)
         assertFalse(estimator.resultAvailable)
 
-        val measurementListener: MagnetometerSensorCollector.OnMeasurementListener? =
+        val measurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
             estimator.getPrivateProperty("measurementListener")
         requireNotNull(measurementListener)
 
-        val earthB = getEarthMagneticFluxDensity()
-        val b = getBodyMagneticFluxDensity(earthB)
-        val bx = MagneticFluxDensityConverter.convert(
-            b.bx,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
-        val by = MagneticFluxDensityConverter.convert(
-            b.by,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
-        val bz = MagneticFluxDensityConverter.convert(
-            b.bz,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
+        val gravity = getGravity()
+        val ax = gravity.gx.toFloat()
+        val ay = gravity.gy.toFloat()
+        val az = gravity.gz.toFloat()
         val timestamp = SystemClock.elapsedRealtimeNanos()
-        val accuracy = SensorAccuracy.HIGH
+        val accuracy = SensorAccuracy.MEDIUM
 
         for (i in 1..maxSamples) {
             measurementListener.onMeasurement(
-                bx,
-                by,
-                bz,
+                ax,
+                ay,
+                az,
                 null,
                 null,
                 null,
@@ -1294,21 +1219,22 @@ class MagnetometerNoiseEstimatorTest {
         verify(exactly = 1) { collectorSpy.stop() }
 
         // check result
-        checkResultMaxSamples(estimator, b)
+        checkResultMaxSamples(estimator, gravity)
     }
 
     @Test
     fun onMeasurement_whenIsCompleteMaxSamplesOnlyAndListener() {
-        val completedListener = mockk<AccumulatedTriadEstimator
-        .OnEstimationCompletedListener<MagnetometerNoiseEstimator>>(relaxUnitFun = true)
+        val completedListener =
+            mockk<AccumulatedTriadEstimator
+            .OnEstimationCompletedListener<AccelerometerNoiseEstimator>>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = MagnetometerNoiseEstimator(
+        val estimator = AccelerometerNoiseEstimator(
             context,
             stopMode = StopMode.MAX_SAMPLES_ONLY,
             completedListener = completedListener
         )
 
-        val collector: MagnetometerSensorCollector? =
+        val collector: AccelerometerSensorCollector? =
             estimator.getPrivateProperty("collector")
         requireNotNull(collector)
         val collectorSpy = spyk(collector)
@@ -1319,39 +1245,26 @@ class MagnetometerNoiseEstimatorTest {
         assertEquals(0, estimator.numberOfProcessedMeasurements)
         assertFalse(estimator.resultAvailable)
 
-        val measurementListener: MagnetometerSensorCollector.OnMeasurementListener? =
+        val measurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
             estimator.getPrivateProperty("measurementListener")
         requireNotNull(measurementListener)
 
-        val earthB = getEarthMagneticFluxDensity()
-        val b = getBodyMagneticFluxDensity(earthB)
-        val bx = MagneticFluxDensityConverter.convert(
-            b.bx,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
-        val by = MagneticFluxDensityConverter.convert(
-            b.by,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
-        val bz = MagneticFluxDensityConverter.convert(
-            b.bz,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
+        val gravity = getGravity()
+        val ax = gravity.gx.toFloat()
+        val ay = gravity.gy.toFloat()
+        val az = gravity.gz.toFloat()
         val timestamp = SystemClock.elapsedRealtimeNanos()
-        val accuracy = SensorAccuracy.HIGH
+        val accuracy = SensorAccuracy.MEDIUM
 
         for (i in 1..maxSamples) {
             measurementListener.onMeasurement(
-                bx,
-                by,
-                bz,
+                ax,
+                ay,
+                az,
                 null,
                 null,
                 null,
-                timestamp + i * TIME_INTERVAL_MILLIS * MILLIS_TO_NANOS,
+                timestamp + i * MILLIS_TO_NANOS,
                 accuracy
             )
 
@@ -1366,15 +1279,15 @@ class MagnetometerNoiseEstimatorTest {
         verify(exactly = 1) { completedListener.onEstimationCompleted(estimator) }
 
         // check result
-        checkResultMaxSamples(estimator, b)
+        checkResultMaxSamples(estimator, gravity)
     }
 
     @Test
     fun onMeasurement_whenIsCompleteMaxDurationOnlyAndNoListener() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = MagnetometerNoiseEstimator(context, stopMode = StopMode.MAX_DURATION_ONLY)
+        val estimator = AccelerometerNoiseEstimator(context, stopMode = StopMode.MAX_DURATION_ONLY)
 
-        val collector: MagnetometerSensorCollector? =
+        val collector: AccelerometerSensorCollector? =
             estimator.getPrivateProperty("collector")
         requireNotNull(collector)
         val collectorSpy = spyk(collector)
@@ -1385,37 +1298,24 @@ class MagnetometerNoiseEstimatorTest {
         assertEquals(0, estimator.numberOfProcessedMeasurements)
         assertFalse(estimator.resultAvailable)
 
-        val measurementListener: MagnetometerSensorCollector.OnMeasurementListener? =
+        val measurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
             estimator.getPrivateProperty("measurementListener")
         requireNotNull(measurementListener)
 
-        val earthB = getEarthMagneticFluxDensity()
-        val b = getBodyMagneticFluxDensity(earthB)
-        val bx = MagneticFluxDensityConverter.convert(
-            b.bx,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
-        val by = MagneticFluxDensityConverter.convert(
-            b.by,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
-        val bz = MagneticFluxDensityConverter.convert(
-            b.bz,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
+        val gravity = getGravity()
+        val ax = gravity.gx.toFloat()
+        val ay = gravity.gy.toFloat()
+        val az = gravity.gz.toFloat()
         val timestamp1 = SystemClock.elapsedRealtimeNanos()
-        val accuracy = SensorAccuracy.HIGH
+        val accuracy = SensorAccuracy.MEDIUM
 
-        measurementListener.onMeasurement(bx, by, bz, null, null, null, timestamp1, accuracy)
+        measurementListener.onMeasurement(ax, ay, az, null, null, null, timestamp1, accuracy)
 
         assertEquals(1, estimator.numberOfProcessedMeasurements)
         assertFalse(estimator.resultAvailable)
 
         val timestamp2 = timestamp1 + TIME_INTERVAL_MILLIS * MILLIS_TO_NANOS
-        measurementListener.onMeasurement(bx, by, bz, null, null, null, timestamp2, accuracy)
+        measurementListener.onMeasurement(ax, ay, az, null, null, null, timestamp2, accuracy)
 
         assertEquals(2, estimator.numberOfProcessedMeasurements)
         assertFalse(estimator.resultAvailable)
@@ -1423,7 +1323,7 @@ class MagnetometerNoiseEstimatorTest {
         // add another measurement after max duration
         val timestamp3 = timestamp1 + maxDurationMillis * MILLIS_TO_NANOS
 
-        measurementListener.onMeasurement(bx, by, bz, null, null, null, timestamp3, accuracy)
+        measurementListener.onMeasurement(ax, ay, az, null, null, null, timestamp3, accuracy)
 
         assertEquals(3, estimator.numberOfProcessedMeasurements)
         assertTrue(estimator.resultAvailable)
@@ -1432,21 +1332,21 @@ class MagnetometerNoiseEstimatorTest {
         verify(exactly = 1) { collectorSpy.stop() }
 
         // check result
-        checkResultMaxDuration(estimator, b)
+        checkResultMaxDuration(estimator, gravity)
     }
 
     @Test
     fun onMeasurement_whenIsCompleteMaxDurationOnlyAndListener() {
         val completedListener = mockk<AccumulatedTriadEstimator
-        .OnEstimationCompletedListener<MagnetometerNoiseEstimator>>(relaxUnitFun = true)
+        .OnEstimationCompletedListener<AccelerometerNoiseEstimator>>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = MagnetometerNoiseEstimator(
+        val estimator = AccelerometerNoiseEstimator(
             context,
             stopMode = StopMode.MAX_DURATION_ONLY,
             completedListener = completedListener
         )
 
-        val collector: MagnetometerSensorCollector? =
+        val collector: AccelerometerSensorCollector? =
             estimator.getPrivateProperty("collector")
         requireNotNull(collector)
         val collectorSpy = spyk(collector)
@@ -1457,37 +1357,24 @@ class MagnetometerNoiseEstimatorTest {
         assertEquals(0, estimator.numberOfProcessedMeasurements)
         assertFalse(estimator.resultAvailable)
 
-        val measurementListener: MagnetometerSensorCollector.OnMeasurementListener? =
+        val measurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
             estimator.getPrivateProperty("measurementListener")
         requireNotNull(measurementListener)
 
-        val earthB = getEarthMagneticFluxDensity()
-        val b = getBodyMagneticFluxDensity(earthB)
-        val bx = MagneticFluxDensityConverter.convert(
-            b.bx,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
-        val by = MagneticFluxDensityConverter.convert(
-            b.by,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
-        val bz = MagneticFluxDensityConverter.convert(
-            b.bz,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
+        val gravity = getGravity()
+        val ax = gravity.gx.toFloat()
+        val ay = gravity.gy.toFloat()
+        val az = gravity.gz.toFloat()
         val timestamp1 = SystemClock.elapsedRealtimeNanos()
-        val accuracy = SensorAccuracy.HIGH
+        val accuracy = SensorAccuracy.MEDIUM
 
-        measurementListener.onMeasurement(bx, by, bz, null, null, null, timestamp1, accuracy)
+        measurementListener.onMeasurement(ax, ay, az, null, null, null, timestamp1, accuracy)
 
         assertEquals(1, estimator.numberOfProcessedMeasurements)
         assertFalse(estimator.resultAvailable)
 
         val timestamp2 = timestamp1 + TIME_INTERVAL_MILLIS * MILLIS_TO_NANOS
-        measurementListener.onMeasurement(bx, by, bz, null, null, null, timestamp2, accuracy)
+        measurementListener.onMeasurement(ax, ay, az, null, null, null, timestamp2, accuracy)
 
         assertEquals(2, estimator.numberOfProcessedMeasurements)
         assertFalse(estimator.resultAvailable)
@@ -1495,7 +1382,7 @@ class MagnetometerNoiseEstimatorTest {
         // add another measurement after max duration
         val timestamp3 = timestamp1 + maxDurationMillis * MILLIS_TO_NANOS
 
-        measurementListener.onMeasurement(bx, by, bz, null, null, null, timestamp3, accuracy)
+        measurementListener.onMeasurement(ax, ay, az, null, null, null, timestamp3, accuracy)
 
         assertEquals(3, estimator.numberOfProcessedMeasurements)
         assertTrue(estimator.resultAvailable)
@@ -1507,16 +1394,16 @@ class MagnetometerNoiseEstimatorTest {
         verify(exactly = 1) { completedListener.onEstimationCompleted(estimator) }
 
         // check result
-        checkResultMaxDuration(estimator, b)
+        checkResultMaxDuration(estimator, gravity)
     }
 
     @Test
     fun onMeasurement_whenIsCompleteMaxSamplesOrDurationAndNoListener() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator =
-            MagnetometerNoiseEstimator(context, stopMode = StopMode.MAX_SAMPLES_OR_DURATION)
+            AccelerometerNoiseEstimator(context, stopMode = StopMode.MAX_SAMPLES_OR_DURATION)
 
-        val collector: MagnetometerSensorCollector? =
+        val collector: AccelerometerSensorCollector? =
             estimator.getPrivateProperty("collector")
         requireNotNull(collector)
         val collectorSpy = spyk(collector)
@@ -1527,37 +1414,24 @@ class MagnetometerNoiseEstimatorTest {
         assertEquals(0, estimator.numberOfProcessedMeasurements)
         assertFalse(estimator.resultAvailable)
 
-        val measurementListener: MagnetometerSensorCollector.OnMeasurementListener? =
+        val measurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
             estimator.getPrivateProperty("measurementListener")
         requireNotNull(measurementListener)
 
-        val earthB = getEarthMagneticFluxDensity()
-        val b = getBodyMagneticFluxDensity(earthB)
-        val bx = MagneticFluxDensityConverter.convert(
-            b.bx,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
-        val by = MagneticFluxDensityConverter.convert(
-            b.by,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
-        val bz = MagneticFluxDensityConverter.convert(
-            b.bz,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
+        val gravity = getGravity()
+        val ax = gravity.gx.toFloat()
+        val ay = gravity.gy.toFloat()
+        val az = gravity.gz.toFloat()
         val timestamp1 = SystemClock.elapsedRealtimeNanos()
-        val accuracy = SensorAccuracy.HIGH
+        val accuracy = SensorAccuracy.MEDIUM
 
-        measurementListener.onMeasurement(bx, by, bz, null, null, null, timestamp1, accuracy)
+        measurementListener.onMeasurement(ax, ay, az, null, null, null, timestamp1, accuracy)
 
         assertEquals(1, estimator.numberOfProcessedMeasurements)
         assertFalse(estimator.resultAvailable)
 
         val timestamp2 = timestamp1 + TIME_INTERVAL_MILLIS * MILLIS_TO_NANOS
-        measurementListener.onMeasurement(bx, by, bz, null, null, null, timestamp2, accuracy)
+        measurementListener.onMeasurement(ax, ay, az, null, null, null, timestamp2, accuracy)
 
         assertEquals(2, estimator.numberOfProcessedMeasurements)
         assertFalse(estimator.resultAvailable)
@@ -1565,7 +1439,7 @@ class MagnetometerNoiseEstimatorTest {
         // add another measurement after max duration
         val timestamp3 = timestamp1 + maxDurationMillis * MILLIS_TO_NANOS
 
-        measurementListener.onMeasurement(bx, by, bz, null, null, null, timestamp3, accuracy)
+        measurementListener.onMeasurement(ax, ay, az, null, null, null, timestamp3, accuracy)
 
         assertEquals(3, estimator.numberOfProcessedMeasurements)
         assertTrue(estimator.resultAvailable)
@@ -1574,22 +1448,21 @@ class MagnetometerNoiseEstimatorTest {
         verify(exactly = 1) { collectorSpy.stop() }
 
         // check result
-        checkResultMaxDuration(estimator, b)
+        checkResultMaxDuration(estimator, gravity)
     }
 
     @Test
     fun onMeasurement_whenIsCompleteMaxSamplesOrDurationAndListener() {
         val completedListener = mockk<AccumulatedTriadEstimator
-        .OnEstimationCompletedListener<MagnetometerNoiseEstimator>>(relaxUnitFun = true)
+        .OnEstimationCompletedListener<AccelerometerNoiseEstimator>>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator =
-            MagnetometerNoiseEstimator(
-                context,
-                stopMode = StopMode.MAX_SAMPLES_OR_DURATION,
-                completedListener = completedListener
-            )
+        val estimator = AccelerometerNoiseEstimator(
+            context,
+            stopMode = StopMode.MAX_SAMPLES_OR_DURATION,
+            completedListener = completedListener
+        )
 
-        val collector: MagnetometerSensorCollector? =
+        val collector: AccelerometerSensorCollector? =
             estimator.getPrivateProperty("collector")
         requireNotNull(collector)
         val collectorSpy = spyk(collector)
@@ -1600,37 +1473,24 @@ class MagnetometerNoiseEstimatorTest {
         assertEquals(0, estimator.numberOfProcessedMeasurements)
         assertFalse(estimator.resultAvailable)
 
-        val measurementListener: MagnetometerSensorCollector.OnMeasurementListener? =
+        val measurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
             estimator.getPrivateProperty("measurementListener")
         requireNotNull(measurementListener)
 
-        val earthB = getEarthMagneticFluxDensity()
-        val b = getBodyMagneticFluxDensity(earthB)
-        val bx = MagneticFluxDensityConverter.convert(
-            b.bx,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
-        val by = MagneticFluxDensityConverter.convert(
-            b.by,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
-        val bz = MagneticFluxDensityConverter.convert(
-            b.bz,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
+        val gravity = getGravity()
+        val ax = gravity.gx.toFloat()
+        val ay = gravity.gy.toFloat()
+        val az = gravity.gz.toFloat()
         val timestamp1 = SystemClock.elapsedRealtimeNanos()
-        val accuracy = SensorAccuracy.HIGH
+        val accuracy = SensorAccuracy.MEDIUM
 
-        measurementListener.onMeasurement(bx, by, bz, null, null, null, timestamp1, accuracy)
+        measurementListener.onMeasurement(ax, ay, az, null, null, null, timestamp1, accuracy)
 
         assertEquals(1, estimator.numberOfProcessedMeasurements)
         assertFalse(estimator.resultAvailable)
 
         val timestamp2 = timestamp1 + TIME_INTERVAL_MILLIS * MILLIS_TO_NANOS
-        measurementListener.onMeasurement(bx, by, bz, null, null, null, timestamp2, accuracy)
+        measurementListener.onMeasurement(ax, ay, az, null, null, null, timestamp2, accuracy)
 
         assertEquals(2, estimator.numberOfProcessedMeasurements)
         assertFalse(estimator.resultAvailable)
@@ -1638,7 +1498,7 @@ class MagnetometerNoiseEstimatorTest {
         // add another measurement after max duration
         val timestamp3 = timestamp1 + maxDurationMillis * MILLIS_TO_NANOS
 
-        measurementListener.onMeasurement(bx, by, bz, null, null, null, timestamp3, accuracy)
+        measurementListener.onMeasurement(ax, ay, az, null, null, null, timestamp3, accuracy)
 
         assertEquals(3, estimator.numberOfProcessedMeasurements)
         assertTrue(estimator.resultAvailable)
@@ -1650,13 +1510,13 @@ class MagnetometerNoiseEstimatorTest {
         verify(exactly = 1) { completedListener.onEstimationCompleted(estimator) }
 
         // check result
-        checkResultMaxDuration(estimator, b)
+        checkResultMaxDuration(estimator, gravity)
     }
 
     @Test
     fun onAccuracyChanged_whenUnreliableAndNoListener_setsResultAsUnreliable() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = MagnetometerNoiseEstimator(context)
+        val estimator = AccelerometerNoiseEstimator(context)
 
         // check default value
         assertFalse(estimator.resultUnreliable)
@@ -1679,11 +1539,12 @@ class MagnetometerNoiseEstimatorTest {
     @Test
     fun onAccuracyChanged_whenUnreliableAndListener_setsResultAsUnreliable() {
         val unreliableListener =
-            mockk<AccumulatedTriadEstimator.OnUnreliableListener<MagnetometerNoiseEstimator>>(
+            mockk<AccumulatedTriadEstimator.OnUnreliableListener<AccelerometerNoiseEstimator>>(
                 relaxUnitFun = true
             )
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = MagnetometerNoiseEstimator(context, unreliableListener = unreliableListener)
+        val estimator =
+            AccelerometerNoiseEstimator(context, unreliableListener = unreliableListener)
 
         // check default value
         assertFalse(estimator.resultUnreliable)
@@ -1707,11 +1568,12 @@ class MagnetometerNoiseEstimatorTest {
     @Test
     fun onAccuracyChanged_whenNotUnreliable_makesNoAction() {
         val unreliableListener =
-            mockk<AccumulatedTriadEstimator.OnUnreliableListener<MagnetometerNoiseEstimator>>(
+            mockk<AccumulatedTriadEstimator.OnUnreliableListener<AccelerometerNoiseEstimator>>(
                 relaxUnitFun = true
             )
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = MagnetometerNoiseEstimator(context, unreliableListener = unreliableListener)
+        val estimator =
+            AccelerometerNoiseEstimator(context, unreliableListener = unreliableListener)
 
         // check default value
         assertFalse(estimator.resultUnreliable)
@@ -1722,7 +1584,6 @@ class MagnetometerNoiseEstimatorTest {
                 estimator,
                 "accuracyChangedListener"
             )
-
         requireNotNull(accuracyChangedListener)
 
         accuracyChangedListener.onAccuracyChanged(SensorAccuracy.MEDIUM)
@@ -1733,8 +1594,8 @@ class MagnetometerNoiseEstimatorTest {
     }
 
     private fun checkResultMaxSamples(
-        estimator: MagnetometerNoiseEstimator,
-        b: BodyMagneticFluxDensity
+        estimator: AccelerometerNoiseEstimator,
+        gravity: ECEFGravity
     ) {
         assertFalse(estimator.running)
         assertTrue(estimator.resultAvailable)
@@ -1742,138 +1603,139 @@ class MagnetometerNoiseEstimatorTest {
 
         val averageX = estimator.averageX
         requireNotNull(averageX)
-        assertEquals(b.bx, averageX, SMALL_ABSOLUTE_ERROR)
+        assertEquals(gravity.gx, averageX, ABSOLUTE_ERROR)
 
         val averageX1 = estimator.averageXAsMeasurement
         requireNotNull(averageX1)
-        val averageX2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        val averageX2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
         assertTrue(estimator.getAverageXAsMeasurement(averageX2))
         assertEquals(averageX1, averageX2)
-        assertEquals(averageX, averageX1.value.toDouble(), SMALL_ABSOLUTE_ERROR)
-        assertEquals(MagneticFluxDensityUnit.TESLA, averageX1.unit)
+        assertEquals(averageX, averageX1.value.toDouble(), 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, averageX1.unit)
 
         val averageY = estimator.averageY
         requireNotNull(averageY)
-        assertEquals(b.by, averageY, SMALL_ABSOLUTE_ERROR)
+        assertEquals(gravity.gy, averageY, ABSOLUTE_ERROR)
 
         val averageY1 = estimator.averageYAsMeasurement
         requireNotNull(averageY1)
-        val averageY2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        val averageY2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
         assertTrue(estimator.getAverageYAsMeasurement(averageY2))
         assertEquals(averageY1, averageY2)
-        assertEquals(averageY, averageY1.value.toDouble(), SMALL_ABSOLUTE_ERROR)
-        assertEquals(MagneticFluxDensityUnit.TESLA, averageY1.unit)
+        assertEquals(averageY, averageY1.value.toDouble(), 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, averageY1.unit)
 
         val averageZ = estimator.averageZ
         requireNotNull(averageZ)
-        assertEquals(b.bz, averageZ, SMALL_ABSOLUTE_ERROR)
+        assertEquals(gravity.gz, averageZ, ABSOLUTE_ERROR)
 
         val averageZ1 = estimator.averageZAsMeasurement
         requireNotNull(averageZ1)
-        val averageZ2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        val averageZ2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
         assertTrue(estimator.getAverageZAsMeasurement(averageZ2))
         assertEquals(averageZ1, averageZ2)
-        assertEquals(averageZ, averageZ1.value.toDouble(), SMALL_ABSOLUTE_ERROR)
-        assertEquals(MagneticFluxDensityUnit.TESLA, averageZ1.unit)
+        assertEquals(averageZ, averageZ1.value.toDouble(), 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, averageZ1.unit)
 
         val averageTriad1 = estimator.averageTriad
         requireNotNull(averageTriad1)
-        assertEquals(MagneticFluxDensityUnit.TESLA, averageTriad1.unit)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, averageTriad1.unit)
         assertEquals(averageX, averageTriad1.valueX, 0.0)
         assertEquals(averageY, averageTriad1.valueY, 0.0)
         assertEquals(averageZ, averageTriad1.valueZ, 0.0)
-        val averageTriad2 = MagneticFluxDensityTriad()
+        val averageTriad2 = AccelerationTriad()
         assertTrue(estimator.getAverageTriad(averageTriad2))
         assertEquals(averageTriad1, averageTriad2)
 
         val averageNorm = estimator.averageNorm
         requireNotNull(averageNorm)
-        assertEquals(b.norm, averageNorm, SMALL_ABSOLUTE_ERROR)
+        assertEquals(gravity.norm, averageNorm, ABSOLUTE_ERROR)
 
         val averageNorm1 = estimator.averageNormAsMeasurement
         requireNotNull(averageNorm1)
-        val averageNorm2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        val averageNorm2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
         assertTrue(estimator.getAverageNormAsMeasurement(averageNorm2))
         assertEquals(averageNorm1, averageNorm2)
         assertEquals(averageNorm, averageNorm1.value.toDouble(), 0.0)
-        assertEquals(MagneticFluxDensityUnit.TESLA, averageNorm1.unit)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, averageNorm1.unit)
 
         val varianceX = estimator.varianceX
         requireNotNull(varianceX)
-        assertEquals(0.0, varianceX, SMALL_ABSOLUTE_ERROR)
+        assertEquals(0.0, varianceX, ABSOLUTE_ERROR)
 
         val varianceY = estimator.varianceY
         requireNotNull(varianceY)
-        assertEquals(0.0, varianceY, SMALL_ABSOLUTE_ERROR)
+        assertEquals(0.0, varianceY, ABSOLUTE_ERROR)
 
         val varianceZ = estimator.varianceZ
         requireNotNull(varianceZ)
-        assertEquals(0.0, varianceZ, SMALL_ABSOLUTE_ERROR)
+        assertEquals(0.0, varianceZ, ABSOLUTE_ERROR)
 
         val standardDeviationX = estimator.standardDeviationX
         requireNotNull(standardDeviationX)
-        assertEquals(0.0, standardDeviationX, SMALL_ABSOLUTE_ERROR)
+        assertEquals(0.0, standardDeviationX, ABSOLUTE_ERROR)
         val standardDeviationX1 = estimator.standardDeviationXAsMeasurement
         requireNotNull(standardDeviationX1)
-        val standardDeviationX2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        val standardDeviationX2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
         assertTrue(estimator.getStandardDeviationXAsMeasurement(standardDeviationX2))
         assertEquals(standardDeviationX1, standardDeviationX2)
         assertEquals(standardDeviationX, standardDeviationX1.value.toDouble(), 0.0)
-        assertEquals(MagneticFluxDensityUnit.TESLA, standardDeviationX1.unit)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, standardDeviationX1.unit)
 
         val standardDeviationY = estimator.standardDeviationY
         requireNotNull(standardDeviationY)
-        assertEquals(0.0, standardDeviationY, SMALL_ABSOLUTE_ERROR)
+        assertEquals(0.0, standardDeviationY, ABSOLUTE_ERROR)
         val standardDeviationY1 = estimator.standardDeviationYAsMeasurement
         requireNotNull(standardDeviationY1)
-        val standardDeviationY2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        val standardDeviationY2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
         assertTrue(estimator.getStandardDeviationYAsMeasurement(standardDeviationY2))
         assertEquals(standardDeviationY1, standardDeviationY2)
         assertEquals(standardDeviationY, standardDeviationY1.value.toDouble(), 0.0)
-        assertEquals(MagneticFluxDensityUnit.TESLA, standardDeviationY1.unit)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, standardDeviationY1.unit)
 
         val standardDeviationZ = estimator.standardDeviationZ
         requireNotNull(standardDeviationZ)
-        assertEquals(0.0, standardDeviationZ, SMALL_ABSOLUTE_ERROR)
+        assertEquals(0.0, standardDeviationZ, ABSOLUTE_ERROR)
         val standardDeviationZ1 = estimator.standardDeviationZAsMeasurement
         requireNotNull(standardDeviationZ1)
-        val standardDeviationZ2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        val standardDeviationZ2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
         assertTrue(estimator.getStandardDeviationZAsMeasurement(standardDeviationZ2))
         assertEquals(standardDeviationZ1, standardDeviationZ2)
         assertEquals(standardDeviationZ, standardDeviationZ1.value.toDouble(), 0.0)
-        assertEquals(MagneticFluxDensityUnit.TESLA, standardDeviationZ1.unit)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, standardDeviationZ1.unit)
 
         val standardDeviationTriad1 = estimator.standardDeviationTriad
         requireNotNull(standardDeviationTriad1)
-        assertEquals(MagneticFluxDensityUnit.TESLA, standardDeviationTriad1.unit)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, standardDeviationTriad1.unit)
         assertEquals(standardDeviationX, standardDeviationTriad1.valueX, 0.0)
         assertEquals(standardDeviationY, standardDeviationTriad1.valueY, 0.0)
         assertEquals(standardDeviationZ, standardDeviationTriad1.valueZ, 0.0)
-        val standardDeviationTriad2 = MagneticFluxDensityTriad()
+        val standardDeviationTriad2 = AccelerationTriad()
         assertTrue(estimator.getStandardDeviationTriad(standardDeviationTriad2))
         assertEquals(standardDeviationTriad1, standardDeviationTriad2)
 
         val standardDeviationNorm = estimator.standardDeviationNorm
         requireNotNull(standardDeviationNorm)
-        assertEquals(0.0, standardDeviationNorm, SMALL_ABSOLUTE_ERROR)
+        assertEquals(0.0, standardDeviationNorm, ABSOLUTE_ERROR)
         val standardDeviationNorm1 = estimator.standardDeviationNormAsMeasurement
         requireNotNull(standardDeviationNorm1)
-        val standardDeviationNorm2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        val standardDeviationNorm2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
         assertTrue(estimator.getStandardDeviationNormAsMeasurement(standardDeviationNorm2))
         assertEquals(standardDeviationNorm1, standardDeviationNorm2)
         assertEquals(standardDeviationNorm, standardDeviationNorm1.value.toDouble(), 0.0)
-        assertEquals(MagneticFluxDensityUnit.TESLA, standardDeviationNorm1.unit)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, standardDeviationNorm1.unit)
 
         val averageStandardDeviation = estimator.averageStandardDeviation
         requireNotNull(averageStandardDeviation)
-        assertEquals(0.0, averageStandardDeviation, SMALL_ABSOLUTE_ERROR)
+        assertEquals(0.0, averageStandardDeviation, ABSOLUTE_ERROR)
         val averageStandardDeviation1 = estimator.averageStandardDeviationAsMeasurement
         requireNotNull(averageStandardDeviation1)
-        val averageStandardDeviation2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        val averageStandardDeviation2 =
+            Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
         assertTrue(estimator.getAverageStandardDeviationAsMeasurement(averageStandardDeviation2))
         assertEquals(averageStandardDeviation1, averageStandardDeviation2)
         assertEquals(averageStandardDeviation, averageStandardDeviation1.value.toDouble(), 0.0)
-        assertEquals(MagneticFluxDensityUnit.TESLA, averageStandardDeviation1.unit)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, averageStandardDeviation1.unit)
 
         val psdX = estimator.psdX
         requireNotNull(psdX)
@@ -1924,10 +1786,7 @@ class MagnetometerNoiseEstimatorTest {
 
         val timeIntervalStandardDeviation = estimator.timeIntervalStandardDeviation
         requireNotNull(timeIntervalStandardDeviation)
-        assertEquals(
-            0.0, timeIntervalStandardDeviation,
-            LARGE_ABSOLUTE_ERROR
-        )
+        assertEquals(0.0, timeIntervalStandardDeviation, LARGE_ABSOLUTE_ERROR)
         val timeIntervalStandardDeviation1 = estimator.timeIntervalStandardDeviationAsTime
         requireNotNull(timeIntervalStandardDeviation1)
         val timeIntervalStandardDeviation2 = Time(0.0, TimeUnit.NANOSECOND)
@@ -1951,8 +1810,8 @@ class MagnetometerNoiseEstimatorTest {
     }
 
     private fun checkResultMaxDuration(
-        estimator: MagnetometerNoiseEstimator,
-        b: BodyMagneticFluxDensity
+        estimator: AccelerometerNoiseEstimator,
+        gravity: ECEFGravity
     ) {
         assertFalse(estimator.running)
         assertTrue(estimator.resultAvailable)
@@ -1960,170 +1819,171 @@ class MagnetometerNoiseEstimatorTest {
 
         val averageX = estimator.averageX
         requireNotNull(averageX)
-        assertEquals(b.bx, averageX, SMALL_ABSOLUTE_ERROR)
+        assertEquals(gravity.gx, averageX, ABSOLUTE_ERROR)
 
         val averageX1 = estimator.averageXAsMeasurement
         requireNotNull(averageX1)
-        val averageX2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        val averageX2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
         assertTrue(estimator.getAverageXAsMeasurement(averageX2))
         assertEquals(averageX1, averageX2)
-        assertEquals(averageX, averageX1.value.toDouble(), SMALL_ABSOLUTE_ERROR)
-        assertEquals(MagneticFluxDensityUnit.TESLA, averageX1.unit)
+        assertEquals(averageX, averageX1.value.toDouble(), 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, averageX1.unit)
 
         val averageY = estimator.averageY
         requireNotNull(averageY)
-        assertEquals(b.by, averageY, SMALL_ABSOLUTE_ERROR)
+        assertEquals(gravity.gy, averageY, ABSOLUTE_ERROR)
 
         val averageY1 = estimator.averageYAsMeasurement
         requireNotNull(averageY1)
-        val averageY2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        val averageY2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
         assertTrue(estimator.getAverageYAsMeasurement(averageY2))
         assertEquals(averageY1, averageY2)
-        assertEquals(averageY, averageY1.value.toDouble(), SMALL_ABSOLUTE_ERROR)
-        assertEquals(MagneticFluxDensityUnit.TESLA, averageY1.unit)
+        assertEquals(averageY, averageY1.value.toDouble(), 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, averageY1.unit)
 
         val averageZ = estimator.averageZ
         requireNotNull(averageZ)
-        assertEquals(b.bz, averageZ, SMALL_ABSOLUTE_ERROR)
+        assertEquals(gravity.gz, averageZ, ABSOLUTE_ERROR)
 
         val averageZ1 = estimator.averageZAsMeasurement
         requireNotNull(averageZ1)
-        val averageZ2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        val averageZ2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
         assertTrue(estimator.getAverageZAsMeasurement(averageZ2))
         assertEquals(averageZ1, averageZ2)
-        assertEquals(averageZ, averageZ1.value.toDouble(), SMALL_ABSOLUTE_ERROR)
-        assertEquals(MagneticFluxDensityUnit.TESLA, averageZ1.unit)
+        assertEquals(averageZ, averageZ1.value.toDouble(), 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, averageZ1.unit)
 
         val averageTriad1 = estimator.averageTriad
         requireNotNull(averageTriad1)
-        assertEquals(MagneticFluxDensityUnit.TESLA, averageTriad1.unit)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, averageTriad1.unit)
         assertEquals(averageX, averageTriad1.valueX, 0.0)
         assertEquals(averageY, averageTriad1.valueY, 0.0)
         assertEquals(averageZ, averageTriad1.valueZ, 0.0)
-        val averageTriad2 = MagneticFluxDensityTriad()
+        val averageTriad2 = AccelerationTriad()
         assertTrue(estimator.getAverageTriad(averageTriad2))
         assertEquals(averageTriad1, averageTriad2)
 
         val averageNorm = estimator.averageNorm
         requireNotNull(averageNorm)
-        assertEquals(b.norm, averageNorm, SMALL_ABSOLUTE_ERROR)
+        assertEquals(gravity.norm, averageNorm, ABSOLUTE_ERROR)
 
         val averageNorm1 = estimator.averageNormAsMeasurement
         requireNotNull(averageNorm1)
-        val averageNorm2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        val averageNorm2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
         assertTrue(estimator.getAverageNormAsMeasurement(averageNorm2))
         assertEquals(averageNorm1, averageNorm2)
         assertEquals(averageNorm, averageNorm1.value.toDouble(), 0.0)
-        assertEquals(MagneticFluxDensityUnit.TESLA, averageNorm1.unit)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, averageNorm1.unit)
 
         val varianceX = estimator.varianceX
         requireNotNull(varianceX)
-        assertEquals(0.0, varianceX, SMALL_ABSOLUTE_ERROR)
+        assertEquals(0.0, varianceX, ABSOLUTE_ERROR)
 
         val varianceY = estimator.varianceY
         requireNotNull(varianceY)
-        assertEquals(0.0, varianceY, SMALL_ABSOLUTE_ERROR)
+        assertEquals(0.0, varianceY, ABSOLUTE_ERROR)
 
         val varianceZ = estimator.varianceZ
         requireNotNull(varianceZ)
-        assertEquals(0.0, varianceZ, SMALL_ABSOLUTE_ERROR)
+        assertEquals(0.0, varianceZ, ABSOLUTE_ERROR)
 
         val standardDeviationX = estimator.standardDeviationX
         requireNotNull(standardDeviationX)
-        assertEquals(0.0, standardDeviationX, SMALL_ABSOLUTE_ERROR)
+        assertEquals(0.0, standardDeviationX, ABSOLUTE_ERROR)
         val standardDeviationX1 = estimator.standardDeviationXAsMeasurement
         requireNotNull(standardDeviationX1)
-        val standardDeviationX2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        val standardDeviationX2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
         assertTrue(estimator.getStandardDeviationXAsMeasurement(standardDeviationX2))
         assertEquals(standardDeviationX1, standardDeviationX2)
         assertEquals(standardDeviationX, standardDeviationX1.value.toDouble(), 0.0)
-        assertEquals(MagneticFluxDensityUnit.TESLA, standardDeviationX1.unit)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, standardDeviationX1.unit)
 
         val standardDeviationY = estimator.standardDeviationY
         requireNotNull(standardDeviationY)
-        assertEquals(0.0, standardDeviationY, SMALL_ABSOLUTE_ERROR)
+        assertEquals(0.0, standardDeviationY, ABSOLUTE_ERROR)
         val standardDeviationY1 = estimator.standardDeviationYAsMeasurement
         requireNotNull(standardDeviationY1)
-        val standardDeviationY2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        val standardDeviationY2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
         assertTrue(estimator.getStandardDeviationYAsMeasurement(standardDeviationY2))
         assertEquals(standardDeviationY1, standardDeviationY2)
         assertEquals(standardDeviationY, standardDeviationY1.value.toDouble(), 0.0)
-        assertEquals(MagneticFluxDensityUnit.TESLA, standardDeviationY1.unit)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, standardDeviationY1.unit)
 
         val standardDeviationZ = estimator.standardDeviationZ
         requireNotNull(standardDeviationZ)
-        assertEquals(0.0, standardDeviationZ, SMALL_ABSOLUTE_ERROR)
+        assertEquals(0.0, standardDeviationZ, ABSOLUTE_ERROR)
         val standardDeviationZ1 = estimator.standardDeviationZAsMeasurement
         requireNotNull(standardDeviationZ1)
-        val standardDeviationZ2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        val standardDeviationZ2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
         assertTrue(estimator.getStandardDeviationZAsMeasurement(standardDeviationZ2))
         assertEquals(standardDeviationZ1, standardDeviationZ2)
         assertEquals(standardDeviationZ, standardDeviationZ1.value.toDouble(), 0.0)
-        assertEquals(MagneticFluxDensityUnit.TESLA, standardDeviationZ1.unit)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, standardDeviationZ1.unit)
 
         val standardDeviationTriad1 = estimator.standardDeviationTriad
         requireNotNull(standardDeviationTriad1)
-        assertEquals(MagneticFluxDensityUnit.TESLA, standardDeviationTriad1.unit)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, standardDeviationTriad1.unit)
         assertEquals(standardDeviationX, standardDeviationTriad1.valueX, 0.0)
         assertEquals(standardDeviationY, standardDeviationTriad1.valueY, 0.0)
         assertEquals(standardDeviationZ, standardDeviationTriad1.valueZ, 0.0)
-        val standardDeviationTriad2 = MagneticFluxDensityTriad()
+        val standardDeviationTriad2 = AccelerationTriad()
         assertTrue(estimator.getStandardDeviationTriad(standardDeviationTriad2))
         assertEquals(standardDeviationTriad1, standardDeviationTriad2)
 
         val standardDeviationNorm = estimator.standardDeviationNorm
         requireNotNull(standardDeviationNorm)
-        assertEquals(0.0, standardDeviationNorm, SMALL_ABSOLUTE_ERROR)
+        assertEquals(0.0, standardDeviationNorm, ABSOLUTE_ERROR)
         val standardDeviationNorm1 = estimator.standardDeviationNormAsMeasurement
         requireNotNull(standardDeviationNorm1)
-        val standardDeviationNorm2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        val standardDeviationNorm2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
         assertTrue(estimator.getStandardDeviationNormAsMeasurement(standardDeviationNorm2))
         assertEquals(standardDeviationNorm1, standardDeviationNorm2)
         assertEquals(standardDeviationNorm, standardDeviationNorm1.value.toDouble(), 0.0)
-        assertEquals(MagneticFluxDensityUnit.TESLA, standardDeviationNorm1.unit)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, standardDeviationNorm1.unit)
 
         val averageStandardDeviation = estimator.averageStandardDeviation
         requireNotNull(averageStandardDeviation)
-        assertEquals(0.0, averageStandardDeviation, SMALL_ABSOLUTE_ERROR)
+        assertEquals(0.0, averageStandardDeviation, ABSOLUTE_ERROR)
         val averageStandardDeviation1 = estimator.averageStandardDeviationAsMeasurement
         requireNotNull(averageStandardDeviation1)
-        val averageStandardDeviation2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        val averageStandardDeviation2 =
+            Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
         assertTrue(estimator.getAverageStandardDeviationAsMeasurement(averageStandardDeviation2))
         assertEquals(averageStandardDeviation1, averageStandardDeviation2)
         assertEquals(averageStandardDeviation, averageStandardDeviation1.value.toDouble(), 0.0)
-        assertEquals(MagneticFluxDensityUnit.TESLA, averageStandardDeviation1.unit)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, averageStandardDeviation1.unit)
 
         val psdX = estimator.psdX
         requireNotNull(psdX)
-        assertEquals(0.0, psdX, SMALL_ABSOLUTE_ERROR)
+        assertEquals(0.0, psdX, 0.0)
 
         val psdY = estimator.psdY
         requireNotNull(psdY)
-        assertEquals(0.0, psdY, SMALL_ABSOLUTE_ERROR)
+        assertEquals(0.0, psdY, 0.0)
 
         val psdZ = estimator.psdZ
         requireNotNull(psdZ)
-        assertEquals(0.0, psdZ, SMALL_ABSOLUTE_ERROR)
+        assertEquals(0.0, psdZ, 0.0)
 
         val rootPsdX = estimator.rootPsdX
         requireNotNull(rootPsdX)
-        assertEquals(0.0, rootPsdX, SMALL_ABSOLUTE_ERROR)
+        assertEquals(0.0, rootPsdX, 0.0)
 
         val rootPsdY = estimator.rootPsdY
         requireNotNull(rootPsdY)
-        assertEquals(0.0, rootPsdY, SMALL_ABSOLUTE_ERROR)
+        assertEquals(0.0, rootPsdY, 0.0)
 
         val rootPsdZ = estimator.rootPsdZ
         requireNotNull(rootPsdZ)
-        assertEquals(0.0, rootPsdZ, SMALL_ABSOLUTE_ERROR)
+        assertEquals(0.0, rootPsdZ, 0.0)
 
         val averageNoisePsd = estimator.averageNoisePsd
         requireNotNull(averageNoisePsd)
-        assertEquals(0.0, averageNoisePsd, SMALL_ABSOLUTE_ERROR)
+        assertEquals(0.0, averageNoisePsd, 0.0)
 
         val noiseRootPsdNorm = estimator.noiseRootPsdNorm
         requireNotNull(noiseRootPsdNorm)
-        assertEquals(0.0, noiseRootPsdNorm, SMALL_ABSOLUTE_ERROR)
+        assertEquals(0.0, noiseRootPsdNorm, 0.0)
 
         val averageTimeInterval = estimator.averageTimeInterval
         requireNotNull(averageTimeInterval)
@@ -2165,7 +2025,7 @@ class MagnetometerNoiseEstimatorTest {
         assertEquals(TimeUnit.NANOSECOND, elapsedTime1.unit)
     }
 
-    private fun getEarthMagneticFluxDensity(): NEDMagneticFluxDensity {
+    private fun getGravity(): ECEFGravity {
         val randomizer = UniformRandomizer()
         val latitude =
             Math.toRadians(randomizer.nextDouble(MIN_LATITUDE_DEGREES, MAX_LATITUDE_DEGREES))
@@ -2180,20 +2040,11 @@ class MagnetometerNoiseEstimatorTest {
             nedPosition, nedVelocity,
             ecefPosition, ecefVelocity
         )
-
-        val earthMagneticFluxDensityEstimator = WMMEarthMagneticFluxDensityEstimator()
-        val now = Date()
-        return earthMagneticFluxDensityEstimator.estimate(nedPosition, now)
-    }
-
-    private fun getBodyMagneticFluxDensity(
-        nedMagneticFluxDensity: NEDMagneticFluxDensity
-    ): BodyMagneticFluxDensity {
-        val c = CoordinateTransformation(
-            FrameType.BODY_FRAME,
-            FrameType.EARTH_CENTERED_EARTH_FIXED_FRAME
+        return ECEFGravityEstimator.estimateGravityAndReturnNew(
+            ecefPosition.x,
+            ecefPosition.y,
+            ecefPosition.z
         )
-        return BodyMagneticFluxDensityEstimator.estimate(nedMagneticFluxDensity, c)
     }
 
     private companion object {
@@ -2214,8 +2065,8 @@ class MagnetometerNoiseEstimatorTest {
 
         const val MILLIS_TO_NANOS = 1000000L
 
-        const val LARGE_ABSOLUTE_ERROR = 6e-4
+        const val ABSOLUTE_ERROR = 1e-6
 
-        const val SMALL_ABSOLUTE_ERROR = 1e-11
+        const val LARGE_ABSOLUTE_ERROR = 6e-4
     }
 }

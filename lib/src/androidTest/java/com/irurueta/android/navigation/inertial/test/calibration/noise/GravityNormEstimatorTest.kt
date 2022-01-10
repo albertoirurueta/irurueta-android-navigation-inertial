@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.irurueta.android.navigation.inertial.test.estimators
+package com.irurueta.android.navigation.inertial.test.calibration.noise
 
 import android.location.Location
 import android.util.Log
@@ -23,8 +23,8 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
 import com.irurueta.android.navigation.inertial.LocationService
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
-import com.irurueta.android.navigation.inertial.estimators.AccelerometerNormEstimator
-import com.irurueta.android.navigation.inertial.estimators.AccumulatedMeasurementEstimator
+import com.irurueta.android.navigation.inertial.calibration.noise.AccumulatedMeasurementEstimator
+import com.irurueta.android.navigation.inertial.calibration.noise.GravityNormEstimator
 import com.irurueta.android.navigation.inertial.test.LocationActivity
 import com.irurueta.android.navigation.inertial.toNEDPosition
 import com.irurueta.navigation.frames.ECEFPosition
@@ -42,7 +42,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
-class AccelerometerNormEstimatorTest {
+class GravityNormEstimatorTest {
 
     @get:Rule
     val permissionRule: GrantPermissionRule = GrantPermissionRule.grant(
@@ -64,23 +64,23 @@ class AccelerometerNormEstimatorTest {
     }
 
     @Test
-    fun startAndStop_estimatesAccelerometerNoiseAndGravity() {
+    fun startAndStop_estimatesGravity() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val estimator = AccelerometerNormEstimator(
-            context,
+        val estimator = GravityNormEstimator(context,
             completedListener = object : AccumulatedMeasurementEstimator
-            .OnEstimationCompletedListener<AccelerometerNormEstimator> {
+            .OnEstimationCompletedListener<GravityNormEstimator> {
 
-                override fun onEstimationCompleted(estimator: AccelerometerNormEstimator) {
+                override fun onEstimationCompleted(estimator: GravityNormEstimator) {
                     assertFalse(estimator.running)
 
                     syncHelper.notifyAll { completed++ }
                 }
             },
-            unreliableListener = object :
-                AccumulatedMeasurementEstimator.OnUnreliableListener<AccelerometerNormEstimator> {
-                override fun onUnreliable(estimator: AccelerometerNormEstimator) {
-                    Log.d("AccelerometerNormEstimatorTest", "Sensor is unreliable")
+            unreliableListener = object : AccumulatedMeasurementEstimator
+            .OnUnreliableListener<GravityNormEstimator> {
+
+                override fun onUnreliable(estimator: GravityNormEstimator) {
+                    Log.d("GravityNormEstimatorTest", "Sensor is unreliable")
                     assertFalse(estimator.running)
                 }
             }
@@ -174,23 +174,23 @@ class AccelerometerNormEstimatorTest {
 
     @RequiresDevice
     @Test
-    fun estimatedResult_whenDeviceStatic_returnsValueCloseToExpectedGravity() {
+    fun estimatedResult_returnsValueCloseToExpectedGravity() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val estimator = AccelerometerNormEstimator(
-            context,
+        val estimator = GravityNormEstimator(context,
             completedListener = object : AccumulatedMeasurementEstimator
-            .OnEstimationCompletedListener<AccelerometerNormEstimator> {
+            .OnEstimationCompletedListener<GravityNormEstimator> {
 
-                override fun onEstimationCompleted(estimator: AccelerometerNormEstimator) {
+                override fun onEstimationCompleted(estimator: GravityNormEstimator) {
                     assertFalse(estimator.running)
 
                     syncHelper.notifyAll { completed++ }
                 }
             },
-            unreliableListener = object :
-                AccumulatedMeasurementEstimator.OnUnreliableListener<AccelerometerNormEstimator> {
-                override fun onUnreliable(estimator: AccelerometerNormEstimator) {
-                    Log.d("AccelerometerNormEstimatorTest", "Sensor is unreliable")
+            unreliableListener = object : AccumulatedMeasurementEstimator
+            .OnUnreliableListener<GravityNormEstimator> {
+
+                override fun onUnreliable(estimator: GravityNormEstimator) {
+                    Log.d("GravityNormEstimatorTest", "Sensor is unreliable")
                     assertFalse(estimator.running)
                 }
             }
@@ -219,7 +219,7 @@ class AccelerometerNormEstimatorTest {
                     spyk(object : LocationService.OnCurrentLocationListener {
                         override fun onCurrentLocation(location: Location) {
                             assertNotNull(location)
-                            this@AccelerometerNormEstimatorTest.location = location
+                            this@GravityNormEstimatorTest.location = location
 
                             syncHelper.notifyAll { completed++ }
                         }

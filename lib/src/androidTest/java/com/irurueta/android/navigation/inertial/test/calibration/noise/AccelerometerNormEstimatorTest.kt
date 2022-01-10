@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.irurueta.android.navigation.inertial.test.estimators
+package com.irurueta.android.navigation.inertial.test.calibration.noise
 
 import android.location.Location
 import android.util.Log
@@ -23,21 +23,26 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
 import com.irurueta.android.navigation.inertial.LocationService
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
-import com.irurueta.android.navigation.inertial.estimators.AccumulatedMeasurementEstimator
-import com.irurueta.android.navigation.inertial.estimators.GyroscopeNormEstimator
+import com.irurueta.android.navigation.inertial.calibration.noise.AccelerometerNormEstimator
+import com.irurueta.android.navigation.inertial.calibration.noise.AccumulatedMeasurementEstimator
 import com.irurueta.android.navigation.inertial.test.LocationActivity
 import com.irurueta.android.navigation.inertial.toNEDPosition
-import com.irurueta.navigation.frames.*
+import com.irurueta.navigation.frames.ECEFPosition
+import com.irurueta.navigation.frames.ECEFVelocity
+import com.irurueta.navigation.frames.NEDVelocity
 import com.irurueta.navigation.frames.converters.NEDtoECEFPositionVelocityConverter
-import com.irurueta.navigation.inertial.estimators.ECEFKinematicsEstimator
-import com.irurueta.units.*
+import com.irurueta.navigation.inertial.estimators.ECEFGravityEstimator
+import com.irurueta.units.Acceleration
+import com.irurueta.units.AccelerationUnit
+import com.irurueta.units.Time
+import com.irurueta.units.TimeUnit
 import io.mockk.spyk
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
-class GyroscopeNormEstimatorTest {
+class AccelerometerNormEstimatorTest {
 
     @get:Rule
     val permissionRule: GrantPermissionRule = GrantPermissionRule.grant(
@@ -58,25 +63,24 @@ class GyroscopeNormEstimatorTest {
         completed = 0
     }
 
-    @RequiresDevice
     @Test
     fun startAndStop_estimatesAccelerometerNoiseAndGravity() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val estimator = GyroscopeNormEstimator(
+        val estimator = AccelerometerNormEstimator(
             context,
             completedListener = object : AccumulatedMeasurementEstimator
-            .OnEstimationCompletedListener<GyroscopeNormEstimator> {
+            .OnEstimationCompletedListener<AccelerometerNormEstimator> {
 
-                override fun onEstimationCompleted(estimator: GyroscopeNormEstimator) {
+                override fun onEstimationCompleted(estimator: AccelerometerNormEstimator) {
                     assertFalse(estimator.running)
 
                     syncHelper.notifyAll { completed++ }
                 }
             },
             unreliableListener = object :
-                AccumulatedMeasurementEstimator.OnUnreliableListener<GyroscopeNormEstimator> {
-                override fun onUnreliable(estimator: GyroscopeNormEstimator) {
-                    Log.d("GyroscopeNormEstimatorTest", "Sensor is unreliable")
+                AccumulatedMeasurementEstimator.OnUnreliableListener<AccelerometerNormEstimator> {
+                override fun onUnreliable(estimator: AccelerometerNormEstimator) {
+                    Log.d("AccelerometerNormEstimatorTest", "Sensor is unreliable")
                     assertFalse(estimator.running)
                 }
             }
@@ -95,11 +99,11 @@ class GyroscopeNormEstimatorTest {
         requireNotNull(averageNorm)
         val averageNorm1 = estimator.averageNormAsMeasurement
         requireNotNull(averageNorm1)
-        val averageNorm2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        val averageNorm2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
         estimator.getAverageNormAsMeasurement(averageNorm2)
         assertEquals(averageNorm1, averageNorm2)
         assertEquals(averageNorm, averageNorm1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, averageNorm1.unit)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, averageNorm1.unit)
 
         val normVariance = estimator.normVariance
         requireNotNull(normVariance)
@@ -110,7 +114,7 @@ class GyroscopeNormEstimatorTest {
         assertTrue(normStandardDeviation > 0.0)
         val normStandardDeviation1 = estimator.normStandardDeviationAsMeasurement
         requireNotNull(normStandardDeviation1)
-        val normStandardDeviation2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        val normStandardDeviation2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
         estimator.getNormStandardDeviationAsMeasurement(normStandardDeviation2)
         assertEquals(normStandardDeviation1, normStandardDeviation2)
         assertEquals(
@@ -118,7 +122,7 @@ class GyroscopeNormEstimatorTest {
             normStandardDeviation1.value.toDouble(),
             0.0
         )
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, normStandardDeviation1.unit)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, normStandardDeviation1.unit)
 
         val psd = estimator.psd
         requireNotNull(psd)
@@ -172,21 +176,21 @@ class GyroscopeNormEstimatorTest {
     @Test
     fun estimatedResult_whenDeviceStatic_returnsValueCloseToExpectedGravity() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val estimator = GyroscopeNormEstimator(
+        val estimator = AccelerometerNormEstimator(
             context,
             completedListener = object : AccumulatedMeasurementEstimator
-            .OnEstimationCompletedListener<GyroscopeNormEstimator> {
+            .OnEstimationCompletedListener<AccelerometerNormEstimator> {
 
-                override fun onEstimationCompleted(estimator: GyroscopeNormEstimator) {
+                override fun onEstimationCompleted(estimator: AccelerometerNormEstimator) {
                     assertFalse(estimator.running)
 
                     syncHelper.notifyAll { completed++ }
                 }
             },
             unreliableListener = object :
-                AccumulatedMeasurementEstimator.OnUnreliableListener<GyroscopeNormEstimator> {
-                override fun onUnreliable(estimator: GyroscopeNormEstimator) {
-                    Log.d("GyroscopeNormEstimatorTest", "Sensor is unreliable")
+                AccumulatedMeasurementEstimator.OnUnreliableListener<AccelerometerNormEstimator> {
+                override fun onUnreliable(estimator: AccelerometerNormEstimator) {
+                    Log.d("AccelerometerNormEstimatorTest", "Sensor is unreliable")
                     assertFalse(estimator.running)
                 }
             }
@@ -215,7 +219,7 @@ class GyroscopeNormEstimatorTest {
                     spyk(object : LocationService.OnCurrentLocationListener {
                         override fun onCurrentLocation(location: Location) {
                             assertNotNull(location)
-                            this@GyroscopeNormEstimatorTest.location = location
+                            this@AccelerometerNormEstimatorTest.location = location
 
                             syncHelper.notifyAll { completed++ }
                         }
@@ -240,29 +244,16 @@ class GyroscopeNormEstimatorTest {
             ecefPosition, ecefVelocity
         )
 
-        val c = CoordinateTransformation(
-            FrameType.BODY_FRAME,
-            FrameType.EARTH_CENTERED_EARTH_FIXED_FRAME
+        val ecefGravity = ECEFGravityEstimator.estimateGravityAndReturnNew(
+            ecefPosition.x,
+            ecefPosition.y,
+            ecefPosition.z
         )
-        val bodyKinematics = ECEFKinematicsEstimator.estimateKinematicsAndReturnNew(
-            TIME_INTERVAL_SECONDS,
-            c,
-            c,
-            ecefVelocity,
-            ecefVelocity,
-            ecefPosition
-        )
+        val gravity = ecefGravity.norm
 
         Log.d(
-            "GyroscopeNormEstimatorTest",
-            "measuredAngularRate: $measuredNorm rad/s - "
-                    + "angularRate: ${bodyKinematics.angularRateNorm} rad/s"
+            "GravityNormEstimatorTest",
+            "measuredGravity: $measuredNorm m/s^2 - gravity: $gravity m/s^2"
         )
-    }
-
-    private companion object {
-        const val TIME_INTERVAL_MILLIS = 20L
-
-        const val TIME_INTERVAL_SECONDS = TIME_INTERVAL_MILLIS.toDouble() / 1000
     }
 }
