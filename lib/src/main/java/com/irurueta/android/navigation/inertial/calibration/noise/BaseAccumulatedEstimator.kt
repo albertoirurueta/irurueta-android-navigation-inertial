@@ -65,13 +65,13 @@ abstract class BaseAccumulatedEstimator private constructor(
      * Contains timestamp when estimator started.
      * This is based on [android.os.SystemClock.elapsedRealtimeNanos].
      */
-    protected var initialTimestampNanos: Long = 0
+    protected var initialTimestampNanos: Long = 0L
 
     /**
      * Contains timestamp of last measurement.
      * This is based on [android.os.SystemClock.elapsedRealtimeNanos].
      */
-    private var endTimestampNanos: Long = 0
+    private var endTimestampNanos: Long = 0L
 
     /**
      * Listener to handle changes of accuracy in gravity sensor.
@@ -197,6 +197,9 @@ abstract class BaseAccumulatedEstimator private constructor(
     /**
      * Gets estimated standard deviation of time interval between measurements.
      * This is only available when estimation completes successfully and [resultAvailable] is true.
+     *
+     * @param result instance where result will be stored.
+     * @return true if result is available, false otherwise.
      */
     fun getTimeIntervalStandardDeviationAsTime(result: Time): Boolean {
         return if (resultAvailable) {
