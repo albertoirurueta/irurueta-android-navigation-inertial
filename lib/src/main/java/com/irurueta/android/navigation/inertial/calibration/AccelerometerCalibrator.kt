@@ -19,6 +19,7 @@ import android.content.Context
 import android.location.Location
 import android.util.Log
 import com.irurueta.algebra.Matrix
+import com.irurueta.android.navigation.inertial.GravityHelper
 import com.irurueta.android.navigation.inertial.calibration.intervals.IntervalDetector
 import com.irurueta.android.navigation.inertial.calibration.noise.AccumulatedMeasurementEstimator
 import com.irurueta.android.navigation.inertial.calibration.noise.GravityNormEstimator
@@ -28,10 +29,6 @@ import com.irurueta.android.navigation.inertial.collectors.GravitySensorCollecto
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.android.navigation.inertial.toNEDPosition
 import com.irurueta.navigation.NavigationException
-import com.irurueta.navigation.frames.ECEFPosition
-import com.irurueta.navigation.frames.ECEFVelocity
-import com.irurueta.navigation.frames.NEDVelocity
-import com.irurueta.navigation.frames.converters.NEDtoECEFPositionVelocityConverter
 import com.irurueta.navigation.inertial.BodyKinematics
 import com.irurueta.navigation.inertial.calibration.AccelerationTriad
 import com.irurueta.navigation.inertial.calibration.AccelerometerBiasUncertaintySource
@@ -40,7 +37,6 @@ import com.irurueta.navigation.inertial.calibration.accelerometer.*
 import com.irurueta.navigation.inertial.calibration.intervals.TriadStaticIntervalDetector
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.DefaultAccelerometerQualityScoreMapper
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.QualityScoreMapper
-import com.irurueta.navigation.inertial.estimators.ECEFGravityEstimator
 import com.irurueta.numerical.robust.RobustEstimatorMethod
 import com.irurueta.units.Acceleration
 import com.irurueta.units.AccelerationUnit
@@ -643,7 +639,7 @@ class AccelerometerCalibrator private constructor(
             field = value
             if (value != null) {
                 // set gravity norm based on provided location
-                gravityNorm = getGravityNormForLocation(value)
+                gravityNorm = GravityHelper.getGravityNormForLocation(value)
             }
         }
 
@@ -1947,31 +1943,6 @@ class AccelerometerCalibrator private constructor(
     }
 
     /**
-     * Gets theoretical gravity norm expressed in meters per squared second (m/s^2) for provided
-     * location following WGS84 Earth model.
-     *
-     * @param location Earth location.
-     */
-    private fun getGravityNormForLocation(location: Location): Double {
-        val nedPosition = location.toNEDPosition()
-        val nedVelocity = NEDVelocity()
-        val ecefPosition = ECEFPosition()
-        val ecefVelocity = ECEFVelocity()
-        NEDtoECEFPositionVelocityConverter.convertNEDtoECEF(
-            nedPosition,
-            nedVelocity,
-            ecefPosition,
-            ecefVelocity
-        )
-        val gravity = ECEFGravityEstimator.estimateGravityAndReturnNew(
-            ecefPosition.x,
-            ecefPosition.y,
-            ecefPosition.z
-        )
-        return gravity.norm
-    }
-
-    /**
      * Builds an internal accelerometer calibrator based on all provided parameters.
      *
      * @return an internal accelerometer calibrator.
@@ -2364,7 +2335,7 @@ class AccelerometerCalibrator private constructor(
         throw IllegalStateException("No calibrator could be built.")
     }
 
-    private fun buildQualityScores() : DoubleArray {
+    private fun buildQualityScores(): DoubleArray {
         val size = measurements.size
         val qualityScores = DoubleArray(size)
         measurements.forEachIndexed { index, measurement ->

@@ -19,22 +19,18 @@ import android.content.Context
 import android.hardware.Sensor
 import android.os.SystemClock
 import androidx.test.core.app.ApplicationProvider
+import com.irurueta.android.navigation.inertial.GravityHelper
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
 import com.irurueta.android.navigation.inertial.collectors.SensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.android.navigation.inertial.getPrivateProperty
 import com.irurueta.android.navigation.inertial.setPrivateProperty
-import com.irurueta.navigation.frames.ECEFPosition
-import com.irurueta.navigation.frames.ECEFVelocity
 import com.irurueta.navigation.frames.NEDPosition
-import com.irurueta.navigation.frames.NEDVelocity
-import com.irurueta.navigation.frames.converters.NEDtoECEFPositionVelocityConverter
 import com.irurueta.navigation.inertial.ECEFGravity
 import com.irurueta.navigation.inertial.calibration.AccelerationTriad
 import com.irurueta.navigation.inertial.calibration.TimeIntervalEstimator
 import com.irurueta.navigation.inertial.calibration.noise.AccumulatedAccelerationTriadNoiseEstimator
-import com.irurueta.navigation.inertial.estimators.ECEFGravityEstimator
 import com.irurueta.statistics.UniformRandomizer
 import com.irurueta.units.Acceleration
 import com.irurueta.units.AccelerationUnit
@@ -2256,18 +2252,7 @@ class AccelerometerNoiseEstimatorTest {
             Math.toRadians(randomizer.nextDouble(MIN_LONGITUDE_DEGREES, MAX_LONGITUDE_DEGREES))
         val height = randomizer.nextDouble(MIN_HEIGHT, MAX_HEIGHT)
         val nedPosition = NEDPosition(latitude, longitude, height)
-        val nedVelocity = NEDVelocity()
-        val ecefPosition = ECEFPosition()
-        val ecefVelocity = ECEFVelocity()
-        NEDtoECEFPositionVelocityConverter.convertNEDtoECEF(
-            nedPosition, nedVelocity,
-            ecefPosition, ecefVelocity
-        )
-        return ECEFGravityEstimator.estimateGravityAndReturnNew(
-            ecefPosition.x,
-            ecefPosition.y,
-            ecefPosition.z
-        )
+        return GravityHelper.getGravityForPosition(nedPosition)
     }
 
     private companion object {

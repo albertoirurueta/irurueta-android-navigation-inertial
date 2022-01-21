@@ -19,19 +19,15 @@ import android.content.Context
 import android.location.Location
 import androidx.test.core.app.ApplicationProvider
 import com.irurueta.algebra.Matrix
+import com.irurueta.android.navigation.inertial.GravityHelper
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.GravitySensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
-import com.irurueta.android.navigation.inertial.toNEDPosition
-import com.irurueta.navigation.frames.ECEFPosition
-import com.irurueta.navigation.frames.ECEFVelocity
-import com.irurueta.navigation.frames.NEDVelocity
-import com.irurueta.navigation.frames.converters.NEDtoECEFPositionVelocityConverter
+import com.irurueta.android.navigation.inertial.setPrivateProperty
 import com.irurueta.navigation.inertial.calibration.AccelerationTriad
 import com.irurueta.navigation.inertial.calibration.StandardDeviationBodyKinematics
 import com.irurueta.navigation.inertial.calibration.intervals.TriadStaticIntervalDetector
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.QualityScoreMapper
-import com.irurueta.navigation.inertial.estimators.ECEFGravityEstimator
 import com.irurueta.statistics.UniformRandomizer
 import com.irurueta.units.Acceleration
 import com.irurueta.units.AccelerationUnit
@@ -959,15 +955,7 @@ class AccelerometerCalibratorTest {
 
     @Test
     fun constructor_whenLocation_returnsExpectedValues() {
-        val randomizer = UniformRandomizer()
-        val latitudeDegrees = randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES)
-        val longitudeDegrees = randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES)
-        val height = randomizer.nextDouble(MIN_HEIGHT, MAX_HEIGHT)
-
-        val location = mockk<Location>()
-        every { location.latitude }.returns(latitudeDegrees)
-        every { location.longitude }.returns(longitudeDegrees)
-        every { location.altitude }.returns(height)
+        val location = getLocation()
 
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = AccelerometerCalibrator(
@@ -1003,7 +991,7 @@ class AccelerometerCalibratorTest {
         assertNull(calibrator.gravityMeasurementListener)
         assertNotNull(calibrator.qualityScoreMapper)
         assertNotNull(calibrator.gravityNorm)
-        assertEquals(getGravityNormForLocation(location), calibrator.gravityNorm)
+        assertEquals(GravityHelper.getGravityNormForLocation(location), calibrator.gravityNorm)
         assertTrue(calibrator.measurements.isEmpty())
         assertFalse(calibrator.isReadyToSolveCalibration)
         assertFalse(calibrator.resultUnreliable)
@@ -1203,7 +1191,7 @@ class AccelerometerCalibratorTest {
         assertNull(calibrator.gravityMeasurementListener)
         assertNotNull(calibrator.qualityScoreMapper)
         assertNotNull(calibrator.gravityNorm)
-        assertEquals(getGravityNormForLocation(location), calibrator.gravityNorm)
+        assertEquals(GravityHelper.getGravityNormForLocation(location), calibrator.gravityNorm)
         assertTrue(calibrator.measurements.isEmpty())
         assertFalse(calibrator.isReadyToSolveCalibration)
         assertFalse(calibrator.resultUnreliable)
@@ -1406,7 +1394,7 @@ class AccelerometerCalibratorTest {
         assertNull(calibrator.gravityMeasurementListener)
         assertNotNull(calibrator.qualityScoreMapper)
         assertNotNull(calibrator.gravityNorm)
-        assertEquals(getGravityNormForLocation(location), calibrator.gravityNorm)
+        assertEquals(GravityHelper.getGravityNormForLocation(location), calibrator.gravityNorm)
         assertTrue(calibrator.measurements.isEmpty())
         assertFalse(calibrator.isReadyToSolveCalibration)
         assertFalse(calibrator.resultUnreliable)
@@ -1611,7 +1599,7 @@ class AccelerometerCalibratorTest {
         assertNull(calibrator.gravityMeasurementListener)
         assertNotNull(calibrator.qualityScoreMapper)
         assertNotNull(calibrator.gravityNorm)
-        assertEquals(getGravityNormForLocation(location), calibrator.gravityNorm)
+        assertEquals(GravityHelper.getGravityNormForLocation(location), calibrator.gravityNorm)
         assertTrue(calibrator.measurements.isEmpty())
         assertFalse(calibrator.isReadyToSolveCalibration)
         assertFalse(calibrator.resultUnreliable)
@@ -1822,7 +1810,7 @@ class AccelerometerCalibratorTest {
         assertNull(calibrator.gravityMeasurementListener)
         assertNotNull(calibrator.qualityScoreMapper)
         assertNotNull(calibrator.gravityNorm)
-        assertEquals(getGravityNormForLocation(location), calibrator.gravityNorm)
+        assertEquals(GravityHelper.getGravityNormForLocation(location), calibrator.gravityNorm)
         assertTrue(calibrator.measurements.isEmpty())
         assertFalse(calibrator.isReadyToSolveCalibration)
         assertFalse(calibrator.resultUnreliable)
@@ -2036,7 +2024,7 @@ class AccelerometerCalibratorTest {
         assertNull(calibrator.gravityMeasurementListener)
         assertNotNull(calibrator.qualityScoreMapper)
         assertNotNull(calibrator.gravityNorm)
-        assertEquals(getGravityNormForLocation(location), calibrator.gravityNorm)
+        assertEquals(GravityHelper.getGravityNormForLocation(location), calibrator.gravityNorm)
         assertTrue(calibrator.measurements.isEmpty())
         assertFalse(calibrator.isReadyToSolveCalibration)
         assertFalse(calibrator.resultUnreliable)
@@ -2256,7 +2244,7 @@ class AccelerometerCalibratorTest {
         assertNull(calibrator.gravityMeasurementListener)
         assertNotNull(calibrator.qualityScoreMapper)
         assertNotNull(calibrator.gravityNorm)
-        assertEquals(getGravityNormForLocation(location), calibrator.gravityNorm)
+        assertEquals(GravityHelper.getGravityNormForLocation(location), calibrator.gravityNorm)
         assertTrue(calibrator.measurements.isEmpty())
         assertFalse(calibrator.isReadyToSolveCalibration)
         assertFalse(calibrator.resultUnreliable)
@@ -2479,7 +2467,7 @@ class AccelerometerCalibratorTest {
         assertNull(calibrator.gravityMeasurementListener)
         assertNotNull(calibrator.qualityScoreMapper)
         assertNotNull(calibrator.gravityNorm)
-        assertEquals(getGravityNormForLocation(location), calibrator.gravityNorm)
+        assertEquals(GravityHelper.getGravityNormForLocation(location), calibrator.gravityNorm)
         assertTrue(calibrator.measurements.isEmpty())
         assertFalse(calibrator.isReadyToSolveCalibration)
         assertFalse(calibrator.resultUnreliable)
@@ -2705,7 +2693,7 @@ class AccelerometerCalibratorTest {
         assertNull(calibrator.gravityMeasurementListener)
         assertNotNull(calibrator.qualityScoreMapper)
         assertNotNull(calibrator.gravityNorm)
-        assertEquals(getGravityNormForLocation(location), calibrator.gravityNorm)
+        assertEquals(GravityHelper.getGravityNormForLocation(location), calibrator.gravityNorm)
         assertTrue(calibrator.measurements.isEmpty())
         assertFalse(calibrator.isReadyToSolveCalibration)
         assertFalse(calibrator.resultUnreliable)
@@ -2934,7 +2922,7 @@ class AccelerometerCalibratorTest {
         assertNull(calibrator.gravityMeasurementListener)
         assertNotNull(calibrator.qualityScoreMapper)
         assertNotNull(calibrator.gravityNorm)
-        assertEquals(getGravityNormForLocation(location), calibrator.gravityNorm)
+        assertEquals(GravityHelper.getGravityNormForLocation(location), calibrator.gravityNorm)
         assertTrue(calibrator.measurements.isEmpty())
         assertFalse(calibrator.isReadyToSolveCalibration)
         assertFalse(calibrator.resultUnreliable)
@@ -3165,7 +3153,7 @@ class AccelerometerCalibratorTest {
         assertNull(calibrator.gravityMeasurementListener)
         assertNotNull(calibrator.qualityScoreMapper)
         assertNotNull(calibrator.gravityNorm)
-        assertEquals(getGravityNormForLocation(location), calibrator.gravityNorm)
+        assertEquals(GravityHelper.getGravityNormForLocation(location), calibrator.gravityNorm)
         assertTrue(calibrator.measurements.isEmpty())
         assertFalse(calibrator.isReadyToSolveCalibration)
         assertFalse(calibrator.resultUnreliable)
@@ -3399,7 +3387,7 @@ class AccelerometerCalibratorTest {
         assertNull(calibrator.gravityMeasurementListener)
         assertNotNull(calibrator.qualityScoreMapper)
         assertNotNull(calibrator.gravityNorm)
-        assertEquals(getGravityNormForLocation(location), calibrator.gravityNorm)
+        assertEquals(GravityHelper.getGravityNormForLocation(location), calibrator.gravityNorm)
         assertTrue(calibrator.measurements.isEmpty())
         assertFalse(calibrator.isReadyToSolveCalibration)
         assertFalse(calibrator.resultUnreliable)
@@ -3635,7 +3623,7 @@ class AccelerometerCalibratorTest {
         assertSame(gravityMeasurementListener, calibrator.gravityMeasurementListener)
         assertNotNull(calibrator.qualityScoreMapper)
         assertNotNull(calibrator.gravityNorm)
-        assertEquals(getGravityNormForLocation(location), calibrator.gravityNorm)
+        assertEquals(GravityHelper.getGravityNormForLocation(location), calibrator.gravityNorm)
         assertTrue(calibrator.measurements.isEmpty())
         assertFalse(calibrator.isReadyToSolveCalibration)
         assertFalse(calibrator.resultUnreliable)
@@ -3873,7 +3861,7 @@ class AccelerometerCalibratorTest {
         assertSame(gravityMeasurementListener, calibrator.gravityMeasurementListener)
         assertSame(qualityScoreMapper, calibrator.qualityScoreMapper)
         assertNotNull(calibrator.gravityNorm)
-        assertEquals(getGravityNormForLocation(location), calibrator.gravityNorm)
+        assertEquals(GravityHelper.getGravityNormForLocation(location), calibrator.gravityNorm)
         assertTrue(calibrator.measurements.isEmpty())
         assertFalse(calibrator.isReadyToSolveCalibration)
         assertFalse(calibrator.resultUnreliable)
@@ -4248,8 +4236,584 @@ class AccelerometerCalibratorTest {
         assertSame(qualityScoreMapper, calibrator.qualityScoreMapper)
     }
 
+    @Test
+    fun isGroundTruthInitialBias_whenValid_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        // check default value
+        assertFalse(calibrator.isGroundTruthInitialBias)
+
+        // set new value
+        calibrator.isGroundTruthInitialBias = true
+
+        // check
+        assertTrue(calibrator.isGroundTruthInitialBias)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun isGroundTruthInitialBias_whenRunning_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        calibrator.setPrivateProperty("running", true)
+
+        calibrator.isGroundTruthInitialBias = true
+    }
+
+    @Test
+    fun location_whenValid_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        // check default value
+        assertNull(calibrator.location)
+        assertNull(calibrator.gravityNorm)
+
+        // set new value
+        val location = getLocation()
+        calibrator.location = location
+
+        // check
+        assertSame(location, calibrator.location)
+        assertEquals(GravityHelper.getGravityNormForLocation(location), calibrator.gravityNorm)
+
+        // set new value
+        calibrator.location = null
+
+        // check
+        assertNull(calibrator.location)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun location_whenRunning_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        calibrator.setPrivateProperty("running", true)
+
+        val location = getLocation()
+        calibrator.location = location
+    }
+
+    @Test
+    fun windowSize_whenValid_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
+
+        // set new value
+        calibrator.windowSize = WINDOW_SIZE
+
+        // check
+        assertEquals(WINDOW_SIZE, calibrator.windowSize)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun windowSize_whenInvalid_throwsIllegalArgumentException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        calibrator.windowSize = 0
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun windowSize_whenRunning_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        calibrator.setPrivateProperty("running", true)
+
+        calibrator.windowSize = WINDOW_SIZE
+    }
+
+    @Test
+    fun initialStaticSamples_whenValid_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        // check default value
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
+            calibrator.initialStaticSamples
+        )
+
+        // set new value
+        calibrator.initialStaticSamples = INITIAL_STATIC_SAMPLES
+
+        // check
+        assertEquals(INITIAL_STATIC_SAMPLES, calibrator.initialStaticSamples)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun initialStaticSamples_whenInvalid_throwsIllegalArgumentException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        calibrator.initialStaticSamples = 0
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun initialStaticSamples_whenRunning_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        calibrator.setPrivateProperty("running", true)
+
+        calibrator.initialStaticSamples = INITIAL_STATIC_SAMPLES
+    }
+
+    @Test
+    fun thresholdFactor_whenValid_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        // check default value
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
+            calibrator.thresholdFactor,
+            0.0
+        )
+
+        // set new value
+        calibrator.thresholdFactor = THRESHOLD_FACTOR
+
+        // check
+        assertEquals(THRESHOLD_FACTOR, calibrator.thresholdFactor, 0.0)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun thresholdFactor_whenInvalid_throwsIllegalArgumentException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        calibrator.thresholdFactor = 0.0
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun thresholdFactor_whenRunning_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        calibrator.setPrivateProperty("running", true)
+
+        calibrator.thresholdFactor = THRESHOLD_FACTOR
+    }
+
+    @Test
+    fun instantaneousNoiseLevelFactor_whenValid_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        // check default value
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
+            calibrator.instantaneousNoiseLevelFactor,
+            0.0
+        )
+
+        // set new value
+        calibrator.instantaneousNoiseLevelFactor = INSTANTANEOUS_NOISE_LEVEL_FACTOR
+
+        // check
+        assertEquals(
+            INSTANTANEOUS_NOISE_LEVEL_FACTOR,
+            calibrator.instantaneousNoiseLevelFactor,
+            0.0
+        )
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun instantaneousNoiseLevelFactor_whenInvalid_throwsIllegalArgumentException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        calibrator.instantaneousNoiseLevelFactor = 0.0
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun instantaneousNoiseLevelFactor_whenRunning_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        calibrator.setPrivateProperty("running", true)
+
+        calibrator.instantaneousNoiseLevelFactor = INSTANTANEOUS_NOISE_LEVEL_FACTOR
+    }
+
+    @Test
+    fun baseNoiseLevelAbsoluteThreshold_whenValid_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        // check default value
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
+            calibrator.baseNoiseLevelAbsoluteThreshold,
+            0.0
+        )
+
+        // set new value
+        calibrator.baseNoiseLevelAbsoluteThreshold = BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD
+
+        // check
+        assertEquals(
+            BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
+            calibrator.baseNoiseLevelAbsoluteThreshold,
+            0.0
+        )
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun baseNoiseLevelAbsoluteThreshold_whenInvalid_throwsIllegalArgumentException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        calibrator.baseNoiseLevelAbsoluteThreshold = 0.0
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun baseNoiseLevelAbsoluteThreshold_whenRunning_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        calibrator.setPrivateProperty("running", true)
+
+        calibrator.baseNoiseLevelAbsoluteThreshold = BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD
+    }
+
+    @Test
+    fun baseNoiseLevelAbsoluteThresholdAsAcceleration_whenValid_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        // check default value
+        val value1 = calibrator.baseNoiseLevelAbsoluteThresholdAsAcceleration
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
+            value1.value.toDouble(),
+            0.0
+        )
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, value1.unit)
+
+        // set new value
+        val value2 = Acceleration(
+            BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
+            AccelerationUnit.METERS_PER_SQUARED_SECOND
+        )
+        calibrator.baseNoiseLevelAbsoluteThresholdAsAcceleration = value2
+
+        // check
+        val value3 = calibrator.baseNoiseLevelAbsoluteThresholdAsAcceleration
+        assertEquals(value2, value3)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun baseNoiseLevelAbsoluteThresholdAsAcceleration_whenInvalid_throwsIllegalArgumentException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        val value = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        calibrator.baseNoiseLevelAbsoluteThresholdAsAcceleration = value
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun baseNoiseLevelAbsoluteThresholdAsAcceleration_whenRunning_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        calibrator.setPrivateProperty("running", true)
+
+        val value = Acceleration(
+            BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
+            AccelerationUnit.METERS_PER_SQUARED_SECOND
+        )
+        calibrator.baseNoiseLevelAbsoluteThresholdAsAcceleration = value
+    }
+
+    @Test
+    fun getBaseNoiseLevelAbsoluteThresholdAsAcceleration_whenValid_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        // check default value
+        val value1 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        calibrator.getBaseNoiseLevelAbsoluteThresholdAsAcceleration(value1)
+
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
+            value1.value.toDouble(),
+            0.0
+        )
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, value1.unit)
+
+        // set new value
+        val value2 = Acceleration(
+            BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
+            AccelerationUnit.METERS_PER_SQUARED_SECOND
+        )
+        calibrator.baseNoiseLevelAbsoluteThresholdAsAcceleration = value2
+
+        // check
+        val value3 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        calibrator.getBaseNoiseLevelAbsoluteThresholdAsAcceleration(value3)
+        assertEquals(value2, value3)
+    }
+
+    @Test
+    fun initialSx_whenValid_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        // check default value
+        assertEquals(0.0, calibrator.initialSx, 0.0)
+
+        // set new value
+        val randomizer = UniformRandomizer()
+        val initialSx = randomizer.nextDouble()
+        calibrator.initialSx = initialSx
+
+        // check
+        assertEquals(initialSx, calibrator.initialSx, 0.0)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun initialSx_whenRunning_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        calibrator.setPrivateProperty("running", true)
+
+        calibrator.initialSx = 0.0
+    }
+
+    @Test
+    fun initialSy_whenValid_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        // check default value
+        assertEquals(0.0, calibrator.initialSy, 0.0)
+
+        // set new value
+        val randomizer = UniformRandomizer()
+        val initialSy = randomizer.nextDouble()
+        calibrator.initialSy = initialSy
+
+        // check
+        assertEquals(initialSy, calibrator.initialSy, 0.0)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun initialSy_whenRunning_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        calibrator.setPrivateProperty("running", true)
+
+        calibrator.initialSy = 0.0
+    }
+
+    @Test
+    fun initialSz_whenValid_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        // check default value
+        assertEquals(0.0, calibrator.initialSz, 0.0)
+
+        // set new value
+        val randomizer = UniformRandomizer()
+        val initialSz = randomizer.nextDouble()
+        calibrator.initialSz = initialSz
+
+        // check
+        assertEquals(initialSz, calibrator.initialSz, 0.0)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun initialSz_whenRunning_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        calibrator.setPrivateProperty("running", true)
+
+        calibrator.initialSz = 0.0
+    }
+
+    @Test
+    fun initialMxy_whenValid_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        // check default value
+        assertEquals(0.0, calibrator.initialMxy, 0.0)
+
+        // set new value
+        val randomizer = UniformRandomizer()
+        val initialMxy = randomizer.nextDouble()
+        calibrator.initialMxy = initialMxy
+
+        // check
+        assertEquals(initialMxy, calibrator.initialMxy, 0.0)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun initialMxy_whenRunning_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        calibrator.setPrivateProperty("running", true)
+
+        calibrator.initialMxy = 0.0
+    }
+
+    @Test
+    fun initialMxz_whenValid_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        // check default value
+        assertEquals(0.0, calibrator.initialMxz, 0.0)
+
+        // set new value
+        val randomizer = UniformRandomizer()
+        val initialMxz = randomizer.nextDouble()
+        calibrator.initialMxz = initialMxz
+
+        // check
+        assertEquals(initialMxz, calibrator.initialMxz, 0.0)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun initialMxz_whenRunning_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        calibrator.setPrivateProperty("running", true)
+
+        calibrator.initialMxz = 0.0
+    }
+
+    @Test
+    fun initialMyx_whenValid_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        // check default value
+        assertEquals(0.0, calibrator.initialMyx, 0.0)
+
+        // set new value
+        val randomizer = UniformRandomizer()
+        val initialMyx = randomizer.nextDouble()
+        calibrator.initialMyx = initialMyx
+
+        // check
+        assertEquals(initialMyx, calibrator.initialMyx, 0.0)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun initialMyx_whenRunning_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        calibrator.setPrivateProperty("running", true)
+
+        calibrator.initialMyx = 0.0
+    }
+
+    @Test
+    fun initialMyz_whenValid_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        // check default value
+        assertEquals(0.0, calibrator.initialMyz, 0.0)
+
+        // set new value
+        val randomizer = UniformRandomizer()
+        val initialMyz = randomizer.nextDouble()
+        calibrator.initialMyz = initialMyz
+
+        // check
+        assertEquals(initialMyz, calibrator.initialMyz, 0.0)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun initialMyz_whenRunning_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        calibrator.setPrivateProperty("running", true)
+
+        calibrator.initialMyz = 0.0
+    }
+
+    @Test
+    fun initialMzx_whenValid_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        // check default value
+        assertEquals(0.0, calibrator.initialMzx, 0.0)
+
+        // set new value
+        val randomizer = UniformRandomizer()
+        val initialMzx = randomizer.nextDouble()
+        calibrator.initialMzx = initialMzx
+
+        // check
+        assertEquals(initialMzx, calibrator.initialMzx, 0.0)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun initialMzx_whenRunning_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        calibrator.setPrivateProperty("running", true)
+
+        calibrator.initialMzx = 0.0
+    }
+
+    @Test
+    fun initialMzy_whenValid_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        // check default value
+        assertEquals(0.0, calibrator.initialMzy, 0.0)
+
+        // set new value
+        val randomizser = UniformRandomizer()
+        val initialMzy = randomizser.nextDouble()
+        calibrator.initialMzy = initialMzy
+
+        // check
+        assertEquals(initialMzy, calibrator.initialMzy, 0.0)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun initialMzy_whenRunning_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        calibrator.setPrivateProperty("running", true)
+
+        calibrator.initialMzy = 0.0
+    }
+
     private companion object {
         const val MA_SIZE = 3
+
+        const val INITIAL_STATIC_SAMPLES = 2500
+
+        const val THRESHOLD_FACTOR = 3.0
+
+        const val INSTANTANEOUS_NOISE_LEVEL_FACTOR = 3.0
+
+        const val BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD = 1e-5;
 
         const val MIN_ANGLE_DEGREES = -90.0
         const val MAX_ANGLE_DEGREES = 90.0
@@ -4257,23 +4821,20 @@ class AccelerometerCalibratorTest {
         const val MIN_HEIGHT = -100.0
         const val MAX_HEIGHT = 3000.0
 
-        fun getGravityNormForLocation(location: Location): Double {
-            val nedPosition = location.toNEDPosition()
-            val nedVelocity = NEDVelocity()
-            val ecefPosition = ECEFPosition()
-            val ecefVelocity = ECEFVelocity()
-            NEDtoECEFPositionVelocityConverter.convertNEDtoECEF(
-                nedPosition,
-                nedVelocity,
-                ecefPosition,
-                ecefVelocity
-            )
-            val gravity = ECEFGravityEstimator.estimateGravityAndReturnNew(
-                ecefPosition.x,
-                ecefPosition.y,
-                ecefPosition.z
-            )
-            return gravity.norm
+        const val WINDOW_SIZE = 51
+
+        fun getLocation(): Location {
+            val randomizer = UniformRandomizer()
+            val latitudeDegrees = randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES)
+            val longitudeDegrees = randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES)
+            val height = randomizer.nextDouble(MIN_HEIGHT, MAX_HEIGHT)
+
+            val location = mockk<Location>()
+            every { location.latitude }.returns(latitudeDegrees)
+            every { location.longitude }.returns(longitudeDegrees)
+            every { location.altitude }.returns(height)
+
+            return location
         }
     }
 }
