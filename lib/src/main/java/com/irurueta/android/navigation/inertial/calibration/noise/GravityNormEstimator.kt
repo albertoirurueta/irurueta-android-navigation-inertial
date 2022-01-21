@@ -17,7 +17,6 @@ package com.irurueta.android.navigation.inertial.calibration.noise
 
 import android.content.Context
 import com.irurueta.android.navigation.inertial.collectors.GravitySensorCollector
-import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.navigation.inertial.calibration.noise.AccumulatedAccelerationMeasurementNoiseEstimator
 import com.irurueta.units.Acceleration
@@ -43,6 +42,7 @@ import com.irurueta.units.AccelerationUnit
  * @property completedListener Listener to notify when estimation is complete.
  * @property unreliableListener Listener to notify when sensor becomes unreliable, and thus,
  * estimation must be discarded.
+ * @property measurementListener Listener to notify collected sensor measurements.
  * @throws IllegalArgumentException when either [maxSamples] or [maxDurationMillis] is negative.
  */
 class GravityNormEstimator(
@@ -52,7 +52,8 @@ class GravityNormEstimator(
     maxDurationMillis: Long = DEFAULT_MAX_DURATION_MILLIS,
     stopMode: StopMode = StopMode.MAX_SAMPLES_OR_DURATION,
     completedListener: OnEstimationCompletedListener<GravityNormEstimator>? = null,
-    unreliableListener: OnUnreliableListener<GravityNormEstimator>? = null
+    unreliableListener: OnUnreliableListener<GravityNormEstimator>? = null,
+    var measurementListener: GravitySensorCollector.OnMeasurementListener? = null
 ) : AccumulatedMeasurementEstimator<GravityNormEstimator,
         AccumulatedAccelerationMeasurementNoiseEstimator, GravitySensorCollector, AccelerationUnit,
         Acceleration>(
@@ -67,18 +68,11 @@ class GravityNormEstimator(
     /**
      * Listener to handle gravity measurements.
      */
-    private val measurementListener = object : GravitySensorCollector.OnMeasurementListener {
-        override fun onMeasurement(
-            gx: Float,
-            gy: Float,
-            gz: Float,
-            g: Double,
-            timestamp: Long,
-            accuracy: SensorAccuracy?
-        ) {
+    private val gravityMeasurementListener =
+        GravitySensorCollector.OnMeasurementListener { gx, gy, gz, g, timestamp, accuracy ->
             handleMeasurement(g, timestamp, accuracy)
+            measurementListener?.onMeasurement(gx, gy, gz, g, timestamp, accuracy)
         }
-    }
 
     /**
      * Internal noise estimator of acceleration magnitude measurements.
@@ -92,7 +86,7 @@ class GravityNormEstimator(
     override val collector = GravitySensorCollector(
         context,
         sensorDelay,
-        measurementListener,
+        gravityMeasurementListener,
         accuracyChangedListener
     )
 }

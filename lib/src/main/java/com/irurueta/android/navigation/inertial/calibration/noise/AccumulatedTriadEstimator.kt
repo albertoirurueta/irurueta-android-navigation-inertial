@@ -69,6 +69,13 @@ abstract class AccumulatedTriadEstimator<A : AccumulatedTriadEstimator<A, N, C, 
     protected abstract val collector: C
 
     /**
+     * Gets sensor being used to obtain measurements or null if not available.
+     * This can be used to obtain additional information about the sensor.
+     */
+    val sensor
+        get() = collector.sensor
+
+    /**
      * Indicates whether this estimator is already running.
      */
     var running = false
@@ -748,7 +755,7 @@ abstract class AccumulatedTriadEstimator<A : AccumulatedTriadEstimator<A, N, C, 
     /**
      * Starts collection of sensor measurements.
      *
-     * @throws IllegalStateException if estimator is already running.
+     * @throws IllegalStateException if estimator is already running or sensor is not available.
      */
     @Throws(IllegalStateException::class)
     fun start() {
@@ -757,7 +764,9 @@ abstract class AccumulatedTriadEstimator<A : AccumulatedTriadEstimator<A, N, C, 
         reset()
 
         running = true
-        collector.start()
+        if (!collector.start()) {
+            throw IllegalStateException("Unavailable sensor")
+        }
     }
 
     /**
@@ -833,7 +842,7 @@ abstract class AccumulatedTriadEstimator<A : AccumulatedTriadEstimator<A, N, C, 
     /**
      * Interface to notify when estimation completes.
      */
-    interface OnEstimationCompletedListener<A : AccumulatedTriadEstimator<*, *, *, *, *, *>> {
+    fun interface OnEstimationCompletedListener<A : AccumulatedTriadEstimator<*, *, *, *, *, *>> {
         /**
          * Called when estimation completes.
          *
@@ -845,7 +854,7 @@ abstract class AccumulatedTriadEstimator<A : AccumulatedTriadEstimator<A, N, C, 
     /**
      * Interface to notify when measurements become unreliable.
      */
-    interface OnUnreliableListener<A : AccumulatedTriadEstimator<*, *, *, *, *, *>> {
+    fun interface OnUnreliableListener<A : AccumulatedTriadEstimator<*, *, *, *, *, *>> {
         /**
          * Called when measurements become unreliable.
          *

@@ -17,7 +17,6 @@ package com.irurueta.android.navigation.inertial.calibration.noise
 
 import android.content.Context
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.navigation.inertial.calibration.AngularSpeedTriad
 import com.irurueta.navigation.inertial.calibration.noise.AccumulatedAngularSpeedTriadNoiseEstimator
@@ -46,6 +45,7 @@ import com.irurueta.units.AngularSpeedUnit
  * @param completedListener Listener to notify when estimation is complete.
  * @param unreliableListener Listener to notify when sensor becomes unreliable, and thus,
  * estimation must be discarded.
+ * @property measurementListener Listener to notify collected sensor measurements.
  * @throws IllegalArgumentException when either [maxSamples] or [maxDurationMillis] is negative.
  */
 class GyroscopeNoiseEstimator(
@@ -57,7 +57,8 @@ class GyroscopeNoiseEstimator(
     maxDurationMillis: Long = DEFAULT_MAX_DURATION_MILLIS,
     stopMode: StopMode = StopMode.MAX_SAMPLES_OR_DURATION,
     completedListener: OnEstimationCompletedListener<GyroscopeNoiseEstimator>? = null,
-    unreliableListener: OnUnreliableListener<GyroscopeNoiseEstimator>? = null
+    unreliableListener: OnUnreliableListener<GyroscopeNoiseEstimator>? = null,
+    var measurementListener: GyroscopeSensorCollector.OnMeasurementListener? = null
 ) : AccumulatedTriadEstimator<GyroscopeNoiseEstimator, AccumulatedAngularSpeedTriadNoiseEstimator,
         GyroscopeSensorCollector, AngularSpeedUnit, AngularSpeed, AngularSpeedTriad>(
     context,
@@ -77,21 +78,11 @@ class GyroscopeNoiseEstimator(
     /**
      * Listener to handle gyroscope measurements.
      */
-    private val measurementListener = object : GyroscopeSensorCollector.OnMeasurementListener {
-        override fun onMeasurement(
-            wx: Float,
-            wy: Float,
-            wz: Float,
-            bx: Float?,
-            by: Float?,
-            bz: Float?,
-            timestamp: Long,
-            accuracy: SensorAccuracy?
-        ) {
+    private val gyroscopeMeasurementListener =
+        GyroscopeSensorCollector.OnMeasurementListener { wx, wy, wz, bx, by, bz, timestamp, accuracy ->
             handleMeasurement(wx.toDouble(), wy.toDouble(), wz.toDouble(), timestamp, accuracy)
+            measurementListener?.onMeasurement(wx, wy, wz, bx, by, bz, timestamp, accuracy)
         }
-
-    }
 
     /**
      * Collector for gyroscope measurements.
@@ -100,7 +91,7 @@ class GyroscopeNoiseEstimator(
         context,
         sensorType,
         sensorDelay,
-        measurementListener,
+        gyroscopeMeasurementListener,
         accuracyChangedListener
     )
 }

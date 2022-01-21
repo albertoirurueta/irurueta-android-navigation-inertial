@@ -16,6 +16,7 @@
 package com.irurueta.android.navigation.inertial.calibration.noise
 
 import android.content.Context
+import android.hardware.Sensor
 import android.os.SystemClock
 import androidx.test.core.app.ApplicationProvider
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
@@ -38,6 +39,7 @@ import com.irurueta.units.Acceleration
 import com.irurueta.units.AccelerationUnit
 import com.irurueta.units.Time
 import com.irurueta.units.TimeUnit
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
@@ -68,6 +70,8 @@ class AccelerometerNormEstimatorTest {
         assertEquals(StopMode.MAX_SAMPLES_OR_DURATION, estimator.stopMode)
         assertNull(estimator.completedListener)
         assertNull(estimator.unreliableListener)
+        assertNull(estimator.measurementListener)
+        assertNull(estimator.sensor)
         assertFalse(estimator.running)
         assertEquals(0, estimator.numberOfProcessedMeasurements)
         assertFalse(estimator.resultAvailable)
@@ -120,6 +124,8 @@ class AccelerometerNormEstimatorTest {
         assertEquals(StopMode.MAX_SAMPLES_OR_DURATION, estimator.stopMode)
         assertNull(estimator.completedListener)
         assertNull(estimator.unreliableListener)
+        assertNull(estimator.measurementListener)
+        assertNull(estimator.sensor)
         assertFalse(estimator.running)
         assertEquals(0, estimator.numberOfProcessedMeasurements)
         assertFalse(estimator.resultAvailable)
@@ -170,10 +176,8 @@ class AccelerometerNormEstimatorTest {
         assertEquals(StopMode.MAX_SAMPLES_OR_DURATION, estimator.stopMode)
         assertNull(estimator.completedListener)
         assertNull(estimator.unreliableListener)
-        assertFalse(estimator.running)
-        assertEquals(0, estimator.numberOfProcessedMeasurements)
-        assertFalse(estimator.resultAvailable)
-        assertFalse(estimator.resultUnreliable)
+        assertNull(estimator.measurementListener)
+        assertNull(estimator.sensor)
         assertFalse(estimator.running)
         assertEquals(0, estimator.numberOfProcessedMeasurements)
         assertFalse(estimator.resultAvailable)
@@ -236,6 +240,8 @@ class AccelerometerNormEstimatorTest {
         assertEquals(StopMode.MAX_SAMPLES_OR_DURATION, estimator.stopMode)
         assertNull(estimator.completedListener)
         assertNull(estimator.unreliableListener)
+        assertNull(estimator.measurementListener)
+        assertNull(estimator.sensor)
         assertFalse(estimator.running)
         assertEquals(0, estimator.numberOfProcessedMeasurements)
         assertFalse(estimator.resultAvailable)
@@ -297,6 +303,8 @@ class AccelerometerNormEstimatorTest {
         assertEquals(StopMode.MAX_SAMPLES_OR_DURATION, estimator.stopMode)
         assertNull(estimator.completedListener)
         assertNull(estimator.unreliableListener)
+        assertNull(estimator.measurementListener)
+        assertNull(estimator.sensor)
         assertFalse(estimator.running)
         assertEquals(0, estimator.numberOfProcessedMeasurements)
         assertFalse(estimator.resultAvailable)
@@ -347,6 +355,8 @@ class AccelerometerNormEstimatorTest {
         assertEquals(StopMode.MAX_SAMPLES_ONLY, estimator.stopMode)
         assertNull(estimator.completedListener)
         assertNull(estimator.unreliableListener)
+        assertNull(estimator.measurementListener)
+        assertNull(estimator.sensor)
         assertFalse(estimator.running)
         assertEquals(0, estimator.numberOfProcessedMeasurements)
         assertFalse(estimator.resultAvailable)
@@ -401,6 +411,8 @@ class AccelerometerNormEstimatorTest {
         assertEquals(StopMode.MAX_SAMPLES_ONLY, estimator.stopMode)
         assertSame(completedListener, estimator.completedListener)
         assertNull(estimator.unreliableListener)
+        assertNull(estimator.measurementListener)
+        assertNull(estimator.sensor)
         assertFalse(estimator.running)
         assertEquals(0, estimator.numberOfProcessedMeasurements)
         assertFalse(estimator.resultAvailable)
@@ -459,6 +471,70 @@ class AccelerometerNormEstimatorTest {
         assertEquals(StopMode.MAX_SAMPLES_ONLY, estimator.stopMode)
         assertSame(completedListener, estimator.completedListener)
         assertSame(unreliableListener, estimator.unreliableListener)
+        assertNull(estimator.measurementListener)
+        assertNull(estimator.sensor)
+        assertFalse(estimator.running)
+        assertEquals(0, estimator.numberOfProcessedMeasurements)
+        assertFalse(estimator.resultAvailable)
+        assertFalse(estimator.resultUnreliable)
+        assertNull(estimator.averageNorm)
+        assertNull(estimator.averageNormAsMeasurement)
+        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        assertFalse(estimator.getAverageNormAsMeasurement(acceleration))
+        assertNull(estimator.normVariance)
+        assertNull(estimator.normStandardDeviation)
+        assertNull(estimator.normStandardDeviationAsMeasurement)
+        assertFalse(estimator.getNormStandardDeviationAsMeasurement(acceleration))
+        assertNull(estimator.psd)
+        assertNull(estimator.rootPsd)
+        assertNull(estimator.averageTimeInterval)
+        assertNull(estimator.averageTimeIntervalAsTime)
+        val time1 = Time(0.0, TimeUnit.SECOND)
+        assertFalse(estimator.getAverageTimeIntervalAsTime(time1))
+        assertNull(estimator.timeIntervalVariance)
+        assertNull(estimator.timeIntervalStandardDeviation)
+        assertNull(estimator.timeIntervalStandardDeviationAsTime)
+        assertFalse(estimator.getTimeIntervalStandardDeviationAsTime(time1))
+        assertEquals(0L, estimator.elapsedTimeNanos)
+        assertEquals(Time(0.0, TimeUnit.NANOSECOND), estimator.elapsedTime)
+        val time2 = Time(1.0, TimeUnit.NANOSECOND)
+        estimator.getElapsedTime(time2)
+        assertEquals(estimator.elapsedTime, time2)
+    }
+
+    @Test
+    fun constructor_whenMeasurementListener_setsExpectedValues() {
+        val completedListener =
+            mockk<AccumulatedMeasurementEstimator
+            .OnEstimationCompletedListener<AccelerometerNormEstimator>>()
+        val unreliableListener =
+            mockk<AccumulatedMeasurementEstimator
+            .OnUnreliableListener<AccelerometerNormEstimator>>()
+        val measurementListener = mockk<AccelerometerSensorCollector.OnMeasurementListener>()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val estimator = AccelerometerNormEstimator(
+            context,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            SensorDelay.NORMAL,
+            MAX_SAMPLES,
+            MAX_DURATION_MILLIS,
+            StopMode.MAX_SAMPLES_ONLY,
+            completedListener,
+            unreliableListener,
+            measurementListener
+        )
+
+        // check values
+        assertSame(context, estimator.context)
+        assertEquals(AccelerometerSensorCollector.SensorType.ACCELEROMETER, estimator.sensorType)
+        assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
+        assertEquals(MAX_SAMPLES, estimator.maxSamples)
+        assertEquals(MAX_DURATION_MILLIS, estimator.maxDurationMillis)
+        assertEquals(StopMode.MAX_SAMPLES_ONLY, estimator.stopMode)
+        assertSame(completedListener, estimator.completedListener)
+        assertSame(unreliableListener, estimator.unreliableListener)
+        assertSame(measurementListener, estimator.measurementListener)
+        assertNull(estimator.sensor)
         assertFalse(estimator.running)
         assertEquals(0, estimator.numberOfProcessedMeasurements)
         assertFalse(estimator.resultAvailable)
@@ -523,7 +599,40 @@ class AccelerometerNormEstimatorTest {
     }
 
     @Test
-    fun start_startsCollector() {
+    fun measurementListener_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val estimator = AccelerometerNormEstimator(context)
+
+        // check default value
+        assertNull(estimator.measurementListener)
+
+        // set new value
+        val measurementListener = mockk<AccelerometerSensorCollector.OnMeasurementListener>()
+        estimator.measurementListener = measurementListener
+
+        // check
+        assertSame(measurementListener, estimator.measurementListener)
+    }
+
+    @Test
+    fun sensor_returnsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val estimator = AccelerometerNormEstimator(context)
+
+        // check
+        val collector: AccelerometerSensorCollector? =
+            estimator.getPrivateProperty("collector")
+        requireNotNull(collector)
+        val collectorSpy = spyk(collector)
+        val sensor = mockk<Sensor>()
+        every { collectorSpy.sensor }.returns(sensor)
+        estimator.setPrivateProperty("collector", collectorSpy)
+
+        assertSame(sensor, estimator.sensor)
+    }
+
+    @Test
+    fun start_whenSensorAvailable_startsCollector() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = AccelerometerNormEstimator(context)
 
@@ -537,6 +646,7 @@ class AccelerometerNormEstimatorTest {
         assertNotNull(collector.accuracyChangedListener)
 
         val collectorSpy = spyk(collector)
+        every { collectorSpy.start() }.returns(true)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         assertFalse(estimator.running)
@@ -545,6 +655,29 @@ class AccelerometerNormEstimatorTest {
 
         assertTrue(estimator.running)
         verify(exactly = 1) { collectorSpy.start() }
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun start_whenSensorUnavailable_startsCollector() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val estimator = AccelerometerNormEstimator(context)
+
+        val collector: AccelerometerSensorCollector? =
+            estimator.getPrivateProperty("collector")
+        requireNotNull(collector)
+        assertSame(context, collector.context)
+        assertEquals(collector.sensorType, estimator.sensorType)
+        assertEquals(collector.sensorDelay, estimator.sensorDelay)
+        assertNotNull(collector.measurementListener)
+        assertNotNull(collector.accuracyChangedListener)
+
+        val collectorSpy = spyk(collector)
+        every { collectorSpy.start() }.returns(false)
+        estimator.setPrivateProperty("collector", collectorSpy)
+
+        assertFalse(estimator.running)
+
+        estimator.start()
     }
 
     @Test
@@ -557,6 +690,13 @@ class AccelerometerNormEstimatorTest {
         requireNotNull(noiseEstimator)
         val noiseEstimatorSpy = spyk(noiseEstimator)
         estimator.setPrivateProperty("noiseEstimator", noiseEstimatorSpy)
+
+        val collector: AccelerometerSensorCollector? =
+            estimator.getPrivateProperty("collector")
+        requireNotNull(collector)
+        val collectorSpy = spyk(collector)
+        every { collectorSpy.start() }.returns(true)
+        estimator.setPrivateProperty("collector", collectorSpy)
 
         val timeIntervalEstimator: TimeIntervalEstimator? = getPrivateProperty(
             BaseAccumulatedEstimator::class,
@@ -596,6 +736,13 @@ class AccelerometerNormEstimatorTest {
         val noiseEstimatorSpy = spyk(noiseEstimator)
         estimator.setPrivateProperty("noiseEstimator", noiseEstimatorSpy)
 
+        val collector: AccelerometerSensorCollector? =
+            estimator.getPrivateProperty("collector")
+        requireNotNull(collector)
+        val collectorSpy = spyk(collector)
+        every { collectorSpy.start() }.returns(true)
+        estimator.setPrivateProperty("collector", collectorSpy)
+
         val timeIntervalEstimator: TimeIntervalEstimator? = getPrivateProperty(
             BaseAccumulatedEstimator::class,
             estimator,
@@ -627,6 +774,13 @@ class AccelerometerNormEstimatorTest {
     fun start_whenResultUnreliable_resets() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = AccelerometerNormEstimator(context)
+
+        val collector: AccelerometerSensorCollector? =
+            estimator.getPrivateProperty("collector")
+        requireNotNull(collector)
+        val collectorSpy = spyk(collector)
+        every { collectorSpy.start() }.returns(true)
+        estimator.setPrivateProperty("collector", collectorSpy)
 
         setPrivateProperty(
             BaseAccumulatedEstimator::class,
@@ -675,6 +829,7 @@ class AccelerometerNormEstimatorTest {
         assertNotNull(collector.accuracyChangedListener)
 
         val collectorSpy = spyk(collector)
+        every { collectorSpy.start() }.returns(true)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         assertFalse(estimator.running)
@@ -718,6 +873,35 @@ class AccelerometerNormEstimatorTest {
     }
 
     @Test
+    fun onMeasurement_whenMeasurementListener_notifies() {
+        val measurementListener =
+            mockk<AccelerometerSensorCollector.OnMeasurementListener>(relaxUnitFun = true)
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val estimator =
+            AccelerometerNoiseEstimator(context, measurementListener = measurementListener)
+
+        val accelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
+            estimator.getPrivateProperty("accelerometerMeasurementListener")
+        requireNotNull(accelerometerMeasurementListener)
+
+        val gravity = getGravity()
+        val ax = gravity.gx.toFloat()
+        val ay = gravity.gy.toFloat()
+        val az = gravity.gz.toFloat()
+        val bx = 1.0f
+        val by = 2.0f
+        val bz = 3.0f
+        val timestamp = SystemClock.elapsedRealtimeNanos()
+        val accuracy = SensorAccuracy.HIGH
+
+        accelerometerMeasurementListener.onMeasurement(ax, ay, az, bx, by, bz, timestamp, accuracy)
+
+        verify(exactly = 1) {
+            measurementListener.onMeasurement(ax, ay, az, bx, by, bz, timestamp, accuracy)
+        }
+    }
+
+    @Test
     fun onMeasurement_whenUnreliableAccuracy_makesResultUnreliable() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = AccelerometerNormEstimator(context)
@@ -725,7 +909,7 @@ class AccelerometerNormEstimatorTest {
         assertFalse(estimator.resultUnreliable)
 
         val measurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
-            estimator.getPrivateProperty("measurementListener")
+            estimator.getPrivateProperty("accelerometerMeasurementListener")
         requireNotNull(measurementListener)
 
         val gravity = getGravity()
@@ -754,7 +938,7 @@ class AccelerometerNormEstimatorTest {
         assertEquals(0L, initialTimestampNanos1)
 
         val measurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
-            estimator.getPrivateProperty("measurementListener")
+            estimator.getPrivateProperty("accelerometerMeasurementListener")
         requireNotNull(measurementListener)
 
         val gravity = getGravity()
@@ -815,7 +999,7 @@ class AccelerometerNormEstimatorTest {
         )
 
         val measurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
-            estimator.getPrivateProperty("measurementListener")
+            estimator.getPrivateProperty("accelerometerMeasurementListener")
         requireNotNull(measurementListener)
 
         val gravity = getGravity()
@@ -854,7 +1038,7 @@ class AccelerometerNormEstimatorTest {
         assertEquals(0L, endTimestampNanos1)
 
         val measurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
-            estimator.getPrivateProperty("measurementListener")
+            estimator.getPrivateProperty("accelerometerMeasurementListener")
         requireNotNull(measurementListener)
 
         val gravity = getGravity()
@@ -885,7 +1069,7 @@ class AccelerometerNormEstimatorTest {
         assertEquals(0, estimator.numberOfProcessedMeasurements)
 
         val measurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
-            estimator.getPrivateProperty("measurementListener")
+            estimator.getPrivateProperty("accelerometerMeasurementListener")
         requireNotNull(measurementListener)
 
         val gravity = getGravity()
@@ -919,7 +1103,7 @@ class AccelerometerNormEstimatorTest {
         assertFalse(estimator.resultAvailable)
 
         val measurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
-            estimator.getPrivateProperty("measurementListener")
+            estimator.getPrivateProperty("accelerometerMeasurementListener")
         requireNotNull(measurementListener)
 
         val gravity = getGravity()
@@ -979,7 +1163,7 @@ class AccelerometerNormEstimatorTest {
         assertFalse(estimator.resultAvailable)
 
         val measurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
-            estimator.getPrivateProperty("measurementListener")
+            estimator.getPrivateProperty("accelerometerMeasurementListener")
         requireNotNull(measurementListener)
 
         val gravity = getGravity()
@@ -1036,7 +1220,7 @@ class AccelerometerNormEstimatorTest {
         assertFalse(estimator.resultAvailable)
 
         val measurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
-            estimator.getPrivateProperty("measurementListener")
+            estimator.getPrivateProperty("accelerometerMeasurementListener")
         requireNotNull(measurementListener)
 
         val gravity = getGravity()
@@ -1098,7 +1282,7 @@ class AccelerometerNormEstimatorTest {
         assertFalse(estimator.resultAvailable)
 
         val measurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
-            estimator.getPrivateProperty("measurementListener")
+            estimator.getPrivateProperty("accelerometerMeasurementListener")
         requireNotNull(measurementListener)
 
         val gravity = getGravity()
@@ -1156,7 +1340,7 @@ class AccelerometerNormEstimatorTest {
         assertFalse(estimator.resultAvailable)
 
         val measurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
-            estimator.getPrivateProperty("measurementListener")
+            estimator.getPrivateProperty("accelerometerMeasurementListener")
         requireNotNull(measurementListener)
 
         val gravity = getGravity()
@@ -1218,7 +1402,7 @@ class AccelerometerNormEstimatorTest {
         assertFalse(estimator.resultAvailable)
 
         val measurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
-            estimator.getPrivateProperty("measurementListener")
+            estimator.getPrivateProperty("accelerometerMeasurementListener")
         requireNotNull(measurementListener)
 
         val gravity = getGravity()

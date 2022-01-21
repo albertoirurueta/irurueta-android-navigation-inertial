@@ -54,6 +54,8 @@ import com.irurueta.units.TimeConverter
  * @property dynamicIntervalDetectedListener listener to notify when a new dynamic interval is
  * detected.
  * @property resetListener listener to notify when a reset occurs.
+ * @property measurementListener listener to notify collected accelerometer measurements.
+ * @property accuracyChangedListener listener to notify when accelerometer accuracy changes.
  */
 class IntervalDetector(
     val context: Context,
@@ -66,6 +68,8 @@ class IntervalDetector(
     var staticIntervalDetectedListener: OnStaticIntervalDetectedListener? = null,
     var dynamicIntervalDetectedListener: OnDynamicIntervalDetectedListener? = null,
     var resetListener: OnResetListener? = null,
+    var measurementListener: AccelerometerSensorCollector.OnMeasurementListener? = null,
+    var accuracyChangedListener: SensorCollector.OnAccuracyChangedListener? = null
 ) {
 
     /**
@@ -175,60 +179,66 @@ class IntervalDetector(
     private var initialTimestamp: Long = 0L
 
     /**
-     * Listener for accelerometer sensor collector.
+     * Internal listener for accelerometer sensor collector.
      * Handles measurements collected by the sensor collector so that they are processed by
      * the internal interval detector.
      */
-    private val measurementListener = object : AccelerometerSensorCollector.OnMeasurementListener {
-        override fun onMeasurement(
-            ax: Float,
-            ay: Float,
-            az: Float,
-            bx: Float?,
-            by: Float?,
-            bz: Float?,
-            timestamp: Long,
-            accuracy: SensorAccuracy?
-        ) {
-            val status = status
-            if (status == Status.INITIALIZING) {
-                // during initialization phase, also estimate time interval duration.
-                if (numberOfProcessedMeasurements > 0) {
-                    val diff = timestamp - initialTimestamp
-                    val diffSeconds = TimeConverter.nanosecondToSecond(diff.toDouble())
-                    timeIntervalEstimator.addTimestamp(diffSeconds)
-                } else {
-                    initialTimestamp = timestamp
+    private val internalMeasurementListener =
+        object : AccelerometerSensorCollector.OnMeasurementListener {
+            override fun onMeasurement(
+                ax: Float,
+                ay: Float,
+                az: Float,
+                bx: Float?,
+                by: Float?,
+                bz: Float?,
+                timestamp: Long,
+                accuracy: SensorAccuracy?
+            ) {
+                val status = status
+                if (status == Status.INITIALIZING) {
+                    // during initialization phase, also estimate time interval duration.
+                    if (numberOfProcessedMeasurements > 0) {
+                        val diff = timestamp - initialTimestamp
+                        val diffSeconds = TimeConverter.nanosecondToSecond(diff.toDouble())
+                        timeIntervalEstimator.addTimestamp(diffSeconds)
+                    } else {
+                        initialTimestamp = timestamp
+                    }
                 }
-            }
 
-            internalDetector.process(ax.toDouble(), ay.toDouble(), az.toDouble())
-            numberOfProcessedMeasurements++
+                internalDetector.process(ax.toDouble(), ay.toDouble(), az.toDouble())
+                numberOfProcessedMeasurements++
 
-            if (status == Status.INITIALIZATION_COMPLETED) {
-                // once initialized, set time interval into internal detector
-                internalDetector.timeInterval = timeIntervalEstimator.averageTimeInterval
-                initialized = true
+                if (status == Status.INITIALIZATION_COMPLETED) {
+                    // once initialized, set time interval into internal detector
+                    internalDetector.timeInterval = timeIntervalEstimator.averageTimeInterval
+                    initialized = true
+                }
+
+                measurementListener?.onMeasurement(ax, ay, az, bx, by, bz, timestamp, accuracy)
             }
         }
-    }
 
     /**
      * Listener to detect when accuracy of accelerometer changes.
      * When accelerometer becomes unreliable, an error is notified.
      */
-    private val accuracyChangedListener = object : SensorCollector.OnAccuracyChangedListener {
-        override fun onAccuracyChanged(accuracy: SensorAccuracy?) {
-            if (accuracy == SensorAccuracy.UNRELIABLE) {
-                stop()
-                unreliable = true
-                errorListener?.onError(
-                    this@IntervalDetector,
-                    ErrorReason.UNRELIABLE_SENSOR
-                )
+    private val internalAccuracyChangedListener =
+        object : SensorCollector.OnAccuracyChangedListener {
+            override fun onAccuracyChanged(accuracy: SensorAccuracy?) {
+                if (accuracy == SensorAccuracy.UNRELIABLE) {
+                    stop()
+                    unreliable = true
+                    errorListener?.onError(
+                        this@IntervalDetector,
+                        ErrorReason.UNRELIABLE_SENSOR
+                    )
+                }
+
+                accuracyChangedListener?.onAccuracyChanged(accuracy)
             }
         }
-    }
 
     /**
      * Accelerometer sensor collector.
@@ -239,8 +249,8 @@ class IntervalDetector(
             context,
             sensorType,
             sensorDelay,
-            measurementListener,
-            accuracyChangedListener
+            internalMeasurementListener,
+            internalAccuracyChangedListener
         )
 
     /**
@@ -255,9 +265,16 @@ class IntervalDetector(
     private var initialized: Boolean = false
 
     /**
+     * Gets sensor being used to obtain accelerometer measurements, or null if not available.
+     * This can be used to obtain additional information about the sensor.
+     */
+    val sensor
+        get() = collector.sensor
+
+    /**
      * Gets or sets length of number of samples to keep within the window being processed to
-     * determine instantaneous accelerometer noise leel. Window size must always be larger than
-     * allowed minimum value, which is 2 and must have and odd value.
+     * determine instantaneous accelerometer noise level. Window size must always be larger than
+     * allowed minimum value, which is 2 and must have an odd value.
      *
      * @throws IllegalArgumentException if provided value is not valid.
      * @throws IllegalStateException if detector is currently running.
@@ -354,6 +371,8 @@ class IntervalDetector(
      * Gets overall absolute threshold to determine whether there has been excessive motion during
      * the whole initialization phase. Failure will be detected if estimated base noise level
      * exceeds this threshold when initialization completes.
+     *
+     * @param result instance where result will be stored.
      */
     fun getBaseNoiseLevelAbsoluteThresholdAsAcceleration(result: Acceleration) {
         check(!running)
@@ -1017,7 +1036,7 @@ class IntervalDetector(
     /**
      * Starts collection of sensor measurements.
      *
-     * @throws IllegalStateException if detector is already running.
+     * @throws IllegalStateException if detector is already running or sensor is not available.
      */
     @Throws(IllegalStateException::class)
     fun start() {
@@ -1026,7 +1045,9 @@ class IntervalDetector(
         reset()
 
         running = true
-        collector.start()
+        if (!collector.start()) {
+            throw IllegalStateException("Unavailable sensor")
+        }
     }
 
     /**
@@ -1072,7 +1093,7 @@ class IntervalDetector(
     /**
      * Interface to notify when detector starts initialization.
      */
-    interface OnInitializationStartedListener {
+    fun interface OnInitializationStartedListener {
         /**
          * Called when initial static period starts so that base noise level starts being estimated.
          *
@@ -1084,7 +1105,7 @@ class IntervalDetector(
     /**
      * Interface to notify when detector completes its initialization.
      */
-    interface OnInitializationCompletedListener {
+    fun interface OnInitializationCompletedListener {
         /**
          * Called when initial static period successfully completes and base noise level is
          * estimated so that static and dynamic periods can be detected.
@@ -1102,7 +1123,7 @@ class IntervalDetector(
     /**
      * Interface to notify when an error occurs.
      */
-    interface OnErrorListener {
+    fun interface OnErrorListener {
         /**
          * Called when an error is detected, either at initialization because excessive movement
          * forces are detected, or because sensor becomes unreliable.
@@ -1123,7 +1144,7 @@ class IntervalDetector(
      * provided at the time the new static interval is detected (and consequently detector ends
      * a previous dynamic interval or its initialization stage).
      */
-    interface OnStaticIntervalDetectedListener {
+    fun interface OnStaticIntervalDetectedListener {
         /**
          * Called when a static interval has been detected after initialization.
          *
@@ -1159,7 +1180,7 @@ class IntervalDetector(
      * deviation of measurements at the time the new dynamic interval is detected (where the
      * detector ends a previous static interval or initialization stage).
      */
-    interface OnDynamicIntervalDetectedListener {
+    fun interface OnDynamicIntervalDetectedListener {
         /**
          * Called when a dynamic interval has been detected after initialization.
          *
@@ -1210,7 +1231,7 @@ class IntervalDetector(
      * Interface to notify when detector is reset (occurs when starting after stopping the
      * detector).
      */
-    interface OnResetListener {
+    fun interface OnResetListener {
         /**
          * Called when detector is reset.
          *

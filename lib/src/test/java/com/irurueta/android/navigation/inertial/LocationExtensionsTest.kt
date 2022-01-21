@@ -50,7 +50,7 @@ class LocationExtensionsTest {
         assertEquals(height, nedPosition1.height, 0.0)
     }
 
-    companion object {
+    private companion object {
         const val MIN_ANGLE_DEGREES = -90.0
         const val MAX_ANGLE_DEGREES = 90.0
 

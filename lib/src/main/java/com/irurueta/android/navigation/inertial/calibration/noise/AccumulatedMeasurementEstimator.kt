@@ -68,6 +68,13 @@ abstract class AccumulatedMeasurementEstimator<A : AccumulatedMeasurementEstimat
     protected abstract val collector: C
 
     /**
+     * Gets sensor being used to obtain measurements or null if not available.
+     * This can be used to obtain additional information about the sensor.
+     */
+    val sensor
+        get() = collector.sensor
+
+    /**
      * Indicates whether this estimator is already running.
      */
     var running = false
@@ -178,7 +185,7 @@ abstract class AccumulatedMeasurementEstimator<A : AccumulatedMeasurementEstimat
         }
 
     /**
-     * Gets root PSD (Power Spectral Density) of norm noise expressed in (m * s^-1.5) for
+     * Gets root PSD (Power Spectral Density) of norm expressed in (m * s^-1.5) for
      * accelerometer, (rad * s^-0.5) for gyroscope or (T * s^0.5) for magnetometer.
      * This is only available when estimation completes successfully and average time interval
      * between measurements is reliably estimated.
@@ -193,7 +200,7 @@ abstract class AccumulatedMeasurementEstimator<A : AccumulatedMeasurementEstimat
     /**
      * Starts collection of sensor norm measurements.
      *
-     * @throws IllegalStateException if estimator is already running.
+     * @throws IllegalStateException if estimator is already running or sensor is not available.
      */
     @Throws(IllegalStateException::class)
     fun start() {
@@ -202,7 +209,9 @@ abstract class AccumulatedMeasurementEstimator<A : AccumulatedMeasurementEstimat
         reset()
 
         running = true
-        collector.start()
+        if (!collector.start()) {
+            throw IllegalStateException("Unavailable sensor")
+        }
     }
 
     /**
@@ -270,7 +279,7 @@ abstract class AccumulatedMeasurementEstimator<A : AccumulatedMeasurementEstimat
     /**
      * Interface to notify when estimation completes.
      */
-    interface OnEstimationCompletedListener<A : AccumulatedMeasurementEstimator<*, *, *, *, *>> {
+    fun interface OnEstimationCompletedListener<A : AccumulatedMeasurementEstimator<*, *, *, *, *>> {
         /**
          * Called when estimation completes.
          *
@@ -282,7 +291,7 @@ abstract class AccumulatedMeasurementEstimator<A : AccumulatedMeasurementEstimat
     /**
      * Interface to notify when measurements become unreliable.
      */
-    interface OnUnreliableListener<A : AccumulatedMeasurementEstimator<*, *, *, *, *>> {
+    fun interface OnUnreliableListener<A : AccumulatedMeasurementEstimator<*, *, *, *, *>> {
         /**
          * Called when measurements become unreliable.
          *

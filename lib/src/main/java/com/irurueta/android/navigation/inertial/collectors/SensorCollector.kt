@@ -79,7 +79,7 @@ abstract class SensorCollector(
     /**
      * Interface to notify when sensor accuracy changes.
      */
-    interface OnAccuracyChangedListener {
+    fun interface OnAccuracyChangedListener {
         /**
          * Called when accuracy changes.
          *

@@ -17,7 +17,6 @@ package com.irurueta.android.navigation.inertial.calibration.noise
 
 import android.content.Context
 import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.navigation.inertial.calibration.MagneticFluxDensityTriad
 import com.irurueta.navigation.inertial.calibration.noise.AccumulatedMagneticFluxDensityTriadNoiseEstimator
@@ -47,6 +46,7 @@ import com.irurueta.units.MagneticFluxDensityUnit
  * @param completedListener Listener to notify when estimation is complete.
  * @param unreliableListener Listener to notify when sensor becomes unreliable, and thus,
  * estimation must be discarded.
+ * @property measurementListener Listener to notify collected sensor measurements.
  * @throws IllegalArgumentException when either [maxSamples] or [maxDurationMillis] is negative.
  */
 class MagnetometerNoiseEstimator(
@@ -58,7 +58,8 @@ class MagnetometerNoiseEstimator(
     maxDurationMillis: Long = DEFAULT_MAX_DURATION_MILLIS,
     stopMode: StopMode = StopMode.MAX_SAMPLES_OR_DURATION,
     completedListener: OnEstimationCompletedListener<MagnetometerNoiseEstimator>? = null,
-    unreliableListener: OnUnreliableListener<MagnetometerNoiseEstimator>? = null
+    unreliableListener: OnUnreliableListener<MagnetometerNoiseEstimator>? = null,
+    var measurementListener: MagnetometerSensorCollector.OnMeasurementListener? = null
 ) : AccumulatedTriadEstimator<MagnetometerNoiseEstimator,
         AccumulatedMagneticFluxDensityTriadNoiseEstimator, MagnetometerSensorCollector,
         MagneticFluxDensityUnit, MagneticFluxDensity, MagneticFluxDensityTriad>(
@@ -79,17 +80,8 @@ class MagnetometerNoiseEstimator(
     /**
      * Listener to handle magnetometer measurements.
      */
-    private val measurementListener = object : MagnetometerSensorCollector.OnMeasurementListener {
-        override fun onMeasurement(
-            bx: Float,
-            by: Float,
-            bz: Float,
-            hardIronX: Float?,
-            hardIronY: Float?,
-            hardIronZ: Float?,
-            timestamp: Long,
-            accuracy: SensorAccuracy?
-        ) {
+    private val magnetometerMeasurementListener =
+        MagnetometerSensorCollector.OnMeasurementListener { bx, by, bz, hardIronX, hardIronY, hardIronZ, timestamp, accuracy ->
             val bxT = MagneticFluxDensityConverter.convert(
                 bx.toDouble(),
                 MagneticFluxDensityUnit.MICROTESLA,
@@ -107,8 +99,17 @@ class MagnetometerNoiseEstimator(
             )
 
             handleMeasurement(bxT, byT, bzT, timestamp, accuracy)
+            measurementListener?.onMeasurement(
+                bx,
+                by,
+                bz,
+                hardIronX,
+                hardIronY,
+                hardIronZ,
+                timestamp,
+                accuracy
+            )
         }
-    }
 
     /**
      * Collector for magnetometer measurements.
@@ -117,7 +118,7 @@ class MagnetometerNoiseEstimator(
         context,
         sensorType,
         sensorDelay,
-        measurementListener,
+        magnetometerMeasurementListener,
         accuracyChangedListener
     )
 }

@@ -153,7 +153,7 @@ class AccelerometerSensorCollector(
     /**
      * Interface to notify when a new accelerometer measurement is available.
      */
-    interface OnMeasurementListener {
+    fun interface OnMeasurementListener {
         /**
          * Called when a new accelerometer measurement is available.
          *

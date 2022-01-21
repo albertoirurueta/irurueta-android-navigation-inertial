@@ -16,6 +16,7 @@
 package com.irurueta.android.navigation.inertial.calibration.intervals
 
 import android.content.Context
+import android.hardware.Sensor
 import android.os.SystemClock
 import androidx.test.core.app.ApplicationProvider
 import com.irurueta.android.navigation.inertial.callPrivateFuncWithResult
@@ -69,6 +70,9 @@ class IntervalDetectorTest {
         assertNull(detector.staticIntervalDetectedListener)
         assertNull(detector.dynamicIntervalDetectedListener)
         assertNull(detector.resetListener)
+        assertNull(detector.measurementListener)
+        assertNull(detector.accuracyChangedListener)
+        assertNull(detector.sensor)
         assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, detector.windowSize)
         assertEquals(
             TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
@@ -264,6 +268,9 @@ class IntervalDetectorTest {
         assertNull(detector.staticIntervalDetectedListener)
         assertNull(detector.dynamicIntervalDetectedListener)
         assertNull(detector.resetListener)
+        assertNull(detector.measurementListener)
+        assertNull(detector.accuracyChangedListener)
+        assertNull(detector.sensor)
         assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, detector.windowSize)
         assertEquals(
             TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
@@ -460,6 +467,9 @@ class IntervalDetectorTest {
         assertNull(detector.staticIntervalDetectedListener)
         assertNull(detector.dynamicIntervalDetectedListener)
         assertNull(detector.resetListener)
+        assertNull(detector.measurementListener)
+        assertNull(detector.accuracyChangedListener)
+        assertNull(detector.sensor)
         assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, detector.windowSize)
         assertEquals(
             TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
@@ -659,6 +669,9 @@ class IntervalDetectorTest {
         assertNull(detector.staticIntervalDetectedListener)
         assertNull(detector.dynamicIntervalDetectedListener)
         assertNull(detector.resetListener)
+        assertNull(detector.measurementListener)
+        assertNull(detector.accuracyChangedListener)
+        assertNull(detector.sensor)
         assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, detector.windowSize)
         assertEquals(
             TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
@@ -861,6 +874,9 @@ class IntervalDetectorTest {
         assertNull(detector.staticIntervalDetectedListener)
         assertNull(detector.dynamicIntervalDetectedListener)
         assertNull(detector.resetListener)
+        assertNull(detector.measurementListener)
+        assertNull(detector.accuracyChangedListener)
+        assertNull(detector.sensor)
         assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, detector.windowSize)
         assertEquals(
             TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
@@ -1065,6 +1081,9 @@ class IntervalDetectorTest {
         assertNull(detector.staticIntervalDetectedListener)
         assertNull(detector.dynamicIntervalDetectedListener)
         assertNull(detector.resetListener)
+        assertNull(detector.measurementListener)
+        assertNull(detector.accuracyChangedListener)
+        assertNull(detector.sensor)
         assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, detector.windowSize)
         assertEquals(
             TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
@@ -1272,6 +1291,9 @@ class IntervalDetectorTest {
         assertSame(staticIntervalDetectedListener, detector.staticIntervalDetectedListener)
         assertNull(detector.dynamicIntervalDetectedListener)
         assertNull(detector.resetListener)
+        assertNull(detector.measurementListener)
+        assertNull(detector.accuracyChangedListener)
+        assertNull(detector.sensor)
         assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, detector.windowSize)
         assertEquals(
             TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
@@ -1482,6 +1504,9 @@ class IntervalDetectorTest {
         assertSame(staticIntervalDetectedListener, detector.staticIntervalDetectedListener)
         assertSame(dynamicIntervalDetectedListener, detector.dynamicIntervalDetectedListener)
         assertNull(detector.resetListener)
+        assertNull(detector.measurementListener)
+        assertNull(detector.accuracyChangedListener)
+        assertNull(detector.sensor)
         assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, detector.windowSize)
         assertEquals(
             TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
@@ -1694,6 +1719,445 @@ class IntervalDetectorTest {
         assertSame(staticIntervalDetectedListener, detector.staticIntervalDetectedListener)
         assertSame(dynamicIntervalDetectedListener, detector.dynamicIntervalDetectedListener)
         assertSame(resetListener, detector.resetListener)
+        assertNull(detector.measurementListener)
+        assertNull(detector.accuracyChangedListener)
+        assertNull(detector.sensor)
+        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, detector.windowSize)
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
+            detector.initialStaticSamples
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
+            detector.thresholdFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
+            detector.instantaneousNoiseLevelFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
+            detector.baseNoiseLevelAbsoluteThreshold,
+            0.0
+        )
+        val baseNoiseLevelAbsoluteThreshold1 =
+            detector.baseNoiseLevelAbsoluteThresholdAsAcceleration
+        assertEquals(
+            detector.baseNoiseLevelAbsoluteThreshold,
+            baseNoiseLevelAbsoluteThreshold1.value.toDouble(),
+            0.0
+        )
+        assertEquals(
+            AccelerationUnit.METERS_PER_SQUARED_SECOND,
+            baseNoiseLevelAbsoluteThreshold1.unit
+        )
+        val baseNoiseLevelAbsoluteThreshold2 =
+            Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        detector.getBaseNoiseLevelAbsoluteThresholdAsAcceleration(baseNoiseLevelAbsoluteThreshold2)
+        assertEquals(baseNoiseLevelAbsoluteThreshold1, baseNoiseLevelAbsoluteThreshold2)
+        assertNull(detector.baseNoiseLevel)
+        assertNull(detector.baseNoiseLevelAsAcceleration)
+        val baseNoiseLevel = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        assertFalse(detector.getBaseNoiseLevelAsAcceleration(baseNoiseLevel))
+        assertNull(detector.baseNoiseLevelPsd)
+        assertNull(detector.baseNoiseLevelRootPsd)
+        assertNull(detector.threshold)
+        assertNull(detector.thresholdAsAcceleration)
+        val threshold = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        assertFalse(detector.getThresholdAsMeasurement(threshold))
+        assertEquals(0.0, detector.accumulatedAvgX, 0.0)
+        val accumulatedAvgX1 = detector.accumulatedAvgXAsAcceleration
+        assertEquals(0.0, accumulatedAvgX1.value.toDouble(), 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, accumulatedAvgX1.unit)
+        val accumulatedAvgX2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        detector.getAccumulatedAvgXAsAcceleration(accumulatedAvgX2)
+        assertEquals(accumulatedAvgX1, accumulatedAvgX2)
+        assertEquals(0.0, detector.accumulatedAvgY, 0.0)
+        val accumulatedAvgY1 = detector.accumulatedAvgYAsAcceleration
+        assertEquals(0.0, accumulatedAvgY1.value.toDouble(), 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, accumulatedAvgY1.unit)
+        val accumulatedAvgY2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        detector.getAccumulatedAvgYAsAcceleration(accumulatedAvgY2)
+        assertEquals(accumulatedAvgY1, accumulatedAvgY2)
+        assertEquals(0.0, detector.accumulatedAvgZ, 0.0)
+        val accumulatedAvgZ1 = detector.accumulatedAvgZAsAcceleration
+        assertEquals(0.0, accumulatedAvgZ1.value.toDouble(), 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, accumulatedAvgZ1.unit)
+        val accumulatedAvgZ2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        detector.getAccumulatedAvgZAsAcceleration(accumulatedAvgZ2)
+        assertEquals(accumulatedAvgZ1, accumulatedAvgZ2)
+        val accumulatedAvgTriad1 = detector.accumulatedAvgTriad
+        assertEquals(0.0, accumulatedAvgTriad1.valueX, 0.0)
+        assertEquals(0.0, accumulatedAvgTriad1.valueY, 0.0)
+        assertEquals(0.0, accumulatedAvgTriad1.valueZ, 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, accumulatedAvgTriad1.unit)
+        val accumulatedAvgTriad2 = AccelerationTriad()
+        detector.getAccumulatedAvgTriad(accumulatedAvgTriad2)
+        assertEquals(accumulatedAvgTriad1, accumulatedAvgTriad2)
+        assertEquals(0.0, detector.accumulatedStdX, 0.0)
+        val accumulatedStdX1 = detector.accumulatedStdXAsAcceleration
+        assertEquals(0.0, accumulatedStdX1.value.toDouble(), 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, accumulatedStdX1.unit)
+        val accumulatedStdX2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        detector.getAccumulatedStdXAsAcceleration(accumulatedStdX2)
+        assertEquals(accumulatedStdX1, accumulatedStdX2)
+        assertEquals(0.0, detector.accumulatedStdY, 0.0)
+        val accumulatedStdY1 = detector.accumulatedStdYAsAcceleration
+        assertEquals(0.0, accumulatedStdY1.value.toDouble(), 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, accumulatedStdY1.unit)
+        val accumulatedStdY2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        detector.getAccumulatedStdYAsAcceleration(accumulatedStdY2)
+        assertEquals(accumulatedStdY1, accumulatedStdY2)
+        assertEquals(0.0, detector.accumulatedStdZ, 0.0)
+        val accumulatedStdZ1 = detector.accumulatedStdZAsAcceleration
+        assertEquals(0.0, accumulatedStdZ1.value.toDouble(), 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, accumulatedStdZ1.unit)
+        val accumulatedStdZ2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        detector.getAccumulatedStdZAsAcceleration(accumulatedStdZ2)
+        assertEquals(accumulatedStdZ1, accumulatedStdZ2)
+        val accumulatedStdTriad1 = detector.accumulatedStdTriad
+        assertEquals(0.0, accumulatedStdTriad1.valueX, 0.0)
+        assertEquals(0.0, accumulatedStdTriad1.valueY, 0.0)
+        assertEquals(0.0, accumulatedStdTriad1.valueZ, 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, accumulatedStdTriad1.unit)
+        val accumulatedStdTriad2 = AccelerationTriad()
+        detector.getAccumulatedStdTriad(accumulatedStdTriad2)
+        assertEquals(accumulatedStdTriad1, accumulatedAvgTriad2)
+        assertEquals(0.0, detector.instantaneousAvgX, 0.0)
+        val instantaneousAvgX1 = detector.instantaneousAvgXAsAcceleration
+        assertEquals(0.0, instantaneousAvgX1.value.toDouble(), 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, instantaneousAvgX1.unit)
+        val instantaneousAvgX2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        detector.getInstantaneousAvgXAsAcceleration(instantaneousAvgX2)
+        assertEquals(instantaneousAvgX1, instantaneousAvgX2)
+        assertEquals(0.0, detector.instantaneousAvgY, 0.0)
+        val instantaneousAvgY1 = detector.instantaneousAvgYAsAcceleration
+        assertEquals(0.0, instantaneousAvgY1.value.toDouble(), 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, instantaneousAvgY1.unit)
+        val instantaneousAvgY2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        detector.getInstantaneousAvgYAsAcceleration(instantaneousAvgY2)
+        assertEquals(instantaneousAvgY1, instantaneousAvgY2)
+        assertEquals(0.0, detector.instantaneousAvgZ, 0.0)
+        val instantaneousAvgZ1 = detector.instantaneousAvgZAsAcceleration
+        assertEquals(0.0, instantaneousAvgZ1.value.toDouble(), 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, instantaneousAvgZ1.unit)
+        val instantaneousAvgZ2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        detector.getInstantaneousAvgZAsAcceleration(instantaneousAvgZ2)
+        assertEquals(instantaneousAvgZ1, instantaneousAvgZ2)
+        val instantaneousAvgTriad1 = detector.instantaneousAvgTriad
+        assertEquals(0.0, instantaneousAvgTriad1.valueX, 0.0)
+        assertEquals(0.0, instantaneousAvgTriad1.valueY, 0.0)
+        assertEquals(0.0, instantaneousAvgTriad1.valueZ, 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, instantaneousAvgTriad1.unit)
+        val instantaneousAvgTriad2 = AccelerationTriad()
+        detector.getInstantaneousAvgTriad(instantaneousAvgTriad2)
+        assertEquals(instantaneousAvgTriad1, instantaneousAvgTriad2)
+        assertEquals(0.0, detector.instantaneousStdX, 0.0)
+        val instantaneousStdX1 = detector.instantaneousStdXAsAcceleration
+        assertEquals(0.0, instantaneousStdX1.value.toDouble(), 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, instantaneousStdX1.unit)
+        val instantaneousStdX2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        detector.getInstantaneousStdXAsAcceleration(instantaneousStdX2)
+        assertEquals(instantaneousStdX1, instantaneousStdX2)
+        assertEquals(0.0, detector.instantaneousStdY, 0.0)
+        val instantaneousStdY1 = detector.instantaneousStdYAsAcceleration
+        assertEquals(0.0, instantaneousStdY1.value.toDouble(), 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, instantaneousStdY1.unit)
+        val instantaneousStdY2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        detector.getInstantaneousStdYAsAcceleration(instantaneousStdY2)
+        assertEquals(instantaneousStdY1, instantaneousStdY2)
+        assertEquals(0.0, detector.instantaneousStdZ, 0.0)
+        val instantaneousStdZ1 = detector.instantaneousStdZAsAcceleration
+        assertEquals(0.0, instantaneousStdZ1.value.toDouble(), 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, instantaneousStdZ1.unit)
+        val instantaneousStdZ2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        detector.getInstantaneousStdZAsAcceleration(instantaneousStdZ2)
+        assertEquals(instantaneousStdZ1, instantaneousStdZ2)
+        val instantaneousStdTriad1 = detector.instantaneousStdTriad
+        assertEquals(0.0, instantaneousAvgTriad1.valueX, 0.0)
+        assertEquals(0.0, instantaneousStdTriad1.valueY, 0.0)
+        assertEquals(0.0, instantaneousStdTriad1.valueZ, 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, instantaneousStdTriad1.unit)
+        val instantaneousStdTriad2 = AccelerationTriad()
+        detector.getInstantaneousStdTriad(instantaneousStdTriad2)
+        assertEquals(instantaneousStdTriad1, instantaneousStdTriad2)
+        assertNull(detector.averageTimeInterval)
+        assertNull(detector.averageTimeIntervalAsTime)
+        val time = Time(0.0, TimeUnit.SECOND)
+        assertFalse(detector.getAverageTimeIntervalAsTime(time))
+        assertNull(detector.timeIntervalVariance)
+        assertNull(detector.timeIntervalStandardDeviation)
+        assertNull(detector.timeIntervalStandardDeviationAsTime)
+        assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
+        assertEquals(0, detector.numberOfProcessedMeasurements)
+        assertFalse(detector.running)
+        assertEquals(IntervalDetector.Status.IDLE, detector.status)
+    }
+
+    @Test
+    fun constructor_whenMeasurementListener_setsExpectedValues() {
+        val initializationStartedListener =
+            mockk<IntervalDetector.OnInitializationStartedListener>()
+        val initializationCompletedListener =
+            mockk<IntervalDetector.OnInitializationCompletedListener>()
+        val errorListener = mockk<IntervalDetector.OnErrorListener>()
+        val staticIntervalDetectedListener =
+            mockk<IntervalDetector.OnStaticIntervalDetectedListener>()
+        val dynamicIntervalDetectedListener =
+            mockk<IntervalDetector.OnDynamicIntervalDetectedListener>()
+        val resetListener = mockk<IntervalDetector.OnResetListener>()
+        val measurementListener = mockk<AccelerometerSensorCollector.OnMeasurementListener>()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val detector = IntervalDetector(
+            context,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            SensorDelay.NORMAL,
+            initializationStartedListener,
+            initializationCompletedListener,
+            errorListener,
+            staticIntervalDetectedListener,
+            dynamicIntervalDetectedListener,
+            resetListener,
+            measurementListener
+        )
+
+        // check default values
+        assertSame(context, detector.context)
+        assertEquals(
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            detector.sensorType
+        )
+        assertEquals(SensorDelay.NORMAL, detector.sensorDelay)
+        assertSame(initializationStartedListener, detector.initializationStartedListener)
+        assertSame(initializationCompletedListener, detector.initializationCompletedListener)
+        assertSame(errorListener, detector.errorListener)
+        assertSame(staticIntervalDetectedListener, detector.staticIntervalDetectedListener)
+        assertSame(dynamicIntervalDetectedListener, detector.dynamicIntervalDetectedListener)
+        assertSame(resetListener, detector.resetListener)
+        assertSame(measurementListener, detector.measurementListener)
+        assertNull(detector.accuracyChangedListener)
+        assertNull(detector.sensor)
+        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, detector.windowSize)
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
+            detector.initialStaticSamples
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
+            detector.thresholdFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
+            detector.instantaneousNoiseLevelFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
+            detector.baseNoiseLevelAbsoluteThreshold,
+            0.0
+        )
+        val baseNoiseLevelAbsoluteThreshold1 =
+            detector.baseNoiseLevelAbsoluteThresholdAsAcceleration
+        assertEquals(
+            detector.baseNoiseLevelAbsoluteThreshold,
+            baseNoiseLevelAbsoluteThreshold1.value.toDouble(),
+            0.0
+        )
+        assertEquals(
+            AccelerationUnit.METERS_PER_SQUARED_SECOND,
+            baseNoiseLevelAbsoluteThreshold1.unit
+        )
+        val baseNoiseLevelAbsoluteThreshold2 =
+            Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        detector.getBaseNoiseLevelAbsoluteThresholdAsAcceleration(baseNoiseLevelAbsoluteThreshold2)
+        assertEquals(baseNoiseLevelAbsoluteThreshold1, baseNoiseLevelAbsoluteThreshold2)
+        assertNull(detector.baseNoiseLevel)
+        assertNull(detector.baseNoiseLevelAsAcceleration)
+        val baseNoiseLevel = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        assertFalse(detector.getBaseNoiseLevelAsAcceleration(baseNoiseLevel))
+        assertNull(detector.baseNoiseLevelPsd)
+        assertNull(detector.baseNoiseLevelRootPsd)
+        assertNull(detector.threshold)
+        assertNull(detector.thresholdAsAcceleration)
+        val threshold = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        assertFalse(detector.getThresholdAsMeasurement(threshold))
+        assertEquals(0.0, detector.accumulatedAvgX, 0.0)
+        val accumulatedAvgX1 = detector.accumulatedAvgXAsAcceleration
+        assertEquals(0.0, accumulatedAvgX1.value.toDouble(), 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, accumulatedAvgX1.unit)
+        val accumulatedAvgX2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        detector.getAccumulatedAvgXAsAcceleration(accumulatedAvgX2)
+        assertEquals(accumulatedAvgX1, accumulatedAvgX2)
+        assertEquals(0.0, detector.accumulatedAvgY, 0.0)
+        val accumulatedAvgY1 = detector.accumulatedAvgYAsAcceleration
+        assertEquals(0.0, accumulatedAvgY1.value.toDouble(), 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, accumulatedAvgY1.unit)
+        val accumulatedAvgY2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        detector.getAccumulatedAvgYAsAcceleration(accumulatedAvgY2)
+        assertEquals(accumulatedAvgY1, accumulatedAvgY2)
+        assertEquals(0.0, detector.accumulatedAvgZ, 0.0)
+        val accumulatedAvgZ1 = detector.accumulatedAvgZAsAcceleration
+        assertEquals(0.0, accumulatedAvgZ1.value.toDouble(), 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, accumulatedAvgZ1.unit)
+        val accumulatedAvgZ2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        detector.getAccumulatedAvgZAsAcceleration(accumulatedAvgZ2)
+        assertEquals(accumulatedAvgZ1, accumulatedAvgZ2)
+        val accumulatedAvgTriad1 = detector.accumulatedAvgTriad
+        assertEquals(0.0, accumulatedAvgTriad1.valueX, 0.0)
+        assertEquals(0.0, accumulatedAvgTriad1.valueY, 0.0)
+        assertEquals(0.0, accumulatedAvgTriad1.valueZ, 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, accumulatedAvgTriad1.unit)
+        val accumulatedAvgTriad2 = AccelerationTriad()
+        detector.getAccumulatedAvgTriad(accumulatedAvgTriad2)
+        assertEquals(accumulatedAvgTriad1, accumulatedAvgTriad2)
+        assertEquals(0.0, detector.accumulatedStdX, 0.0)
+        val accumulatedStdX1 = detector.accumulatedStdXAsAcceleration
+        assertEquals(0.0, accumulatedStdX1.value.toDouble(), 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, accumulatedStdX1.unit)
+        val accumulatedStdX2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        detector.getAccumulatedStdXAsAcceleration(accumulatedStdX2)
+        assertEquals(accumulatedStdX1, accumulatedStdX2)
+        assertEquals(0.0, detector.accumulatedStdY, 0.0)
+        val accumulatedStdY1 = detector.accumulatedStdYAsAcceleration
+        assertEquals(0.0, accumulatedStdY1.value.toDouble(), 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, accumulatedStdY1.unit)
+        val accumulatedStdY2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        detector.getAccumulatedStdYAsAcceleration(accumulatedStdY2)
+        assertEquals(accumulatedStdY1, accumulatedStdY2)
+        assertEquals(0.0, detector.accumulatedStdZ, 0.0)
+        val accumulatedStdZ1 = detector.accumulatedStdZAsAcceleration
+        assertEquals(0.0, accumulatedStdZ1.value.toDouble(), 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, accumulatedStdZ1.unit)
+        val accumulatedStdZ2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        detector.getAccumulatedStdZAsAcceleration(accumulatedStdZ2)
+        assertEquals(accumulatedStdZ1, accumulatedStdZ2)
+        val accumulatedStdTriad1 = detector.accumulatedStdTriad
+        assertEquals(0.0, accumulatedStdTriad1.valueX, 0.0)
+        assertEquals(0.0, accumulatedStdTriad1.valueY, 0.0)
+        assertEquals(0.0, accumulatedStdTriad1.valueZ, 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, accumulatedStdTriad1.unit)
+        val accumulatedStdTriad2 = AccelerationTriad()
+        detector.getAccumulatedStdTriad(accumulatedStdTriad2)
+        assertEquals(accumulatedStdTriad1, accumulatedAvgTriad2)
+        assertEquals(0.0, detector.instantaneousAvgX, 0.0)
+        val instantaneousAvgX1 = detector.instantaneousAvgXAsAcceleration
+        assertEquals(0.0, instantaneousAvgX1.value.toDouble(), 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, instantaneousAvgX1.unit)
+        val instantaneousAvgX2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        detector.getInstantaneousAvgXAsAcceleration(instantaneousAvgX2)
+        assertEquals(instantaneousAvgX1, instantaneousAvgX2)
+        assertEquals(0.0, detector.instantaneousAvgY, 0.0)
+        val instantaneousAvgY1 = detector.instantaneousAvgYAsAcceleration
+        assertEquals(0.0, instantaneousAvgY1.value.toDouble(), 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, instantaneousAvgY1.unit)
+        val instantaneousAvgY2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        detector.getInstantaneousAvgYAsAcceleration(instantaneousAvgY2)
+        assertEquals(instantaneousAvgY1, instantaneousAvgY2)
+        assertEquals(0.0, detector.instantaneousAvgZ, 0.0)
+        val instantaneousAvgZ1 = detector.instantaneousAvgZAsAcceleration
+        assertEquals(0.0, instantaneousAvgZ1.value.toDouble(), 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, instantaneousAvgZ1.unit)
+        val instantaneousAvgZ2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        detector.getInstantaneousAvgZAsAcceleration(instantaneousAvgZ2)
+        assertEquals(instantaneousAvgZ1, instantaneousAvgZ2)
+        val instantaneousAvgTriad1 = detector.instantaneousAvgTriad
+        assertEquals(0.0, instantaneousAvgTriad1.valueX, 0.0)
+        assertEquals(0.0, instantaneousAvgTriad1.valueY, 0.0)
+        assertEquals(0.0, instantaneousAvgTriad1.valueZ, 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, instantaneousAvgTriad1.unit)
+        val instantaneousAvgTriad2 = AccelerationTriad()
+        detector.getInstantaneousAvgTriad(instantaneousAvgTriad2)
+        assertEquals(instantaneousAvgTriad1, instantaneousAvgTriad2)
+        assertEquals(0.0, detector.instantaneousStdX, 0.0)
+        val instantaneousStdX1 = detector.instantaneousStdXAsAcceleration
+        assertEquals(0.0, instantaneousStdX1.value.toDouble(), 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, instantaneousStdX1.unit)
+        val instantaneousStdX2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        detector.getInstantaneousStdXAsAcceleration(instantaneousStdX2)
+        assertEquals(instantaneousStdX1, instantaneousStdX2)
+        assertEquals(0.0, detector.instantaneousStdY, 0.0)
+        val instantaneousStdY1 = detector.instantaneousStdYAsAcceleration
+        assertEquals(0.0, instantaneousStdY1.value.toDouble(), 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, instantaneousStdY1.unit)
+        val instantaneousStdY2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        detector.getInstantaneousStdYAsAcceleration(instantaneousStdY2)
+        assertEquals(instantaneousStdY1, instantaneousStdY2)
+        assertEquals(0.0, detector.instantaneousStdZ, 0.0)
+        val instantaneousStdZ1 = detector.instantaneousStdZAsAcceleration
+        assertEquals(0.0, instantaneousStdZ1.value.toDouble(), 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, instantaneousStdZ1.unit)
+        val instantaneousStdZ2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        detector.getInstantaneousStdZAsAcceleration(instantaneousStdZ2)
+        assertEquals(instantaneousStdZ1, instantaneousStdZ2)
+        val instantaneousStdTriad1 = detector.instantaneousStdTriad
+        assertEquals(0.0, instantaneousAvgTriad1.valueX, 0.0)
+        assertEquals(0.0, instantaneousStdTriad1.valueY, 0.0)
+        assertEquals(0.0, instantaneousStdTriad1.valueZ, 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, instantaneousStdTriad1.unit)
+        val instantaneousStdTriad2 = AccelerationTriad()
+        detector.getInstantaneousStdTriad(instantaneousStdTriad2)
+        assertEquals(instantaneousStdTriad1, instantaneousStdTriad2)
+        assertNull(detector.averageTimeInterval)
+        assertNull(detector.averageTimeIntervalAsTime)
+        val time = Time(0.0, TimeUnit.SECOND)
+        assertFalse(detector.getAverageTimeIntervalAsTime(time))
+        assertNull(detector.timeIntervalVariance)
+        assertNull(detector.timeIntervalStandardDeviation)
+        assertNull(detector.timeIntervalStandardDeviationAsTime)
+        assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
+        assertEquals(0, detector.numberOfProcessedMeasurements)
+        assertFalse(detector.running)
+        assertEquals(IntervalDetector.Status.IDLE, detector.status)
+    }
+
+    @Test
+    fun constructor_whenAccuracyChangedListener_setsExpectedValues() {
+        val initializationStartedListener =
+            mockk<IntervalDetector.OnInitializationStartedListener>()
+        val initializationCompletedListener =
+            mockk<IntervalDetector.OnInitializationCompletedListener>()
+        val errorListener = mockk<IntervalDetector.OnErrorListener>()
+        val staticIntervalDetectedListener =
+            mockk<IntervalDetector.OnStaticIntervalDetectedListener>()
+        val dynamicIntervalDetectedListener =
+            mockk<IntervalDetector.OnDynamicIntervalDetectedListener>()
+        val resetListener = mockk<IntervalDetector.OnResetListener>()
+        val measurementListener = mockk<AccelerometerSensorCollector.OnMeasurementListener>()
+        val accuracyChangedListener = mockk<SensorCollector.OnAccuracyChangedListener>()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val detector = IntervalDetector(
+            context,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            SensorDelay.NORMAL,
+            initializationStartedListener,
+            initializationCompletedListener,
+            errorListener,
+            staticIntervalDetectedListener,
+            dynamicIntervalDetectedListener,
+            resetListener,
+            measurementListener,
+            accuracyChangedListener
+        )
+
+        // check default values
+        assertSame(context, detector.context)
+        assertEquals(
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            detector.sensorType
+        )
+        assertEquals(SensorDelay.NORMAL, detector.sensorDelay)
+        assertSame(initializationStartedListener, detector.initializationStartedListener)
+        assertSame(initializationCompletedListener, detector.initializationCompletedListener)
+        assertSame(errorListener, detector.errorListener)
+        assertSame(staticIntervalDetectedListener, detector.staticIntervalDetectedListener)
+        assertSame(dynamicIntervalDetectedListener, detector.dynamicIntervalDetectedListener)
+        assertSame(resetListener, detector.resetListener)
+        assertSame(measurementListener, detector.measurementListener)
+        assertSame(accuracyChangedListener, detector.accuracyChangedListener)
+        assertNull(detector.sensor)
         assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, detector.windowSize)
         assertEquals(
             TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
@@ -1958,11 +2422,63 @@ class IntervalDetectorTest {
         val detector = IntervalDetector(context)
 
         // check default value
+        assertNull(detector.resetListener)
+
+        // set new value
         val resetListener = mockk<IntervalDetector.OnResetListener>()
         detector.resetListener = resetListener
 
         // check
         assertSame(resetListener, detector.resetListener)
+    }
+
+    @Test
+    fun measurementListener_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val detector = IntervalDetector(context)
+
+        // check default value
+        assertNull(detector.measurementListener)
+
+        // set new value
+        val measurementListener = mockk<AccelerometerSensorCollector.OnMeasurementListener>()
+        detector.measurementListener = measurementListener
+
+        // check
+        assertSame(measurementListener, detector.measurementListener)
+    }
+
+    @Test
+    fun accuracyChangedListener_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val detector = IntervalDetector(context)
+
+        // check default value
+        assertNull(detector.accuracyChangedListener)
+
+        // set new value
+        val accuracyChangedListener = mockk<SensorCollector.OnAccuracyChangedListener>()
+        detector.accuracyChangedListener = accuracyChangedListener
+
+        // check
+        assertSame(accuracyChangedListener, detector.accuracyChangedListener)
+    }
+
+    @Test
+    fun sensor_returnsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val detector = IntervalDetector(context)
+
+        val collector: AccelerometerSensorCollector? =
+            detector.getPrivateProperty("collector")
+        requireNotNull(collector)
+
+        val collectorSpy = spyk(collector)
+        val sensor = mockk<Sensor>()
+        every { collectorSpy.sensor }.returns(sensor)
+        detector.setPrivateProperty("collector", collectorSpy)
+
+        assertSame(sensor, detector.sensor)
     }
 
     @Test
@@ -2221,7 +2737,7 @@ class IntervalDetectorTest {
     }
 
     @Test
-    fun start_startsCollector() {
+    fun start_whenSensorAvailable_startsCollector() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = IntervalDetector(context)
 
@@ -2235,6 +2751,7 @@ class IntervalDetectorTest {
         assertNotNull(collector.accuracyChangedListener)
 
         val collectorSpy = spyk(collector)
+        every { collectorSpy.start() }.returns(true)
         detector.setPrivateProperty("collector", collectorSpy)
 
         assertFalse(detector.running)
@@ -2245,10 +2762,40 @@ class IntervalDetectorTest {
         verify(exactly = 1) { collectorSpy.start() }
     }
 
+    @Test(expected = IllegalStateException::class)
+    fun start_whenSensorUnavailable_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val detector = IntervalDetector(context)
+
+        val collector: AccelerometerSensorCollector? =
+            detector.getPrivateProperty("collector")
+        requireNotNull(collector)
+        assertSame(context, collector.context)
+        assertEquals(collector.sensorType, detector.sensorType)
+        assertEquals(collector.sensorDelay, detector.sensorDelay)
+        assertNotNull(collector.measurementListener)
+        assertNotNull(collector.accuracyChangedListener)
+
+        val collectorSpy = spyk(collector)
+        every { collectorSpy.start() }.returns(false)
+        detector.setPrivateProperty("collector", collectorSpy)
+
+        assertFalse(detector.running)
+
+        detector.start()
+    }
+
     @Test
     fun start_resets() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = IntervalDetector(context)
+
+        val collector: AccelerometerSensorCollector? =
+            detector.getPrivateProperty("collector")
+        requireNotNull(collector)
+        val collectorSpy = spyk(collector)
+        every { collectorSpy.start() }.returns(true)
+        detector.setPrivateProperty("collector", collectorSpy)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -2320,6 +2867,7 @@ class IntervalDetectorTest {
         assertNotNull(collector.accuracyChangedListener)
 
         val collectorSpy = spyk(collector)
+        every { collectorSpy.start() }.returns(true)
         detector.setPrivateProperty("collector", collectorSpy)
 
         assertFalse(detector.running)
@@ -2426,7 +2974,7 @@ class IntervalDetectorTest {
 
         // process measurement
         val measurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
-            detector.getPrivateProperty("measurementListener")
+            detector.getPrivateProperty("internalMeasurementListener")
         requireNotNull(measurementListener)
 
         val gravity = getGravity()
@@ -2472,7 +3020,7 @@ class IntervalDetectorTest {
 
         // process measurement
         val measurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
-            detector.getPrivateProperty("measurementListener")
+            detector.getPrivateProperty("internalMeasurementListener")
         requireNotNull(measurementListener)
 
         val gravity = getGravity()
@@ -2531,7 +3079,7 @@ class IntervalDetectorTest {
 
         // process measurement
         val measurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
-            detector.getPrivateProperty("measurementListener")
+            detector.getPrivateProperty("internalMeasurementListener")
         requireNotNull(measurementListener)
 
         val gravity = getGravity()
@@ -2592,7 +3140,7 @@ class IntervalDetectorTest {
 
         // process measurement
         val measurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
-            detector.getPrivateProperty("measurementListener")
+            detector.getPrivateProperty("internalMeasurementListener")
         requireNotNull(measurementListener)
 
         val gravity = getGravity()
@@ -2613,6 +3161,56 @@ class IntervalDetectorTest {
     }
 
     @Test
+    fun onMeasurement_whenMeasurementListener_notifiesMeasurement() {
+        val measurementListener =
+            mockk<AccelerometerSensorCollector.OnMeasurementListener>(relaxUnitFun = true)
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val detector = IntervalDetector(context, measurementListener = measurementListener)
+
+        val internalDetector: AccelerationTriadStaticIntervalDetector? =
+            detector.getPrivateProperty("internalDetector")
+        requireNotNull(internalDetector)
+        val internalDetectorSpy = spyk(internalDetector)
+        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
+
+        // check initial status
+        assertEquals(IntervalDetector.Status.IDLE, detector.status)
+        assertEquals(0, detector.numberOfProcessedMeasurements)
+
+        // process measurement
+        val internalMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
+            detector.getPrivateProperty("internalMeasurementListener")
+        requireNotNull(internalMeasurementListener)
+
+        val gravity = getGravity()
+        val ax = gravity.gx.toFloat()
+        val ay = gravity.gy.toFloat()
+        val az = gravity.gz.toFloat()
+        val randomizer = UniformRandomizer()
+        val bx = randomizer.nextFloat()
+        val by = randomizer.nextFloat()
+        val bz = randomizer.nextFloat()
+        val timestamp = SystemClock.elapsedRealtimeNanos()
+        val accuracy = SensorAccuracy.HIGH
+
+        internalMeasurementListener.onMeasurement(ax, ay, az, bx, by, bz, timestamp, accuracy)
+
+        // check
+        verify(exactly = 1) {
+            measurementListener.onMeasurement(
+                ax,
+                ay,
+                az,
+                bx,
+                by,
+                bz,
+                timestamp,
+                accuracy
+            )
+        }
+    }
+
+    @Test
     fun onAccuracyChanged_whenUnreliableAndNoListener_setsResultAsUnreliable() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = IntervalDetector(context)
@@ -2623,7 +3221,7 @@ class IntervalDetectorTest {
         assertFalse(unreliable1)
 
         val accuracyChangedListener: SensorCollector.OnAccuracyChangedListener? =
-            detector.getPrivateProperty("accuracyChangedListener")
+            detector.getPrivateProperty("internalAccuracyChangedListener")
         requireNotNull(accuracyChangedListener)
 
         accuracyChangedListener.onAccuracyChanged(SensorAccuracy.UNRELIABLE)
@@ -2646,7 +3244,7 @@ class IntervalDetectorTest {
         assertFalse(unreliable1)
 
         val accuracyChangedListener: SensorCollector.OnAccuracyChangedListener? =
-            detector.getPrivateProperty("accuracyChangedListener")
+            detector.getPrivateProperty("internalAccuracyChangedListener")
         requireNotNull(accuracyChangedListener)
 
         accuracyChangedListener.onAccuracyChanged(SensorAccuracy.UNRELIABLE)
@@ -2675,7 +3273,7 @@ class IntervalDetectorTest {
         assertFalse(unreliable1)
 
         val accuracyChangedListener: SensorCollector.OnAccuracyChangedListener? =
-            detector.getPrivateProperty("accuracyChangedListener")
+            detector.getPrivateProperty("internalAccuracyChangedListener")
         requireNotNull(accuracyChangedListener)
 
         accuracyChangedListener.onAccuracyChanged(SensorAccuracy.HIGH)
@@ -2687,6 +3285,39 @@ class IntervalDetectorTest {
         verify(exactly = 0) {
             errorListener.onError(any(), any())
         }
+    }
+
+    @Test
+    fun onAccuracyChanged_whenUnreliableListener_notifiesAccuracyChange() {
+        val accuracyChangedListener =
+            mockk<SensorCollector.OnAccuracyChangedListener>(relaxUnitFun = true)
+        val errorListener = mockk<IntervalDetector.OnErrorListener>(relaxUnitFun = true)
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val detector = IntervalDetector(
+            context,
+            errorListener = errorListener,
+            accuracyChangedListener = accuracyChangedListener
+        )
+
+        // check default value
+        val unreliable1: Boolean? = detector.getPrivateProperty("unreliable")
+        requireNotNull(unreliable1)
+        assertFalse(unreliable1)
+
+        val internalAccuracyChangedListener: SensorCollector.OnAccuracyChangedListener? =
+            detector.getPrivateProperty("internalAccuracyChangedListener")
+        requireNotNull(internalAccuracyChangedListener)
+
+        internalAccuracyChangedListener.onAccuracyChanged(SensorAccuracy.HIGH)
+
+        // check
+        val unreliable2: Boolean? = detector.getPrivateProperty("unreliable")
+        requireNotNull(unreliable2)
+        assertFalse(unreliable2)
+        verify(exactly = 0) {
+            errorListener.onError(any(), any())
+        }
+        verify(exactly = 1) { accuracyChangedListener.onAccuracyChanged(SensorAccuracy.HIGH) }
     }
 
     @Test

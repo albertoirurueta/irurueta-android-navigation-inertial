@@ -77,12 +77,10 @@ abstract class BaseAccumulatedEstimator private constructor(
      * Listener to handle changes of accuracy in gravity sensor.
      */
     protected val accuracyChangedListener =
-        object : SensorCollector.OnAccuracyChangedListener {
-            override fun onAccuracyChanged(accuracy: SensorAccuracy?) {
-                if (accuracy == SensorAccuracy.UNRELIABLE) {
-                    resultUnreliable = true
-                    notifyUnreliableListener()
-                }
+        SensorCollector.OnAccuracyChangedListener { accuracy ->
+            if (accuracy == SensorAccuracy.UNRELIABLE) {
+                resultUnreliable = true
+                notifyUnreliableListener()
             }
         }
 

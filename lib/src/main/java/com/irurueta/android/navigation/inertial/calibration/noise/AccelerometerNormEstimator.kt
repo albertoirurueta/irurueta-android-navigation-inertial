@@ -17,7 +17,6 @@ package com.irurueta.android.navigation.inertial.calibration.noise
 
 import android.content.Context
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.navigation.inertial.calibration.noise.AccumulatedAccelerationMeasurementNoiseEstimator
 import com.irurueta.units.Acceleration
@@ -47,6 +46,7 @@ import kotlin.math.sqrt
  * @param completedListener Listener to notify when estimation is complete.
  * @param unreliableListener Listener to notify when sensor becomes unreliable, and thus,
  * estimation must be discarded.
+ * @param measurementListener Listener to notify collected sensor measurements.
  * @throws IllegalArgumentException when either [maxSamples] or [maxDurationMillis] is negative.
  */
 class AccelerometerNormEstimator(
@@ -58,7 +58,8 @@ class AccelerometerNormEstimator(
     maxDurationMillis: Long = DEFAULT_MAX_DURATION_MILLIS,
     stopMode: StopMode = StopMode.MAX_SAMPLES_OR_DURATION,
     completedListener: OnEstimationCompletedListener<AccelerometerNormEstimator>? = null,
-    unreliableListener: OnUnreliableListener<AccelerometerNormEstimator>? = null
+    unreliableListener: OnUnreliableListener<AccelerometerNormEstimator>? = null,
+    var measurementListener: AccelerometerSensorCollector.OnMeasurementListener? = null
 ) : AccumulatedMeasurementEstimator<AccelerometerNormEstimator,
         AccumulatedAccelerationMeasurementNoiseEstimator, AccelerometerSensorCollector,
         AccelerationUnit, Acceleration>(
@@ -74,21 +75,12 @@ class AccelerometerNormEstimator(
     /**
      * Listener to handle accelerometer measurements.
      */
-    private val measurementListener = object : AccelerometerSensorCollector.OnMeasurementListener {
-        override fun onMeasurement(
-            ax: Float,
-            ay: Float,
-            az: Float,
-            bx: Float?,
-            by: Float?,
-            bz: Float?,
-            timestamp: Long,
-            accuracy: SensorAccuracy?
-        ) {
+    private val accelerometerMeasurementListener =
+        AccelerometerSensorCollector.OnMeasurementListener { ax, ay, az, bx, by, bz, timestamp, accuracy ->
             val a = sqrt(ax.toDouble().pow(2.0) + ay.toDouble().pow(2.0) + az.toDouble().pow(2.0))
             handleMeasurement(a, timestamp, accuracy)
+            measurementListener?.onMeasurement(ax, ay, az, bx, by, bz, timestamp, accuracy)
         }
-    }
 
     /**
      * Internal noise estimator of acceleration magnitude measurements.
@@ -103,7 +95,7 @@ class AccelerometerNormEstimator(
         context,
         sensorType,
         sensorDelay,
-        measurementListener,
+        accelerometerMeasurementListener,
         accuracyChangedListener
     )
 }

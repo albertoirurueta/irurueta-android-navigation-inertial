@@ -92,7 +92,7 @@ class GravitySensorCollector(
     /**
      * Interface to notify when a new gravity measurement is available.
      */
-    interface OnMeasurementListener {
+    fun interface OnMeasurementListener {
 
         /**
          * Called when a new gravity measurement is available.

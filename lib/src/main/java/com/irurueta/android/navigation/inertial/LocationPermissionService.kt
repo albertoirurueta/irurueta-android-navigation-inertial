@@ -396,7 +396,7 @@ class LocationPermissionService private constructor(
     /**
      * Listener to notify the result of permission request.
      */
-    interface OnLocationPermissionRequestResultListener {
+    fun interface OnLocationPermissionRequestResultListener {
         /**
          * Called when a permission request result is received.
          *

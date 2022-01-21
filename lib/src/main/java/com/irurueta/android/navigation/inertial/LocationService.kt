@@ -372,7 +372,7 @@ class LocationService(val context: Context) {
      * and listener might be called later if no cached location is readily available, in such cases
      * system must wait until a new location update is received.
      */
-    interface OnCurrentLocationListener {
+    fun interface OnCurrentLocationListener {
         /**
          * Called when new location is received or a recent cached location is available.
          *

@@ -124,7 +124,7 @@ class MagnetometerSensorCollector(
     /**
      * Interface to notify when a new magnetometer measurement is available.
      */
-    interface OnMeasurementListener {
+    fun interface OnMeasurementListener {
         /**
          * Called when a new magnetometer measurement is available.
          *
