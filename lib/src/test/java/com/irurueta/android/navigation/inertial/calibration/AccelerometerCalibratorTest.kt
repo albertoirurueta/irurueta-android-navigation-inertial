@@ -28,6 +28,7 @@ import com.irurueta.navigation.inertial.calibration.AccelerationTriad
 import com.irurueta.navigation.inertial.calibration.StandardDeviationBodyKinematics
 import com.irurueta.navigation.inertial.calibration.intervals.TriadStaticIntervalDetector
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.QualityScoreMapper
+import com.irurueta.numerical.robust.RobustEstimatorMethod
 import com.irurueta.statistics.UniformRandomizer
 import com.irurueta.units.Acceleration
 import com.irurueta.units.AccelerationUnit
@@ -4989,6 +4990,464 @@ class AccelerometerCalibratorTest {
         )
     }
 
+    @Test
+    fun initialMa_whenValid_setsExpectedValues() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        // check default value
+        assertEquals(Matrix(MA_SIZE, MA_SIZE), calibrator.initialMa)
+        assertEquals(0.0, calibrator.initialSx, 0.0)
+        assertEquals(0.0, calibrator.initialSy, 0.0)
+        assertEquals(0.0, calibrator.initialSz, 0.0)
+        assertEquals(0.0, calibrator.initialMxy, 0.0)
+        assertEquals(0.0, calibrator.initialMxz, 0.0)
+        assertEquals(0.0, calibrator.initialMyx, 0.0)
+        assertEquals(0.0, calibrator.initialMyz, 0.0)
+        assertEquals(0.0, calibrator.initialMzx, 0.0)
+        assertEquals(0.0, calibrator.initialMzy, 0.0)
+
+        // set new value
+        val randomizer = UniformRandomizer()
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+
+        val ma = Matrix(MA_SIZE, MA_SIZE)
+        ma.setElementAtIndex(0, initialSx)
+        ma.setElementAtIndex(1, initialMyx)
+        ma.setElementAtIndex(2, initialMzx)
+
+        ma.setElementAtIndex(3, initialMxy)
+        ma.setElementAtIndex(4, initialSy)
+        ma.setElementAtIndex(5, initialMzy)
+
+        ma.setElementAtIndex(6, initialMxz)
+        ma.setElementAtIndex(7, initialMyz)
+        ma.setElementAtIndex(8, initialSz)
+
+        calibrator.initialMa = ma
+
+        // check
+        assertEquals(ma, calibrator.initialMa)
+        assertEquals(initialSx, calibrator.initialSx, 0.0)
+        assertEquals(initialSy, calibrator.initialSy, 0.0)
+        assertEquals(initialSz, calibrator.initialSz, 0.0)
+        assertEquals(initialMxy, calibrator.initialMxy, 0.0)
+        assertEquals(initialMxz, calibrator.initialMxz, 0.0)
+        assertEquals(initialMyx, calibrator.initialMyx, 0.0)
+        assertEquals(initialMyz, calibrator.initialMyz, 0.0)
+        assertEquals(initialMzx, calibrator.initialMzx, 0.0)
+        assertEquals(initialMzy, calibrator.initialMzy, 0.0)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun initialMa_whenInvalidRowsSize_throwsIllegalArgumentException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        val ma = Matrix(1, MA_SIZE)
+        calibrator.initialMa = ma
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun initialMa_whenInvalidColumnsSize_throwsIllegalArgumentException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        val ma = Matrix(MA_SIZE, 1)
+        calibrator.initialMa = ma
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun initialMa_whenRunning_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        calibrator.setPrivateProperty("running", true)
+
+        calibrator.initialMa = Matrix(MA_SIZE, MA_SIZE)
+    }
+
+    @Test
+    fun getInitialMa_returnsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        // set new value
+        val randomizer = UniformRandomizer()
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+
+        // check
+        val ma = Matrix(MA_SIZE, MA_SIZE)
+        calibrator.getInitialMa(ma)
+
+        // check
+        assertEquals(initialSx, ma.getElementAtIndex(0), 0.0)
+        assertEquals(initialMyx, ma.getElementAtIndex(1), 0.0)
+        assertEquals(initialMzx, ma.getElementAtIndex(2), 0.0)
+
+        assertEquals(initialMxy, ma.getElementAtIndex(3), 0.0)
+        assertEquals(initialSy, ma.getElementAtIndex(4), 0.0)
+        assertEquals(initialMzy, ma.getElementAtIndex(5), 0.0)
+
+        assertEquals(initialMxz, ma.getElementAtIndex(6), 0.0)
+        assertEquals(initialMyz, ma.getElementAtIndex(7), 0.0)
+        assertEquals(initialSz, ma.getElementAtIndex(8), 0.0)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun getInitialMa_whenInvalidRowSize_throwsIllegalArgumentException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        val ma = Matrix(1, MA_SIZE)
+        calibrator.getInitialMa(ma)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun getInitialMa_whenInvalidColumnSize_throwsIllegalArgumentException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        val ma = Matrix(MA_SIZE, 1)
+        calibrator.getInitialMa(ma)
+    }
+
+    @Test
+    fun isCommonAxisUsed_whenNotRunning_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        assertFalse(calibrator.isCommonAxisUsed)
+
+        // set new value
+        calibrator.isCommonAxisUsed = true
+
+        // check
+        assertTrue(calibrator.isCommonAxisUsed)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun isCommonAxisUsed_whenRunning_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        calibrator.setPrivateProperty("running", true)
+
+        calibrator.isCommonAxisUsed = true
+    }
+
+    @Test
+    fun requiredMeasurements_whenValid_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        // check default value
+        assertEquals(
+            AccelerometerCalibrator.UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
+            calibrator.requiredMeasurements
+        )
+
+        // set new value
+        calibrator.requiredMeasurements = REQUIRED_MEASUREMENTS
+
+        // check
+        assertEquals(REQUIRED_MEASUREMENTS, calibrator.requiredMeasurements)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun requiredMeasurements_whenInvalid_throwsIllegalArgumentException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        calibrator.requiredMeasurements = 0
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun requiredMeasurements_whenRunning_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        calibrator.setPrivateProperty("running", true)
+
+        calibrator.requiredMeasurements = REQUIRED_MEASUREMENTS
+    }
+
+    @Test
+    fun robustMethod_whenNotRunning_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        // check default value
+        assertNull(calibrator.robustMethod)
+
+        // set new value
+        calibrator.robustMethod = RobustEstimatorMethod.RANSAC
+
+        // check
+        assertEquals(RobustEstimatorMethod.RANSAC, calibrator.robustMethod)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun robustMethod_whenRunning_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        calibrator.setPrivateProperty("running", true)
+
+        calibrator.robustMethod = RobustEstimatorMethod.RANSAC
+    }
+
+    @Test
+    fun robustConfidence_whenValid_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        // check default value
+        assertEquals(
+            AccelerometerCalibrator.ROBUST_DEFAULT_CONFIDENCE,
+            calibrator.robustConfidence,
+            0.0
+        )
+
+        // set new value
+        calibrator.robustConfidence = ROBUST_CONFIDENCE
+
+        // check
+        assertEquals(ROBUST_CONFIDENCE, calibrator.robustConfidence, 0.0)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun robustConfidence_whenInvalid_throwsIllegalArgumentException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        calibrator.robustConfidence = -1.0
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun robustConfidence_whenRunning_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        calibrator.setPrivateProperty("running", true)
+
+        calibrator.robustConfidence = ROBUST_CONFIDENCE
+    }
+
+    @Test
+    fun robustMaxIterations_whenValid_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        // check default value
+        assertEquals(
+            AccelerometerCalibrator.ROBUST_DEFAULT_MAX_ITERATIONS,
+            calibrator.robustMaxIterations
+        )
+
+        // set new value
+        calibrator.robustMaxIterations = ROBUST_MAX_ITERATIONS
+
+        // check
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.robustMaxIterations)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun robustMaxIterations_whenInvalid_throwsIllegalArgumentException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        calibrator.robustMaxIterations = 0
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun robustMaxIterations_whenRunning_throwsIllegalArgumentException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        calibrator.setPrivateProperty("running", true)
+
+        calibrator.robustMaxIterations = ROBUST_MAX_ITERATIONS
+    }
+
+    @Test
+    fun robustPreliminarySubsetSize_whenValid_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        // check default value
+        assertEquals(
+            AccelerometerCalibrator.UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
+            calibrator.robustPreliminarySubsetSize
+        )
+
+        // set new value
+        calibrator.robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+
+        // check
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.robustPreliminarySubsetSize)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun robustPreliminarySubsetSize_whenInvalid_throwsIllegalArgumentException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        calibrator.robustPreliminarySubsetSize = 12
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun robustPreliminarySubsetSize_whenRunning_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        calibrator.setPrivateProperty("running", true)
+
+        calibrator.robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+    }
+
+    @Test
+    fun robustThreshold_whenValid_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        // check default value
+        assertNull(calibrator.robustThreshold)
+
+        // set new value
+        calibrator.robustThreshold = ROBUST_THRESHOLD
+
+        // check
+        val robustThreshold = calibrator.robustThreshold
+        requireNotNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
+
+        // set new value
+        calibrator.robustThreshold = null
+
+        // check
+        assertNull(calibrator.robustThreshold)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun robustThreshold_whenInvalid_throwsIllegalArgumentException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        calibrator.robustThreshold = 0.0
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun robustThreshold_whenRunning_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        calibrator.setPrivateProperty("running", true)
+
+        calibrator.robustThreshold = ROBUST_THRESHOLD
+    }
+
+    @Test
+    fun robustThresholdFactor_whenValid_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        // check default value
+        assertEquals(
+            AccelerometerCalibrator.DEFAULT_ROBUST_THRESHOLD_FACTOR,
+            calibrator.robustThresholdFactor,
+            0.0
+        )
+
+        // set new value
+        calibrator.robustThresholdFactor = ROBUST_THRESHOLD_FACTOR
+
+        // check
+        assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.robustThresholdFactor, 0.0)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun robustThresholdFactor_whenInvalid_throwsIllegalArgumentException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        calibrator.robustThresholdFactor = 0.0
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun robustThresholdFactor_whenRunning_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        calibrator.setPrivateProperty("running", true)
+
+        calibrator.robustThresholdFactor = ROBUST_THRESHOLD_FACTOR
+    }
+
+    @Test
+    fun robustStopThresholdFactor_whenValid_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        // check default value
+        assertEquals(
+            AccelerometerCalibrator.DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR,
+            calibrator.robustStopThresholdFactor,
+            0.0
+        )
+
+        // set new value
+        calibrator.robustStopThresholdFactor = ROBUST_STOP_THRESHOLD_FACTOR
+
+        // check
+        assertEquals(ROBUST_STOP_THRESHOLD_FACTOR, calibrator.robustStopThresholdFactor, 0.0)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun robustStopThresholdFactor_whenInvalid_throwsIllegalArgumentException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        calibrator.robustStopThresholdFactor = 0.0
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun robustStopThresholdFactor_whenRunning_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        calibrator.setPrivateProperty("running", true)
+
+        calibrator.robustStopThresholdFactor = ROBUST_STOP_THRESHOLD_FACTOR
+    }
+
     private companion object {
         const val MA_SIZE = 3
 
@@ -5007,6 +5466,20 @@ class AccelerometerCalibratorTest {
         const val MAX_HEIGHT = 3000.0
 
         const val WINDOW_SIZE = 51
+
+        const val REQUIRED_MEASUREMENTS = 30
+
+        const val ROBUST_CONFIDENCE = 0.9
+
+        const val ROBUST_MAX_ITERATIONS = 1000
+
+        const val ROBUST_PRELIMINARY_SUBSET_SIZE = 15
+
+        const val ROBUST_THRESHOLD = 1e-5
+
+        const val ROBUST_THRESHOLD_FACTOR = 2.0
+
+        const val ROBUST_STOP_THRESHOLD_FACTOR = 1e-3
 
         fun getLocation(): Location {
             val randomizer = UniformRandomizer()
