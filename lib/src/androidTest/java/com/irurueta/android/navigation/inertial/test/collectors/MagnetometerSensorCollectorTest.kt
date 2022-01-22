@@ -21,8 +21,6 @@ import android.util.Log
 import androidx.test.platform.app.InstrumentationRegistry
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
 import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
-import com.irurueta.android.navigation.inertial.collectors.SensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import org.junit.Assert.*
 import org.junit.Before
@@ -97,40 +95,26 @@ class MagnetometerSensorCollectorTest {
             context,
             MagnetometerSensorCollector.SensorType.MAGNETOMETER,
             SensorDelay.FASTEST,
-            measurementListener = object : MagnetometerSensorCollector.OnMeasurementListener {
-                override fun onMeasurement(
-                    bx: Float,
-                    by: Float,
-                    bz: Float,
-                    hardIronX: Float?,
-                    hardIronY: Float?,
-                    hardIronZ: Float?,
-                    timestamp: Long,
-                    accuracy: SensorAccuracy?
-                ) {
-                    assertNull(hardIronX)
-                    assertNull(hardIronY)
-                    assertNull(hardIronZ)
+            measurementListener = { bx, by, bz, hardIronX, hardIronY, hardIronZ, timestamp, accuracy ->
+                assertNull(hardIronX)
+                assertNull(hardIronY)
+                assertNull(hardIronZ)
 
-                    Log.d(
-                        "MagnetometerSensorCollectorTest",
-                        "onMeasurement - bx: $bx, by: $by, bz: $bz, hardIronX: $hardIronX, "
-                                + "hardIronY: $hardIronY, hardIronZ: $hardIronZ, "
-                                + "timestamp: $timestamp, accuracy: $accuracy"
-                    )
+                Log.d(
+                    "MagnetometerSensorCollectorTest",
+                    "onMeasurement - bx: $bx, by: $by, bz: $bz, hardIronX: $hardIronX, "
+                            + "hardIronY: $hardIronY, hardIronZ: $hardIronZ, "
+                            + "timestamp: $timestamp, accuracy: $accuracy"
+                )
 
-                    syncHelper.notifyAll { measured++ }
-                }
-            },
-            accuracyChangedListener = object : SensorCollector.OnAccuracyChangedListener {
-                override fun onAccuracyChanged(accuracy: SensorAccuracy?) {
-                    Log.d(
-                        "MagnetometerSensorCollectorTest",
-                        "onAccuracyChanged - accuracy: $accuracy"
-                    )
-                }
+                syncHelper.notifyAll { measured++ }
             }
-        )
+        ) { accuracy ->
+            Log.d(
+                "MagnetometerSensorCollectorTest",
+                "onAccuracyChanged - accuracy: $accuracy"
+            )
+        }
 
         collector.start()
 
@@ -148,40 +132,26 @@ class MagnetometerSensorCollectorTest {
             context,
             MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
             SensorDelay.FASTEST,
-            measurementListener = object : MagnetometerSensorCollector.OnMeasurementListener {
-                override fun onMeasurement(
-                    bx: Float,
-                    by: Float,
-                    bz: Float,
-                    hardIronX: Float?,
-                    hardIronY: Float?,
-                    hardIronZ: Float?,
-                    timestamp: Long,
-                    accuracy: SensorAccuracy?
-                ) {
-                    assertNotNull(hardIronX)
-                    assertNotNull(hardIronY)
-                    assertNotNull(hardIronZ)
+            measurementListener = { bx, by, bz, hardIronX, hardIronY, hardIronZ, timestamp, accuracy ->
+                assertNotNull(hardIronX)
+                assertNotNull(hardIronY)
+                assertNotNull(hardIronZ)
 
-                    Log.d(
-                        "MagnetometerSensorCollectorTest",
-                        "onMeasurement - bx: $bx, by: $by, bz: $bz, hardIronX: $hardIronX, "
-                                + "hardIronY: $hardIronY, hardIronZ: $hardIronZ, "
-                                + "timestamp: $timestamp, accuracy: $accuracy"
-                    )
+                Log.d(
+                    "MagnetometerSensorCollectorTest",
+                    "onMeasurement - bx: $bx, by: $by, bz: $bz, hardIronX: $hardIronX, "
+                            + "hardIronY: $hardIronY, hardIronZ: $hardIronZ, "
+                            + "timestamp: $timestamp, accuracy: $accuracy"
+                )
 
-                    syncHelper.notifyAll { measured++ }
-                }
-            },
-            accuracyChangedListener = object : SensorCollector.OnAccuracyChangedListener {
-                override fun onAccuracyChanged(accuracy: SensorAccuracy?) {
-                    Log.d(
-                        "MagnetometerSensorCollectorTest",
-                        "onAccuracyChanged - accuracy: $accuracy"
-                    )
-                }
+                syncHelper.notifyAll { measured++ }
             }
-        )
+        ) { accuracy ->
+            Log.d(
+                "MagnetometerSensorCollectorTest",
+                "onAccuracyChanged - accuracy: $accuracy"
+            )
+        }
 
         collector.start()
 

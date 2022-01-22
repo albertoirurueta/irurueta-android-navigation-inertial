@@ -22,8 +22,6 @@ import androidx.test.filters.RequiresDevice
 import androidx.test.platform.app.InstrumentationRegistry
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
-import com.irurueta.android.navigation.inertial.collectors.SensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import org.junit.Assert.*
 import org.junit.Before
@@ -96,36 +94,25 @@ class GyroscopeSensorCollectorTest {
             context,
             GyroscopeSensorCollector.SensorType.GYROSCOPE,
             SensorDelay.FASTEST,
-            measurementListener = object : GyroscopeSensorCollector.OnMeasurementListener {
-                override fun onMeasurement(
-                    wx: Float,
-                    wy: Float,
-                    wz: Float,
-                    bx: Float?,
-                    by: Float?,
-                    bz: Float?,
-                    timestamp: Long,
-                    accuracy: SensorAccuracy?
-                ) {
-                    assertNull(bx)
-                    assertNull(by)
-                    assertNull(bz)
+            measurementListener = { wx, wy, wz, bx, by, bz, timestamp, accuracy ->
+                assertNull(bx)
+                assertNull(by)
+                assertNull(bz)
 
-                    Log.d(
-                        "GyroscopeSensorCollectorTest",
-                        "onMeasurement - wx: $wx, wy: $wy, wz: $wz, bx: $bx, by: $by, bz: $bz, "
-                                + "timestamp: $timestamp, accuracy: $accuracy"
-                    )
+                Log.d(
+                    "GyroscopeSensorCollectorTest",
+                    "onMeasurement - wx: $wx, wy: $wy, wz: $wz, bx: $bx, by: $by, bz: $bz, "
+                            + "timestamp: $timestamp, accuracy: $accuracy"
+                )
 
-                    syncHelper.notifyAll { measured++ }
-                }
-            },
-            accuracyChangedListener = object : SensorCollector.OnAccuracyChangedListener {
-                override fun onAccuracyChanged(accuracy: SensorAccuracy?) {
-                    Log.d("GyroscopeSensorCollectorTest", "onAccuracyChanged - accuracy: $accuracy")
-                }
+                syncHelper.notifyAll { measured++ }
             }
-        )
+        ) { accuracy ->
+            Log.d(
+                "GyroscopeSensorCollectorTest",
+                "onAccuracyChanged - accuracy: $accuracy"
+            )
+        }
 
         collector.start()
 
@@ -144,36 +131,25 @@ class GyroscopeSensorCollectorTest {
             context,
             GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
             SensorDelay.FASTEST,
-            measurementListener = object : GyroscopeSensorCollector.OnMeasurementListener {
-                override fun onMeasurement(
-                    wx: Float,
-                    wy: Float,
-                    wz: Float,
-                    bx: Float?,
-                    by: Float?,
-                    bz: Float?,
-                    timestamp: Long,
-                    accuracy: SensorAccuracy?
-                ) {
-                    assertNotNull(bx)
-                    assertNotNull(by)
-                    assertNotNull(bz)
+            measurementListener = { wx, wy, wz, bx, by, bz, timestamp, accuracy ->
+                assertNotNull(bx)
+                assertNotNull(by)
+                assertNotNull(bz)
 
-                    Log.d(
-                        "GyroscopeSensorCollectorTest",
-                        "onMeasurement - wx: $wx, wy: $wy, wz: $wz, bx: $bx, by: $by, bz: $bz, "
-                                + "timestamp: $timestamp, accuracy: $accuracy"
-                    )
+                Log.d(
+                    "GyroscopeSensorCollectorTest",
+                    "onMeasurement - wx: $wx, wy: $wy, wz: $wz, bx: $bx, by: $by, bz: $bz, "
+                            + "timestamp: $timestamp, accuracy: $accuracy"
+                )
 
-                    syncHelper.notifyAll { measured++ }
-                }
-            },
-            accuracyChangedListener = object : SensorCollector.OnAccuracyChangedListener {
-                override fun onAccuracyChanged(accuracy: SensorAccuracy?) {
-                    Log.d("GyroscopeSensorCollectorTest", "onAccuracyChanged - accuracy: $accuracy")
-                }
+                syncHelper.notifyAll { measured++ }
             }
-        )
+        ) { accuracy ->
+            Log.d(
+                "GyroscopeSensorCollectorTest",
+                "onAccuracyChanged - accuracy: $accuracy"
+            )
+        }
 
         collector.start()
 

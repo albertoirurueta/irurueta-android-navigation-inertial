@@ -25,69 +25,31 @@ class IntervalDetectorTest {
     fun startAndStop_detectsIntervals() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val detector = IntervalDetector(context,
-            initializationStartedListener = object :
-                IntervalDetector.OnInitializationStartedListener {
-                override fun onInitializationStarted(detector: IntervalDetector) {
-                    Log.i("IntervalDetectorTest", "Initialization started")
-                }
+            initializationStartedListener = {
+                Log.i(
+                    "IntervalDetectorTest",
+                    "Initialization started"
+                )
             },
-            initializationCompletedListener = object :
-                IntervalDetector.OnInitializationCompletedListener {
-                override fun onInitializationCompleted(
-                    detector: IntervalDetector,
-                    baseNoiseLevel: Double
-                ) {
-                    Log.i("IntervalDetectorTest",
-                        "Initialization completed. Base noise level: $baseNoiseLevel m/s^2"
-                    )
-                }
+            initializationCompletedListener = { _, baseNoiseLevel ->
+                Log.i(
+                    "IntervalDetectorTest",
+                    "Initialization completed. Base noise level: $baseNoiseLevel m/s^2"
+                )
             },
-            errorListener = object : IntervalDetector.OnErrorListener {
-                override fun onError(
-                    detector: IntervalDetector,
-                    reason: IntervalDetector.ErrorReason
-                ) {
-                    Log.i("IntervalDetectorTest", "Error: $reason")
-                }
+            errorListener = { _, reason -> Log.i("IntervalDetectorTest", "Error: $reason") },
+            staticIntervalDetectedListener = { _, _, _, _, _, _, _ ->
+                Log.i(
+                    "IntervalDetectorTest",
+                    "Static interval detected"
+                )
             },
-            staticIntervalDetectedListener = object :
-                IntervalDetector.OnStaticIntervalDetectedListener {
-                override fun onStaticIntervalDetected(
-                    detector: IntervalDetector,
-                    instantaneousAvgX: Double,
-                    instantaneousAvgY: Double,
-                    instantaneousAvgZ: Double,
-                    instantaneousStdX: Double,
-                    instantaneousStdY: Double,
-                    instantaneousStdZ: Double
-                ) {
-                    Log.i("IntervalDetectorTest", "Static interval detected")
-                }
-            },
-            dynamicIntervalDetectedListener = object :
-                IntervalDetector.OnDynamicIntervalDetectedListener {
-                override fun onDynamicIntervalDetected(
-                    detector: IntervalDetector,
-                    instantaneousAvgX: Double,
-                    instantaneousAvgY: Double,
-                    instantaneousAvgZ: Double,
-                    instantaneousStdX: Double,
-                    instantaneousStdY: Double,
-                    instantaneousStdZ: Double,
-                    accumulatedAvgX: Double,
-                    accumulatedAvgY: Double,
-                    accumulatedAvgZ: Double,
-                    accumulatedStdX: Double,
-                    accumulatedStdY: Double,
-                    accumulatedStdZ: Double
-                ) {
-                    Log.i("IntervalDetectorTest", "Dynamic interval detected")
-                }
-            }, resetListener = object : IntervalDetector.OnResetListener {
-                override fun onReset(detector: IntervalDetector) {
-                    Log.i("IntervalDetectorTest", "Reset")
-                }
-            })
+            dynamicIntervalDetectedListener = { _, _, _, _, _, _, _, _, _, _, _, _, _ ->
+                Log.i(
+                    "IntervalDetectorTest",
+                    "Dynamic interval detected"
+                )
+            }, resetListener = { Log.i("IntervalDetectorTest", "Reset") })
 
         detector.start()
 

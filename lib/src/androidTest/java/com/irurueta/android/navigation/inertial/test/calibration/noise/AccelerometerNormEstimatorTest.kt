@@ -24,7 +24,6 @@ import androidx.test.rule.GrantPermissionRule
 import com.irurueta.android.navigation.inertial.LocationService
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
 import com.irurueta.android.navigation.inertial.calibration.noise.AccelerometerNormEstimator
-import com.irurueta.android.navigation.inertial.calibration.noise.AccumulatedMeasurementEstimator
 import com.irurueta.android.navigation.inertial.test.LocationActivity
 import com.irurueta.android.navigation.inertial.toNEDPosition
 import com.irurueta.navigation.frames.ECEFPosition
@@ -68,21 +67,14 @@ class AccelerometerNormEstimatorTest {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val estimator = AccelerometerNormEstimator(
             context,
-            completedListener = object : AccumulatedMeasurementEstimator
-            .OnEstimationCompletedListener<AccelerometerNormEstimator> {
+            completedListener = { estimator ->
+                assertFalse(estimator.running)
 
-                override fun onEstimationCompleted(estimator: AccelerometerNormEstimator) {
-                    assertFalse(estimator.running)
-
-                    syncHelper.notifyAll { completed++ }
-                }
+                syncHelper.notifyAll { completed++ }
             },
-            unreliableListener = object :
-                AccumulatedMeasurementEstimator.OnUnreliableListener<AccelerometerNormEstimator> {
-                override fun onUnreliable(estimator: AccelerometerNormEstimator) {
-                    Log.d("AccelerometerNormEstimatorTest", "Sensor is unreliable")
-                    assertFalse(estimator.running)
-                }
+            unreliableListener = { estimator ->
+                Log.d("AccelerometerNormEstimatorTest", "Sensor is unreliable")
+                assertFalse(estimator.running)
             }
         )
 
@@ -178,21 +170,14 @@ class AccelerometerNormEstimatorTest {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val estimator = AccelerometerNormEstimator(
             context,
-            completedListener = object : AccumulatedMeasurementEstimator
-            .OnEstimationCompletedListener<AccelerometerNormEstimator> {
+            completedListener = { estimator ->
+                assertFalse(estimator.running)
 
-                override fun onEstimationCompleted(estimator: AccelerometerNormEstimator) {
-                    assertFalse(estimator.running)
-
-                    syncHelper.notifyAll { completed++ }
-                }
+                syncHelper.notifyAll { completed++ }
             },
-            unreliableListener = object :
-                AccumulatedMeasurementEstimator.OnUnreliableListener<AccelerometerNormEstimator> {
-                override fun onUnreliable(estimator: AccelerometerNormEstimator) {
-                    Log.d("AccelerometerNormEstimatorTest", "Sensor is unreliable")
-                    assertFalse(estimator.running)
-                }
+            unreliableListener = { estimator ->
+                Log.d("AccelerometerNormEstimatorTest", "Sensor is unreliable")
+                assertFalse(estimator.running)
             }
         )
 

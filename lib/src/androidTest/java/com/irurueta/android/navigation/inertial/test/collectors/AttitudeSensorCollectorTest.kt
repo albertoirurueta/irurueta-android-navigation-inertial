@@ -21,11 +21,7 @@ import android.util.Log
 import androidx.test.platform.app.InstrumentationRegistry
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
 import com.irurueta.android.navigation.inertial.collectors.AttitudeSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
-import com.irurueta.android.navigation.inertial.collectors.SensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
-import com.irurueta.geometry.Rotation3D
-import com.irurueta.navigation.frames.CoordinateTransformation
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -91,37 +87,29 @@ class AttitudeSensorCollectorTest {
             context,
             AttitudeSensorCollector.SensorType.ABSOLUTE_ATTITUDE,
             SensorDelay.FASTEST,
-            measurementListener = object : AttitudeSensorCollector.OnMeasurementListener {
-                override fun onMeasurement(
-                    rotation: Rotation3D,
-                    coordinationTransformation: CoordinateTransformation,
-                    headingAccuracyRadians: Float?,
-                    timestamp: Long,
-                    accuracy: SensorAccuracy?
-                ) {
-                    val quaternion = rotation.toQuaternion()
-                    val angles = quaternion.toEulerAngles()
-                    val roll = angles[0]
-                    val pitch = angles[1]
-                    val yaw = angles[2]
+            measurementListener = { rotation, _, headingAccuracyRadians, timestamp, accuracy ->
+                val quaternion = rotation.toQuaternion()
+                val angles = quaternion.toEulerAngles()
+                val roll = angles[0]
+                val pitch = angles[1]
+                val yaw = angles[2]
 
-                    Log.d(
-                        "AttitudeSensorCollectorTest", "onMeasurement - roll: $roll rad, "
-                                + "pitch: $pitch rad, "
-                                + "yaw: $yaw rad, "
-                                + "headingAccuracy: $headingAccuracyRadians rad, "
-                                + "timestamp: $timestamp, accuracy: $accuracy"
-                    )
+                Log.d(
+                    "AttitudeSensorCollectorTest", "onMeasurement - roll: $roll rad, "
+                            + "pitch: $pitch rad, "
+                            + "yaw: $yaw rad, "
+                            + "headingAccuracy: $headingAccuracyRadians rad, "
+                            + "timestamp: $timestamp, accuracy: $accuracy"
+                )
 
-                    syncHelper.notifyAll { measured++ }
-                }
-            },
-            accuracyChangedListener = object : SensorCollector.OnAccuracyChangedListener {
-                override fun onAccuracyChanged(accuracy: SensorAccuracy?) {
-                    Log.d("AttitudeSensorCollectorTest", "onAccuracyChanged - accuracy: $accuracy")
-                }
+                syncHelper.notifyAll { measured++ }
             }
-        )
+        ) { accuracy ->
+            Log.d(
+                "AttitudeSensorCollectorTest",
+                "onAccuracyChanged - accuracy: $accuracy"
+            )
+        }
 
         collector.start()
 
@@ -139,37 +127,29 @@ class AttitudeSensorCollectorTest {
             context,
             AttitudeSensorCollector.SensorType.RELATIVE_ATTITUDE,
             SensorDelay.FASTEST,
-            measurementListener = object : AttitudeSensorCollector.OnMeasurementListener {
-                override fun onMeasurement(
-                    rotation: Rotation3D,
-                    coordinationTransformation: CoordinateTransformation,
-                    headingAccuracyRadians: Float?,
-                    timestamp: Long,
-                    accuracy: SensorAccuracy?
-                ) {
-                    val quaternion = rotation.toQuaternion()
-                    val angles = quaternion.toEulerAngles()
-                    val roll = angles[0]
-                    val pitch = angles[1]
-                    val yaw = angles[2]
+            measurementListener = { rotation, _, headingAccuracyRadians, timestamp, accuracy ->
+                val quaternion = rotation.toQuaternion()
+                val angles = quaternion.toEulerAngles()
+                val roll = angles[0]
+                val pitch = angles[1]
+                val yaw = angles[2]
 
-                    Log.d(
-                        "AttitudeSensorCollectorTest", "onMeasurement - roll: $roll rad, "
-                                + "pitch: $pitch rad, "
-                                + "yaw: $yaw rad, "
-                                + "headingAccuracy: $headingAccuracyRadians rad, "
-                                + "timestamp: $timestamp, accuracy: $accuracy"
-                    )
+                Log.d(
+                    "AttitudeSensorCollectorTest", "onMeasurement - roll: $roll rad, "
+                            + "pitch: $pitch rad, "
+                            + "yaw: $yaw rad, "
+                            + "headingAccuracy: $headingAccuracyRadians rad, "
+                            + "timestamp: $timestamp, accuracy: $accuracy"
+                )
 
-                    syncHelper.notifyAll { measured++ }
-                }
-            },
-            accuracyChangedListener = object : SensorCollector.OnAccuracyChangedListener {
-                override fun onAccuracyChanged(accuracy: SensorAccuracy?) {
-                    Log.d("AttitudeSensorCollectorTest", "onAccuracyChanged - accuracy: $accuracy")
-                }
+                syncHelper.notifyAll { measured++ }
             }
-        )
+        ) { accuracy ->
+            Log.d(
+                "AttitudeSensorCollectorTest",
+                "onAccuracyChanged - accuracy: $accuracy"
+            )
+        }
 
         collector.start()
 

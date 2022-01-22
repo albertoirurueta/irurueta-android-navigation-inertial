@@ -4562,7 +4562,7 @@ class AccelerometerCalibratorTest {
     }
 
     @Test
-    fun initialSx_whenValid_setsExpectedValue() {
+    fun initialSx_whenNotRunning_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = AccelerometerCalibrator(context)
 
@@ -4589,7 +4589,7 @@ class AccelerometerCalibratorTest {
     }
 
     @Test
-    fun initialSy_whenValid_setsExpectedValue() {
+    fun initialSy_whenNotRunning_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = AccelerometerCalibrator(context)
 
@@ -4616,7 +4616,7 @@ class AccelerometerCalibratorTest {
     }
 
     @Test
-    fun initialSz_whenValid_setsExpectedValue() {
+    fun initialSz_whenNotRunning_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = AccelerometerCalibrator(context)
 
@@ -4643,7 +4643,7 @@ class AccelerometerCalibratorTest {
     }
 
     @Test
-    fun initialMxy_whenValid_setsExpectedValue() {
+    fun initialMxy_whenNotRunning_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = AccelerometerCalibrator(context)
 
@@ -4670,7 +4670,7 @@ class AccelerometerCalibratorTest {
     }
 
     @Test
-    fun initialMxz_whenValid_setsExpectedValue() {
+    fun initialMxz_whenNotRunning_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = AccelerometerCalibrator(context)
 
@@ -4697,7 +4697,7 @@ class AccelerometerCalibratorTest {
     }
 
     @Test
-    fun initialMyx_whenValid_setsExpectedValue() {
+    fun initialMyx_whenNotRunning_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = AccelerometerCalibrator(context)
 
@@ -4724,7 +4724,7 @@ class AccelerometerCalibratorTest {
     }
 
     @Test
-    fun initialMyz_whenValid_setsExpectedValue() {
+    fun initialMyz_whenNotRunning_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = AccelerometerCalibrator(context)
 
@@ -4751,7 +4751,7 @@ class AccelerometerCalibratorTest {
     }
 
     @Test
-    fun initialMzx_whenValid_setsExpectedValue() {
+    fun initialMzx_whenNotRunning_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = AccelerometerCalibrator(context)
 
@@ -4778,7 +4778,7 @@ class AccelerometerCalibratorTest {
     }
 
     @Test
-    fun initialMzy_whenValid_setsExpectedValue() {
+    fun initialMzy_whenNotRunning_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = AccelerometerCalibrator(context)
 
@@ -4786,8 +4786,8 @@ class AccelerometerCalibratorTest {
         assertEquals(0.0, calibrator.initialMzy, 0.0)
 
         // set new value
-        val randomizser = UniformRandomizer()
-        val initialMzy = randomizser.nextDouble()
+        val randomizer = UniformRandomizer()
+        val initialMzy = randomizer.nextDouble()
         calibrator.initialMzy = initialMzy
 
         // check
@@ -4804,6 +4804,191 @@ class AccelerometerCalibratorTest {
         calibrator.initialMzy = 0.0
     }
 
+    @Test
+    fun setInitialScalingFactors_whenNotRunning_setsExpectedValues() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        // check default values
+        assertEquals(0.0, calibrator.initialSx, 0.0)
+        assertEquals(0.0, calibrator.initialSy, 0.0)
+        assertEquals(0.0, calibrator.initialSz, 0.0)
+
+        // set new value
+        val randomizer = UniformRandomizer()
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        calibrator.setInitialScalingFactors(initialSx, initialSy, initialSz)
+
+        // check
+        assertEquals(initialSx, calibrator.initialSx, 0.0)
+        assertEquals(initialSy, calibrator.initialSy, 0.0)
+        assertEquals(initialSz, calibrator.initialSz, 0.0)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun setInitialScalingFactors_whenRunning_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        calibrator.setPrivateProperty("running", true)
+
+        val randomizer = UniformRandomizer()
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        calibrator.setInitialScalingFactors(initialSx, initialSy, initialSz)
+    }
+
+    @Test
+    fun setInitialCrossCouplingErrors_whenNotRunning_setsExpectedValues() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        // check default values
+        assertEquals(0.0, calibrator.initialMxy, 0.0)
+        assertEquals(0.0, calibrator.initialMxz, 0.0)
+        assertEquals(0.0, calibrator.initialMyx, 0.0)
+        assertEquals(0.0, calibrator.initialMyz, 0.0)
+        assertEquals(0.0, calibrator.initialMzx, 0.0)
+        assertEquals(0.0, calibrator.initialMzy, 0.0)
+
+        // set new value
+        val randomizer = UniformRandomizer()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setInitialCrossCouplingErrors(
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+
+        // check
+        assertEquals(initialMxy, calibrator.initialMxy, 0.0)
+        assertEquals(initialMxz, calibrator.initialMxz, 0.0)
+        assertEquals(initialMyx, calibrator.initialMyx, 0.0)
+        assertEquals(initialMyz, calibrator.initialMyz, 0.0)
+        assertEquals(initialMzx, calibrator.initialMzx, 0.0)
+        assertEquals(initialMzy, calibrator.initialMzy, 0.0)
+
+        assertEquals(0.0, calibrator.initialSx, 0.0)
+        assertEquals(0.0, calibrator.initialSy, 0.0)
+        assertEquals(0.0, calibrator.initialSz, 0.0)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun setInitialCrossCouplingErrors_whenRunning_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        calibrator.setPrivateProperty("running", true)
+
+        val randomizer = UniformRandomizer()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setInitialCrossCouplingErrors(
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+    }
+
+    @Test
+    fun setInitialScalingFactorsAndCrossCouplingErrors_whenNotRunning_setsExpectedValues() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        // check default values
+        assertEquals(0.0, calibrator.initialSx, 0.0)
+        assertEquals(0.0, calibrator.initialSy, 0.0)
+        assertEquals(0.0, calibrator.initialSz, 0.0)
+        assertEquals(0.0, calibrator.initialMxy, 0.0)
+        assertEquals(0.0, calibrator.initialMxz, 0.0)
+        assertEquals(0.0, calibrator.initialMyx, 0.0)
+        assertEquals(0.0, calibrator.initialMyz, 0.0)
+        assertEquals(0.0, calibrator.initialMzx, 0.0)
+        assertEquals(0.0, calibrator.initialMzy, 0.0)
+
+        // set new value
+        val randomizer = UniformRandomizer()
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+
+        // check
+        assertEquals(initialSx, calibrator.initialSx, 0.0)
+        assertEquals(initialSy, calibrator.initialSy, 0.0)
+        assertEquals(initialSz, calibrator.initialSz, 0.0)
+        assertEquals(initialMxy, calibrator.initialMxy, 0.0)
+        assertEquals(initialMxz, calibrator.initialMxz, 0.0)
+        assertEquals(initialMyx, calibrator.initialMyx, 0.0)
+        assertEquals(initialMyz, calibrator.initialMyz, 0.0)
+        assertEquals(initialMzx, calibrator.initialMzx, 0.0)
+        assertEquals(initialMzy, calibrator.initialMzy, 0.0)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun setInitialScalingFactorsAndCrossCouplingErrors_whenRunning_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        calibrator.setPrivateProperty("running", true)
+
+        val randomizer = UniformRandomizer()
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+    }
+
     private companion object {
         const val MA_SIZE = 3
 
@@ -4813,7 +4998,7 @@ class AccelerometerCalibratorTest {
 
         const val INSTANTANEOUS_NOISE_LEVEL_FACTOR = 3.0
 
-        const val BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD = 1e-5;
+        const val BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD = 1e-5
 
         const val MIN_ANGLE_DEGREES = -90.0
         const val MAX_ANGLE_DEGREES = 90.0

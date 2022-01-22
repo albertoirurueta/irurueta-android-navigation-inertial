@@ -23,7 +23,6 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
 import com.irurueta.android.navigation.inertial.LocationService
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
-import com.irurueta.android.navigation.inertial.calibration.noise.AccumulatedMeasurementEstimator
 import com.irurueta.android.navigation.inertial.calibration.noise.GravityNormEstimator
 import com.irurueta.android.navigation.inertial.test.LocationActivity
 import com.irurueta.android.navigation.inertial.toNEDPosition
@@ -63,26 +62,19 @@ class GravityNormEstimatorTest {
         completed = 0
     }
 
+    @RequiresDevice
     @Test
     fun startAndStop_estimatesGravity() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val estimator = GravityNormEstimator(context,
-            completedListener = object : AccumulatedMeasurementEstimator
-            .OnEstimationCompletedListener<GravityNormEstimator> {
+            completedListener = { estimator ->
+                assertFalse(estimator.running)
 
-                override fun onEstimationCompleted(estimator: GravityNormEstimator) {
-                    assertFalse(estimator.running)
-
-                    syncHelper.notifyAll { completed++ }
-                }
+                syncHelper.notifyAll { completed++ }
             },
-            unreliableListener = object : AccumulatedMeasurementEstimator
-            .OnUnreliableListener<GravityNormEstimator> {
-
-                override fun onUnreliable(estimator: GravityNormEstimator) {
-                    Log.d("GravityNormEstimatorTest", "Sensor is unreliable")
-                    assertFalse(estimator.running)
-                }
+            unreliableListener = { estimator ->
+                Log.d("GravityNormEstimatorTest", "Sensor is unreliable")
+                assertFalse(estimator.running)
             }
         )
 
@@ -177,22 +169,14 @@ class GravityNormEstimatorTest {
     fun estimatedResult_returnsValueCloseToExpectedGravity() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val estimator = GravityNormEstimator(context,
-            completedListener = object : AccumulatedMeasurementEstimator
-            .OnEstimationCompletedListener<GravityNormEstimator> {
+            completedListener = { estimator ->
+                assertFalse(estimator.running)
 
-                override fun onEstimationCompleted(estimator: GravityNormEstimator) {
-                    assertFalse(estimator.running)
-
-                    syncHelper.notifyAll { completed++ }
-                }
+                syncHelper.notifyAll { completed++ }
             },
-            unreliableListener = object : AccumulatedMeasurementEstimator
-            .OnUnreliableListener<GravityNormEstimator> {
-
-                override fun onUnreliable(estimator: GravityNormEstimator) {
-                    Log.d("GravityNormEstimatorTest", "Sensor is unreliable")
-                    assertFalse(estimator.running)
-                }
+            unreliableListener = { estimator ->
+                Log.d("GravityNormEstimatorTest", "Sensor is unreliable")
+                assertFalse(estimator.running)
             }
         )
 

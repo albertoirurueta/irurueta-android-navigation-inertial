@@ -22,8 +22,6 @@ import androidx.test.filters.RequiresDevice
 import androidx.test.platform.app.InstrumentationRegistry
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
-import com.irurueta.android.navigation.inertial.collectors.SensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import org.junit.Assert.*
 import org.junit.Before
@@ -100,39 +98,25 @@ class AccelerometerSensorCollectorTest {
             context,
             AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             SensorDelay.FASTEST,
-            measurementListener = object : AccelerometerSensorCollector.OnMeasurementListener {
-                override fun onMeasurement(
-                    ax: Float,
-                    ay: Float,
-                    az: Float,
-                    bx: Float?,
-                    by: Float?,
-                    bz: Float?,
-                    timestamp: Long,
-                    accuracy: SensorAccuracy?
-                ) {
-                    assertNull(bx)
-                    assertNull(by)
-                    assertNull(bz)
+            measurementListener = { ax, ay, az, bx, by, bz, timestamp, accuracy ->
+                assertNull(bx)
+                assertNull(by)
+                assertNull(bz)
 
-                    Log.d(
-                        "AccelerometerSensorCollectorTest",
-                        "onMeasurement - ax: $ax, ay: $ay, az: $az, bx: $bx, by: $by, bz: $bz, "
-                                + "timestamp: $timestamp, accuracy: $accuracy"
-                    )
+                Log.d(
+                    "AccelerometerSensorCollectorTest",
+                    "onMeasurement - ax: $ax, ay: $ay, az: $az, bx: $bx, by: $by, bz: $bz, "
+                            + "timestamp: $timestamp, accuracy: $accuracy"
+                )
 
-                    syncHelper.notifyAll { measured++ }
-                }
-            },
-            accuracyChangedListener = object : SensorCollector.OnAccuracyChangedListener {
-                override fun onAccuracyChanged(accuracy: SensorAccuracy?) {
-                    Log.d(
-                        "AccelerometerSensorCollectorTest",
-                        "onAccuracyChanged - accuracy: $accuracy"
-                    )
-                }
+                syncHelper.notifyAll { measured++ }
             }
-        )
+        ) { accuracy ->
+            Log.d(
+                "AccelerometerSensorCollectorTest",
+                "onAccuracyChanged - accuracy: $accuracy"
+            )
+        }
 
         collector.start()
 
@@ -151,39 +135,25 @@ class AccelerometerSensorCollectorTest {
             context,
             AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             SensorDelay.FASTEST,
-            measurementListener = object : AccelerometerSensorCollector.OnMeasurementListener {
-                override fun onMeasurement(
-                    ax: Float,
-                    ay: Float,
-                    az: Float,
-                    bx: Float?,
-                    by: Float?,
-                    bz: Float?,
-                    timestamp: Long,
-                    accuracy: SensorAccuracy?
-                ) {
-                    assertNotNull(bx)
-                    assertNotNull(by)
-                    assertNotNull(bz)
+            measurementListener = { ax, ay, az, bx, by, bz, timestamp, accuracy ->
+                assertNotNull(bx)
+                assertNotNull(by)
+                assertNotNull(bz)
 
-                    Log.d(
-                        "AccelerometerSensorCollectorTest",
-                        "onMeasurement - ax: $ax, ay: $ay, az: $az, bx: $bx, by: $by, bz: $bz, "
-                                + "timestamp: $timestamp, accuracy: $accuracy"
-                    )
+                Log.d(
+                    "AccelerometerSensorCollectorTest",
+                    "onMeasurement - ax: $ax, ay: $ay, az: $az, bx: $bx, by: $by, bz: $bz, "
+                            + "timestamp: $timestamp, accuracy: $accuracy"
+                )
 
-                    syncHelper.notifyAll { measured++ }
-                }
-            },
-            accuracyChangedListener = object : SensorCollector.OnAccuracyChangedListener {
-                override fun onAccuracyChanged(accuracy: SensorAccuracy?) {
-                    Log.d(
-                        "AccelerometerSensorCollectorTest",
-                        "onAccuracyChanged - accuracy: $accuracy"
-                    )
-                }
+                syncHelper.notifyAll { measured++ }
             }
-        )
+        ) { accuracy ->
+            Log.d(
+                "AccelerometerSensorCollectorTest",
+                "onAccuracyChanged - accuracy: $accuracy"
+            )
+        }
 
         collector.start()
 

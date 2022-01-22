@@ -23,7 +23,6 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
 import com.irurueta.android.navigation.inertial.LocationService
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
-import com.irurueta.android.navigation.inertial.calibration.noise.AccumulatedMeasurementEstimator
 import com.irurueta.android.navigation.inertial.calibration.noise.GyroscopeNormEstimator
 import com.irurueta.android.navigation.inertial.test.LocationActivity
 import com.irurueta.android.navigation.inertial.toNEDPosition
@@ -64,21 +63,14 @@ class GyroscopeNormEstimatorTest {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val estimator = GyroscopeNormEstimator(
             context,
-            completedListener = object : AccumulatedMeasurementEstimator
-            .OnEstimationCompletedListener<GyroscopeNormEstimator> {
+            completedListener = { estimator ->
+                assertFalse(estimator.running)
 
-                override fun onEstimationCompleted(estimator: GyroscopeNormEstimator) {
-                    assertFalse(estimator.running)
-
-                    syncHelper.notifyAll { completed++ }
-                }
+                syncHelper.notifyAll { completed++ }
             },
-            unreliableListener = object :
-                AccumulatedMeasurementEstimator.OnUnreliableListener<GyroscopeNormEstimator> {
-                override fun onUnreliable(estimator: GyroscopeNormEstimator) {
-                    Log.d("GyroscopeNormEstimatorTest", "Sensor is unreliable")
-                    assertFalse(estimator.running)
-                }
+            unreliableListener = { estimator ->
+                Log.d("GyroscopeNormEstimatorTest", "Sensor is unreliable")
+                assertFalse(estimator.running)
             }
         )
 
@@ -174,21 +166,14 @@ class GyroscopeNormEstimatorTest {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val estimator = GyroscopeNormEstimator(
             context,
-            completedListener = object : AccumulatedMeasurementEstimator
-            .OnEstimationCompletedListener<GyroscopeNormEstimator> {
+            completedListener = { estimator ->
+                assertFalse(estimator.running)
 
-                override fun onEstimationCompleted(estimator: GyroscopeNormEstimator) {
-                    assertFalse(estimator.running)
-
-                    syncHelper.notifyAll { completed++ }
-                }
+                syncHelper.notifyAll { completed++ }
             },
-            unreliableListener = object :
-                AccumulatedMeasurementEstimator.OnUnreliableListener<GyroscopeNormEstimator> {
-                override fun onUnreliable(estimator: GyroscopeNormEstimator) {
-                    Log.d("GyroscopeNormEstimatorTest", "Sensor is unreliable")
-                    assertFalse(estimator.running)
-                }
+            unreliableListener = { estimator ->
+                Log.d("GyroscopeNormEstimatorTest", "Sensor is unreliable")
+                assertFalse(estimator.running)
             }
         )
 

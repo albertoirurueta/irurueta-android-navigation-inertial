@@ -21,8 +21,6 @@ import android.util.Log
 import androidx.test.platform.app.InstrumentationRegistry
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
 import com.irurueta.android.navigation.inertial.collectors.GravitySensorCollector
-import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
-import com.irurueta.android.navigation.inertial.collectors.SensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -65,30 +63,21 @@ class GravitySensorCollectorTest {
         val collector = GravitySensorCollector(
             context,
             SensorDelay.FASTEST,
-            measurementListener = object : GravitySensorCollector.OnMeasurementListener {
-                override fun onMeasurement(
-                    gx: Float,
-                    gy: Float,
-                    gz: Float,
-                    g: Double,
-                    timestamp: Long,
-                    accuracy: SensorAccuracy?
-                ) {
-                    Log.d(
-                        "GravitySensorCollectorTest",
-                        "onMeasurement - gx: $gx, gy: $gy, gz: $gz, g: $g, timestamp: $timestamp, "
-                                + "accuracy: $accuracy"
-                    )
+            measurementListener = { gx, gy, gz, g, timestamp, accuracy ->
+                Log.d(
+                    "GravitySensorCollectorTest",
+                    "onMeasurement - gx: $gx, gy: $gy, gz: $gz, g: $g, timestamp: $timestamp, "
+                            + "accuracy: $accuracy"
+                )
 
-                    syncHelper.notifyAll { measured++ }
-                }
-            },
-            accuracyChangedListener = object : SensorCollector.OnAccuracyChangedListener {
-                override fun onAccuracyChanged(accuracy: SensorAccuracy?) {
-                    Log.d("GravitySensorCollectorTest", "onAccuracyChanged - accuracy: $accuracy")
-                }
+                syncHelper.notifyAll { measured++ }
             }
-        )
+        ) { accuracy ->
+            Log.d(
+                "GravitySensorCollectorTest",
+                "onAccuracyChanged - accuracy: $accuracy"
+            )
+        }
 
         collector.start()
 

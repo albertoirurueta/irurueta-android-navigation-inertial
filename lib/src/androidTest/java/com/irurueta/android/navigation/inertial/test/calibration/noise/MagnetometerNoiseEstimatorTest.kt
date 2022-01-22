@@ -23,7 +23,6 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
 import com.irurueta.android.navigation.inertial.LocationService
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
-import com.irurueta.android.navigation.inertial.calibration.noise.AccumulatedTriadEstimator
 import com.irurueta.android.navigation.inertial.calibration.noise.MagnetometerNoiseEstimator
 import com.irurueta.android.navigation.inertial.test.LocationActivity
 import com.irurueta.android.navigation.inertial.toNEDPosition
@@ -65,20 +64,14 @@ class MagnetometerNoiseEstimatorTest {
     fun startAndStop_estimatesAccelerometerNoise() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val estimator = MagnetometerNoiseEstimator(context,
-            completedListener = object : AccumulatedTriadEstimator
-            .OnEstimationCompletedListener<MagnetometerNoiseEstimator> {
-                override fun onEstimationCompleted(estimator: MagnetometerNoiseEstimator) {
-                    assertFalse(estimator.running)
+            completedListener = { estimator ->
+                assertFalse(estimator.running)
 
-                    syncHelper.notifyAll { completed++ }
-                }
+                syncHelper.notifyAll { completed++ }
             },
-            unreliableListener = object :
-                AccumulatedTriadEstimator.OnUnreliableListener<MagnetometerNoiseEstimator> {
-                override fun onUnreliable(estimator: MagnetometerNoiseEstimator) {
-                    Log.d("MagnetometerNoiseEstimatorTest", "Sensor is unreliable")
-                    assertFalse(estimator.running)
-                }
+            unreliableListener = { estimator ->
+                Log.d("MagnetometerNoiseEstimatorTest", "Sensor is unreliable")
+                assertFalse(estimator.running)
             }
         )
 
@@ -182,20 +175,14 @@ class MagnetometerNoiseEstimatorTest {
     fun estimatedResult_whenDeviceStatic_returnsValueCloseToExpectedGravity() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val estimator = MagnetometerNoiseEstimator(context,
-            completedListener = object : AccumulatedTriadEstimator
-            .OnEstimationCompletedListener<MagnetometerNoiseEstimator> {
-                override fun onEstimationCompleted(estimator: MagnetometerNoiseEstimator) {
-                    assertFalse(estimator.running)
+            completedListener = { estimator ->
+                assertFalse(estimator.running)
 
-                    syncHelper.notifyAll { completed++ }
-                }
+                syncHelper.notifyAll { completed++ }
             },
-            unreliableListener = object :
-                AccumulatedTriadEstimator.OnUnreliableListener<MagnetometerNoiseEstimator> {
-                override fun onUnreliable(estimator: MagnetometerNoiseEstimator) {
-                    Log.d("MagnetometerNoiseEstimatorTest", "Sensor is unreliable")
-                    assertFalse(estimator.running)
-                }
+            unreliableListener = { estimator ->
+                Log.d("MagnetometerNoiseEstimatorTest", "Sensor is unreliable")
+                assertFalse(estimator.running)
             }
         )
 
