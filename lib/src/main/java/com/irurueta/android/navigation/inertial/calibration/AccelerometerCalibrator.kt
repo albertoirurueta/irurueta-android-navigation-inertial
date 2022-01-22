@@ -320,8 +320,8 @@ class AccelerometerCalibrator private constructor(
     /**
      * Indicates whether the interval detector has picked the first accelerometer measurement.
      */
-    private val isFirstMeasurement =
-        intervalDetector.numberOfProcessedMeasurements <= FIRST_MEASUREMENT
+    private val isFirstMeasurement
+        get() = intervalDetector.numberOfProcessedMeasurements <= FIRST_MEASUREMENT
 
     /**
      * Internal calibrator used to solve the calibration parameters once enough measurements are

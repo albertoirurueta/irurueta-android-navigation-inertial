@@ -17,29 +17,45 @@ package com.irurueta.android.navigation.inertial.calibration
 
 import android.content.Context
 import android.location.Location
+import android.os.SystemClock
 import androidx.test.core.app.ApplicationProvider
 import com.irurueta.algebra.Matrix
 import com.irurueta.android.navigation.inertial.GravityHelper
+import com.irurueta.android.navigation.inertial.calibration.intervals.IntervalDetector
+import com.irurueta.android.navigation.inertial.calibration.noise.GravityNormEstimator
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.GravitySensorCollector
+import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.navigation.inertial.getPrivateProperty
 import com.irurueta.android.navigation.inertial.setPrivateProperty
+import com.irurueta.android.navigation.inertial.toNEDPosition
+import com.irurueta.navigation.frames.CoordinateTransformation
+import com.irurueta.navigation.frames.FrameType
+import com.irurueta.navigation.frames.NEDFrame
+import com.irurueta.navigation.frames.converters.NEDtoECEFFrameConverter
 import com.irurueta.navigation.inertial.calibration.AccelerationTriad
+import com.irurueta.navigation.inertial.calibration.BodyKinematicsGenerator
+import com.irurueta.navigation.inertial.calibration.IMUErrors
 import com.irurueta.navigation.inertial.calibration.StandardDeviationBodyKinematics
+import com.irurueta.navigation.inertial.calibration.accelerometer.AccelerometerNonLinearCalibrator
 import com.irurueta.navigation.inertial.calibration.intervals.TriadStaticIntervalDetector
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.QualityScoreMapper
+import com.irurueta.navigation.inertial.estimators.ECEFKinematicsEstimator
 import com.irurueta.numerical.robust.RobustEstimatorMethod
 import com.irurueta.statistics.UniformRandomizer
 import com.irurueta.units.Acceleration
 import com.irurueta.units.AccelerationUnit
 import com.irurueta.units.Time
 import com.irurueta.units.TimeUnit
-import io.mockk.every
-import io.mockk.mockk
+import io.mockk.*
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import java.util.*
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 @RunWith(RobolectricTestRunner::class)
 class AccelerometerCalibratorTest {
@@ -5448,6 +5464,870 @@ class AccelerometerCalibratorTest {
         calibrator.robustStopThresholdFactor = ROBUST_STOP_THRESHOLD_FACTOR
     }
 
+    @Test
+    fun onInitializationStarted_whenNoListenerAvailable_makesNoAction() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        val intervalDetectorInitializationStartedListener: IntervalDetector.OnInitializationStartedListener? =
+            calibrator.getPrivateProperty("intervalDetectorInitializationStartedListener")
+        requireNotNull(intervalDetectorInitializationStartedListener)
+
+        val intervalDetector = mockk<IntervalDetector>()
+        intervalDetectorInitializationStartedListener.onInitializationStarted(intervalDetector)
+    }
+
+    @Test
+    fun onInitializationStarted_whenListenerAvailable_notifies() {
+        val initializationStartedListener =
+            mockk<AccelerometerCalibrator.OnInitializationStartedListener>(relaxUnitFun = true)
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(
+            context,
+            initializationStartedListener = initializationStartedListener
+        )
+
+        val intervalDetectorInitializationStartedListener: IntervalDetector.OnInitializationStartedListener? =
+            calibrator.getPrivateProperty("intervalDetectorInitializationStartedListener")
+        requireNotNull(intervalDetectorInitializationStartedListener)
+
+        val intervalDetector = mockk<IntervalDetector>()
+        intervalDetectorInitializationStartedListener.onInitializationStarted(intervalDetector)
+
+        verify(exactly = 1) { initializationStartedListener.onInitializationStarted(calibrator) }
+    }
+
+    @Test
+    fun onInitializationCompleted_whenNoListenerAvailable_setsGravityNorm() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        // check initial value
+        assertNull(calibrator.gravityNorm)
+
+        val intervalDetectorInitializationCompletedListener: IntervalDetector.OnInitializationCompletedListener? =
+            calibrator.getPrivateProperty("intervalDetectorInitializationCompletedListener")
+        requireNotNull(intervalDetectorInitializationCompletedListener)
+
+        val gravityNormEstimator: GravityNormEstimator? =
+            calibrator.getPrivateProperty("gravityNormEstimator")
+        requireNotNull(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        val gravityNorm = GravityHelper.getGravityNormForLocation(getLocation())
+        every { gravityNormEstimatorSpy.averageNorm }.returns(gravityNorm)
+        calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
+
+        val randomizer = UniformRandomizer()
+        val baseNoiseLevel = randomizer.nextDouble()
+        val intervalDetector = mockk<IntervalDetector>()
+        intervalDetectorInitializationCompletedListener.onInitializationCompleted(
+            intervalDetector,
+            baseNoiseLevel
+        )
+
+        // check
+        assertEquals(gravityNorm, calibrator.gravityNorm)
+    }
+
+    @Test
+    fun onInitializationCompleted_whenListenerAvailable_setsGravityNormAndNotifies() {
+        val initializationCompletedListener =
+            mockk<AccelerometerCalibrator.OnInitializationCompletedListener>(relaxUnitFun = true)
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(
+            context,
+            initializationCompletedListener = initializationCompletedListener
+        )
+
+        // check initial value
+        assertNull(calibrator.gravityNorm)
+
+        val intervalDetectorInitializationCompletedListener: IntervalDetector.OnInitializationCompletedListener? =
+            calibrator.getPrivateProperty("intervalDetectorInitializationCompletedListener")
+        requireNotNull(intervalDetectorInitializationCompletedListener)
+
+        val gravityNormEstimator: GravityNormEstimator? =
+            calibrator.getPrivateProperty("gravityNormEstimator")
+        requireNotNull(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        val gravityNorm = GravityHelper.getGravityNormForLocation(getLocation())
+        every { gravityNormEstimatorSpy.averageNorm }.returns(gravityNorm)
+        calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
+
+        val randomizer = UniformRandomizer()
+        val baseNoiseLevel = randomizer.nextDouble()
+        val intervalDetector = mockk<IntervalDetector>()
+        intervalDetectorInitializationCompletedListener.onInitializationCompleted(
+            intervalDetector,
+            baseNoiseLevel
+        )
+
+        // check
+        assertEquals(gravityNorm, calibrator.gravityNorm)
+
+        verify(exactly = 1) { initializationCompletedListener.onInitializationCompleted(calibrator) }
+    }
+
+    @Test
+    fun onError_whenNoListeners_stopsCollectorAndGravityNormEstimator() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        calibrator.setPrivateProperty("running", true)
+        assertTrue(calibrator.running)
+
+        val intervalDetector: IntervalDetector? = calibrator.getPrivateProperty("intervalDetector")
+        requireNotNull(intervalDetector)
+        val intervalDetectorSpy = spyk(intervalDetector)
+        calibrator.setPrivateProperty("intervalDetector", intervalDetectorSpy)
+
+        val gravityNormEstimator: GravityNormEstimator? =
+            calibrator.getPrivateProperty("gravityNormEstimator")
+        requireNotNull(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        every { gravityNormEstimatorSpy.running }.returns(true)
+        calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
+
+        val intervalDetectorErrorListener: IntervalDetector.OnErrorListener? =
+            calibrator.getPrivateProperty("intervalDetectorErrorListener")
+        requireNotNull(intervalDetectorErrorListener)
+
+        intervalDetectorErrorListener.onError(
+            intervalDetectorSpy,
+            IntervalDetector.ErrorReason.UNRELIABLE_SENSOR
+        )
+
+        // check
+        assertFalse(calibrator.running)
+        verify(exactly = 1) { intervalDetectorSpy.stop() }
+        verify(exactly = 1) { gravityNormEstimatorSpy.stop() }
+    }
+
+    @Test
+    fun onError_whenListenersAvailable_stopsAndNotifies() {
+        val errorListener = mockk<AccelerometerCalibrator.OnErrorListener>(relaxUnitFun = true)
+        val stoppedListener = mockk<AccelerometerCalibrator.OnStoppedListener>(relaxUnitFun = true)
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(
+            context,
+            errorListener = errorListener,
+            stoppedListener = stoppedListener
+        )
+
+        calibrator.setPrivateProperty("running", true)
+        assertTrue(calibrator.running)
+
+        val intervalDetector: IntervalDetector? = calibrator.getPrivateProperty("intervalDetector")
+        requireNotNull(intervalDetector)
+        val intervalDetectorSpy = spyk(intervalDetector)
+        calibrator.setPrivateProperty("intervalDetector", intervalDetectorSpy)
+
+        val gravityNormEstimator: GravityNormEstimator? =
+            calibrator.getPrivateProperty("gravityNormEstimator")
+        requireNotNull(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        every { gravityNormEstimatorSpy.running }.returns(true)
+        calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
+
+        val intervalDetectorErrorListener: IntervalDetector.OnErrorListener? =
+            calibrator.getPrivateProperty("intervalDetectorErrorListener")
+        requireNotNull(intervalDetectorErrorListener)
+
+        intervalDetectorErrorListener.onError(
+            intervalDetectorSpy,
+            IntervalDetector.ErrorReason.UNRELIABLE_SENSOR
+        )
+
+        // check
+        assertFalse(calibrator.running)
+        verify(exactly = 1) { intervalDetectorSpy.stop() }
+        verify(exactly = 1) { gravityNormEstimatorSpy.stop() }
+        verify(exactly = 1) {
+            errorListener.onError(
+                calibrator,
+                AccelerometerCalibrator.ErrorReason.UNRELIABLE_SENSOR
+            )
+        }
+        verify(exactly = 1) { stoppedListener.onStopped(calibrator) }
+    }
+
+    @Test
+    fun onDynamicIntervalDetected_addsOneMeasurement() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        assertTrue(calibrator.measurements.isEmpty())
+
+        val intervalDetectorDynamicIntervalDetectedListener: IntervalDetector.OnDynamicIntervalDetectedListener? =
+            calibrator.getPrivateProperty("intervalDetectorDynamicIntervalDetectedListener")
+        requireNotNull(intervalDetectorDynamicIntervalDetectedListener)
+
+        val intervalDetector = mockk<IntervalDetector>()
+        intervalDetectorDynamicIntervalDetectedListener.onDynamicIntervalDetected(
+            intervalDetector,
+            1.0,
+            2.0,
+            3.0,
+            4.0,
+            5.0,
+            6.0,
+            7.0,
+            8.0,
+            9.0,
+            10.0,
+            11.0,
+            12.0
+        )
+
+        assertEquals(1, calibrator.measurements.size)
+        val measurement = calibrator.measurements[0]
+        val kinematics = measurement.kinematics
+
+        assertEquals(7.0, kinematics.fx, 0.0)
+        assertEquals(8.0, kinematics.fy, 0.0)
+        assertEquals(9.0, kinematics.fz, 0.0)
+        assertEquals(0.0, kinematics.angularRateX, 0.0)
+        assertEquals(0.0, kinematics.angularRateY, 0.0)
+        assertEquals(0.0, kinematics.angularRateZ, 0.0)
+
+        val stdNorm = sqrt(10.0.pow(2.0) + 11.0.pow(2.0) + 12.0.pow(2.0))
+        assertEquals(stdNorm, measurement.specificForceStandardDeviation, 0.0)
+        assertEquals(0.0, measurement.angularRateStandardDeviation, 0.0)
+    }
+
+    @Test
+    fun onDynamicIntervalDetected_whenNewCalibrationMeasurementAvailable_notifies() {
+        val newCalibrationMeasurementAvailableListener =
+            mockk<AccelerometerCalibrator.OnNewCalibrationMeasurementAvailableListener>(relaxUnitFun = true)
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(
+            context,
+            newCalibrationMeasurementAvailableListener = newCalibrationMeasurementAvailableListener
+        )
+
+        val intervalDetectorDynamicIntervalDetectedListener: IntervalDetector.OnDynamicIntervalDetectedListener? =
+            calibrator.getPrivateProperty("intervalDetectorDynamicIntervalDetectedListener")
+        requireNotNull(intervalDetectorDynamicIntervalDetectedListener)
+
+        val intervalDetector = mockk<IntervalDetector>()
+        intervalDetectorDynamicIntervalDetectedListener.onDynamicIntervalDetected(
+            intervalDetector,
+            1.0,
+            2.0,
+            3.0,
+            4.0,
+            5.0,
+            6.0,
+            7.0,
+            8.0,
+            9.0,
+            10.0,
+            11.0,
+            12.0
+        )
+
+        assertEquals(1, calibrator.measurements.size)
+        val measurement = calibrator.measurements[0]
+
+        val measurementSize = calibrator.measurements.size
+        assertEquals(1, measurementSize)
+
+        val requiredMeasurements = calibrator.requiredMeasurements
+        assertEquals(13, requiredMeasurements)
+        val minimumRequiredMeasurements = calibrator.minimumRequiredMeasurements
+        assertEquals(13, minimumRequiredMeasurements)
+        val reqMeasurements = requiredMeasurements.coerceAtLeast(minimumRequiredMeasurements)
+
+        verify(exactly = 1) {
+            newCalibrationMeasurementAvailableListener.onNewCalibrationMeasurementAvailable(
+                calibrator,
+                measurement,
+                measurementSize,
+                reqMeasurements
+            )
+        }
+    }
+
+    @Test
+    fun onDynamicIntervalDetected_whenEnoughMeasurementsAndNotSolveCalibrator_stopsCollectorAndGravityNormEstimatorAndBuildInternalCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(
+            context,
+            location = location,
+            solveCalibrationWhenEnoughMeasurements = false
+        )
+
+        val requiredMeasurements = calibrator.requiredMeasurements
+        assertEquals(13, requiredMeasurements)
+        val minimumRequiredMeasurements = calibrator.minimumRequiredMeasurements
+        assertEquals(13, minimumRequiredMeasurements)
+        val reqMeasurements = requiredMeasurements.coerceAtLeast(minimumRequiredMeasurements)
+
+        val internalCalibrator1: AccelerometerNonLinearCalibrator? =
+            calibrator.getPrivateProperty("internalCalibrator")
+        assertNull(internalCalibrator1)
+
+        calibrator.setPrivateProperty("running", true)
+        assertTrue(calibrator.running)
+
+        val intervalDetector: IntervalDetector? = calibrator.getPrivateProperty("intervalDetector")
+        requireNotNull(intervalDetector)
+        val intervalDetectorSpy = spyk(intervalDetector)
+        calibrator.setPrivateProperty("intervalDetector", intervalDetectorSpy)
+
+        val gravityNormEstimator: GravityNormEstimator? =
+            calibrator.getPrivateProperty("gravityNormEstimator")
+        requireNotNull(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        every { gravityNormEstimatorSpy.running }.returns(true)
+        calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
+
+        val intervalDetectorDynamicIntervalDetectedListener: IntervalDetector.OnDynamicIntervalDetectedListener? =
+            calibrator.getPrivateProperty("intervalDetectorDynamicIntervalDetectedListener")
+        requireNotNull(intervalDetectorDynamicIntervalDetectedListener)
+
+        for (i in 1..reqMeasurements) {
+            intervalDetectorDynamicIntervalDetectedListener.onDynamicIntervalDetected(
+                intervalDetector,
+                1.0,
+                2.0,
+                3.0,
+                4.0,
+                5.0,
+                6.0,
+                7.0,
+                8.0,
+                9.0,
+                10.0,
+                11.0,
+                12.0
+            )
+        }
+
+        assertEquals(reqMeasurements, calibrator.measurements.size)
+        assertTrue(calibrator.running)
+        verify(exactly = 1) { intervalDetectorSpy.stop() }
+        verify(exactly = 1) { gravityNormEstimatorSpy.stop() }
+
+        val internalCalibrator2: AccelerometerNonLinearCalibrator? =
+            calibrator.getPrivateProperty("internalCalibrator")
+        assertNotNull(internalCalibrator2)
+    }
+
+    @Test
+    fun onDynamicIntervalDetected_whenListenersAvailable_notifies() {
+        val readyToSolveCalibrationListener =
+            mockk<AccelerometerCalibrator.OnReadyToSolveCalibrationListener>(relaxUnitFun = true)
+        val stoppedListener = mockk<AccelerometerCalibrator.OnStoppedListener>(relaxUnitFun = true)
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(
+            context,
+            location = location,
+            solveCalibrationWhenEnoughMeasurements = false,
+            readyToSolveCalibrationListener = readyToSolveCalibrationListener,
+            stoppedListener = stoppedListener
+        )
+
+        val requiredMeasurements = calibrator.requiredMeasurements
+        assertEquals(13, requiredMeasurements)
+        val minimumRequiredMeasurements = calibrator.minimumRequiredMeasurements
+        assertEquals(13, minimumRequiredMeasurements)
+        val reqMeasurements = requiredMeasurements.coerceAtLeast(minimumRequiredMeasurements)
+
+        val internalCalibrator1: AccelerometerNonLinearCalibrator? =
+            calibrator.getPrivateProperty("internalCalibrator")
+        assertNull(internalCalibrator1)
+
+        calibrator.setPrivateProperty("running", true)
+        assertTrue(calibrator.running)
+
+        val intervalDetector: IntervalDetector? = calibrator.getPrivateProperty("intervalDetector")
+        requireNotNull(intervalDetector)
+        val intervalDetectorSpy = spyk(intervalDetector)
+        calibrator.setPrivateProperty("intervalDetector", intervalDetectorSpy)
+
+        val gravityNormEstimator: GravityNormEstimator? =
+            calibrator.getPrivateProperty("gravityNormEstimator")
+        requireNotNull(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        every { gravityNormEstimatorSpy.running }.returns(true)
+        calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
+
+        val intervalDetectorDynamicIntervalDetectedListener: IntervalDetector.OnDynamicIntervalDetectedListener? =
+            calibrator.getPrivateProperty("intervalDetectorDynamicIntervalDetectedListener")
+        requireNotNull(intervalDetectorDynamicIntervalDetectedListener)
+
+        for (i in 1..reqMeasurements) {
+            intervalDetectorDynamicIntervalDetectedListener.onDynamicIntervalDetected(
+                intervalDetector,
+                1.0,
+                2.0,
+                3.0,
+                4.0,
+                5.0,
+                6.0,
+                7.0,
+                8.0,
+                9.0,
+                10.0,
+                11.0,
+                12.0
+            )
+        }
+
+        assertEquals(reqMeasurements, calibrator.measurements.size)
+        assertTrue(calibrator.running)
+        verify(exactly = 1) { readyToSolveCalibrationListener.onReadyToSolveCalibration(calibrator) }
+        verify(exactly = 1) { stoppedListener.onStopped(calibrator) }
+    }
+
+    @Test
+    fun onDynamicIntervalDetected_whenSolveCalibrationEnabled_solvesCalibration() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(
+            context,
+            location = location,
+            solveCalibrationWhenEnoughMeasurements = true
+        )
+
+        assertFalse(calibrator.isCommonAxisUsed)
+        assertFalse(calibrator.isGroundTruthInitialBias)
+
+        val nedPosition = location.toNEDPosition()
+
+        val requiredMeasurements = calibrator.requiredMeasurements
+        assertEquals(13, requiredMeasurements)
+        val minimumRequiredMeasurements = calibrator.minimumRequiredMeasurements
+        assertEquals(13, minimumRequiredMeasurements)
+        val reqMeasurements = requiredMeasurements.coerceAtLeast(minimumRequiredMeasurements)
+
+        val intervalDetector: IntervalDetector? = calibrator.getPrivateProperty("intervalDetector")
+        requireNotNull(intervalDetector)
+
+        val intervalDetectorDynamicIntervalDetectedListener: IntervalDetector.OnDynamicIntervalDetectedListener? =
+            calibrator.getPrivateProperty("intervalDetectorDynamicIntervalDetectedListener")
+        requireNotNull(intervalDetectorDynamicIntervalDetectedListener)
+
+        val ba = generateBa()
+        val bg = generateBg()
+        val ma = generateMaGeneral()
+        val mg = generateMg()
+        val gg = generateGg()
+
+        val accelNoiseRootPSD = 0.0
+        val gyroNoiseRootPSD = 0.0
+        val accelQuantLevel = 0.0
+        val gyroQuantLevel = 0.0
+
+        val errors = IMUErrors(
+            ba,
+            bg,
+            ma,
+            mg,
+            gg,
+            accelNoiseRootPSD,
+            gyroNoiseRootPSD,
+            accelQuantLevel,
+            gyroQuantLevel
+        )
+
+        val randomizer = UniformRandomizer()
+        val random = Random()
+
+        for (i in 1..reqMeasurements) {
+            val roll = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
+            val pitch = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
+            val yaw = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
+            val nedC = CoordinateTransformation(
+                roll,
+                pitch,
+                yaw,
+                FrameType.BODY_FRAME,
+                FrameType.LOCAL_NAVIGATION_FRAME
+            )
+
+            val nedFrame = NEDFrame(nedPosition, nedC)
+            val ecefFrame = NEDtoECEFFrameConverter.convertNEDtoECEFAndReturnNew(nedFrame)
+
+            val trueKinematics = ECEFKinematicsEstimator.estimateKinematicsAndReturnNew(
+                TIME_INTERVAL_SECONDS, ecefFrame, ecefFrame
+            )
+
+            val measuredKinematics = BodyKinematicsGenerator
+                .generate(TIME_INTERVAL_SECONDS, trueKinematics, errors, random)
+
+            intervalDetectorDynamicIntervalDetectedListener.onDynamicIntervalDetected(
+                intervalDetector,
+                1.0,
+                2.0,
+                3.0,
+                4.0,
+                5.0,
+                6.0,
+                measuredKinematics.fx,
+                measuredKinematics.fy,
+                measuredKinematics.fz,
+                ACCUMULATED_STD,
+                ACCUMULATED_STD,
+                ACCUMULATED_STD
+            )
+        }
+
+        assertNotNull(calibrator.estimatedMa)
+        assertNotNull(calibrator.estimatedSx)
+        assertNotNull(calibrator.estimatedSy)
+        assertNotNull(calibrator.estimatedSz)
+        assertNotNull(calibrator.estimatedMxy)
+        assertNotNull(calibrator.estimatedMxz)
+        assertNotNull(calibrator.estimatedMyx)
+        assertNotNull(calibrator.estimatedMyz)
+        assertNotNull(calibrator.estimatedMzx)
+        assertNotNull(calibrator.estimatedMzy)
+        assertNotNull(calibrator.estimatedCovariance)
+        assertNotNull(calibrator.estimatedChiSq)
+        assertNotNull(calibrator.estimatedMse)
+        assertNotNull(calibrator.estimatedBiasX)
+        assertNotNull(calibrator.estimatedBiasY)
+        assertNotNull(calibrator.estimatedBiasZ)
+        assertNotNull(calibrator.estimatedBiasXAsAcceleration)
+        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        assertTrue(calibrator.getEstimatedBiasXAsAcceleration(acceleration))
+        assertNotNull(calibrator.estimatedBiasYAsAcceleration)
+        assertTrue(calibrator.getEstimatedBiasYAsAcceleration(acceleration))
+        assertNotNull(calibrator.estimatedBiasZAsAcceleration)
+        assertTrue(calibrator.getEstimatedBiasZAsAcceleration(acceleration))
+        assertNotNull(calibrator.estimatedBiasAsTriad)
+        val triad = AccelerationTriad()
+        assertTrue(calibrator.getEstimatedBiasAsTriad(triad))
+        assertNotNull(calibrator.estimatedBiasStandardDeviationNorm)
+    }
+
+    @Test
+    fun onDynamicIntervalDetected_whenSolveCalibrationEnabledAndListenersAvailable_solvesCalibrationAndNotifies() {
+        val readyToSolveCalibrationListener =
+            mockk<AccelerometerCalibrator.OnReadyToSolveCalibrationListener>(relaxUnitFun = true)
+        val stoppedListener = mockk<AccelerometerCalibrator.OnStoppedListener>(relaxUnitFun = true)
+        val calibrationSolvingStartedListener =
+            mockk<AccelerometerCalibrator.OnCalibrationSolvingStartedListener>(relaxUnitFun = true)
+        val calibrationCompletedListener =
+            mockk<AccelerometerCalibrator.OnCalibrationCompletedListener>(relaxUnitFun = true)
+        val errorListener = mockk<AccelerometerCalibrator.OnErrorListener>(relaxUnitFun = true)
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(
+            context,
+            location = location,
+            solveCalibrationWhenEnoughMeasurements = true,
+            readyToSolveCalibrationListener = readyToSolveCalibrationListener,
+            stoppedListener = stoppedListener,
+            calibrationSolvingStartedListener = calibrationSolvingStartedListener,
+            calibrationCompletedListener = calibrationCompletedListener,
+            errorListener = errorListener
+        )
+
+        assertFalse(calibrator.isCommonAxisUsed)
+        assertFalse(calibrator.isGroundTruthInitialBias)
+
+        val nedPosition = location.toNEDPosition()
+
+        val requiredMeasurements = calibrator.requiredMeasurements
+        assertEquals(13, requiredMeasurements)
+        val minimumRequiredMeasurements = calibrator.minimumRequiredMeasurements
+        assertEquals(13, minimumRequiredMeasurements)
+        val reqMeasurements = requiredMeasurements.coerceAtLeast(minimumRequiredMeasurements)
+
+        val intervalDetector: IntervalDetector? = calibrator.getPrivateProperty("intervalDetector")
+        requireNotNull(intervalDetector)
+
+        val intervalDetectorDynamicIntervalDetectedListener: IntervalDetector.OnDynamicIntervalDetectedListener? =
+            calibrator.getPrivateProperty("intervalDetectorDynamicIntervalDetectedListener")
+        requireNotNull(intervalDetectorDynamicIntervalDetectedListener)
+
+        val ba = generateBa()
+        val bg = generateBg()
+        val ma = generateMaGeneral()
+        val mg = generateMg()
+        val gg = generateGg()
+
+        val accelNoiseRootPSD = 0.0
+        val gyroNoiseRootPSD = 0.0
+        val accelQuantLevel = 0.0
+        val gyroQuantLevel = 0.0
+
+        val errors = IMUErrors(
+            ba,
+            bg,
+            ma,
+            mg,
+            gg,
+            accelNoiseRootPSD,
+            gyroNoiseRootPSD,
+            accelQuantLevel,
+            gyroQuantLevel
+        )
+
+        val randomizer = UniformRandomizer()
+        val random = Random()
+
+        for (i in 1..reqMeasurements) {
+            val roll = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
+            val pitch = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
+            val yaw = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
+            val nedC = CoordinateTransformation(
+                roll,
+                pitch,
+                yaw,
+                FrameType.BODY_FRAME,
+                FrameType.LOCAL_NAVIGATION_FRAME
+            )
+
+            val nedFrame = NEDFrame(nedPosition, nedC)
+            val ecefFrame = NEDtoECEFFrameConverter.convertNEDtoECEFAndReturnNew(nedFrame)
+
+            val trueKinematics = ECEFKinematicsEstimator.estimateKinematicsAndReturnNew(
+                TIME_INTERVAL_SECONDS, ecefFrame, ecefFrame
+            )
+
+            val measuredKinematics = BodyKinematicsGenerator
+                .generate(TIME_INTERVAL_SECONDS, trueKinematics, errors, random)
+
+            intervalDetectorDynamicIntervalDetectedListener.onDynamicIntervalDetected(
+                intervalDetector,
+                1.0,
+                2.0,
+                3.0,
+                4.0,
+                5.0,
+                6.0,
+                measuredKinematics.fx,
+                measuredKinematics.fy,
+                measuredKinematics.fz,
+                ACCUMULATED_STD,
+                ACCUMULATED_STD,
+                ACCUMULATED_STD
+            )
+        }
+
+        assertNotNull(calibrator.estimatedMa)
+        assertNotNull(calibrator.estimatedSx)
+        assertNotNull(calibrator.estimatedSy)
+        assertNotNull(calibrator.estimatedSz)
+        assertNotNull(calibrator.estimatedMxy)
+        assertNotNull(calibrator.estimatedMxz)
+        assertNotNull(calibrator.estimatedMyx)
+        assertNotNull(calibrator.estimatedMyz)
+        assertNotNull(calibrator.estimatedMzx)
+        assertNotNull(calibrator.estimatedMzy)
+        assertNotNull(calibrator.estimatedCovariance)
+        assertNotNull(calibrator.estimatedChiSq)
+        assertNotNull(calibrator.estimatedMse)
+        assertNotNull(calibrator.estimatedBiasX)
+        assertNotNull(calibrator.estimatedBiasY)
+        assertNotNull(calibrator.estimatedBiasZ)
+        assertNotNull(calibrator.estimatedBiasXAsAcceleration)
+        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        assertTrue(calibrator.getEstimatedBiasXAsAcceleration(acceleration))
+        assertNotNull(calibrator.estimatedBiasYAsAcceleration)
+        assertTrue(calibrator.getEstimatedBiasYAsAcceleration(acceleration))
+        assertNotNull(calibrator.estimatedBiasZAsAcceleration)
+        assertTrue(calibrator.getEstimatedBiasZAsAcceleration(acceleration))
+        assertNotNull(calibrator.estimatedBiasAsTriad)
+        val triad = AccelerationTriad()
+        assertTrue(calibrator.getEstimatedBiasAsTriad(triad))
+        assertNotNull(calibrator.estimatedBiasStandardDeviationNorm)
+
+        verify(exactly = 1) { readyToSolveCalibrationListener.onReadyToSolveCalibration(calibrator) }
+        verify(exactly = 1) { stoppedListener.onStopped(calibrator) }
+        verify(exactly = 1) {
+            calibrationSolvingStartedListener.onCalibrationSolvingStarted(
+                calibrator
+            )
+        }
+        verify(exactly = 1) { calibrationCompletedListener.onCalibrationCompleted(calibrator) }
+        verify { errorListener wasNot Called }
+    }
+
+    @Test
+    fun onMeasurement_whenFirstMeasurement_updatesInitialBiases() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        assertNull(calibrator.initialBiasX)
+        assertNull(calibrator.initialBiasY)
+        assertNull(calibrator.initialBiasZ)
+
+        val intervalDetector: IntervalDetector? = calibrator.getPrivateProperty("intervalDetector")
+        requireNotNull(intervalDetector)
+        val intervalDetectorSpy = spyk(intervalDetector)
+        every { intervalDetectorSpy.numberOfProcessedMeasurements }.returns(0)
+        calibrator.setPrivateProperty("intervalDetector", intervalDetectorSpy)
+
+        val intervalDetectorMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
+            calibrator.getPrivateProperty("intervalDetectorMeasurementListener")
+        requireNotNull(intervalDetectorMeasurementListener)
+
+        intervalDetectorMeasurementListener.onMeasurement(
+            1.0f,
+            2.0f,
+            3.0f,
+            4.0f,
+            5.0f,
+            6.0f,
+            SystemClock.elapsedRealtimeNanos(),
+            SensorAccuracy.HIGH
+        )
+
+        // check
+        val initialBiasX = calibrator.initialBiasX
+        requireNotNull(initialBiasX)
+        val initialBiasY = calibrator.initialBiasY
+        requireNotNull(initialBiasY)
+        val initialBiasZ = calibrator.initialBiasZ
+        requireNotNull(initialBiasZ)
+        assertEquals(4.0, initialBiasX, 0.0)
+        assertEquals(5.0, initialBiasY, 0.0)
+        assertEquals(6.0, initialBiasZ, 0.0)
+    }
+
+    @Test
+    fun onMeasurement_whenFirstMeasurementAndNoBias_updatesInitialBiases() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        assertNull(calibrator.initialBiasX)
+        assertNull(calibrator.initialBiasY)
+        assertNull(calibrator.initialBiasZ)
+
+        val intervalDetector: IntervalDetector? = calibrator.getPrivateProperty("intervalDetector")
+        requireNotNull(intervalDetector)
+        val intervalDetectorSpy = spyk(intervalDetector)
+        every { intervalDetectorSpy.numberOfProcessedMeasurements }.returns(0)
+        calibrator.setPrivateProperty("intervalDetector", intervalDetectorSpy)
+
+        val intervalDetectorMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
+            calibrator.getPrivateProperty("intervalDetectorMeasurementListener")
+        requireNotNull(intervalDetectorMeasurementListener)
+
+        intervalDetectorMeasurementListener.onMeasurement(
+            1.0f,
+            2.0f,
+            3.0f,
+            null,
+            null,
+            null,
+            SystemClock.elapsedRealtimeNanos(),
+            SensorAccuracy.HIGH
+        )
+
+        // check
+        val initialBiasX = calibrator.initialBiasX
+        requireNotNull(initialBiasX)
+        val initialBiasY = calibrator.initialBiasY
+        requireNotNull(initialBiasY)
+        val initialBiasZ = calibrator.initialBiasZ
+        requireNotNull(initialBiasZ)
+        assertEquals(0.0, initialBiasX, 0.0)
+        assertEquals(0.0, initialBiasY, 0.0)
+        assertEquals(0.0, initialBiasZ, 0.0)
+    }
+
+    @Test
+    fun onMeasurement_whenFirstMeasurementAndListener_updatesInitialBiasesAndNotifies() {
+        val initialBiasAvailableListener =
+            mockk<AccelerometerCalibrator.OnInitialBiasAvailableListener>(relaxUnitFun = true)
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(
+            context,
+            initialBiasAvailableListener = initialBiasAvailableListener
+        )
+
+        assertNull(calibrator.initialBiasX)
+        assertNull(calibrator.initialBiasY)
+        assertNull(calibrator.initialBiasZ)
+
+        val intervalDetector: IntervalDetector? = calibrator.getPrivateProperty("intervalDetector")
+        requireNotNull(intervalDetector)
+        val intervalDetectorSpy = spyk(intervalDetector)
+        every { intervalDetectorSpy.numberOfProcessedMeasurements }.returns(0)
+        calibrator.setPrivateProperty("intervalDetector", intervalDetectorSpy)
+
+        val intervalDetectorMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
+            calibrator.getPrivateProperty("intervalDetectorMeasurementListener")
+        requireNotNull(intervalDetectorMeasurementListener)
+
+        intervalDetectorMeasurementListener.onMeasurement(
+            1.0f,
+            2.0f,
+            3.0f,
+            null,
+            null,
+            null,
+            SystemClock.elapsedRealtimeNanos(),
+            SensorAccuracy.HIGH
+        )
+
+        // check
+        val initialBiasX = calibrator.initialBiasX
+        requireNotNull(initialBiasX)
+        val initialBiasY = calibrator.initialBiasY
+        requireNotNull(initialBiasY)
+        val initialBiasZ = calibrator.initialBiasZ
+        requireNotNull(initialBiasZ)
+        assertEquals(0.0, initialBiasX, 0.0)
+        assertEquals(0.0, initialBiasY, 0.0)
+        assertEquals(0.0, initialBiasZ, 0.0)
+
+        verify(exactly = 1) {
+            initialBiasAvailableListener.onInitialBiasAvailable(
+                calibrator,
+                0.0,
+                0.0,
+                0.0
+            )
+        }
+    }
+
+    @Test
+    fun onMeasurement_whenNotFirstMeasurement_makesNoAction() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        assertNull(calibrator.initialBiasX)
+        assertNull(calibrator.initialBiasY)
+        assertNull(calibrator.initialBiasZ)
+
+        val intervalDetector: IntervalDetector? = calibrator.getPrivateProperty("intervalDetector")
+        requireNotNull(intervalDetector)
+        val intervalDetectorSpy = spyk(intervalDetector)
+        every { intervalDetectorSpy.numberOfProcessedMeasurements }.returns(2)
+        calibrator.setPrivateProperty("intervalDetector", intervalDetectorSpy)
+
+        val intervalDetectorMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
+            calibrator.getPrivateProperty("intervalDetectorMeasurementListener")
+        requireNotNull(intervalDetectorMeasurementListener)
+
+        intervalDetectorMeasurementListener.onMeasurement(
+            1.0f,
+            2.0f,
+            3.0f,
+            4.0f,
+            5.0f,
+            6.0f,
+            SystemClock.elapsedRealtimeNanos(),
+            SensorAccuracy.HIGH
+        )
+
+        // check
+        assertNull(calibrator.initialBiasX)
+        assertNull(calibrator.initialBiasY)
+        assertNull(calibrator.initialBiasZ)
+    }
+
+    // TODO: gravityNormCompletedListener
+
     private companion object {
         const val MA_SIZE = 3
 
@@ -5459,8 +6339,14 @@ class AccelerometerCalibratorTest {
 
         const val BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD = 1e-5
 
-        const val MIN_ANGLE_DEGREES = -90.0
-        const val MAX_ANGLE_DEGREES = 90.0
+        const val MIN_LATITUDE_DEGREES = -90.0
+        const val MAX_LATITUDE_DEGREES = 90.0
+
+        const val MIN_LONGITUDE_DEGREES = -180.0
+        const val MAX_LONGITUDE_DEGREES = 180.0
+
+        const val MIN_ANGLE_DEGREES = -180.0
+        const val MAX_ANGLE_DEGREES = 180.0
 
         const val MIN_HEIGHT = -100.0
         const val MAX_HEIGHT = 3000.0
@@ -5481,10 +6367,19 @@ class AccelerometerCalibratorTest {
 
         const val ROBUST_STOP_THRESHOLD_FACTOR = 1e-3
 
+        const val TIME_INTERVAL_SECONDS = 0.02
+
+        const val ACCUMULATED_STD = 0.007
+
+        const val MICRO_G_TO_METERS_PER_SECOND_SQUARED = 9.80665E-6
+
+        const val DEG_TO_RAD = 0.01745329252
+
         fun getLocation(): Location {
             val randomizer = UniformRandomizer()
-            val latitudeDegrees = randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES)
-            val longitudeDegrees = randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES)
+            val latitudeDegrees = randomizer.nextDouble(MIN_LATITUDE_DEGREES, MAX_LATITUDE_DEGREES)
+            val longitudeDegrees =
+                randomizer.nextDouble(MIN_LONGITUDE_DEGREES, MAX_LONGITUDE_DEGREES)
             val height = randomizer.nextDouble(MIN_HEIGHT, MAX_HEIGHT)
 
             val location = mockk<Location>()
@@ -5493,6 +6388,66 @@ class AccelerometerCalibratorTest {
             every { location.altitude }.returns(height)
 
             return location
+        }
+
+        fun generateBa(): Matrix {
+            return Matrix.newFromArray(
+                doubleArrayOf(
+                    900 * MICRO_G_TO_METERS_PER_SECOND_SQUARED,
+                    -1300 * MICRO_G_TO_METERS_PER_SECOND_SQUARED,
+                    800 * MICRO_G_TO_METERS_PER_SECOND_SQUARED
+                )
+            )
+        }
+
+        fun generateBg(): Matrix {
+            return Matrix.newFromArray(
+                doubleArrayOf(
+                    -9 * DEG_TO_RAD / 3600.0,
+                    13 * DEG_TO_RAD / 3600.0,
+                    -8 * DEG_TO_RAD / 3600.0
+                )
+            )
+        }
+
+        private fun generateMaGeneral(): Matrix {
+            val result = Matrix(3, 3)
+            result.fromArray(
+                doubleArrayOf(
+                    500e-6, -300e-6, 200e-6,
+                    -150e-6, -600e-6, 250e-6,
+                    -250e-6, 100e-6, 450e-6
+                ), false
+            )
+
+            return result
+        }
+
+        fun generateMg(): Matrix {
+            val result = Matrix(3, 3)
+            result.fromArray(
+                doubleArrayOf(
+                    400e-6, -300e-6, 250e-6,
+                    0.0, -300e-6, -150e-6,
+                    0.0, 0.0, -350e-6
+                ), false
+            )
+
+            return result
+        }
+
+        fun generateGg(): Matrix {
+            val result = Matrix(3, 3)
+            val tmp = DEG_TO_RAD / (3600 * 9.80665)
+            result.fromArray(
+                doubleArrayOf(
+                    0.9 * tmp, -1.1 * tmp, -0.6 * tmp,
+                    -0.5 * tmp, 1.9 * tmp, -1.6 * tmp,
+                    0.3 * tmp, 1.1 * tmp, -1.3 * tmp
+                ), false
+            )
+
+            return result
         }
     }
 }
