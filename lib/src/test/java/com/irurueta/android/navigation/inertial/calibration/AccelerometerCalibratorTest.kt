@@ -5262,11 +5262,19 @@ class AccelerometerCalibratorTest {
     }
 
     @Test(expected = IllegalArgumentException::class)
-    fun robustConfidence_whenInvalid_throwsIllegalArgumentException() {
+    fun robustConfidence_whenInvalidLowerBound_throwsIllegalArgumentException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = AccelerometerCalibrator(context)
 
         calibrator.robustConfidence = -1.0
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun robustConfidence_whenInvalidUpperBound_throwsIllegalArgumentException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        calibrator.robustConfidence = 2.0
     }
 
     @Test(expected = IllegalStateException::class)
@@ -5695,6 +5703,8 @@ class AccelerometerCalibratorTest {
         val stdNorm = sqrt(10.0.pow(2.0) + 11.0.pow(2.0) + 12.0.pow(2.0))
         assertEquals(stdNorm, measurement.specificForceStandardDeviation, 0.0)
         assertEquals(0.0, measurement.angularRateStandardDeviation, 0.0)
+
+        assertFalse(calibrator.isReadyToSolveCalibration)
     }
 
     @Test
@@ -5748,6 +5758,8 @@ class AccelerometerCalibratorTest {
                 reqMeasurements
             )
         }
+
+        assertFalse(calibrator.isReadyToSolveCalibration)
     }
 
     @Test
@@ -5815,6 +5827,8 @@ class AccelerometerCalibratorTest {
         val internalCalibrator2: AccelerometerNonLinearCalibrator? =
             calibrator.getPrivateProperty("internalCalibrator")
         assertNotNull(internalCalibrator2)
+
+        assertTrue(calibrator.isReadyToSolveCalibration)
     }
 
     @Test
@@ -5883,6 +5897,8 @@ class AccelerometerCalibratorTest {
         assertTrue(calibrator.running)
         verify(exactly = 1) { readyToSolveCalibrationListener.onReadyToSolveCalibration(calibrator) }
         verify(exactly = 1) { stoppedListener.onStopped(calibrator) }
+
+        assertTrue(calibrator.isReadyToSolveCalibration)
     }
 
     @Test
@@ -6005,6 +6021,8 @@ class AccelerometerCalibratorTest {
         val triad = AccelerationTriad()
         assertTrue(calibrator.getEstimatedBiasAsTriad(triad))
         assertNotNull(calibrator.estimatedBiasStandardDeviationNorm)
+
+        assertTrue(calibrator.isReadyToSolveCalibration)
     }
 
     @Test
@@ -6150,6 +6168,8 @@ class AccelerometerCalibratorTest {
         }
         verify(exactly = 1) { calibrationCompletedListener.onCalibrationCompleted(calibrator) }
         verify { errorListener wasNot Called }
+
+        assertTrue(calibrator.isReadyToSolveCalibration)
     }
 
     @Test
@@ -7299,7 +7319,11 @@ class AccelerometerCalibratorTest {
         assertTrue(calibrator.getGravityNormStandardDeviationAsAcceleration(acceleration))
         assertEquals(value, acceleration.value.toDouble(), 0.0)
         assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, acceleration.unit)
-        verify(exactly = 1) { gravityNormEstimatorSpy.getNormStandardDeviationAsMeasurement(acceleration) }
+        verify(exactly = 1) {
+            gravityNormEstimatorSpy.getNormStandardDeviationAsMeasurement(
+                acceleration
+            )
+        }
     }
 
     @Test
@@ -7376,7 +7400,219 @@ class AccelerometerCalibratorTest {
         assertNull(calibrator.gravityRootPsd)
     }
 
-    // TODO: start
+    @Test
+    fun start_whenNotRunningAndGravityNormNotEstimated_resetsAndStartsIntervalDetector() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context, location = location)
+
+        assertFalse(calibrator.running)
+        assertFalse(calibrator.isGravityNormEstimated)
+
+        val gravityNorm = GravityHelper.getGravityNormForLocation(location)
+        calibrator.setPrivateProperty("gravityNorm", gravityNorm)
+
+        val measurements = calibrator.measurements
+        val measurementsSpy = spyk(measurements)
+        calibrator.setPrivateProperty("measurements", measurementsSpy)
+
+        calibrator.setPrivateProperty("resultUnreliable", true)
+        calibrator.setPrivateProperty("initialBiasX", 0.0)
+        calibrator.setPrivateProperty("initialBiasY", 0.0)
+        calibrator.setPrivateProperty("initialBiasZ", 0.0)
+
+        val internalCalibrator = mockk<AccelerometerNonLinearCalibrator>()
+        calibrator.setPrivateProperty("internalCalibrator", internalCalibrator)
+
+        val gravityNormEstimator: GravityNormEstimator? =
+            calibrator.getPrivateProperty("gravityNormEstimator")
+        requireNotNull(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
+
+        val intervalDetector: IntervalDetector? = calibrator.getPrivateProperty("intervalDetector")
+        requireNotNull(intervalDetector)
+        val intervalDetectorSpy = spyk(intervalDetector)
+        justRun { intervalDetectorSpy.start() }
+        calibrator.setPrivateProperty("intervalDetector", intervalDetectorSpy)
+
+        calibrator.start()
+
+        // check
+        assertNull(calibrator.gravityNorm)
+        verify(exactly = 1) { measurementsSpy.clear() }
+        assertFalse(calibrator.resultUnreliable)
+        assertNull(calibrator.initialBiasX)
+        assertNull(calibrator.initialBiasY)
+        assertNull(calibrator.initialBiasZ)
+        assertNull(calibrator.getPrivateProperty("internalCalibrator"))
+
+        assertTrue(calibrator.running)
+
+        verify { gravityNormEstimatorSpy wasNot Called }
+        verify(exactly = 1) { intervalDetectorSpy.start() }
+    }
+
+    @Test
+    fun start_whenNotRunningAndGravityNormEstimated_resetsAndStartsIntervalDetector() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        assertFalse(calibrator.running)
+        assertTrue(calibrator.isGravityNormEstimated)
+
+        val gravityNorm = GravityHelper.getGravityNormForLocation(getLocation())
+        calibrator.setPrivateProperty("gravityNorm", gravityNorm)
+
+        val measurements = calibrator.measurements
+        val measurementsSpy = spyk(measurements)
+        calibrator.setPrivateProperty("measurements", measurementsSpy)
+
+        calibrator.setPrivateProperty("resultUnreliable", true)
+        calibrator.setPrivateProperty("initialBiasX", 0.0)
+        calibrator.setPrivateProperty("initialBiasY", 0.0)
+        calibrator.setPrivateProperty("initialBiasZ", 0.0)
+
+        val internalCalibrator = mockk<AccelerometerNonLinearCalibrator>()
+        calibrator.setPrivateProperty("internalCalibrator", internalCalibrator)
+
+        val gravityNormEstimator: GravityNormEstimator? =
+            calibrator.getPrivateProperty("gravityNormEstimator")
+        requireNotNull(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        justRun { gravityNormEstimatorSpy.start() }
+        calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
+
+        val intervalDetector: IntervalDetector? = calibrator.getPrivateProperty("intervalDetector")
+        requireNotNull(intervalDetector)
+        val intervalDetectorSpy = spyk(intervalDetector)
+        justRun { intervalDetectorSpy.start() }
+        calibrator.setPrivateProperty("intervalDetector", intervalDetectorSpy)
+
+        calibrator.start()
+
+        // check
+        assertNull(calibrator.gravityNorm)
+        verify(exactly = 1) { measurementsSpy.clear() }
+        assertFalse(calibrator.resultUnreliable)
+        assertNull(calibrator.initialBiasX)
+        assertNull(calibrator.initialBiasY)
+        assertNull(calibrator.initialBiasZ)
+        assertNull(calibrator.getPrivateProperty("internalCalibrator"))
+
+        assertTrue(calibrator.running)
+
+        verify(exactly = 1) { gravityNormEstimatorSpy.start() }
+        verify(exactly = 1) { intervalDetectorSpy.start() }
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun start_whenRunning_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        assertFalse(calibrator.running)
+
+        calibrator.start()
+
+        assertTrue(calibrator.running)
+
+        calibrator.start()
+    }
+
+    @Test
+    fun stop_whenGravityNormEstimatorNotRunning_stopsIntervalDetector() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        val intervalDetector: IntervalDetector? = calibrator.getPrivateProperty("intervalDetector")
+        requireNotNull(intervalDetector)
+        val intervalDetectorSpy = spyk(intervalDetector)
+        justRun { intervalDetectorSpy.stop() }
+        calibrator.setPrivateProperty("intervalDetector", intervalDetectorSpy)
+
+        val gravityNormEstimator: GravityNormEstimator? =
+            calibrator.getPrivateProperty("gravityNormEstimator")
+        requireNotNull(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
+
+        calibrator.setPrivateProperty("running", true)
+        assertTrue(calibrator.running)
+
+        calibrator.stop()
+
+        assertFalse(calibrator.running)
+        verify(exactly = 1) { intervalDetectorSpy.stop() }
+        verify(exactly = 1) { gravityNormEstimatorSpy.running }
+        verify(exactly = 0) { gravityNormEstimatorSpy.stop() }
+        assertFalse(gravityNormEstimatorSpy.running)
+    }
+
+    @Test
+    fun stop_whenGravityNormEstimatorRunning_stopsIntervalDetector() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        val intervalDetector: IntervalDetector? = calibrator.getPrivateProperty("intervalDetector")
+        requireNotNull(intervalDetector)
+        val intervalDetectorSpy = spyk(intervalDetector)
+        justRun { intervalDetectorSpy.stop() }
+        calibrator.setPrivateProperty("intervalDetector", intervalDetectorSpy)
+
+        val gravityNormEstimator: GravityNormEstimator? =
+            calibrator.getPrivateProperty("gravityNormEstimator")
+        requireNotNull(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        every { gravityNormEstimatorSpy.running }.returns(true)
+        calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
+
+        calibrator.setPrivateProperty("running", true)
+        assertTrue(calibrator.running)
+
+        calibrator.stop()
+
+        assertFalse(calibrator.running)
+        verify(exactly = 1) { intervalDetectorSpy.stop() }
+        verify(exactly = 1) { gravityNormEstimatorSpy.running }
+        verify(exactly = 1) { gravityNormEstimatorSpy.stop() }
+        assertTrue(gravityNormEstimatorSpy.running)
+    }
+
+    @Test
+    fun stop_whenListenerAvailable_notifies() {
+        val stoppedListener = mockk<AccelerometerCalibrator.OnStoppedListener>(relaxUnitFun = true)
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context, stoppedListener = stoppedListener)
+
+        val intervalDetector: IntervalDetector? = calibrator.getPrivateProperty("intervalDetector")
+        requireNotNull(intervalDetector)
+        val intervalDetectorSpy = spyk(intervalDetector)
+        justRun { intervalDetectorSpy.stop() }
+        calibrator.setPrivateProperty("intervalDetector", intervalDetectorSpy)
+
+        val gravityNormEstimator: GravityNormEstimator? =
+            calibrator.getPrivateProperty("gravityNormEstimator")
+        requireNotNull(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
+
+        calibrator.setPrivateProperty("running", true)
+        assertTrue(calibrator.running)
+
+        calibrator.stop()
+
+        assertFalse(calibrator.running)
+        verify(exactly = 1) { intervalDetectorSpy.stop() }
+        verify(exactly = 1) { gravityNormEstimatorSpy.running }
+        verify(exactly = 0) { gravityNormEstimatorSpy.stop() }
+        verify(exactly = 1) { stoppedListener.onStopped(calibrator) }
+        assertFalse(gravityNormEstimatorSpy.running)
+    }
+
+
+    // TODO: calibrate (with and without listener, and with numerical error)
+    // TODO: build internal calibrator
 
     private companion object {
         const val MA_SIZE = 3
