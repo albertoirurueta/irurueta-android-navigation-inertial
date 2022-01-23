@@ -836,7 +836,7 @@ class AccelerometerCalibrator private constructor(
      * @param result instance where result will be stored.
      * @return true if result is available, false otherwise.
      */
-    fun getThresholdAsMeasurement(result: Acceleration): Boolean {
+    fun getThresholdAsAcceleration(result: Acceleration): Boolean {
         return intervalDetector.getThresholdAsMeasurement(result)
     }
 
@@ -1348,8 +1348,12 @@ class AccelerometerCalibrator private constructor(
      * Gets estimated average gravity norm as Acceleration.
      * This is only available if no location is provided and initialization has completed.
      */
-    fun getAverageNormAsAcceleration(result: Acceleration): Boolean {
-        return gravityNormEstimator.getAverageNormAsMeasurement(result)
+    fun getAverageGravityNormAsAcceleration(result: Acceleration): Boolean {
+        return if (isGravityNormEstimated) {
+            gravityNormEstimator.getAverageNormAsMeasurement(result)
+        } else {
+            false
+        }
     }
 
     /**
@@ -1394,7 +1398,11 @@ class AccelerometerCalibrator private constructor(
      * @return true i result is available, false otherwise.
      */
     fun getGravityNormStandardDeviationAsAcceleration(result: Acceleration): Boolean {
-        return gravityNormEstimator.getNormStandardDeviationAsMeasurement(result)
+        return if (isGravityNormEstimated) {
+            gravityNormEstimator.getNormStandardDeviationAsMeasurement(result)
+        } else {
+            false
+        }
     }
 
     /**
@@ -1402,14 +1410,22 @@ class AccelerometerCalibrator private constructor(
      * This is only available if no location is provided and initialization has completed.
      */
     val gravityPsd
-        get() = gravityNormEstimator.psd
+        get() = if (isGravityNormEstimated) {
+            gravityNormEstimator.psd
+        } else {
+            null
+        }
 
     /**
      * Gets root PSD (Power Spectral Density) of gravity norm expressed in (m * s^-1.5).
      * This is only available if no location is provided and initialization has completed.
      */
     val gravityRootPsd
-        get() = gravityNormEstimator.rootPsd
+        get() = if (isGravityNormEstimated) {
+            gravityNormEstimator.rootPsd
+        } else {
+            null
+        }
 
     /**
      * Gets estimated accelerometer scale factors and cross coupling errors, or null if not

@@ -145,7 +145,7 @@ class AccelerometerCalibratorTest {
         assertNull(calibrator.baseNoiseLevelRootPsd)
         assertNull(calibrator.threshold)
         assertNull(calibrator.thresholdAsAcceleration)
-        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
+        assertFalse(calibrator.getThresholdAsAcceleration(acceleration))
         assertNull(calibrator.averageTimeInterval)
         assertNull(calibrator.averageTimeIntervalAsTime)
         val time = Time(0.0, TimeUnit.SECOND)
@@ -204,7 +204,7 @@ class AccelerometerCalibratorTest {
         )
         assertNull(calibrator.averageGravityNorm)
         assertNull(calibrator.averageGravityNormAsAcceleration)
-        assertFalse(calibrator.getAverageNormAsAcceleration(acceleration))
+        assertFalse(calibrator.getAverageGravityNormAsAcceleration(acceleration))
         assertNull(calibrator.gravityNormVariance)
         assertNull(calibrator.gravityNormStandardDeviation)
         assertNull(calibrator.gravityNormStandardDeviationAsAcceleration)
@@ -327,7 +327,7 @@ class AccelerometerCalibratorTest {
         assertNull(calibrator.baseNoiseLevelRootPsd)
         assertNull(calibrator.threshold)
         assertNull(calibrator.thresholdAsAcceleration)
-        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
+        assertFalse(calibrator.getThresholdAsAcceleration(acceleration))
         assertNull(calibrator.averageTimeInterval)
         assertNull(calibrator.averageTimeIntervalAsTime)
         val time = Time(0.0, TimeUnit.SECOND)
@@ -386,7 +386,7 @@ class AccelerometerCalibratorTest {
         )
         assertNull(calibrator.averageGravityNorm)
         assertNull(calibrator.averageGravityNormAsAcceleration)
-        assertFalse(calibrator.getAverageNormAsAcceleration(acceleration))
+        assertFalse(calibrator.getAverageGravityNormAsAcceleration(acceleration))
         assertNull(calibrator.gravityNormVariance)
         assertNull(calibrator.gravityNormStandardDeviation)
         assertNull(calibrator.gravityNormStandardDeviationAsAcceleration)
@@ -510,7 +510,7 @@ class AccelerometerCalibratorTest {
         assertNull(calibrator.baseNoiseLevelRootPsd)
         assertNull(calibrator.threshold)
         assertNull(calibrator.thresholdAsAcceleration)
-        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
+        assertFalse(calibrator.getThresholdAsAcceleration(acceleration))
         assertNull(calibrator.averageTimeInterval)
         assertNull(calibrator.averageTimeIntervalAsTime)
         val time = Time(0.0, TimeUnit.SECOND)
@@ -569,7 +569,7 @@ class AccelerometerCalibratorTest {
         )
         assertNull(calibrator.averageGravityNorm)
         assertNull(calibrator.averageGravityNormAsAcceleration)
-        assertFalse(calibrator.getAverageNormAsAcceleration(acceleration))
+        assertFalse(calibrator.getAverageGravityNormAsAcceleration(acceleration))
         assertNull(calibrator.gravityNormVariance)
         assertNull(calibrator.gravityNormStandardDeviation)
         assertNull(calibrator.gravityNormStandardDeviationAsAcceleration)
@@ -694,7 +694,7 @@ class AccelerometerCalibratorTest {
         assertNull(calibrator.baseNoiseLevelRootPsd)
         assertNull(calibrator.threshold)
         assertNull(calibrator.thresholdAsAcceleration)
-        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
+        assertFalse(calibrator.getThresholdAsAcceleration(acceleration))
         assertNull(calibrator.averageTimeInterval)
         assertNull(calibrator.averageTimeIntervalAsTime)
         val time = Time(0.0, TimeUnit.SECOND)
@@ -753,7 +753,7 @@ class AccelerometerCalibratorTest {
         )
         assertNull(calibrator.averageGravityNorm)
         assertNull(calibrator.averageGravityNormAsAcceleration)
-        assertFalse(calibrator.getAverageNormAsAcceleration(acceleration))
+        assertFalse(calibrator.getAverageGravityNormAsAcceleration(acceleration))
         assertNull(calibrator.gravityNormVariance)
         assertNull(calibrator.gravityNormStandardDeviation)
         assertNull(calibrator.gravityNormStandardDeviationAsAcceleration)
@@ -879,7 +879,7 @@ class AccelerometerCalibratorTest {
         assertNull(calibrator.baseNoiseLevelRootPsd)
         assertNull(calibrator.threshold)
         assertNull(calibrator.thresholdAsAcceleration)
-        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
+        assertFalse(calibrator.getThresholdAsAcceleration(acceleration))
         assertNull(calibrator.averageTimeInterval)
         assertNull(calibrator.averageTimeIntervalAsTime)
         val time = Time(0.0, TimeUnit.SECOND)
@@ -938,7 +938,7 @@ class AccelerometerCalibratorTest {
         )
         assertNull(calibrator.averageGravityNorm)
         assertNull(calibrator.averageGravityNormAsAcceleration)
-        assertFalse(calibrator.getAverageNormAsAcceleration(acceleration))
+        assertFalse(calibrator.getAverageGravityNormAsAcceleration(acceleration))
         assertNull(calibrator.gravityNormVariance)
         assertNull(calibrator.gravityNormStandardDeviation)
         assertNull(calibrator.gravityNormStandardDeviationAsAcceleration)
@@ -1068,7 +1068,7 @@ class AccelerometerCalibratorTest {
         assertNull(calibrator.baseNoiseLevelRootPsd)
         assertNull(calibrator.threshold)
         assertNull(calibrator.thresholdAsAcceleration)
-        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
+        assertFalse(calibrator.getThresholdAsAcceleration(acceleration))
         assertNull(calibrator.averageTimeInterval)
         assertNull(calibrator.averageTimeIntervalAsTime)
         val time = Time(0.0, TimeUnit.SECOND)
@@ -1127,7 +1127,7 @@ class AccelerometerCalibratorTest {
         )
         assertNull(calibrator.averageGravityNorm)
         assertNull(calibrator.averageGravityNormAsAcceleration)
-        assertFalse(calibrator.getAverageNormAsAcceleration(acceleration))
+        assertFalse(calibrator.getAverageGravityNormAsAcceleration(acceleration))
         assertNull(calibrator.gravityNormVariance)
         assertNull(calibrator.gravityNormStandardDeviation)
         assertNull(calibrator.gravityNormStandardDeviationAsAcceleration)
@@ -1268,7 +1268,7 @@ class AccelerometerCalibratorTest {
         assertNull(calibrator.baseNoiseLevelRootPsd)
         assertNull(calibrator.threshold)
         assertNull(calibrator.thresholdAsAcceleration)
-        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
+        assertFalse(calibrator.getThresholdAsAcceleration(acceleration))
         assertNull(calibrator.averageTimeInterval)
         assertNull(calibrator.averageTimeIntervalAsTime)
         val time = Time(0.0, TimeUnit.SECOND)
@@ -1327,7 +1327,7 @@ class AccelerometerCalibratorTest {
         )
         assertNull(calibrator.averageGravityNorm)
         assertNull(calibrator.averageGravityNormAsAcceleration)
-        assertFalse(calibrator.getAverageNormAsAcceleration(acceleration))
+        assertFalse(calibrator.getAverageGravityNormAsAcceleration(acceleration))
         assertNull(calibrator.gravityNormVariance)
         assertNull(calibrator.gravityNormStandardDeviation)
         assertNull(calibrator.gravityNormStandardDeviationAsAcceleration)
@@ -1471,7 +1471,7 @@ class AccelerometerCalibratorTest {
         assertNull(calibrator.baseNoiseLevelRootPsd)
         assertNull(calibrator.threshold)
         assertNull(calibrator.thresholdAsAcceleration)
-        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
+        assertFalse(calibrator.getThresholdAsAcceleration(acceleration))
         assertNull(calibrator.averageTimeInterval)
         assertNull(calibrator.averageTimeIntervalAsTime)
         val time = Time(0.0, TimeUnit.SECOND)
@@ -1530,7 +1530,7 @@ class AccelerometerCalibratorTest {
         )
         assertNull(calibrator.averageGravityNorm)
         assertNull(calibrator.averageGravityNormAsAcceleration)
-        assertFalse(calibrator.getAverageNormAsAcceleration(acceleration))
+        assertFalse(calibrator.getAverageGravityNormAsAcceleration(acceleration))
         assertNull(calibrator.gravityNormVariance)
         assertNull(calibrator.gravityNormStandardDeviation)
         assertNull(calibrator.gravityNormStandardDeviationAsAcceleration)
@@ -1676,7 +1676,7 @@ class AccelerometerCalibratorTest {
         assertNull(calibrator.baseNoiseLevelRootPsd)
         assertNull(calibrator.threshold)
         assertNull(calibrator.thresholdAsAcceleration)
-        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
+        assertFalse(calibrator.getThresholdAsAcceleration(acceleration))
         assertNull(calibrator.averageTimeInterval)
         assertNull(calibrator.averageTimeIntervalAsTime)
         val time = Time(0.0, TimeUnit.SECOND)
@@ -1735,7 +1735,7 @@ class AccelerometerCalibratorTest {
         )
         assertNull(calibrator.averageGravityNorm)
         assertNull(calibrator.averageGravityNormAsAcceleration)
-        assertFalse(calibrator.getAverageNormAsAcceleration(acceleration))
+        assertFalse(calibrator.getAverageGravityNormAsAcceleration(acceleration))
         assertNull(calibrator.gravityNormVariance)
         assertNull(calibrator.gravityNormStandardDeviation)
         assertNull(calibrator.gravityNormStandardDeviationAsAcceleration)
@@ -1887,7 +1887,7 @@ class AccelerometerCalibratorTest {
         assertNull(calibrator.baseNoiseLevelRootPsd)
         assertNull(calibrator.threshold)
         assertNull(calibrator.thresholdAsAcceleration)
-        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
+        assertFalse(calibrator.getThresholdAsAcceleration(acceleration))
         assertNull(calibrator.averageTimeInterval)
         assertNull(calibrator.averageTimeIntervalAsTime)
         val time = Time(0.0, TimeUnit.SECOND)
@@ -1946,7 +1946,7 @@ class AccelerometerCalibratorTest {
         )
         assertNull(calibrator.averageGravityNorm)
         assertNull(calibrator.averageGravityNormAsAcceleration)
-        assertFalse(calibrator.getAverageNormAsAcceleration(acceleration))
+        assertFalse(calibrator.getAverageGravityNormAsAcceleration(acceleration))
         assertNull(calibrator.gravityNormVariance)
         assertNull(calibrator.gravityNormStandardDeviation)
         assertNull(calibrator.gravityNormStandardDeviationAsAcceleration)
@@ -2101,7 +2101,7 @@ class AccelerometerCalibratorTest {
         assertNull(calibrator.baseNoiseLevelRootPsd)
         assertNull(calibrator.threshold)
         assertNull(calibrator.thresholdAsAcceleration)
-        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
+        assertFalse(calibrator.getThresholdAsAcceleration(acceleration))
         assertNull(calibrator.averageTimeInterval)
         assertNull(calibrator.averageTimeIntervalAsTime)
         val time = Time(0.0, TimeUnit.SECOND)
@@ -2160,7 +2160,7 @@ class AccelerometerCalibratorTest {
         )
         assertNull(calibrator.averageGravityNorm)
         assertNull(calibrator.averageGravityNormAsAcceleration)
-        assertFalse(calibrator.getAverageNormAsAcceleration(acceleration))
+        assertFalse(calibrator.getAverageGravityNormAsAcceleration(acceleration))
         assertNull(calibrator.gravityNormVariance)
         assertNull(calibrator.gravityNormStandardDeviation)
         assertNull(calibrator.gravityNormStandardDeviationAsAcceleration)
@@ -2321,7 +2321,7 @@ class AccelerometerCalibratorTest {
         assertNull(calibrator.baseNoiseLevelRootPsd)
         assertNull(calibrator.threshold)
         assertNull(calibrator.thresholdAsAcceleration)
-        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
+        assertFalse(calibrator.getThresholdAsAcceleration(acceleration))
         assertNull(calibrator.averageTimeInterval)
         assertNull(calibrator.averageTimeIntervalAsTime)
         val time = Time(0.0, TimeUnit.SECOND)
@@ -2380,7 +2380,7 @@ class AccelerometerCalibratorTest {
         )
         assertNull(calibrator.averageGravityNorm)
         assertNull(calibrator.averageGravityNormAsAcceleration)
-        assertFalse(calibrator.getAverageNormAsAcceleration(acceleration))
+        assertFalse(calibrator.getAverageGravityNormAsAcceleration(acceleration))
         assertNull(calibrator.gravityNormVariance)
         assertNull(calibrator.gravityNormStandardDeviation)
         assertNull(calibrator.gravityNormStandardDeviationAsAcceleration)
@@ -2544,7 +2544,7 @@ class AccelerometerCalibratorTest {
         assertNull(calibrator.baseNoiseLevelRootPsd)
         assertNull(calibrator.threshold)
         assertNull(calibrator.thresholdAsAcceleration)
-        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
+        assertFalse(calibrator.getThresholdAsAcceleration(acceleration))
         assertNull(calibrator.averageTimeInterval)
         assertNull(calibrator.averageTimeIntervalAsTime)
         val time = Time(0.0, TimeUnit.SECOND)
@@ -2603,7 +2603,7 @@ class AccelerometerCalibratorTest {
         )
         assertNull(calibrator.averageGravityNorm)
         assertNull(calibrator.averageGravityNormAsAcceleration)
-        assertFalse(calibrator.getAverageNormAsAcceleration(acceleration))
+        assertFalse(calibrator.getAverageGravityNormAsAcceleration(acceleration))
         assertNull(calibrator.gravityNormVariance)
         assertNull(calibrator.gravityNormStandardDeviation)
         assertNull(calibrator.gravityNormStandardDeviationAsAcceleration)
@@ -2770,7 +2770,7 @@ class AccelerometerCalibratorTest {
         assertNull(calibrator.baseNoiseLevelRootPsd)
         assertNull(calibrator.threshold)
         assertNull(calibrator.thresholdAsAcceleration)
-        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
+        assertFalse(calibrator.getThresholdAsAcceleration(acceleration))
         assertNull(calibrator.averageTimeInterval)
         assertNull(calibrator.averageTimeIntervalAsTime)
         val time = Time(0.0, TimeUnit.SECOND)
@@ -2829,7 +2829,7 @@ class AccelerometerCalibratorTest {
         )
         assertNull(calibrator.averageGravityNorm)
         assertNull(calibrator.averageGravityNormAsAcceleration)
-        assertFalse(calibrator.getAverageNormAsAcceleration(acceleration))
+        assertFalse(calibrator.getAverageGravityNormAsAcceleration(acceleration))
         assertNull(calibrator.gravityNormVariance)
         assertNull(calibrator.gravityNormStandardDeviation)
         assertNull(calibrator.gravityNormStandardDeviationAsAcceleration)
@@ -2999,7 +2999,7 @@ class AccelerometerCalibratorTest {
         assertNull(calibrator.baseNoiseLevelRootPsd)
         assertNull(calibrator.threshold)
         assertNull(calibrator.thresholdAsAcceleration)
-        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
+        assertFalse(calibrator.getThresholdAsAcceleration(acceleration))
         assertNull(calibrator.averageTimeInterval)
         assertNull(calibrator.averageTimeIntervalAsTime)
         val time = Time(0.0, TimeUnit.SECOND)
@@ -3058,7 +3058,7 @@ class AccelerometerCalibratorTest {
         )
         assertNull(calibrator.averageGravityNorm)
         assertNull(calibrator.averageGravityNormAsAcceleration)
-        assertFalse(calibrator.getAverageNormAsAcceleration(acceleration))
+        assertFalse(calibrator.getAverageGravityNormAsAcceleration(acceleration))
         assertNull(calibrator.gravityNormVariance)
         assertNull(calibrator.gravityNormStandardDeviation)
         assertNull(calibrator.gravityNormStandardDeviationAsAcceleration)
@@ -3230,7 +3230,7 @@ class AccelerometerCalibratorTest {
         assertNull(calibrator.baseNoiseLevelRootPsd)
         assertNull(calibrator.threshold)
         assertNull(calibrator.thresholdAsAcceleration)
-        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
+        assertFalse(calibrator.getThresholdAsAcceleration(acceleration))
         assertNull(calibrator.averageTimeInterval)
         assertNull(calibrator.averageTimeIntervalAsTime)
         val time = Time(0.0, TimeUnit.SECOND)
@@ -3289,7 +3289,7 @@ class AccelerometerCalibratorTest {
         )
         assertNull(calibrator.averageGravityNorm)
         assertNull(calibrator.averageGravityNormAsAcceleration)
-        assertFalse(calibrator.getAverageNormAsAcceleration(acceleration))
+        assertFalse(calibrator.getAverageGravityNormAsAcceleration(acceleration))
         assertNull(calibrator.gravityNormVariance)
         assertNull(calibrator.gravityNormStandardDeviation)
         assertNull(calibrator.gravityNormStandardDeviationAsAcceleration)
@@ -3464,7 +3464,7 @@ class AccelerometerCalibratorTest {
         assertNull(calibrator.baseNoiseLevelRootPsd)
         assertNull(calibrator.threshold)
         assertNull(calibrator.thresholdAsAcceleration)
-        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
+        assertFalse(calibrator.getThresholdAsAcceleration(acceleration))
         assertNull(calibrator.averageTimeInterval)
         assertNull(calibrator.averageTimeIntervalAsTime)
         val time = Time(0.0, TimeUnit.SECOND)
@@ -3523,7 +3523,7 @@ class AccelerometerCalibratorTest {
         )
         assertNull(calibrator.averageGravityNorm)
         assertNull(calibrator.averageGravityNormAsAcceleration)
-        assertFalse(calibrator.getAverageNormAsAcceleration(acceleration))
+        assertFalse(calibrator.getAverageGravityNormAsAcceleration(acceleration))
         assertNull(calibrator.gravityNormVariance)
         assertNull(calibrator.gravityNormStandardDeviation)
         assertNull(calibrator.gravityNormStandardDeviationAsAcceleration)
@@ -3700,7 +3700,7 @@ class AccelerometerCalibratorTest {
         assertNull(calibrator.baseNoiseLevelRootPsd)
         assertNull(calibrator.threshold)
         assertNull(calibrator.thresholdAsAcceleration)
-        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
+        assertFalse(calibrator.getThresholdAsAcceleration(acceleration))
         assertNull(calibrator.averageTimeInterval)
         assertNull(calibrator.averageTimeIntervalAsTime)
         val time = Time(0.0, TimeUnit.SECOND)
@@ -3759,7 +3759,7 @@ class AccelerometerCalibratorTest {
         )
         assertNull(calibrator.averageGravityNorm)
         assertNull(calibrator.averageGravityNormAsAcceleration)
-        assertFalse(calibrator.getAverageNormAsAcceleration(acceleration))
+        assertFalse(calibrator.getAverageGravityNormAsAcceleration(acceleration))
         assertNull(calibrator.gravityNormVariance)
         assertNull(calibrator.gravityNormStandardDeviation)
         assertNull(calibrator.gravityNormStandardDeviationAsAcceleration)
@@ -3938,7 +3938,7 @@ class AccelerometerCalibratorTest {
         assertNull(calibrator.baseNoiseLevelRootPsd)
         assertNull(calibrator.threshold)
         assertNull(calibrator.thresholdAsAcceleration)
-        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
+        assertFalse(calibrator.getThresholdAsAcceleration(acceleration))
         assertNull(calibrator.averageTimeInterval)
         assertNull(calibrator.averageTimeIntervalAsTime)
         val time = Time(0.0, TimeUnit.SECOND)
@@ -3997,7 +3997,7 @@ class AccelerometerCalibratorTest {
         )
         assertNull(calibrator.averageGravityNorm)
         assertNull(calibrator.averageGravityNormAsAcceleration)
-        assertFalse(calibrator.getAverageNormAsAcceleration(acceleration))
+        assertFalse(calibrator.getAverageGravityNormAsAcceleration(acceleration))
         assertNull(calibrator.gravityNormVariance)
         assertNull(calibrator.gravityNormStandardDeviation)
         assertNull(calibrator.gravityNormStandardDeviationAsAcceleration)
@@ -6700,6 +6700,7 @@ class AccelerometerCalibratorTest {
 
         val baseNoiseLevel2 = calibrator.baseNoiseLevelAsAcceleration
         assertSame(baseNoiseLevel1, baseNoiseLevel2)
+        verify(exactly = 1) { intervalDetectorSpy.baseNoiseLevelAsAcceleration }
     }
 
     @Test
@@ -6730,9 +6731,652 @@ class AccelerometerCalibratorTest {
         // check
         assertEquals(baseNoiseLevel, acceleration.value.toDouble(), 0.0)
         assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, acceleration.unit)
+        verify(exactly = 1) { intervalDetectorSpy.getBaseNoiseLevelAsAcceleration(acceleration) }
     }
 
-    // TODO: baseNoiseLevelPsd
+    @Test
+    fun baseNoiseLevelPsd_getsIntervalDetectorBaseNoiseLevelPsd() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        // check default value
+        assertNull(calibrator.baseNoiseLevelPsd)
+
+        val intervalDetector: IntervalDetector? =
+            calibrator.getPrivateProperty("intervalDetector")
+        requireNotNull(intervalDetector)
+        val intervalDetectorSpy = spyk(intervalDetector)
+        val randomizer = UniformRandomizer()
+        val baseNoiseLevelPsd = randomizer.nextDouble()
+        every { intervalDetectorSpy.baseNoiseLevelPsd }.returns(baseNoiseLevelPsd)
+        calibrator.setPrivateProperty("intervalDetector", intervalDetectorSpy)
+
+        assertEquals(baseNoiseLevelPsd, calibrator.baseNoiseLevelPsd)
+        verify(exactly = 1) { intervalDetectorSpy.baseNoiseLevelPsd }
+    }
+
+    @Test
+    fun baseNoiseLevelRootPsd_getsIntervalDetectorBaseNoiseLevelRootPsd() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        // check default value
+        assertNull(calibrator.baseNoiseLevelRootPsd)
+
+        val intervalDetector: IntervalDetector? =
+            calibrator.getPrivateProperty("intervalDetector")
+        requireNotNull(intervalDetector)
+        val intervalDetectorSpy = spyk(intervalDetector)
+        val randomizer = UniformRandomizer()
+        val baseNoiseLevelRootPsd = randomizer.nextDouble()
+        every { intervalDetectorSpy.baseNoiseLevelRootPsd }.returns(baseNoiseLevelRootPsd)
+        calibrator.setPrivateProperty("intervalDetector", intervalDetectorSpy)
+
+        assertEquals(baseNoiseLevelRootPsd, calibrator.baseNoiseLevelRootPsd)
+        verify(exactly = 1) { intervalDetectorSpy.baseNoiseLevelRootPsd }
+    }
+
+    @Test
+    fun threshold_getsIntervalDetectorThreshold() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        // check default value
+        assertNull(calibrator.threshold)
+
+        val intervalDetector: IntervalDetector? =
+            calibrator.getPrivateProperty("intervalDetector")
+        requireNotNull(intervalDetector)
+        val intervalDetectorSpy = spyk(intervalDetector)
+        val randomizer = UniformRandomizer()
+        val threshold = randomizer.nextDouble()
+        every { intervalDetectorSpy.threshold }.returns(threshold)
+        calibrator.setPrivateProperty("intervalDetector", intervalDetectorSpy)
+
+        assertEquals(threshold, calibrator.threshold)
+        verify(exactly = 1) { intervalDetectorSpy.threshold }
+    }
+
+    @Test
+    fun thresholdAsAcceleration_getsIntervalDetectorThresholdAsAcceleration() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        // check default value
+        assertNull(calibrator.thresholdAsAcceleration)
+
+        val intervalDetector: IntervalDetector? =
+            calibrator.getPrivateProperty("intervalDetector")
+        requireNotNull(intervalDetector)
+        val intervalDetectorSpy = spyk(intervalDetector)
+        val randomizer = UniformRandomizer()
+        val threshold = randomizer.nextDouble()
+        val acceleration = Acceleration(threshold, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        every { intervalDetectorSpy.thresholdAsAcceleration }.returns(acceleration)
+        calibrator.setPrivateProperty("intervalDetector", intervalDetectorSpy)
+
+        assertSame(acceleration, calibrator.thresholdAsAcceleration)
+        verify(exactly = 1) { intervalDetectorSpy.thresholdAsAcceleration }
+    }
+
+    @Test
+    fun getThresholdAsAcceleration_getsIntervalDetectorThresholdAsAcceleration() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        // check default value
+        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        assertFalse(calibrator.getThresholdAsAcceleration(acceleration))
+
+        val intervalDetector: IntervalDetector? =
+            calibrator.getPrivateProperty("intervalDetector")
+        requireNotNull(intervalDetector)
+        val intervalDetectorSpy = spyk(intervalDetector)
+        val randomizer = UniformRandomizer()
+        val threshold = randomizer.nextDouble()
+        every { intervalDetectorSpy.getThresholdAsMeasurement(any()) }.answers { answer ->
+            val result = answer.invocation.args[0] as Acceleration
+            result.value = threshold
+            result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
+            return@answers true
+        }
+        calibrator.setPrivateProperty("intervalDetector", intervalDetectorSpy)
+
+        assertTrue(calibrator.getThresholdAsAcceleration(acceleration))
+        assertEquals(threshold, acceleration.value.toDouble(), 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, acceleration.unit)
+        verify(exactly = 1) { intervalDetectorSpy.getThresholdAsMeasurement(acceleration) }
+    }
+
+    @Test
+    fun averageTimeInterval_getsIntervalDetectorAverageTimeInterval() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        // check default value
+        assertNull(calibrator.averageTimeInterval)
+
+        val intervalDetector: IntervalDetector? =
+            calibrator.getPrivateProperty("intervalDetector")
+        requireNotNull(intervalDetector)
+        val intervalDetectorSpy = spyk(intervalDetector)
+        val randomizer = UniformRandomizer()
+        val averageTimeInterval = randomizer.nextDouble()
+        every { intervalDetectorSpy.averageTimeInterval }.returns(averageTimeInterval)
+        calibrator.setPrivateProperty("intervalDetector", intervalDetectorSpy)
+
+        assertEquals(averageTimeInterval, calibrator.averageTimeInterval)
+        verify(exactly = 1) { intervalDetectorSpy.averageTimeInterval }
+    }
+
+    @Test
+    fun averageTimeIntervalAsTime_getsIntervalDetectorAverageTimeInterval() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        // check default value
+        assertNull(calibrator.averageTimeIntervalAsTime)
+
+        val intervalDetector: IntervalDetector? =
+            calibrator.getPrivateProperty("intervalDetector")
+        requireNotNull(intervalDetector)
+        val intervalDetectorSpy = spyk(intervalDetector)
+        val randomizer = UniformRandomizer()
+        val averageTimeInterval = randomizer.nextDouble()
+        val time = Time(averageTimeInterval, TimeUnit.SECOND)
+        every { intervalDetectorSpy.averageTimeIntervalAsTime }.returns(time)
+        calibrator.setPrivateProperty("intervalDetector", intervalDetectorSpy)
+
+        assertSame(time, calibrator.averageTimeIntervalAsTime)
+        verify(exactly = 1) { intervalDetectorSpy.averageTimeIntervalAsTime }
+    }
+
+    @Test
+    fun getAverageTimeIntervalAsTime_getsIntervalDetectorAverageTimeInterval() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        // check default value
+        val time = Time(0.0, TimeUnit.SECOND)
+        assertFalse(calibrator.getAverageTimeIntervalAsTime(time))
+
+        val intervalDetector: IntervalDetector? =
+            calibrator.getPrivateProperty("intervalDetector")
+        requireNotNull(intervalDetector)
+        val intervalDetectorSpy = spyk(intervalDetector)
+        val randomizer = UniformRandomizer()
+        val averageTimeInterval = randomizer.nextDouble()
+        every { intervalDetectorSpy.getAverageTimeIntervalAsTime(any()) }.answers { answer ->
+            val result = answer.invocation.args[0] as Time
+            result.value = averageTimeInterval
+            result.unit = TimeUnit.SECOND
+            return@answers true
+        }
+        calibrator.setPrivateProperty("intervalDetector", intervalDetectorSpy)
+
+        assertTrue(calibrator.getAverageTimeIntervalAsTime(time))
+        assertEquals(averageTimeInterval, time.value.toDouble(), 0.0)
+        assertEquals(TimeUnit.SECOND, time.unit)
+        verify(exactly = 1) { intervalDetectorSpy.getAverageTimeIntervalAsTime(time) }
+    }
+
+    @Test
+    fun timeIntervalVariance_getsIntervalDetectorTimeIntervalVariance() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        // check default value
+        assertNull(calibrator.timeIntervalVariance)
+
+        val intervalDetector: IntervalDetector? =
+            calibrator.getPrivateProperty("intervalDetector")
+        requireNotNull(intervalDetector)
+        val intervalDetectorSpy = spyk(intervalDetector)
+        val randomizer = UniformRandomizer()
+        val timeIntervalVariance = randomizer.nextDouble()
+        every { intervalDetectorSpy.timeIntervalVariance }.returns(timeIntervalVariance)
+        calibrator.setPrivateProperty("intervalDetector", intervalDetectorSpy)
+
+        assertEquals(timeIntervalVariance, calibrator.timeIntervalVariance)
+        verify(exactly = 1) { intervalDetectorSpy.timeIntervalVariance }
+    }
+
+    @Test
+    fun timeIntervalStandardDeviation_getsIntervalDetectorTimeIntervalStandardDeviation() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        // check default value
+        assertNull(calibrator.timeIntervalStandardDeviation)
+
+        val intervalDetector: IntervalDetector? =
+            calibrator.getPrivateProperty("intervalDetector")
+        requireNotNull(intervalDetector)
+        val intervalDetectorSpy = spyk(intervalDetector)
+        val randomizer = UniformRandomizer()
+        val timeIntervalStandardDeviation = randomizer.nextDouble()
+        every { intervalDetectorSpy.timeIntervalStandardDeviation }.returns(
+            timeIntervalStandardDeviation
+        )
+        calibrator.setPrivateProperty("intervalDetector", intervalDetectorSpy)
+
+        assertEquals(timeIntervalStandardDeviation, calibrator.timeIntervalStandardDeviation)
+        verify(exactly = 1) { intervalDetectorSpy.timeIntervalStandardDeviation }
+    }
+
+    @Test
+    fun timeIntervalStandardDeviationAsTime_getsIntervalDetectorTimeIntervalStadnardDeviation() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        // check default value
+        assertNull(calibrator.timeIntervalStandardDeviationAsTime)
+
+        val intervalDetector: IntervalDetector? =
+            calibrator.getPrivateProperty("intervalDetector")
+        requireNotNull(intervalDetector)
+        val intervalDetectorSpy = spyk(intervalDetector)
+        val randomizer = UniformRandomizer()
+        val value = randomizer.nextDouble()
+        val time = Time(value, TimeUnit.SECOND)
+        every { intervalDetectorSpy.timeIntervalStandardDeviationAsTime }.returns(time)
+        calibrator.setPrivateProperty("intervalDetector", intervalDetectorSpy)
+
+        assertSame(time, calibrator.timeIntervalStandardDeviationAsTime)
+        verify(exactly = 1) { intervalDetectorSpy.timeIntervalStandardDeviationAsTime }
+    }
+
+    @Test
+    fun getTimeIntervalStandardDeviationAsTime_getsIntervalDetectorTimeIntervalStandardDeviation() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        // check default value
+        val time = Time(0.0, TimeUnit.SECOND)
+        assertFalse(calibrator.getTimeIntervalStandardDeviationAsTime(time))
+
+        val intervalDetector: IntervalDetector? =
+            calibrator.getPrivateProperty("intervalDetector")
+        requireNotNull(intervalDetector)
+        val intervalDetectorSpy = spyk(intervalDetector)
+        val randomizer = UniformRandomizer()
+        val value = randomizer.nextDouble()
+        every { intervalDetectorSpy.getTimeIntervalStandardDeviationAsTime(any()) }.answers { answer ->
+            val result = answer.invocation.args[0] as Time
+            result.value = value
+            result.unit = TimeUnit.SECOND
+            return@answers true
+        }
+        calibrator.setPrivateProperty("intervalDetector", intervalDetectorSpy)
+
+        assertTrue(calibrator.getTimeIntervalStandardDeviationAsTime(time))
+        assertEquals(value, time.value.toDouble(), 0.0)
+        assertEquals(TimeUnit.SECOND, time.unit)
+        verify(exactly = 1) { intervalDetectorSpy.getTimeIntervalStandardDeviationAsTime(time) }
+    }
+
+    @Test
+    fun minimumRequiredMeasurements_whenCommonAxisAndKnownBias_returnsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        calibrator.isCommonAxisUsed = true
+        calibrator.isGroundTruthInitialBias = true
+
+        // check
+        assertTrue(calibrator.isCommonAxisUsed)
+        assertTrue(calibrator.isGroundTruthInitialBias)
+        assertEquals(7, calibrator.minimumRequiredMeasurements)
+    }
+
+    @Test
+    fun minimumRequiredMeasurements_whenCommonAxisAndUnknownBias_returnsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        calibrator.isCommonAxisUsed = true
+        calibrator.isGroundTruthInitialBias = false
+
+        // check
+        assertTrue(calibrator.isCommonAxisUsed)
+        assertFalse(calibrator.isGroundTruthInitialBias)
+        assertEquals(10, calibrator.minimumRequiredMeasurements)
+    }
+
+    @Test
+    fun minimumRequiredMeasurements_whenNotCommonAxisAndKnownBias_returnsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        calibrator.isCommonAxisUsed = false
+        calibrator.isGroundTruthInitialBias = true
+
+        // check
+        assertFalse(calibrator.isCommonAxisUsed)
+        assertTrue(calibrator.isGroundTruthInitialBias)
+        assertEquals(10, calibrator.minimumRequiredMeasurements)
+    }
+
+    @Test
+    fun minimumRequiredMeasurements_whenNotCommonAxisAndUnknownBias_returnsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        calibrator.isCommonAxisUsed = false
+        calibrator.isGroundTruthInitialBias = false
+
+        // check
+        assertFalse(calibrator.isCommonAxisUsed)
+        assertFalse(calibrator.isGroundTruthInitialBias)
+        assertEquals(13, calibrator.minimumRequiredMeasurements)
+    }
+
+    @Test
+    fun averageGravityNorm_whenGravityNormEstimated_getsEstimatorAverageNorm() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        assertTrue(calibrator.isGravityNormEstimated)
+
+        val gravityNormEstimator: GravityNormEstimator? =
+            calibrator.getPrivateProperty("gravityNormEstimator")
+        requireNotNull(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        val gravityNorm = GravityHelper.getGravityNormForLocation(location)
+        every { gravityNormEstimatorSpy.averageNorm }.returns(gravityNorm)
+        calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
+
+        assertEquals(gravityNorm, calibrator.averageGravityNorm)
+        verify(exactly = 1) { gravityNormEstimatorSpy.averageNorm }
+    }
+
+    @Test
+    fun averageGravityNorm_whenGravityNormNotEstimated_returnsNull() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context, location = location)
+
+        assertFalse(calibrator.isGravityNormEstimated)
+
+        assertNull(calibrator.averageGravityNorm)
+    }
+
+    @Test
+    fun averageGravityNormAsAcceleration_whenGravityNormEstimated_getsEstimatorAverageNorm() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        assertTrue(calibrator.isGravityNormEstimated)
+
+        val gravityNormEstimator: GravityNormEstimator? =
+            calibrator.getPrivateProperty("gravityNormEstimator")
+        requireNotNull(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        val gravityNorm = GravityHelper.getGravityNormForLocation(location)
+        val acceleration = Acceleration(gravityNorm, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        every { gravityNormEstimatorSpy.averageNormAsMeasurement }.returns(acceleration)
+        calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
+
+        assertSame(acceleration, gravityNormEstimatorSpy.averageNormAsMeasurement)
+        verify(exactly = 1) { gravityNormEstimatorSpy.averageNormAsMeasurement }
+    }
+
+    @Test
+    fun averageGravityNormAsAcceleration_whenGravityNormNotEstimated_returnsNull() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context, location = location)
+
+        assertFalse(calibrator.isGravityNormEstimated)
+
+        assertNull(calibrator.averageGravityNormAsAcceleration)
+    }
+
+    @Test
+    fun getAverageGravityNormAsAcceleration_whenGravityNormEstimated_getsEstimatorAverageNorm() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        assertTrue(calibrator.isGravityNormEstimated)
+
+        val gravityNormEstimator: GravityNormEstimator? =
+            calibrator.getPrivateProperty("gravityNormEstimator")
+        requireNotNull(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        val gravityNorm = GravityHelper.getGravityNormForLocation(location)
+        every { gravityNormEstimatorSpy.getAverageNormAsMeasurement(any()) }.answers { answer ->
+            val result = answer.invocation.args[0] as Acceleration
+            result.value = gravityNorm
+            result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
+            return@answers true
+        }
+        calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
+
+        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        assertTrue(calibrator.getAverageGravityNormAsAcceleration(acceleration))
+        assertEquals(gravityNorm, acceleration.value.toDouble(), 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, acceleration.unit)
+        verify(exactly = 1) { gravityNormEstimatorSpy.getAverageNormAsMeasurement(acceleration) }
+    }
+
+    @Test
+    fun getAverageGravityNormAsAcceleration_whenGravityNormNotEstimated_returnsFalse() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context, location = location)
+
+        assertFalse(calibrator.isGravityNormEstimated)
+
+        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        assertFalse(calibrator.getAverageGravityNormAsAcceleration(acceleration))
+        assertEquals(0.0, acceleration.value.toDouble(), 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, acceleration.unit)
+    }
+
+    @Test
+    fun gravityNormVariance_whenGravityNormEstimated_getsEstimatorVariance() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        assertTrue(calibrator.isGravityNormEstimated)
+
+        val gravityNormEstimator: GravityNormEstimator? =
+            calibrator.getPrivateProperty("gravityNormEstimator")
+        requireNotNull(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        val randomizer = UniformRandomizer()
+        val gravityNormVariance = randomizer.nextDouble()
+        every { gravityNormEstimatorSpy.normVariance }.returns(gravityNormVariance)
+        calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
+
+        val result = calibrator.gravityNormVariance
+        requireNotNull(result)
+        assertEquals(gravityNormVariance, result, 0.0)
+        verify(exactly = 1) { gravityNormEstimatorSpy.normVariance }
+    }
+
+    @Test
+    fun gravityNormVariance_whenGravityNormNotEstimated_returnsNull() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context, location = location)
+
+        assertNull(calibrator.gravityNormVariance)
+    }
+
+    @Test
+    fun gravityNormStandardDeviation_whenGravityNormEstimated_getsEstimatorStandardDeviation() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        assertTrue(calibrator.isGravityNormEstimated)
+
+        val gravityNormEstimator: GravityNormEstimator? =
+            calibrator.getPrivateProperty("gravityNormEstimator")
+        requireNotNull(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        val randomizer = UniformRandomizer()
+        val gravityNormStandardDeviation = randomizer.nextDouble()
+        every { gravityNormEstimatorSpy.normStandardDeviation }.returns(gravityNormStandardDeviation)
+        calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
+
+        val result = calibrator.gravityNormStandardDeviation
+        requireNotNull(result)
+        assertEquals(gravityNormStandardDeviation, result, 0.0)
+        verify(exactly = 1) { gravityNormEstimatorSpy.normStandardDeviation }
+    }
+
+    @Test
+    fun gravityNormStandardDeviation_whenGravityNormNotEstimated_returnsNull() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context, location = location)
+
+        assertFalse(calibrator.isGravityNormEstimated)
+
+        assertNull(calibrator.gravityNormStandardDeviation)
+    }
+
+    @Test
+    fun gravityNormStandardDeviationAsAcceleration_whenGravityNormEstimated_getsEstimatorStandardDeviation() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        assertTrue(calibrator.isGravityNormEstimated)
+
+        val gravityNormEstimator: GravityNormEstimator? =
+            calibrator.getPrivateProperty("gravityNormEstimator")
+        requireNotNull(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        val randomizer = UniformRandomizer()
+        val gravityNormStandardDeviation = randomizer.nextDouble()
+        val acceleration =
+            Acceleration(gravityNormStandardDeviation, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        every { gravityNormEstimatorSpy.normStandardDeviationAsMeasurement }.returns(acceleration)
+        calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
+
+        val result = calibrator.gravityNormStandardDeviationAsAcceleration
+        assertSame(acceleration, result)
+        verify(exactly = 1) { gravityNormEstimatorSpy.normStandardDeviationAsMeasurement }
+    }
+
+    @Test
+    fun gravityNormStandardDeviationAsAcceleration_whenGravityNormNotEstimated_returnsNull() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context, location = location)
+
+        assertFalse(calibrator.isGravityNormEstimated)
+
+        assertNull(calibrator.gravityNormStandardDeviationAsAcceleration)
+    }
+
+    @Test
+    fun getGravityNormStandardDeviationAsAcceleration_whenGravityNormEstimated_getsEstimatorStandardDeviation() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        assertTrue(calibrator.isGravityNormEstimated)
+
+        val gravityNormEstimator: GravityNormEstimator? =
+            calibrator.getPrivateProperty("gravityNormEstimator")
+        requireNotNull(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        val randomizer = UniformRandomizer()
+        val value = randomizer.nextDouble()
+        every { gravityNormEstimatorSpy.getNormStandardDeviationAsMeasurement(any()) }.answers { answer ->
+            val result = answer.invocation.args[0] as Acceleration
+            result.value = value
+            result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
+            return@answers true
+        }
+        calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
+
+        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        assertTrue(calibrator.getGravityNormStandardDeviationAsAcceleration(acceleration))
+        assertEquals(value, acceleration.value.toDouble(), 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, acceleration.unit)
+        verify(exactly = 1) { gravityNormEstimatorSpy.getNormStandardDeviationAsMeasurement(acceleration) }
+    }
+
+    @Test
+    fun getGravityNormStandardDeviationAsAcceleration_whenGravityNormNotEstimated_returnsFalse() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context, location = location)
+
+        assertFalse(calibrator.isGravityNormEstimated)
+
+        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        assertFalse(calibrator.getGravityNormStandardDeviationAsAcceleration(acceleration))
+    }
+
+    @Test
+    fun gravityPsd_whenGravityNormEstimated_getsEstimatorPsd() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        assertTrue(calibrator.isGravityNormEstimated)
+
+        val gravityNormEstimator: GravityNormEstimator? =
+            calibrator.getPrivateProperty("gravityNormEstimator")
+        requireNotNull(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        val randomizer = UniformRandomizer()
+        val gravityPsd = randomizer.nextDouble()
+        every { gravityNormEstimatorSpy.psd }.returns(gravityPsd)
+        calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
+
+        assertEquals(gravityPsd, calibrator.gravityPsd)
+        verify(exactly = 1) { gravityNormEstimatorSpy.psd }
+    }
+
+    @Test
+    fun gravityPsd_whenGravityNormNotestimated_returnsNull() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context, location = location)
+
+        assertFalse(calibrator.isGravityNormEstimated)
+
+        assertNull(calibrator.gravityPsd)
+    }
+
+    @Test
+    fun gravityRootPsd_whenGravityNormEstimated_getEstimatorRootPsd() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        assertTrue(calibrator.isGravityNormEstimated)
+
+        val gravityNormEstimator: GravityNormEstimator? =
+            calibrator.getPrivateProperty("gravityNormEstimator")
+        requireNotNull(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        val randomizer = UniformRandomizer()
+        val gravityRootPsd = randomizer.nextDouble()
+        every { gravityNormEstimatorSpy.rootPsd }.returns(gravityRootPsd)
+        calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
+
+        assertEquals(gravityRootPsd, calibrator.gravityRootPsd)
+        verify(exactly = 1) { gravityNormEstimatorSpy.rootPsd }
+    }
+
+    @Test
+    fun gravityRootPsd_whenGravityNormNotEstimated_returnsNull() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context, location = location)
+
+        assertFalse(calibrator.isGravityNormEstimated)
+
+        assertNull(calibrator.gravityRootPsd)
+    }
+
+    // TODO: start
 
     private companion object {
         const val MA_SIZE = 3
