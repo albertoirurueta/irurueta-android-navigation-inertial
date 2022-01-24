@@ -8236,7 +8236,45 @@ class AccelerometerCalibratorTest {
         assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, triad.unit)
     }
 
-    // TODO: estimatedBiasStandardDeviationNorm
+    @Test
+    fun estimatedBiasStandardDeviationNorm_whenNoInternalCalibrator_returnsNull() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        assertNull(calibrator.getPrivateProperty("internalCalibrator"))
+
+        assertNull(calibrator.estimatedBiasStandardDeviationNorm)
+    }
+
+    @Test
+    fun estimatedBiasStandardDeviationNorm_whenBiasUncertaintySourceInternalCalibrator_returnsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasStandardDeviationNorm = randomizer.nextDouble()
+        every { internalCalibratorSpy.estimatedBiasStandardDeviationNorm }.returns(
+            estimatedBiasStandardDeviationNorm
+        )
+        calibrator.setPrivateProperty("internalCalibrator", internalCalibratorSpy)
+
+        assertEquals(
+            estimatedBiasStandardDeviationNorm,
+            calibrator.estimatedBiasStandardDeviationNorm
+        )
+    }
+
+    @Test
+    fun estimatedBiasStandardDeviationNorm_whenOtherinternalCalibrator_returnsNull() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = AccelerometerCalibrator(context)
+
+        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
+        calibrator.setPrivateProperty("internalCalibrator", internalCalibratorSpy)
+
+        assertNull(calibrator.estimatedBiasStandardDeviationNorm)
+    }
 
     // TODO: build internal calibrator
 

@@ -2115,35 +2115,35 @@ class MagnetometerNoiseEstimatorTest {
 
         val psdX = estimator.psdX
         requireNotNull(psdX)
-        assertTrue(psdX > 0.0)
+        assertTrue(psdX >= 0.0)
 
         val psdY = estimator.psdY
         requireNotNull(psdY)
-        assertTrue(psdY > 0.0)
+        assertTrue(psdY >= 0.0)
 
         val psdZ = estimator.psdZ
         requireNotNull(psdZ)
-        assertTrue(psdZ > 0.0)
+        assertTrue(psdZ >= 0.0)
 
         val rootPsdX = estimator.rootPsdX
         requireNotNull(rootPsdX)
-        assertTrue(rootPsdX > 0.0)
+        assertTrue(rootPsdX >= 0.0)
 
         val rootPsdY = estimator.rootPsdY
         requireNotNull(rootPsdY)
-        assertTrue(rootPsdY > 0.0)
+        assertTrue(rootPsdY >= 0.0)
 
         val rootPsdZ = estimator.rootPsdZ
         requireNotNull(rootPsdZ)
-        assertTrue(rootPsdZ > 0.0)
+        assertTrue(rootPsdZ >= 0.0)
 
         val averageNoisePsd = estimator.averageNoisePsd
         requireNotNull(averageNoisePsd)
-        assertTrue(averageNoisePsd > 0.0)
+        assertTrue(averageNoisePsd >= 0.0)
 
         val noiseRootPsdNorm = estimator.noiseRootPsdNorm
         requireNotNull(noiseRootPsdNorm)
-        assertTrue(noiseRootPsdNorm > 0.0)
+        assertTrue(noiseRootPsdNorm >= 0.0)
 
         val averageTimeInterval = estimator.averageTimeInterval
         requireNotNull(averageTimeInterval)
