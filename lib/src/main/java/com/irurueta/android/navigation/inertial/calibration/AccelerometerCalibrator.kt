@@ -1989,6 +1989,7 @@ class AccelerometerCalibrator private constructor(
     @Throws(IllegalStateException::class)
     private fun buildNonRobustCalibrator(): AccelerometerNonLinearCalibrator {
         val location = this.location
+        val gravityNorm = this.gravityNorm
         if (isGroundTruthInitialBias) {
             if (location != null) {
                 return KnownBiasAndPositionAccelerometerCalibrator(
@@ -2008,7 +2009,8 @@ class AccelerometerCalibrator private constructor(
                     initialMzx,
                     initialMzy
                 )
-            } else if (gravityNorm != null) {
+            } else {
+                checkNotNull(gravityNorm)
                 return KnownBiasAndGravityNormAccelerometerCalibrator(
                     gravityNorm,
                     measurements,
@@ -2046,7 +2048,8 @@ class AccelerometerCalibrator private constructor(
                     initialMzx,
                     initialMzy
                 )
-            } else if (gravityNorm != null) {
+            } else {
+                checkNotNull(gravityNorm)
                 return KnownGravityNormAccelerometerCalibrator(
                     gravityNorm,
                     measurements,
@@ -2066,8 +2069,6 @@ class AccelerometerCalibrator private constructor(
                 )
             }
         }
-
-        throw IllegalStateException("No calibrator could be built.")
     }
 
     /**
