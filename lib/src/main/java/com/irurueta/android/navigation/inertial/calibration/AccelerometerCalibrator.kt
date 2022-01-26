@@ -2105,8 +2105,6 @@ class AccelerometerCalibrator private constructor(
         checkNotNull(location)
 
         val baseNoiseLevel = this.baseNoiseLevel
-        checkNotNull(baseNoiseLevel)
-
         val robustThreshold = this.robustThreshold
 
         val result = RobustKnownBiasAndPositionAccelerometerCalibrator.create(
@@ -2136,6 +2134,7 @@ class AccelerometerCalibrator private constructor(
                 if (robustThreshold != null) {
                     result.threshold = robustThreshold
                 } else {
+                    checkNotNull(baseNoiseLevel)
                     result.threshold = robustThresholdFactor * baseNoiseLevel
                 }
             }
@@ -2143,6 +2142,7 @@ class AccelerometerCalibrator private constructor(
                 if (robustThreshold != null) {
                     result.threshold = robustThreshold
                 } else {
+                    checkNotNull(baseNoiseLevel)
                     result.threshold = robustThresholdFactor * baseNoiseLevel
                 }
             }
@@ -2150,6 +2150,7 @@ class AccelerometerCalibrator private constructor(
                 if (robustThreshold != null) {
                     result.threshold = robustThreshold
                 } else {
+                    checkNotNull(baseNoiseLevel)
                     result.threshold = robustThresholdFactor * baseNoiseLevel
                 }
                 result.qualityScores = buildQualityScores()
@@ -2158,6 +2159,7 @@ class AccelerometerCalibrator private constructor(
                 if (robustThreshold != null) {
                     result.stopThreshold = robustThreshold
                 } else {
+                    checkNotNull(baseNoiseLevel)
                     result.stopThreshold =
                         robustThresholdFactor * robustStopThresholdFactor * baseNoiseLevel
                 }
@@ -2166,6 +2168,7 @@ class AccelerometerCalibrator private constructor(
                 if (robustThreshold != null) {
                     result.stopThreshold = robustThreshold
                 } else {
+                    checkNotNull(baseNoiseLevel)
                     result.stopThreshold =
                         robustThresholdFactor * robustStopThresholdFactor * baseNoiseLevel
                 }
@@ -2186,8 +2189,6 @@ class AccelerometerCalibrator private constructor(
         checkNotNull(gravityNorm)
 
         val baseNoiseLevel = this.baseNoiseLevel
-        checkNotNull(baseNoiseLevel)
-
         val robustThreshold = this.robustThreshold
 
         val result = RobustKnownBiasAndGravityNormAccelerometerCalibrator.create(
@@ -2217,6 +2218,7 @@ class AccelerometerCalibrator private constructor(
                 if (robustThreshold != null) {
                     result.threshold = robustThreshold
                 } else {
+                    checkNotNull(baseNoiseLevel)
                     result.threshold = robustThresholdFactor * baseNoiseLevel
                 }
             }
@@ -2224,6 +2226,7 @@ class AccelerometerCalibrator private constructor(
                 if (robustThreshold != null) {
                     result.threshold = robustThreshold
                 } else {
+                    checkNotNull(baseNoiseLevel)
                     result.threshold = robustThresholdFactor * baseNoiseLevel
                 }
             }
@@ -2231,6 +2234,7 @@ class AccelerometerCalibrator private constructor(
                 if (robustThreshold != null) {
                     result.threshold = robustThreshold
                 } else {
+                    checkNotNull(baseNoiseLevel)
                     result.threshold = robustThresholdFactor * baseNoiseLevel
                 }
                 result.qualityScores = buildQualityScores()
@@ -2239,6 +2243,7 @@ class AccelerometerCalibrator private constructor(
                 if (robustThreshold != null) {
                     result.stopThreshold = robustThreshold
                 } else {
+                    checkNotNull(baseNoiseLevel)
                     result.stopThreshold =
                         robustThresholdFactor * robustStopThresholdFactor * baseNoiseLevel
                 }
@@ -2247,6 +2252,7 @@ class AccelerometerCalibrator private constructor(
                 if (robustThreshold != null) {
                     result.stopThreshold = robustThreshold
                 } else {
+                    checkNotNull(baseNoiseLevel)
                     result.stopThreshold =
                         robustThresholdFactor * robustStopThresholdFactor * baseNoiseLevel
                 }
@@ -2267,8 +2273,6 @@ class AccelerometerCalibrator private constructor(
         checkNotNull(location)
 
         val baseNoiseLevel = this.baseNoiseLevel
-        checkNotNull(baseNoiseLevel)
-
         val robustThreshold = this.robustThreshold
 
         val result = RobustKnownPositionAccelerometerCalibrator.create(
@@ -2298,6 +2302,7 @@ class AccelerometerCalibrator private constructor(
                 if (robustThreshold != null) {
                     result.threshold = robustThreshold
                 } else {
+                    checkNotNull(baseNoiseLevel)
                     result.threshold = robustThresholdFactor * baseNoiseLevel
                 }
             }
@@ -2305,6 +2310,7 @@ class AccelerometerCalibrator private constructor(
                 if (robustThreshold != null) {
                     result.threshold = robustThreshold
                 } else {
+                    checkNotNull(baseNoiseLevel)
                     result.threshold = robustThresholdFactor * baseNoiseLevel
                 }
             }
@@ -2312,13 +2318,16 @@ class AccelerometerCalibrator private constructor(
                 if (robustThreshold != null) {
                     result.threshold = robustThreshold
                 } else {
+                    checkNotNull(baseNoiseLevel)
                     result.threshold = robustThresholdFactor * baseNoiseLevel
                 }
+                result.qualityScores = buildQualityScores()
             }
             is LMedSRobustKnownPositionAccelerometerCalibrator -> {
                 if (robustThreshold != null) {
                     result.stopThreshold = robustThreshold
                 } else {
+                    checkNotNull(baseNoiseLevel)
                     result.stopThreshold =
                         robustThresholdFactor * robustStopThresholdFactor * baseNoiseLevel
                 }
@@ -2327,9 +2336,11 @@ class AccelerometerCalibrator private constructor(
                 if (robustThreshold != null) {
                     result.stopThreshold = robustThreshold
                 } else {
+                    checkNotNull(baseNoiseLevel)
                     result.stopThreshold =
                         robustThresholdFactor * robustStopThresholdFactor * baseNoiseLevel
                 }
+                result.qualityScores = buildQualityScores()
             }
         }
 
