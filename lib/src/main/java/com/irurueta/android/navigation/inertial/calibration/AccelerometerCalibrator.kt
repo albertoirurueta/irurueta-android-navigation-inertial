@@ -2357,8 +2357,6 @@ class AccelerometerCalibrator private constructor(
         checkNotNull(gravityNorm)
 
         val baseNoiseLevel = this.baseNoiseLevel
-        checkNotNull(baseNoiseLevel)
-
         val robustThreshold = this.robustThreshold
 
         val result = RobustKnownGravityNormAccelerometerCalibrator.create(
@@ -2388,6 +2386,7 @@ class AccelerometerCalibrator private constructor(
                 if (robustThreshold != null) {
                     result.threshold = robustThreshold
                 } else {
+                    checkNotNull(baseNoiseLevel)
                     result.threshold = robustThresholdFactor * baseNoiseLevel
                 }
             }
@@ -2395,6 +2394,7 @@ class AccelerometerCalibrator private constructor(
                 if (robustThreshold != null) {
                     result.threshold = robustThreshold
                 } else {
+                    checkNotNull(baseNoiseLevel)
                     result.threshold = robustThresholdFactor * baseNoiseLevel
                 }
             }
@@ -2402,13 +2402,16 @@ class AccelerometerCalibrator private constructor(
                 if (robustThreshold != null) {
                     result.threshold = robustThreshold
                 } else {
+                    checkNotNull(baseNoiseLevel)
                     result.threshold = robustThresholdFactor * baseNoiseLevel
                 }
+                result.qualityScores = buildQualityScores()
             }
             is LMedSRobustKnownGravityNormAccelerometerCalibrator -> {
                 if (robustThreshold != null) {
                     result.stopThreshold = robustThreshold
                 } else {
+                    checkNotNull(baseNoiseLevel)
                     result.stopThreshold =
                         robustThresholdFactor * robustStopThresholdFactor * baseNoiseLevel
                 }
@@ -2417,9 +2420,11 @@ class AccelerometerCalibrator private constructor(
                 if (robustThreshold != null) {
                     result.stopThreshold = robustThreshold
                 } else {
+                    checkNotNull(baseNoiseLevel)
                     result.stopThreshold =
                         robustThresholdFactor * robustStopThresholdFactor * baseNoiseLevel
                 }
+                result.qualityScores = buildQualityScores()
             }
         }
 
@@ -2427,7 +2432,7 @@ class AccelerometerCalibrator private constructor(
     }
 
     /**
-     * Builds required quality scroes for PROSAC and PROMedS robust methods.
+     * Builds required quality scores for PROSAC and PROMedS robust methods.
      * Quality scores are build for each measurement. By default the standard deviation
      * of each measurement is taken into account, so that the larger the standard deviation
      * the poorer the measurement is considered (lower score).
