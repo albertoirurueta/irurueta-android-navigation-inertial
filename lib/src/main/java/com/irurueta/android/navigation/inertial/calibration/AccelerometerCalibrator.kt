@@ -1557,8 +1557,7 @@ class AccelerometerCalibrator private constructor(
      */
     val estimatedBiasX: Double?
         get() {
-            val internalCalibrator = this.internalCalibrator ?: return null
-            return when (internalCalibrator) {
+            return when (val internalCalibrator = this.internalCalibrator) {
                 is UnknownBiasAccelerometerCalibrator -> {
                     internalCalibrator.estimatedBiasFx
                 }
@@ -1580,8 +1579,7 @@ class AccelerometerCalibrator private constructor(
      */
     val estimatedBiasY: Double?
         get() {
-            val internalCalibrator = this.internalCalibrator ?: return null
-            return when (internalCalibrator) {
+            return when (val internalCalibrator = this.internalCalibrator) {
                 is UnknownBiasAccelerometerCalibrator -> {
                     internalCalibrator.estimatedBiasFy
                 }
@@ -1603,8 +1601,7 @@ class AccelerometerCalibrator private constructor(
      */
     val estimatedBiasZ: Double?
         get() {
-            val internalCalibrator = this.internalCalibrator ?: return null
-            return when (internalCalibrator) {
+            return when (val internalCalibrator = this.internalCalibrator) {
                 is UnknownBiasAccelerometerCalibrator -> {
                     internalCalibrator.estimatedBiasFz
                 }
@@ -1625,8 +1622,7 @@ class AccelerometerCalibrator private constructor(
      */
     val estimatedBiasXAsAcceleration: Acceleration?
         get() {
-            val internalCalibrator = this.internalCalibrator ?: return null
-            return when (internalCalibrator) {
+            return when (val internalCalibrator = this.internalCalibrator) {
                 is UnknownBiasAccelerometerCalibrator -> {
                     internalCalibrator.estimatedBiasFxAsAcceleration
                 }
@@ -1649,8 +1645,7 @@ class AccelerometerCalibrator private constructor(
      * @return true if result is available, false otherwise.
      */
     fun getEstimatedBiasXAsAcceleration(result: Acceleration): Boolean {
-        val internalCalibrator = this.internalCalibrator ?: return false
-        return when (internalCalibrator) {
+        return when (val internalCalibrator = this.internalCalibrator) {
             is UnknownBiasAccelerometerCalibrator -> {
                 internalCalibrator.getEstimatedBiasFxAsAcceleration(result)
             }
@@ -1672,8 +1667,7 @@ class AccelerometerCalibrator private constructor(
      */
     val estimatedBiasYAsAcceleration: Acceleration?
         get() {
-            val internalCalibrator = this.internalCalibrator ?: return null
-            return when (internalCalibrator) {
+            return when (val internalCalibrator = this.internalCalibrator) {
                 is UnknownBiasAccelerometerCalibrator -> {
                     internalCalibrator.estimatedBiasFyAsAcceleration
                 }
@@ -1696,8 +1690,7 @@ class AccelerometerCalibrator private constructor(
      * @return true if result is available, false otherwise.
      */
     fun getEstimatedBiasYAsAcceleration(result: Acceleration): Boolean {
-        val internalCalibrator = this.internalCalibrator ?: return false
-        return when (internalCalibrator) {
+        return when (val internalCalibrator = this.internalCalibrator) {
             is UnknownBiasAccelerometerCalibrator -> {
                 internalCalibrator.getEstimatedBiasFyAsAcceleration(result)
             }
@@ -1719,8 +1712,7 @@ class AccelerometerCalibrator private constructor(
      */
     val estimatedBiasZAsAcceleration: Acceleration?
         get() {
-            val internalCalibrator = this.internalCalibrator ?: return null
-            return when (internalCalibrator) {
+            return when (val internalCalibrator = this.internalCalibrator) {
                 is UnknownBiasAccelerometerCalibrator -> {
                     internalCalibrator.estimatedBiasFzAsAcceleration
                 }
@@ -1743,8 +1735,7 @@ class AccelerometerCalibrator private constructor(
      * @return true if result is available, false otherwise.
      */
     fun getEstimatedBiasZAsAcceleration(result: Acceleration): Boolean {
-        val internalCalibrator = this.internalCalibrator ?: return false
-        return when (internalCalibrator) {
+        return when (val internalCalibrator = this.internalCalibrator) {
             is UnknownBiasAccelerometerCalibrator -> {
                 internalCalibrator.getEstimatedBiasFzAsAcceleration(result)
             }
@@ -1766,8 +1757,7 @@ class AccelerometerCalibrator private constructor(
      */
     val estimatedBiasAsTriad: AccelerationTriad?
         get() {
-            val internalCalibrator = this.internalCalibrator ?: return null
-            return when (internalCalibrator) {
+            return when (val internalCalibrator = this.internalCalibrator) {
                 is UnknownBiasAccelerometerCalibrator -> {
                     internalCalibrator.estimatedBiasAsTriad
                 }
@@ -1790,8 +1780,7 @@ class AccelerometerCalibrator private constructor(
      * @return true if result is available, false otherwise.
      */
     fun getEstimatedBiasAsTriad(result: AccelerationTriad): Boolean {
-        val internalCalibrator = this.internalCalibrator ?: return false
-        return when (internalCalibrator) {
+        return when (val internalCalibrator = this.internalCalibrator) {
             is UnknownBiasAccelerometerCalibrator -> {
                 internalCalibrator.getEstimatedBiasAsTriad(result)
             }
@@ -2082,13 +2071,13 @@ class AccelerometerCalibrator private constructor(
         val location = this.location
         return if (isGroundTruthInitialBias) {
             if (location != null) {
-                buildRobustKnownBiasAndPositionCalibrator()
+                buildRobustKnownBiasAndPositionCalibrator(location)
             } else {
                 buildRobustKnownBiasAndGravityCalibrator()
             }
         } else {
             if (location != null) {
-                buildRobustKnownPositionCalibrator()
+                buildRobustKnownPositionCalibrator(location)
             } else {
                 buildRobustKnownGravityCalibrator()
             }
@@ -2098,12 +2087,10 @@ class AccelerometerCalibrator private constructor(
     /**
      * Internally build a robust accelerometer calibrator when bias and position is known.
      *
+     * @param location current device location.
      * @return an internal accelerometer calibrator.
      */
-    private fun buildRobustKnownBiasAndPositionCalibrator(): RobustKnownBiasAndPositionAccelerometerCalibrator {
-        val location = this.location
-        checkNotNull(location)
-
+    private fun buildRobustKnownBiasAndPositionCalibrator(location: Location): RobustKnownBiasAndPositionAccelerometerCalibrator {
         val baseNoiseLevel = this.baseNoiseLevel
         val robustThreshold = this.robustThreshold
 
@@ -2266,12 +2253,10 @@ class AccelerometerCalibrator private constructor(
     /**
      * Internally build a robust accelerometer calibrator when position is known.
      *
+     * @param location current device location.
      * @return an internal accelerometer calibrator.
      */
-    private fun buildRobustKnownPositionCalibrator(): RobustKnownPositionAccelerometerCalibrator {
-        val location = this.location
-        checkNotNull(location)
-
+    private fun buildRobustKnownPositionCalibrator(location: Location): RobustKnownPositionAccelerometerCalibrator {
         val baseNoiseLevel = this.baseNoiseLevel
         val robustThreshold = this.robustThreshold
 
