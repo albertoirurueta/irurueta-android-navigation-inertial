@@ -22,8 +22,8 @@ buildscript {
         nexus_publish_version = '1.1.0'
         irurueta_android_gl_cube = '1.0.0'
         irurueta_navigation = '1.1.0'
-        irurueta_navigation_inertial = '1.1.0'
-        irurueta_navigation_inertial_extra = '1.1.0'
+        irurueta_navigation_inertial = '1.1.1'
+        irurueta_navigation_inertial_extra = '1.1.1'
     }
     repositories {
         google()

@@ -11024,11 +11024,11 @@ class AccelerometerCalibratorTest {
         assertEquals(ROBUST_THRESHOLD, internalCalibrator2.threshold, 0.0)
 
         assertTrue(internalCalibrator2.isReady)
-        //TODO: fix assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
-        //TODO: fix assertEquals(
-        //    calibrator.minimumRequiredMeasurements,
-        //    internalCalibrator2.minimumRequiredMeasurements
-        //)
+        assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
     }
 
     @Test
@@ -11118,11 +11118,11 @@ class AccelerometerCalibratorTest {
         assertEquals(ROBUST_THRESHOLD, internalCalibrator2.threshold, 0.0)
 
         assertTrue(internalCalibrator2.isReady)
-        // TODO: fix assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
-        // TODO: fix assertEquals(
-        //    calibrator.minimumRequiredMeasurements,
-        //    internalCalibrator2.minimumRequiredMeasurements
-        //)
+        assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
     }
 
     @Test
@@ -11215,11 +11215,11 @@ class AccelerometerCalibratorTest {
         assertEquals(ROBUST_THRESHOLD_FACTOR * baseNoiseLevel, internalCalibrator2.threshold, 0.0)
 
         assertTrue(internalCalibrator2.isReady)
-        // TODO: fix assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
-        // TODO: fix assertEquals(
-        //    calibrator.minimumRequiredMeasurements,
-        //    internalCalibrator2.minimumRequiredMeasurements
-        //)
+        assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
     }
 
     @Test
@@ -11365,11 +11365,11 @@ class AccelerometerCalibratorTest {
         assertEquals(ROBUST_THRESHOLD, internalCalibrator2.threshold, 0.0)
 
         assertTrue(internalCalibrator2.isReady)
-        // TODO: fix assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
-        // TODO: fix assertEquals(
-        //    calibrator.minimumRequiredMeasurements,
-        //    internalCalibrator2.minimumRequiredMeasurements
-        //)
+        assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
     }
 
     @Test
@@ -11459,11 +11459,11 @@ class AccelerometerCalibratorTest {
         assertEquals(ROBUST_THRESHOLD, internalCalibrator2.threshold, 0.0)
 
         assertTrue(internalCalibrator2.isReady)
-        // TODO: fix assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
-        // TODO: fix assertEquals(
-        //    calibrator.minimumRequiredMeasurements,
-        //    internalCalibrator2.minimumRequiredMeasurements
-        //)
+        assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
     }
 
     @Test
@@ -11556,11 +11556,11 @@ class AccelerometerCalibratorTest {
         assertEquals(ROBUST_THRESHOLD_FACTOR * baseNoiseLevel, internalCalibrator2.threshold, 0.0)
 
         assertTrue(internalCalibrator2.isReady)
-        // TODO: fix assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
-        // TODO: fix assertEquals(
-        //    calibrator.minimumRequiredMeasurements,
-        //    internalCalibrator2.minimumRequiredMeasurements
-        //)
+        assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
     }
 
     @Test
@@ -11710,11 +11710,11 @@ class AccelerometerCalibratorTest {
         assertEquals(calibrator.measurements.size, internalCalibrator2.qualityScores.size)
 
         assertTrue(internalCalibrator2.isReady)
-        // TODO: fix assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
-        // TODO: fix assertEquals(
-        //    calibrator.minimumRequiredMeasurements,
-        //    internalCalibrator2.minimumRequiredMeasurements
-        //)
+        assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
     }
 
     @Test
@@ -11808,11 +11808,11 @@ class AccelerometerCalibratorTest {
         assertEquals(calibrator.measurements.size, internalCalibrator2.qualityScores.size)
 
         assertTrue(internalCalibrator2.isReady)
-        // TODO: fix assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
-        // TODO: fix assertEquals(
-        //    calibrator.minimumRequiredMeasurements,
-        //    internalCalibrator2.minimumRequiredMeasurements
-        //)
+        assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
     }
 
     @Test
@@ -11909,11 +11909,11 @@ class AccelerometerCalibratorTest {
         assertEquals(calibrator.measurements.size, internalCalibrator2.qualityScores.size)
 
         assertTrue(internalCalibrator2.isReady)
-        // TODO: fix assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
-        // TODO: fix assertEquals(
-        //    calibrator.minimumRequiredMeasurements,
-        //    internalCalibrator2.minimumRequiredMeasurements
-        //)
+        assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
     }
 
     @Test
@@ -12062,11 +12062,11 @@ class AccelerometerCalibratorTest {
         assertEquals(ROBUST_THRESHOLD, internalCalibrator2.stopThreshold, 0.0)
 
         assertTrue(internalCalibrator2.isReady)
-        // TODO: fix assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
-        // TODO: fix assertEquals(
-        //    calibrator.minimumRequiredMeasurements,
-        //    internalCalibrator2.minimumRequiredMeasurements
-        //)
+        assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
     }
 
     @Test
@@ -12156,11 +12156,11 @@ class AccelerometerCalibratorTest {
         assertEquals(ROBUST_THRESHOLD, internalCalibrator2.stopThreshold, 0.0)
 
         assertTrue(internalCalibrator2.isReady)
-        // TODO: fix assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
-        // TODO: fix assertEquals(
-        //    calibrator.minimumRequiredMeasurements,
-        //    internalCalibrator2.minimumRequiredMeasurements
-        //)
+        assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
     }
 
     @Test
@@ -12258,11 +12258,11 @@ class AccelerometerCalibratorTest {
         )
 
         assertTrue(internalCalibrator2.isReady)
-        // TODO: fix assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
-        // TODO: fix assertEquals(
-        //    calibrator.minimumRequiredMeasurements,
-        //    internalCalibrator2.minimumRequiredMeasurements
-        //)
+        assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
     }
 
     @Test
@@ -12412,11 +12412,11 @@ class AccelerometerCalibratorTest {
         assertEquals(calibrator.measurements.size, internalCalibrator2.qualityScores.size)
 
         assertTrue(internalCalibrator2.isReady)
-        // TODO: fix assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
-        // TODO: fix assertEquals(
-        //    calibrator.minimumRequiredMeasurements,
-        //    internalCalibrator2.minimumRequiredMeasurements
-        //)
+        assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
     }
 
     @Test
@@ -12510,11 +12510,11 @@ class AccelerometerCalibratorTest {
         assertEquals(calibrator.measurements.size, internalCalibrator2.qualityScores.size)
 
         assertTrue(internalCalibrator2.isReady)
-        // TODO: fix assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
-        // TODO: fix assertEquals(
-        //    calibrator.minimumRequiredMeasurements,
-        //    internalCalibrator2.minimumRequiredMeasurements
-        //)
+        assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
     }
 
     @Test
@@ -12616,11 +12616,11 @@ class AccelerometerCalibratorTest {
         assertEquals(calibrator.measurements.size, internalCalibrator2.qualityScores.size)
 
         assertTrue(internalCalibrator2.isReady)
-        // TODO: fix assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
-        // TODO: fix assertEquals(
-        //    calibrator.minimumRequiredMeasurements,
-        //    internalCalibrator2.minimumRequiredMeasurements
-        //)
+        assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
     }
 
     @Test
