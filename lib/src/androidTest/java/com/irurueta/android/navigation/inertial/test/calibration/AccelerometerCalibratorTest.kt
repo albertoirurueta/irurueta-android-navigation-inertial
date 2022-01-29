@@ -10,6 +10,7 @@ import androidx.test.rule.GrantPermissionRule
 import com.irurueta.android.navigation.inertial.LocationService
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
 import com.irurueta.android.navigation.inertial.calibration.AccelerometerCalibrator
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
 import com.irurueta.android.navigation.inertial.test.LocationActivity
 import com.irurueta.numerical.robust.RobustEstimatorMethod
 import io.mockk.spyk
@@ -41,11 +42,10 @@ class AccelerometerCalibratorTest {
 
     @RequiresDevice
     @Test
-    fun startAndStop_whenNoLocation_completesCalibration() {
+    fun startAndStop_whenNoLocationAccelerometerSensor_completesCalibration() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val calibrator = buildCalibrator(context)
-        calibrator.robustMethod = RobustEstimatorMethod.RANSAC
-        calibrator.requiredMeasurements = 3 * calibrator.minimumRequiredMeasurements
+        val calibrator =
+            buildCalibrator(context, AccelerometerSensorCollector.SensorType.ACCELEROMETER)
 
         calibrator.start()
 
@@ -58,14 +58,13 @@ class AccelerometerCalibratorTest {
 
     @RequiresDevice
     @Test
-    fun startAndStop_whenLocation_completesCalibration() {
+    fun startAndStop_whenLocationAccelerometerSensor_completesCalibration() {
         val location = getCurrentLocation()
 
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val calibrator = buildCalibrator(context)
+        val calibrator =
+            buildCalibrator(context, AccelerometerSensorCollector.SensorType.ACCELEROMETER)
         calibrator.location = location
-        calibrator.robustMethod = RobustEstimatorMethod.RANSAC
-        calibrator.requiredMeasurements = 3 * calibrator.minimumRequiredMeasurements
 
         calibrator.start()
 
@@ -76,6 +75,46 @@ class AccelerometerCalibratorTest {
         logCalibrationResult(calibrator)
     }
 
+    @RequiresDevice
+    @Test
+    fun startAndStop_whenNoLocationAccelerometerUncalibratedSensor_completesCalibration() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val calibrator =
+            buildCalibrator(
+                context,
+                AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+            )
+
+        calibrator.start()
+
+        syncHelper.waitOnCondition({ completed < 1 }, timeout = TIMEOUT)
+
+        calibrator.stop()
+
+        logCalibrationResult(calibrator)
+    }
+
+    @RequiresDevice
+    @Test
+    fun startAndStop_whenLocationAccelerometerUncalibratedSensor_completesCalibration() {
+        val location = getCurrentLocation()
+
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val calibrator =
+            buildCalibrator(
+                context,
+                AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+            )
+        calibrator.location = location
+
+        calibrator.start()
+
+        syncHelper.waitOnCondition({ completed < 1 }, timeout = TIMEOUT)
+
+        calibrator.stop()
+
+        logCalibrationResult(calibrator)
+    }
 
     private fun getCurrentLocation(): Location {
         val scenario = ActivityScenario.launch(LocationActivity::class.java).use {
@@ -109,8 +148,12 @@ class AccelerometerCalibratorTest {
         return currentLocation
     }
 
-    private fun buildCalibrator(context: Context): AccelerometerCalibrator {
-        return AccelerometerCalibrator(context,
+    private fun buildCalibrator(
+        context: Context,
+        sensorType: AccelerometerSensorCollector.SensorType
+    ): AccelerometerCalibrator {
+        val calibrator = AccelerometerCalibrator(context,
+            sensorType = sensorType,
             initializationStartedListener = {
                 Log.i(
                     "AccelerometerCalibratorTest",
@@ -171,13 +214,16 @@ class AccelerometerCalibratorTest {
             },
             stoppedListener = { Log.i("AccelerometerCalibratorTest", "Calibrator stopped") }
         )
+        calibrator.robustMethod = RobustEstimatorMethod.PROSAC
+        calibrator.requiredMeasurements = 3 * calibrator.minimumRequiredMeasurements
+        return calibrator
     }
 
     private fun logCalibrationResult(calibrator: AccelerometerCalibrator) {
         Log.i("AccelerometerCalibratorTest", "Result unreliable: ${calibrator.resultUnreliable}")
         Log.i(
             "AccelerometerCalibratorTest",
-            "Initial bias. x: ${calibrator.initialBiasX}, y: ${calibrator.initialBiasX}, z: ${calibrator.initialBiasX} m/s^2"
+            "Initial bias. x: ${calibrator.initialBiasX}, y: ${calibrator.initialBiasY}, z: ${calibrator.initialBiasZ} m/s^2"
         )
         Log.i("AccelerometerCalibratorTest", "Result unreliable: ${calibrator.resultUnreliable}")
         Log.i(
