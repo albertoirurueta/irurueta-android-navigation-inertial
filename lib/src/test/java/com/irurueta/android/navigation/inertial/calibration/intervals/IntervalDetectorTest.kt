@@ -32,6 +32,7 @@ import com.irurueta.navigation.inertial.ECEFGravity
 import com.irurueta.navigation.inertial.calibration.AccelerationTriad
 import com.irurueta.navigation.inertial.calibration.TimeIntervalEstimator
 import com.irurueta.navigation.inertial.calibration.intervals.AccelerationTriadStaticIntervalDetector
+import com.irurueta.navigation.inertial.calibration.intervals.AccelerationTriadStaticIntervalDetectorListener
 import com.irurueta.navigation.inertial.calibration.intervals.TriadStaticIntervalDetector
 import com.irurueta.navigation.inertial.calibration.noise.WindowedTriadNoiseEstimator
 import com.irurueta.statistics.UniformRandomizer
@@ -3105,6 +3106,71 @@ class IntervalDetectorTest {
     }
 
     @Test
+    fun onMeasurement_whenInitializingAndListener_notifies() {
+        val initializationStartedListener =
+            mockk<IntervalDetector.OnInitializationStartedListener>(relaxUnitFun = true)
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val detector =
+            IntervalDetector(context, initializationStartedListener = initializationStartedListener)
+
+        val internalDetector: AccelerationTriadStaticIntervalDetector? =
+            detector.getPrivateProperty("internalDetector")
+        requireNotNull(internalDetector)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZING)
+        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
+        detector.setPrivateProperty("numberOfProcessedMeasurements", 1)
+        val timestamp1 = SystemClock.elapsedRealtimeNanos()
+        detector.setPrivateProperty("initialTimestamp", timestamp1)
+
+        val timeIntervalEstimator: TimeIntervalEstimator? =
+            detector.getPrivateProperty("timeIntervalEstimator")
+        requireNotNull(timeIntervalEstimator)
+        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+        detector.setPrivateProperty("timeIntervalEstimator", timeIntervalEstimatorSpy)
+
+        // check initial values
+        val initialTimestamp1: Long? = detector.getPrivateProperty("initialTimestamp")
+        requireNotNull(initialTimestamp1)
+        assertEquals(timestamp1, initialTimestamp1)
+
+        assertEquals(IntervalDetector.Status.INITIALIZING, detector.status)
+        assertEquals(1, detector.numberOfProcessedMeasurements)
+
+        // process measurement
+        val measurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
+            detector.getPrivateProperty("internalMeasurementListener")
+        requireNotNull(measurementListener)
+
+        val gravity = getGravity()
+        val ax = gravity.gx.toFloat()
+        val ay = gravity.gy.toFloat()
+        val az = gravity.gz.toFloat()
+        val timestamp2 = timestamp1 + TIME_INTERVAL_MILLIS * MILLIS_TO_NANOS
+        val accuracy = SensorAccuracy.HIGH
+
+        measurementListener.onMeasurement(ax, ay, az, null, null, null, timestamp2, accuracy)
+
+        // check
+        verify(exactly = 1) { timeIntervalEstimatorSpy.addTimestamp(TIME_INTERVAL_SECONDS) }
+        verify(exactly = 1) {
+            internalDetectorSpy.process(
+                ax.toDouble(),
+                ay.toDouble(),
+                az.toDouble()
+            )
+        }
+        assertEquals(2, detector.numberOfProcessedMeasurements)
+        assertEquals(IntervalDetector.Status.INITIALIZING, detector.status)
+
+        val initialTimestamp2: Long? = detector.getPrivateProperty("initialTimestamp")
+        requireNotNull(initialTimestamp2)
+        assertEquals(timestamp1, initialTimestamp2)
+
+        verify(exactly = 1) { initializationStartedListener.onInitializationStarted(detector) }
+    }
+
+    @Test
     fun onMeasurement_whenInitializationCompleted_setsTimeInterval() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = IntervalDetector(context)
@@ -4987,6 +5053,377 @@ class IntervalDetectorTest {
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(IntervalDetector.Status.IDLE, detector.status)
+    }
+
+    @Test
+    fun onInitializationStarted_whenNoListener_makesNoAction() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val intervalDetector = IntervalDetector(context)
+
+        val internalDetectorListener: AccelerationTriadStaticIntervalDetectorListener? =
+            intervalDetector.getPrivateProperty("internalDetectorListener")
+        requireNotNull(internalDetectorListener)
+
+        val internalDetector: AccelerationTriadStaticIntervalDetector? =
+            intervalDetector.getPrivateProperty("internalDetector")
+        requireNotNull(internalDetector)
+        internalDetectorListener.onInitializationStarted(internalDetector)
+    }
+
+    @Test
+    fun onInitializationStarted_whenListener_notifies() {
+        val initializationStartedListener =
+            mockk<IntervalDetector.OnInitializationStartedListener>(relaxUnitFun = true)
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val intervalDetector =
+            IntervalDetector(context, initializationStartedListener = initializationStartedListener)
+
+        val internalDetectorListener: AccelerationTriadStaticIntervalDetectorListener? =
+            intervalDetector.getPrivateProperty("internalDetectorListener")
+        requireNotNull(internalDetectorListener)
+
+        val internalDetector: AccelerationTriadStaticIntervalDetector? =
+            intervalDetector.getPrivateProperty("internalDetector")
+        requireNotNull(internalDetector)
+        internalDetectorListener.onInitializationStarted(internalDetector)
+
+        verify(exactly = 1) { initializationStartedListener.onInitializationStarted(intervalDetector) }
+    }
+
+    @Test
+    fun onInitializationCompleted_whenNoListener_makesNoAction() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val intervalDetector = IntervalDetector(context)
+
+        val internalDetectorListener: AccelerationTriadStaticIntervalDetectorListener? =
+            intervalDetector.getPrivateProperty("internalDetectorListener")
+        requireNotNull(internalDetectorListener)
+
+        val internalDetector: AccelerationTriadStaticIntervalDetector? =
+            intervalDetector.getPrivateProperty("internalDetector")
+        requireNotNull(internalDetector)
+        val randomizer = UniformRandomizer()
+        val baseNoiseLevel = randomizer.nextDouble()
+        internalDetectorListener.onInitializationCompleted(internalDetector, baseNoiseLevel)
+    }
+
+    @Test
+    fun onInitializationCompleted_whenListener_notifies() {
+        val initializationCompletedListener =
+            mockk<IntervalDetector.OnInitializationCompletedListener>(relaxUnitFun = true)
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val intervalDetector = IntervalDetector(
+            context,
+            initializationCompletedListener = initializationCompletedListener
+        )
+
+        val internalDetectorListener: AccelerationTriadStaticIntervalDetectorListener? =
+            intervalDetector.getPrivateProperty("internalDetectorListener")
+        requireNotNull(internalDetectorListener)
+
+        val internalDetector: AccelerationTriadStaticIntervalDetector? =
+            intervalDetector.getPrivateProperty("internalDetector")
+        requireNotNull(internalDetector)
+        val randomizer = UniformRandomizer()
+        val baseNoiseLevel = randomizer.nextDouble()
+        internalDetectorListener.onInitializationCompleted(internalDetector, baseNoiseLevel)
+
+        verify(exactly = 1) {
+            initializationCompletedListener.onInitializationCompleted(
+                intervalDetector,
+                baseNoiseLevel
+            )
+        }
+    }
+
+    @Test
+    fun onError_whenNoListener_stops() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val intervalDetector = IntervalDetector(context)
+
+        val internalDetectorListener: AccelerationTriadStaticIntervalDetectorListener? =
+            intervalDetector.getPrivateProperty("internalDetectorListener")
+        requireNotNull(internalDetectorListener)
+
+        val internalDetector: AccelerationTriadStaticIntervalDetector? =
+            intervalDetector.getPrivateProperty("internalDetector")
+        requireNotNull(internalDetector)
+        val randomizer = UniformRandomizer()
+        val accumulatedNoiseLevel = randomizer.nextDouble()
+        val instantaneousNoiseLevel = randomizer.nextDouble()
+
+        val collector: AccelerometerSensorCollector? =
+            intervalDetector.getPrivateProperty("collector")
+        requireNotNull(collector)
+        val collectorSpy = spyk(collector)
+        intervalDetector.setPrivateProperty("collector", collectorSpy)
+
+        internalDetectorListener.onError(
+            internalDetector,
+            accumulatedNoiseLevel,
+            instantaneousNoiseLevel,
+            TriadStaticIntervalDetector.ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED
+        )
+
+        verify(exactly = 1) { collectorSpy.stop() }
+    }
+
+    @Test
+    fun onError_whenListener_stopsAndNotifies() {
+        val errorListener = mockk<IntervalDetector.OnErrorListener>(relaxUnitFun = true)
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val intervalDetector = IntervalDetector(context, errorListener = errorListener)
+
+        val internalDetectorListener: AccelerationTriadStaticIntervalDetectorListener? =
+            intervalDetector.getPrivateProperty("internalDetectorListener")
+        requireNotNull(internalDetectorListener)
+
+        val internalDetector: AccelerationTriadStaticIntervalDetector? =
+            intervalDetector.getPrivateProperty("internalDetector")
+        requireNotNull(internalDetector)
+        val randomizer = UniformRandomizer()
+        val accumulatedNoiseLevel = randomizer.nextDouble()
+        val instantaneousNoiseLevel = randomizer.nextDouble()
+
+        val collector: AccelerometerSensorCollector? =
+            intervalDetector.getPrivateProperty("collector")
+        requireNotNull(collector)
+        val collectorSpy = spyk(collector)
+        intervalDetector.setPrivateProperty("collector", collectorSpy)
+
+        internalDetectorListener.onError(
+            internalDetector,
+            accumulatedNoiseLevel,
+            instantaneousNoiseLevel,
+            TriadStaticIntervalDetector.ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED
+        )
+
+        verify(exactly = 1) { collectorSpy.stop() }
+        verify(exactly = 1) {
+            errorListener.onError(
+                intervalDetector,
+                IntervalDetector.ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
+            )
+        }
+    }
+
+    @Test
+    fun onStaticIntervalDetected_whenNoListener_makesNoAction() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val intervalDetector = IntervalDetector(context)
+
+        val internalDetectorListener: AccelerationTriadStaticIntervalDetectorListener? =
+            intervalDetector.getPrivateProperty("internalDetectorListener")
+        requireNotNull(internalDetectorListener)
+
+        val internalDetector: AccelerationTriadStaticIntervalDetector? =
+            intervalDetector.getPrivateProperty("internalDetector")
+        requireNotNull(internalDetector)
+        val randomizer = UniformRandomizer()
+        val instantaneousAvgX = randomizer.nextDouble()
+        val instantaneousAvgY = randomizer.nextDouble()
+        val instantaneousAvgZ = randomizer.nextDouble()
+        val instantaneousStdX = randomizer.nextDouble()
+        val instantaneousStdY = randomizer.nextDouble()
+        val instantaneousStdZ = randomizer.nextDouble()
+        internalDetectorListener.onStaticIntervalDetected(
+            internalDetector,
+            instantaneousAvgX,
+            instantaneousAvgY,
+            instantaneousAvgZ,
+            instantaneousStdX,
+            instantaneousStdY,
+            instantaneousStdZ
+        )
+    }
+
+    @Test
+    fun onStaticIntervalDetected_whenListener_notifies() {
+        val staticIntervalDetectedListener =
+            mockk<IntervalDetector.OnStaticIntervalDetectedListener>(relaxUnitFun = true)
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val intervalDetector = IntervalDetector(
+            context,
+            staticIntervalDetectedListener = staticIntervalDetectedListener
+        )
+
+        val internalDetectorListener: AccelerationTriadStaticIntervalDetectorListener? =
+            intervalDetector.getPrivateProperty("internalDetectorListener")
+        requireNotNull(internalDetectorListener)
+
+        val internalDetector: AccelerationTriadStaticIntervalDetector? =
+            intervalDetector.getPrivateProperty("internalDetector")
+        requireNotNull(internalDetector)
+        val randomizer = UniformRandomizer()
+        val instantaneousAvgX = randomizer.nextDouble()
+        val instantaneousAvgY = randomizer.nextDouble()
+        val instantaneousAvgZ = randomizer.nextDouble()
+        val instantaneousStdX = randomizer.nextDouble()
+        val instantaneousStdY = randomizer.nextDouble()
+        val instantaneousStdZ = randomizer.nextDouble()
+        internalDetectorListener.onStaticIntervalDetected(
+            internalDetector,
+            instantaneousAvgX,
+            instantaneousAvgY,
+            instantaneousAvgZ,
+            instantaneousStdX,
+            instantaneousStdY,
+            instantaneousStdZ
+        )
+
+        verify(exactly = 1) {
+            staticIntervalDetectedListener.onStaticIntervalDetected(
+                intervalDetector,
+                instantaneousAvgX,
+                instantaneousAvgY,
+                instantaneousAvgZ,
+                instantaneousStdX,
+                instantaneousStdY,
+                instantaneousStdZ
+            )
+        }
+    }
+
+    @Test
+    fun onDynamicIntervalDetected_whenNoListener_makesNoAction() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val intervalDetector = IntervalDetector(context)
+
+        val internalDetectorListener: AccelerationTriadStaticIntervalDetectorListener? =
+            intervalDetector.getPrivateProperty("internalDetectorListener")
+        requireNotNull(internalDetectorListener)
+
+        val internalDetector: AccelerationTriadStaticIntervalDetector? =
+            intervalDetector.getPrivateProperty("internalDetector")
+        requireNotNull(internalDetector)
+        val randomizer = UniformRandomizer()
+        val instantaneousAvgX = randomizer.nextDouble()
+        val instantaneousAvgY = randomizer.nextDouble()
+        val instantaneousAvgZ = randomizer.nextDouble()
+        val instantaneousStdX = randomizer.nextDouble()
+        val instantaneousStdY = randomizer.nextDouble()
+        val instantaneousStdZ = randomizer.nextDouble()
+        val accumulatedAvgX = randomizer.nextDouble()
+        val accumulatedAvgY = randomizer.nextDouble()
+        val accumulatedAvgZ = randomizer.nextDouble()
+        val accumulatedStdX = randomizer.nextDouble()
+        val accumulatedStdY = randomizer.nextDouble()
+        val accumulatedStdZ = randomizer.nextDouble()
+        internalDetectorListener.onDynamicIntervalDetected(
+            internalDetector,
+            instantaneousAvgX,
+            instantaneousAvgY,
+            instantaneousAvgZ,
+            instantaneousStdX,
+            instantaneousStdY,
+            instantaneousStdZ,
+            accumulatedAvgX,
+            accumulatedAvgY,
+            accumulatedAvgZ,
+            accumulatedStdX,
+            accumulatedStdY,
+            accumulatedStdZ
+        )
+    }
+
+    @Test
+    fun onDynamicIntervalDetected_whenListener_notifies() {
+        val dynamicIntervalDetectedListener =
+            mockk<IntervalDetector.OnDynamicIntervalDetectedListener>(relaxUnitFun = true)
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val intervalDetector = IntervalDetector(
+            context,
+            dynamicIntervalDetectedListener = dynamicIntervalDetectedListener
+        )
+
+        val internalDetectorListener: AccelerationTriadStaticIntervalDetectorListener? =
+            intervalDetector.getPrivateProperty("internalDetectorListener")
+        requireNotNull(internalDetectorListener)
+
+        val internalDetector: AccelerationTriadStaticIntervalDetector? =
+            intervalDetector.getPrivateProperty("internalDetector")
+        requireNotNull(internalDetector)
+        val randomizer = UniformRandomizer()
+        val instantaneousAvgX = randomizer.nextDouble()
+        val instantaneousAvgY = randomizer.nextDouble()
+        val instantaneousAvgZ = randomizer.nextDouble()
+        val instantaneousStdX = randomizer.nextDouble()
+        val instantaneousStdY = randomizer.nextDouble()
+        val instantaneousStdZ = randomizer.nextDouble()
+        val accumulatedAvgX = randomizer.nextDouble()
+        val accumulatedAvgY = randomizer.nextDouble()
+        val accumulatedAvgZ = randomizer.nextDouble()
+        val accumulatedStdX = randomizer.nextDouble()
+        val accumulatedStdY = randomizer.nextDouble()
+        val accumulatedStdZ = randomizer.nextDouble()
+        internalDetectorListener.onDynamicIntervalDetected(
+            internalDetector,
+            instantaneousAvgX,
+            instantaneousAvgY,
+            instantaneousAvgZ,
+            instantaneousStdX,
+            instantaneousStdY,
+            instantaneousStdZ,
+            accumulatedAvgX,
+            accumulatedAvgY,
+            accumulatedAvgZ,
+            accumulatedStdX,
+            accumulatedStdY,
+            accumulatedStdZ
+        )
+
+        verify(exactly = 1) {
+            dynamicIntervalDetectedListener.onDynamicIntervalDetected(
+                intervalDetector,
+                instantaneousAvgX,
+                instantaneousAvgY,
+                instantaneousAvgZ,
+                instantaneousStdX,
+                instantaneousStdY,
+                instantaneousStdZ,
+                accumulatedAvgX,
+                accumulatedAvgY,
+                accumulatedAvgZ,
+                accumulatedStdX,
+                accumulatedStdY,
+                accumulatedStdZ
+            )
+        }
+    }
+
+    @Test
+    fun onReset_whenNoListener_makesNoAction() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val intervalDetector = IntervalDetector(context)
+
+        val internalDetectorListener: AccelerationTriadStaticIntervalDetectorListener? =
+            intervalDetector.getPrivateProperty("internalDetectorListener")
+        requireNotNull(internalDetectorListener)
+
+        val internalDetector: AccelerationTriadStaticIntervalDetector? =
+            intervalDetector.getPrivateProperty("internalDetector")
+        requireNotNull(internalDetector)
+
+        internalDetectorListener.onReset(internalDetector)
+    }
+
+    @Test
+    fun onReset_whenListener_notifies() {
+        val resetListener = mockk<IntervalDetector.OnResetListener>(relaxUnitFun = true)
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val intervalDetector = IntervalDetector(context, resetListener = resetListener)
+
+        val internalDetectorListener: AccelerationTriadStaticIntervalDetectorListener? =
+            intervalDetector.getPrivateProperty("internalDetectorListener")
+        requireNotNull(internalDetectorListener)
+
+        val internalDetector: AccelerationTriadStaticIntervalDetector? =
+            intervalDetector.getPrivateProperty("internalDetector")
+        requireNotNull(internalDetector)
+
+        internalDetectorListener.onReset(internalDetector)
+
+        verify(exactly = 1) { resetListener.onReset(intervalDetector) }
     }
 
     private fun getGravity(): ECEFGravity {

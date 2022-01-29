@@ -184,40 +184,29 @@ class IntervalDetector(
      * the internal interval detector.
      */
     private val internalMeasurementListener =
-        object : AccelerometerSensorCollector.OnMeasurementListener {
-            override fun onMeasurement(
-                ax: Float,
-                ay: Float,
-                az: Float,
-                bx: Float?,
-                by: Float?,
-                bz: Float?,
-                timestamp: Long,
-                accuracy: SensorAccuracy?
-            ) {
-                val status = status
-                if (status == Status.INITIALIZING) {
-                    // during initialization phase, also estimate time interval duration.
-                    if (numberOfProcessedMeasurements > 0) {
-                        val diff = timestamp - initialTimestamp
-                        val diffSeconds = TimeConverter.nanosecondToSecond(diff.toDouble())
-                        timeIntervalEstimator.addTimestamp(diffSeconds)
-                    } else {
-                        initialTimestamp = timestamp
-                    }
+        AccelerometerSensorCollector.OnMeasurementListener { ax, ay, az, bx, by, bz, timestamp, accuracy ->
+            val status = status
+            if (status == Status.INITIALIZING) {
+                // during initialization phase, also estimate time interval duration.
+                if (numberOfProcessedMeasurements > 0) {
+                    val diff = timestamp - initialTimestamp
+                    val diffSeconds = TimeConverter.nanosecondToSecond(diff.toDouble())
+                    timeIntervalEstimator.addTimestamp(diffSeconds)
+                } else {
+                    initialTimestamp = timestamp
                 }
-
-                internalDetector.process(ax.toDouble(), ay.toDouble(), az.toDouble())
-                numberOfProcessedMeasurements++
-
-                if (status == Status.INITIALIZATION_COMPLETED) {
-                    // once initialized, set time interval into internal detector
-                    internalDetector.timeInterval = timeIntervalEstimator.averageTimeInterval
-                    initialized = true
-                }
-
-                measurementListener?.onMeasurement(ax, ay, az, bx, by, bz, timestamp, accuracy)
             }
+
+            internalDetector.process(ax.toDouble(), ay.toDouble(), az.toDouble())
+            numberOfProcessedMeasurements++
+
+            if (status == Status.INITIALIZATION_COMPLETED) {
+                // once initialized, set time interval into internal detector
+                internalDetector.timeInterval = timeIntervalEstimator.averageTimeInterval
+                initialized = true
+            }
+
+            measurementListener?.onMeasurement(ax, ay, az, bx, by, bz, timestamp, accuracy)
         }
 
     /**
@@ -225,19 +214,17 @@ class IntervalDetector(
      * When accelerometer becomes unreliable, an error is notified.
      */
     private val internalAccuracyChangedListener =
-        object : SensorCollector.OnAccuracyChangedListener {
-            override fun onAccuracyChanged(accuracy: SensorAccuracy?) {
-                if (accuracy == SensorAccuracy.UNRELIABLE) {
-                    stop()
-                    unreliable = true
-                    errorListener?.onError(
-                        this@IntervalDetector,
-                        ErrorReason.UNRELIABLE_SENSOR
-                    )
-                }
-
-                accuracyChangedListener?.onAccuracyChanged(accuracy)
+        SensorCollector.OnAccuracyChangedListener { accuracy ->
+            if (accuracy == SensorAccuracy.UNRELIABLE) {
+                stop()
+                unreliable = true
+                errorListener?.onError(
+                    this@IntervalDetector,
+                    ErrorReason.UNRELIABLE_SENSOR
+                )
             }
+
+            accuracyChangedListener?.onAccuracyChanged(accuracy)
         }
 
     /**
@@ -375,7 +362,6 @@ class IntervalDetector(
      * @param result instance where result will be stored.
      */
     fun getBaseNoiseLevelAbsoluteThresholdAsAcceleration(result: Acceleration) {
-        check(!running)
         internalDetector.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(result)
     }
 
