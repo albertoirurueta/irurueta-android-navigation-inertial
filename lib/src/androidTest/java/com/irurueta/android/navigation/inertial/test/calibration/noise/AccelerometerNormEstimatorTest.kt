@@ -62,6 +62,7 @@ class AccelerometerNormEstimatorTest {
         completed = 0
     }
 
+    @RequiresDevice
     @Test
     fun startAndStop_estimatesAccelerometerNoiseAndGravity() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
