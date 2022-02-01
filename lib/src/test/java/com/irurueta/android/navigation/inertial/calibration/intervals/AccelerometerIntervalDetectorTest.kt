@@ -50,12 +50,12 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
-class IntervalDetectorTest {
+class AccelerometerIntervalDetectorTest {
 
     @Test
     fun constructor_whenContext_setsDefaultValues() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         // check default values
         assertSame(context, detector.context)
@@ -241,13 +241,13 @@ class IntervalDetectorTest {
         assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, detector.numberOfProcessedMeasurements)
         assertFalse(detector.running)
-        assertEquals(IntervalDetector.Status.IDLE, detector.status)
+        assertEquals(AccelerometerIntervalDetector.Status.IDLE, detector.status)
     }
 
     @Test
     fun constructor_whenSensorType_setsExpectedValues() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(
+        val detector = AccelerometerIntervalDetector(
             context,
             AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
         )
@@ -439,13 +439,13 @@ class IntervalDetectorTest {
         assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, detector.numberOfProcessedMeasurements)
         assertFalse(detector.running)
-        assertEquals(IntervalDetector.Status.IDLE, detector.status)
+        assertEquals(AccelerometerIntervalDetector.Status.IDLE, detector.status)
     }
 
     @Test
     fun constructor_whenSensorDelay_setsExpectedValues() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(
+        val detector = AccelerometerIntervalDetector(
             context,
             AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             SensorDelay.NORMAL
@@ -638,15 +638,15 @@ class IntervalDetectorTest {
         assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, detector.numberOfProcessedMeasurements)
         assertFalse(detector.running)
-        assertEquals(IntervalDetector.Status.IDLE, detector.status)
+        assertEquals(AccelerometerIntervalDetector.Status.IDLE, detector.status)
     }
 
     @Test
     fun constructor_whenInitializationStartedListener_setsExpectedValues() {
         val initializationStartedListener =
-            mockk<IntervalDetector.OnInitializationStartedListener>()
+            mockk<AccelerometerIntervalDetector.OnInitializationStartedListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(
+        val detector = AccelerometerIntervalDetector(
             context,
             AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             SensorDelay.NORMAL,
@@ -840,17 +840,17 @@ class IntervalDetectorTest {
         assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, detector.numberOfProcessedMeasurements)
         assertFalse(detector.running)
-        assertEquals(IntervalDetector.Status.IDLE, detector.status)
+        assertEquals(AccelerometerIntervalDetector.Status.IDLE, detector.status)
     }
 
     @Test
     fun constructor_whenInitializationCompletedListener_setsExpectedValues() {
         val initializationStartedListener =
-            mockk<IntervalDetector.OnInitializationStartedListener>()
+            mockk<AccelerometerIntervalDetector.OnInitializationStartedListener>()
         val initializationCompletedListener =
-            mockk<IntervalDetector.OnInitializationCompletedListener>()
+            mockk<AccelerometerIntervalDetector.OnInitializationCompletedListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(
+        val detector = AccelerometerIntervalDetector(
             context,
             AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             SensorDelay.NORMAL,
@@ -1045,18 +1045,18 @@ class IntervalDetectorTest {
         assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, detector.numberOfProcessedMeasurements)
         assertFalse(detector.running)
-        assertEquals(IntervalDetector.Status.IDLE, detector.status)
+        assertEquals(AccelerometerIntervalDetector.Status.IDLE, detector.status)
     }
 
     @Test
     fun constructor_whenErrorListener_setsExpectedValues() {
         val initializationStartedListener =
-            mockk<IntervalDetector.OnInitializationStartedListener>()
+            mockk<AccelerometerIntervalDetector.OnInitializationStartedListener>()
         val initializationCompletedListener =
-            mockk<IntervalDetector.OnInitializationCompletedListener>()
-        val errorListener = mockk<IntervalDetector.OnErrorListener>()
+            mockk<AccelerometerIntervalDetector.OnInitializationCompletedListener>()
+        val errorListener = mockk<AccelerometerIntervalDetector.OnErrorListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(
+        val detector = AccelerometerIntervalDetector(
             context,
             AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             SensorDelay.NORMAL,
@@ -1252,20 +1252,20 @@ class IntervalDetectorTest {
         assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, detector.numberOfProcessedMeasurements)
         assertFalse(detector.running)
-        assertEquals(IntervalDetector.Status.IDLE, detector.status)
+        assertEquals(AccelerometerIntervalDetector.Status.IDLE, detector.status)
     }
 
     @Test
     fun constructor_whenStaticIntervalDetectedListener_setsExpectedValues() {
         val initializationStartedListener =
-            mockk<IntervalDetector.OnInitializationStartedListener>()
+            mockk<AccelerometerIntervalDetector.OnInitializationStartedListener>()
         val initializationCompletedListener =
-            mockk<IntervalDetector.OnInitializationCompletedListener>()
-        val errorListener = mockk<IntervalDetector.OnErrorListener>()
+            mockk<AccelerometerIntervalDetector.OnInitializationCompletedListener>()
+        val errorListener = mockk<AccelerometerIntervalDetector.OnErrorListener>()
         val staticIntervalDetectedListener =
-            mockk<IntervalDetector.OnStaticIntervalDetectedListener>()
+            mockk<AccelerometerIntervalDetector.OnStaticIntervalDetectedListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(
+        val detector = AccelerometerIntervalDetector(
             context,
             AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             SensorDelay.NORMAL,
@@ -1462,22 +1462,22 @@ class IntervalDetectorTest {
         assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, detector.numberOfProcessedMeasurements)
         assertFalse(detector.running)
-        assertEquals(IntervalDetector.Status.IDLE, detector.status)
+        assertEquals(AccelerometerIntervalDetector.Status.IDLE, detector.status)
     }
 
     @Test
     fun constructor_whenDynamicIntervalDetectedListener_setsExpectedValues() {
         val initializationStartedListener =
-            mockk<IntervalDetector.OnInitializationStartedListener>()
+            mockk<AccelerometerIntervalDetector.OnInitializationStartedListener>()
         val initializationCompletedListener =
-            mockk<IntervalDetector.OnInitializationCompletedListener>()
-        val errorListener = mockk<IntervalDetector.OnErrorListener>()
+            mockk<AccelerometerIntervalDetector.OnInitializationCompletedListener>()
+        val errorListener = mockk<AccelerometerIntervalDetector.OnErrorListener>()
         val staticIntervalDetectedListener =
-            mockk<IntervalDetector.OnStaticIntervalDetectedListener>()
+            mockk<AccelerometerIntervalDetector.OnStaticIntervalDetectedListener>()
         val dynamicIntervalDetectedListener =
-            mockk<IntervalDetector.OnDynamicIntervalDetectedListener>()
+            mockk<AccelerometerIntervalDetector.OnDynamicIntervalDetectedListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(
+        val detector = AccelerometerIntervalDetector(
             context,
             AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             SensorDelay.NORMAL,
@@ -1675,23 +1675,23 @@ class IntervalDetectorTest {
         assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, detector.numberOfProcessedMeasurements)
         assertFalse(detector.running)
-        assertEquals(IntervalDetector.Status.IDLE, detector.status)
+        assertEquals(AccelerometerIntervalDetector.Status.IDLE, detector.status)
     }
 
     @Test
     fun constructor_whenResetListener_setsExpectedValues() {
         val initializationStartedListener =
-            mockk<IntervalDetector.OnInitializationStartedListener>()
+            mockk<AccelerometerIntervalDetector.OnInitializationStartedListener>()
         val initializationCompletedListener =
-            mockk<IntervalDetector.OnInitializationCompletedListener>()
-        val errorListener = mockk<IntervalDetector.OnErrorListener>()
+            mockk<AccelerometerIntervalDetector.OnInitializationCompletedListener>()
+        val errorListener = mockk<AccelerometerIntervalDetector.OnErrorListener>()
         val staticIntervalDetectedListener =
-            mockk<IntervalDetector.OnStaticIntervalDetectedListener>()
+            mockk<AccelerometerIntervalDetector.OnStaticIntervalDetectedListener>()
         val dynamicIntervalDetectedListener =
-            mockk<IntervalDetector.OnDynamicIntervalDetectedListener>()
-        val resetListener = mockk<IntervalDetector.OnResetListener>()
+            mockk<AccelerometerIntervalDetector.OnDynamicIntervalDetectedListener>()
+        val resetListener = mockk<AccelerometerIntervalDetector.OnResetListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(
+        val detector = AccelerometerIntervalDetector(
             context,
             AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             SensorDelay.NORMAL,
@@ -1890,24 +1890,24 @@ class IntervalDetectorTest {
         assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, detector.numberOfProcessedMeasurements)
         assertFalse(detector.running)
-        assertEquals(IntervalDetector.Status.IDLE, detector.status)
+        assertEquals(AccelerometerIntervalDetector.Status.IDLE, detector.status)
     }
 
     @Test
     fun constructor_whenMeasurementListener_setsExpectedValues() {
         val initializationStartedListener =
-            mockk<IntervalDetector.OnInitializationStartedListener>()
+            mockk<AccelerometerIntervalDetector.OnInitializationStartedListener>()
         val initializationCompletedListener =
-            mockk<IntervalDetector.OnInitializationCompletedListener>()
-        val errorListener = mockk<IntervalDetector.OnErrorListener>()
+            mockk<AccelerometerIntervalDetector.OnInitializationCompletedListener>()
+        val errorListener = mockk<AccelerometerIntervalDetector.OnErrorListener>()
         val staticIntervalDetectedListener =
-            mockk<IntervalDetector.OnStaticIntervalDetectedListener>()
+            mockk<AccelerometerIntervalDetector.OnStaticIntervalDetectedListener>()
         val dynamicIntervalDetectedListener =
-            mockk<IntervalDetector.OnDynamicIntervalDetectedListener>()
-        val resetListener = mockk<IntervalDetector.OnResetListener>()
+            mockk<AccelerometerIntervalDetector.OnDynamicIntervalDetectedListener>()
+        val resetListener = mockk<AccelerometerIntervalDetector.OnResetListener>()
         val measurementListener = mockk<AccelerometerSensorCollector.OnMeasurementListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(
+        val detector = AccelerometerIntervalDetector(
             context,
             AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             SensorDelay.NORMAL,
@@ -2107,25 +2107,25 @@ class IntervalDetectorTest {
         assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, detector.numberOfProcessedMeasurements)
         assertFalse(detector.running)
-        assertEquals(IntervalDetector.Status.IDLE, detector.status)
+        assertEquals(AccelerometerIntervalDetector.Status.IDLE, detector.status)
     }
 
     @Test
     fun constructor_whenAccuracyChangedListener_setsExpectedValues() {
         val initializationStartedListener =
-            mockk<IntervalDetector.OnInitializationStartedListener>()
+            mockk<AccelerometerIntervalDetector.OnInitializationStartedListener>()
         val initializationCompletedListener =
-            mockk<IntervalDetector.OnInitializationCompletedListener>()
-        val errorListener = mockk<IntervalDetector.OnErrorListener>()
+            mockk<AccelerometerIntervalDetector.OnInitializationCompletedListener>()
+        val errorListener = mockk<AccelerometerIntervalDetector.OnErrorListener>()
         val staticIntervalDetectedListener =
-            mockk<IntervalDetector.OnStaticIntervalDetectedListener>()
+            mockk<AccelerometerIntervalDetector.OnStaticIntervalDetectedListener>()
         val dynamicIntervalDetectedListener =
-            mockk<IntervalDetector.OnDynamicIntervalDetectedListener>()
-        val resetListener = mockk<IntervalDetector.OnResetListener>()
+            mockk<AccelerometerIntervalDetector.OnDynamicIntervalDetectedListener>()
+        val resetListener = mockk<AccelerometerIntervalDetector.OnResetListener>()
         val measurementListener = mockk<AccelerometerSensorCollector.OnMeasurementListener>()
         val accuracyChangedListener = mockk<SensorCollector.OnAccuracyChangedListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(
+        val detector = AccelerometerIntervalDetector(
             context,
             AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             SensorDelay.NORMAL,
@@ -2326,20 +2326,20 @@ class IntervalDetectorTest {
         assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, detector.numberOfProcessedMeasurements)
         assertFalse(detector.running)
-        assertEquals(IntervalDetector.Status.IDLE, detector.status)
+        assertEquals(AccelerometerIntervalDetector.Status.IDLE, detector.status)
     }
 
     @Test
     fun initializationStartedListener_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         // check default value
         assertNull(detector.initializationStartedListener)
 
         // set new value
         val initializationStartedListener =
-            mockk<IntervalDetector.OnInitializationStartedListener>()
+            mockk<AccelerometerIntervalDetector.OnInitializationStartedListener>()
         detector.initializationStartedListener = initializationStartedListener
 
         // check
@@ -2349,14 +2349,14 @@ class IntervalDetectorTest {
     @Test
     fun initializationCompletedListener_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         // check default value
         assertNull(detector.initializationCompletedListener)
 
         // set new value
         val initializationCompletedListener =
-            mockk<IntervalDetector.OnInitializationCompletedListener>()
+            mockk<AccelerometerIntervalDetector.OnInitializationCompletedListener>()
         detector.initializationCompletedListener = initializationCompletedListener
 
         // check
@@ -2366,13 +2366,13 @@ class IntervalDetectorTest {
     @Test
     fun errorListener_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         // check default value
         assertNull(detector.errorListener)
 
         // set new value
-        val errorListener = mockk<IntervalDetector.OnErrorListener>()
+        val errorListener = mockk<AccelerometerIntervalDetector.OnErrorListener>()
         detector.errorListener = errorListener
 
         // check
@@ -2382,14 +2382,14 @@ class IntervalDetectorTest {
     @Test
     fun staticIntervalDetectedListener_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         // check default value
         assertNull(detector.staticIntervalDetectedListener)
 
         // set new value
         val staticIntervalDetectedListener =
-            mockk<IntervalDetector.OnStaticIntervalDetectedListener>()
+            mockk<AccelerometerIntervalDetector.OnStaticIntervalDetectedListener>()
         detector.staticIntervalDetectedListener = staticIntervalDetectedListener
 
         // check
@@ -2399,14 +2399,14 @@ class IntervalDetectorTest {
     @Test
     fun dynamicIntervalDetectedListener_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         // check default value
         assertNull(detector.dynamicIntervalDetectedListener)
 
         // set new value
         val dynamicIntervalDetectedListener =
-            mockk<IntervalDetector.OnDynamicIntervalDetectedListener>()
+            mockk<AccelerometerIntervalDetector.OnDynamicIntervalDetectedListener>()
         detector.dynamicIntervalDetectedListener = dynamicIntervalDetectedListener
 
         // check
@@ -2416,13 +2416,13 @@ class IntervalDetectorTest {
     @Test
     fun resetListener_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         // check default value
         assertNull(detector.resetListener)
 
         // set new value
-        val resetListener = mockk<IntervalDetector.OnResetListener>()
+        val resetListener = mockk<AccelerometerIntervalDetector.OnResetListener>()
         detector.resetListener = resetListener
 
         // check
@@ -2432,7 +2432,7 @@ class IntervalDetectorTest {
     @Test
     fun measurementListener_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         // check default value
         assertNull(detector.measurementListener)
@@ -2448,7 +2448,7 @@ class IntervalDetectorTest {
     @Test
     fun accuracyChangedListener_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         // check default value
         assertNull(detector.accuracyChangedListener)
@@ -2464,7 +2464,7 @@ class IntervalDetectorTest {
     @Test
     fun sensor_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val collector: AccelerometerSensorCollector? =
             detector.getPrivateProperty("collector")
@@ -2481,7 +2481,7 @@ class IntervalDetectorTest {
     @Test
     fun windowSize_whenValid_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         // check default value
         assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, detector.windowSize)
@@ -2496,7 +2496,7 @@ class IntervalDetectorTest {
     @Test(expected = IllegalArgumentException::class)
     fun windowSize_whenInvalid_throwsIllegalArgumentException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         detector.windowSize = 0
     }
@@ -2504,7 +2504,7 @@ class IntervalDetectorTest {
     @Test(expected = IllegalStateException::class)
     fun windowSize_whenRunning_throwsIllegalStateException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         detector.setPrivateProperty("running", true)
 
@@ -2514,7 +2514,7 @@ class IntervalDetectorTest {
     @Test
     fun initialStaticSamples_whenValid_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         // check default value
         assertEquals(
@@ -2532,7 +2532,7 @@ class IntervalDetectorTest {
     @Test(expected = IllegalArgumentException::class)
     fun initialStaticSamples_whenInvalid_throwsIllegalArgumentException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         detector.initialStaticSamples = 0
     }
@@ -2540,7 +2540,7 @@ class IntervalDetectorTest {
     @Test(expected = IllegalStateException::class)
     fun initialStaticSamples_whenRunning_throwsIllegalStateException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         detector.setPrivateProperty("running", true)
 
@@ -2550,7 +2550,7 @@ class IntervalDetectorTest {
     @Test
     fun thresholdFactor_whenValid_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         // check default value
         assertEquals(
@@ -2569,7 +2569,7 @@ class IntervalDetectorTest {
     @Test(expected = IllegalArgumentException::class)
     fun thresholdFactor_whenInvalid_throwsIllegalArgumentException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         detector.thresholdFactor = 0.0
     }
@@ -2577,7 +2577,7 @@ class IntervalDetectorTest {
     @Test(expected = IllegalStateException::class)
     fun thresholdFactor_whenRunning_throwsIllegalStateException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         detector.setPrivateProperty("running", true)
 
@@ -2587,7 +2587,7 @@ class IntervalDetectorTest {
     @Test
     fun instantaneousNoiseLevelFactor_whenValid_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         // check default value
         assertEquals(
@@ -2606,7 +2606,7 @@ class IntervalDetectorTest {
     @Test(expected = IllegalArgumentException::class)
     fun instantaneousNoiseLevelFactor_whenInvalid_throwsIllegalArgumentException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         detector.instantaneousNoiseLevelFactor = 0.0
     }
@@ -2614,7 +2614,7 @@ class IntervalDetectorTest {
     @Test(expected = IllegalStateException::class)
     fun instantaneousNoiseLevelFactor_whenRunning_throwsIllegalStateException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         detector.setPrivateProperty("running", true)
 
@@ -2625,7 +2625,7 @@ class IntervalDetectorTest {
     @Test
     fun baseNoiseLevelAbsoluteThreshold_whenValid_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         // check default value
         assertEquals(
@@ -2648,7 +2648,7 @@ class IntervalDetectorTest {
     @Test(expected = IllegalArgumentException::class)
     fun baseNoiseLevelAbsoluteThreshold_whenInvalid_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         detector.baseNoiseLevelAbsoluteThreshold = 0.0
     }
@@ -2656,7 +2656,7 @@ class IntervalDetectorTest {
     @Test(expected = IllegalStateException::class)
     fun baseNoiseLevelAbsoluteThreshold_whenRunning_throwsIllegalStateException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         detector.setPrivateProperty("running", true)
 
@@ -2667,7 +2667,7 @@ class IntervalDetectorTest {
     @Test
     fun baseNoiseLevelAbsoluteThresholdAsAcceleration_whenValid_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         // check default value
         val baseNoiseLevelAbsoluteThreshold1 =
@@ -2714,7 +2714,7 @@ class IntervalDetectorTest {
     @Test(expected = IllegalArgumentException::class)
     fun baseNoiseLevelAbsoluteThresholdAsAcceleration_whenInvalid_throwsIllegalArgumentException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         detector.baseNoiseLevelAbsoluteThresholdAsAcceleration =
             Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
@@ -2723,7 +2723,7 @@ class IntervalDetectorTest {
     @Test(expected = IllegalStateException::class)
     fun baseNoiseLevelAbsoluteThresholdAsAcceleration_whenRunning_throwsIllegalStateException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         detector.setPrivateProperty("running", true)
 
@@ -2736,7 +2736,7 @@ class IntervalDetectorTest {
     @Test
     fun start_whenSensorAvailable_startsCollector() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val collector: AccelerometerSensorCollector? =
             detector.getPrivateProperty("collector")
@@ -2762,7 +2762,7 @@ class IntervalDetectorTest {
     @Test(expected = IllegalStateException::class)
     fun start_whenSensorUnavailable_throwsIllegalStateException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val collector: AccelerometerSensorCollector? =
             detector.getPrivateProperty("collector")
@@ -2785,7 +2785,7 @@ class IntervalDetectorTest {
     @Test
     fun start_resets() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val collector: AccelerometerSensorCollector? =
             detector.getPrivateProperty("collector")
@@ -2838,7 +2838,7 @@ class IntervalDetectorTest {
     @Test(expected = IllegalStateException::class)
     fun start_whenAlreadyRunning_throwsIllegalStateException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         assertFalse(detector.running)
 
@@ -2853,7 +2853,7 @@ class IntervalDetectorTest {
     @Test
     fun stop_whenAlreadyStarted_stopsSensorCollector() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val collector: AccelerometerSensorCollector? = detector.getPrivateProperty("collector")
         requireNotNull(collector)
@@ -2884,7 +2884,7 @@ class IntervalDetectorTest {
     @Test
     fun stop_whenNotAlreadyStarted_stopsSensorCollector() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val collector: AccelerometerSensorCollector? = detector.getPrivateProperty("collector")
         requireNotNull(collector)
@@ -2909,38 +2909,38 @@ class IntervalDetectorTest {
     @Test
     fun mapErrorReason_whenUnreliable_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         detector.setPrivateProperty("unreliable", true)
 
-        var errorReason: IntervalDetector.ErrorReason? = detector.callPrivateFuncWithResult(
+        var errorReason: AccelerometerIntervalDetector.ErrorReason? = detector.callPrivateFuncWithResult(
             "mapErrorReason",
             TriadStaticIntervalDetector.ErrorReason.OVERALL_EXCESSIVE_MOVEMENT_DETECTED
         )
-        assertEquals(IntervalDetector.ErrorReason.UNRELIABLE_SENSOR, errorReason)
+        assertEquals(AccelerometerIntervalDetector.ErrorReason.UNRELIABLE_SENSOR, errorReason)
 
         errorReason = detector.callPrivateFuncWithResult(
             "mapErrorReason",
             TriadStaticIntervalDetector.ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED
         )
-        assertEquals(IntervalDetector.ErrorReason.UNRELIABLE_SENSOR, errorReason)
+        assertEquals(AccelerometerIntervalDetector.ErrorReason.UNRELIABLE_SENSOR, errorReason)
     }
 
     @Test
     fun mapErrorReason_whenReliable_returnsExpectedValues() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val unreliable: Boolean? = detector.getPrivateProperty("unreliable")
         requireNotNull(unreliable)
         assertFalse(unreliable)
 
-        var errorReason: IntervalDetector.ErrorReason? = detector.callPrivateFuncWithResult(
+        var errorReason: AccelerometerIntervalDetector.ErrorReason? = detector.callPrivateFuncWithResult(
             "mapErrorReason",
             TriadStaticIntervalDetector.ErrorReason.OVERALL_EXCESSIVE_MOVEMENT_DETECTED
         )
         assertEquals(
-            IntervalDetector.ErrorReason.OVERALL_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION,
+            AccelerometerIntervalDetector.ErrorReason.OVERALL_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION,
             errorReason
         )
 
@@ -2949,7 +2949,7 @@ class IntervalDetectorTest {
             TriadStaticIntervalDetector.ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED
         )
         assertEquals(
-            IntervalDetector.ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION,
+            AccelerometerIntervalDetector.ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION,
             errorReason
         )
     }
@@ -2957,7 +2957,7 @@ class IntervalDetectorTest {
     @Test
     fun onMeasurement_whenIdle_processesMeasurement() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -2966,7 +2966,7 @@ class IntervalDetectorTest {
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         // check initial status
-        assertEquals(IntervalDetector.Status.IDLE, detector.status)
+        assertEquals(AccelerometerIntervalDetector.Status.IDLE, detector.status)
         assertEquals(0, detector.numberOfProcessedMeasurements)
 
         // process measurement
@@ -2992,13 +2992,13 @@ class IntervalDetectorTest {
             )
         }
         assertEquals(1, detector.numberOfProcessedMeasurements)
-        assertEquals(IntervalDetector.Status.INITIALIZING, detector.status)
+        assertEquals(AccelerometerIntervalDetector.Status.INITIALIZING, detector.status)
     }
 
     @Test
     fun onMeasurement_whenInitializingStatusAndZeroProcessedMeasurement_setsInitialTimestamp() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -3012,7 +3012,7 @@ class IntervalDetectorTest {
         requireNotNull(initialTimestamp1)
         assertEquals(0L, initialTimestamp1)
 
-        assertEquals(IntervalDetector.Status.INITIALIZING, detector.status)
+        assertEquals(AccelerometerIntervalDetector.Status.INITIALIZING, detector.status)
         assertEquals(0, detector.numberOfProcessedMeasurements)
 
         // process measurement
@@ -3038,7 +3038,7 @@ class IntervalDetectorTest {
             )
         }
         assertEquals(1, detector.numberOfProcessedMeasurements)
-        assertEquals(IntervalDetector.Status.INITIALIZING, detector.status)
+        assertEquals(AccelerometerIntervalDetector.Status.INITIALIZING, detector.status)
 
         val initialTimestamp2: Long? = detector.getPrivateProperty("initialTimestamp")
         requireNotNull(initialTimestamp2)
@@ -3048,7 +3048,7 @@ class IntervalDetectorTest {
     @Test
     fun onMeasurement_whenInitializingStatusAndNonZeroProcessedMeasurement_addsTimestampToTimeIntervalEstimator() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -3071,7 +3071,7 @@ class IntervalDetectorTest {
         requireNotNull(initialTimestamp1)
         assertEquals(timestamp1, initialTimestamp1)
 
-        assertEquals(IntervalDetector.Status.INITIALIZING, detector.status)
+        assertEquals(AccelerometerIntervalDetector.Status.INITIALIZING, detector.status)
         assertEquals(1, detector.numberOfProcessedMeasurements)
 
         // process measurement
@@ -3098,7 +3098,7 @@ class IntervalDetectorTest {
             )
         }
         assertEquals(2, detector.numberOfProcessedMeasurements)
-        assertEquals(IntervalDetector.Status.INITIALIZING, detector.status)
+        assertEquals(AccelerometerIntervalDetector.Status.INITIALIZING, detector.status)
 
         val initialTimestamp2: Long? = detector.getPrivateProperty("initialTimestamp")
         requireNotNull(initialTimestamp2)
@@ -3108,10 +3108,10 @@ class IntervalDetectorTest {
     @Test
     fun onMeasurement_whenInitializingAndListener_notifies() {
         val initializationStartedListener =
-            mockk<IntervalDetector.OnInitializationStartedListener>(relaxUnitFun = true)
+            mockk<AccelerometerIntervalDetector.OnInitializationStartedListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector =
-            IntervalDetector(context, initializationStartedListener = initializationStartedListener)
+            AccelerometerIntervalDetector(context, initializationStartedListener = initializationStartedListener)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -3134,7 +3134,7 @@ class IntervalDetectorTest {
         requireNotNull(initialTimestamp1)
         assertEquals(timestamp1, initialTimestamp1)
 
-        assertEquals(IntervalDetector.Status.INITIALIZING, detector.status)
+        assertEquals(AccelerometerIntervalDetector.Status.INITIALIZING, detector.status)
         assertEquals(1, detector.numberOfProcessedMeasurements)
 
         // process measurement
@@ -3161,7 +3161,7 @@ class IntervalDetectorTest {
             )
         }
         assertEquals(2, detector.numberOfProcessedMeasurements)
-        assertEquals(IntervalDetector.Status.INITIALIZING, detector.status)
+        assertEquals(AccelerometerIntervalDetector.Status.INITIALIZING, detector.status)
 
         val initialTimestamp2: Long? = detector.getPrivateProperty("initialTimestamp")
         requireNotNull(initialTimestamp2)
@@ -3173,7 +3173,7 @@ class IntervalDetectorTest {
     @Test
     fun onMeasurement_whenInitializationCompleted_setsTimeInterval() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -3227,7 +3227,7 @@ class IntervalDetectorTest {
         val measurementListener =
             mockk<AccelerometerSensorCollector.OnMeasurementListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context, measurementListener = measurementListener)
+        val detector = AccelerometerIntervalDetector(context, measurementListener = measurementListener)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -3236,7 +3236,7 @@ class IntervalDetectorTest {
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         // check initial status
-        assertEquals(IntervalDetector.Status.IDLE, detector.status)
+        assertEquals(AccelerometerIntervalDetector.Status.IDLE, detector.status)
         assertEquals(0, detector.numberOfProcessedMeasurements)
 
         // process measurement
@@ -3275,7 +3275,7 @@ class IntervalDetectorTest {
     @Test
     fun onAccuracyChanged_whenUnreliableAndNoListener_setsResultAsUnreliable() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         // check default value
         val unreliable1: Boolean? = detector.getPrivateProperty("unreliable")
@@ -3296,9 +3296,9 @@ class IntervalDetectorTest {
 
     @Test
     fun onAccuracyChanged_whenUnreliableAndListener_setsResultAsUnreliableAndNotifies() {
-        val errorListener = mockk<IntervalDetector.OnErrorListener>(relaxUnitFun = true)
+        val errorListener = mockk<AccelerometerIntervalDetector.OnErrorListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context, errorListener = errorListener)
+        val detector = AccelerometerIntervalDetector(context, errorListener = errorListener)
 
         // check default value
         val unreliable1: Boolean? = detector.getPrivateProperty("unreliable")
@@ -3318,16 +3318,16 @@ class IntervalDetectorTest {
         verify(exactly = 1) {
             errorListener.onError(
                 detector,
-                IntervalDetector.ErrorReason.UNRELIABLE_SENSOR
+                AccelerometerIntervalDetector.ErrorReason.UNRELIABLE_SENSOR
             )
         }
     }
 
     @Test
     fun onAccuracyChanged_whenNotUnreliable_makesNoAction() {
-        val errorListener = mockk<IntervalDetector.OnErrorListener>(relaxUnitFun = true)
+        val errorListener = mockk<AccelerometerIntervalDetector.OnErrorListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context, errorListener = errorListener)
+        val detector = AccelerometerIntervalDetector(context, errorListener = errorListener)
 
         // check default value
         val unreliable1: Boolean? = detector.getPrivateProperty("unreliable")
@@ -3353,9 +3353,9 @@ class IntervalDetectorTest {
     fun onAccuracyChanged_whenUnreliableListener_notifiesAccuracyChange() {
         val accuracyChangedListener =
             mockk<SensorCollector.OnAccuracyChangedListener>(relaxUnitFun = true)
-        val errorListener = mockk<IntervalDetector.OnErrorListener>(relaxUnitFun = true)
+        val errorListener = mockk<AccelerometerIntervalDetector.OnErrorListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(
+        val detector = AccelerometerIntervalDetector(
             context,
             errorListener = errorListener,
             accuracyChangedListener = accuracyChangedListener
@@ -3385,7 +3385,7 @@ class IntervalDetectorTest {
     @Test
     fun baseNoiseLevel_whenNotInitialized_returnsNull() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val initialized: Boolean? = detector.getPrivateProperty("initialized")
         requireNotNull(initialized)
@@ -3397,7 +3397,7 @@ class IntervalDetectorTest {
     @Test
     fun baseNoiseLevel_whenInitialized_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -3419,7 +3419,7 @@ class IntervalDetectorTest {
     @Test
     fun baseNoiseLevelAsAcceleration_whenNotInitialized_returnsNull() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val initialized: Boolean? = detector.getPrivateProperty("initialized")
         requireNotNull(initialized)
@@ -3431,7 +3431,7 @@ class IntervalDetectorTest {
     @Test
     fun baseNoiseLevelAsAcceleration_whenInitialized_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -3454,7 +3454,7 @@ class IntervalDetectorTest {
     @Test
     fun getBaseNoiseLevelAsAcceleration_whenNotInitialized_returnsFalse() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val initialized: Boolean? = detector.getPrivateProperty("initialized")
         requireNotNull(initialized)
@@ -3467,7 +3467,7 @@ class IntervalDetectorTest {
     @Test
     fun getBaseNoiseLevelAsAcceleration_whenInitialized_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -3494,7 +3494,7 @@ class IntervalDetectorTest {
     @Test
     fun baseNoiseLevelPsd_whenNotInitialized_returnsNull() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val initialized: Boolean? = detector.getPrivateProperty("initialized")
         requireNotNull(initialized)
@@ -3506,7 +3506,7 @@ class IntervalDetectorTest {
     @Test
     fun baseNoiseLevelPsd_whenInitialized_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -3528,7 +3528,7 @@ class IntervalDetectorTest {
     @Test
     fun baseNoiseLevelRootPsd_whenNotInitialized_returnsNull() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val initialized: Boolean? = detector.getPrivateProperty("initialized")
         requireNotNull(initialized)
@@ -3540,7 +3540,7 @@ class IntervalDetectorTest {
     @Test
     fun baseNoiseLevelRootPsd_whenInitialized_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -3562,7 +3562,7 @@ class IntervalDetectorTest {
     @Test
     fun threshold_whenNotInitialized_returnsNull() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val initialized: Boolean? = detector.getPrivateProperty("initialized")
         requireNotNull(initialized)
@@ -3574,7 +3574,7 @@ class IntervalDetectorTest {
     @Test
     fun threshold_whenInitialized_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -3596,7 +3596,7 @@ class IntervalDetectorTest {
     @Test
     fun thresholdAsAcceleration_whenNotInitialized_returnsNull() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val initialized: Boolean? = detector.getPrivateProperty("initialized")
         requireNotNull(initialized)
@@ -3608,7 +3608,7 @@ class IntervalDetectorTest {
     @Test
     fun thresholdAsAcceleration_whenInitialized_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -3631,7 +3631,7 @@ class IntervalDetectorTest {
     @Test
     fun getThresholdAsMeasurement_whenNotInitialized_returnsFalse() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val initialized: Boolean? = detector.getPrivateProperty("initialized")
         requireNotNull(initialized)
@@ -3644,7 +3644,7 @@ class IntervalDetectorTest {
     @Test
     fun getThresholdAsMeasurement_whenInitialized_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -3671,7 +3671,7 @@ class IntervalDetectorTest {
     @Test
     fun accumulatedAvgX_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -3689,7 +3689,7 @@ class IntervalDetectorTest {
     @Test
     fun accumulatedAvgXAsAcceleration_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -3708,7 +3708,7 @@ class IntervalDetectorTest {
     @Test
     fun getAccumulatedAvgXAsAcceleration_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -3734,7 +3734,7 @@ class IntervalDetectorTest {
     @Test
     fun accumulatedAvgY_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -3752,7 +3752,7 @@ class IntervalDetectorTest {
     @Test
     fun accumulatedAvgYAsAcceleration_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -3771,7 +3771,7 @@ class IntervalDetectorTest {
     @Test
     fun getAccumulatedAvgYAsAcceleration_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -3797,7 +3797,7 @@ class IntervalDetectorTest {
     @Test
     fun accumulatedAvgZ_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -3815,7 +3815,7 @@ class IntervalDetectorTest {
     @Test
     fun accumulatedAvgZAsAcceleration_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -3834,7 +3834,7 @@ class IntervalDetectorTest {
     @Test
     fun getAccumulatedAvgZAsAcceleration_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -3860,7 +3860,7 @@ class IntervalDetectorTest {
     @Test
     fun accumulatedAvgTriad_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -3882,7 +3882,7 @@ class IntervalDetectorTest {
     @Test
     fun getAccumulatedAvgTriad_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -3917,7 +3917,7 @@ class IntervalDetectorTest {
     @Test
     fun accumulatedStdX_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -3935,7 +3935,7 @@ class IntervalDetectorTest {
     @Test
     fun accumulatedStdXAsAcceleration_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -3954,7 +3954,7 @@ class IntervalDetectorTest {
     @Test
     fun getAccumulatedStdXAsAcceleration_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -3980,7 +3980,7 @@ class IntervalDetectorTest {
     @Test
     fun accumulatedStdY_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -3998,7 +3998,7 @@ class IntervalDetectorTest {
     @Test
     fun accumulatedStdYAsAcceleration_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -4017,7 +4017,7 @@ class IntervalDetectorTest {
     @Test
     fun getAccumulatedStdYAsAcceleration_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -4043,7 +4043,7 @@ class IntervalDetectorTest {
     @Test
     fun accumulatedStdZ_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -4061,7 +4061,7 @@ class IntervalDetectorTest {
     @Test
     fun accumulatedStdZAsAcceleration_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -4080,7 +4080,7 @@ class IntervalDetectorTest {
     @Test
     fun getAccumulatedStdZAsAcceleration_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -4106,7 +4106,7 @@ class IntervalDetectorTest {
     @Test
     fun accumulatedStdTriad_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -4128,7 +4128,7 @@ class IntervalDetectorTest {
     @Test
     fun getAccumulatedStdTriad_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -4163,7 +4163,7 @@ class IntervalDetectorTest {
     @Test
     fun instantaneousAvgX_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -4181,7 +4181,7 @@ class IntervalDetectorTest {
     @Test
     fun instantaneousAvgXAsAcceleration_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -4200,7 +4200,7 @@ class IntervalDetectorTest {
     @Test
     fun getInstantaneousAvgXAsAcceleration_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -4226,7 +4226,7 @@ class IntervalDetectorTest {
     @Test
     fun instantaneousAvgY_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -4244,7 +4244,7 @@ class IntervalDetectorTest {
     @Test
     fun instantaneousAvgYAsAcceleration_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -4263,7 +4263,7 @@ class IntervalDetectorTest {
     @Test
     fun getInstantaneousAvgYAsAcceleration_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -4289,7 +4289,7 @@ class IntervalDetectorTest {
     @Test
     fun instantaneousAvgZ_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -4307,7 +4307,7 @@ class IntervalDetectorTest {
     @Test
     fun instantaneousAvgZAsAcceleration_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -4326,7 +4326,7 @@ class IntervalDetectorTest {
     @Test
     fun getInstantaneousAvgZAsAcceleration_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -4352,7 +4352,7 @@ class IntervalDetectorTest {
     @Test
     fun instantaneousAvgTriad_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -4374,7 +4374,7 @@ class IntervalDetectorTest {
     @Test
     fun getInstantaneousAvgTriad_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -4408,7 +4408,7 @@ class IntervalDetectorTest {
     @Test
     fun instantaneousStdX_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -4426,7 +4426,7 @@ class IntervalDetectorTest {
     @Test
     fun instantaneousStdXAsAcceleration_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -4445,7 +4445,7 @@ class IntervalDetectorTest {
     @Test
     fun getInstantaneousStdXAsAcceleration_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -4471,7 +4471,7 @@ class IntervalDetectorTest {
     @Test
     fun instantaneousStdY_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -4489,7 +4489,7 @@ class IntervalDetectorTest {
     @Test
     fun instantaneousStdYAsAcceleration_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -4508,7 +4508,7 @@ class IntervalDetectorTest {
     @Test
     fun getInstantaneousStdYAsAcceleration_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -4534,7 +4534,7 @@ class IntervalDetectorTest {
     @Test
     fun instantaneousStdZ_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -4552,7 +4552,7 @@ class IntervalDetectorTest {
     @Test
     fun instantaneousStdZAsAcceleration_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -4571,7 +4571,7 @@ class IntervalDetectorTest {
     @Test
     fun getInstantaneousStdZAsAcceleration_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -4597,7 +4597,7 @@ class IntervalDetectorTest {
     @Test
     fun instantaneousStdTriad_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -4619,7 +4619,7 @@ class IntervalDetectorTest {
     @Test
     fun getInstantaneousStdTriad_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
@@ -4653,7 +4653,7 @@ class IntervalDetectorTest {
     @Test
     fun averageTimeInterval_whenNotInitialized_returnsNull() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val initialized: Boolean? = detector.getPrivateProperty("initialized")
         requireNotNull(initialized)
@@ -4665,7 +4665,7 @@ class IntervalDetectorTest {
     @Test
     fun averageTimeInterval_whenInitialized_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val timeIntervalEstimator: TimeIntervalEstimator? =
             detector.getPrivateProperty("timeIntervalEstimator")
@@ -4686,7 +4686,7 @@ class IntervalDetectorTest {
 
     fun averageTimeIntervalAsTime_whenNotInitialized_returnsNull() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val initialized: Boolean? = detector.getPrivateProperty("initialized")
         requireNotNull(initialized)
@@ -4698,7 +4698,7 @@ class IntervalDetectorTest {
     @Test
     fun averageTimeIntervalAsTime_whenInitialized_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val timeIntervalEstimator: TimeIntervalEstimator? =
             detector.getPrivateProperty("timeIntervalEstimator")
@@ -4721,7 +4721,7 @@ class IntervalDetectorTest {
     @Test
     fun getAverageTimeIntervalAsTime_whenNotInitialized_returnsFalse() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val initialized: Boolean? = detector.getPrivateProperty("initialized")
         requireNotNull(initialized)
@@ -4734,7 +4734,7 @@ class IntervalDetectorTest {
     @Test
     fun getAverageTimeIntervalAsTime_whenInitialized_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val timeIntervalEstimator: TimeIntervalEstimator? =
             detector.getPrivateProperty("timeIntervalEstimator")
@@ -4762,7 +4762,7 @@ class IntervalDetectorTest {
     @Test
     fun timeIntervalVariance_whenNotInitialized_returnsNull() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val initialized: Boolean? = detector.getPrivateProperty("initialized")
         requireNotNull(initialized)
@@ -4774,7 +4774,7 @@ class IntervalDetectorTest {
     @Test
     fun timeIntervalVariance_whenInitialized_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val timeIntervalEstimator: TimeIntervalEstimator? =
             detector.getPrivateProperty("timeIntervalEstimator")
@@ -4796,7 +4796,7 @@ class IntervalDetectorTest {
     @Test
     fun timeIntervalStandardDeviation_whenNotInitialized_returnsNull() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val initialized: Boolean? = detector.getPrivateProperty("initialized")
         requireNotNull(initialized)
@@ -4808,7 +4808,7 @@ class IntervalDetectorTest {
     @Test
     fun timeIntervalStandardDeviation_whenInitialized_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val timeIntervalEstimator: TimeIntervalEstimator? =
             detector.getPrivateProperty("timeIntervalEstimator")
@@ -4832,7 +4832,7 @@ class IntervalDetectorTest {
     @Test
     fun timeIntervalStandardDeviationAsTime_whenNotInitialized_returnsNull() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val initialized: Boolean? = detector.getPrivateProperty("initialized")
         requireNotNull(initialized)
@@ -4844,7 +4844,7 @@ class IntervalDetectorTest {
     @Test
     fun timeIntervalStandardDeviationAsTime_whenInitialized_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val timeIntervalEstimator: TimeIntervalEstimator? =
             detector.getPrivateProperty("timeIntervalEstimator")
@@ -4869,7 +4869,7 @@ class IntervalDetectorTest {
     @Test
     fun getTimeIntervalStandardDeviationAsTime_whenNotInitialized_returnsFalse() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val initialized: Boolean? = detector.getPrivateProperty("initialized")
         requireNotNull(initialized)
@@ -4882,7 +4882,7 @@ class IntervalDetectorTest {
     @Test
     fun getTimeIntervalStandardDeviationAsTime_whenInitialized_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val timeIntervalEstimator: TimeIntervalEstimator? =
             detector.getPrivateProperty("timeIntervalEstimator")
@@ -4910,17 +4910,17 @@ class IntervalDetectorTest {
     @Test
     fun status_whenUnreliable_returnsFailed() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         detector.setPrivateProperty("unreliable", true)
 
-        assertEquals(IntervalDetector.Status.FAILED, detector.status)
+        assertEquals(AccelerometerIntervalDetector.Status.FAILED, detector.status)
     }
 
     @Test
     fun status_whenReliableAndIdle_returnsIdle() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val unreliable: Boolean? = detector.getPrivateProperty("unreliable")
         requireNotNull(unreliable)
@@ -4933,13 +4933,13 @@ class IntervalDetectorTest {
         every { internalDetectorSpy.status }.returns(TriadStaticIntervalDetector.Status.IDLE)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        assertEquals(IntervalDetector.Status.IDLE, detector.status)
+        assertEquals(AccelerometerIntervalDetector.Status.IDLE, detector.status)
     }
 
     @Test
     fun status_whenReliableAndInitializing_returnsIdle() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val unreliable: Boolean? = detector.getPrivateProperty("unreliable")
         requireNotNull(unreliable)
@@ -4953,13 +4953,13 @@ class IntervalDetectorTest {
             .returns(TriadStaticIntervalDetector.Status.INITIALIZING)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        assertEquals(IntervalDetector.Status.INITIALIZING, detector.status)
+        assertEquals(AccelerometerIntervalDetector.Status.INITIALIZING, detector.status)
     }
 
     @Test
     fun status_whenReliableAndInitializationCompleted_returnsIdle() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val unreliable: Boolean? = detector.getPrivateProperty("unreliable")
         requireNotNull(unreliable)
@@ -4973,13 +4973,13 @@ class IntervalDetectorTest {
             .returns(TriadStaticIntervalDetector.Status.INITIALIZATION_COMPLETED)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        assertEquals(IntervalDetector.Status.INITIALIZATION_COMPLETED, detector.status)
+        assertEquals(AccelerometerIntervalDetector.Status.INITIALIZATION_COMPLETED, detector.status)
     }
 
     @Test
     fun status_whenReliableAndStaticInterval_returnsIdle() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val unreliable: Boolean? = detector.getPrivateProperty("unreliable")
         requireNotNull(unreliable)
@@ -4993,13 +4993,13 @@ class IntervalDetectorTest {
             .returns(TriadStaticIntervalDetector.Status.STATIC_INTERVAL)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        assertEquals(IntervalDetector.Status.STATIC_INTERVAL, detector.status)
+        assertEquals(AccelerometerIntervalDetector.Status.STATIC_INTERVAL, detector.status)
     }
 
     @Test
     fun status_whenReliableAndDynamicInterval_returnsIdle() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val unreliable: Boolean? = detector.getPrivateProperty("unreliable")
         requireNotNull(unreliable)
@@ -5013,13 +5013,13 @@ class IntervalDetectorTest {
             .returns(TriadStaticIntervalDetector.Status.DYNAMIC_INTERVAL)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        assertEquals(IntervalDetector.Status.DYNAMIC_INTERVAL, detector.status)
+        assertEquals(AccelerometerIntervalDetector.Status.DYNAMIC_INTERVAL, detector.status)
     }
 
     @Test
     fun status_whenReliableAndFailed_returnsIdle() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val unreliable: Boolean? = detector.getPrivateProperty("unreliable")
         requireNotNull(unreliable)
@@ -5033,13 +5033,13 @@ class IntervalDetectorTest {
             .returns(TriadStaticIntervalDetector.Status.FAILED)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        assertEquals(IntervalDetector.Status.FAILED, detector.status)
+        assertEquals(AccelerometerIntervalDetector.Status.FAILED, detector.status)
     }
 
     @Test
     fun status_whenReliableAndNoStatus_returnsIdle() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = IntervalDetector(context)
+        val detector = AccelerometerIntervalDetector(context)
 
         val unreliable: Boolean? = detector.getPrivateProperty("unreliable")
         requireNotNull(unreliable)
@@ -5052,13 +5052,13 @@ class IntervalDetectorTest {
         every { internalDetectorSpy.status }.returns(null)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        assertEquals(IntervalDetector.Status.IDLE, detector.status)
+        assertEquals(AccelerometerIntervalDetector.Status.IDLE, detector.status)
     }
 
     @Test
     fun onInitializationStarted_whenNoListener_makesNoAction() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val intervalDetector = IntervalDetector(context)
+        val intervalDetector = AccelerometerIntervalDetector(context)
 
         val internalDetectorListener: AccelerationTriadStaticIntervalDetectorListener? =
             intervalDetector.getPrivateProperty("internalDetectorListener")
@@ -5073,10 +5073,10 @@ class IntervalDetectorTest {
     @Test
     fun onInitializationStarted_whenListener_notifies() {
         val initializationStartedListener =
-            mockk<IntervalDetector.OnInitializationStartedListener>(relaxUnitFun = true)
+            mockk<AccelerometerIntervalDetector.OnInitializationStartedListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val intervalDetector =
-            IntervalDetector(context, initializationStartedListener = initializationStartedListener)
+            AccelerometerIntervalDetector(context, initializationStartedListener = initializationStartedListener)
 
         val internalDetectorListener: AccelerationTriadStaticIntervalDetectorListener? =
             intervalDetector.getPrivateProperty("internalDetectorListener")
@@ -5093,7 +5093,7 @@ class IntervalDetectorTest {
     @Test
     fun onInitializationCompleted_whenNoListener_makesNoAction() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val intervalDetector = IntervalDetector(context)
+        val intervalDetector = AccelerometerIntervalDetector(context)
 
         val internalDetectorListener: AccelerationTriadStaticIntervalDetectorListener? =
             intervalDetector.getPrivateProperty("internalDetectorListener")
@@ -5110,9 +5110,9 @@ class IntervalDetectorTest {
     @Test
     fun onInitializationCompleted_whenListener_notifies() {
         val initializationCompletedListener =
-            mockk<IntervalDetector.OnInitializationCompletedListener>(relaxUnitFun = true)
+            mockk<AccelerometerIntervalDetector.OnInitializationCompletedListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val intervalDetector = IntervalDetector(
+        val intervalDetector = AccelerometerIntervalDetector(
             context,
             initializationCompletedListener = initializationCompletedListener
         )
@@ -5139,7 +5139,7 @@ class IntervalDetectorTest {
     @Test
     fun onError_whenNoListener_stops() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val intervalDetector = IntervalDetector(context)
+        val intervalDetector = AccelerometerIntervalDetector(context)
 
         val internalDetectorListener: AccelerationTriadStaticIntervalDetectorListener? =
             intervalDetector.getPrivateProperty("internalDetectorListener")
@@ -5170,9 +5170,9 @@ class IntervalDetectorTest {
 
     @Test
     fun onError_whenListener_stopsAndNotifies() {
-        val errorListener = mockk<IntervalDetector.OnErrorListener>(relaxUnitFun = true)
+        val errorListener = mockk<AccelerometerIntervalDetector.OnErrorListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val intervalDetector = IntervalDetector(context, errorListener = errorListener)
+        val intervalDetector = AccelerometerIntervalDetector(context, errorListener = errorListener)
 
         val internalDetectorListener: AccelerationTriadStaticIntervalDetectorListener? =
             intervalDetector.getPrivateProperty("internalDetectorListener")
@@ -5202,7 +5202,7 @@ class IntervalDetectorTest {
         verify(exactly = 1) {
             errorListener.onError(
                 intervalDetector,
-                IntervalDetector.ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
+                AccelerometerIntervalDetector.ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
             )
         }
     }
@@ -5210,7 +5210,7 @@ class IntervalDetectorTest {
     @Test
     fun onStaticIntervalDetected_whenNoListener_makesNoAction() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val intervalDetector = IntervalDetector(context)
+        val intervalDetector = AccelerometerIntervalDetector(context)
 
         val internalDetectorListener: AccelerationTriadStaticIntervalDetectorListener? =
             intervalDetector.getPrivateProperty("internalDetectorListener")
@@ -5240,9 +5240,9 @@ class IntervalDetectorTest {
     @Test
     fun onStaticIntervalDetected_whenListener_notifies() {
         val staticIntervalDetectedListener =
-            mockk<IntervalDetector.OnStaticIntervalDetectedListener>(relaxUnitFun = true)
+            mockk<AccelerometerIntervalDetector.OnStaticIntervalDetectedListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val intervalDetector = IntervalDetector(
+        val intervalDetector = AccelerometerIntervalDetector(
             context,
             staticIntervalDetectedListener = staticIntervalDetectedListener
         )
@@ -5287,7 +5287,7 @@ class IntervalDetectorTest {
     @Test
     fun onDynamicIntervalDetected_whenNoListener_makesNoAction() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val intervalDetector = IntervalDetector(context)
+        val intervalDetector = AccelerometerIntervalDetector(context)
 
         val internalDetectorListener: AccelerationTriadStaticIntervalDetectorListener? =
             intervalDetector.getPrivateProperty("internalDetectorListener")
@@ -5329,9 +5329,9 @@ class IntervalDetectorTest {
     @Test
     fun onDynamicIntervalDetected_whenListener_notifies() {
         val dynamicIntervalDetectedListener =
-            mockk<IntervalDetector.OnDynamicIntervalDetectedListener>(relaxUnitFun = true)
+            mockk<AccelerometerIntervalDetector.OnDynamicIntervalDetectedListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val intervalDetector = IntervalDetector(
+        val intervalDetector = AccelerometerIntervalDetector(
             context,
             dynamicIntervalDetectedListener = dynamicIntervalDetectedListener
         )
@@ -5394,7 +5394,7 @@ class IntervalDetectorTest {
     @Test
     fun onReset_whenNoListener_makesNoAction() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val intervalDetector = IntervalDetector(context)
+        val intervalDetector = AccelerometerIntervalDetector(context)
 
         val internalDetectorListener: AccelerationTriadStaticIntervalDetectorListener? =
             intervalDetector.getPrivateProperty("internalDetectorListener")
@@ -5409,9 +5409,9 @@ class IntervalDetectorTest {
 
     @Test
     fun onReset_whenListener_notifies() {
-        val resetListener = mockk<IntervalDetector.OnResetListener>(relaxUnitFun = true)
+        val resetListener = mockk<AccelerometerIntervalDetector.OnResetListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val intervalDetector = IntervalDetector(context, resetListener = resetListener)
+        val intervalDetector = AccelerometerIntervalDetector(context, resetListener = resetListener)
 
         val internalDetectorListener: AccelerationTriadStaticIntervalDetectorListener? =
             intervalDetector.getPrivateProperty("internalDetectorListener")

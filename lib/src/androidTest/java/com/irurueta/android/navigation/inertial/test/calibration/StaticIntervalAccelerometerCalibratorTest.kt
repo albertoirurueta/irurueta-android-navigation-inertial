@@ -9,7 +9,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
 import com.irurueta.android.navigation.inertial.LocationService
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
-import com.irurueta.android.navigation.inertial.calibration.AccelerometerCalibrator
+import com.irurueta.android.navigation.inertial.calibration.StaticIntervalAccelerometerCalibrator
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
 import com.irurueta.android.navigation.inertial.test.LocationActivity
 import com.irurueta.numerical.robust.RobustEstimatorMethod
@@ -19,7 +19,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
-class AccelerometerCalibratorTest {
+class StaticIntervalAccelerometerCalibratorTest {
 
     private val syncHelper = ThreadSyncHelper()
 
@@ -151,8 +151,8 @@ class AccelerometerCalibratorTest {
     private fun buildCalibrator(
         context: Context,
         sensorType: AccelerometerSensorCollector.SensorType
-    ): AccelerometerCalibrator {
-        val calibrator = AccelerometerCalibrator(context,
+    ): StaticIntervalAccelerometerCalibrator {
+        val calibrator = StaticIntervalAccelerometerCalibrator(context,
             sensorType = sensorType,
             initializationStartedListener = {
                 Log.i(
@@ -219,7 +219,7 @@ class AccelerometerCalibratorTest {
         return calibrator
     }
 
-    private fun logCalibrationResult(calibrator: AccelerometerCalibrator) {
+    private fun logCalibrationResult(calibrator: StaticIntervalAccelerometerCalibrator) {
         Log.i("AccelerometerCalibratorTest", "Result unreliable: ${calibrator.resultUnreliable}")
         Log.i(
             "AccelerometerCalibratorTest",

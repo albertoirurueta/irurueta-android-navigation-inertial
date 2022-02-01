@@ -20,7 +20,7 @@ import android.location.Location
 import android.util.Log
 import com.irurueta.algebra.Matrix
 import com.irurueta.android.navigation.inertial.GravityHelper
-import com.irurueta.android.navigation.inertial.calibration.intervals.IntervalDetector
+import com.irurueta.android.navigation.inertial.calibration.intervals.AccelerometerIntervalDetector
 import com.irurueta.android.navigation.inertial.calibration.noise.AccumulatedMeasurementEstimator
 import com.irurueta.android.navigation.inertial.calibration.noise.GravityNormEstimator
 import com.irurueta.android.navigation.inertial.calibration.noise.StopMode
@@ -75,7 +75,7 @@ import kotlin.math.sqrt
  * based on the amount of standard deviation (the larger the variability, the worse the score
  * will be).
  */
-class AccelerometerCalibrator private constructor(
+class StaticIntervalAccelerometerCalibrator private constructor(
     val context: Context,
     val sensorType: AccelerometerSensorCollector.SensorType,
     val sensorDelay: SensorDelay,
@@ -182,9 +182,9 @@ class AccelerometerCalibrator private constructor(
      * Listener used by internal interval detector to handle events when initialization starts.
      */
     private val intervalDetectorInitializationStartedListener =
-        IntervalDetector.OnInitializationStartedListener {
+        AccelerometerIntervalDetector.OnInitializationStartedListener {
             initializationStartedListener?.onInitializationStarted(
-                this@AccelerometerCalibrator
+                this@StaticIntervalAccelerometerCalibrator
             )
         }
 
@@ -193,10 +193,10 @@ class AccelerometerCalibrator private constructor(
      * completed.
      */
     private val intervalDetectorInitializationCompletedListener =
-        IntervalDetector.OnInitializationCompletedListener { _, _ ->
+        AccelerometerIntervalDetector.OnInitializationCompletedListener { _, _ ->
             gravityNorm = gravityNormEstimator.averageNorm
             initializationCompletedListener?.onInitializationCompleted(
-                this@AccelerometerCalibrator
+                this@StaticIntervalAccelerometerCalibrator
             )
         }
 
@@ -204,9 +204,9 @@ class AccelerometerCalibrator private constructor(
      * Listener used by the internal interval detector to handle errors during interval detection.
      */
     private val intervalDetectorErrorListener =
-        IntervalDetector.OnErrorListener { _, reason ->
+        AccelerometerIntervalDetector.OnErrorListener { _, reason ->
             stop()
-            errorListener?.onError(this@AccelerometerCalibrator, mapErrorReason(reason))
+            errorListener?.onError(this@StaticIntervalAccelerometerCalibrator, mapErrorReason(reason))
         }
 
     /**
@@ -215,7 +215,7 @@ class AccelerometerCalibrator private constructor(
      * period, that will be used as a measurement to solve calibration.
      */
     private val intervalDetectorDynamicIntervalDetectedListener =
-        IntervalDetector.OnDynamicIntervalDetectedListener { _, _, _, _, _, _, _, accumulatedAvgX, accumulatedAvgY, accumulatedAvgZ, accumulatedStdX, accumulatedStdY, accumulatedStdZ ->
+        AccelerometerIntervalDetector.OnDynamicIntervalDetectedListener { _, _, _, _, _, _, _, accumulatedAvgX, accumulatedAvgY, accumulatedAvgZ, accumulatedStdX, accumulatedStdY, accumulatedStdZ ->
             // add one measurement
             val kinematics = BodyKinematics(accumulatedAvgX, accumulatedAvgY, accumulatedAvgZ)
             val stdNorm = sqrt(
@@ -229,14 +229,14 @@ class AccelerometerCalibrator private constructor(
             val measurementsSize = measurements.size
 
             newCalibrationMeasurementAvailableListener?.onNewCalibrationMeasurementAvailable(
-                this@AccelerometerCalibrator, measurement, measurementsSize, reqMeasurements
+                this@StaticIntervalAccelerometerCalibrator, measurement, measurementsSize, reqMeasurements
             )
 
             // check if enough measurements have been collected
             val isReadyToCalibrate = measurementsSize >= reqMeasurements
             if (isReadyToCalibrate) {
                 readyToSolveCalibrationListener?.onReadyToSolveCalibration(
-                    this@AccelerometerCalibrator
+                    this@StaticIntervalAccelerometerCalibrator
                 )
 
                 // stop interval detector since no more measurements need to be collected
@@ -285,15 +285,15 @@ class AccelerometerCalibrator private constructor(
         AccumulatedMeasurementEstimator.OnUnreliableListener<GravityNormEstimator> {
             resultUnreliable = true
             unreliableGravityNormEstimationListener?.onUnreliableGravityEstimation(
-                this@AccelerometerCalibrator
+                this@StaticIntervalAccelerometerCalibrator
             )
         }
 
     /**
      * Internal interval detector to detect periods when device remains static.
      */
-    private val intervalDetector: IntervalDetector =
-        IntervalDetector(
+    private val intervalDetector: AccelerometerIntervalDetector =
+        AccelerometerIntervalDetector(
             context,
             sensorType,
             sensorDelay,
@@ -1894,7 +1894,7 @@ class AccelerometerCalibrator private constructor(
             running = false
             true
         } catch (e: NavigationException) {
-            Log.e(AccelerometerCalibrator::class.qualifiedName, "Calibration estimation failed", e)
+            Log.e(StaticIntervalAccelerometerCalibrator::class.qualifiedName, "Calibration estimation failed", e)
             errorListener?.onError(this, ErrorReason.NUMERICAL_INSTABILITY_DURING_CALIBRATION)
             running = false
             false
@@ -2518,15 +2518,15 @@ class AccelerometerCalibrator private constructor(
 
         /**
          * Maps interval detector error reasons into error reasons returned by
-         * [AccelerometerCalibrator].
+         * [StaticIntervalAccelerometerCalibrator].
          */
-        private fun mapErrorReason(reason: IntervalDetector.ErrorReason): ErrorReason {
+        private fun mapErrorReason(reason: AccelerometerIntervalDetector.ErrorReason): ErrorReason {
             return when (reason) {
-                IntervalDetector.ErrorReason.UNRELIABLE_SENSOR
+                AccelerometerIntervalDetector.ErrorReason.UNRELIABLE_SENSOR
                 -> ErrorReason.UNRELIABLE_SENSOR
-                IntervalDetector.ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
+                AccelerometerIntervalDetector.ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
                 -> ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
-                IntervalDetector.ErrorReason.OVERALL_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
+                AccelerometerIntervalDetector.ErrorReason.OVERALL_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
                 -> ErrorReason.OVERALL_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
             }
         }
@@ -2542,7 +2542,7 @@ class AccelerometerCalibrator private constructor(
          *
          * @param calibrator calibrator that raised the event.
          */
-        fun onInitializationStarted(calibrator: AccelerometerCalibrator)
+        fun onInitializationStarted(calibrator: StaticIntervalAccelerometerCalibrator)
     }
 
     /**
@@ -2555,7 +2555,7 @@ class AccelerometerCalibrator private constructor(
          *
          * @param calibrator calibrator that raised the event.
          */
-        fun onInitializationCompleted(calibrator: AccelerometerCalibrator)
+        fun onInitializationCompleted(calibrator: StaticIntervalAccelerometerCalibrator)
     }
 
     /**
@@ -2570,7 +2570,7 @@ class AccelerometerCalibrator private constructor(
          * @param calibrator calibrator that raised the event.
          * @param errorReason reason why error was detected.
          */
-        fun onError(calibrator: AccelerometerCalibrator, errorReason: ErrorReason)
+        fun onError(calibrator: StaticIntervalAccelerometerCalibrator, errorReason: ErrorReason)
     }
 
     /**
@@ -2584,19 +2584,19 @@ class AccelerometerCalibrator private constructor(
          *
          * @param calibrator calibrator that raised the event.
          */
-        fun onUnreliableGravityEstimation(calibrator: AccelerometerCalibrator)
+        fun onUnreliableGravityEstimation(calibrator: StaticIntervalAccelerometerCalibrator)
     }
 
     /**
      * Interface to notify when initial bias guess is available.
-     * If [isGroundTruthInitialBias] is true, then initial bias is considered the true value after solving
-     * calibration, otherwise, initial bias is considered only an initial guess.
+     * If [isGroundTruthInitialBias] is true, then initial bias is considered the true value after
+     * solving calibration, otherwise, initial bias is considered only an initial guess.
      */
     fun interface OnInitialBiasAvailableListener {
         /**
          * Called when initial bias is available.
-         * If [isGroundTruthInitialBias] is true, then initial bias is considered the true value after solving
-         * calibration, otherwise, initial bias is considered only an initial guess.
+         * If [isGroundTruthInitialBias] is true, then initial bias is considered the true value
+         * after solving calibration, otherwise, initial bias is considered only an initial guess.
          *
          * @param calibrator calibrator that raised the event.
          * @param biasX x-coordinate of bias expressed in meters per squared second (m/s^2).
@@ -2604,7 +2604,7 @@ class AccelerometerCalibrator private constructor(
          * @param biasZ z-coordinate of bias expressed in meters per squared second (m/s^2).
          */
         fun onInitialBiasAvailable(
-            calibrator: AccelerometerCalibrator,
+            calibrator: StaticIntervalAccelerometerCalibrator,
             biasX: Double,
             biasY: Double,
             biasZ: Double
@@ -2615,14 +2615,14 @@ class AccelerometerCalibrator private constructor(
      * Interface to notify when a new measurement is obtained for calibration purposes.
      * Such measurements are determined each time a static period finishes (when device stops
      * being static).
-     * When enough of this measurements are obtained, calibration can actually be solved.
+     * When enough of these measurements are obtained, calibration can actually be solved.
      */
     fun interface OnNewCalibrationMeasurementAvailableListener {
         /**
          * Called when a new measurement for calibration is found.
          * A new measurement each time a static period finishes (when device stops being static for
          * given amount of time).
-         * When enough of this measurements are obtained, calibration can actually be solved.
+         * When enough of these measurements are obtained, calibration can actually be solved.
          * This listener can be used to modify each measurement as it is being collected.
          * Notice that changes to new measurements should be done carefully as they might affect
          * result of solved calibration.
@@ -2633,7 +2633,7 @@ class AccelerometerCalibrator private constructor(
          * @param requiredMeasurements required number of measurements to solve calibration.
          */
         fun onNewCalibrationMeasurementAvailable(
-            calibrator: AccelerometerCalibrator,
+            calibrator: StaticIntervalAccelerometerCalibrator,
             newMeasurement: StandardDeviationBodyKinematics,
             measurementsFoundSoFar: Int,
             requiredMeasurements: Int
@@ -2649,7 +2649,7 @@ class AccelerometerCalibrator private constructor(
          *
          * @param calibrator calibrator that raised the event.
          */
-        fun onReadyToSolveCalibration(calibrator: AccelerometerCalibrator)
+        fun onReadyToSolveCalibration(calibrator: StaticIntervalAccelerometerCalibrator)
     }
 
     /**
@@ -2664,7 +2664,7 @@ class AccelerometerCalibrator private constructor(
          *
          * @param calibrator calibrator that raised the event.
          */
-        fun onCalibrationSolvingStarted(calibrator: AccelerometerCalibrator)
+        fun onCalibrationSolvingStarted(calibrator: StaticIntervalAccelerometerCalibrator)
     }
 
     /**
@@ -2676,7 +2676,7 @@ class AccelerometerCalibrator private constructor(
          *
          * @param calibrator calibrator that raised the event.
          */
-        fun onCalibrationCompleted(calibrator: AccelerometerCalibrator)
+        fun onCalibrationCompleted(calibrator: StaticIntervalAccelerometerCalibrator)
     }
 
     /**
@@ -2692,7 +2692,7 @@ class AccelerometerCalibrator private constructor(
          *
          * @param calibrator calibrator that raised the event.
          */
-        fun onStopped(calibrator: AccelerometerCalibrator)
+        fun onStopped(calibrator: StaticIntervalAccelerometerCalibrator)
     }
 
     /**

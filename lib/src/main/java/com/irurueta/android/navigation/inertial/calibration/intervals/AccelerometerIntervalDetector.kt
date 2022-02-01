@@ -57,7 +57,7 @@ import com.irurueta.units.TimeConverter
  * @property measurementListener listener to notify collected accelerometer measurements.
  * @property accuracyChangedListener listener to notify when accelerometer accuracy changes.
  */
-class IntervalDetector(
+class AccelerometerIntervalDetector(
     val context: Context,
     val sensorType: AccelerometerSensorCollector.SensorType =
         AccelerometerSensorCollector.SensorType.ACCELEROMETER,
@@ -80,7 +80,7 @@ class IntervalDetector(
             override fun onInitializationStarted(
                 detector: AccelerationTriadStaticIntervalDetector?
             ) {
-                initializationStartedListener?.onInitializationStarted(this@IntervalDetector)
+                initializationStartedListener?.onInitializationStarted(this@AccelerometerIntervalDetector)
             }
 
             override fun onInitializationCompleted(
@@ -88,7 +88,7 @@ class IntervalDetector(
                 baseNoiseLevel: Double
             ) {
                 initializationCompletedListener?.onInitializationCompleted(
-                    this@IntervalDetector,
+                    this@AccelerometerIntervalDetector,
                     baseNoiseLevel
                 )
             }
@@ -100,7 +100,7 @@ class IntervalDetector(
                 reason: TriadStaticIntervalDetector.ErrorReason
             ) {
                 stop()
-                errorListener?.onError(this@IntervalDetector, mapErrorReason(reason))
+                errorListener?.onError(this@AccelerometerIntervalDetector, mapErrorReason(reason))
             }
 
             override fun onStaticIntervalDetected(
@@ -113,7 +113,7 @@ class IntervalDetector(
                 instantaneousStdZ: Double
             ) {
                 staticIntervalDetectedListener?.onStaticIntervalDetected(
-                    this@IntervalDetector,
+                    this@AccelerometerIntervalDetector,
                     instantaneousAvgX,
                     instantaneousAvgY,
                     instantaneousAvgZ,
@@ -139,7 +139,7 @@ class IntervalDetector(
                 accumulatedStdZ: Double
             ) {
                 dynamicIntervalDetectedListener?.onDynamicIntervalDetected(
-                    this@IntervalDetector,
+                    this@AccelerometerIntervalDetector,
                     instantaneousAvgX,
                     instantaneousAvgY,
                     instantaneousAvgZ,
@@ -156,7 +156,7 @@ class IntervalDetector(
             }
 
             override fun onReset(detector: AccelerationTriadStaticIntervalDetector?) {
-                resetListener?.onReset(this@IntervalDetector)
+                resetListener?.onReset(this@AccelerometerIntervalDetector)
             }
 
         }
@@ -219,7 +219,7 @@ class IntervalDetector(
                 stop()
                 unreliable = true
                 errorListener?.onError(
-                    this@IntervalDetector,
+                    this@AccelerometerIntervalDetector,
                     ErrorReason.UNRELIABLE_SENSOR
                 )
             }
@@ -889,6 +889,8 @@ class IntervalDetector(
      * Gets windowed standard deviation of measurements for each processed triad.
      * This value is updated for each processed sample containing measured standard deviation for
      * the samples within the window.
+     *
+     * @param result instance where result will be stored.
      */
     fun getInstantaneousStdTriad(result: AccelerationTriad) {
         internalDetector.getInstantaneousStdTriad(result)
@@ -1085,7 +1087,7 @@ class IntervalDetector(
          *
          * @param detector detector that raised the event.
          */
-        fun onInitializationStarted(detector: IntervalDetector)
+        fun onInitializationStarted(detector: AccelerometerIntervalDetector)
     }
 
     /**
@@ -1101,7 +1103,7 @@ class IntervalDetector(
          * second (m/s^2).
          */
         fun onInitializationCompleted(
-            detector: IntervalDetector,
+            detector: AccelerometerIntervalDetector,
             baseNoiseLevel: Double
         )
     }
@@ -1119,7 +1121,7 @@ class IntervalDetector(
          * @param reason reason why error was detected.
          */
         fun onError(
-            detector: IntervalDetector,
+            detector: AccelerometerIntervalDetector,
             reason: ErrorReason
         )
     }
@@ -1149,7 +1151,7 @@ class IntervalDetector(
          * within the window expressed in meters per squared second (m/s^2).
          */
         fun onStaticIntervalDetected(
-            detector: IntervalDetector,
+            detector: AccelerometerIntervalDetector,
             instantaneousAvgX: Double,
             instantaneousAvgY: Double,
             instantaneousAvgZ: Double,
@@ -1197,7 +1199,7 @@ class IntervalDetector(
          * during last static period expressed in meters per squared second (m/s^2).
          */
         fun onDynamicIntervalDetected(
-            detector: IntervalDetector,
+            detector: AccelerometerIntervalDetector,
             instantaneousAvgX: Double,
             instantaneousAvgY: Double,
             instantaneousAvgZ: Double,
@@ -1223,7 +1225,7 @@ class IntervalDetector(
          *
          * @param detector detector that raised the event.
          */
-        fun onReset(detector: IntervalDetector)
+        fun onReset(detector: AccelerometerIntervalDetector)
     }
 
     /**
