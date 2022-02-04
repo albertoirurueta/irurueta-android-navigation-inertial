@@ -21,6 +21,7 @@ import android.util.Log
 import com.irurueta.algebra.Matrix
 import com.irurueta.android.navigation.inertial.GravityHelper
 import com.irurueta.android.navigation.inertial.calibration.intervals.AccelerometerIntervalDetector
+import com.irurueta.android.navigation.inertial.calibration.intervals.IntervalDetector
 import com.irurueta.android.navigation.inertial.calibration.noise.AccumulatedMeasurementEstimator
 import com.irurueta.android.navigation.inertial.calibration.noise.GravityNormEstimator
 import com.irurueta.android.navigation.inertial.calibration.noise.StopMode
@@ -182,7 +183,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
      * Listener used by internal interval detector to handle events when initialization starts.
      */
     private val intervalDetectorInitializationStartedListener =
-        AccelerometerIntervalDetector.OnInitializationStartedListener {
+        IntervalDetector.OnInitializationStartedListener<AccelerometerIntervalDetector> {
             initializationStartedListener?.onInitializationStarted(
                 this@StaticIntervalAccelerometerCalibrator
             )
@@ -193,7 +194,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
      * completed.
      */
     private val intervalDetectorInitializationCompletedListener =
-        AccelerometerIntervalDetector.OnInitializationCompletedListener { _, _ ->
+        IntervalDetector.OnInitializationCompletedListener<AccelerometerIntervalDetector> { _, _ ->
             gravityNorm = gravityNormEstimator.averageNorm
             initializationCompletedListener?.onInitializationCompleted(
                 this@StaticIntervalAccelerometerCalibrator
@@ -204,9 +205,12 @@ class StaticIntervalAccelerometerCalibrator private constructor(
      * Listener used by the internal interval detector to handle errors during interval detection.
      */
     private val intervalDetectorErrorListener =
-        AccelerometerIntervalDetector.OnErrorListener { _, reason ->
+        IntervalDetector.OnErrorListener<AccelerometerIntervalDetector> { _, reason ->
             stop()
-            errorListener?.onError(this@StaticIntervalAccelerometerCalibrator, mapErrorReason(reason))
+            errorListener?.onError(
+                this@StaticIntervalAccelerometerCalibrator,
+                mapErrorReason(reason)
+            )
         }
 
     /**
@@ -215,7 +219,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
      * period, that will be used as a measurement to solve calibration.
      */
     private val intervalDetectorDynamicIntervalDetectedListener =
-        AccelerometerIntervalDetector.OnDynamicIntervalDetectedListener { _, _, _, _, _, _, _, accumulatedAvgX, accumulatedAvgY, accumulatedAvgZ, accumulatedStdX, accumulatedStdY, accumulatedStdZ ->
+        IntervalDetector.OnDynamicIntervalDetectedListener<AccelerometerIntervalDetector> { _, _, _, _, _, _, _, accumulatedAvgX, accumulatedAvgY, accumulatedAvgZ, accumulatedStdX, accumulatedStdY, accumulatedStdZ ->
             // add one measurement
             val kinematics = BodyKinematics(accumulatedAvgX, accumulatedAvgY, accumulatedAvgZ)
             val stdNorm = sqrt(
@@ -229,7 +233,10 @@ class StaticIntervalAccelerometerCalibrator private constructor(
             val measurementsSize = measurements.size
 
             newCalibrationMeasurementAvailableListener?.onNewCalibrationMeasurementAvailable(
-                this@StaticIntervalAccelerometerCalibrator, measurement, measurementsSize, reqMeasurements
+                this@StaticIntervalAccelerometerCalibrator,
+                measurement,
+                measurementsSize,
+                reqMeasurements
             )
 
             // check if enough measurements have been collected
@@ -755,11 +762,11 @@ class StaticIntervalAccelerometerCalibrator private constructor(
      * @throws IllegalStateException if calibrator is currently running.
      */
     var baseNoiseLevelAbsoluteThresholdAsAcceleration
-        get() = intervalDetector.baseNoiseLevelAbsoluteThresholdAsAcceleration
+        get() = intervalDetector.baseNoiseLevelAbsoluteThresholdAsMeasurement
         @Throws(IllegalArgumentException::class, IllegalStateException::class)
         set(value) {
             check(!running)
-            intervalDetector.baseNoiseLevelAbsoluteThresholdAsAcceleration = value
+            intervalDetector.baseNoiseLevelAbsoluteThresholdAsMeasurement = value
         }
 
     /**
@@ -770,7 +777,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
      * @param result instance where result will be stored.
      */
     fun getBaseNoiseLevelAbsoluteThresholdAsAcceleration(result: Acceleration) {
-        intervalDetector.getBaseNoiseLevelAbsoluteThresholdAsAcceleration(result)
+        intervalDetector.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(result)
     }
 
     /**
@@ -786,7 +793,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
      * This is only available once initialization is completed.
      */
     val baseNoiseLevelAsAcceleration
-        get() = intervalDetector.baseNoiseLevelAsAcceleration
+        get() = intervalDetector.baseNoiseLevelAsMeasurement
 
     /**
      * Gets accelerometer measurement base noise level that has been detected during initialization.
@@ -796,7 +803,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
      * @return true if result is available, false otherwise.
      */
     fun getBaseNoiseLevelAsAcceleration(result: Acceleration): Boolean {
-        return intervalDetector.getBaseNoiseLevelAsAcceleration(result)
+        return intervalDetector.getBaseNoiseLevelAsMeasurement(result)
     }
 
     /**
@@ -827,7 +834,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
      * This is only available once initialization is completed.
      */
     val thresholdAsAcceleration
-        get() = intervalDetector.thresholdAsAcceleration
+        get() = intervalDetector.thresholdAsMeasurement
 
     /**
      * Gets estimated threshold to determine static/dynamic period changes.
@@ -1894,7 +1901,11 @@ class StaticIntervalAccelerometerCalibrator private constructor(
             running = false
             true
         } catch (e: NavigationException) {
-            Log.e(StaticIntervalAccelerometerCalibrator::class.qualifiedName, "Calibration estimation failed", e)
+            Log.e(
+                StaticIntervalAccelerometerCalibrator::class.qualifiedName,
+                "Calibration estimation failed",
+                e
+            )
             errorListener?.onError(this, ErrorReason.NUMERICAL_INSTABILITY_DURING_CALIBRATION)
             running = false
             false
@@ -2520,13 +2531,13 @@ class StaticIntervalAccelerometerCalibrator private constructor(
          * Maps interval detector error reasons into error reasons returned by
          * [StaticIntervalAccelerometerCalibrator].
          */
-        private fun mapErrorReason(reason: AccelerometerIntervalDetector.ErrorReason): ErrorReason {
+        private fun mapErrorReason(reason: IntervalDetector.ErrorReason): ErrorReason {
             return when (reason) {
-                AccelerometerIntervalDetector.ErrorReason.UNRELIABLE_SENSOR
+                IntervalDetector.ErrorReason.UNRELIABLE_SENSOR
                 -> ErrorReason.UNRELIABLE_SENSOR
-                AccelerometerIntervalDetector.ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
+                IntervalDetector.ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
                 -> ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
-                AccelerometerIntervalDetector.ErrorReason.OVERALL_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
+                IntervalDetector.ErrorReason.OVERALL_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
                 -> ErrorReason.OVERALL_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
             }
         }

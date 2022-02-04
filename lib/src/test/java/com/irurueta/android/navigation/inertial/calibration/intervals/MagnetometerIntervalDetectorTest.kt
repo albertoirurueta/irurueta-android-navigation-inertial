@@ -78,7 +78,7 @@ class MagnetometerIntervalDetectorTest {
             0.0
         )
         val baseNoiseLevelAbsoluteThreshold1 =
-            detector.baseNoiseLevelAbsoluteThresholdAsMagneticFluxDensity
+            detector.baseNoiseLevelAbsoluteThresholdAsMeasurement
         assertEquals(
             detector.baseNoiseLevelAbsoluteThreshold,
             baseNoiseLevelAbsoluteThreshold1.value.toDouble(),
@@ -87,41 +87,41 @@ class MagnetometerIntervalDetectorTest {
         assertEquals(MagneticFluxDensityUnit.TESLA, baseNoiseLevelAbsoluteThreshold1.unit)
         val baseNoiseLevelAbsoluteThreshold2 =
             MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getBaseNoiseLevelAbsoluteThresholdAsMagneticFluxDensity(
+        detector.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(
             baseNoiseLevelAbsoluteThreshold2
         )
         assertEquals(baseNoiseLevelAbsoluteThreshold1, baseNoiseLevelAbsoluteThreshold2)
         assertNull(detector.baseNoiseLevel)
-        assertNull(detector.baseNoiseLevelAsMagneticFluxDensity)
+        assertNull(detector.baseNoiseLevelAsMeasurement)
         val baseNoiseLevel = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        assertFalse(detector.getBaseNoiseLevelAsMagneticFluxDensity(baseNoiseLevel))
+        assertFalse(detector.getBaseNoiseLevelAsMeasurement(baseNoiseLevel))
         assertNull(detector.baseNoiseLevelPsd)
         assertNull(detector.baseNoiseLevelRootPsd)
         assertNull(detector.threshold)
-        assertNull(detector.thresholdAsMagneticFluxDensity)
+        assertNull(detector.thresholdAsMeasurement)
         val threshold = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
         assertFalse(detector.getThresholdAsMeasurement(threshold))
         assertEquals(0.0, detector.accumulatedAvgX, 0.0)
-        val accumulatedAvgX1 = detector.accumulatedAvgXAsMagneticFluxDensity
+        val accumulatedAvgX1 = detector.accumulatedAvgXAsMeasurement
         assertEquals(0.0, accumulatedAvgX1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedAvgX1.unit)
         val accumulatedAvgX2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedAvgXAsMagneticFluxDensity(accumulatedAvgX2)
+        detector.getAccumulatedAvgXAsMeasurement(accumulatedAvgX2)
         assertEquals(accumulatedAvgX1, accumulatedAvgX2)
         assertEquals(accumulatedAvgX1, accumulatedAvgX2)
         assertEquals(0.0, detector.accumulatedAvgY, 0.0)
-        val accumulatedAvgY1 = detector.accumulatedAvgYAsMagneticFluxDensity
+        val accumulatedAvgY1 = detector.accumulatedAvgYAsMeasurement
         assertEquals(0.0, accumulatedAvgY1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedAvgY1.unit)
         val accumulatedAvgY2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedAvgYAsMagneticFluxDensity(accumulatedAvgY2)
+        detector.getAccumulatedAvgYAsMeasurement(accumulatedAvgY2)
         assertEquals(accumulatedAvgY1, accumulatedAvgY2)
         assertEquals(0.0, detector.accumulatedAvgZ, 0.0)
-        val accumulatedAvgZ1 = detector.accumulatedAvgZAsMagneticFluxDensity
+        val accumulatedAvgZ1 = detector.accumulatedAvgZAsMeasurement
         assertEquals(0.0, accumulatedAvgZ1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedAvgZ1.unit)
         val accumulatedAvgZ2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedAvgZAsMagneticFluxDensity(accumulatedAvgZ2)
+        detector.getAccumulatedAvgZAsMeasurement(accumulatedAvgZ2)
         assertEquals(accumulatedAvgZ1, accumulatedAvgZ2)
         val accumulatedAvgTriad1 = detector.accumulatedAvgTriad
         assertEquals(0.0, accumulatedAvgTriad1.valueX, 0.0)
@@ -132,25 +132,25 @@ class MagnetometerIntervalDetectorTest {
         detector.getAccumulatedAvgTriad(accumulatedAvgTriad2)
         assertEquals(accumulatedAvgTriad1, accumulatedAvgTriad2)
         assertEquals(0.0, detector.accumulatedStdX, 0.0)
-        val accumulatedStdX1 = detector.accumulatedStdXAsMagneticFluxDensity
+        val accumulatedStdX1 = detector.accumulatedStdXAsMeasurement
         assertEquals(0.0, accumulatedStdX1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedStdX1.unit)
         val accumulatedStdX2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedStdXAsMagneticFluxDensity(accumulatedStdX2)
+        detector.getAccumulatedStdXAsMeasurement(accumulatedStdX2)
         assertEquals(accumulatedStdX1, accumulatedStdX2)
         assertEquals(0.0, detector.accumulatedStdY, 0.0)
-        val accumulatedStdY1 = detector.accumulatedStdYAsMagneticFluxDensity
+        val accumulatedStdY1 = detector.accumulatedStdYAsMeasurement
         assertEquals(0.0, accumulatedStdY1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedStdY1.unit)
         val accumulatedStdY2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedStdYAsMagneticFluxDensity(accumulatedStdY2)
+        detector.getAccumulatedStdYAsMeasurement(accumulatedStdY2)
         assertEquals(accumulatedStdY1, accumulatedStdY2)
         assertEquals(0.0, detector.accumulatedStdZ, 0.0)
-        val accumulatedStdZ1 = detector.accumulatedStdZAsMagneticFluxDensity
+        val accumulatedStdZ1 = detector.accumulatedStdZAsMeasurement
         assertEquals(0.0, accumulatedStdZ1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedStdZ1.unit)
         val accumulatedStdZ2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedStdZAsMagneticFluxDensity(accumulatedStdZ2)
+        detector.getAccumulatedStdZAsMeasurement(accumulatedStdZ2)
         assertEquals(accumulatedStdZ1, accumulatedStdZ2)
         val accumulatedStdTriad1 = detector.accumulatedStdTriad
         assertEquals(0.0, accumulatedStdTriad1.valueX, 0.0)
@@ -161,25 +161,25 @@ class MagnetometerIntervalDetectorTest {
         detector.getAccumulatedStdTriad(accumulatedStdTriad2)
         assertEquals(accumulatedStdTriad1, accumulatedAvgTriad2)
         assertEquals(0.0, detector.instantaneousAvgX, 0.0)
-        val instantaneousAvgX1 = detector.instantaneousAvgXAsMagneticFluxDensity
+        val instantaneousAvgX1 = detector.instantaneousAvgXAsMeasurement
         assertEquals(0.0, instantaneousAvgX1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousAvgX1.unit)
         val instantaneousAvgX2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousAvgXAsMagneticFluxDensity(instantaneousAvgX2)
+        detector.getInstantaneousAvgXAsMeasurement(instantaneousAvgX2)
         assertEquals(instantaneousAvgX1, instantaneousAvgX2)
         assertEquals(0.0, detector.instantaneousAvgY, 0.0)
-        val instantaneousAvgY1 = detector.instantaneousAvgYAsMagneticFluxDensity
+        val instantaneousAvgY1 = detector.instantaneousAvgYAsMeasurement
         assertEquals(0.0, instantaneousAvgY1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousAvgY1.unit)
         val instantaneousAvgY2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousAvgYAsMagneticFluxDensity(instantaneousAvgY2)
+        detector.getInstantaneousAvgYAsMeasurement(instantaneousAvgY2)
         assertEquals(instantaneousAvgY1, instantaneousAvgY2)
         assertEquals(0.0, detector.instantaneousAvgZ, 0.0)
-        val instantaneousAvgZ1 = detector.instantaneousAvgZAsMagneticFluxDensity
+        val instantaneousAvgZ1 = detector.instantaneousAvgZAsMeasurement
         assertEquals(0.0, instantaneousAvgZ1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousAvgZ1.unit)
         val instantaneousAvgZ2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousAvgZAsMagneticFluxDensity(instantaneousAvgZ2)
+        detector.getInstantaneousAvgZAsMeasurement(instantaneousAvgZ2)
         assertEquals(instantaneousAvgZ1, instantaneousAvgZ2)
         val instantaneousAvgTriad1 = detector.instantaneousAvgTriad
         assertEquals(0.0, instantaneousAvgTriad1.valueX, 0.0)
@@ -190,25 +190,25 @@ class MagnetometerIntervalDetectorTest {
         detector.getInstantaneousAvgTriad(instantaneousAvgTriad2)
         assertEquals(instantaneousAvgTriad1, instantaneousAvgTriad2)
         assertEquals(0.0, detector.instantaneousStdX, 0.0)
-        val instantaneousStdX1 = detector.instantaneousStdXAsMagneticFluxDensity
+        val instantaneousStdX1 = detector.instantaneousStdXAsMeasurement
         assertEquals(0.0, instantaneousStdX1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousStdX1.unit)
         val instantaneousStdX2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousStdXAsMagneticFluxDensity(instantaneousStdX2)
+        detector.getInstantaneousStdXAsMeasurement(instantaneousStdX2)
         assertEquals(instantaneousStdX1, instantaneousStdX2)
         assertEquals(0.0, detector.instantaneousStdY, 0.0)
-        val instantaneousStdY1 = detector.instantaneousStdYAsMagneticFluxDensity
+        val instantaneousStdY1 = detector.instantaneousStdYAsMeasurement
         assertEquals(0.0, instantaneousStdY1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousStdY1.unit)
         val instantaneousStdY2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousStdYAsMagneticFluxDensity(instantaneousStdY2)
+        detector.getInstantaneousStdYAsMeasurement(instantaneousStdY2)
         assertEquals(instantaneousStdY1, instantaneousStdY2)
         assertEquals(0.0, detector.instantaneousStdZ, 0.0)
-        val instantaneousStdZ1 = detector.instantaneousStdZAsMagneticFluxDensity
+        val instantaneousStdZ1 = detector.instantaneousStdZAsMeasurement
         assertEquals(0.0, instantaneousStdZ1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousStdZ1.unit)
         val instantaneousStdZ2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousStdZAsMagneticFluxDensity(instantaneousStdZ2)
+        detector.getInstantaneousStdZAsMeasurement(instantaneousStdZ2)
         assertEquals(instantaneousStdZ1, instantaneousStdZ2)
         val instantaneousStdTriad1 = detector.instantaneousStdTriad
         assertEquals(0.0, instantaneousAvgTriad1.valueX, 0.0)
@@ -228,7 +228,7 @@ class MagnetometerIntervalDetectorTest {
         assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, detector.numberOfProcessedMeasurements)
         assertFalse(detector.running)
-        assertEquals(MagnetometerIntervalDetector.Status.IDLE, detector.status)
+        assertEquals(IntervalDetector.Status.IDLE, detector.status)
     }
 
     @Test
@@ -276,7 +276,7 @@ class MagnetometerIntervalDetectorTest {
             0.0
         )
         val baseNoiseLevelAbsoluteThreshold1 =
-            detector.baseNoiseLevelAbsoluteThresholdAsMagneticFluxDensity
+            detector.baseNoiseLevelAbsoluteThresholdAsMeasurement
         assertEquals(
             detector.baseNoiseLevelAbsoluteThreshold,
             baseNoiseLevelAbsoluteThreshold1.value.toDouble(),
@@ -285,41 +285,41 @@ class MagnetometerIntervalDetectorTest {
         assertEquals(MagneticFluxDensityUnit.TESLA, baseNoiseLevelAbsoluteThreshold1.unit)
         val baseNoiseLevelAbsoluteThreshold2 =
             MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getBaseNoiseLevelAbsoluteThresholdAsMagneticFluxDensity(
+        detector.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(
             baseNoiseLevelAbsoluteThreshold2
         )
         assertEquals(baseNoiseLevelAbsoluteThreshold1, baseNoiseLevelAbsoluteThreshold2)
         assertNull(detector.baseNoiseLevel)
-        assertNull(detector.baseNoiseLevelAsMagneticFluxDensity)
+        assertNull(detector.baseNoiseLevelAsMeasurement)
         val baseNoiseLevel = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        assertFalse(detector.getBaseNoiseLevelAsMagneticFluxDensity(baseNoiseLevel))
+        assertFalse(detector.getBaseNoiseLevelAsMeasurement(baseNoiseLevel))
         assertNull(detector.baseNoiseLevelPsd)
         assertNull(detector.baseNoiseLevelRootPsd)
         assertNull(detector.threshold)
-        assertNull(detector.thresholdAsMagneticFluxDensity)
+        assertNull(detector.thresholdAsMeasurement)
         val threshold = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
         assertFalse(detector.getThresholdAsMeasurement(threshold))
         assertEquals(0.0, detector.accumulatedAvgX, 0.0)
-        val accumulatedAvgX1 = detector.accumulatedAvgXAsMagneticFluxDensity
+        val accumulatedAvgX1 = detector.accumulatedAvgXAsMeasurement
         assertEquals(0.0, accumulatedAvgX1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedAvgX1.unit)
         val accumulatedAvgX2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedAvgXAsMagneticFluxDensity(accumulatedAvgX2)
+        detector.getAccumulatedAvgXAsMeasurement(accumulatedAvgX2)
         assertEquals(accumulatedAvgX1, accumulatedAvgX2)
         assertEquals(accumulatedAvgX1, accumulatedAvgX2)
         assertEquals(0.0, detector.accumulatedAvgY, 0.0)
-        val accumulatedAvgY1 = detector.accumulatedAvgYAsMagneticFluxDensity
+        val accumulatedAvgY1 = detector.accumulatedAvgYAsMeasurement
         assertEquals(0.0, accumulatedAvgY1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedAvgY1.unit)
         val accumulatedAvgY2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedAvgYAsMagneticFluxDensity(accumulatedAvgY2)
+        detector.getAccumulatedAvgYAsMeasurement(accumulatedAvgY2)
         assertEquals(accumulatedAvgY1, accumulatedAvgY2)
         assertEquals(0.0, detector.accumulatedAvgZ, 0.0)
-        val accumulatedAvgZ1 = detector.accumulatedAvgZAsMagneticFluxDensity
+        val accumulatedAvgZ1 = detector.accumulatedAvgZAsMeasurement
         assertEquals(0.0, accumulatedAvgZ1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedAvgZ1.unit)
         val accumulatedAvgZ2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedAvgZAsMagneticFluxDensity(accumulatedAvgZ2)
+        detector.getAccumulatedAvgZAsMeasurement(accumulatedAvgZ2)
         assertEquals(accumulatedAvgZ1, accumulatedAvgZ2)
         val accumulatedAvgTriad1 = detector.accumulatedAvgTriad
         assertEquals(0.0, accumulatedAvgTriad1.valueX, 0.0)
@@ -330,25 +330,25 @@ class MagnetometerIntervalDetectorTest {
         detector.getAccumulatedAvgTriad(accumulatedAvgTriad2)
         assertEquals(accumulatedAvgTriad1, accumulatedAvgTriad2)
         assertEquals(0.0, detector.accumulatedStdX, 0.0)
-        val accumulatedStdX1 = detector.accumulatedStdXAsMagneticFluxDensity
+        val accumulatedStdX1 = detector.accumulatedStdXAsMeasurement
         assertEquals(0.0, accumulatedStdX1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedStdX1.unit)
         val accumulatedStdX2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedStdXAsMagneticFluxDensity(accumulatedStdX2)
+        detector.getAccumulatedStdXAsMeasurement(accumulatedStdX2)
         assertEquals(accumulatedStdX1, accumulatedStdX2)
         assertEquals(0.0, detector.accumulatedStdY, 0.0)
-        val accumulatedStdY1 = detector.accumulatedStdYAsMagneticFluxDensity
+        val accumulatedStdY1 = detector.accumulatedStdYAsMeasurement
         assertEquals(0.0, accumulatedStdY1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedStdY1.unit)
         val accumulatedStdY2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedStdYAsMagneticFluxDensity(accumulatedStdY2)
+        detector.getAccumulatedStdYAsMeasurement(accumulatedStdY2)
         assertEquals(accumulatedStdY1, accumulatedStdY2)
         assertEquals(0.0, detector.accumulatedStdZ, 0.0)
-        val accumulatedStdZ1 = detector.accumulatedStdZAsMagneticFluxDensity
+        val accumulatedStdZ1 = detector.accumulatedStdZAsMeasurement
         assertEquals(0.0, accumulatedStdZ1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedStdZ1.unit)
         val accumulatedStdZ2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedStdZAsMagneticFluxDensity(accumulatedStdZ2)
+        detector.getAccumulatedStdZAsMeasurement(accumulatedStdZ2)
         assertEquals(accumulatedStdZ1, accumulatedStdZ2)
         val accumulatedStdTriad1 = detector.accumulatedStdTriad
         assertEquals(0.0, accumulatedStdTriad1.valueX, 0.0)
@@ -359,25 +359,25 @@ class MagnetometerIntervalDetectorTest {
         detector.getAccumulatedStdTriad(accumulatedStdTriad2)
         assertEquals(accumulatedStdTriad1, accumulatedAvgTriad2)
         assertEquals(0.0, detector.instantaneousAvgX, 0.0)
-        val instantaneousAvgX1 = detector.instantaneousAvgXAsMagneticFluxDensity
+        val instantaneousAvgX1 = detector.instantaneousAvgXAsMeasurement
         assertEquals(0.0, instantaneousAvgX1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousAvgX1.unit)
         val instantaneousAvgX2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousAvgXAsMagneticFluxDensity(instantaneousAvgX2)
+        detector.getInstantaneousAvgXAsMeasurement(instantaneousAvgX2)
         assertEquals(instantaneousAvgX1, instantaneousAvgX2)
         assertEquals(0.0, detector.instantaneousAvgY, 0.0)
-        val instantaneousAvgY1 = detector.instantaneousAvgYAsMagneticFluxDensity
+        val instantaneousAvgY1 = detector.instantaneousAvgYAsMeasurement
         assertEquals(0.0, instantaneousAvgY1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousAvgY1.unit)
         val instantaneousAvgY2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousAvgYAsMagneticFluxDensity(instantaneousAvgY2)
+        detector.getInstantaneousAvgYAsMeasurement(instantaneousAvgY2)
         assertEquals(instantaneousAvgY1, instantaneousAvgY2)
         assertEquals(0.0, detector.instantaneousAvgZ, 0.0)
-        val instantaneousAvgZ1 = detector.instantaneousAvgZAsMagneticFluxDensity
+        val instantaneousAvgZ1 = detector.instantaneousAvgZAsMeasurement
         assertEquals(0.0, instantaneousAvgZ1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousAvgZ1.unit)
         val instantaneousAvgZ2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousAvgZAsMagneticFluxDensity(instantaneousAvgZ2)
+        detector.getInstantaneousAvgZAsMeasurement(instantaneousAvgZ2)
         assertEquals(instantaneousAvgZ1, instantaneousAvgZ2)
         val instantaneousAvgTriad1 = detector.instantaneousAvgTriad
         assertEquals(0.0, instantaneousAvgTriad1.valueX, 0.0)
@@ -388,25 +388,25 @@ class MagnetometerIntervalDetectorTest {
         detector.getInstantaneousAvgTriad(instantaneousAvgTriad2)
         assertEquals(instantaneousAvgTriad1, instantaneousAvgTriad2)
         assertEquals(0.0, detector.instantaneousStdX, 0.0)
-        val instantaneousStdX1 = detector.instantaneousStdXAsMagneticFluxDensity
+        val instantaneousStdX1 = detector.instantaneousStdXAsMeasurement
         assertEquals(0.0, instantaneousStdX1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousStdX1.unit)
         val instantaneousStdX2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousStdXAsMagneticFluxDensity(instantaneousStdX2)
+        detector.getInstantaneousStdXAsMeasurement(instantaneousStdX2)
         assertEquals(instantaneousStdX1, instantaneousStdX2)
         assertEquals(0.0, detector.instantaneousStdY, 0.0)
-        val instantaneousStdY1 = detector.instantaneousStdYAsMagneticFluxDensity
+        val instantaneousStdY1 = detector.instantaneousStdYAsMeasurement
         assertEquals(0.0, instantaneousStdY1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousStdY1.unit)
         val instantaneousStdY2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousStdYAsMagneticFluxDensity(instantaneousStdY2)
+        detector.getInstantaneousStdYAsMeasurement(instantaneousStdY2)
         assertEquals(instantaneousStdY1, instantaneousStdY2)
         assertEquals(0.0, detector.instantaneousStdZ, 0.0)
-        val instantaneousStdZ1 = detector.instantaneousStdZAsMagneticFluxDensity
+        val instantaneousStdZ1 = detector.instantaneousStdZAsMeasurement
         assertEquals(0.0, instantaneousStdZ1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousStdZ1.unit)
         val instantaneousStdZ2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousStdZAsMagneticFluxDensity(instantaneousStdZ2)
+        detector.getInstantaneousStdZAsMeasurement(instantaneousStdZ2)
         assertEquals(instantaneousStdZ1, instantaneousStdZ2)
         val instantaneousStdTriad1 = detector.instantaneousStdTriad
         assertEquals(0.0, instantaneousAvgTriad1.valueX, 0.0)
@@ -426,7 +426,7 @@ class MagnetometerIntervalDetectorTest {
         assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, detector.numberOfProcessedMeasurements)
         assertFalse(detector.running)
-        assertEquals(MagnetometerIntervalDetector.Status.IDLE, detector.status)
+        assertEquals(IntervalDetector.Status.IDLE, detector.status)
     }
 
     @Test
@@ -475,7 +475,7 @@ class MagnetometerIntervalDetectorTest {
             0.0
         )
         val baseNoiseLevelAbsoluteThreshold1 =
-            detector.baseNoiseLevelAbsoluteThresholdAsMagneticFluxDensity
+            detector.baseNoiseLevelAbsoluteThresholdAsMeasurement
         assertEquals(
             detector.baseNoiseLevelAbsoluteThreshold,
             baseNoiseLevelAbsoluteThreshold1.value.toDouble(),
@@ -484,41 +484,41 @@ class MagnetometerIntervalDetectorTest {
         assertEquals(MagneticFluxDensityUnit.TESLA, baseNoiseLevelAbsoluteThreshold1.unit)
         val baseNoiseLevelAbsoluteThreshold2 =
             MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getBaseNoiseLevelAbsoluteThresholdAsMagneticFluxDensity(
+        detector.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(
             baseNoiseLevelAbsoluteThreshold2
         )
         assertEquals(baseNoiseLevelAbsoluteThreshold1, baseNoiseLevelAbsoluteThreshold2)
         assertNull(detector.baseNoiseLevel)
-        assertNull(detector.baseNoiseLevelAsMagneticFluxDensity)
+        assertNull(detector.baseNoiseLevelAsMeasurement)
         val baseNoiseLevel = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        assertFalse(detector.getBaseNoiseLevelAsMagneticFluxDensity(baseNoiseLevel))
+        assertFalse(detector.getBaseNoiseLevelAsMeasurement(baseNoiseLevel))
         assertNull(detector.baseNoiseLevelPsd)
         assertNull(detector.baseNoiseLevelRootPsd)
         assertNull(detector.threshold)
-        assertNull(detector.thresholdAsMagneticFluxDensity)
+        assertNull(detector.thresholdAsMeasurement)
         val threshold = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
         assertFalse(detector.getThresholdAsMeasurement(threshold))
         assertEquals(0.0, detector.accumulatedAvgX, 0.0)
-        val accumulatedAvgX1 = detector.accumulatedAvgXAsMagneticFluxDensity
+        val accumulatedAvgX1 = detector.accumulatedAvgXAsMeasurement
         assertEquals(0.0, accumulatedAvgX1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedAvgX1.unit)
         val accumulatedAvgX2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedAvgXAsMagneticFluxDensity(accumulatedAvgX2)
+        detector.getAccumulatedAvgXAsMeasurement(accumulatedAvgX2)
         assertEquals(accumulatedAvgX1, accumulatedAvgX2)
         assertEquals(accumulatedAvgX1, accumulatedAvgX2)
         assertEquals(0.0, detector.accumulatedAvgY, 0.0)
-        val accumulatedAvgY1 = detector.accumulatedAvgYAsMagneticFluxDensity
+        val accumulatedAvgY1 = detector.accumulatedAvgYAsMeasurement
         assertEquals(0.0, accumulatedAvgY1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedAvgY1.unit)
         val accumulatedAvgY2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedAvgYAsMagneticFluxDensity(accumulatedAvgY2)
+        detector.getAccumulatedAvgYAsMeasurement(accumulatedAvgY2)
         assertEquals(accumulatedAvgY1, accumulatedAvgY2)
         assertEquals(0.0, detector.accumulatedAvgZ, 0.0)
-        val accumulatedAvgZ1 = detector.accumulatedAvgZAsMagneticFluxDensity
+        val accumulatedAvgZ1 = detector.accumulatedAvgZAsMeasurement
         assertEquals(0.0, accumulatedAvgZ1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedAvgZ1.unit)
         val accumulatedAvgZ2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedAvgZAsMagneticFluxDensity(accumulatedAvgZ2)
+        detector.getAccumulatedAvgZAsMeasurement(accumulatedAvgZ2)
         assertEquals(accumulatedAvgZ1, accumulatedAvgZ2)
         val accumulatedAvgTriad1 = detector.accumulatedAvgTriad
         assertEquals(0.0, accumulatedAvgTriad1.valueX, 0.0)
@@ -529,25 +529,25 @@ class MagnetometerIntervalDetectorTest {
         detector.getAccumulatedAvgTriad(accumulatedAvgTriad2)
         assertEquals(accumulatedAvgTriad1, accumulatedAvgTriad2)
         assertEquals(0.0, detector.accumulatedStdX, 0.0)
-        val accumulatedStdX1 = detector.accumulatedStdXAsMagneticFluxDensity
+        val accumulatedStdX1 = detector.accumulatedStdXAsMeasurement
         assertEquals(0.0, accumulatedStdX1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedStdX1.unit)
         val accumulatedStdX2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedStdXAsMagneticFluxDensity(accumulatedStdX2)
+        detector.getAccumulatedStdXAsMeasurement(accumulatedStdX2)
         assertEquals(accumulatedStdX1, accumulatedStdX2)
         assertEquals(0.0, detector.accumulatedStdY, 0.0)
-        val accumulatedStdY1 = detector.accumulatedStdYAsMagneticFluxDensity
+        val accumulatedStdY1 = detector.accumulatedStdYAsMeasurement
         assertEquals(0.0, accumulatedStdY1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedStdY1.unit)
         val accumulatedStdY2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedStdYAsMagneticFluxDensity(accumulatedStdY2)
+        detector.getAccumulatedStdYAsMeasurement(accumulatedStdY2)
         assertEquals(accumulatedStdY1, accumulatedStdY2)
         assertEquals(0.0, detector.accumulatedStdZ, 0.0)
-        val accumulatedStdZ1 = detector.accumulatedStdZAsMagneticFluxDensity
+        val accumulatedStdZ1 = detector.accumulatedStdZAsMeasurement
         assertEquals(0.0, accumulatedStdZ1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedStdZ1.unit)
         val accumulatedStdZ2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedStdZAsMagneticFluxDensity(accumulatedStdZ2)
+        detector.getAccumulatedStdZAsMeasurement(accumulatedStdZ2)
         assertEquals(accumulatedStdZ1, accumulatedStdZ2)
         val accumulatedStdTriad1 = detector.accumulatedStdTriad
         assertEquals(0.0, accumulatedStdTriad1.valueX, 0.0)
@@ -558,25 +558,25 @@ class MagnetometerIntervalDetectorTest {
         detector.getAccumulatedStdTriad(accumulatedStdTriad2)
         assertEquals(accumulatedStdTriad1, accumulatedAvgTriad2)
         assertEquals(0.0, detector.instantaneousAvgX, 0.0)
-        val instantaneousAvgX1 = detector.instantaneousAvgXAsMagneticFluxDensity
+        val instantaneousAvgX1 = detector.instantaneousAvgXAsMeasurement
         assertEquals(0.0, instantaneousAvgX1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousAvgX1.unit)
         val instantaneousAvgX2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousAvgXAsMagneticFluxDensity(instantaneousAvgX2)
+        detector.getInstantaneousAvgXAsMeasurement(instantaneousAvgX2)
         assertEquals(instantaneousAvgX1, instantaneousAvgX2)
         assertEquals(0.0, detector.instantaneousAvgY, 0.0)
-        val instantaneousAvgY1 = detector.instantaneousAvgYAsMagneticFluxDensity
+        val instantaneousAvgY1 = detector.instantaneousAvgYAsMeasurement
         assertEquals(0.0, instantaneousAvgY1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousAvgY1.unit)
         val instantaneousAvgY2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousAvgYAsMagneticFluxDensity(instantaneousAvgY2)
+        detector.getInstantaneousAvgYAsMeasurement(instantaneousAvgY2)
         assertEquals(instantaneousAvgY1, instantaneousAvgY2)
         assertEquals(0.0, detector.instantaneousAvgZ, 0.0)
-        val instantaneousAvgZ1 = detector.instantaneousAvgZAsMagneticFluxDensity
+        val instantaneousAvgZ1 = detector.instantaneousAvgZAsMeasurement
         assertEquals(0.0, instantaneousAvgZ1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousAvgZ1.unit)
         val instantaneousAvgZ2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousAvgZAsMagneticFluxDensity(instantaneousAvgZ2)
+        detector.getInstantaneousAvgZAsMeasurement(instantaneousAvgZ2)
         assertEquals(instantaneousAvgZ1, instantaneousAvgZ2)
         val instantaneousAvgTriad1 = detector.instantaneousAvgTriad
         assertEquals(0.0, instantaneousAvgTriad1.valueX, 0.0)
@@ -587,25 +587,25 @@ class MagnetometerIntervalDetectorTest {
         detector.getInstantaneousAvgTriad(instantaneousAvgTriad2)
         assertEquals(instantaneousAvgTriad1, instantaneousAvgTriad2)
         assertEquals(0.0, detector.instantaneousStdX, 0.0)
-        val instantaneousStdX1 = detector.instantaneousStdXAsMagneticFluxDensity
+        val instantaneousStdX1 = detector.instantaneousStdXAsMeasurement
         assertEquals(0.0, instantaneousStdX1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousStdX1.unit)
         val instantaneousStdX2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousStdXAsMagneticFluxDensity(instantaneousStdX2)
+        detector.getInstantaneousStdXAsMeasurement(instantaneousStdX2)
         assertEquals(instantaneousStdX1, instantaneousStdX2)
         assertEquals(0.0, detector.instantaneousStdY, 0.0)
-        val instantaneousStdY1 = detector.instantaneousStdYAsMagneticFluxDensity
+        val instantaneousStdY1 = detector.instantaneousStdYAsMeasurement
         assertEquals(0.0, instantaneousStdY1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousStdY1.unit)
         val instantaneousStdY2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousStdYAsMagneticFluxDensity(instantaneousStdY2)
+        detector.getInstantaneousStdYAsMeasurement(instantaneousStdY2)
         assertEquals(instantaneousStdY1, instantaneousStdY2)
         assertEquals(0.0, detector.instantaneousStdZ, 0.0)
-        val instantaneousStdZ1 = detector.instantaneousStdZAsMagneticFluxDensity
+        val instantaneousStdZ1 = detector.instantaneousStdZAsMeasurement
         assertEquals(0.0, instantaneousStdZ1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousStdZ1.unit)
         val instantaneousStdZ2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousStdZAsMagneticFluxDensity(instantaneousStdZ2)
+        detector.getInstantaneousStdZAsMeasurement(instantaneousStdZ2)
         assertEquals(instantaneousStdZ1, instantaneousStdZ2)
         val instantaneousStdTriad1 = detector.instantaneousStdTriad
         assertEquals(0.0, instantaneousAvgTriad1.valueX, 0.0)
@@ -625,13 +625,13 @@ class MagnetometerIntervalDetectorTest {
         assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, detector.numberOfProcessedMeasurements)
         assertFalse(detector.running)
-        assertEquals(MagnetometerIntervalDetector.Status.IDLE, detector.status)
+        assertEquals(IntervalDetector.Status.IDLE, detector.status)
     }
 
     @Test
     fun constructor_whenInitializationStartedListener_setsExpectedValues() {
         val initializationStartedListener =
-            mockk<MagnetometerIntervalDetector.OnInitializationStartedListener>()
+            mockk<IntervalDetector.OnInitializationStartedListener<MagnetometerIntervalDetector>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(
             context,
@@ -677,7 +677,7 @@ class MagnetometerIntervalDetectorTest {
             0.0
         )
         val baseNoiseLevelAbsoluteThreshold1 =
-            detector.baseNoiseLevelAbsoluteThresholdAsMagneticFluxDensity
+            detector.baseNoiseLevelAbsoluteThresholdAsMeasurement
         assertEquals(
             detector.baseNoiseLevelAbsoluteThreshold,
             baseNoiseLevelAbsoluteThreshold1.value.toDouble(),
@@ -686,41 +686,41 @@ class MagnetometerIntervalDetectorTest {
         assertEquals(MagneticFluxDensityUnit.TESLA, baseNoiseLevelAbsoluteThreshold1.unit)
         val baseNoiseLevelAbsoluteThreshold2 =
             MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getBaseNoiseLevelAbsoluteThresholdAsMagneticFluxDensity(
+        detector.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(
             baseNoiseLevelAbsoluteThreshold2
         )
         assertEquals(baseNoiseLevelAbsoluteThreshold1, baseNoiseLevelAbsoluteThreshold2)
         assertNull(detector.baseNoiseLevel)
-        assertNull(detector.baseNoiseLevelAsMagneticFluxDensity)
+        assertNull(detector.baseNoiseLevelAsMeasurement)
         val baseNoiseLevel = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        assertFalse(detector.getBaseNoiseLevelAsMagneticFluxDensity(baseNoiseLevel))
+        assertFalse(detector.getBaseNoiseLevelAsMeasurement(baseNoiseLevel))
         assertNull(detector.baseNoiseLevelPsd)
         assertNull(detector.baseNoiseLevelRootPsd)
         assertNull(detector.threshold)
-        assertNull(detector.thresholdAsMagneticFluxDensity)
+        assertNull(detector.thresholdAsMeasurement)
         val threshold = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
         assertFalse(detector.getThresholdAsMeasurement(threshold))
         assertEquals(0.0, detector.accumulatedAvgX, 0.0)
-        val accumulatedAvgX1 = detector.accumulatedAvgXAsMagneticFluxDensity
+        val accumulatedAvgX1 = detector.accumulatedAvgXAsMeasurement
         assertEquals(0.0, accumulatedAvgX1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedAvgX1.unit)
         val accumulatedAvgX2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedAvgXAsMagneticFluxDensity(accumulatedAvgX2)
+        detector.getAccumulatedAvgXAsMeasurement(accumulatedAvgX2)
         assertEquals(accumulatedAvgX1, accumulatedAvgX2)
         assertEquals(accumulatedAvgX1, accumulatedAvgX2)
         assertEquals(0.0, detector.accumulatedAvgY, 0.0)
-        val accumulatedAvgY1 = detector.accumulatedAvgYAsMagneticFluxDensity
+        val accumulatedAvgY1 = detector.accumulatedAvgYAsMeasurement
         assertEquals(0.0, accumulatedAvgY1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedAvgY1.unit)
         val accumulatedAvgY2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedAvgYAsMagneticFluxDensity(accumulatedAvgY2)
+        detector.getAccumulatedAvgYAsMeasurement(accumulatedAvgY2)
         assertEquals(accumulatedAvgY1, accumulatedAvgY2)
         assertEquals(0.0, detector.accumulatedAvgZ, 0.0)
-        val accumulatedAvgZ1 = detector.accumulatedAvgZAsMagneticFluxDensity
+        val accumulatedAvgZ1 = detector.accumulatedAvgZAsMeasurement
         assertEquals(0.0, accumulatedAvgZ1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedAvgZ1.unit)
         val accumulatedAvgZ2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedAvgZAsMagneticFluxDensity(accumulatedAvgZ2)
+        detector.getAccumulatedAvgZAsMeasurement(accumulatedAvgZ2)
         assertEquals(accumulatedAvgZ1, accumulatedAvgZ2)
         val accumulatedAvgTriad1 = detector.accumulatedAvgTriad
         assertEquals(0.0, accumulatedAvgTriad1.valueX, 0.0)
@@ -731,25 +731,25 @@ class MagnetometerIntervalDetectorTest {
         detector.getAccumulatedAvgTriad(accumulatedAvgTriad2)
         assertEquals(accumulatedAvgTriad1, accumulatedAvgTriad2)
         assertEquals(0.0, detector.accumulatedStdX, 0.0)
-        val accumulatedStdX1 = detector.accumulatedStdXAsMagneticFluxDensity
+        val accumulatedStdX1 = detector.accumulatedStdXAsMeasurement
         assertEquals(0.0, accumulatedStdX1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedStdX1.unit)
         val accumulatedStdX2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedStdXAsMagneticFluxDensity(accumulatedStdX2)
+        detector.getAccumulatedStdXAsMeasurement(accumulatedStdX2)
         assertEquals(accumulatedStdX1, accumulatedStdX2)
         assertEquals(0.0, detector.accumulatedStdY, 0.0)
-        val accumulatedStdY1 = detector.accumulatedStdYAsMagneticFluxDensity
+        val accumulatedStdY1 = detector.accumulatedStdYAsMeasurement
         assertEquals(0.0, accumulatedStdY1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedStdY1.unit)
         val accumulatedStdY2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedStdYAsMagneticFluxDensity(accumulatedStdY2)
+        detector.getAccumulatedStdYAsMeasurement(accumulatedStdY2)
         assertEquals(accumulatedStdY1, accumulatedStdY2)
         assertEquals(0.0, detector.accumulatedStdZ, 0.0)
-        val accumulatedStdZ1 = detector.accumulatedStdZAsMagneticFluxDensity
+        val accumulatedStdZ1 = detector.accumulatedStdZAsMeasurement
         assertEquals(0.0, accumulatedStdZ1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedStdZ1.unit)
         val accumulatedStdZ2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedStdZAsMagneticFluxDensity(accumulatedStdZ2)
+        detector.getAccumulatedStdZAsMeasurement(accumulatedStdZ2)
         assertEquals(accumulatedStdZ1, accumulatedStdZ2)
         val accumulatedStdTriad1 = detector.accumulatedStdTriad
         assertEquals(0.0, accumulatedStdTriad1.valueX, 0.0)
@@ -760,25 +760,25 @@ class MagnetometerIntervalDetectorTest {
         detector.getAccumulatedStdTriad(accumulatedStdTriad2)
         assertEquals(accumulatedStdTriad1, accumulatedAvgTriad2)
         assertEquals(0.0, detector.instantaneousAvgX, 0.0)
-        val instantaneousAvgX1 = detector.instantaneousAvgXAsMagneticFluxDensity
+        val instantaneousAvgX1 = detector.instantaneousAvgXAsMeasurement
         assertEquals(0.0, instantaneousAvgX1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousAvgX1.unit)
         val instantaneousAvgX2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousAvgXAsMagneticFluxDensity(instantaneousAvgX2)
+        detector.getInstantaneousAvgXAsMeasurement(instantaneousAvgX2)
         assertEquals(instantaneousAvgX1, instantaneousAvgX2)
         assertEquals(0.0, detector.instantaneousAvgY, 0.0)
-        val instantaneousAvgY1 = detector.instantaneousAvgYAsMagneticFluxDensity
+        val instantaneousAvgY1 = detector.instantaneousAvgYAsMeasurement
         assertEquals(0.0, instantaneousAvgY1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousAvgY1.unit)
         val instantaneousAvgY2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousAvgYAsMagneticFluxDensity(instantaneousAvgY2)
+        detector.getInstantaneousAvgYAsMeasurement(instantaneousAvgY2)
         assertEquals(instantaneousAvgY1, instantaneousAvgY2)
         assertEquals(0.0, detector.instantaneousAvgZ, 0.0)
-        val instantaneousAvgZ1 = detector.instantaneousAvgZAsMagneticFluxDensity
+        val instantaneousAvgZ1 = detector.instantaneousAvgZAsMeasurement
         assertEquals(0.0, instantaneousAvgZ1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousAvgZ1.unit)
         val instantaneousAvgZ2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousAvgZAsMagneticFluxDensity(instantaneousAvgZ2)
+        detector.getInstantaneousAvgZAsMeasurement(instantaneousAvgZ2)
         assertEquals(instantaneousAvgZ1, instantaneousAvgZ2)
         val instantaneousAvgTriad1 = detector.instantaneousAvgTriad
         assertEquals(0.0, instantaneousAvgTriad1.valueX, 0.0)
@@ -789,25 +789,25 @@ class MagnetometerIntervalDetectorTest {
         detector.getInstantaneousAvgTriad(instantaneousAvgTriad2)
         assertEquals(instantaneousAvgTriad1, instantaneousAvgTriad2)
         assertEquals(0.0, detector.instantaneousStdX, 0.0)
-        val instantaneousStdX1 = detector.instantaneousStdXAsMagneticFluxDensity
+        val instantaneousStdX1 = detector.instantaneousStdXAsMeasurement
         assertEquals(0.0, instantaneousStdX1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousStdX1.unit)
         val instantaneousStdX2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousStdXAsMagneticFluxDensity(instantaneousStdX2)
+        detector.getInstantaneousStdXAsMeasurement(instantaneousStdX2)
         assertEquals(instantaneousStdX1, instantaneousStdX2)
         assertEquals(0.0, detector.instantaneousStdY, 0.0)
-        val instantaneousStdY1 = detector.instantaneousStdYAsMagneticFluxDensity
+        val instantaneousStdY1 = detector.instantaneousStdYAsMeasurement
         assertEquals(0.0, instantaneousStdY1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousStdY1.unit)
         val instantaneousStdY2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousStdYAsMagneticFluxDensity(instantaneousStdY2)
+        detector.getInstantaneousStdYAsMeasurement(instantaneousStdY2)
         assertEquals(instantaneousStdY1, instantaneousStdY2)
         assertEquals(0.0, detector.instantaneousStdZ, 0.0)
-        val instantaneousStdZ1 = detector.instantaneousStdZAsMagneticFluxDensity
+        val instantaneousStdZ1 = detector.instantaneousStdZAsMeasurement
         assertEquals(0.0, instantaneousStdZ1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousStdZ1.unit)
         val instantaneousStdZ2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousStdZAsMagneticFluxDensity(instantaneousStdZ2)
+        detector.getInstantaneousStdZAsMeasurement(instantaneousStdZ2)
         assertEquals(instantaneousStdZ1, instantaneousStdZ2)
         val instantaneousStdTriad1 = detector.instantaneousStdTriad
         assertEquals(0.0, instantaneousAvgTriad1.valueX, 0.0)
@@ -827,15 +827,15 @@ class MagnetometerIntervalDetectorTest {
         assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, detector.numberOfProcessedMeasurements)
         assertFalse(detector.running)
-        assertEquals(MagnetometerIntervalDetector.Status.IDLE, detector.status)
+        assertEquals(IntervalDetector.Status.IDLE, detector.status)
     }
 
     @Test
     fun constructor_whenInitializationCompletedListener_setsExpectedValues() {
         val initializationStartedListener =
-            mockk<MagnetometerIntervalDetector.OnInitializationStartedListener>()
+            mockk<IntervalDetector.OnInitializationStartedListener<MagnetometerIntervalDetector>>()
         val initializationCompletedListener =
-            mockk<MagnetometerIntervalDetector.OnInitializationCompletedListener>()
+            mockk<IntervalDetector.OnInitializationCompletedListener<MagnetometerIntervalDetector>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(
             context,
@@ -882,7 +882,7 @@ class MagnetometerIntervalDetectorTest {
             0.0
         )
         val baseNoiseLevelAbsoluteThreshold1 =
-            detector.baseNoiseLevelAbsoluteThresholdAsMagneticFluxDensity
+            detector.baseNoiseLevelAbsoluteThresholdAsMeasurement
         assertEquals(
             detector.baseNoiseLevelAbsoluteThreshold,
             baseNoiseLevelAbsoluteThreshold1.value.toDouble(),
@@ -891,41 +891,41 @@ class MagnetometerIntervalDetectorTest {
         assertEquals(MagneticFluxDensityUnit.TESLA, baseNoiseLevelAbsoluteThreshold1.unit)
         val baseNoiseLevelAbsoluteThreshold2 =
             MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getBaseNoiseLevelAbsoluteThresholdAsMagneticFluxDensity(
+        detector.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(
             baseNoiseLevelAbsoluteThreshold2
         )
         assertEquals(baseNoiseLevelAbsoluteThreshold1, baseNoiseLevelAbsoluteThreshold2)
         assertNull(detector.baseNoiseLevel)
-        assertNull(detector.baseNoiseLevelAsMagneticFluxDensity)
+        assertNull(detector.baseNoiseLevelAsMeasurement)
         val baseNoiseLevel = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        assertFalse(detector.getBaseNoiseLevelAsMagneticFluxDensity(baseNoiseLevel))
+        assertFalse(detector.getBaseNoiseLevelAsMeasurement(baseNoiseLevel))
         assertNull(detector.baseNoiseLevelPsd)
         assertNull(detector.baseNoiseLevelRootPsd)
         assertNull(detector.threshold)
-        assertNull(detector.thresholdAsMagneticFluxDensity)
+        assertNull(detector.thresholdAsMeasurement)
         val threshold = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
         assertFalse(detector.getThresholdAsMeasurement(threshold))
         assertEquals(0.0, detector.accumulatedAvgX, 0.0)
-        val accumulatedAvgX1 = detector.accumulatedAvgXAsMagneticFluxDensity
+        val accumulatedAvgX1 = detector.accumulatedAvgXAsMeasurement
         assertEquals(0.0, accumulatedAvgX1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedAvgX1.unit)
         val accumulatedAvgX2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedAvgXAsMagneticFluxDensity(accumulatedAvgX2)
+        detector.getAccumulatedAvgXAsMeasurement(accumulatedAvgX2)
         assertEquals(accumulatedAvgX1, accumulatedAvgX2)
         assertEquals(accumulatedAvgX1, accumulatedAvgX2)
         assertEquals(0.0, detector.accumulatedAvgY, 0.0)
-        val accumulatedAvgY1 = detector.accumulatedAvgYAsMagneticFluxDensity
+        val accumulatedAvgY1 = detector.accumulatedAvgYAsMeasurement
         assertEquals(0.0, accumulatedAvgY1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedAvgY1.unit)
         val accumulatedAvgY2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedAvgYAsMagneticFluxDensity(accumulatedAvgY2)
+        detector.getAccumulatedAvgYAsMeasurement(accumulatedAvgY2)
         assertEquals(accumulatedAvgY1, accumulatedAvgY2)
         assertEquals(0.0, detector.accumulatedAvgZ, 0.0)
-        val accumulatedAvgZ1 = detector.accumulatedAvgZAsMagneticFluxDensity
+        val accumulatedAvgZ1 = detector.accumulatedAvgZAsMeasurement
         assertEquals(0.0, accumulatedAvgZ1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedAvgZ1.unit)
         val accumulatedAvgZ2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedAvgZAsMagneticFluxDensity(accumulatedAvgZ2)
+        detector.getAccumulatedAvgZAsMeasurement(accumulatedAvgZ2)
         assertEquals(accumulatedAvgZ1, accumulatedAvgZ2)
         val accumulatedAvgTriad1 = detector.accumulatedAvgTriad
         assertEquals(0.0, accumulatedAvgTriad1.valueX, 0.0)
@@ -936,25 +936,25 @@ class MagnetometerIntervalDetectorTest {
         detector.getAccumulatedAvgTriad(accumulatedAvgTriad2)
         assertEquals(accumulatedAvgTriad1, accumulatedAvgTriad2)
         assertEquals(0.0, detector.accumulatedStdX, 0.0)
-        val accumulatedStdX1 = detector.accumulatedStdXAsMagneticFluxDensity
+        val accumulatedStdX1 = detector.accumulatedStdXAsMeasurement
         assertEquals(0.0, accumulatedStdX1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedStdX1.unit)
         val accumulatedStdX2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedStdXAsMagneticFluxDensity(accumulatedStdX2)
+        detector.getAccumulatedStdXAsMeasurement(accumulatedStdX2)
         assertEquals(accumulatedStdX1, accumulatedStdX2)
         assertEquals(0.0, detector.accumulatedStdY, 0.0)
-        val accumulatedStdY1 = detector.accumulatedStdYAsMagneticFluxDensity
+        val accumulatedStdY1 = detector.accumulatedStdYAsMeasurement
         assertEquals(0.0, accumulatedStdY1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedStdY1.unit)
         val accumulatedStdY2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedStdYAsMagneticFluxDensity(accumulatedStdY2)
+        detector.getAccumulatedStdYAsMeasurement(accumulatedStdY2)
         assertEquals(accumulatedStdY1, accumulatedStdY2)
         assertEquals(0.0, detector.accumulatedStdZ, 0.0)
-        val accumulatedStdZ1 = detector.accumulatedStdZAsMagneticFluxDensity
+        val accumulatedStdZ1 = detector.accumulatedStdZAsMeasurement
         assertEquals(0.0, accumulatedStdZ1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedStdZ1.unit)
         val accumulatedStdZ2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedStdZAsMagneticFluxDensity(accumulatedStdZ2)
+        detector.getAccumulatedStdZAsMeasurement(accumulatedStdZ2)
         assertEquals(accumulatedStdZ1, accumulatedStdZ2)
         val accumulatedStdTriad1 = detector.accumulatedStdTriad
         assertEquals(0.0, accumulatedStdTriad1.valueX, 0.0)
@@ -965,25 +965,25 @@ class MagnetometerIntervalDetectorTest {
         detector.getAccumulatedStdTriad(accumulatedStdTriad2)
         assertEquals(accumulatedStdTriad1, accumulatedAvgTriad2)
         assertEquals(0.0, detector.instantaneousAvgX, 0.0)
-        val instantaneousAvgX1 = detector.instantaneousAvgXAsMagneticFluxDensity
+        val instantaneousAvgX1 = detector.instantaneousAvgXAsMeasurement
         assertEquals(0.0, instantaneousAvgX1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousAvgX1.unit)
         val instantaneousAvgX2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousAvgXAsMagneticFluxDensity(instantaneousAvgX2)
+        detector.getInstantaneousAvgXAsMeasurement(instantaneousAvgX2)
         assertEquals(instantaneousAvgX1, instantaneousAvgX2)
         assertEquals(0.0, detector.instantaneousAvgY, 0.0)
-        val instantaneousAvgY1 = detector.instantaneousAvgYAsMagneticFluxDensity
+        val instantaneousAvgY1 = detector.instantaneousAvgYAsMeasurement
         assertEquals(0.0, instantaneousAvgY1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousAvgY1.unit)
         val instantaneousAvgY2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousAvgYAsMagneticFluxDensity(instantaneousAvgY2)
+        detector.getInstantaneousAvgYAsMeasurement(instantaneousAvgY2)
         assertEquals(instantaneousAvgY1, instantaneousAvgY2)
         assertEquals(0.0, detector.instantaneousAvgZ, 0.0)
-        val instantaneousAvgZ1 = detector.instantaneousAvgZAsMagneticFluxDensity
+        val instantaneousAvgZ1 = detector.instantaneousAvgZAsMeasurement
         assertEquals(0.0, instantaneousAvgZ1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousAvgZ1.unit)
         val instantaneousAvgZ2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousAvgZAsMagneticFluxDensity(instantaneousAvgZ2)
+        detector.getInstantaneousAvgZAsMeasurement(instantaneousAvgZ2)
         assertEquals(instantaneousAvgZ1, instantaneousAvgZ2)
         val instantaneousAvgTriad1 = detector.instantaneousAvgTriad
         assertEquals(0.0, instantaneousAvgTriad1.valueX, 0.0)
@@ -994,25 +994,25 @@ class MagnetometerIntervalDetectorTest {
         detector.getInstantaneousAvgTriad(instantaneousAvgTriad2)
         assertEquals(instantaneousAvgTriad1, instantaneousAvgTriad2)
         assertEquals(0.0, detector.instantaneousStdX, 0.0)
-        val instantaneousStdX1 = detector.instantaneousStdXAsMagneticFluxDensity
+        val instantaneousStdX1 = detector.instantaneousStdXAsMeasurement
         assertEquals(0.0, instantaneousStdX1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousStdX1.unit)
         val instantaneousStdX2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousStdXAsMagneticFluxDensity(instantaneousStdX2)
+        detector.getInstantaneousStdXAsMeasurement(instantaneousStdX2)
         assertEquals(instantaneousStdX1, instantaneousStdX2)
         assertEquals(0.0, detector.instantaneousStdY, 0.0)
-        val instantaneousStdY1 = detector.instantaneousStdYAsMagneticFluxDensity
+        val instantaneousStdY1 = detector.instantaneousStdYAsMeasurement
         assertEquals(0.0, instantaneousStdY1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousStdY1.unit)
         val instantaneousStdY2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousStdYAsMagneticFluxDensity(instantaneousStdY2)
+        detector.getInstantaneousStdYAsMeasurement(instantaneousStdY2)
         assertEquals(instantaneousStdY1, instantaneousStdY2)
         assertEquals(0.0, detector.instantaneousStdZ, 0.0)
-        val instantaneousStdZ1 = detector.instantaneousStdZAsMagneticFluxDensity
+        val instantaneousStdZ1 = detector.instantaneousStdZAsMeasurement
         assertEquals(0.0, instantaneousStdZ1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousStdZ1.unit)
         val instantaneousStdZ2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousStdZAsMagneticFluxDensity(instantaneousStdZ2)
+        detector.getInstantaneousStdZAsMeasurement(instantaneousStdZ2)
         assertEquals(instantaneousStdZ1, instantaneousStdZ2)
         val instantaneousStdTriad1 = detector.instantaneousStdTriad
         assertEquals(0.0, instantaneousAvgTriad1.valueX, 0.0)
@@ -1032,16 +1032,16 @@ class MagnetometerIntervalDetectorTest {
         assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, detector.numberOfProcessedMeasurements)
         assertFalse(detector.running)
-        assertEquals(MagnetometerIntervalDetector.Status.IDLE, detector.status)
+        assertEquals(IntervalDetector.Status.IDLE, detector.status)
     }
 
     @Test
     fun constructor_whenErrorListener_setsExpectedValues() {
         val initializationStartedListener =
-            mockk<MagnetometerIntervalDetector.OnInitializationStartedListener>()
+            mockk<IntervalDetector.OnInitializationStartedListener<MagnetometerIntervalDetector>>()
         val initializationCompletedListener =
-            mockk<MagnetometerIntervalDetector.OnInitializationCompletedListener>()
-        val errorListener = mockk<MagnetometerIntervalDetector.OnErrorListener>()
+            mockk<IntervalDetector.OnInitializationCompletedListener<MagnetometerIntervalDetector>>()
+        val errorListener = mockk<IntervalDetector.OnErrorListener<MagnetometerIntervalDetector>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(
             context,
@@ -1089,7 +1089,7 @@ class MagnetometerIntervalDetectorTest {
             0.0
         )
         val baseNoiseLevelAbsoluteThreshold1 =
-            detector.baseNoiseLevelAbsoluteThresholdAsMagneticFluxDensity
+            detector.baseNoiseLevelAbsoluteThresholdAsMeasurement
         assertEquals(
             detector.baseNoiseLevelAbsoluteThreshold,
             baseNoiseLevelAbsoluteThreshold1.value.toDouble(),
@@ -1098,41 +1098,41 @@ class MagnetometerIntervalDetectorTest {
         assertEquals(MagneticFluxDensityUnit.TESLA, baseNoiseLevelAbsoluteThreshold1.unit)
         val baseNoiseLevelAbsoluteThreshold2 =
             MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getBaseNoiseLevelAbsoluteThresholdAsMagneticFluxDensity(
+        detector.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(
             baseNoiseLevelAbsoluteThreshold2
         )
         assertEquals(baseNoiseLevelAbsoluteThreshold1, baseNoiseLevelAbsoluteThreshold2)
         assertNull(detector.baseNoiseLevel)
-        assertNull(detector.baseNoiseLevelAsMagneticFluxDensity)
+        assertNull(detector.baseNoiseLevelAsMeasurement)
         val baseNoiseLevel = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        assertFalse(detector.getBaseNoiseLevelAsMagneticFluxDensity(baseNoiseLevel))
+        assertFalse(detector.getBaseNoiseLevelAsMeasurement(baseNoiseLevel))
         assertNull(detector.baseNoiseLevelPsd)
         assertNull(detector.baseNoiseLevelRootPsd)
         assertNull(detector.threshold)
-        assertNull(detector.thresholdAsMagneticFluxDensity)
+        assertNull(detector.thresholdAsMeasurement)
         val threshold = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
         assertFalse(detector.getThresholdAsMeasurement(threshold))
         assertEquals(0.0, detector.accumulatedAvgX, 0.0)
-        val accumulatedAvgX1 = detector.accumulatedAvgXAsMagneticFluxDensity
+        val accumulatedAvgX1 = detector.accumulatedAvgXAsMeasurement
         assertEquals(0.0, accumulatedAvgX1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedAvgX1.unit)
         val accumulatedAvgX2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedAvgXAsMagneticFluxDensity(accumulatedAvgX2)
+        detector.getAccumulatedAvgXAsMeasurement(accumulatedAvgX2)
         assertEquals(accumulatedAvgX1, accumulatedAvgX2)
         assertEquals(accumulatedAvgX1, accumulatedAvgX2)
         assertEquals(0.0, detector.accumulatedAvgY, 0.0)
-        val accumulatedAvgY1 = detector.accumulatedAvgYAsMagneticFluxDensity
+        val accumulatedAvgY1 = detector.accumulatedAvgYAsMeasurement
         assertEquals(0.0, accumulatedAvgY1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedAvgY1.unit)
         val accumulatedAvgY2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedAvgYAsMagneticFluxDensity(accumulatedAvgY2)
+        detector.getAccumulatedAvgYAsMeasurement(accumulatedAvgY2)
         assertEquals(accumulatedAvgY1, accumulatedAvgY2)
         assertEquals(0.0, detector.accumulatedAvgZ, 0.0)
-        val accumulatedAvgZ1 = detector.accumulatedAvgZAsMagneticFluxDensity
+        val accumulatedAvgZ1 = detector.accumulatedAvgZAsMeasurement
         assertEquals(0.0, accumulatedAvgZ1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedAvgZ1.unit)
         val accumulatedAvgZ2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedAvgZAsMagneticFluxDensity(accumulatedAvgZ2)
+        detector.getAccumulatedAvgZAsMeasurement(accumulatedAvgZ2)
         assertEquals(accumulatedAvgZ1, accumulatedAvgZ2)
         val accumulatedAvgTriad1 = detector.accumulatedAvgTriad
         assertEquals(0.0, accumulatedAvgTriad1.valueX, 0.0)
@@ -1143,25 +1143,25 @@ class MagnetometerIntervalDetectorTest {
         detector.getAccumulatedAvgTriad(accumulatedAvgTriad2)
         assertEquals(accumulatedAvgTriad1, accumulatedAvgTriad2)
         assertEquals(0.0, detector.accumulatedStdX, 0.0)
-        val accumulatedStdX1 = detector.accumulatedStdXAsMagneticFluxDensity
+        val accumulatedStdX1 = detector.accumulatedStdXAsMeasurement
         assertEquals(0.0, accumulatedStdX1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedStdX1.unit)
         val accumulatedStdX2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedStdXAsMagneticFluxDensity(accumulatedStdX2)
+        detector.getAccumulatedStdXAsMeasurement(accumulatedStdX2)
         assertEquals(accumulatedStdX1, accumulatedStdX2)
         assertEquals(0.0, detector.accumulatedStdY, 0.0)
-        val accumulatedStdY1 = detector.accumulatedStdYAsMagneticFluxDensity
+        val accumulatedStdY1 = detector.accumulatedStdYAsMeasurement
         assertEquals(0.0, accumulatedStdY1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedStdY1.unit)
         val accumulatedStdY2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedStdYAsMagneticFluxDensity(accumulatedStdY2)
+        detector.getAccumulatedStdYAsMeasurement(accumulatedStdY2)
         assertEquals(accumulatedStdY1, accumulatedStdY2)
         assertEquals(0.0, detector.accumulatedStdZ, 0.0)
-        val accumulatedStdZ1 = detector.accumulatedStdZAsMagneticFluxDensity
+        val accumulatedStdZ1 = detector.accumulatedStdZAsMeasurement
         assertEquals(0.0, accumulatedStdZ1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedStdZ1.unit)
         val accumulatedStdZ2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedStdZAsMagneticFluxDensity(accumulatedStdZ2)
+        detector.getAccumulatedStdZAsMeasurement(accumulatedStdZ2)
         assertEquals(accumulatedStdZ1, accumulatedStdZ2)
         val accumulatedStdTriad1 = detector.accumulatedStdTriad
         assertEquals(0.0, accumulatedStdTriad1.valueX, 0.0)
@@ -1172,25 +1172,25 @@ class MagnetometerIntervalDetectorTest {
         detector.getAccumulatedStdTriad(accumulatedStdTriad2)
         assertEquals(accumulatedStdTriad1, accumulatedAvgTriad2)
         assertEquals(0.0, detector.instantaneousAvgX, 0.0)
-        val instantaneousAvgX1 = detector.instantaneousAvgXAsMagneticFluxDensity
+        val instantaneousAvgX1 = detector.instantaneousAvgXAsMeasurement
         assertEquals(0.0, instantaneousAvgX1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousAvgX1.unit)
         val instantaneousAvgX2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousAvgXAsMagneticFluxDensity(instantaneousAvgX2)
+        detector.getInstantaneousAvgXAsMeasurement(instantaneousAvgX2)
         assertEquals(instantaneousAvgX1, instantaneousAvgX2)
         assertEquals(0.0, detector.instantaneousAvgY, 0.0)
-        val instantaneousAvgY1 = detector.instantaneousAvgYAsMagneticFluxDensity
+        val instantaneousAvgY1 = detector.instantaneousAvgYAsMeasurement
         assertEquals(0.0, instantaneousAvgY1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousAvgY1.unit)
         val instantaneousAvgY2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousAvgYAsMagneticFluxDensity(instantaneousAvgY2)
+        detector.getInstantaneousAvgYAsMeasurement(instantaneousAvgY2)
         assertEquals(instantaneousAvgY1, instantaneousAvgY2)
         assertEquals(0.0, detector.instantaneousAvgZ, 0.0)
-        val instantaneousAvgZ1 = detector.instantaneousAvgZAsMagneticFluxDensity
+        val instantaneousAvgZ1 = detector.instantaneousAvgZAsMeasurement
         assertEquals(0.0, instantaneousAvgZ1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousAvgZ1.unit)
         val instantaneousAvgZ2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousAvgZAsMagneticFluxDensity(instantaneousAvgZ2)
+        detector.getInstantaneousAvgZAsMeasurement(instantaneousAvgZ2)
         assertEquals(instantaneousAvgZ1, instantaneousAvgZ2)
         val instantaneousAvgTriad1 = detector.instantaneousAvgTriad
         assertEquals(0.0, instantaneousAvgTriad1.valueX, 0.0)
@@ -1201,25 +1201,25 @@ class MagnetometerIntervalDetectorTest {
         detector.getInstantaneousAvgTriad(instantaneousAvgTriad2)
         assertEquals(instantaneousAvgTriad1, instantaneousAvgTriad2)
         assertEquals(0.0, detector.instantaneousStdX, 0.0)
-        val instantaneousStdX1 = detector.instantaneousStdXAsMagneticFluxDensity
+        val instantaneousStdX1 = detector.instantaneousStdXAsMeasurement
         assertEquals(0.0, instantaneousStdX1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousStdX1.unit)
         val instantaneousStdX2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousStdXAsMagneticFluxDensity(instantaneousStdX2)
+        detector.getInstantaneousStdXAsMeasurement(instantaneousStdX2)
         assertEquals(instantaneousStdX1, instantaneousStdX2)
         assertEquals(0.0, detector.instantaneousStdY, 0.0)
-        val instantaneousStdY1 = detector.instantaneousStdYAsMagneticFluxDensity
+        val instantaneousStdY1 = detector.instantaneousStdYAsMeasurement
         assertEquals(0.0, instantaneousStdY1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousStdY1.unit)
         val instantaneousStdY2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousStdYAsMagneticFluxDensity(instantaneousStdY2)
+        detector.getInstantaneousStdYAsMeasurement(instantaneousStdY2)
         assertEquals(instantaneousStdY1, instantaneousStdY2)
         assertEquals(0.0, detector.instantaneousStdZ, 0.0)
-        val instantaneousStdZ1 = detector.instantaneousStdZAsMagneticFluxDensity
+        val instantaneousStdZ1 = detector.instantaneousStdZAsMeasurement
         assertEquals(0.0, instantaneousStdZ1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousStdZ1.unit)
         val instantaneousStdZ2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousStdZAsMagneticFluxDensity(instantaneousStdZ2)
+        detector.getInstantaneousStdZAsMeasurement(instantaneousStdZ2)
         assertEquals(instantaneousStdZ1, instantaneousStdZ2)
         val instantaneousStdTriad1 = detector.instantaneousStdTriad
         assertEquals(0.0, instantaneousAvgTriad1.valueX, 0.0)
@@ -1239,18 +1239,18 @@ class MagnetometerIntervalDetectorTest {
         assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, detector.numberOfProcessedMeasurements)
         assertFalse(detector.running)
-        assertEquals(MagnetometerIntervalDetector.Status.IDLE, detector.status)
+        assertEquals(IntervalDetector.Status.IDLE, detector.status)
     }
 
     @Test
     fun constructor_whenStaticIntervalDetectedListener_setsExpectedValues() {
         val initializationStartedListener =
-            mockk<MagnetometerIntervalDetector.OnInitializationStartedListener>()
+            mockk<IntervalDetector.OnInitializationStartedListener<MagnetometerIntervalDetector>>()
         val initializationCompletedListener =
-            mockk<MagnetometerIntervalDetector.OnInitializationCompletedListener>()
-        val errorListener = mockk<MagnetometerIntervalDetector.OnErrorListener>()
+            mockk<IntervalDetector.OnInitializationCompletedListener<MagnetometerIntervalDetector>>()
+        val errorListener = mockk<IntervalDetector.OnErrorListener<MagnetometerIntervalDetector>>()
         val staticIntervalDetectedListener =
-            mockk<MagnetometerIntervalDetector.OnStaticIntervalDetectedListener>()
+            mockk<IntervalDetector.OnStaticIntervalDetectedListener<MagnetometerIntervalDetector>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(
             context,
@@ -1299,7 +1299,7 @@ class MagnetometerIntervalDetectorTest {
             0.0
         )
         val baseNoiseLevelAbsoluteThreshold1 =
-            detector.baseNoiseLevelAbsoluteThresholdAsMagneticFluxDensity
+            detector.baseNoiseLevelAbsoluteThresholdAsMeasurement
         assertEquals(
             detector.baseNoiseLevelAbsoluteThreshold,
             baseNoiseLevelAbsoluteThreshold1.value.toDouble(),
@@ -1308,41 +1308,41 @@ class MagnetometerIntervalDetectorTest {
         assertEquals(MagneticFluxDensityUnit.TESLA, baseNoiseLevelAbsoluteThreshold1.unit)
         val baseNoiseLevelAbsoluteThreshold2 =
             MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getBaseNoiseLevelAbsoluteThresholdAsMagneticFluxDensity(
+        detector.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(
             baseNoiseLevelAbsoluteThreshold2
         )
         assertEquals(baseNoiseLevelAbsoluteThreshold1, baseNoiseLevelAbsoluteThreshold2)
         assertNull(detector.baseNoiseLevel)
-        assertNull(detector.baseNoiseLevelAsMagneticFluxDensity)
+        assertNull(detector.baseNoiseLevelAsMeasurement)
         val baseNoiseLevel = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        assertFalse(detector.getBaseNoiseLevelAsMagneticFluxDensity(baseNoiseLevel))
+        assertFalse(detector.getBaseNoiseLevelAsMeasurement(baseNoiseLevel))
         assertNull(detector.baseNoiseLevelPsd)
         assertNull(detector.baseNoiseLevelRootPsd)
         assertNull(detector.threshold)
-        assertNull(detector.thresholdAsMagneticFluxDensity)
+        assertNull(detector.thresholdAsMeasurement)
         val threshold = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
         assertFalse(detector.getThresholdAsMeasurement(threshold))
         assertEquals(0.0, detector.accumulatedAvgX, 0.0)
-        val accumulatedAvgX1 = detector.accumulatedAvgXAsMagneticFluxDensity
+        val accumulatedAvgX1 = detector.accumulatedAvgXAsMeasurement
         assertEquals(0.0, accumulatedAvgX1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedAvgX1.unit)
         val accumulatedAvgX2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedAvgXAsMagneticFluxDensity(accumulatedAvgX2)
+        detector.getAccumulatedAvgXAsMeasurement(accumulatedAvgX2)
         assertEquals(accumulatedAvgX1, accumulatedAvgX2)
         assertEquals(accumulatedAvgX1, accumulatedAvgX2)
         assertEquals(0.0, detector.accumulatedAvgY, 0.0)
-        val accumulatedAvgY1 = detector.accumulatedAvgYAsMagneticFluxDensity
+        val accumulatedAvgY1 = detector.accumulatedAvgYAsMeasurement
         assertEquals(0.0, accumulatedAvgY1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedAvgY1.unit)
         val accumulatedAvgY2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedAvgYAsMagneticFluxDensity(accumulatedAvgY2)
+        detector.getAccumulatedAvgYAsMeasurement(accumulatedAvgY2)
         assertEquals(accumulatedAvgY1, accumulatedAvgY2)
         assertEquals(0.0, detector.accumulatedAvgZ, 0.0)
-        val accumulatedAvgZ1 = detector.accumulatedAvgZAsMagneticFluxDensity
+        val accumulatedAvgZ1 = detector.accumulatedAvgZAsMeasurement
         assertEquals(0.0, accumulatedAvgZ1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedAvgZ1.unit)
         val accumulatedAvgZ2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedAvgZAsMagneticFluxDensity(accumulatedAvgZ2)
+        detector.getAccumulatedAvgZAsMeasurement(accumulatedAvgZ2)
         assertEquals(accumulatedAvgZ1, accumulatedAvgZ2)
         val accumulatedAvgTriad1 = detector.accumulatedAvgTriad
         assertEquals(0.0, accumulatedAvgTriad1.valueX, 0.0)
@@ -1353,25 +1353,25 @@ class MagnetometerIntervalDetectorTest {
         detector.getAccumulatedAvgTriad(accumulatedAvgTriad2)
         assertEquals(accumulatedAvgTriad1, accumulatedAvgTriad2)
         assertEquals(0.0, detector.accumulatedStdX, 0.0)
-        val accumulatedStdX1 = detector.accumulatedStdXAsMagneticFluxDensity
+        val accumulatedStdX1 = detector.accumulatedStdXAsMeasurement
         assertEquals(0.0, accumulatedStdX1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedStdX1.unit)
         val accumulatedStdX2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedStdXAsMagneticFluxDensity(accumulatedStdX2)
+        detector.getAccumulatedStdXAsMeasurement(accumulatedStdX2)
         assertEquals(accumulatedStdX1, accumulatedStdX2)
         assertEquals(0.0, detector.accumulatedStdY, 0.0)
-        val accumulatedStdY1 = detector.accumulatedStdYAsMagneticFluxDensity
+        val accumulatedStdY1 = detector.accumulatedStdYAsMeasurement
         assertEquals(0.0, accumulatedStdY1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedStdY1.unit)
         val accumulatedStdY2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedStdYAsMagneticFluxDensity(accumulatedStdY2)
+        detector.getAccumulatedStdYAsMeasurement(accumulatedStdY2)
         assertEquals(accumulatedStdY1, accumulatedStdY2)
         assertEquals(0.0, detector.accumulatedStdZ, 0.0)
-        val accumulatedStdZ1 = detector.accumulatedStdZAsMagneticFluxDensity
+        val accumulatedStdZ1 = detector.accumulatedStdZAsMeasurement
         assertEquals(0.0, accumulatedStdZ1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedStdZ1.unit)
         val accumulatedStdZ2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedStdZAsMagneticFluxDensity(accumulatedStdZ2)
+        detector.getAccumulatedStdZAsMeasurement(accumulatedStdZ2)
         assertEquals(accumulatedStdZ1, accumulatedStdZ2)
         val accumulatedStdTriad1 = detector.accumulatedStdTriad
         assertEquals(0.0, accumulatedStdTriad1.valueX, 0.0)
@@ -1382,25 +1382,25 @@ class MagnetometerIntervalDetectorTest {
         detector.getAccumulatedStdTriad(accumulatedStdTriad2)
         assertEquals(accumulatedStdTriad1, accumulatedAvgTriad2)
         assertEquals(0.0, detector.instantaneousAvgX, 0.0)
-        val instantaneousAvgX1 = detector.instantaneousAvgXAsMagneticFluxDensity
+        val instantaneousAvgX1 = detector.instantaneousAvgXAsMeasurement
         assertEquals(0.0, instantaneousAvgX1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousAvgX1.unit)
         val instantaneousAvgX2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousAvgXAsMagneticFluxDensity(instantaneousAvgX2)
+        detector.getInstantaneousAvgXAsMeasurement(instantaneousAvgX2)
         assertEquals(instantaneousAvgX1, instantaneousAvgX2)
         assertEquals(0.0, detector.instantaneousAvgY, 0.0)
-        val instantaneousAvgY1 = detector.instantaneousAvgYAsMagneticFluxDensity
+        val instantaneousAvgY1 = detector.instantaneousAvgYAsMeasurement
         assertEquals(0.0, instantaneousAvgY1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousAvgY1.unit)
         val instantaneousAvgY2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousAvgYAsMagneticFluxDensity(instantaneousAvgY2)
+        detector.getInstantaneousAvgYAsMeasurement(instantaneousAvgY2)
         assertEquals(instantaneousAvgY1, instantaneousAvgY2)
         assertEquals(0.0, detector.instantaneousAvgZ, 0.0)
-        val instantaneousAvgZ1 = detector.instantaneousAvgZAsMagneticFluxDensity
+        val instantaneousAvgZ1 = detector.instantaneousAvgZAsMeasurement
         assertEquals(0.0, instantaneousAvgZ1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousAvgZ1.unit)
         val instantaneousAvgZ2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousAvgZAsMagneticFluxDensity(instantaneousAvgZ2)
+        detector.getInstantaneousAvgZAsMeasurement(instantaneousAvgZ2)
         assertEquals(instantaneousAvgZ1, instantaneousAvgZ2)
         val instantaneousAvgTriad1 = detector.instantaneousAvgTriad
         assertEquals(0.0, instantaneousAvgTriad1.valueX, 0.0)
@@ -1411,25 +1411,25 @@ class MagnetometerIntervalDetectorTest {
         detector.getInstantaneousAvgTriad(instantaneousAvgTriad2)
         assertEquals(instantaneousAvgTriad1, instantaneousAvgTriad2)
         assertEquals(0.0, detector.instantaneousStdX, 0.0)
-        val instantaneousStdX1 = detector.instantaneousStdXAsMagneticFluxDensity
+        val instantaneousStdX1 = detector.instantaneousStdXAsMeasurement
         assertEquals(0.0, instantaneousStdX1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousStdX1.unit)
         val instantaneousStdX2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousStdXAsMagneticFluxDensity(instantaneousStdX2)
+        detector.getInstantaneousStdXAsMeasurement(instantaneousStdX2)
         assertEquals(instantaneousStdX1, instantaneousStdX2)
         assertEquals(0.0, detector.instantaneousStdY, 0.0)
-        val instantaneousStdY1 = detector.instantaneousStdYAsMagneticFluxDensity
+        val instantaneousStdY1 = detector.instantaneousStdYAsMeasurement
         assertEquals(0.0, instantaneousStdY1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousStdY1.unit)
         val instantaneousStdY2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousStdYAsMagneticFluxDensity(instantaneousStdY2)
+        detector.getInstantaneousStdYAsMeasurement(instantaneousStdY2)
         assertEquals(instantaneousStdY1, instantaneousStdY2)
         assertEquals(0.0, detector.instantaneousStdZ, 0.0)
-        val instantaneousStdZ1 = detector.instantaneousStdZAsMagneticFluxDensity
+        val instantaneousStdZ1 = detector.instantaneousStdZAsMeasurement
         assertEquals(0.0, instantaneousStdZ1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousStdZ1.unit)
         val instantaneousStdZ2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousStdZAsMagneticFluxDensity(instantaneousStdZ2)
+        detector.getInstantaneousStdZAsMeasurement(instantaneousStdZ2)
         assertEquals(instantaneousStdZ1, instantaneousStdZ2)
         val instantaneousStdTriad1 = detector.instantaneousStdTriad
         assertEquals(0.0, instantaneousAvgTriad1.valueX, 0.0)
@@ -1449,20 +1449,20 @@ class MagnetometerIntervalDetectorTest {
         assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, detector.numberOfProcessedMeasurements)
         assertFalse(detector.running)
-        assertEquals(MagnetometerIntervalDetector.Status.IDLE, detector.status)
+        assertEquals(IntervalDetector.Status.IDLE, detector.status)
     }
 
     @Test
     fun constructor_whenDynamicIntervalDetectedListener_setsExpectedValues() {
         val initializationStartedListener =
-            mockk<MagnetometerIntervalDetector.OnInitializationStartedListener>()
+            mockk<IntervalDetector.OnInitializationStartedListener<MagnetometerIntervalDetector>>()
         val initializationCompletedListener =
-            mockk<MagnetometerIntervalDetector.OnInitializationCompletedListener>()
-        val errorListener = mockk<MagnetometerIntervalDetector.OnErrorListener>()
+            mockk<IntervalDetector.OnInitializationCompletedListener<MagnetometerIntervalDetector>>()
+        val errorListener = mockk<IntervalDetector.OnErrorListener<MagnetometerIntervalDetector>>()
         val staticIntervalDetectedListener =
-            mockk<MagnetometerIntervalDetector.OnStaticIntervalDetectedListener>()
+            mockk<IntervalDetector.OnStaticIntervalDetectedListener<MagnetometerIntervalDetector>>()
         val dynamicIntervalDetectedListener =
-            mockk<MagnetometerIntervalDetector.OnDynamicIntervalDetectedListener>()
+            mockk<IntervalDetector.OnDynamicIntervalDetectedListener<MagnetometerIntervalDetector>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(
             context,
@@ -1512,7 +1512,7 @@ class MagnetometerIntervalDetectorTest {
             0.0
         )
         val baseNoiseLevelAbsoluteThreshold1 =
-            detector.baseNoiseLevelAbsoluteThresholdAsMagneticFluxDensity
+            detector.baseNoiseLevelAbsoluteThresholdAsMeasurement
         assertEquals(
             detector.baseNoiseLevelAbsoluteThreshold,
             baseNoiseLevelAbsoluteThreshold1.value.toDouble(),
@@ -1521,41 +1521,41 @@ class MagnetometerIntervalDetectorTest {
         assertEquals(MagneticFluxDensityUnit.TESLA, baseNoiseLevelAbsoluteThreshold1.unit)
         val baseNoiseLevelAbsoluteThreshold2 =
             MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getBaseNoiseLevelAbsoluteThresholdAsMagneticFluxDensity(
+        detector.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(
             baseNoiseLevelAbsoluteThreshold2
         )
         assertEquals(baseNoiseLevelAbsoluteThreshold1, baseNoiseLevelAbsoluteThreshold2)
         assertNull(detector.baseNoiseLevel)
-        assertNull(detector.baseNoiseLevelAsMagneticFluxDensity)
+        assertNull(detector.baseNoiseLevelAsMeasurement)
         val baseNoiseLevel = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        assertFalse(detector.getBaseNoiseLevelAsMagneticFluxDensity(baseNoiseLevel))
+        assertFalse(detector.getBaseNoiseLevelAsMeasurement(baseNoiseLevel))
         assertNull(detector.baseNoiseLevelPsd)
         assertNull(detector.baseNoiseLevelRootPsd)
         assertNull(detector.threshold)
-        assertNull(detector.thresholdAsMagneticFluxDensity)
+        assertNull(detector.thresholdAsMeasurement)
         val threshold = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
         assertFalse(detector.getThresholdAsMeasurement(threshold))
         assertEquals(0.0, detector.accumulatedAvgX, 0.0)
-        val accumulatedAvgX1 = detector.accumulatedAvgXAsMagneticFluxDensity
+        val accumulatedAvgX1 = detector.accumulatedAvgXAsMeasurement
         assertEquals(0.0, accumulatedAvgX1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedAvgX1.unit)
         val accumulatedAvgX2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedAvgXAsMagneticFluxDensity(accumulatedAvgX2)
+        detector.getAccumulatedAvgXAsMeasurement(accumulatedAvgX2)
         assertEquals(accumulatedAvgX1, accumulatedAvgX2)
         assertEquals(accumulatedAvgX1, accumulatedAvgX2)
         assertEquals(0.0, detector.accumulatedAvgY, 0.0)
-        val accumulatedAvgY1 = detector.accumulatedAvgYAsMagneticFluxDensity
+        val accumulatedAvgY1 = detector.accumulatedAvgYAsMeasurement
         assertEquals(0.0, accumulatedAvgY1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedAvgY1.unit)
         val accumulatedAvgY2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedAvgYAsMagneticFluxDensity(accumulatedAvgY2)
+        detector.getAccumulatedAvgYAsMeasurement(accumulatedAvgY2)
         assertEquals(accumulatedAvgY1, accumulatedAvgY2)
         assertEquals(0.0, detector.accumulatedAvgZ, 0.0)
-        val accumulatedAvgZ1 = detector.accumulatedAvgZAsMagneticFluxDensity
+        val accumulatedAvgZ1 = detector.accumulatedAvgZAsMeasurement
         assertEquals(0.0, accumulatedAvgZ1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedAvgZ1.unit)
         val accumulatedAvgZ2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedAvgZAsMagneticFluxDensity(accumulatedAvgZ2)
+        detector.getAccumulatedAvgZAsMeasurement(accumulatedAvgZ2)
         assertEquals(accumulatedAvgZ1, accumulatedAvgZ2)
         val accumulatedAvgTriad1 = detector.accumulatedAvgTriad
         assertEquals(0.0, accumulatedAvgTriad1.valueX, 0.0)
@@ -1566,25 +1566,25 @@ class MagnetometerIntervalDetectorTest {
         detector.getAccumulatedAvgTriad(accumulatedAvgTriad2)
         assertEquals(accumulatedAvgTriad1, accumulatedAvgTriad2)
         assertEquals(0.0, detector.accumulatedStdX, 0.0)
-        val accumulatedStdX1 = detector.accumulatedStdXAsMagneticFluxDensity
+        val accumulatedStdX1 = detector.accumulatedStdXAsMeasurement
         assertEquals(0.0, accumulatedStdX1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedStdX1.unit)
         val accumulatedStdX2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedStdXAsMagneticFluxDensity(accumulatedStdX2)
+        detector.getAccumulatedStdXAsMeasurement(accumulatedStdX2)
         assertEquals(accumulatedStdX1, accumulatedStdX2)
         assertEquals(0.0, detector.accumulatedStdY, 0.0)
-        val accumulatedStdY1 = detector.accumulatedStdYAsMagneticFluxDensity
+        val accumulatedStdY1 = detector.accumulatedStdYAsMeasurement
         assertEquals(0.0, accumulatedStdY1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedStdY1.unit)
         val accumulatedStdY2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedStdYAsMagneticFluxDensity(accumulatedStdY2)
+        detector.getAccumulatedStdYAsMeasurement(accumulatedStdY2)
         assertEquals(accumulatedStdY1, accumulatedStdY2)
         assertEquals(0.0, detector.accumulatedStdZ, 0.0)
-        val accumulatedStdZ1 = detector.accumulatedStdZAsMagneticFluxDensity
+        val accumulatedStdZ1 = detector.accumulatedStdZAsMeasurement
         assertEquals(0.0, accumulatedStdZ1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedStdZ1.unit)
         val accumulatedStdZ2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedStdZAsMagneticFluxDensity(accumulatedStdZ2)
+        detector.getAccumulatedStdZAsMeasurement(accumulatedStdZ2)
         assertEquals(accumulatedStdZ1, accumulatedStdZ2)
         val accumulatedStdTriad1 = detector.accumulatedStdTriad
         assertEquals(0.0, accumulatedStdTriad1.valueX, 0.0)
@@ -1595,25 +1595,25 @@ class MagnetometerIntervalDetectorTest {
         detector.getAccumulatedStdTriad(accumulatedStdTriad2)
         assertEquals(accumulatedStdTriad1, accumulatedAvgTriad2)
         assertEquals(0.0, detector.instantaneousAvgX, 0.0)
-        val instantaneousAvgX1 = detector.instantaneousAvgXAsMagneticFluxDensity
+        val instantaneousAvgX1 = detector.instantaneousAvgXAsMeasurement
         assertEquals(0.0, instantaneousAvgX1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousAvgX1.unit)
         val instantaneousAvgX2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousAvgXAsMagneticFluxDensity(instantaneousAvgX2)
+        detector.getInstantaneousAvgXAsMeasurement(instantaneousAvgX2)
         assertEquals(instantaneousAvgX1, instantaneousAvgX2)
         assertEquals(0.0, detector.instantaneousAvgY, 0.0)
-        val instantaneousAvgY1 = detector.instantaneousAvgYAsMagneticFluxDensity
+        val instantaneousAvgY1 = detector.instantaneousAvgYAsMeasurement
         assertEquals(0.0, instantaneousAvgY1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousAvgY1.unit)
         val instantaneousAvgY2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousAvgYAsMagneticFluxDensity(instantaneousAvgY2)
+        detector.getInstantaneousAvgYAsMeasurement(instantaneousAvgY2)
         assertEquals(instantaneousAvgY1, instantaneousAvgY2)
         assertEquals(0.0, detector.instantaneousAvgZ, 0.0)
-        val instantaneousAvgZ1 = detector.instantaneousAvgZAsMagneticFluxDensity
+        val instantaneousAvgZ1 = detector.instantaneousAvgZAsMeasurement
         assertEquals(0.0, instantaneousAvgZ1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousAvgZ1.unit)
         val instantaneousAvgZ2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousAvgZAsMagneticFluxDensity(instantaneousAvgZ2)
+        detector.getInstantaneousAvgZAsMeasurement(instantaneousAvgZ2)
         assertEquals(instantaneousAvgZ1, instantaneousAvgZ2)
         val instantaneousAvgTriad1 = detector.instantaneousAvgTriad
         assertEquals(0.0, instantaneousAvgTriad1.valueX, 0.0)
@@ -1624,25 +1624,25 @@ class MagnetometerIntervalDetectorTest {
         detector.getInstantaneousAvgTriad(instantaneousAvgTriad2)
         assertEquals(instantaneousAvgTriad1, instantaneousAvgTriad2)
         assertEquals(0.0, detector.instantaneousStdX, 0.0)
-        val instantaneousStdX1 = detector.instantaneousStdXAsMagneticFluxDensity
+        val instantaneousStdX1 = detector.instantaneousStdXAsMeasurement
         assertEquals(0.0, instantaneousStdX1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousStdX1.unit)
         val instantaneousStdX2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousStdXAsMagneticFluxDensity(instantaneousStdX2)
+        detector.getInstantaneousStdXAsMeasurement(instantaneousStdX2)
         assertEquals(instantaneousStdX1, instantaneousStdX2)
         assertEquals(0.0, detector.instantaneousStdY, 0.0)
-        val instantaneousStdY1 = detector.instantaneousStdYAsMagneticFluxDensity
+        val instantaneousStdY1 = detector.instantaneousStdYAsMeasurement
         assertEquals(0.0, instantaneousStdY1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousStdY1.unit)
         val instantaneousStdY2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousStdYAsMagneticFluxDensity(instantaneousStdY2)
+        detector.getInstantaneousStdYAsMeasurement(instantaneousStdY2)
         assertEquals(instantaneousStdY1, instantaneousStdY2)
         assertEquals(0.0, detector.instantaneousStdZ, 0.0)
-        val instantaneousStdZ1 = detector.instantaneousStdZAsMagneticFluxDensity
+        val instantaneousStdZ1 = detector.instantaneousStdZAsMeasurement
         assertEquals(0.0, instantaneousStdZ1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousStdZ1.unit)
         val instantaneousStdZ2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousStdZAsMagneticFluxDensity(instantaneousStdZ2)
+        detector.getInstantaneousStdZAsMeasurement(instantaneousStdZ2)
         assertEquals(instantaneousStdZ1, instantaneousStdZ2)
         val instantaneousStdTriad1 = detector.instantaneousStdTriad
         assertEquals(0.0, instantaneousAvgTriad1.valueX, 0.0)
@@ -1662,21 +1662,21 @@ class MagnetometerIntervalDetectorTest {
         assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, detector.numberOfProcessedMeasurements)
         assertFalse(detector.running)
-        assertEquals(MagnetometerIntervalDetector.Status.IDLE, detector.status)
+        assertEquals(IntervalDetector.Status.IDLE, detector.status)
     }
 
     @Test
     fun constructor_whenResetListener_setsExpectedValues() {
         val initializationStartedListener =
-            mockk<MagnetometerIntervalDetector.OnInitializationStartedListener>()
+            mockk<IntervalDetector.OnInitializationStartedListener<MagnetometerIntervalDetector>>()
         val initializationCompletedListener =
-            mockk<MagnetometerIntervalDetector.OnInitializationCompletedListener>()
-        val errorListener = mockk<MagnetometerIntervalDetector.OnErrorListener>()
+            mockk<IntervalDetector.OnInitializationCompletedListener<MagnetometerIntervalDetector>>()
+        val errorListener = mockk<IntervalDetector.OnErrorListener<MagnetometerIntervalDetector>>()
         val staticIntervalDetectedListener =
-            mockk<MagnetometerIntervalDetector.OnStaticIntervalDetectedListener>()
+            mockk<IntervalDetector.OnStaticIntervalDetectedListener<MagnetometerIntervalDetector>>()
         val dynamicIntervalDetectedListener =
-            mockk<MagnetometerIntervalDetector.OnDynamicIntervalDetectedListener>()
-        val resetListener = mockk<MagnetometerIntervalDetector.OnResetListener>()
+            mockk<IntervalDetector.OnDynamicIntervalDetectedListener<MagnetometerIntervalDetector>>()
+        val resetListener = mockk<IntervalDetector.OnResetListener<MagnetometerIntervalDetector>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(
             context,
@@ -1727,7 +1727,7 @@ class MagnetometerIntervalDetectorTest {
             0.0
         )
         val baseNoiseLevelAbsoluteThreshold1 =
-            detector.baseNoiseLevelAbsoluteThresholdAsMagneticFluxDensity
+            detector.baseNoiseLevelAbsoluteThresholdAsMeasurement
         assertEquals(
             detector.baseNoiseLevelAbsoluteThreshold,
             baseNoiseLevelAbsoluteThreshold1.value.toDouble(),
@@ -1736,41 +1736,41 @@ class MagnetometerIntervalDetectorTest {
         assertEquals(MagneticFluxDensityUnit.TESLA, baseNoiseLevelAbsoluteThreshold1.unit)
         val baseNoiseLevelAbsoluteThreshold2 =
             MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getBaseNoiseLevelAbsoluteThresholdAsMagneticFluxDensity(
+        detector.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(
             baseNoiseLevelAbsoluteThreshold2
         )
         assertEquals(baseNoiseLevelAbsoluteThreshold1, baseNoiseLevelAbsoluteThreshold2)
         assertNull(detector.baseNoiseLevel)
-        assertNull(detector.baseNoiseLevelAsMagneticFluxDensity)
+        assertNull(detector.baseNoiseLevelAsMeasurement)
         val baseNoiseLevel = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        assertFalse(detector.getBaseNoiseLevelAsMagneticFluxDensity(baseNoiseLevel))
+        assertFalse(detector.getBaseNoiseLevelAsMeasurement(baseNoiseLevel))
         assertNull(detector.baseNoiseLevelPsd)
         assertNull(detector.baseNoiseLevelRootPsd)
         assertNull(detector.threshold)
-        assertNull(detector.thresholdAsMagneticFluxDensity)
+        assertNull(detector.thresholdAsMeasurement)
         val threshold = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
         assertFalse(detector.getThresholdAsMeasurement(threshold))
         assertEquals(0.0, detector.accumulatedAvgX, 0.0)
-        val accumulatedAvgX1 = detector.accumulatedAvgXAsMagneticFluxDensity
+        val accumulatedAvgX1 = detector.accumulatedAvgXAsMeasurement
         assertEquals(0.0, accumulatedAvgX1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedAvgX1.unit)
         val accumulatedAvgX2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedAvgXAsMagneticFluxDensity(accumulatedAvgX2)
+        detector.getAccumulatedAvgXAsMeasurement(accumulatedAvgX2)
         assertEquals(accumulatedAvgX1, accumulatedAvgX2)
         assertEquals(accumulatedAvgX1, accumulatedAvgX2)
         assertEquals(0.0, detector.accumulatedAvgY, 0.0)
-        val accumulatedAvgY1 = detector.accumulatedAvgYAsMagneticFluxDensity
+        val accumulatedAvgY1 = detector.accumulatedAvgYAsMeasurement
         assertEquals(0.0, accumulatedAvgY1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedAvgY1.unit)
         val accumulatedAvgY2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedAvgYAsMagneticFluxDensity(accumulatedAvgY2)
+        detector.getAccumulatedAvgYAsMeasurement(accumulatedAvgY2)
         assertEquals(accumulatedAvgY1, accumulatedAvgY2)
         assertEquals(0.0, detector.accumulatedAvgZ, 0.0)
-        val accumulatedAvgZ1 = detector.accumulatedAvgZAsMagneticFluxDensity
+        val accumulatedAvgZ1 = detector.accumulatedAvgZAsMeasurement
         assertEquals(0.0, accumulatedAvgZ1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedAvgZ1.unit)
         val accumulatedAvgZ2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedAvgZAsMagneticFluxDensity(accumulatedAvgZ2)
+        detector.getAccumulatedAvgZAsMeasurement(accumulatedAvgZ2)
         assertEquals(accumulatedAvgZ1, accumulatedAvgZ2)
         val accumulatedAvgTriad1 = detector.accumulatedAvgTriad
         assertEquals(0.0, accumulatedAvgTriad1.valueX, 0.0)
@@ -1781,25 +1781,25 @@ class MagnetometerIntervalDetectorTest {
         detector.getAccumulatedAvgTriad(accumulatedAvgTriad2)
         assertEquals(accumulatedAvgTriad1, accumulatedAvgTriad2)
         assertEquals(0.0, detector.accumulatedStdX, 0.0)
-        val accumulatedStdX1 = detector.accumulatedStdXAsMagneticFluxDensity
+        val accumulatedStdX1 = detector.accumulatedStdXAsMeasurement
         assertEquals(0.0, accumulatedStdX1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedStdX1.unit)
         val accumulatedStdX2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedStdXAsMagneticFluxDensity(accumulatedStdX2)
+        detector.getAccumulatedStdXAsMeasurement(accumulatedStdX2)
         assertEquals(accumulatedStdX1, accumulatedStdX2)
         assertEquals(0.0, detector.accumulatedStdY, 0.0)
-        val accumulatedStdY1 = detector.accumulatedStdYAsMagneticFluxDensity
+        val accumulatedStdY1 = detector.accumulatedStdYAsMeasurement
         assertEquals(0.0, accumulatedStdY1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedStdY1.unit)
         val accumulatedStdY2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedStdYAsMagneticFluxDensity(accumulatedStdY2)
+        detector.getAccumulatedStdYAsMeasurement(accumulatedStdY2)
         assertEquals(accumulatedStdY1, accumulatedStdY2)
         assertEquals(0.0, detector.accumulatedStdZ, 0.0)
-        val accumulatedStdZ1 = detector.accumulatedStdZAsMagneticFluxDensity
+        val accumulatedStdZ1 = detector.accumulatedStdZAsMeasurement
         assertEquals(0.0, accumulatedStdZ1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedStdZ1.unit)
         val accumulatedStdZ2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedStdZAsMagneticFluxDensity(accumulatedStdZ2)
+        detector.getAccumulatedStdZAsMeasurement(accumulatedStdZ2)
         assertEquals(accumulatedStdZ1, accumulatedStdZ2)
         val accumulatedStdTriad1 = detector.accumulatedStdTriad
         assertEquals(0.0, accumulatedStdTriad1.valueX, 0.0)
@@ -1810,25 +1810,25 @@ class MagnetometerIntervalDetectorTest {
         detector.getAccumulatedStdTriad(accumulatedStdTriad2)
         assertEquals(accumulatedStdTriad1, accumulatedAvgTriad2)
         assertEquals(0.0, detector.instantaneousAvgX, 0.0)
-        val instantaneousAvgX1 = detector.instantaneousAvgXAsMagneticFluxDensity
+        val instantaneousAvgX1 = detector.instantaneousAvgXAsMeasurement
         assertEquals(0.0, instantaneousAvgX1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousAvgX1.unit)
         val instantaneousAvgX2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousAvgXAsMagneticFluxDensity(instantaneousAvgX2)
+        detector.getInstantaneousAvgXAsMeasurement(instantaneousAvgX2)
         assertEquals(instantaneousAvgX1, instantaneousAvgX2)
         assertEquals(0.0, detector.instantaneousAvgY, 0.0)
-        val instantaneousAvgY1 = detector.instantaneousAvgYAsMagneticFluxDensity
+        val instantaneousAvgY1 = detector.instantaneousAvgYAsMeasurement
         assertEquals(0.0, instantaneousAvgY1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousAvgY1.unit)
         val instantaneousAvgY2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousAvgYAsMagneticFluxDensity(instantaneousAvgY2)
+        detector.getInstantaneousAvgYAsMeasurement(instantaneousAvgY2)
         assertEquals(instantaneousAvgY1, instantaneousAvgY2)
         assertEquals(0.0, detector.instantaneousAvgZ, 0.0)
-        val instantaneousAvgZ1 = detector.instantaneousAvgZAsMagneticFluxDensity
+        val instantaneousAvgZ1 = detector.instantaneousAvgZAsMeasurement
         assertEquals(0.0, instantaneousAvgZ1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousAvgZ1.unit)
         val instantaneousAvgZ2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousAvgZAsMagneticFluxDensity(instantaneousAvgZ2)
+        detector.getInstantaneousAvgZAsMeasurement(instantaneousAvgZ2)
         assertEquals(instantaneousAvgZ1, instantaneousAvgZ2)
         val instantaneousAvgTriad1 = detector.instantaneousAvgTriad
         assertEquals(0.0, instantaneousAvgTriad1.valueX, 0.0)
@@ -1839,25 +1839,25 @@ class MagnetometerIntervalDetectorTest {
         detector.getInstantaneousAvgTriad(instantaneousAvgTriad2)
         assertEquals(instantaneousAvgTriad1, instantaneousAvgTriad2)
         assertEquals(0.0, detector.instantaneousStdX, 0.0)
-        val instantaneousStdX1 = detector.instantaneousStdXAsMagneticFluxDensity
+        val instantaneousStdX1 = detector.instantaneousStdXAsMeasurement
         assertEquals(0.0, instantaneousStdX1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousStdX1.unit)
         val instantaneousStdX2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousStdXAsMagneticFluxDensity(instantaneousStdX2)
+        detector.getInstantaneousStdXAsMeasurement(instantaneousStdX2)
         assertEquals(instantaneousStdX1, instantaneousStdX2)
         assertEquals(0.0, detector.instantaneousStdY, 0.0)
-        val instantaneousStdY1 = detector.instantaneousStdYAsMagneticFluxDensity
+        val instantaneousStdY1 = detector.instantaneousStdYAsMeasurement
         assertEquals(0.0, instantaneousStdY1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousStdY1.unit)
         val instantaneousStdY2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousStdYAsMagneticFluxDensity(instantaneousStdY2)
+        detector.getInstantaneousStdYAsMeasurement(instantaneousStdY2)
         assertEquals(instantaneousStdY1, instantaneousStdY2)
         assertEquals(0.0, detector.instantaneousStdZ, 0.0)
-        val instantaneousStdZ1 = detector.instantaneousStdZAsMagneticFluxDensity
+        val instantaneousStdZ1 = detector.instantaneousStdZAsMeasurement
         assertEquals(0.0, instantaneousStdZ1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousStdZ1.unit)
         val instantaneousStdZ2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousStdZAsMagneticFluxDensity(instantaneousStdZ2)
+        detector.getInstantaneousStdZAsMeasurement(instantaneousStdZ2)
         assertEquals(instantaneousStdZ1, instantaneousStdZ2)
         val instantaneousStdTriad1 = detector.instantaneousStdTriad
         assertEquals(0.0, instantaneousAvgTriad1.valueX, 0.0)
@@ -1877,21 +1877,21 @@ class MagnetometerIntervalDetectorTest {
         assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, detector.numberOfProcessedMeasurements)
         assertFalse(detector.running)
-        assertEquals(MagnetometerIntervalDetector.Status.IDLE, detector.status)
+        assertEquals(IntervalDetector.Status.IDLE, detector.status)
     }
 
     @Test
     fun constructor_whenMeasurementListener_setsExpectedValues() {
         val initializationStartedListener =
-            mockk<MagnetometerIntervalDetector.OnInitializationStartedListener>()
+            mockk<IntervalDetector.OnInitializationStartedListener<MagnetometerIntervalDetector>>()
         val initializationCompletedListener =
-            mockk<MagnetometerIntervalDetector.OnInitializationCompletedListener>()
-        val errorListener = mockk<MagnetometerIntervalDetector.OnErrorListener>()
+            mockk<IntervalDetector.OnInitializationCompletedListener<MagnetometerIntervalDetector>>()
+        val errorListener = mockk<IntervalDetector.OnErrorListener<MagnetometerIntervalDetector>>()
         val staticIntervalDetectedListener =
-            mockk<MagnetometerIntervalDetector.OnStaticIntervalDetectedListener>()
+            mockk<IntervalDetector.OnStaticIntervalDetectedListener<MagnetometerIntervalDetector>>()
         val dynamicIntervalDetectedListener =
-            mockk<MagnetometerIntervalDetector.OnDynamicIntervalDetectedListener>()
-        val resetListener = mockk<MagnetometerIntervalDetector.OnResetListener>()
+            mockk<IntervalDetector.OnDynamicIntervalDetectedListener<MagnetometerIntervalDetector>>()
+        val resetListener = mockk<IntervalDetector.OnResetListener<MagnetometerIntervalDetector>>()
         val measurementListener = mockk<MagnetometerSensorCollector.OnMeasurementListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(
@@ -1944,7 +1944,7 @@ class MagnetometerIntervalDetectorTest {
             0.0
         )
         val baseNoiseLevelAbsoluteThreshold1 =
-            detector.baseNoiseLevelAbsoluteThresholdAsMagneticFluxDensity
+            detector.baseNoiseLevelAbsoluteThresholdAsMeasurement
         assertEquals(
             detector.baseNoiseLevelAbsoluteThreshold,
             baseNoiseLevelAbsoluteThreshold1.value.toDouble(),
@@ -1953,41 +1953,41 @@ class MagnetometerIntervalDetectorTest {
         assertEquals(MagneticFluxDensityUnit.TESLA, baseNoiseLevelAbsoluteThreshold1.unit)
         val baseNoiseLevelAbsoluteThreshold2 =
             MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getBaseNoiseLevelAbsoluteThresholdAsMagneticFluxDensity(
+        detector.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(
             baseNoiseLevelAbsoluteThreshold2
         )
         assertEquals(baseNoiseLevelAbsoluteThreshold1, baseNoiseLevelAbsoluteThreshold2)
         assertNull(detector.baseNoiseLevel)
-        assertNull(detector.baseNoiseLevelAsMagneticFluxDensity)
+        assertNull(detector.baseNoiseLevelAsMeasurement)
         val baseNoiseLevel = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        assertFalse(detector.getBaseNoiseLevelAsMagneticFluxDensity(baseNoiseLevel))
+        assertFalse(detector.getBaseNoiseLevelAsMeasurement(baseNoiseLevel))
         assertNull(detector.baseNoiseLevelPsd)
         assertNull(detector.baseNoiseLevelRootPsd)
         assertNull(detector.threshold)
-        assertNull(detector.thresholdAsMagneticFluxDensity)
+        assertNull(detector.thresholdAsMeasurement)
         val threshold = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
         assertFalse(detector.getThresholdAsMeasurement(threshold))
         assertEquals(0.0, detector.accumulatedAvgX, 0.0)
-        val accumulatedAvgX1 = detector.accumulatedAvgXAsMagneticFluxDensity
+        val accumulatedAvgX1 = detector.accumulatedAvgXAsMeasurement
         assertEquals(0.0, accumulatedAvgX1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedAvgX1.unit)
         val accumulatedAvgX2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedAvgXAsMagneticFluxDensity(accumulatedAvgX2)
+        detector.getAccumulatedAvgXAsMeasurement(accumulatedAvgX2)
         assertEquals(accumulatedAvgX1, accumulatedAvgX2)
         assertEquals(accumulatedAvgX1, accumulatedAvgX2)
         assertEquals(0.0, detector.accumulatedAvgY, 0.0)
-        val accumulatedAvgY1 = detector.accumulatedAvgYAsMagneticFluxDensity
+        val accumulatedAvgY1 = detector.accumulatedAvgYAsMeasurement
         assertEquals(0.0, accumulatedAvgY1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedAvgY1.unit)
         val accumulatedAvgY2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedAvgYAsMagneticFluxDensity(accumulatedAvgY2)
+        detector.getAccumulatedAvgYAsMeasurement(accumulatedAvgY2)
         assertEquals(accumulatedAvgY1, accumulatedAvgY2)
         assertEquals(0.0, detector.accumulatedAvgZ, 0.0)
-        val accumulatedAvgZ1 = detector.accumulatedAvgZAsMagneticFluxDensity
+        val accumulatedAvgZ1 = detector.accumulatedAvgZAsMeasurement
         assertEquals(0.0, accumulatedAvgZ1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedAvgZ1.unit)
         val accumulatedAvgZ2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedAvgZAsMagneticFluxDensity(accumulatedAvgZ2)
+        detector.getAccumulatedAvgZAsMeasurement(accumulatedAvgZ2)
         assertEquals(accumulatedAvgZ1, accumulatedAvgZ2)
         val accumulatedAvgTriad1 = detector.accumulatedAvgTriad
         assertEquals(0.0, accumulatedAvgTriad1.valueX, 0.0)
@@ -1998,25 +1998,25 @@ class MagnetometerIntervalDetectorTest {
         detector.getAccumulatedAvgTriad(accumulatedAvgTriad2)
         assertEquals(accumulatedAvgTriad1, accumulatedAvgTriad2)
         assertEquals(0.0, detector.accumulatedStdX, 0.0)
-        val accumulatedStdX1 = detector.accumulatedStdXAsMagneticFluxDensity
+        val accumulatedStdX1 = detector.accumulatedStdXAsMeasurement
         assertEquals(0.0, accumulatedStdX1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedStdX1.unit)
         val accumulatedStdX2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedStdXAsMagneticFluxDensity(accumulatedStdX2)
+        detector.getAccumulatedStdXAsMeasurement(accumulatedStdX2)
         assertEquals(accumulatedStdX1, accumulatedStdX2)
         assertEquals(0.0, detector.accumulatedStdY, 0.0)
-        val accumulatedStdY1 = detector.accumulatedStdYAsMagneticFluxDensity
+        val accumulatedStdY1 = detector.accumulatedStdYAsMeasurement
         assertEquals(0.0, accumulatedStdY1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedStdY1.unit)
         val accumulatedStdY2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedStdYAsMagneticFluxDensity(accumulatedStdY2)
+        detector.getAccumulatedStdYAsMeasurement(accumulatedStdY2)
         assertEquals(accumulatedStdY1, accumulatedStdY2)
         assertEquals(0.0, detector.accumulatedStdZ, 0.0)
-        val accumulatedStdZ1 = detector.accumulatedStdZAsMagneticFluxDensity
+        val accumulatedStdZ1 = detector.accumulatedStdZAsMeasurement
         assertEquals(0.0, accumulatedStdZ1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedStdZ1.unit)
         val accumulatedStdZ2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedStdZAsMagneticFluxDensity(accumulatedStdZ2)
+        detector.getAccumulatedStdZAsMeasurement(accumulatedStdZ2)
         assertEquals(accumulatedStdZ1, accumulatedStdZ2)
         val accumulatedStdTriad1 = detector.accumulatedStdTriad
         assertEquals(0.0, accumulatedStdTriad1.valueX, 0.0)
@@ -2027,25 +2027,25 @@ class MagnetometerIntervalDetectorTest {
         detector.getAccumulatedStdTriad(accumulatedStdTriad2)
         assertEquals(accumulatedStdTriad1, accumulatedAvgTriad2)
         assertEquals(0.0, detector.instantaneousAvgX, 0.0)
-        val instantaneousAvgX1 = detector.instantaneousAvgXAsMagneticFluxDensity
+        val instantaneousAvgX1 = detector.instantaneousAvgXAsMeasurement
         assertEquals(0.0, instantaneousAvgX1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousAvgX1.unit)
         val instantaneousAvgX2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousAvgXAsMagneticFluxDensity(instantaneousAvgX2)
+        detector.getInstantaneousAvgXAsMeasurement(instantaneousAvgX2)
         assertEquals(instantaneousAvgX1, instantaneousAvgX2)
         assertEquals(0.0, detector.instantaneousAvgY, 0.0)
-        val instantaneousAvgY1 = detector.instantaneousAvgYAsMagneticFluxDensity
+        val instantaneousAvgY1 = detector.instantaneousAvgYAsMeasurement
         assertEquals(0.0, instantaneousAvgY1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousAvgY1.unit)
         val instantaneousAvgY2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousAvgYAsMagneticFluxDensity(instantaneousAvgY2)
+        detector.getInstantaneousAvgYAsMeasurement(instantaneousAvgY2)
         assertEquals(instantaneousAvgY1, instantaneousAvgY2)
         assertEquals(0.0, detector.instantaneousAvgZ, 0.0)
-        val instantaneousAvgZ1 = detector.instantaneousAvgZAsMagneticFluxDensity
+        val instantaneousAvgZ1 = detector.instantaneousAvgZAsMeasurement
         assertEquals(0.0, instantaneousAvgZ1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousAvgZ1.unit)
         val instantaneousAvgZ2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousAvgZAsMagneticFluxDensity(instantaneousAvgZ2)
+        detector.getInstantaneousAvgZAsMeasurement(instantaneousAvgZ2)
         assertEquals(instantaneousAvgZ1, instantaneousAvgZ2)
         val instantaneousAvgTriad1 = detector.instantaneousAvgTriad
         assertEquals(0.0, instantaneousAvgTriad1.valueX, 0.0)
@@ -2056,25 +2056,25 @@ class MagnetometerIntervalDetectorTest {
         detector.getInstantaneousAvgTriad(instantaneousAvgTriad2)
         assertEquals(instantaneousAvgTriad1, instantaneousAvgTriad2)
         assertEquals(0.0, detector.instantaneousStdX, 0.0)
-        val instantaneousStdX1 = detector.instantaneousStdXAsMagneticFluxDensity
+        val instantaneousStdX1 = detector.instantaneousStdXAsMeasurement
         assertEquals(0.0, instantaneousStdX1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousStdX1.unit)
         val instantaneousStdX2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousStdXAsMagneticFluxDensity(instantaneousStdX2)
+        detector.getInstantaneousStdXAsMeasurement(instantaneousStdX2)
         assertEquals(instantaneousStdX1, instantaneousStdX2)
         assertEquals(0.0, detector.instantaneousStdY, 0.0)
-        val instantaneousStdY1 = detector.instantaneousStdYAsMagneticFluxDensity
+        val instantaneousStdY1 = detector.instantaneousStdYAsMeasurement
         assertEquals(0.0, instantaneousStdY1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousStdY1.unit)
         val instantaneousStdY2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousStdYAsMagneticFluxDensity(instantaneousStdY2)
+        detector.getInstantaneousStdYAsMeasurement(instantaneousStdY2)
         assertEquals(instantaneousStdY1, instantaneousStdY2)
         assertEquals(0.0, detector.instantaneousStdZ, 0.0)
-        val instantaneousStdZ1 = detector.instantaneousStdZAsMagneticFluxDensity
+        val instantaneousStdZ1 = detector.instantaneousStdZAsMeasurement
         assertEquals(0.0, instantaneousStdZ1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousStdZ1.unit)
         val instantaneousStdZ2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousStdZAsMagneticFluxDensity(instantaneousStdZ2)
+        detector.getInstantaneousStdZAsMeasurement(instantaneousStdZ2)
         assertEquals(instantaneousStdZ1, instantaneousStdZ2)
         val instantaneousStdTriad1 = detector.instantaneousStdTriad
         assertEquals(0.0, instantaneousAvgTriad1.valueX, 0.0)
@@ -2094,21 +2094,21 @@ class MagnetometerIntervalDetectorTest {
         assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, detector.numberOfProcessedMeasurements)
         assertFalse(detector.running)
-        assertEquals(MagnetometerIntervalDetector.Status.IDLE, detector.status)
+        assertEquals(IntervalDetector.Status.IDLE, detector.status)
     }
 
     @Test
     fun constructor_whenAccuracyChangedListener_setsExpectedValues() {
         val initializationStartedListener =
-            mockk<MagnetometerIntervalDetector.OnInitializationStartedListener>()
+            mockk<IntervalDetector.OnInitializationStartedListener<MagnetometerIntervalDetector>>()
         val initializationCompletedListener =
-            mockk<MagnetometerIntervalDetector.OnInitializationCompletedListener>()
-        val errorListener = mockk<MagnetometerIntervalDetector.OnErrorListener>()
+            mockk<IntervalDetector.OnInitializationCompletedListener<MagnetometerIntervalDetector>>()
+        val errorListener = mockk<IntervalDetector.OnErrorListener<MagnetometerIntervalDetector>>()
         val staticIntervalDetectedListener =
-            mockk<MagnetometerIntervalDetector.OnStaticIntervalDetectedListener>()
+            mockk<IntervalDetector.OnStaticIntervalDetectedListener<MagnetometerIntervalDetector>>()
         val dynamicIntervalDetectedListener =
-            mockk<MagnetometerIntervalDetector.OnDynamicIntervalDetectedListener>()
-        val resetListener = mockk<MagnetometerIntervalDetector.OnResetListener>()
+            mockk<IntervalDetector.OnDynamicIntervalDetectedListener<MagnetometerIntervalDetector>>()
+        val resetListener = mockk<IntervalDetector.OnResetListener<MagnetometerIntervalDetector>>()
         val measurementListener = mockk<MagnetometerSensorCollector.OnMeasurementListener>()
         val accuracyChangedListener = mockk<SensorCollector.OnAccuracyChangedListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
@@ -2163,7 +2163,7 @@ class MagnetometerIntervalDetectorTest {
             0.0
         )
         val baseNoiseLevelAbsoluteThreshold1 =
-            detector.baseNoiseLevelAbsoluteThresholdAsMagneticFluxDensity
+            detector.baseNoiseLevelAbsoluteThresholdAsMeasurement
         assertEquals(
             detector.baseNoiseLevelAbsoluteThreshold,
             baseNoiseLevelAbsoluteThreshold1.value.toDouble(),
@@ -2172,41 +2172,41 @@ class MagnetometerIntervalDetectorTest {
         assertEquals(MagneticFluxDensityUnit.TESLA, baseNoiseLevelAbsoluteThreshold1.unit)
         val baseNoiseLevelAbsoluteThreshold2 =
             MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getBaseNoiseLevelAbsoluteThresholdAsMagneticFluxDensity(
+        detector.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(
             baseNoiseLevelAbsoluteThreshold2
         )
         assertEquals(baseNoiseLevelAbsoluteThreshold1, baseNoiseLevelAbsoluteThreshold2)
         assertNull(detector.baseNoiseLevel)
-        assertNull(detector.baseNoiseLevelAsMagneticFluxDensity)
+        assertNull(detector.baseNoiseLevelAsMeasurement)
         val baseNoiseLevel = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        assertFalse(detector.getBaseNoiseLevelAsMagneticFluxDensity(baseNoiseLevel))
+        assertFalse(detector.getBaseNoiseLevelAsMeasurement(baseNoiseLevel))
         assertNull(detector.baseNoiseLevelPsd)
         assertNull(detector.baseNoiseLevelRootPsd)
         assertNull(detector.threshold)
-        assertNull(detector.thresholdAsMagneticFluxDensity)
+        assertNull(detector.thresholdAsMeasurement)
         val threshold = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
         assertFalse(detector.getThresholdAsMeasurement(threshold))
         assertEquals(0.0, detector.accumulatedAvgX, 0.0)
-        val accumulatedAvgX1 = detector.accumulatedAvgXAsMagneticFluxDensity
+        val accumulatedAvgX1 = detector.accumulatedAvgXAsMeasurement
         assertEquals(0.0, accumulatedAvgX1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedAvgX1.unit)
         val accumulatedAvgX2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedAvgXAsMagneticFluxDensity(accumulatedAvgX2)
+        detector.getAccumulatedAvgXAsMeasurement(accumulatedAvgX2)
         assertEquals(accumulatedAvgX1, accumulatedAvgX2)
         assertEquals(accumulatedAvgX1, accumulatedAvgX2)
         assertEquals(0.0, detector.accumulatedAvgY, 0.0)
-        val accumulatedAvgY1 = detector.accumulatedAvgYAsMagneticFluxDensity
+        val accumulatedAvgY1 = detector.accumulatedAvgYAsMeasurement
         assertEquals(0.0, accumulatedAvgY1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedAvgY1.unit)
         val accumulatedAvgY2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedAvgYAsMagneticFluxDensity(accumulatedAvgY2)
+        detector.getAccumulatedAvgYAsMeasurement(accumulatedAvgY2)
         assertEquals(accumulatedAvgY1, accumulatedAvgY2)
         assertEquals(0.0, detector.accumulatedAvgZ, 0.0)
-        val accumulatedAvgZ1 = detector.accumulatedAvgZAsMagneticFluxDensity
+        val accumulatedAvgZ1 = detector.accumulatedAvgZAsMeasurement
         assertEquals(0.0, accumulatedAvgZ1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedAvgZ1.unit)
         val accumulatedAvgZ2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedAvgZAsMagneticFluxDensity(accumulatedAvgZ2)
+        detector.getAccumulatedAvgZAsMeasurement(accumulatedAvgZ2)
         assertEquals(accumulatedAvgZ1, accumulatedAvgZ2)
         val accumulatedAvgTriad1 = detector.accumulatedAvgTriad
         assertEquals(0.0, accumulatedAvgTriad1.valueX, 0.0)
@@ -2217,25 +2217,25 @@ class MagnetometerIntervalDetectorTest {
         detector.getAccumulatedAvgTriad(accumulatedAvgTriad2)
         assertEquals(accumulatedAvgTriad1, accumulatedAvgTriad2)
         assertEquals(0.0, detector.accumulatedStdX, 0.0)
-        val accumulatedStdX1 = detector.accumulatedStdXAsMagneticFluxDensity
+        val accumulatedStdX1 = detector.accumulatedStdXAsMeasurement
         assertEquals(0.0, accumulatedStdX1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedStdX1.unit)
         val accumulatedStdX2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedStdXAsMagneticFluxDensity(accumulatedStdX2)
+        detector.getAccumulatedStdXAsMeasurement(accumulatedStdX2)
         assertEquals(accumulatedStdX1, accumulatedStdX2)
         assertEquals(0.0, detector.accumulatedStdY, 0.0)
-        val accumulatedStdY1 = detector.accumulatedStdYAsMagneticFluxDensity
+        val accumulatedStdY1 = detector.accumulatedStdYAsMeasurement
         assertEquals(0.0, accumulatedStdY1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedStdY1.unit)
         val accumulatedStdY2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedStdYAsMagneticFluxDensity(accumulatedStdY2)
+        detector.getAccumulatedStdYAsMeasurement(accumulatedStdY2)
         assertEquals(accumulatedStdY1, accumulatedStdY2)
         assertEquals(0.0, detector.accumulatedStdZ, 0.0)
-        val accumulatedStdZ1 = detector.accumulatedStdZAsMagneticFluxDensity
+        val accumulatedStdZ1 = detector.accumulatedStdZAsMeasurement
         assertEquals(0.0, accumulatedStdZ1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, accumulatedStdZ1.unit)
         val accumulatedStdZ2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getAccumulatedStdZAsMagneticFluxDensity(accumulatedStdZ2)
+        detector.getAccumulatedStdZAsMeasurement(accumulatedStdZ2)
         assertEquals(accumulatedStdZ1, accumulatedStdZ2)
         val accumulatedStdTriad1 = detector.accumulatedStdTriad
         assertEquals(0.0, accumulatedStdTriad1.valueX, 0.0)
@@ -2246,25 +2246,25 @@ class MagnetometerIntervalDetectorTest {
         detector.getAccumulatedStdTriad(accumulatedStdTriad2)
         assertEquals(accumulatedStdTriad1, accumulatedAvgTriad2)
         assertEquals(0.0, detector.instantaneousAvgX, 0.0)
-        val instantaneousAvgX1 = detector.instantaneousAvgXAsMagneticFluxDensity
+        val instantaneousAvgX1 = detector.instantaneousAvgXAsMeasurement
         assertEquals(0.0, instantaneousAvgX1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousAvgX1.unit)
         val instantaneousAvgX2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousAvgXAsMagneticFluxDensity(instantaneousAvgX2)
+        detector.getInstantaneousAvgXAsMeasurement(instantaneousAvgX2)
         assertEquals(instantaneousAvgX1, instantaneousAvgX2)
         assertEquals(0.0, detector.instantaneousAvgY, 0.0)
-        val instantaneousAvgY1 = detector.instantaneousAvgYAsMagneticFluxDensity
+        val instantaneousAvgY1 = detector.instantaneousAvgYAsMeasurement
         assertEquals(0.0, instantaneousAvgY1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousAvgY1.unit)
         val instantaneousAvgY2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousAvgYAsMagneticFluxDensity(instantaneousAvgY2)
+        detector.getInstantaneousAvgYAsMeasurement(instantaneousAvgY2)
         assertEquals(instantaneousAvgY1, instantaneousAvgY2)
         assertEquals(0.0, detector.instantaneousAvgZ, 0.0)
-        val instantaneousAvgZ1 = detector.instantaneousAvgZAsMagneticFluxDensity
+        val instantaneousAvgZ1 = detector.instantaneousAvgZAsMeasurement
         assertEquals(0.0, instantaneousAvgZ1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousAvgZ1.unit)
         val instantaneousAvgZ2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousAvgZAsMagneticFluxDensity(instantaneousAvgZ2)
+        detector.getInstantaneousAvgZAsMeasurement(instantaneousAvgZ2)
         assertEquals(instantaneousAvgZ1, instantaneousAvgZ2)
         val instantaneousAvgTriad1 = detector.instantaneousAvgTriad
         assertEquals(0.0, instantaneousAvgTriad1.valueX, 0.0)
@@ -2275,25 +2275,25 @@ class MagnetometerIntervalDetectorTest {
         detector.getInstantaneousAvgTriad(instantaneousAvgTriad2)
         assertEquals(instantaneousAvgTriad1, instantaneousAvgTriad2)
         assertEquals(0.0, detector.instantaneousStdX, 0.0)
-        val instantaneousStdX1 = detector.instantaneousStdXAsMagneticFluxDensity
+        val instantaneousStdX1 = detector.instantaneousStdXAsMeasurement
         assertEquals(0.0, instantaneousStdX1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousStdX1.unit)
         val instantaneousStdX2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousStdXAsMagneticFluxDensity(instantaneousStdX2)
+        detector.getInstantaneousStdXAsMeasurement(instantaneousStdX2)
         assertEquals(instantaneousStdX1, instantaneousStdX2)
         assertEquals(0.0, detector.instantaneousStdY, 0.0)
-        val instantaneousStdY1 = detector.instantaneousStdYAsMagneticFluxDensity
+        val instantaneousStdY1 = detector.instantaneousStdYAsMeasurement
         assertEquals(0.0, instantaneousStdY1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousStdY1.unit)
         val instantaneousStdY2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousStdYAsMagneticFluxDensity(instantaneousStdY2)
+        detector.getInstantaneousStdYAsMeasurement(instantaneousStdY2)
         assertEquals(instantaneousStdY1, instantaneousStdY2)
         assertEquals(0.0, detector.instantaneousStdZ, 0.0)
-        val instantaneousStdZ1 = detector.instantaneousStdZAsMagneticFluxDensity
+        val instantaneousStdZ1 = detector.instantaneousStdZAsMeasurement
         assertEquals(0.0, instantaneousStdZ1.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, instantaneousStdZ1.unit)
         val instantaneousStdZ2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getInstantaneousStdZAsMagneticFluxDensity(instantaneousStdZ2)
+        detector.getInstantaneousStdZAsMeasurement(instantaneousStdZ2)
         assertEquals(instantaneousStdZ1, instantaneousStdZ2)
         val instantaneousStdTriad1 = detector.instantaneousStdTriad
         assertEquals(0.0, instantaneousAvgTriad1.valueX, 0.0)
@@ -2313,7 +2313,7 @@ class MagnetometerIntervalDetectorTest {
         assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, detector.numberOfProcessedMeasurements)
         assertFalse(detector.running)
-        assertEquals(MagnetometerIntervalDetector.Status.IDLE, detector.status)
+        assertEquals(IntervalDetector.Status.IDLE, detector.status)
     }
 
     @Test
@@ -2326,7 +2326,7 @@ class MagnetometerIntervalDetectorTest {
 
         // set new value
         val initializationStartedListener =
-            mockk<MagnetometerIntervalDetector.OnInitializationStartedListener>()
+            mockk<IntervalDetector.OnInitializationStartedListener<MagnetometerIntervalDetector>>()
         detector.initializationStartedListener = initializationStartedListener
 
         // check
@@ -2343,7 +2343,7 @@ class MagnetometerIntervalDetectorTest {
 
         // set new value
         val initializationCompletedListener =
-            mockk<MagnetometerIntervalDetector.OnInitializationCompletedListener>()
+            mockk<IntervalDetector.OnInitializationCompletedListener<MagnetometerIntervalDetector>>()
         detector.initializationCompletedListener = initializationCompletedListener
 
         // check
@@ -2359,7 +2359,7 @@ class MagnetometerIntervalDetectorTest {
         assertNull(detector.errorListener)
 
         // set new value
-        val errorListener = mockk<MagnetometerIntervalDetector.OnErrorListener>()
+        val errorListener = mockk<IntervalDetector.OnErrorListener<MagnetometerIntervalDetector>>()
         detector.errorListener = errorListener
 
         // check
@@ -2376,7 +2376,7 @@ class MagnetometerIntervalDetectorTest {
 
         // sets new value
         val staticIntervalDetectedListener =
-            mockk<MagnetometerIntervalDetector.OnStaticIntervalDetectedListener>()
+            mockk<IntervalDetector.OnStaticIntervalDetectedListener<MagnetometerIntervalDetector>>()
         detector.staticIntervalDetectedListener = staticIntervalDetectedListener
 
         // check
@@ -2393,7 +2393,7 @@ class MagnetometerIntervalDetectorTest {
 
         // sets new value
         val dynamicIntervalDetectedListener =
-            mockk<MagnetometerIntervalDetector.OnDynamicIntervalDetectedListener>()
+            mockk<IntervalDetector.OnDynamicIntervalDetectedListener<MagnetometerIntervalDetector>>()
         detector.dynamicIntervalDetectedListener = dynamicIntervalDetectedListener
 
         // check
@@ -2409,7 +2409,7 @@ class MagnetometerIntervalDetectorTest {
         assertNull(detector.resetListener)
 
         // set new value
-        val resetListener = mockk<MagnetometerIntervalDetector.OnResetListener>()
+        val resetListener = mockk<IntervalDetector.OnResetListener<MagnetometerIntervalDetector>>()
         detector.resetListener = resetListener
 
         // check
@@ -2493,7 +2493,7 @@ class MagnetometerIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
-        detector.setPrivateProperty("running", true)
+        setPrivateProperty(IntervalDetector::class, detector, "running", true)
 
         detector.windowSize = WINDOW_SIZE
     }
@@ -2529,7 +2529,7 @@ class MagnetometerIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
-        detector.setPrivateProperty("running", true)
+        setPrivateProperty(IntervalDetector::class, detector, "running", true)
 
         detector.initialStaticSamples = TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES
     }
@@ -2566,7 +2566,7 @@ class MagnetometerIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
-        detector.setPrivateProperty("running", true)
+        setPrivateProperty(IntervalDetector::class, detector, "running", true)
 
         detector.thresholdFactor = TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR
     }
@@ -2603,7 +2603,7 @@ class MagnetometerIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
-        detector.setPrivateProperty("running", true)
+        setPrivateProperty(IntervalDetector::class, detector, "running", true)
 
         detector.instantaneousNoiseLevelFactor =
             TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR
@@ -2645,20 +2645,20 @@ class MagnetometerIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
-        detector.setPrivateProperty("running", true)
+        setPrivateProperty(IntervalDetector::class, detector, "running", true)
 
         detector.baseNoiseLevelAbsoluteThreshold =
             TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD
     }
 
     @Test
-    fun baseNoiseLevelAbsoluteThresholdAsMagneticFluxDensity_whenValid_setsExpectedValue() {
+    fun baseNoiseLevelAbsoluteThresholdAsMeasurement_whenValid_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
         // check default value
         val baseNoiseLevelAbsoluteThreshold1 =
-            detector.baseNoiseLevelAbsoluteThresholdAsMagneticFluxDensity
+            detector.baseNoiseLevelAbsoluteThresholdAsMeasurement
         assertEquals(
             TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
             baseNoiseLevelAbsoluteThreshold1.value.toDouble(),
@@ -2667,7 +2667,7 @@ class MagnetometerIntervalDetectorTest {
         assertEquals(MagneticFluxDensityUnit.TESLA, baseNoiseLevelAbsoluteThreshold1.unit)
         val baseNoiseLevelAbsoluteThreshold2 =
             MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getBaseNoiseLevelAbsoluteThresholdAsMagneticFluxDensity(
+        detector.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(
             baseNoiseLevelAbsoluteThreshold2
         )
         assertEquals(baseNoiseLevelAbsoluteThreshold1, baseNoiseLevelAbsoluteThreshold2)
@@ -2676,12 +2676,12 @@ class MagnetometerIntervalDetectorTest {
         val baseNoiseLevelAbsoluteThreshold3 = MagneticFluxDensity(
             BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD, MagneticFluxDensityUnit.TESLA
         )
-        detector.baseNoiseLevelAbsoluteThresholdAsMagneticFluxDensity =
+        detector.baseNoiseLevelAbsoluteThresholdAsMeasurement =
             baseNoiseLevelAbsoluteThreshold3
 
         // check
         val baseNoiseLevelAbsoluteThreshold4 =
-            detector.baseNoiseLevelAbsoluteThresholdAsMagneticFluxDensity
+            detector.baseNoiseLevelAbsoluteThresholdAsMeasurement
         assertEquals(
             BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
             baseNoiseLevelAbsoluteThreshold4.value.toDouble(),
@@ -2690,29 +2690,29 @@ class MagnetometerIntervalDetectorTest {
         assertEquals(MagneticFluxDensityUnit.TESLA, baseNoiseLevelAbsoluteThreshold4.unit)
         val baseNoiseLevelAbsoluteThreshold5 =
             MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        detector.getBaseNoiseLevelAbsoluteThresholdAsMagneticFluxDensity(
+        detector.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(
             baseNoiseLevelAbsoluteThreshold5
         )
         assertEquals(baseNoiseLevelAbsoluteThreshold4, baseNoiseLevelAbsoluteThreshold5)
     }
 
     @Test(expected = IllegalArgumentException::class)
-    fun baseNoiseLevelAbsoluteThresholdAsMagneticFluxDensity_whenInvalid_throwsIllegalArgumentException() {
+    fun baseNoiseLevelAbsoluteThresholdAsMeasurement_whenInvalid_throwsIllegalArgumentException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
-        detector.baseNoiseLevelAbsoluteThresholdAsMagneticFluxDensity =
+        detector.baseNoiseLevelAbsoluteThresholdAsMeasurement =
             MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
     }
 
     @Test(expected = IllegalStateException::class)
-    fun baseNoiseLevelAbsoluteThresholdAsMagneticFluxDensity_whenRunning_throwsIllegalStateException() {
+    fun baseNoiseLevelAbsoluteThresholdAsMeasurement_whenRunning_throwsIllegalStateException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
-        detector.setPrivateProperty("running", true)
+        setPrivateProperty(IntervalDetector::class, detector, "running", true)
 
-        detector.baseNoiseLevelAbsoluteThresholdAsMagneticFluxDensity = MagneticFluxDensity(
+        detector.baseNoiseLevelAbsoluteThresholdAsMeasurement = MagneticFluxDensity(
             BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD, MagneticFluxDensityUnit.TESLA
         )
     }
@@ -2785,15 +2785,25 @@ class MagnetometerIntervalDetectorTest {
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         val timeIntervalEstimator: TimeIntervalEstimator? =
-            detector.getPrivateProperty("timeIntervalEstimator")
+            getPrivateProperty(IntervalDetector::class, detector, "timeIntervalEstimator")
         requireNotNull(timeIntervalEstimator)
         val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-        detector.setPrivateProperty("timeIntervalEstimator", timeIntervalEstimatorSpy)
+        setPrivateProperty(
+            IntervalDetector::class,
+            detector,
+            "timeIntervalEstimator",
+            timeIntervalEstimatorSpy
+        )
 
-        detector.setPrivateProperty("unreliable", true)
-        detector.setPrivateProperty("initialTimestamp", SystemClock.elapsedRealtimeNanos())
-        detector.setPrivateProperty("numberOfProcessedMeasurements", 1)
-        detector.setPrivateProperty("initialized", true)
+        setPrivateProperty(IntervalDetector::class, detector, "unreliable", true)
+        setPrivateProperty(
+            IntervalDetector::class,
+            detector,
+            "initialTimestamp",
+            SystemClock.elapsedRealtimeNanos()
+        )
+        setPrivateProperty(IntervalDetector::class, detector, "numberOfProcessedMeasurements", 1)
+        setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
 
         detector.start()
 
@@ -2801,20 +2811,23 @@ class MagnetometerIntervalDetectorTest {
         verify(exactly = 1) { timeIntervalEstimatorSpy.reset() }
         verify(exactly = 1) { internalDetectorSpy.reset() }
 
-        val unreliable: Boolean? = detector.getPrivateProperty("unreliable")
+        val unreliable: Boolean? =
+            getPrivateProperty(IntervalDetector::class, detector, "unreliable")
         requireNotNull(unreliable)
         assertFalse(unreliable)
 
-        val initialTimestamp: Long? = detector.getPrivateProperty("initialTimestamp")
+        val initialTimestamp: Long? =
+            getPrivateProperty(IntervalDetector::class, detector, "initialTimestamp")
         requireNotNull(initialTimestamp)
         assertEquals(0L, initialTimestamp)
 
         val numberOfProcessedMeasurements: Int? =
-            detector.getPrivateProperty("numberOfProcessedMeasurements")
+            getPrivateProperty(IntervalDetector::class, detector, "numberOfProcessedMeasurements")
         requireNotNull(numberOfProcessedMeasurements)
         assertEquals(0, numberOfProcessedMeasurements)
 
-        val initialized: Boolean? = detector.getPrivateProperty("initialized")
+        val initialized: Boolean? =
+            getPrivateProperty(IntervalDetector::class, detector, "initialized")
         requireNotNull(initialized)
         assertFalse(initialized)
     }
@@ -2895,20 +2908,20 @@ class MagnetometerIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
-        detector.setPrivateProperty("unreliable", true)
+        setPrivateProperty(IntervalDetector::class, detector, "unreliable", true)
 
-        var errorReason: MagnetometerIntervalDetector.ErrorReason? =
-            detector.callPrivateFuncWithResult(
-                "mapErrorReason",
+        var errorReason: IntervalDetector.ErrorReason? =
+            callPrivateFuncWithResult(
+                IntervalDetector::class, detector, "mapErrorReason",
                 TriadStaticIntervalDetector.ErrorReason.OVERALL_EXCESSIVE_MOVEMENT_DETECTED
             )
-        assertEquals(MagnetometerIntervalDetector.ErrorReason.UNRELIABLE_SENSOR, errorReason)
+        assertEquals(IntervalDetector.ErrorReason.UNRELIABLE_SENSOR, errorReason)
 
-        errorReason = detector.callPrivateFuncWithResult(
-            "mapErrorReason",
+        errorReason = callPrivateFuncWithResult(
+            IntervalDetector::class, detector, "mapErrorReason",
             TriadStaticIntervalDetector.ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED
         )
-        assertEquals(MagnetometerIntervalDetector.ErrorReason.UNRELIABLE_SENSOR, errorReason)
+        assertEquals(IntervalDetector.ErrorReason.UNRELIABLE_SENSOR, errorReason)
     }
 
     @Test
@@ -2916,26 +2929,27 @@ class MagnetometerIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
-        val unreliable: Boolean? = detector.getPrivateProperty("unreliable")
+        val unreliable: Boolean? =
+            getPrivateProperty(IntervalDetector::class, detector, "unreliable")
         requireNotNull(unreliable)
         assertFalse(unreliable)
 
-        var errorReason: MagnetometerIntervalDetector.ErrorReason? =
-            detector.callPrivateFuncWithResult(
-                "mapErrorReason",
+        var errorReason: IntervalDetector.ErrorReason? =
+            callPrivateFuncWithResult(
+                IntervalDetector::class, detector, "mapErrorReason",
                 TriadStaticIntervalDetector.ErrorReason.OVERALL_EXCESSIVE_MOVEMENT_DETECTED
             )
         assertEquals(
-            MagnetometerIntervalDetector.ErrorReason.OVERALL_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION,
+            IntervalDetector.ErrorReason.OVERALL_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION,
             errorReason
         )
 
-        errorReason = detector.callPrivateFuncWithResult(
-            "mapErrorReason",
+        errorReason = callPrivateFuncWithResult(
+            IntervalDetector::class, detector, "mapErrorReason",
             TriadStaticIntervalDetector.ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED
         )
         assertEquals(
-            MagnetometerIntervalDetector.ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION,
+            IntervalDetector.ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION,
             errorReason
         )
     }
@@ -2952,7 +2966,7 @@ class MagnetometerIntervalDetectorTest {
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         // check initial status
-        assertEquals(MagnetometerIntervalDetector.Status.IDLE, detector.status)
+        assertEquals(IntervalDetector.Status.IDLE, detector.status)
         assertEquals(0, detector.numberOfProcessedMeasurements)
 
         // process measurement
@@ -2987,7 +3001,7 @@ class MagnetometerIntervalDetectorTest {
         )
         verify(exactly = 1) { internalDetectorSpy.process(bxT, byT, bzT) }
         assertEquals(1, detector.numberOfProcessedMeasurements)
-        assertEquals(MagnetometerIntervalDetector.Status.INITIALIZING, detector.status)
+        assertEquals(IntervalDetector.Status.INITIALIZING, detector.status)
     }
 
     @Test
@@ -3003,11 +3017,12 @@ class MagnetometerIntervalDetectorTest {
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         // check initial values
-        val initialTimestamp1: Long? = detector.getPrivateProperty("initialTimestamp")
+        val initialTimestamp1: Long? =
+            getPrivateProperty(IntervalDetector::class, detector, "initialTimestamp")
         requireNotNull(initialTimestamp1)
         assertEquals(0L, initialTimestamp1)
 
-        assertEquals(MagnetometerIntervalDetector.Status.INITIALIZING, detector.status)
+        assertEquals(IntervalDetector.Status.INITIALIZING, detector.status)
         assertEquals(0, detector.numberOfProcessedMeasurements)
 
         // process measurement
@@ -3042,9 +3057,10 @@ class MagnetometerIntervalDetectorTest {
         )
         verify(exactly = 1) { internalDetectorSpy.process(bxT, byT, bzT) }
         assertEquals(1, detector.numberOfProcessedMeasurements)
-        assertEquals(MagnetometerIntervalDetector.Status.INITIALIZING, detector.status)
+        assertEquals(IntervalDetector.Status.INITIALIZING, detector.status)
 
-        val initialTimestamp2: Long? = detector.getPrivateProperty("initialTimestamp")
+        val initialTimestamp2: Long? =
+            getPrivateProperty(IntervalDetector::class, detector, "initialTimestamp")
         requireNotNull(initialTimestamp2)
         assertEquals(timestamp, initialTimestamp2)
     }
@@ -3060,22 +3076,28 @@ class MagnetometerIntervalDetectorTest {
         val internalDetectorSpy = spyk(internalDetector)
         every { internalDetectorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZING)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
-        detector.setPrivateProperty("numberOfProcessedMeasurements", 1)
+        setPrivateProperty(IntervalDetector::class, detector, "numberOfProcessedMeasurements", 1)
         val timestamp1 = SystemClock.elapsedRealtimeNanos()
-        detector.setPrivateProperty("initialTimestamp", timestamp1)
+        setPrivateProperty(IntervalDetector::class, detector, "initialTimestamp", timestamp1)
 
         val timeIntervalEstimator: TimeIntervalEstimator? =
-            detector.getPrivateProperty("timeIntervalEstimator")
+            getPrivateProperty(IntervalDetector::class, detector, "timeIntervalEstimator")
         requireNotNull(timeIntervalEstimator)
         val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-        detector.setPrivateProperty("timeIntervalEstimator", timeIntervalEstimatorSpy)
+        setPrivateProperty(
+            IntervalDetector::class,
+            detector,
+            "timeIntervalEstimator",
+            timeIntervalEstimatorSpy
+        )
 
         // check initial values
-        val initialTimestamp1: Long? = detector.getPrivateProperty("initialTimestamp")
+        val initialTimestamp1: Long? =
+            getPrivateProperty(IntervalDetector::class, detector, "initialTimestamp")
         requireNotNull(initialTimestamp1)
         assertEquals(timestamp1, initialTimestamp1)
 
-        assertEquals(MagnetometerIntervalDetector.Status.INITIALIZING, detector.status)
+        assertEquals(IntervalDetector.Status.INITIALIZING, detector.status)
         assertEquals(1, detector.numberOfProcessedMeasurements)
 
         // process measurement
@@ -3111,9 +3133,10 @@ class MagnetometerIntervalDetectorTest {
         )
         verify(exactly = 1) { internalDetectorSpy.process(bxT, byT, bzT) }
         assertEquals(2, detector.numberOfProcessedMeasurements)
-        assertEquals(MagnetometerIntervalDetector.Status.INITIALIZING, detector.status)
+        assertEquals(IntervalDetector.Status.INITIALIZING, detector.status)
 
-        val initialTimestamp2: Long? = detector.getPrivateProperty("initialTimestamp")
+        val initialTimestamp2: Long? =
+            getPrivateProperty(IntervalDetector::class, detector, "initialTimestamp")
         requireNotNull(initialTimestamp2)
         assertEquals(timestamp1, initialTimestamp2)
     }
@@ -3121,7 +3144,9 @@ class MagnetometerIntervalDetectorTest {
     @Test
     fun onMeasurement_whenInitializingAndListener_notifies() {
         val initializationStartedListener =
-            mockk<MagnetometerIntervalDetector.OnInitializationStartedListener>(relaxUnitFun = true)
+            mockk<IntervalDetector.OnInitializationStartedListener<MagnetometerIntervalDetector>>(
+                relaxUnitFun = true
+            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(
             context,
@@ -3134,22 +3159,28 @@ class MagnetometerIntervalDetectorTest {
         val internalDetectorSpy = spyk(internalDetector)
         every { internalDetectorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZING)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
-        detector.setPrivateProperty("numberOfProcessedMeasurements", 1)
+        setPrivateProperty(IntervalDetector::class, detector, "numberOfProcessedMeasurements", 1)
         val timestamp1 = SystemClock.elapsedRealtimeNanos()
-        detector.setPrivateProperty("initialTimestamp", timestamp1)
+        setPrivateProperty(IntervalDetector::class, detector, "initialTimestamp", timestamp1)
 
         val timeIntervalEstimator: TimeIntervalEstimator? =
-            detector.getPrivateProperty("timeIntervalEstimator")
+            getPrivateProperty(IntervalDetector::class, detector, "timeIntervalEstimator")
         requireNotNull(timeIntervalEstimator)
         val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-        detector.setPrivateProperty("timeIntervalEstimator", timeIntervalEstimatorSpy)
+        setPrivateProperty(
+            IntervalDetector::class,
+            detector,
+            "timeIntervalEstimator",
+            timeIntervalEstimatorSpy
+        )
 
         // check initial values
-        val initialTimestamp1: Long? = detector.getPrivateProperty("initialTimestamp")
+        val initialTimestamp1: Long? =
+            getPrivateProperty(IntervalDetector::class, detector, "initialTimestamp")
         requireNotNull(initialTimestamp1)
         assertEquals(timestamp1, initialTimestamp1)
 
-        assertEquals(MagnetometerIntervalDetector.Status.INITIALIZING, detector.status)
+        assertEquals(IntervalDetector.Status.INITIALIZING, detector.status)
         assertEquals(1, detector.numberOfProcessedMeasurements)
 
         // process measurement
@@ -3185,9 +3216,10 @@ class MagnetometerIntervalDetectorTest {
         )
         verify(exactly = 1) { internalDetectorSpy.process(bxT, byT, bzT) }
         assertEquals(2, detector.numberOfProcessedMeasurements)
-        assertEquals(MagnetometerIntervalDetector.Status.INITIALIZING, detector.status)
+        assertEquals(IntervalDetector.Status.INITIALIZING, detector.status)
 
-        val initialTimestamp2: Long? = detector.getPrivateProperty("initialTimestamp")
+        val initialTimestamp2: Long? =
+            getPrivateProperty(IntervalDetector::class, detector, "initialTimestamp")
         requireNotNull(initialTimestamp2)
         assertEquals(timestamp1, initialTimestamp2)
 
@@ -3207,11 +3239,16 @@ class MagnetometerIntervalDetectorTest {
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         val timeIntervalEstimator: TimeIntervalEstimator? =
-            detector.getPrivateProperty("timeIntervalEstimator")
+            getPrivateProperty(IntervalDetector::class, detector, "timeIntervalEstimator")
         requireNotNull(timeIntervalEstimator)
         val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
         every { timeIntervalEstimatorSpy.averageTimeInterval }.returns(2.0 * TIME_INTERVAL_SECONDS)
-        detector.setPrivateProperty("timeIntervalEstimator", timeIntervalEstimatorSpy)
+        setPrivateProperty(
+            IntervalDetector::class,
+            detector,
+            "timeIntervalEstimator",
+            timeIntervalEstimatorSpy
+        )
 
         // check initial values
         assertEquals(
@@ -3219,7 +3256,8 @@ class MagnetometerIntervalDetectorTest {
             internalDetector.timeInterval,
             0.0
         )
-        val initialized1: Boolean? = detector.getPrivateProperty("initialized")
+        val initialized1: Boolean? =
+            getPrivateProperty(IntervalDetector::class, detector, "initialized")
         requireNotNull(initialized1)
         assertFalse(initialized1)
         assertNull(detector.averageTimeInterval)
@@ -3240,7 +3278,8 @@ class MagnetometerIntervalDetectorTest {
 
         // check
         assertEquals(2.0 * TIME_INTERVAL_SECONDS, internalDetectorSpy.timeInterval, 0.0)
-        val initialized2: Boolean? = detector.getPrivateProperty("initialized")
+        val initialized2: Boolean? =
+            getPrivateProperty(IntervalDetector::class, detector, "initialized")
         requireNotNull(initialized2)
         assertTrue(initialized2)
         assertEquals(2.0 * TIME_INTERVAL_SECONDS, detector.averageTimeInterval)
@@ -3261,7 +3300,7 @@ class MagnetometerIntervalDetectorTest {
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         // check initial status
-        assertEquals(MagnetometerIntervalDetector.Status.IDLE, detector.status)
+        assertEquals(IntervalDetector.Status.IDLE, detector.status)
         assertEquals(0, detector.numberOfProcessedMeasurements)
 
         // process measurement
@@ -3312,70 +3351,78 @@ class MagnetometerIntervalDetectorTest {
         val detector = MagnetometerIntervalDetector(context)
 
         // check default value
-        val unreliable1: Boolean? = detector.getPrivateProperty("unreliable")
+        val unreliable1: Boolean? =
+            getPrivateProperty(IntervalDetector::class, detector, "unreliable")
         requireNotNull(unreliable1)
         assertFalse(unreliable1)
 
         val accuracyChangedListener: SensorCollector.OnAccuracyChangedListener? =
-            detector.getPrivateProperty("internalAccuracyChangedListener")
+            getPrivateProperty(IntervalDetector::class, detector, "internalAccuracyChangedListener")
         requireNotNull(accuracyChangedListener)
 
         accuracyChangedListener.onAccuracyChanged(SensorAccuracy.UNRELIABLE)
 
         // check
-        val unreliable2: Boolean? = detector.getPrivateProperty("unreliable")
+        val unreliable2: Boolean? =
+            getPrivateProperty(IntervalDetector::class, detector, "unreliable")
         requireNotNull(unreliable2)
         assertTrue(unreliable2)
     }
 
     @Test
     fun onAccuracyChanged_whenUnreliableAndListener_setsResultAsUnreliableAndNotifies() {
-        val errorListener = mockk<MagnetometerIntervalDetector.OnErrorListener>(relaxUnitFun = true)
+        val errorListener =
+            mockk<IntervalDetector.OnErrorListener<MagnetometerIntervalDetector>>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context, errorListener = errorListener)
 
         // check default value
-        val unreliable1: Boolean? = detector.getPrivateProperty("unreliable")
+        val unreliable1: Boolean? =
+            getPrivateProperty(IntervalDetector::class, detector, "unreliable")
         requireNotNull(unreliable1)
         assertFalse(unreliable1)
 
         val accuracyChangedListener: SensorCollector.OnAccuracyChangedListener? =
-            detector.getPrivateProperty("internalAccuracyChangedListener")
+            getPrivateProperty(IntervalDetector::class, detector, "internalAccuracyChangedListener")
         requireNotNull(accuracyChangedListener)
 
         accuracyChangedListener.onAccuracyChanged(SensorAccuracy.UNRELIABLE)
 
         // check
-        val unreliable2: Boolean? = detector.getPrivateProperty("unreliable")
+        val unreliable2: Boolean? =
+            getPrivateProperty(IntervalDetector::class, detector, "unreliable")
         requireNotNull(unreliable2)
         assertTrue(unreliable2)
         verify(exactly = 1) {
             errorListener.onError(
                 detector,
-                MagnetometerIntervalDetector.ErrorReason.UNRELIABLE_SENSOR
+                IntervalDetector.ErrorReason.UNRELIABLE_SENSOR
             )
         }
     }
 
     @Test
     fun onAccuracyChanged_whenNotUnreliable_makesNoAction() {
-        val errorListener = mockk<MagnetometerIntervalDetector.OnErrorListener>(relaxUnitFun = true)
+        val errorListener =
+            mockk<IntervalDetector.OnErrorListener<MagnetometerIntervalDetector>>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context, errorListener = errorListener)
 
         // check default value
-        val unreliable1: Boolean? = detector.getPrivateProperty("unreliable")
+        val unreliable1: Boolean? =
+            getPrivateProperty(IntervalDetector::class, detector, "unreliable")
         requireNotNull(unreliable1)
         assertFalse(unreliable1)
 
         val accuracyChangedListener: SensorCollector.OnAccuracyChangedListener? =
-            detector.getPrivateProperty("internalAccuracyChangedListener")
+            getPrivateProperty(IntervalDetector::class, detector, "internalAccuracyChangedListener")
         requireNotNull(accuracyChangedListener)
 
         accuracyChangedListener.onAccuracyChanged(SensorAccuracy.HIGH)
 
         // check
-        val unreliable2: Boolean? = detector.getPrivateProperty("unreliable")
+        val unreliable2: Boolean? =
+            getPrivateProperty(IntervalDetector::class, detector, "unreliable")
         requireNotNull(unreliable2)
         assertFalse(unreliable2)
         verify(exactly = 0) {
@@ -3387,7 +3434,8 @@ class MagnetometerIntervalDetectorTest {
     fun onAccuracyChanged_whenUnreliableListener_notifiesAccuracyChange() {
         val accuracyChangedListener =
             mockk<SensorCollector.OnAccuracyChangedListener>(relaxUnitFun = true)
-        val errorListener = mockk<MagnetometerIntervalDetector.OnErrorListener>(relaxUnitFun = true)
+        val errorListener =
+            mockk<IntervalDetector.OnErrorListener<MagnetometerIntervalDetector>>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(
             context,
@@ -3396,18 +3444,20 @@ class MagnetometerIntervalDetectorTest {
         )
 
         // check default value
-        val unreliable1: Boolean? = detector.getPrivateProperty("unreliable")
+        val unreliable1: Boolean? =
+            getPrivateProperty(IntervalDetector::class, detector, "unreliable")
         requireNotNull(unreliable1)
         assertFalse(unreliable1)
 
         val internalAccuracyChangedListener: SensorCollector.OnAccuracyChangedListener? =
-            detector.getPrivateProperty("internalAccuracyChangedListener")
+            getPrivateProperty(IntervalDetector::class, detector, "internalAccuracyChangedListener")
         requireNotNull(internalAccuracyChangedListener)
 
         internalAccuracyChangedListener.onAccuracyChanged(SensorAccuracy.HIGH)
 
         // check
-        val unreliable2: Boolean? = detector.getPrivateProperty("unreliable")
+        val unreliable2: Boolean? =
+            getPrivateProperty(IntervalDetector::class, detector, "unreliable")
         requireNotNull(unreliable2)
         assertFalse(unreliable2)
         verify(exactly = 0) {
@@ -3421,7 +3471,8 @@ class MagnetometerIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
-        val initialized: Boolean? = detector.getPrivateProperty("initialized")
+        val initialized: Boolean? =
+            getPrivateProperty(IntervalDetector::class, detector, "initialized")
         requireNotNull(initialized)
         assertFalse(initialized)
 
@@ -3443,7 +3494,7 @@ class MagnetometerIntervalDetectorTest {
         every { internalDetectorSpy.baseNoiseLevel }.returns(baseNoiseLevel1)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        detector.setPrivateProperty("initialized", true)
+        setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
 
         val baseNoiseLevel2 = detector.baseNoiseLevel
         requireNotNull(baseNoiseLevel2)
@@ -3451,19 +3502,20 @@ class MagnetometerIntervalDetectorTest {
     }
 
     @Test
-    fun baseNoiseLevelAsMagneticFluxDensity_whenNotInitialized_returnsNull() {
+    fun baseNoiseLevelAsMeasurement_whenNotInitialized_returnsNull() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
-        val initialized: Boolean? = detector.getPrivateProperty("initialized")
+        val initialized: Boolean? =
+            getPrivateProperty(IntervalDetector::class, detector, "initialized")
         requireNotNull(initialized)
         assertFalse(initialized)
 
-        assertNull(detector.baseNoiseLevelAsMagneticFluxDensity)
+        assertNull(detector.baseNoiseLevelAsMeasurement)
     }
 
     @Test
-    fun baseNoiseLevelAsMagneticFluxDensity_whenInitialized_returnsExpectedValue() {
+    fun baseNoiseLevelAsMeasurement_whenInitialized_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
@@ -3478,28 +3530,29 @@ class MagnetometerIntervalDetectorTest {
         every { internalDetectorSpy.baseNoiseLevelAsMeasurement }.returns(baseNoiseLevel1)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        detector.setPrivateProperty("initialized", true)
+        setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
 
-        val baseNoiseLevel2 = detector.baseNoiseLevelAsMagneticFluxDensity
+        val baseNoiseLevel2 = detector.baseNoiseLevelAsMeasurement
         requireNotNull(baseNoiseLevel2)
         assertEquals(baseNoiseLevel1, baseNoiseLevel2)
     }
 
     @Test
-    fun getBaseNoiseLevelAsMagneticFluxDensity_whenNotInitialized_returnsFalse() {
+    fun getBaseNoiseLevelAsMeasurement_whenNotInitialized_returnsFalse() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
-        val initialized: Boolean? = detector.getPrivateProperty("initialized")
+        val initialized: Boolean? =
+            getPrivateProperty(IntervalDetector::class, detector, "initialized")
         requireNotNull(initialized)
         assertFalse(initialized)
 
         val result = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        assertFalse(detector.getBaseNoiseLevelAsMagneticFluxDensity(result))
+        assertFalse(detector.getBaseNoiseLevelAsMeasurement(result))
     }
 
     @Test
-    fun getBaseNoiseLevelAsMagneticFluxDensity_whenInitialized_returnsExpectedValue() {
+    fun getBaseNoiseLevelAsMeasurement_whenInitialized_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
@@ -3516,10 +3569,10 @@ class MagnetometerIntervalDetectorTest {
         }
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        detector.setPrivateProperty("initialized", true)
+        setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
 
         val result = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        assertTrue(detector.getBaseNoiseLevelAsMagneticFluxDensity(result))
+        assertTrue(detector.getBaseNoiseLevelAsMeasurement(result))
         assertEquals(value, result.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, result.unit)
     }
@@ -3529,7 +3582,8 @@ class MagnetometerIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
-        val initialized: Boolean? = detector.getPrivateProperty("initialized")
+        val initialized: Boolean? =
+            getPrivateProperty(IntervalDetector::class, detector, "initialized")
         requireNotNull(initialized)
         assertFalse(initialized)
 
@@ -3551,7 +3605,7 @@ class MagnetometerIntervalDetectorTest {
         every { internalDetectorSpy.baseNoiseLevelPsd }.returns(baseNoiseLevelPsd1)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        detector.setPrivateProperty("initialized", true)
+        setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
 
         val baseNoiseLevelPsd2 = detector.baseNoiseLevelPsd
         requireNotNull(baseNoiseLevelPsd2)
@@ -3563,7 +3617,8 @@ class MagnetometerIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
-        val initialized: Boolean? = detector.getPrivateProperty("initialized")
+        val initialized: Boolean? =
+            getPrivateProperty(IntervalDetector::class, detector, "initialized")
         requireNotNull(initialized)
         assertFalse(initialized)
 
@@ -3585,7 +3640,7 @@ class MagnetometerIntervalDetectorTest {
         every { internalDetectorSpy.baseNoiseLevelRootPsd }.returns(baseNoiseLevelRootPsd1)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        detector.setPrivateProperty("initialized", true)
+        setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
 
         val baseNoiseLevelRootPsd2 = detector.baseNoiseLevelRootPsd
         requireNotNull(baseNoiseLevelRootPsd2)
@@ -3597,7 +3652,8 @@ class MagnetometerIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
-        val initialized: Boolean? = detector.getPrivateProperty("initialized")
+        val initialized: Boolean? =
+            getPrivateProperty(IntervalDetector::class, detector, "initialized")
         requireNotNull(initialized)
         assertFalse(initialized)
 
@@ -3619,7 +3675,7 @@ class MagnetometerIntervalDetectorTest {
         every { internalDetectorSpy.threshold }.returns(threshold1)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        detector.setPrivateProperty("initialized", true)
+        setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
 
         val threshold2 = detector.threshold
         requireNotNull(threshold2)
@@ -3627,19 +3683,20 @@ class MagnetometerIntervalDetectorTest {
     }
 
     @Test
-    fun thresholdAsMagneticFluxDensity_whenNotInitialized_returnsNull() {
+    fun thresholdAsMeasurement_whenNotInitialized_returnsNull() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
-        val initialized: Boolean? = detector.getPrivateProperty("initialized")
+        val initialized: Boolean? =
+            getPrivateProperty(IntervalDetector::class, detector, "initialized")
         requireNotNull(initialized)
         assertFalse(initialized)
 
-        assertNull(detector.thresholdAsMagneticFluxDensity)
+        assertNull(detector.thresholdAsMeasurement)
     }
 
     @Test
-    fun thresholdAsMagneticFluxDensity_whenInitialized_returnsExpectedValue() {
+    fun thresholdAsMeasurement_whenInitialized_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
@@ -3654,9 +3711,9 @@ class MagnetometerIntervalDetectorTest {
         every { internalDetectorSpy.thresholdAsMeasurement }.returns(threshold1)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        detector.setPrivateProperty("initialized", true)
+        setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
 
-        val threshold2 = detector.thresholdAsMagneticFluxDensity
+        val threshold2 = detector.thresholdAsMeasurement
         requireNotNull(threshold2)
         assertEquals(threshold1, threshold2)
     }
@@ -3666,7 +3723,8 @@ class MagnetometerIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
-        val initialized: Boolean? = detector.getPrivateProperty("initialized")
+        val initialized: Boolean? =
+            getPrivateProperty(IntervalDetector::class, detector, "initialized")
         requireNotNull(initialized)
         assertFalse(initialized)
 
@@ -3693,7 +3751,7 @@ class MagnetometerIntervalDetectorTest {
         }
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        detector.setPrivateProperty("initialized", true)
+        setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
 
         val result = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
         assertTrue(detector.getThresholdAsMeasurement(result))
@@ -3720,7 +3778,7 @@ class MagnetometerIntervalDetectorTest {
     }
 
     @Test
-    fun accumulatedAvgXAsMagneticFluxDensity_returnsExpectedValue() {
+    fun accumulatedAvgXAsMeasurement_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
@@ -3735,11 +3793,11 @@ class MagnetometerIntervalDetectorTest {
         every { internalDetectorSpy.accumulatedAvgXAsMeasurement }.returns(b)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        assertSame(b, detector.accumulatedAvgXAsMagneticFluxDensity)
+        assertSame(b, detector.accumulatedAvgXAsMeasurement)
     }
 
     @Test
-    fun getAccumulatedAvgXAsMagneticFluxDensity_returnsExpectedValue() {
+    fun getAccumulatedAvgXAsMeasurement_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
@@ -3758,7 +3816,7 @@ class MagnetometerIntervalDetectorTest {
         }
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        detector.getAccumulatedAvgXAsMagneticFluxDensity(result)
+        detector.getAccumulatedAvgXAsMeasurement(result)
 
         assertEquals(value, result.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, result.unit)
@@ -3783,7 +3841,7 @@ class MagnetometerIntervalDetectorTest {
     }
 
     @Test
-    fun accumulatedAvgYAsMagneticFluxDensity_returnsExpectedValue() {
+    fun accumulatedAvgYAsMeasurement_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
@@ -3798,11 +3856,11 @@ class MagnetometerIntervalDetectorTest {
         every { internalDetectorSpy.accumulatedAvgYAsMeasurement }.returns(b)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        assertSame(b, detector.accumulatedAvgYAsMagneticFluxDensity)
+        assertSame(b, detector.accumulatedAvgYAsMeasurement)
     }
 
     @Test
-    fun getAccumulatedAvgYAsMagneticFluxDensity_returnsExpectedValue() {
+    fun getAccumulatedAvgYAsMeasurement_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
@@ -3821,7 +3879,7 @@ class MagnetometerIntervalDetectorTest {
         }
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        detector.getAccumulatedAvgYAsMagneticFluxDensity(result)
+        detector.getAccumulatedAvgYAsMeasurement(result)
 
         assertEquals(value, result.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, result.unit)
@@ -3846,7 +3904,7 @@ class MagnetometerIntervalDetectorTest {
     }
 
     @Test
-    fun accumulatedAvgZAsMagneticFluxDensity_returnsExpectedValue() {
+    fun accumulatedAvgZAsMeasurement_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
@@ -3861,11 +3919,11 @@ class MagnetometerIntervalDetectorTest {
         every { internalDetectorSpy.accumulatedAvgZAsMeasurement }.returns(b)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        assertSame(b, detector.accumulatedAvgZAsMagneticFluxDensity)
+        assertSame(b, detector.accumulatedAvgZAsMeasurement)
     }
 
     @Test
-    fun getAccumulatedAvgZAsMagneticFluxDensity_returnsExpectedValue() {
+    fun getAccumulatedAvgZAsMeasurement_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
@@ -3884,7 +3942,7 @@ class MagnetometerIntervalDetectorTest {
         }
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        detector.getAccumulatedAvgZAsMagneticFluxDensity(result)
+        detector.getAccumulatedAvgZAsMeasurement(result)
 
         assertEquals(value, result.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, result.unit)
@@ -3959,7 +4017,7 @@ class MagnetometerIntervalDetectorTest {
     }
 
     @Test
-    fun accumulatedStdXAsMagneticFluxDensity_returnsExpectedValue() {
+    fun accumulatedStdXAsMeasurement_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
@@ -3974,11 +4032,11 @@ class MagnetometerIntervalDetectorTest {
         every { internalDetectorSpy.accumulatedStdXAsMeasurement }.returns(b)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        assertSame(b, detector.accumulatedStdXAsMagneticFluxDensity)
+        assertSame(b, detector.accumulatedStdXAsMeasurement)
     }
 
     @Test
-    fun getAccumulatedStdXAsMagneticFluxDensity_returnsExpectedValue() {
+    fun getAccumulatedStdXAsMeasurement_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
@@ -3997,7 +4055,7 @@ class MagnetometerIntervalDetectorTest {
         }
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        detector.getAccumulatedStdXAsMagneticFluxDensity(result)
+        detector.getAccumulatedStdXAsMeasurement(result)
 
         assertEquals(value, result.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, result.unit)
@@ -4022,7 +4080,7 @@ class MagnetometerIntervalDetectorTest {
     }
 
     @Test
-    fun accumulatedStdYAsMagneticFluxDensity_returnsExpectedValue() {
+    fun accumulatedStdYAsMeasurement_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
@@ -4037,11 +4095,11 @@ class MagnetometerIntervalDetectorTest {
         every { internalDetectorSpy.accumulatedStdYAsMeasurement }.returns(b)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        assertSame(b, detector.accumulatedStdYAsMagneticFluxDensity)
+        assertSame(b, detector.accumulatedStdYAsMeasurement)
     }
 
     @Test
-    fun getAccumulatedStdYAsMagneticFluxDensity_returnsExpectedValue() {
+    fun getAccumulatedStdYAsMeasurement_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
@@ -4060,7 +4118,7 @@ class MagnetometerIntervalDetectorTest {
         }
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        detector.getAccumulatedStdYAsMagneticFluxDensity(result)
+        detector.getAccumulatedStdYAsMeasurement(result)
 
         assertEquals(value, result.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, result.unit)
@@ -4085,7 +4143,7 @@ class MagnetometerIntervalDetectorTest {
     }
 
     @Test
-    fun accumulatedStdZAsMagneticFluxDensity_returnsExpectedValue() {
+    fun accumulatedStdZAsMeasurement_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
@@ -4100,11 +4158,11 @@ class MagnetometerIntervalDetectorTest {
         every { internalDetectorSpy.accumulatedStdZAsMeasurement }.returns(b)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        assertSame(b, detector.accumulatedStdZAsMagneticFluxDensity)
+        assertSame(b, detector.accumulatedStdZAsMeasurement)
     }
 
     @Test
-    fun getAccumulatedStdZAsMagneticFluxDensity_returnsExpectedValue() {
+    fun getAccumulatedStdZAsMeasurement_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
@@ -4123,7 +4181,7 @@ class MagnetometerIntervalDetectorTest {
         }
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        detector.getAccumulatedStdZAsMagneticFluxDensity(result)
+        detector.getAccumulatedStdZAsMeasurement(result)
 
         assertEquals(value, result.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, result.unit)
@@ -4198,7 +4256,7 @@ class MagnetometerIntervalDetectorTest {
     }
 
     @Test
-    fun instantaneousAvgXAsMagneticFluxDensity_returnsExpectedValue() {
+    fun instantaneousAvgXAsMeasurement_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
@@ -4213,11 +4271,11 @@ class MagnetometerIntervalDetectorTest {
         every { internalDetectorSpy.instantaneousAvgXAsMeasurement }.returns(b)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        assertSame(b, detector.instantaneousAvgXAsMagneticFluxDensity)
+        assertSame(b, detector.instantaneousAvgXAsMeasurement)
     }
 
     @Test
-    fun getInstantaneousAvgXAsMagneticFluxDensity_returnsExpectedValue() {
+    fun getInstantaneousAvgXAsMeasurement_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
@@ -4236,7 +4294,7 @@ class MagnetometerIntervalDetectorTest {
         }
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        detector.getInstantaneousAvgXAsMagneticFluxDensity(result)
+        detector.getInstantaneousAvgXAsMeasurement(result)
 
         assertEquals(value, result.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, result.unit)
@@ -4261,7 +4319,7 @@ class MagnetometerIntervalDetectorTest {
     }
 
     @Test
-    fun instantaneousAvgYAsMagneticFluxDensity_returnsExpectedValue() {
+    fun instantaneousAvgYAsMeasurement_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
@@ -4276,11 +4334,11 @@ class MagnetometerIntervalDetectorTest {
         every { internalDetectorSpy.instantaneousAvgYAsMeasurement }.returns(b)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        assertSame(b, detector.instantaneousAvgYAsMagneticFluxDensity)
+        assertSame(b, detector.instantaneousAvgYAsMeasurement)
     }
 
     @Test
-    fun getInstantaneousAvgYAsMagneticFluxDensity_returnsExpectedValue() {
+    fun getInstantaneousAvgYAsMeasurement_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
@@ -4299,7 +4357,7 @@ class MagnetometerIntervalDetectorTest {
         }
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        detector.getInstantaneousAvgYAsMagneticFluxDensity(result)
+        detector.getInstantaneousAvgYAsMeasurement(result)
 
         assertEquals(value, result.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, result.unit)
@@ -4324,7 +4382,7 @@ class MagnetometerIntervalDetectorTest {
     }
 
     @Test
-    fun instantaneousAvgZAsMagneticFluxDensity_returnsExpectedValue() {
+    fun instantaneousAvgZAsMeasurement_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
@@ -4339,11 +4397,11 @@ class MagnetometerIntervalDetectorTest {
         every { internalDetectorSpy.instantaneousAvgZAsMeasurement }.returns(b)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        assertSame(b, detector.instantaneousAvgZAsMagneticFluxDensity)
+        assertSame(b, detector.instantaneousAvgZAsMeasurement)
     }
 
     @Test
-    fun getInstantaneousAvgZAsMagneticFluxDensity_returnsExpectedValue() {
+    fun getInstantaneousAvgZAsMeasurement_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
@@ -4362,7 +4420,7 @@ class MagnetometerIntervalDetectorTest {
         }
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        detector.getInstantaneousAvgZAsMagneticFluxDensity(result)
+        detector.getInstantaneousAvgZAsMeasurement(result)
 
         assertEquals(value, result.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, result.unit)
@@ -4437,7 +4495,7 @@ class MagnetometerIntervalDetectorTest {
     }
 
     @Test
-    fun instantaneousStdXAsMagneticFluxDensity_returnsExpectedValue() {
+    fun instantaneousStdXAsMeasurement_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
@@ -4452,11 +4510,11 @@ class MagnetometerIntervalDetectorTest {
         every { internalDetectorSpy.instantaneousStdXAsMeasurement }.returns(b)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        assertSame(b, detector.instantaneousStdXAsMagneticFluxDensity)
+        assertSame(b, detector.instantaneousStdXAsMeasurement)
     }
 
     @Test
-    fun getInstantaneousStdXAsMagneticFluxDensity_returnsExpectedValue() {
+    fun getInstantaneousStdXAsMeasurement_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
@@ -4475,7 +4533,7 @@ class MagnetometerIntervalDetectorTest {
         }
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        detector.getInstantaneousStdXAsMagneticFluxDensity(result)
+        detector.getInstantaneousStdXAsMeasurement(result)
 
         assertEquals(value, result.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, result.unit)
@@ -4500,7 +4558,7 @@ class MagnetometerIntervalDetectorTest {
     }
 
     @Test
-    fun instantaneousStdYAsMagneticFluxDensity_returnsExpectedValue() {
+    fun instantaneousStdYAsMeasurement_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
@@ -4515,11 +4573,11 @@ class MagnetometerIntervalDetectorTest {
         every { internalDetectorSpy.instantaneousStdYAsMeasurement }.returns(b)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        assertSame(b, detector.instantaneousStdYAsMagneticFluxDensity)
+        assertSame(b, detector.instantaneousStdYAsMeasurement)
     }
 
     @Test
-    fun getInstantaneousStdYAsMagneticFluxDensity_returnsExpectedValue() {
+    fun getInstantaneousStdYAsMeasurement_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
@@ -4538,7 +4596,7 @@ class MagnetometerIntervalDetectorTest {
         }
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        detector.getInstantaneousStdYAsMagneticFluxDensity(result)
+        detector.getInstantaneousStdYAsMeasurement(result)
 
         assertEquals(value, result.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, result.unit)
@@ -4561,7 +4619,7 @@ class MagnetometerIntervalDetectorTest {
     }
 
     @Test
-    fun instantaneousStdZAsMagneticFluxDensity_returnsExpectedValue() {
+    fun instantaneousStdZAsMeasurement_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
@@ -4576,11 +4634,11 @@ class MagnetometerIntervalDetectorTest {
         every { internalDetectorSpy.instantaneousStdZAsMeasurement }.returns(b)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        assertSame(b, detector.instantaneousStdZAsMagneticFluxDensity)
+        assertSame(b, detector.instantaneousStdZAsMeasurement)
     }
 
     @Test
-    fun getInstantaneousStdZAsMagneticFluxDensity_returnsExpectedValue() {
+    fun getInstantaneousStdZAsMeasurement_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
@@ -4599,7 +4657,7 @@ class MagnetometerIntervalDetectorTest {
         }
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        detector.getInstantaneousStdZAsMagneticFluxDensity(result)
+        detector.getInstantaneousStdZAsMeasurement(result)
 
         assertEquals(value, result.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, result.unit)
@@ -4660,7 +4718,8 @@ class MagnetometerIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
-        val initialized: Boolean? = detector.getPrivateProperty("initialized")
+        val initialized: Boolean? =
+            getPrivateProperty(IntervalDetector::class, detector, "initialized")
         requireNotNull(initialized)
         assertFalse(initialized)
 
@@ -4673,16 +4732,21 @@ class MagnetometerIntervalDetectorTest {
         val detector = MagnetometerIntervalDetector(context)
 
         val timeIntervalEstimator: TimeIntervalEstimator? =
-            detector.getPrivateProperty("timeIntervalEstimator")
+            getPrivateProperty(IntervalDetector::class, detector, "timeIntervalEstimator")
         requireNotNull(timeIntervalEstimator)
 
         val randomizer = UniformRandomizer()
         val averageTimeInterval1 = randomizer.nextDouble()
         val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
         every { timeIntervalEstimatorSpy.averageTimeInterval }.returns(averageTimeInterval1)
-        detector.setPrivateProperty("timeIntervalEstimator", timeIntervalEstimatorSpy)
+        setPrivateProperty(
+            IntervalDetector::class,
+            detector,
+            "timeIntervalEstimator",
+            timeIntervalEstimatorSpy
+        )
 
-        detector.setPrivateProperty("initialized", true)
+        setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
 
         val averageTimeInterval2 = detector.averageTimeInterval
         requireNotNull(averageTimeInterval2)
@@ -4694,7 +4758,8 @@ class MagnetometerIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
-        val initialized: Boolean? = detector.getPrivateProperty("initialized")
+        val initialized: Boolean? =
+            getPrivateProperty(IntervalDetector::class, detector, "initialized")
         requireNotNull(initialized)
         assertFalse(initialized)
 
@@ -4707,7 +4772,7 @@ class MagnetometerIntervalDetectorTest {
         val detector = MagnetometerIntervalDetector(context)
 
         val timeIntervalEstimator: TimeIntervalEstimator? =
-            detector.getPrivateProperty("timeIntervalEstimator")
+            getPrivateProperty(IntervalDetector::class, detector, "timeIntervalEstimator")
         requireNotNull(timeIntervalEstimator)
 
         val randomizer = UniformRandomizer()
@@ -4715,9 +4780,14 @@ class MagnetometerIntervalDetectorTest {
         val averageTimeInterval1 = Time(value, TimeUnit.SECOND)
         val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
         every { timeIntervalEstimatorSpy.averageTimeIntervalAsTime }.returns(averageTimeInterval1)
-        detector.setPrivateProperty("timeIntervalEstimator", timeIntervalEstimatorSpy)
+        setPrivateProperty(
+            IntervalDetector::class,
+            detector,
+            "timeIntervalEstimator",
+            timeIntervalEstimatorSpy
+        )
 
-        detector.setPrivateProperty("initialized", true)
+        setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
 
         val averageTimeInterval2 = detector.averageTimeIntervalAsTime
         requireNotNull(averageTimeInterval2)
@@ -4729,7 +4799,8 @@ class MagnetometerIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
-        val initialized: Boolean? = detector.getPrivateProperty("initialized")
+        val initialized: Boolean? =
+            getPrivateProperty(IntervalDetector::class, detector, "initialized")
         requireNotNull(initialized)
         assertFalse(initialized)
 
@@ -4743,7 +4814,7 @@ class MagnetometerIntervalDetectorTest {
         val detector = MagnetometerIntervalDetector(context)
 
         val timeIntervalEstimator: TimeIntervalEstimator? =
-            detector.getPrivateProperty("timeIntervalEstimator")
+            getPrivateProperty(IntervalDetector::class, detector, "timeIntervalEstimator")
         requireNotNull(timeIntervalEstimator)
 
         val randomizer = UniformRandomizer()
@@ -4754,9 +4825,14 @@ class MagnetometerIntervalDetectorTest {
             result.value = value
             result.unit = TimeUnit.SECOND
         }
-        detector.setPrivateProperty("timeIntervalEstimator", timeIntervalEstimatorSpy)
+        setPrivateProperty(
+            IntervalDetector::class,
+            detector,
+            "timeIntervalEstimator",
+            timeIntervalEstimatorSpy
+        )
 
-        detector.setPrivateProperty("initialized", true)
+        setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
 
         val result = Time(1.0, TimeUnit.NANOSECOND)
         assertTrue(detector.getAverageTimeIntervalAsTime(result))
@@ -4770,7 +4846,8 @@ class MagnetometerIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
-        val initialized: Boolean? = detector.getPrivateProperty("initialized")
+        val initialized: Boolean? =
+            getPrivateProperty(IntervalDetector::class, detector, "initialized")
         requireNotNull(initialized)
         assertFalse(initialized)
 
@@ -4783,16 +4860,21 @@ class MagnetometerIntervalDetectorTest {
         val detector = MagnetometerIntervalDetector(context)
 
         val timeIntervalEstimator: TimeIntervalEstimator? =
-            detector.getPrivateProperty("timeIntervalEstimator")
+            getPrivateProperty(IntervalDetector::class, detector, "timeIntervalEstimator")
         requireNotNull(timeIntervalEstimator)
 
         val randomizer = UniformRandomizer()
         val timeIntervalVariance1 = randomizer.nextDouble()
         val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
         every { timeIntervalEstimatorSpy.timeIntervalVariance }.returns(timeIntervalVariance1)
-        detector.setPrivateProperty("timeIntervalEstimator", timeIntervalEstimatorSpy)
+        setPrivateProperty(
+            IntervalDetector::class,
+            detector,
+            "timeIntervalEstimator",
+            timeIntervalEstimatorSpy
+        )
 
-        detector.setPrivateProperty("initialized", true)
+        setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
 
         val timeIntervalVariance2 = detector.timeIntervalVariance
         requireNotNull(timeIntervalVariance2)
@@ -4804,7 +4886,8 @@ class MagnetometerIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
-        val initialized: Boolean? = detector.getPrivateProperty("initialized")
+        val initialized: Boolean? =
+            getPrivateProperty(IntervalDetector::class, detector, "initialized")
         requireNotNull(initialized)
         assertFalse(initialized)
 
@@ -4817,7 +4900,7 @@ class MagnetometerIntervalDetectorTest {
         val detector = MagnetometerIntervalDetector(context)
 
         val timeIntervalEstimator: TimeIntervalEstimator? =
-            detector.getPrivateProperty("timeIntervalEstimator")
+            getPrivateProperty(IntervalDetector::class, detector, "timeIntervalEstimator")
         requireNotNull(timeIntervalEstimator)
 
         val randomizer = UniformRandomizer()
@@ -4826,9 +4909,14 @@ class MagnetometerIntervalDetectorTest {
         every { timeIntervalEstimatorSpy.timeIntervalStandardDeviation }.returns(
             timeIntervalStandardDeviation1
         )
-        detector.setPrivateProperty("timeIntervalEstimator", timeIntervalEstimatorSpy)
+        setPrivateProperty(
+            IntervalDetector::class,
+            detector,
+            "timeIntervalEstimator",
+            timeIntervalEstimatorSpy
+        )
 
-        detector.setPrivateProperty("initialized", true)
+        setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
 
         val timeIntervalStandardDeviation2 = detector.timeIntervalStandardDeviation
         requireNotNull(timeIntervalStandardDeviation2)
@@ -4840,7 +4928,8 @@ class MagnetometerIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
-        val initialized: Boolean? = detector.getPrivateProperty("initialized")
+        val initialized: Boolean? =
+            getPrivateProperty(IntervalDetector::class, detector, "initialized")
         requireNotNull(initialized)
         assertFalse(initialized)
 
@@ -4853,7 +4942,7 @@ class MagnetometerIntervalDetectorTest {
         val detector = MagnetometerIntervalDetector(context)
 
         val timeIntervalEstimator: TimeIntervalEstimator? =
-            detector.getPrivateProperty("timeIntervalEstimator")
+            getPrivateProperty(IntervalDetector::class, detector, "timeIntervalEstimator")
         requireNotNull(timeIntervalEstimator)
 
         val randomizer = UniformRandomizer()
@@ -4863,9 +4952,14 @@ class MagnetometerIntervalDetectorTest {
         every { timeIntervalEstimatorSpy.timeIntervalStandardDeviationAsTime }.returns(
             timeIntervalStd1
         )
-        detector.setPrivateProperty("timeIntervalEstimator", timeIntervalEstimatorSpy)
+        setPrivateProperty(
+            IntervalDetector::class,
+            detector,
+            "timeIntervalEstimator",
+            timeIntervalEstimatorSpy
+        )
 
-        detector.setPrivateProperty("initialized", true)
+        setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
 
         val timeIntervalStd2 = detector.timeIntervalStandardDeviationAsTime
         requireNotNull(timeIntervalStd2)
@@ -4877,7 +4971,8 @@ class MagnetometerIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
-        val initialized: Boolean? = detector.getPrivateProperty("initialized")
+        val initialized: Boolean? =
+            getPrivateProperty(IntervalDetector::class, detector, "initialized")
         requireNotNull(initialized)
         assertFalse(initialized)
 
@@ -4891,7 +4986,7 @@ class MagnetometerIntervalDetectorTest {
         val detector = MagnetometerIntervalDetector(context)
 
         val timeIntervalEstimator: TimeIntervalEstimator? =
-            detector.getPrivateProperty("timeIntervalEstimator")
+            getPrivateProperty(IntervalDetector::class, detector, "timeIntervalEstimator")
         requireNotNull(timeIntervalEstimator)
 
         val randomizer = UniformRandomizer()
@@ -4902,9 +4997,14 @@ class MagnetometerIntervalDetectorTest {
             result.value = value
             result.unit = TimeUnit.SECOND
         }
-        detector.setPrivateProperty("timeIntervalEstimator", timeIntervalEstimatorSpy)
+        setPrivateProperty(
+            IntervalDetector::class,
+            detector,
+            "timeIntervalEstimator",
+            timeIntervalEstimatorSpy
+        )
 
-        detector.setPrivateProperty("initialized", true)
+        setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
 
         val result = Time(1.0, TimeUnit.NANOSECOND)
         assertTrue(detector.getTimeIntervalStandardDeviationAsTime(result))
@@ -4918,9 +5018,9 @@ class MagnetometerIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
-        detector.setPrivateProperty("unreliable", true)
+        setPrivateProperty(IntervalDetector::class, detector, "unreliable", true)
 
-        assertEquals(MagnetometerIntervalDetector.Status.FAILED, detector.status)
+        assertEquals(IntervalDetector.Status.FAILED, detector.status)
     }
 
     @Test
@@ -4928,7 +5028,8 @@ class MagnetometerIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
-        val unreliable: Boolean? = detector.getPrivateProperty("unreliable")
+        val unreliable: Boolean? =
+            getPrivateProperty(IntervalDetector::class, detector, "unreliable")
         requireNotNull(unreliable)
         assertFalse(unreliable)
 
@@ -4939,7 +5040,7 @@ class MagnetometerIntervalDetectorTest {
         every { internalDetectorSpy.status }.returns(TriadStaticIntervalDetector.Status.IDLE)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        assertEquals(MagnetometerIntervalDetector.Status.IDLE, detector.status)
+        assertEquals(IntervalDetector.Status.IDLE, detector.status)
     }
 
     @Test
@@ -4947,7 +5048,8 @@ class MagnetometerIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
-        val unreliable: Boolean? = detector.getPrivateProperty("unreliable")
+        val unreliable: Boolean? =
+            getPrivateProperty(IntervalDetector::class, detector, "unreliable")
         requireNotNull(unreliable)
 
         val internalDetector: MagneticFluxDensityTriadStaticIntervalDetector? =
@@ -4957,7 +5059,7 @@ class MagnetometerIntervalDetectorTest {
         every { internalDetectorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZING)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        assertEquals(MagnetometerIntervalDetector.Status.INITIALIZING, detector.status)
+        assertEquals(IntervalDetector.Status.INITIALIZING, detector.status)
     }
 
     @Test
@@ -4965,7 +5067,8 @@ class MagnetometerIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
-        val unreliable: Boolean? = detector.getPrivateProperty("unreliable")
+        val unreliable: Boolean? =
+            getPrivateProperty(IntervalDetector::class, detector, "unreliable")
         requireNotNull(unreliable)
         assertFalse(unreliable)
 
@@ -4977,7 +5080,7 @@ class MagnetometerIntervalDetectorTest {
             .returns(TriadStaticIntervalDetector.Status.INITIALIZATION_COMPLETED)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        assertEquals(MagnetometerIntervalDetector.Status.INITIALIZATION_COMPLETED, detector.status)
+        assertEquals(IntervalDetector.Status.INITIALIZATION_COMPLETED, detector.status)
     }
 
     @Test
@@ -4985,7 +5088,8 @@ class MagnetometerIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
-        val unreliable: Boolean? = detector.getPrivateProperty("unreliable")
+        val unreliable: Boolean? =
+            getPrivateProperty(IntervalDetector::class, detector, "unreliable")
         requireNotNull(unreliable)
         assertFalse(unreliable)
 
@@ -4997,7 +5101,7 @@ class MagnetometerIntervalDetectorTest {
             .returns(TriadStaticIntervalDetector.Status.STATIC_INTERVAL)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        assertEquals(MagnetometerIntervalDetector.Status.STATIC_INTERVAL, detector.status)
+        assertEquals(IntervalDetector.Status.STATIC_INTERVAL, detector.status)
     }
 
     @Test
@@ -5005,7 +5109,8 @@ class MagnetometerIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
-        val unreliable: Boolean? = detector.getPrivateProperty("unreliable")
+        val unreliable: Boolean? =
+            getPrivateProperty(IntervalDetector::class, detector, "unreliable")
         requireNotNull(unreliable)
         assertFalse(unreliable)
 
@@ -5017,7 +5122,7 @@ class MagnetometerIntervalDetectorTest {
             .returns(TriadStaticIntervalDetector.Status.DYNAMIC_INTERVAL)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        assertEquals(MagnetometerIntervalDetector.Status.DYNAMIC_INTERVAL, detector.status)
+        assertEquals(IntervalDetector.Status.DYNAMIC_INTERVAL, detector.status)
     }
 
     @Test
@@ -5025,7 +5130,8 @@ class MagnetometerIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
-        val unreliable: Boolean? = detector.getPrivateProperty("unreliable")
+        val unreliable: Boolean? =
+            getPrivateProperty(IntervalDetector::class, detector, "unreliable")
         requireNotNull(unreliable)
         assertFalse(unreliable)
 
@@ -5036,7 +5142,7 @@ class MagnetometerIntervalDetectorTest {
         every { internalDetectorSpy.status }.returns(TriadStaticIntervalDetector.Status.FAILED)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        assertEquals(MagnetometerIntervalDetector.Status.FAILED, detector.status)
+        assertEquals(IntervalDetector.Status.FAILED, detector.status)
     }
 
     @Test
@@ -5044,7 +5150,8 @@ class MagnetometerIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
-        val unreliable: Boolean? = detector.getPrivateProperty("unreliable")
+        val unreliable: Boolean? =
+            getPrivateProperty(IntervalDetector::class, detector, "unreliable")
         requireNotNull(unreliable)
         assertFalse(unreliable)
 
@@ -5055,7 +5162,7 @@ class MagnetometerIntervalDetectorTest {
         every { internalDetectorSpy.status }.returns(null)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        assertEquals(MagnetometerIntervalDetector.Status.IDLE, detector.status)
+        assertEquals(IntervalDetector.Status.IDLE, detector.status)
     }
 
     @Test
@@ -5076,7 +5183,9 @@ class MagnetometerIntervalDetectorTest {
     @Test
     fun onInitializationStarted_whenListener_notifies() {
         val initializationStartedListener =
-            mockk<MagnetometerIntervalDetector.OnInitializationStartedListener>(relaxUnitFun = true)
+            mockk<IntervalDetector.OnInitializationStartedListener<MagnetometerIntervalDetector>>(
+                relaxUnitFun = true
+            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val intervalDetector = MagnetometerIntervalDetector(
             context,
@@ -5115,7 +5224,9 @@ class MagnetometerIntervalDetectorTest {
     @Test
     fun onInitializationCompleted_whenListener_notifies() {
         val initializationCompletedListener =
-            mockk<MagnetometerIntervalDetector.OnInitializationCompletedListener>(relaxUnitFun = true)
+            mockk<IntervalDetector.OnInitializationCompletedListener<MagnetometerIntervalDetector>>(
+                relaxUnitFun = true
+            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val intervalDetector = MagnetometerIntervalDetector(
             context,
@@ -5175,7 +5286,8 @@ class MagnetometerIntervalDetectorTest {
 
     @Test
     fun onError_whenListener_stopsAndNotifies() {
-        val errorListener = mockk<MagnetometerIntervalDetector.OnErrorListener>(relaxUnitFun = true)
+        val errorListener =
+            mockk<IntervalDetector.OnErrorListener<MagnetometerIntervalDetector>>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val intervalDetector = MagnetometerIntervalDetector(context, errorListener = errorListener)
 
@@ -5207,7 +5319,7 @@ class MagnetometerIntervalDetectorTest {
         verify(exactly = 1) {
             errorListener.onError(
                 intervalDetector,
-                MagnetometerIntervalDetector.ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
+                IntervalDetector.ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
             )
         }
     }
@@ -5245,7 +5357,9 @@ class MagnetometerIntervalDetectorTest {
     @Test
     fun onStaticIntervalDetected_whenListener_notifies() {
         val staticIntervalDetectedListener =
-            mockk<MagnetometerIntervalDetector.OnStaticIntervalDetectedListener>(relaxUnitFun = true)
+            mockk<IntervalDetector.OnStaticIntervalDetectedListener<MagnetometerIntervalDetector>>(
+                relaxUnitFun = true
+            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val intervalDetector = MagnetometerIntervalDetector(
             context,
@@ -5335,7 +5449,9 @@ class MagnetometerIntervalDetectorTest {
     @Test
     fun onDynamicIntervalDetected_whenListener_notifies() {
         val dynamicIntervalDetectedListener =
-            mockk<MagnetometerIntervalDetector.OnDynamicIntervalDetectedListener>(relaxUnitFun = true)
+            mockk<IntervalDetector.OnDynamicIntervalDetectedListener<MagnetometerIntervalDetector>>(
+                relaxUnitFun = true
+            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val intervalDetector = MagnetometerIntervalDetector(
             context,
@@ -5415,7 +5531,8 @@ class MagnetometerIntervalDetectorTest {
 
     @Test
     fun onReset_whenListener_notifies() {
-        val resetListener = mockk<MagnetometerIntervalDetector.OnResetListener>(relaxUnitFun = true)
+        val resetListener =
+            mockk<IntervalDetector.OnResetListener<MagnetometerIntervalDetector>>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val intervalDetector = MagnetometerIntervalDetector(context, resetListener = resetListener)
 
