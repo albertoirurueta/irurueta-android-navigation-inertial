@@ -625,6 +625,8 @@ class StaticIntervalAccelerometerCalibrator private constructor(
      * When true, estimated biases are exactly equal to initial biases, otherwise
      * initial biases are just an initial guess and estimated ones might differ after
      * solving calibration.
+     *
+     * @throws IllegalStateException if calibrator is already running.
      */
     var isGroundTruthInitialBias: Boolean = false
         @Throws(IllegalStateException::class)
@@ -638,6 +640,8 @@ class StaticIntervalAccelerometerCalibrator private constructor(
      * If location is provided, WGS84 Earth model is used to determine gravity norm
      * at such location, otherwise gravity norm is estimated during initialization by using the
      * gravity sensor of device.
+     *
+     * @throws IllegalStateException if calibrator is already running.
      */
     var location: Location? = null
         @Throws(IllegalStateException::class)
@@ -709,7 +713,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
      * Gets or sets factor to be applied to detected base noise level in order to determine a
      * threshold for static/dynamic period changes. This factor is unit-less.
      *
-     * @throws IllegalArgumentException if provided value is zero or negative
+     * @throws IllegalArgumentException if provided value is zero or negative.
      * @throws IllegalStateException if calibrator is currently running.
      */
     var thresholdFactor
@@ -726,7 +730,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
      * is unit-less.
      *
      * @throws IllegalArgumentException if provided value is zero or negative.
-     * @throws IllegalStateException if calibrator is currently running
+     * @throws IllegalStateException if calibrator is currently running.
      */
     var instantaneousNoiseLevelFactor
         get() = intervalDetector.instantaneousNoiseLevelFactor
@@ -754,7 +758,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
         }
 
     /**
-     * Gets or sts overall absolute threshold to determine whether there has been excessive motion
+     * Gets or sets overall absolute threshold to determine whether there has been excessive motion
      * during the whole initialization phase. Failure will be detected if estimated base noise level
      * exceeds this threshold when initialization completes.
      *
@@ -1821,7 +1825,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
      * When calibrator is started, it begins with an initialization stage where accelerometer noise
      * is estimated while device remains static. If no location is provided, during initialization
      * gravity norm is also estimated.
-     * Once initialization is completed, calibrator determines intervals where device remain static
+     * Once initialization is completed, calibrator determines intervals where device remains static
      * when device has different poses, so that measurements are collected to solve calibration.
      * If [solveCalibrationWhenEnoughMeasurements] is true, calibration is automatically solved
      * once enough measurements are collected, otherwise a call to [calibrate] must be done to solve
@@ -2100,7 +2104,9 @@ class StaticIntervalAccelerometerCalibrator private constructor(
      *
      * @param location current device location.
      * @return an internal accelerometer calibrator.
+     * @throws IllegalStateException if no suitable calibrator can be built.
      */
+    @Throws(IllegalStateException::class)
     private fun buildRobustKnownBiasAndPositionCalibrator(location: Location): RobustKnownBiasAndPositionAccelerometerCalibrator {
         val baseNoiseLevel = this.baseNoiseLevel
         val robustThreshold = this.robustThreshold
@@ -2181,7 +2187,9 @@ class StaticIntervalAccelerometerCalibrator private constructor(
      * Internally build a robust accelerometer calibrator when bias and gravity is known.
      *
      * @return an internal accelerometer calibrator.
+     * @throws IllegalStateException if no suitable calibrator can be built.
      */
+    @Throws(IllegalStateException::class)
     private fun buildRobustKnownBiasAndGravityCalibrator(): RobustKnownBiasAndGravityNormAccelerometerCalibrator {
         val gravityNorm = this.gravityNorm
         checkNotNull(gravityNorm)
@@ -2266,7 +2274,9 @@ class StaticIntervalAccelerometerCalibrator private constructor(
      *
      * @param location current device location.
      * @return an internal accelerometer calibrator.
+     * @throws IllegalStateException if no suitable calibrator can be built.
      */
+    @Throws(IllegalStateException::class)
     private fun buildRobustKnownPositionCalibrator(location: Location): RobustKnownPositionAccelerometerCalibrator {
         val baseNoiseLevel = this.baseNoiseLevel
         val robustThreshold = this.robustThreshold
@@ -2347,7 +2357,9 @@ class StaticIntervalAccelerometerCalibrator private constructor(
      * Internally build a robust accelerometer calibrator when gravity is known.
      *
      * @return an internal accelerometer calibrator.
+     * @throws IllegalStateException if no suitable calibrator can be built.
      */
+    @Throws(IllegalStateException::class)
     private fun buildRobustKnownGravityCalibrator(): RobustKnownGravityNormAccelerometerCalibrator {
         val gravityNorm = this.gravityNorm
         checkNotNull(gravityNorm)
@@ -2433,7 +2445,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
      * of each measurement is taken into account, so that the larger the standard deviation
      * the poorer the measurement is considered (lower score).
      *
-     * @return build qualitys core array.
+     * @return build quality score array.
      */
     private fun buildQualityScores(): DoubleArray {
         val size = measurements.size
