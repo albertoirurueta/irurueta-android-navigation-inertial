@@ -203,10 +203,10 @@ class StaticIntervalMagnetometerCalibrator private constructor(
      * period starts. This listener contains accumulated magnetometer average values during static
      * period, that will be used as a measurement to solve calibration.
      */
-    private val intervalDetectorDynamicIntervalDetectorListener =
+    private val intervalDetectorDynamicIntervalDetectedListener =
         IntervalDetector.OnDynamicIntervalDetectedListener<MagnetometerIntervalDetector> { _, _, _, _, _, _, _, accumulatedAvgX, accumulatedAvgY, accumulatedAvgZ, accumulatedStdX, accumulatedStdY, accumulatedStdZ ->
             // add one measurement
-            val b = BodyMagneticFluxDensity(accumulatedAvgX, accumulatedAvgX, accumulatedAvgX)
+            val b = BodyMagneticFluxDensity(accumulatedAvgX, accumulatedAvgY, accumulatedAvgZ)
             val stdNorm = sqrt(
                 accumulatedStdX.pow(2.0) + accumulatedStdY.pow(2.0) + accumulatedStdZ.pow(2.0)
             )
@@ -268,7 +268,7 @@ class StaticIntervalMagnetometerCalibrator private constructor(
             intervalDetectorInitializationStartedListener,
             intervalDetectorInitializationCompletedListener,
             intervalDetectorErrorListener,
-            dynamicIntervalDetectedListener = intervalDetectorDynamicIntervalDetectorListener,
+            dynamicIntervalDetectedListener = intervalDetectorDynamicIntervalDetectedListener,
             measurementListener = intervalDetectorMeasurementListener
         )
 
@@ -1342,7 +1342,7 @@ class StaticIntervalMagnetometerCalibrator private constructor(
      * </pre>
      * Values of this matrix are unit-less.
      */
-    val estimatedMa
+    val estimatedMm
         get() = internalCalibrator?.estimatedMm
 
     /**

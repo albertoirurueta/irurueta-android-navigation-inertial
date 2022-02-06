@@ -4552,7 +4552,7 @@ class StaticIntervalAccelerometerCalibratorTest {
     }
 
     @Test
-    fun getBaseNoiseLevelAbsoluteThresholdAsAcceleration_whenValid_setsExpectedValue() {
+    fun getBaseNoiseLevelAbsoluteThresholdAsAcceleration_getsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
