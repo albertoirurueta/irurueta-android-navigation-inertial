@@ -1677,8 +1677,8 @@ class StaticIntervalMagnetometerCalibrator private constructor(
      * once enough measurements are collected, otherwise a call to [calibrate] must be done to solve
      * calibration.
      *
-     * @throws IllegalStateException if calibrator is already running or a sensor is missing
-     * (either magnetometer or gravity if it is being used when no location is provided).
+     * @throws IllegalStateException if calibrator is already running or magnetometer sensor is
+     * missing.
      */
     fun start() {
         check(!running)
@@ -1691,7 +1691,7 @@ class StaticIntervalMagnetometerCalibrator private constructor(
 
     /**
      * Stops calibrator.
-     * When this is called, no more magnetometer or gravity measurements are collected.
+     * When this is called, no more magnetometer measurements are collected.
      */
     fun stop() {
         internalStop(false)
@@ -1716,7 +1716,7 @@ class StaticIntervalMagnetometerCalibrator private constructor(
 
     /**
      * Stops calibrator.
-     * When this is called, no more magnetometer or gravity measurements are collected.
+     * When this is called, no more magnetometer measurements are collected.
      *
      * @param running specifies the running parameter to be set. This is true when stop occurs
      * internally during measurement collection to start solving calibration, otherwise is false

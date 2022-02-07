@@ -7100,7 +7100,7 @@ class StaticIntervalAccelerometerCalibratorTest {
     }
 
     @Test
-    fun timeIntervalStandardDeviationAsTime_getsIntervalDetectorTimeIntervalStadnardDeviation() {
+    fun timeIntervalStandardDeviationAsTime_getsIntervalDetectorTimeIntervalStandardDeviation() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
@@ -7474,7 +7474,7 @@ class StaticIntervalAccelerometerCalibratorTest {
     }
 
     @Test
-    fun gravityPsd_whenGravityNormNotestimated_returnsNull() {
+    fun gravityPsd_whenGravityNormNotEstimated_returnsNull() {
         val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(context, location = location)
@@ -8037,6 +8037,9 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
         assertTrue(calibrator.getEstimatedBiasXAsAcceleration(acceleration))
+
+        assertEquals(estimatedBiasX, acceleration.value.toDouble(), 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, acceleration.unit)
     }
 
     @Test
@@ -8056,6 +8059,9 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
         assertTrue(calibrator.getEstimatedBiasXAsAcceleration(acceleration))
+
+        assertEquals(estimatedBiasX, acceleration.value.toDouble(), 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, acceleration.unit)
     }
 
     @Test
@@ -8125,6 +8131,9 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
         assertTrue(calibrator.getEstimatedBiasYAsAcceleration(acceleration))
+
+        assertEquals(estimatedBiasY, acceleration.value.toDouble(), 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, acceleration.unit)
     }
 
     @Test
@@ -8144,6 +8153,9 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
         assertTrue(calibrator.getEstimatedBiasYAsAcceleration(acceleration))
+
+        assertEquals(estimatedBiasY, acceleration.value.toDouble(), 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, acceleration.unit)
     }
 
     @Test
@@ -8232,6 +8244,9 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
         assertTrue(calibrator.getEstimatedBiasZAsAcceleration(acceleration))
+
+        assertEquals(estimatedBiasZ, acceleration.value.toDouble(), 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, acceleration.unit)
     }
 
     @Test
