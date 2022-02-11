@@ -16,61 +16,44 @@
 package com.irurueta.android.navigation.inertial.calibration.intervals
 
 import android.content.Context
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
-import com.irurueta.navigation.inertial.calibration.AccelerationTriad
-import com.irurueta.navigation.inertial.calibration.intervals.AccelerationTriadStaticIntervalDetector
-import com.irurueta.navigation.inertial.calibration.intervals.AccelerationTriadStaticIntervalDetectorListener
+import com.irurueta.navigation.inertial.calibration.AngularSpeedTriad
+import com.irurueta.navigation.inertial.calibration.intervals.AngularSpeedTriadStaticIntervalDetector
+import com.irurueta.navigation.inertial.calibration.intervals.AngularSpeedTriadStaticIntervalDetectorListener
 import com.irurueta.navigation.inertial.calibration.intervals.TriadStaticIntervalDetector
-import com.irurueta.units.Acceleration
-import com.irurueta.units.AccelerationUnit
+import com.irurueta.units.AngularSpeed
+import com.irurueta.units.AngularSpeedUnit
 import com.irurueta.units.TimeConverter
 
 /**
- * Detects static or motion intervals of time by using the accelerometer of the
- * device to determine whether the device is moving or not.
- * When detector is started, initialization occurs to determine the accelerometer noise level while
+ * Detects static or motion intervals of time by using the gyroscope of the device to determine
+ * whether the device is moving or not.
+ * When detector is started, initialization occurs to determine the gyroscope noise level while
  * keeping device static. Once the detector is initialized, then static or dynamic intervals can be
  * detected.
- * This detector uses accumulated average values during static intervals, and windowed
- * averages as "instantaneous" values during dynamic intervals.
+ * This detector uses accumulated average values during static intervals, and windowed averages as
+ * "instantaneous" values during dynamic intervals.
  * Length of windows, as well as thresholds to determine when changes between static and dynamic
  * intervals occur can be easily configured.
- *
- * @property context Android context.
- * @property sensorType One of the supported accelerometer sensor types.
- * @property sensorDelay Delay of sensor between samples.
- * @property initializationStartedListener listener to notify when this detector starts
- * initialization after being started.
- * @property initializationCompletedListener listener to notify when this detector completes
- * initialization after being started.
- * @property errorListener listener to notify errors such as sudden motion during initialization or
- * sensor unreliability.
- * @property staticIntervalDetectedListener listener to notify when a new static interval is
- * detected.
- * @property dynamicIntervalDetectedListener listener to notify when a new dynamic interval is
- * detected.
- * @property resetListener listener to notify when a reset occurs.
- * @property measurementListener listener to notify collected accelerometer measurements.
- * @property accuracyChangedListener listener to notify when accelerometer accuracy changes.
  */
-class AccelerometerIntervalDetector(
+class GyroscopeIntervalDetector(
     context: Context,
-    val sensorType: AccelerometerSensorCollector.SensorType =
-        AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+    val sensorType: GyroscopeSensorCollector.SensorType =
+        GyroscopeSensorCollector.SensorType.GYROSCOPE,
     sensorDelay: SensorDelay = SensorDelay.FASTEST,
-    initializationStartedListener: OnInitializationStartedListener<AccelerometerIntervalDetector>? = null,
-    initializationCompletedListener: OnInitializationCompletedListener<AccelerometerIntervalDetector>? = null,
-    errorListener: OnErrorListener<AccelerometerIntervalDetector>? = null,
-    staticIntervalDetectedListener: OnStaticIntervalDetectedListener<AccelerometerIntervalDetector>? = null,
-    dynamicIntervalDetectedListener: OnDynamicIntervalDetectedListener<AccelerometerIntervalDetector>? = null,
-    resetListener: OnResetListener<AccelerometerIntervalDetector>? = null,
-    var measurementListener: AccelerometerSensorCollector.OnMeasurementListener? = null,
+    initializationStartedListener: OnInitializationStartedListener<GyroscopeIntervalDetector>? = null,
+    initializationCompletedListener: OnInitializationCompletedListener<GyroscopeIntervalDetector>? = null,
+    errorListener: OnErrorListener<GyroscopeIntervalDetector>? = null,
+    staticIntervalDetectedListener: OnStaticIntervalDetectedListener<GyroscopeIntervalDetector>? = null,
+    dynamicIntervalDetectedListener: OnDynamicIntervalDetectedListener<GyroscopeIntervalDetector>? = null,
+    resetListener: OnResetListener<GyroscopeIntervalDetector>? = null,
+    var measurementListener: GyroscopeSensorCollector.OnMeasurementListener? = null,
     accuracyChangedListener: SensorCollector.OnAccuracyChangedListener? = null
-) : IntervalDetector<AccelerometerIntervalDetector, AccelerometerSensorCollector, AccelerationUnit,
-        Acceleration, AccelerationTriad, AccelerationTriadStaticIntervalDetector,
-        AccelerationTriadStaticIntervalDetectorListener>(
+) : IntervalDetector<GyroscopeIntervalDetector, GyroscopeSensorCollector, AngularSpeedUnit,
+        AngularSpeed, AngularSpeedTriad, AngularSpeedTriadStaticIntervalDetector,
+        AngularSpeedTriadStaticIntervalDetectorListener>(
     context,
     sensorDelay,
     initializationStartedListener,
@@ -82,38 +65,36 @@ class AccelerometerIntervalDetector(
     accuracyChangedListener
 ) {
     /**
-     * Listener for internal interval detector.
+     * Listener for interval detector.
      */
     override val internalDetectorListener =
-        object : AccelerationTriadStaticIntervalDetectorListener {
-            override fun onInitializationStarted(
-                detector: AccelerationTriadStaticIntervalDetector?
-            ) {
-                initializationStartedListener?.onInitializationStarted(this@AccelerometerIntervalDetector)
+        object : AngularSpeedTriadStaticIntervalDetectorListener {
+            override fun onInitializationStarted(detector: AngularSpeedTriadStaticIntervalDetector?) {
+                initializationStartedListener?.onInitializationStarted(this@GyroscopeIntervalDetector)
             }
 
             override fun onInitializationCompleted(
-                detector: AccelerationTriadStaticIntervalDetector?,
+                detector: AngularSpeedTriadStaticIntervalDetector?,
                 baseNoiseLevel: Double
             ) {
                 initializationCompletedListener?.onInitializationCompleted(
-                    this@AccelerometerIntervalDetector,
+                    this@GyroscopeIntervalDetector,
                     baseNoiseLevel
                 )
             }
 
             override fun onError(
-                detector: AccelerationTriadStaticIntervalDetector?,
+                detector: AngularSpeedTriadStaticIntervalDetector?,
                 accumulatedNoiseLevel: Double,
                 instantaneousNoiseLevel: Double,
                 reason: TriadStaticIntervalDetector.ErrorReason
             ) {
                 stop()
-                errorListener?.onError(this@AccelerometerIntervalDetector, mapErrorReason(reason))
+                errorListener?.onError(this@GyroscopeIntervalDetector, mapErrorReason(reason))
             }
 
             override fun onStaticIntervalDetected(
-                detector: AccelerationTriadStaticIntervalDetector?,
+                detector: AngularSpeedTriadStaticIntervalDetector?,
                 instantaneousAvgX: Double,
                 instantaneousAvgY: Double,
                 instantaneousAvgZ: Double,
@@ -122,7 +103,7 @@ class AccelerometerIntervalDetector(
                 instantaneousStdZ: Double
             ) {
                 staticIntervalDetectedListener?.onStaticIntervalDetected(
-                    this@AccelerometerIntervalDetector,
+                    this@GyroscopeIntervalDetector,
                     instantaneousAvgX,
                     instantaneousAvgY,
                     instantaneousAvgZ,
@@ -133,7 +114,7 @@ class AccelerometerIntervalDetector(
             }
 
             override fun onDynamicIntervalDetected(
-                detector: AccelerationTriadStaticIntervalDetector?,
+                detector: AngularSpeedTriadStaticIntervalDetector?,
                 instantaneousAvgX: Double,
                 instantaneousAvgY: Double,
                 instantaneousAvgZ: Double,
@@ -148,7 +129,7 @@ class AccelerometerIntervalDetector(
                 accumulatedStdZ: Double
             ) {
                 dynamicIntervalDetectedListener?.onDynamicIntervalDetected(
-                    this@AccelerometerIntervalDetector,
+                    this@GyroscopeIntervalDetector,
                     instantaneousAvgX,
                     instantaneousAvgY,
                     instantaneousAvgZ,
@@ -164,25 +145,25 @@ class AccelerometerIntervalDetector(
                 )
             }
 
-            override fun onReset(detector: AccelerationTriadStaticIntervalDetector?) {
-                resetListener?.onReset(this@AccelerometerIntervalDetector)
+            override fun onReset(detector: AngularSpeedTriadStaticIntervalDetector?) {
+                resetListener?.onReset(this@GyroscopeIntervalDetector)
             }
         }
 
     /**
      * Internal interval detector.
-     * Processes accelerometer measurements and detects static and dynamic intervals.
+     * Processes gyroscope measurements and detects static and dynamic intervals.
      */
     override val internalDetector =
-        AccelerationTriadStaticIntervalDetector(internalDetectorListener)
+        AngularSpeedTriadStaticIntervalDetector(internalDetectorListener)
 
     /**
-     * Internal listener for accelerometer sensor collector.
+     * Internal listener for gyroscope sensor collector.
      * Handles measurements collected by the sensor collector so that they are processed by
      * the internal interval detector.
      */
     private val internalMeasurementListener =
-        AccelerometerSensorCollector.OnMeasurementListener { ax, ay, az, bx, by, bz, timestamp, accuracy ->
+        GyroscopeSensorCollector.OnMeasurementListener { wx, wy, wz, bx, by, bz, timestamp, accuracy ->
             val status = status
             if (status == Status.INITIALIZING) {
                 // during initialization phase, also estimate time interval duration.
@@ -195,7 +176,7 @@ class AccelerometerIntervalDetector(
                 }
             }
 
-            internalDetector.process(ax.toDouble(), ay.toDouble(), az.toDouble())
+            internalDetector.process(wx.toDouble(), wy.toDouble(), wz.toDouble())
             numberOfProcessedMeasurements++
 
             if (status == Status.INITIALIZATION_COMPLETED) {
@@ -204,19 +185,18 @@ class AccelerometerIntervalDetector(
                 initialized = true
             }
 
-            measurementListener?.onMeasurement(ax, ay, az, bx, by, bz, timestamp, accuracy)
+            measurementListener?.onMeasurement(wx, wy, wz, bx, by, bz, timestamp, accuracy)
         }
 
     /**
-     * Accelerometer sensor collector.
-     * Collects accelerometer measurements.
+     * Gyroscope sensor collector.
+     * Collects gyroscope measurements.
      */
-    override val collector =
-        AccelerometerSensorCollector(
-            context,
-            sensorType,
-            sensorDelay,
-            internalMeasurementListener,
-            internalAccuracyChangedListener
-        )
+    override val collector = GyroscopeSensorCollector(
+        context,
+        sensorType,
+        sensorDelay,
+        internalMeasurementListener,
+        internalAccuracyChangedListener
+    )
 }
