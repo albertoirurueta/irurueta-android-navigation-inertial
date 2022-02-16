@@ -1249,7 +1249,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
                 "Calibration estimation failed",
                 e
             )
-            errorListener?.onError(this, ErrorReason.NUMERICAL_INSTABILITY_DURING_CALIBRATION)
+            errorListener?.onError(this, CalibratorErrorReason.NUMERICAL_INSTABILITY_DURING_CALIBRATION)
             running = false
             false
         }

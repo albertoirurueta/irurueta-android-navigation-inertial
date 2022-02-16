@@ -228,7 +228,7 @@ class MagnetometerIntervalDetectorTest {
         assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, detector.numberOfProcessedMeasurements)
         assertFalse(detector.running)
-        assertEquals(IntervalDetector.Status.IDLE, detector.status)
+        assertEquals(Status.IDLE, detector.status)
     }
 
     @Test
@@ -426,7 +426,7 @@ class MagnetometerIntervalDetectorTest {
         assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, detector.numberOfProcessedMeasurements)
         assertFalse(detector.running)
-        assertEquals(IntervalDetector.Status.IDLE, detector.status)
+        assertEquals(Status.IDLE, detector.status)
     }
 
     @Test
@@ -625,7 +625,7 @@ class MagnetometerIntervalDetectorTest {
         assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, detector.numberOfProcessedMeasurements)
         assertFalse(detector.running)
-        assertEquals(IntervalDetector.Status.IDLE, detector.status)
+        assertEquals(Status.IDLE, detector.status)
     }
 
     @Test
@@ -827,7 +827,7 @@ class MagnetometerIntervalDetectorTest {
         assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, detector.numberOfProcessedMeasurements)
         assertFalse(detector.running)
-        assertEquals(IntervalDetector.Status.IDLE, detector.status)
+        assertEquals(Status.IDLE, detector.status)
     }
 
     @Test
@@ -1032,7 +1032,7 @@ class MagnetometerIntervalDetectorTest {
         assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, detector.numberOfProcessedMeasurements)
         assertFalse(detector.running)
-        assertEquals(IntervalDetector.Status.IDLE, detector.status)
+        assertEquals(Status.IDLE, detector.status)
     }
 
     @Test
@@ -1239,7 +1239,7 @@ class MagnetometerIntervalDetectorTest {
         assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, detector.numberOfProcessedMeasurements)
         assertFalse(detector.running)
-        assertEquals(IntervalDetector.Status.IDLE, detector.status)
+        assertEquals(Status.IDLE, detector.status)
     }
 
     @Test
@@ -1449,7 +1449,7 @@ class MagnetometerIntervalDetectorTest {
         assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, detector.numberOfProcessedMeasurements)
         assertFalse(detector.running)
-        assertEquals(IntervalDetector.Status.IDLE, detector.status)
+        assertEquals(Status.IDLE, detector.status)
     }
 
     @Test
@@ -1662,7 +1662,7 @@ class MagnetometerIntervalDetectorTest {
         assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, detector.numberOfProcessedMeasurements)
         assertFalse(detector.running)
-        assertEquals(IntervalDetector.Status.IDLE, detector.status)
+        assertEquals(Status.IDLE, detector.status)
     }
 
     @Test
@@ -1877,7 +1877,7 @@ class MagnetometerIntervalDetectorTest {
         assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, detector.numberOfProcessedMeasurements)
         assertFalse(detector.running)
-        assertEquals(IntervalDetector.Status.IDLE, detector.status)
+        assertEquals(Status.IDLE, detector.status)
     }
 
     @Test
@@ -2094,7 +2094,7 @@ class MagnetometerIntervalDetectorTest {
         assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, detector.numberOfProcessedMeasurements)
         assertFalse(detector.running)
-        assertEquals(IntervalDetector.Status.IDLE, detector.status)
+        assertEquals(Status.IDLE, detector.status)
     }
 
     @Test
@@ -2313,7 +2313,7 @@ class MagnetometerIntervalDetectorTest {
         assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, detector.numberOfProcessedMeasurements)
         assertFalse(detector.running)
-        assertEquals(IntervalDetector.Status.IDLE, detector.status)
+        assertEquals(Status.IDLE, detector.status)
     }
 
     @Test
@@ -2910,18 +2910,18 @@ class MagnetometerIntervalDetectorTest {
 
         setPrivateProperty(IntervalDetector::class, detector, "unreliable", true)
 
-        var errorReason: IntervalDetector.ErrorReason? =
+        var errorReason: ErrorReason? =
             callPrivateFuncWithResult(
                 IntervalDetector::class, detector, "mapErrorReason",
                 TriadStaticIntervalDetector.ErrorReason.OVERALL_EXCESSIVE_MOVEMENT_DETECTED
             )
-        assertEquals(IntervalDetector.ErrorReason.UNRELIABLE_SENSOR, errorReason)
+        assertEquals(ErrorReason.UNRELIABLE_SENSOR, errorReason)
 
         errorReason = callPrivateFuncWithResult(
             IntervalDetector::class, detector, "mapErrorReason",
             TriadStaticIntervalDetector.ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED
         )
-        assertEquals(IntervalDetector.ErrorReason.UNRELIABLE_SENSOR, errorReason)
+        assertEquals(ErrorReason.UNRELIABLE_SENSOR, errorReason)
     }
 
     @Test
@@ -2934,13 +2934,13 @@ class MagnetometerIntervalDetectorTest {
         requireNotNull(unreliable)
         assertFalse(unreliable)
 
-        var errorReason: IntervalDetector.ErrorReason? =
+        var errorReason: ErrorReason? =
             callPrivateFuncWithResult(
                 IntervalDetector::class, detector, "mapErrorReason",
                 TriadStaticIntervalDetector.ErrorReason.OVERALL_EXCESSIVE_MOVEMENT_DETECTED
             )
         assertEquals(
-            IntervalDetector.ErrorReason.OVERALL_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION,
+            ErrorReason.OVERALL_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION,
             errorReason
         )
 
@@ -2949,7 +2949,7 @@ class MagnetometerIntervalDetectorTest {
             TriadStaticIntervalDetector.ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED
         )
         assertEquals(
-            IntervalDetector.ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION,
+            ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION,
             errorReason
         )
     }
@@ -2966,7 +2966,7 @@ class MagnetometerIntervalDetectorTest {
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         // check initial status
-        assertEquals(IntervalDetector.Status.IDLE, detector.status)
+        assertEquals(Status.IDLE, detector.status)
         assertEquals(0, detector.numberOfProcessedMeasurements)
 
         // process measurement
@@ -3001,7 +3001,7 @@ class MagnetometerIntervalDetectorTest {
         )
         verify(exactly = 1) { internalDetectorSpy.process(bxT, byT, bzT) }
         assertEquals(1, detector.numberOfProcessedMeasurements)
-        assertEquals(IntervalDetector.Status.INITIALIZING, detector.status)
+        assertEquals(Status.INITIALIZING, detector.status)
     }
 
     @Test
@@ -3022,7 +3022,7 @@ class MagnetometerIntervalDetectorTest {
         requireNotNull(initialTimestamp1)
         assertEquals(0L, initialTimestamp1)
 
-        assertEquals(IntervalDetector.Status.INITIALIZING, detector.status)
+        assertEquals(Status.INITIALIZING, detector.status)
         assertEquals(0, detector.numberOfProcessedMeasurements)
 
         // process measurement
@@ -3057,7 +3057,7 @@ class MagnetometerIntervalDetectorTest {
         )
         verify(exactly = 1) { internalDetectorSpy.process(bxT, byT, bzT) }
         assertEquals(1, detector.numberOfProcessedMeasurements)
-        assertEquals(IntervalDetector.Status.INITIALIZING, detector.status)
+        assertEquals(Status.INITIALIZING, detector.status)
 
         val initialTimestamp2: Long? =
             getPrivateProperty(IntervalDetector::class, detector, "initialTimestamp")
@@ -3097,7 +3097,7 @@ class MagnetometerIntervalDetectorTest {
         requireNotNull(initialTimestamp1)
         assertEquals(timestamp1, initialTimestamp1)
 
-        assertEquals(IntervalDetector.Status.INITIALIZING, detector.status)
+        assertEquals(Status.INITIALIZING, detector.status)
         assertEquals(1, detector.numberOfProcessedMeasurements)
 
         // process measurement
@@ -3133,7 +3133,7 @@ class MagnetometerIntervalDetectorTest {
         )
         verify(exactly = 1) { internalDetectorSpy.process(bxT, byT, bzT) }
         assertEquals(2, detector.numberOfProcessedMeasurements)
-        assertEquals(IntervalDetector.Status.INITIALIZING, detector.status)
+        assertEquals(Status.INITIALIZING, detector.status)
 
         val initialTimestamp2: Long? =
             getPrivateProperty(IntervalDetector::class, detector, "initialTimestamp")
@@ -3180,7 +3180,7 @@ class MagnetometerIntervalDetectorTest {
         requireNotNull(initialTimestamp1)
         assertEquals(timestamp1, initialTimestamp1)
 
-        assertEquals(IntervalDetector.Status.INITIALIZING, detector.status)
+        assertEquals(Status.INITIALIZING, detector.status)
         assertEquals(1, detector.numberOfProcessedMeasurements)
 
         // process measurement
@@ -3216,7 +3216,7 @@ class MagnetometerIntervalDetectorTest {
         )
         verify(exactly = 1) { internalDetectorSpy.process(bxT, byT, bzT) }
         assertEquals(2, detector.numberOfProcessedMeasurements)
-        assertEquals(IntervalDetector.Status.INITIALIZING, detector.status)
+        assertEquals(Status.INITIALIZING, detector.status)
 
         val initialTimestamp2: Long? =
             getPrivateProperty(IntervalDetector::class, detector, "initialTimestamp")
@@ -3300,7 +3300,7 @@ class MagnetometerIntervalDetectorTest {
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         // check initial status
-        assertEquals(IntervalDetector.Status.IDLE, detector.status)
+        assertEquals(Status.IDLE, detector.status)
         assertEquals(0, detector.numberOfProcessedMeasurements)
 
         // process measurement
@@ -3396,7 +3396,7 @@ class MagnetometerIntervalDetectorTest {
         verify(exactly = 1) {
             errorListener.onError(
                 detector,
-                IntervalDetector.ErrorReason.UNRELIABLE_SENSOR
+                ErrorReason.UNRELIABLE_SENSOR
             )
         }
     }
@@ -5020,7 +5020,7 @@ class MagnetometerIntervalDetectorTest {
 
         setPrivateProperty(IntervalDetector::class, detector, "unreliable", true)
 
-        assertEquals(IntervalDetector.Status.FAILED, detector.status)
+        assertEquals(Status.FAILED, detector.status)
     }
 
     @Test
@@ -5040,7 +5040,7 @@ class MagnetometerIntervalDetectorTest {
         every { internalDetectorSpy.status }.returns(TriadStaticIntervalDetector.Status.IDLE)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        assertEquals(IntervalDetector.Status.IDLE, detector.status)
+        assertEquals(Status.IDLE, detector.status)
     }
 
     @Test
@@ -5059,7 +5059,7 @@ class MagnetometerIntervalDetectorTest {
         every { internalDetectorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZING)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        assertEquals(IntervalDetector.Status.INITIALIZING, detector.status)
+        assertEquals(Status.INITIALIZING, detector.status)
     }
 
     @Test
@@ -5080,7 +5080,7 @@ class MagnetometerIntervalDetectorTest {
             .returns(TriadStaticIntervalDetector.Status.INITIALIZATION_COMPLETED)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        assertEquals(IntervalDetector.Status.INITIALIZATION_COMPLETED, detector.status)
+        assertEquals(Status.INITIALIZATION_COMPLETED, detector.status)
     }
 
     @Test
@@ -5101,7 +5101,7 @@ class MagnetometerIntervalDetectorTest {
             .returns(TriadStaticIntervalDetector.Status.STATIC_INTERVAL)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        assertEquals(IntervalDetector.Status.STATIC_INTERVAL, detector.status)
+        assertEquals(Status.STATIC_INTERVAL, detector.status)
     }
 
     @Test
@@ -5122,7 +5122,7 @@ class MagnetometerIntervalDetectorTest {
             .returns(TriadStaticIntervalDetector.Status.DYNAMIC_INTERVAL)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        assertEquals(IntervalDetector.Status.DYNAMIC_INTERVAL, detector.status)
+        assertEquals(Status.DYNAMIC_INTERVAL, detector.status)
     }
 
     @Test
@@ -5142,7 +5142,7 @@ class MagnetometerIntervalDetectorTest {
         every { internalDetectorSpy.status }.returns(TriadStaticIntervalDetector.Status.FAILED)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        assertEquals(IntervalDetector.Status.FAILED, detector.status)
+        assertEquals(Status.FAILED, detector.status)
     }
 
     @Test
@@ -5162,7 +5162,7 @@ class MagnetometerIntervalDetectorTest {
         every { internalDetectorSpy.status }.returns(null)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        assertEquals(IntervalDetector.Status.IDLE, detector.status)
+        assertEquals(Status.IDLE, detector.status)
     }
 
     @Test
@@ -5319,7 +5319,7 @@ class MagnetometerIntervalDetectorTest {
         verify(exactly = 1) {
             errorListener.onError(
                 intervalDetector,
-                IntervalDetector.ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
+                ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
             )
         }
     }

@@ -8,6 +8,7 @@ import androidx.test.core.app.ApplicationProvider
 import com.irurueta.algebra.Matrix
 import com.irurueta.algebra.WrongSizeException
 import com.irurueta.android.navigation.inertial.calibration.intervals.IntervalDetector
+import com.irurueta.android.navigation.inertial.calibration.intervals.ErrorReason
 import com.irurueta.android.navigation.inertial.calibration.intervals.MagnetometerIntervalDetector
 import com.irurueta.android.navigation.inertial.callPrivateFuncWithResult
 import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
@@ -5054,7 +5055,7 @@ class StaticIntervalMagnetometerCalibratorTest {
 
         intervalDetectorErrorListener.onError(
             intervalDetectorSpy,
-            IntervalDetector.ErrorReason.UNRELIABLE_SENSOR
+            ErrorReason.UNRELIABLE_SENSOR
         )
 
         // check
@@ -5102,7 +5103,7 @@ class StaticIntervalMagnetometerCalibratorTest {
 
         intervalDetectorErrorListener.onError(
             intervalDetectorSpy,
-            IntervalDetector.ErrorReason.UNRELIABLE_SENSOR
+            ErrorReason.UNRELIABLE_SENSOR
         )
 
         // check
@@ -5111,7 +5112,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         verify(exactly = 1) {
             errorListener.onError(
                 calibrator,
-                StaticIntervalCalibrator.ErrorReason.UNRELIABLE_SENSOR
+                StaticIntervalCalibrator.CalibratorErrorReason.UNRELIABLE_SENSOR
             )
         }
         verify(exactly = 1) { stoppedListener.onStopped(calibrator) }
@@ -6842,7 +6843,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         verify(exactly = 1) {
             errorListener.onError(
                 calibrator,
-                StaticIntervalCalibrator.ErrorReason.NUMERICAL_INSTABILITY_DURING_CALIBRATION
+                StaticIntervalCalibrator.CalibratorErrorReason.NUMERICAL_INSTABILITY_DURING_CALIBRATION
             )
         }
     }

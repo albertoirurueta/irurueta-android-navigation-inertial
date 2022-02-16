@@ -1,3 +1,18 @@
+/*
+ * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.irurueta.android.navigation.inertial.calibration.intervals
 
 import android.content.Context
@@ -63,7 +78,7 @@ abstract class IntervalDetector<I : IntervalDetector<I, S, U, M, T, D, L>, S : S
     /**
      * Listener for internal interval detector.
      */
-    protected abstract val internalDetectorListener : L
+    protected abstract val internalDetectorListener: L
 
     /**
      * Internal interval detector.
@@ -234,7 +249,7 @@ abstract class IntervalDetector<I : IntervalDetector<I, S, U, M, T, D, L>, S : S
     }
 
     /**
-     * Gets accelerometer measurement base noise level that has been detected during initialization
+     * Gets sensor measurement base noise level that has been detected during initialization
      * expressed in meters per squared second (m/s^2) for accelerometer, radians per second (rad/s)
      * for gyroscope and Teslas (T) for magnetometer.
      * This is only available once detector completes initialization.
@@ -889,21 +904,7 @@ abstract class IntervalDetector<I : IntervalDetector<I, S, U, M, T, D, L>, S : S
      * until detector is stopped or an error occurs.
      */
     val status: Status
-        get() {
-            return if (unreliable) {
-                Status.FAILED
-            } else {
-                when (internalDetector.status) {
-                    TriadStaticIntervalDetector.Status.IDLE -> Status.IDLE
-                    TriadStaticIntervalDetector.Status.INITIALIZING -> Status.INITIALIZING
-                    TriadStaticIntervalDetector.Status.INITIALIZATION_COMPLETED -> Status.INITIALIZATION_COMPLETED
-                    TriadStaticIntervalDetector.Status.STATIC_INTERVAL -> Status.STATIC_INTERVAL
-                    TriadStaticIntervalDetector.Status.DYNAMIC_INTERVAL -> Status.DYNAMIC_INTERVAL
-                    TriadStaticIntervalDetector.Status.FAILED -> Status.FAILED
-                    else -> Status.IDLE
-                }
-            }
-        }
+        get() = Status.mapStatus(internalDetector.status, unreliable)
 
     /**
      * Starts collection of sensor measurements.
@@ -950,16 +951,7 @@ abstract class IntervalDetector<I : IntervalDetector<I, S, U, M, T, D, L>, S : S
      * @return mapped reason.
      */
     protected fun mapErrorReason(reason: TriadStaticIntervalDetector.ErrorReason): ErrorReason {
-        return if (unreliable) {
-            ErrorReason.UNRELIABLE_SENSOR
-        } else {
-            return when (reason) {
-                TriadStaticIntervalDetector.ErrorReason.OVERALL_EXCESSIVE_MOVEMENT_DETECTED ->
-                    ErrorReason.OVERALL_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
-                TriadStaticIntervalDetector.ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED ->
-                    ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
-            }
-        }
+        return ErrorReason.mapErrorReason(reason, unreliable)
     }
 
     /**
@@ -995,7 +987,7 @@ abstract class IntervalDetector<I : IntervalDetector<I, S, U, M, T, D, L>, S : S
     }
 
     /**
-     * Interfae to notify when an error occurs.
+     * Interface to notify when an error occurs.
      *
      * @param T an implementation of [IntervalDetector]
      */
@@ -1141,67 +1133,5 @@ abstract class IntervalDetector<I : IntervalDetector<I, S, U, M, T, D, L>, S : S
          * @param detector detector that raised the event.
          */
         fun onReset(detector: T)
-    }
-
-    /**
-     * Detector status values.
-     */
-    enum class Status {
-        /**
-         * Detector is in idle status when it hasn't processed any sample yet.
-         */
-        IDLE,
-
-        /**
-         * Detector is processing samples in the initial static interval to determine base noise
-         * level.
-         */
-        INITIALIZING,
-
-        /**
-         * Detector has successfully completed processing samples on the initial static period.
-         */
-        INITIALIZATION_COMPLETED,
-
-        /**
-         * A static interval has been detected, where sensor is considered to be subject to
-         * no substantial movement forces.
-         */
-        STATIC_INTERVAL,
-
-        /**
-         * A dynamic interval has been detected, where sensor is considered to be subject to
-         * substantial movement forces.
-         */
-        DYNAMIC_INTERVAL,
-
-        /**
-         * Detector has failed. This happens if sensor is subject to sudden movement forces
-         * while detector is initializing during the initial static period, if there is too much
-         * overall motion during initialization, or if sensor becomes unreliable.
-         * When detector has failed, no new samples will be allowed to be processed until detector
-         * is reset.
-         */
-        FAILED
-    }
-
-    /**
-     * Reason why this detector has failed.
-     */
-    enum class ErrorReason {
-        /**
-         * If a sudden movement is detected during initialization.
-         */
-        SUDDEN_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION,
-
-        /**
-         * If overall noise level is excessive during initialization.
-         */
-        OVERALL_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION,
-
-        /**
-         * If sensor becomes unreliable.
-         */
-        UNRELIABLE_SENSOR
     }
 }

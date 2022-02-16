@@ -18,6 +18,7 @@ package com.irurueta.android.navigation.inertial.calibration
 import android.content.Context
 import com.irurueta.algebra.Matrix
 import com.irurueta.android.navigation.inertial.calibration.intervals.IntervalDetector
+import com.irurueta.android.navigation.inertial.calibration.intervals.ErrorReason
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.navigation.inertial.calibration.Triad
 import com.irurueta.navigation.inertial.calibration.intervals.TriadStaticIntervalDetector
@@ -913,14 +914,14 @@ abstract class StaticIntervalCalibrator<C : StaticIntervalCalibrator<C, R, I, U,
          * Maps interval detector error reasons into error reasons returned by
          * [StaticIntervalCalibrator].
          */
-        private fun mapErrorReason(reason: IntervalDetector.ErrorReason): ErrorReason {
+        private fun mapErrorReason(reason: ErrorReason): CalibratorErrorReason {
             return when (reason) {
-                IntervalDetector.ErrorReason.UNRELIABLE_SENSOR
-                -> ErrorReason.UNRELIABLE_SENSOR
-                IntervalDetector.ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
-                -> ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
-                IntervalDetector.ErrorReason.OVERALL_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
-                -> ErrorReason.OVERALL_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
+                ErrorReason.UNRELIABLE_SENSOR
+                -> CalibratorErrorReason.UNRELIABLE_SENSOR
+                ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
+                -> CalibratorErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
+                ErrorReason.OVERALL_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
+                -> CalibratorErrorReason.OVERALL_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
             }
         }
     }
@@ -963,7 +964,7 @@ abstract class StaticIntervalCalibrator<C : StaticIntervalCalibrator<C, R, I, U,
          * @param calibrator calibrator that raised the event.
          * @param errorReason reason why error was detected.
          */
-        fun onError(calibrator: C, errorReason: ErrorReason)
+        fun onError(calibrator: C, errorReason: CalibratorErrorReason)
     }
 
     /**
@@ -1053,7 +1054,7 @@ abstract class StaticIntervalCalibrator<C : StaticIntervalCalibrator<C, R, I, U,
     /**
      * Reasons why this calibrator can fail
      */
-    enum class ErrorReason {
+    enum class CalibratorErrorReason {
         /**
          * If a sudden movement is detected during initialization.
          */

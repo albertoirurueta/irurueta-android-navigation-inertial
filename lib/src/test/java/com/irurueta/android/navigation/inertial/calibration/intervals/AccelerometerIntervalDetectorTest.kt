@@ -241,7 +241,7 @@ class AccelerometerIntervalDetectorTest {
         assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, detector.numberOfProcessedMeasurements)
         assertFalse(detector.running)
-        assertEquals(IntervalDetector.Status.IDLE, detector.status)
+        assertEquals(Status.IDLE, detector.status)
     }
 
     @Test
@@ -439,7 +439,7 @@ class AccelerometerIntervalDetectorTest {
         assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, detector.numberOfProcessedMeasurements)
         assertFalse(detector.running)
-        assertEquals(IntervalDetector.Status.IDLE, detector.status)
+        assertEquals(Status.IDLE, detector.status)
     }
 
     @Test
@@ -638,7 +638,7 @@ class AccelerometerIntervalDetectorTest {
         assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, detector.numberOfProcessedMeasurements)
         assertFalse(detector.running)
-        assertEquals(IntervalDetector.Status.IDLE, detector.status)
+        assertEquals(Status.IDLE, detector.status)
     }
 
     @Test
@@ -840,7 +840,7 @@ class AccelerometerIntervalDetectorTest {
         assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, detector.numberOfProcessedMeasurements)
         assertFalse(detector.running)
-        assertEquals(IntervalDetector.Status.IDLE, detector.status)
+        assertEquals(Status.IDLE, detector.status)
     }
 
     @Test
@@ -1045,7 +1045,7 @@ class AccelerometerIntervalDetectorTest {
         assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, detector.numberOfProcessedMeasurements)
         assertFalse(detector.running)
-        assertEquals(IntervalDetector.Status.IDLE, detector.status)
+        assertEquals(Status.IDLE, detector.status)
     }
 
     @Test
@@ -1252,7 +1252,7 @@ class AccelerometerIntervalDetectorTest {
         assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, detector.numberOfProcessedMeasurements)
         assertFalse(detector.running)
-        assertEquals(IntervalDetector.Status.IDLE, detector.status)
+        assertEquals(Status.IDLE, detector.status)
     }
 
     @Test
@@ -1462,7 +1462,7 @@ class AccelerometerIntervalDetectorTest {
         assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, detector.numberOfProcessedMeasurements)
         assertFalse(detector.running)
-        assertEquals(IntervalDetector.Status.IDLE, detector.status)
+        assertEquals(Status.IDLE, detector.status)
     }
 
     @Test
@@ -1675,7 +1675,7 @@ class AccelerometerIntervalDetectorTest {
         assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, detector.numberOfProcessedMeasurements)
         assertFalse(detector.running)
-        assertEquals(IntervalDetector.Status.IDLE, detector.status)
+        assertEquals(Status.IDLE, detector.status)
     }
 
     @Test
@@ -1890,7 +1890,7 @@ class AccelerometerIntervalDetectorTest {
         assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, detector.numberOfProcessedMeasurements)
         assertFalse(detector.running)
-        assertEquals(IntervalDetector.Status.IDLE, detector.status)
+        assertEquals(Status.IDLE, detector.status)
     }
 
     @Test
@@ -2107,7 +2107,7 @@ class AccelerometerIntervalDetectorTest {
         assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, detector.numberOfProcessedMeasurements)
         assertFalse(detector.running)
-        assertEquals(IntervalDetector.Status.IDLE, detector.status)
+        assertEquals(Status.IDLE, detector.status)
     }
 
     @Test
@@ -2326,7 +2326,7 @@ class AccelerometerIntervalDetectorTest {
         assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, detector.numberOfProcessedMeasurements)
         assertFalse(detector.running)
-        assertEquals(IntervalDetector.Status.IDLE, detector.status)
+        assertEquals(Status.IDLE, detector.status)
     }
 
     @Test
@@ -2646,7 +2646,7 @@ class AccelerometerIntervalDetectorTest {
     }
 
     @Test(expected = IllegalArgumentException::class)
-    fun baseNoiseLevelAbsoluteThreshold_whenInvalid_setsExpectedValue() {
+    fun baseNoiseLevelAbsoluteThreshold_whenInvalid_throwsIllegalArgumentException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = AccelerometerIntervalDetector(context)
 
@@ -2926,18 +2926,18 @@ class AccelerometerIntervalDetectorTest {
 
         setPrivateProperty(IntervalDetector::class, detector, "unreliable", true)
 
-        var errorReason: IntervalDetector.ErrorReason? =
+        var errorReason: ErrorReason? =
             callPrivateFuncWithResult(
                 IntervalDetector::class, detector, "mapErrorReason",
                 TriadStaticIntervalDetector.ErrorReason.OVERALL_EXCESSIVE_MOVEMENT_DETECTED
             )
-        assertEquals(IntervalDetector.ErrorReason.UNRELIABLE_SENSOR, errorReason)
+        assertEquals(ErrorReason.UNRELIABLE_SENSOR, errorReason)
 
         errorReason = callPrivateFuncWithResult(
             IntervalDetector::class, detector, "mapErrorReason",
             TriadStaticIntervalDetector.ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED
         )
-        assertEquals(IntervalDetector.ErrorReason.UNRELIABLE_SENSOR, errorReason)
+        assertEquals(ErrorReason.UNRELIABLE_SENSOR, errorReason)
     }
 
     @Test
@@ -2950,13 +2950,13 @@ class AccelerometerIntervalDetectorTest {
         requireNotNull(unreliable)
         assertFalse(unreliable)
 
-        var errorReason: IntervalDetector.ErrorReason? =
+        var errorReason: ErrorReason? =
             callPrivateFuncWithResult(
                 IntervalDetector::class, detector, "mapErrorReason",
                 TriadStaticIntervalDetector.ErrorReason.OVERALL_EXCESSIVE_MOVEMENT_DETECTED
             )
         assertEquals(
-            IntervalDetector.ErrorReason.OVERALL_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION,
+            ErrorReason.OVERALL_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION,
             errorReason
         )
 
@@ -2965,7 +2965,7 @@ class AccelerometerIntervalDetectorTest {
             TriadStaticIntervalDetector.ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED
         )
         assertEquals(
-            IntervalDetector.ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION,
+            ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION,
             errorReason
         )
     }
@@ -2982,7 +2982,7 @@ class AccelerometerIntervalDetectorTest {
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         // check initial status
-        assertEquals(IntervalDetector.Status.IDLE, detector.status)
+        assertEquals(Status.IDLE, detector.status)
         assertEquals(0, detector.numberOfProcessedMeasurements)
 
         // process measurement
@@ -3008,7 +3008,7 @@ class AccelerometerIntervalDetectorTest {
             )
         }
         assertEquals(1, detector.numberOfProcessedMeasurements)
-        assertEquals(IntervalDetector.Status.INITIALIZING, detector.status)
+        assertEquals(Status.INITIALIZING, detector.status)
     }
 
     @Test
@@ -3029,7 +3029,7 @@ class AccelerometerIntervalDetectorTest {
         requireNotNull(initialTimestamp1)
         assertEquals(0L, initialTimestamp1)
 
-        assertEquals(IntervalDetector.Status.INITIALIZING, detector.status)
+        assertEquals(Status.INITIALIZING, detector.status)
         assertEquals(0, detector.numberOfProcessedMeasurements)
 
         // process measurement
@@ -3055,7 +3055,7 @@ class AccelerometerIntervalDetectorTest {
             )
         }
         assertEquals(1, detector.numberOfProcessedMeasurements)
-        assertEquals(IntervalDetector.Status.INITIALIZING, detector.status)
+        assertEquals(Status.INITIALIZING, detector.status)
 
         val initialTimestamp2: Long? =
             getPrivateProperty(IntervalDetector::class, detector, "initialTimestamp")
@@ -3095,7 +3095,7 @@ class AccelerometerIntervalDetectorTest {
         requireNotNull(initialTimestamp1)
         assertEquals(timestamp1, initialTimestamp1)
 
-        assertEquals(IntervalDetector.Status.INITIALIZING, detector.status)
+        assertEquals(Status.INITIALIZING, detector.status)
         assertEquals(1, detector.numberOfProcessedMeasurements)
 
         // process measurement
@@ -3122,7 +3122,7 @@ class AccelerometerIntervalDetectorTest {
             )
         }
         assertEquals(2, detector.numberOfProcessedMeasurements)
-        assertEquals(IntervalDetector.Status.INITIALIZING, detector.status)
+        assertEquals(Status.INITIALIZING, detector.status)
 
         val initialTimestamp2: Long? =
             getPrivateProperty(IntervalDetector::class, detector, "initialTimestamp")
@@ -3170,7 +3170,7 @@ class AccelerometerIntervalDetectorTest {
         requireNotNull(initialTimestamp1)
         assertEquals(timestamp1, initialTimestamp1)
 
-        assertEquals(IntervalDetector.Status.INITIALIZING, detector.status)
+        assertEquals(Status.INITIALIZING, detector.status)
         assertEquals(1, detector.numberOfProcessedMeasurements)
 
         // process measurement
@@ -3197,7 +3197,7 @@ class AccelerometerIntervalDetectorTest {
             )
         }
         assertEquals(2, detector.numberOfProcessedMeasurements)
-        assertEquals(IntervalDetector.Status.INITIALIZING, detector.status)
+        assertEquals(Status.INITIALIZING, detector.status)
 
         val initialTimestamp2: Long? =
             getPrivateProperty(IntervalDetector::class, detector, "initialTimestamp")
@@ -3281,7 +3281,7 @@ class AccelerometerIntervalDetectorTest {
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         // check initial status
-        assertEquals(IntervalDetector.Status.IDLE, detector.status)
+        assertEquals(Status.IDLE, detector.status)
         assertEquals(0, detector.numberOfProcessedMeasurements)
 
         // process measurement
@@ -3368,7 +3368,7 @@ class AccelerometerIntervalDetectorTest {
         verify(exactly = 1) {
             errorListener.onError(
                 detector,
-                IntervalDetector.ErrorReason.UNRELIABLE_SENSOR
+                ErrorReason.UNRELIABLE_SENSOR
             )
         }
     }
@@ -5019,7 +5019,7 @@ class AccelerometerIntervalDetectorTest {
 
         setPrivateProperty(IntervalDetector::class, detector, "unreliable", true)
 
-        assertEquals(IntervalDetector.Status.FAILED, detector.status)
+        assertEquals(Status.FAILED, detector.status)
     }
 
     @Test
@@ -5039,11 +5039,11 @@ class AccelerometerIntervalDetectorTest {
         every { internalDetectorSpy.status }.returns(TriadStaticIntervalDetector.Status.IDLE)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        assertEquals(IntervalDetector.Status.IDLE, detector.status)
+        assertEquals(Status.IDLE, detector.status)
     }
 
     @Test
-    fun status_whenReliableAndInitializing_returnsIdle() {
+    fun status_whenReliableAndInitializing_returnsInitializing() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = AccelerometerIntervalDetector(context)
 
@@ -5060,11 +5060,11 @@ class AccelerometerIntervalDetectorTest {
             .returns(TriadStaticIntervalDetector.Status.INITIALIZING)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        assertEquals(IntervalDetector.Status.INITIALIZING, detector.status)
+        assertEquals(Status.INITIALIZING, detector.status)
     }
 
     @Test
-    fun status_whenReliableAndInitializationCompleted_returnsIdle() {
+    fun status_whenReliableAndInitializationCompleted_returnsInitializationCompleted() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = AccelerometerIntervalDetector(context)
 
@@ -5081,11 +5081,11 @@ class AccelerometerIntervalDetectorTest {
             .returns(TriadStaticIntervalDetector.Status.INITIALIZATION_COMPLETED)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        assertEquals(IntervalDetector.Status.INITIALIZATION_COMPLETED, detector.status)
+        assertEquals(Status.INITIALIZATION_COMPLETED, detector.status)
     }
 
     @Test
-    fun status_whenReliableAndStaticInterval_returnsIdle() {
+    fun status_whenReliableAndStaticInterval_returnsStaticInterval() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = AccelerometerIntervalDetector(context)
 
@@ -5102,11 +5102,11 @@ class AccelerometerIntervalDetectorTest {
             .returns(TriadStaticIntervalDetector.Status.STATIC_INTERVAL)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        assertEquals(IntervalDetector.Status.STATIC_INTERVAL, detector.status)
+        assertEquals(Status.STATIC_INTERVAL, detector.status)
     }
 
     @Test
-    fun status_whenReliableAndDynamicInterval_returnsIdle() {
+    fun status_whenReliableAndDynamicInterval_returnsDynamicInterval() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = AccelerometerIntervalDetector(context)
 
@@ -5123,7 +5123,7 @@ class AccelerometerIntervalDetectorTest {
             .returns(TriadStaticIntervalDetector.Status.DYNAMIC_INTERVAL)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        assertEquals(IntervalDetector.Status.DYNAMIC_INTERVAL, detector.status)
+        assertEquals(Status.DYNAMIC_INTERVAL, detector.status)
     }
 
     @Test
@@ -5144,7 +5144,7 @@ class AccelerometerIntervalDetectorTest {
             .returns(TriadStaticIntervalDetector.Status.FAILED)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        assertEquals(IntervalDetector.Status.FAILED, detector.status)
+        assertEquals(Status.FAILED, detector.status)
     }
 
     @Test
@@ -5164,7 +5164,7 @@ class AccelerometerIntervalDetectorTest {
         every { internalDetectorSpy.status }.returns(null)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
-        assertEquals(IntervalDetector.Status.IDLE, detector.status)
+        assertEquals(Status.IDLE, detector.status)
     }
 
     @Test
@@ -5322,7 +5322,7 @@ class AccelerometerIntervalDetectorTest {
         verify(exactly = 1) {
             errorListener.onError(
                 intervalDetector,
-                IntervalDetector.ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
+                ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
             )
         }
     }

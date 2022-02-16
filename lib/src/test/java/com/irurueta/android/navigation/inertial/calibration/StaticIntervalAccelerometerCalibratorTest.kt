@@ -24,6 +24,7 @@ import com.irurueta.algebra.Matrix
 import com.irurueta.android.navigation.inertial.*
 import com.irurueta.android.navigation.inertial.calibration.intervals.AccelerometerIntervalDetector
 import com.irurueta.android.navigation.inertial.calibration.intervals.IntervalDetector
+import com.irurueta.android.navigation.inertial.calibration.intervals.ErrorReason
 import com.irurueta.android.navigation.inertial.calibration.noise.AccumulatedMeasurementEstimator
 import com.irurueta.android.navigation.inertial.calibration.noise.GravityNormEstimator
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
@@ -5609,7 +5610,7 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         intervalDetectorErrorListener.onError(
             intervalDetectorSpy,
-            IntervalDetector.ErrorReason.UNRELIABLE_SENSOR
+            ErrorReason.UNRELIABLE_SENSOR
         )
 
         // check
@@ -5653,7 +5654,7 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         intervalDetectorErrorListener.onError(
             intervalDetectorSpy,
-            IntervalDetector.ErrorReason.UNRELIABLE_SENSOR
+            ErrorReason.UNRELIABLE_SENSOR
         )
 
         // check
@@ -5663,7 +5664,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         verify(exactly = 1) {
             errorListener.onError(
                 calibrator,
-                StaticIntervalCalibrator.ErrorReason.UNRELIABLE_SENSOR
+                StaticIntervalCalibrator.CalibratorErrorReason.UNRELIABLE_SENSOR
             )
         }
         verify(exactly = 1) { stoppedListener.onStopped(calibrator) }
@@ -7854,7 +7855,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         verify(exactly = 1) {
             errorListener.onError(
                 calibrator,
-                StaticIntervalCalibrator.ErrorReason.NUMERICAL_INSTABILITY_DURING_CALIBRATION
+                StaticIntervalCalibrator.CalibratorErrorReason.NUMERICAL_INSTABILITY_DURING_CALIBRATION
             )
         }
     }
