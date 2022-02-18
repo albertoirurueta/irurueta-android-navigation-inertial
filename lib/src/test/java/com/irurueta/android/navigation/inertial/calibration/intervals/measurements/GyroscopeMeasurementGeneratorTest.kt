@@ -23,18 +23,12 @@ import com.irurueta.android.navigation.inertial.calibration.intervals.ErrorReaso
 import com.irurueta.android.navigation.inertial.calibration.intervals.Status
 import com.irurueta.android.navigation.inertial.callPrivateFunc
 import com.irurueta.android.navigation.inertial.callPrivateFuncWithResult
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
-import com.irurueta.android.navigation.inertial.collectors.SensorCollector
-import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.getPrivateProperty
 import com.irurueta.android.navigation.inertial.setPrivateProperty
 import com.irurueta.navigation.inertial.BodyKinematics
-import com.irurueta.navigation.inertial.calibration.StandardDeviationBodyKinematics
-import com.irurueta.navigation.inertial.calibration.TimeIntervalEstimator
-import com.irurueta.navigation.inertial.calibration.generators.AccelerometerMeasurementsGenerator
-import com.irurueta.navigation.inertial.calibration.generators.AccelerometerMeasurementsGeneratorListener
-import com.irurueta.navigation.inertial.calibration.generators.MeasurementsGenerator
+import com.irurueta.navigation.inertial.calibration.*
+import com.irurueta.navigation.inertial.calibration.generators.*
 import com.irurueta.navigation.inertial.calibration.intervals.TriadStaticIntervalDetector
 import com.irurueta.statistics.UniformRandomizer
 import com.irurueta.units.*
@@ -45,12 +39,12 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
-class AccelerometerMeasurementGeneratorTest {
+class GyroscopeMeasurementGeneratorTest {
 
     @Test
     fun constructor_whenContext_setsDefaultValues() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         // check default values
         assertSame(context, generator.context)
@@ -59,6 +53,11 @@ class AccelerometerMeasurementGeneratorTest {
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.FASTEST, generator.accelerometerSensorDelay)
+        assertEquals(
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            generator.gyroscopeSensorType
+        )
+        assertEquals(SensorDelay.FASTEST, generator.gyroscopeSensorDelay)
         assertNull(generator.initializationStartedListener)
         assertNull(generator.initializationCompletedListener)
         assertNull(generator.errorListener)
@@ -69,8 +68,10 @@ class AccelerometerMeasurementGeneratorTest {
         assertNull(generator.generatedMeasurementListener)
         assertNull(generator.resetListener)
         assertNull(generator.accelerometerMeasurementListener)
+        assertNull(generator.gyroscopeMeasurementListener)
         assertNull(generator.accuracyChangedListener)
         assertNull(generator.accelerometerSensor)
+        assertNull(generator.gyroscopeSensor)
         assertEquals(MeasurementsGenerator.DEFAULT_MIN_STATIC_SAMPLES, generator.minStaticSamples)
         assertEquals(MeasurementsGenerator.DEFAULT_MAX_DYNAMIC_SAMPLES, generator.maxDynamicSamples)
         assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, generator.windowSize)
@@ -133,12 +134,13 @@ class AccelerometerMeasurementGeneratorTest {
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
+
     }
 
     @Test
     fun constructor_whenAccelerometerSensorType_setsExpectedValues() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(
+        val generator = GyroscopeMeasurementGenerator(
             context,
             AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
         )
@@ -150,6 +152,11 @@ class AccelerometerMeasurementGeneratorTest {
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.FASTEST, generator.accelerometerSensorDelay)
+        assertEquals(
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            generator.gyroscopeSensorType
+        )
+        assertEquals(SensorDelay.FASTEST, generator.gyroscopeSensorDelay)
         assertNull(generator.initializationStartedListener)
         assertNull(generator.initializationCompletedListener)
         assertNull(generator.errorListener)
@@ -160,8 +167,10 @@ class AccelerometerMeasurementGeneratorTest {
         assertNull(generator.generatedMeasurementListener)
         assertNull(generator.resetListener)
         assertNull(generator.accelerometerMeasurementListener)
+        assertNull(generator.gyroscopeMeasurementListener)
         assertNull(generator.accuracyChangedListener)
         assertNull(generator.accelerometerSensor)
+        assertNull(generator.gyroscopeSensor)
         assertEquals(MeasurementsGenerator.DEFAULT_MIN_STATIC_SAMPLES, generator.minStaticSamples)
         assertEquals(MeasurementsGenerator.DEFAULT_MAX_DYNAMIC_SAMPLES, generator.maxDynamicSamples)
         assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, generator.windowSize)
@@ -224,12 +233,13 @@ class AccelerometerMeasurementGeneratorTest {
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
+
     }
 
     @Test
     fun constructor_whenAccelerometerSensorDelay_setsExpectedValues() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(
+        val generator = GyroscopeMeasurementGenerator(
             context,
             AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             SensorDelay.NORMAL
@@ -242,6 +252,11 @@ class AccelerometerMeasurementGeneratorTest {
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
+        assertEquals(
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            generator.gyroscopeSensorType
+        )
+        assertEquals(SensorDelay.FASTEST, generator.gyroscopeSensorDelay)
         assertNull(generator.initializationStartedListener)
         assertNull(generator.initializationCompletedListener)
         assertNull(generator.errorListener)
@@ -252,8 +267,10 @@ class AccelerometerMeasurementGeneratorTest {
         assertNull(generator.generatedMeasurementListener)
         assertNull(generator.resetListener)
         assertNull(generator.accelerometerMeasurementListener)
+        assertNull(generator.gyroscopeMeasurementListener)
         assertNull(generator.accuracyChangedListener)
         assertNull(generator.accelerometerSensor)
+        assertNull(generator.gyroscopeSensor)
         assertEquals(MeasurementsGenerator.DEFAULT_MIN_STATIC_SAMPLES, generator.minStaticSamples)
         assertEquals(MeasurementsGenerator.DEFAULT_MAX_DYNAMIC_SAMPLES, generator.maxDynamicSamples)
         assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, generator.windowSize)
@@ -316,16 +333,222 @@ class AccelerometerMeasurementGeneratorTest {
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
+
+    }
+
+    @Test
+    fun constructor_whenGyroscopeSensorType_setsExpectedValues() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val generator = GyroscopeMeasurementGenerator(
+            context,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            SensorDelay.NORMAL,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED
+        )
+
+        // check default values
+        assertSame(context, generator.context)
+        assertEquals(
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            generator.accelerometerSensorType
+        )
+        assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
+        assertEquals(
+            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            generator.gyroscopeSensorType
+        )
+        assertEquals(SensorDelay.FASTEST, generator.gyroscopeSensorDelay)
+        assertNull(generator.initializationStartedListener)
+        assertNull(generator.initializationCompletedListener)
+        assertNull(generator.errorListener)
+        assertNull(generator.staticIntervalDetectedListener)
+        assertNull(generator.dynamicIntervalDetectedListener)
+        assertNull(generator.staticIntervalSkippedListener)
+        assertNull(generator.dynamicIntervalSkippedListener)
+        assertNull(generator.generatedMeasurementListener)
+        assertNull(generator.resetListener)
+        assertNull(generator.accelerometerMeasurementListener)
+        assertNull(generator.gyroscopeMeasurementListener)
+        assertNull(generator.accuracyChangedListener)
+        assertNull(generator.accelerometerSensor)
+        assertNull(generator.gyroscopeSensor)
+        assertEquals(MeasurementsGenerator.DEFAULT_MIN_STATIC_SAMPLES, generator.minStaticSamples)
+        assertEquals(MeasurementsGenerator.DEFAULT_MAX_DYNAMIC_SAMPLES, generator.maxDynamicSamples)
+        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, generator.windowSize)
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
+            generator.initialStaticSamples
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
+            generator.thresholdFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
+            generator.instantaneousNoiseLevelFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
+            generator.baseNoiseLevelAbsoluteThreshold,
+            0.0
+        )
+        val baseNoiseLevelAbsoluteThreshold1 =
+            generator.baseNoiseLevelAbsoluteThresholdAsMeasurement
+        assertEquals(
+            generator.baseNoiseLevelAbsoluteThreshold,
+            baseNoiseLevelAbsoluteThreshold1.value.toDouble(),
+            0.0
+        )
+        assertEquals(
+            AccelerationUnit.METERS_PER_SQUARED_SECOND,
+            baseNoiseLevelAbsoluteThreshold1.unit
+        )
+        val baseNoiseLevelAbsoluteThreshold2 =
+            Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        generator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevelAbsoluteThreshold2)
+        assertEquals(baseNoiseLevelAbsoluteThreshold1, baseNoiseLevelAbsoluteThreshold2)
+        assertNull(generator.accelerometerBaseNoiseLevel)
+        assertNull(generator.accelerometerBaseNoiseLevelAsMeasurement)
+        val baseNoiseLevel = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        assertFalse(generator.getAccelerometerBaseNoiseLevelAsMeasurement(baseNoiseLevel))
+        assertNull(generator.accelerometerBaseNoiseLevelPsd)
+        assertNull(generator.accelerometerBaseNoiseLevelRootPsd)
+        assertNull(generator.threshold)
+        assertNull(generator.thresholdAsMeasurement)
+        val threshold = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        assertFalse(generator.getThresholdAsMeasurement(threshold))
+        assertEquals(0, generator.processedStaticSamples)
+        assertEquals(0, generator.processedDynamicSamples)
+        assertFalse(generator.isStaticIntervalSkipped)
+        assertFalse(generator.isDynamicIntervalSkipped)
+        assertNull(generator.accelerometerAverageTimeInterval)
+        assertNull(generator.accelerometerAverageTimeIntervalAsTime)
+        val time = Time(0.0, TimeUnit.SECOND)
+        assertFalse(generator.getAccelerometerAverageTimeIntervalAsTime(time))
+        assertNull(generator.accelerometerTimeIntervalVariance)
+        assertNull(generator.accelerometerTimeIntervalStandardDeviation)
+        assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
+        assertFalse(generator.getTimeIntervalStandardDeviationAsTime(time))
+        assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertFalse(generator.running)
+        assertEquals(Status.IDLE, generator.status)
+
+    }
+
+    @Test
+    fun constructor_whenGyroscopeSensorDelay_setsExpectedValues() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val generator = GyroscopeMeasurementGenerator(
+            context,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            SensorDelay.NORMAL,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            SensorDelay.NORMAL
+        )
+
+        // check default values
+        assertSame(context, generator.context)
+        assertEquals(
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            generator.accelerometerSensorType
+        )
+        assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
+        assertEquals(
+            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            generator.gyroscopeSensorType
+        )
+        assertEquals(SensorDelay.NORMAL, generator.gyroscopeSensorDelay)
+        assertNull(generator.initializationStartedListener)
+        assertNull(generator.initializationCompletedListener)
+        assertNull(generator.errorListener)
+        assertNull(generator.staticIntervalDetectedListener)
+        assertNull(generator.dynamicIntervalDetectedListener)
+        assertNull(generator.staticIntervalSkippedListener)
+        assertNull(generator.dynamicIntervalSkippedListener)
+        assertNull(generator.generatedMeasurementListener)
+        assertNull(generator.resetListener)
+        assertNull(generator.accelerometerMeasurementListener)
+        assertNull(generator.gyroscopeMeasurementListener)
+        assertNull(generator.accuracyChangedListener)
+        assertNull(generator.accelerometerSensor)
+        assertNull(generator.gyroscopeSensor)
+        assertEquals(MeasurementsGenerator.DEFAULT_MIN_STATIC_SAMPLES, generator.minStaticSamples)
+        assertEquals(MeasurementsGenerator.DEFAULT_MAX_DYNAMIC_SAMPLES, generator.maxDynamicSamples)
+        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, generator.windowSize)
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
+            generator.initialStaticSamples
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
+            generator.thresholdFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
+            generator.instantaneousNoiseLevelFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
+            generator.baseNoiseLevelAbsoluteThreshold,
+            0.0
+        )
+        val baseNoiseLevelAbsoluteThreshold1 =
+            generator.baseNoiseLevelAbsoluteThresholdAsMeasurement
+        assertEquals(
+            generator.baseNoiseLevelAbsoluteThreshold,
+            baseNoiseLevelAbsoluteThreshold1.value.toDouble(),
+            0.0
+        )
+        assertEquals(
+            AccelerationUnit.METERS_PER_SQUARED_SECOND,
+            baseNoiseLevelAbsoluteThreshold1.unit
+        )
+        val baseNoiseLevelAbsoluteThreshold2 =
+            Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        generator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevelAbsoluteThreshold2)
+        assertEquals(baseNoiseLevelAbsoluteThreshold1, baseNoiseLevelAbsoluteThreshold2)
+        assertNull(generator.accelerometerBaseNoiseLevel)
+        assertNull(generator.accelerometerBaseNoiseLevelAsMeasurement)
+        val baseNoiseLevel = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        assertFalse(generator.getAccelerometerBaseNoiseLevelAsMeasurement(baseNoiseLevel))
+        assertNull(generator.accelerometerBaseNoiseLevelPsd)
+        assertNull(generator.accelerometerBaseNoiseLevelRootPsd)
+        assertNull(generator.threshold)
+        assertNull(generator.thresholdAsMeasurement)
+        val threshold = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        assertFalse(generator.getThresholdAsMeasurement(threshold))
+        assertEquals(0, generator.processedStaticSamples)
+        assertEquals(0, generator.processedDynamicSamples)
+        assertFalse(generator.isStaticIntervalSkipped)
+        assertFalse(generator.isDynamicIntervalSkipped)
+        assertNull(generator.accelerometerAverageTimeInterval)
+        assertNull(generator.accelerometerAverageTimeIntervalAsTime)
+        val time = Time(0.0, TimeUnit.SECOND)
+        assertFalse(generator.getAccelerometerAverageTimeIntervalAsTime(time))
+        assertNull(generator.accelerometerTimeIntervalVariance)
+        assertNull(generator.accelerometerTimeIntervalStandardDeviation)
+        assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
+        assertFalse(generator.getTimeIntervalStandardDeviationAsTime(time))
+        assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertFalse(generator.running)
+        assertEquals(Status.IDLE, generator.status)
+
     }
 
     @Test
     fun constructor_whenInitializationStartedListener_setsExpectedValues() {
         val initializationStartedListener =
-            mockk<CalibrationMeasurementGenerator.OnInitializationStartedListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnInitializationStartedListener<GyroscopeMeasurementGenerator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(
+        val generator = GyroscopeMeasurementGenerator(
             context,
             AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            SensorDelay.NORMAL,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
             SensorDelay.NORMAL,
             initializationStartedListener
         )
@@ -337,6 +560,11 @@ class AccelerometerMeasurementGeneratorTest {
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
+        assertEquals(
+            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            generator.gyroscopeSensorType
+        )
+        assertEquals(SensorDelay.NORMAL, generator.gyroscopeSensorDelay)
         assertSame(initializationStartedListener, generator.initializationStartedListener)
         assertNull(generator.initializationCompletedListener)
         assertNull(generator.errorListener)
@@ -347,8 +575,10 @@ class AccelerometerMeasurementGeneratorTest {
         assertNull(generator.generatedMeasurementListener)
         assertNull(generator.resetListener)
         assertNull(generator.accelerometerMeasurementListener)
+        assertNull(generator.gyroscopeMeasurementListener)
         assertNull(generator.accuracyChangedListener)
         assertNull(generator.accelerometerSensor)
+        assertNull(generator.gyroscopeSensor)
         assertEquals(MeasurementsGenerator.DEFAULT_MIN_STATIC_SAMPLES, generator.minStaticSamples)
         assertEquals(MeasurementsGenerator.DEFAULT_MAX_DYNAMIC_SAMPLES, generator.maxDynamicSamples)
         assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, generator.windowSize)
@@ -411,18 +641,21 @@ class AccelerometerMeasurementGeneratorTest {
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
+
     }
 
     @Test
     fun constructor_whenInitializationCompletedListener_setsExpectedValues() {
         val initializationStartedListener =
-            mockk<CalibrationMeasurementGenerator.OnInitializationStartedListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnInitializationStartedListener<GyroscopeMeasurementGenerator>>()
         val initializationCompletedListener =
-            mockk<CalibrationMeasurementGenerator.OnInitializationCompletedListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnInitializationCompletedListener<GyroscopeMeasurementGenerator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(
+        val generator = GyroscopeMeasurementGenerator(
             context,
             AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            SensorDelay.NORMAL,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener
@@ -435,6 +668,11 @@ class AccelerometerMeasurementGeneratorTest {
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
+        assertEquals(
+            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            generator.gyroscopeSensorType
+        )
+        assertEquals(SensorDelay.NORMAL, generator.gyroscopeSensorDelay)
         assertSame(initializationStartedListener, generator.initializationStartedListener)
         assertSame(initializationCompletedListener, generator.initializationCompletedListener)
         assertNull(generator.errorListener)
@@ -445,8 +683,10 @@ class AccelerometerMeasurementGeneratorTest {
         assertNull(generator.generatedMeasurementListener)
         assertNull(generator.resetListener)
         assertNull(generator.accelerometerMeasurementListener)
+        assertNull(generator.gyroscopeMeasurementListener)
         assertNull(generator.accuracyChangedListener)
         assertNull(generator.accelerometerSensor)
+        assertNull(generator.gyroscopeSensor)
         assertEquals(MeasurementsGenerator.DEFAULT_MIN_STATIC_SAMPLES, generator.minStaticSamples)
         assertEquals(MeasurementsGenerator.DEFAULT_MAX_DYNAMIC_SAMPLES, generator.maxDynamicSamples)
         assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, generator.windowSize)
@@ -509,20 +749,23 @@ class AccelerometerMeasurementGeneratorTest {
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
+
     }
 
     @Test
     fun constructor_whenErrorListener_setsExpectedValues() {
         val initializationStartedListener =
-            mockk<CalibrationMeasurementGenerator.OnInitializationStartedListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnInitializationStartedListener<GyroscopeMeasurementGenerator>>()
         val initializationCompletedListener =
-            mockk<CalibrationMeasurementGenerator.OnInitializationCompletedListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnInitializationCompletedListener<GyroscopeMeasurementGenerator>>()
         val errorListener =
-            mockk<CalibrationMeasurementGenerator.OnErrorListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnErrorListener<GyroscopeMeasurementGenerator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(
+        val generator = GyroscopeMeasurementGenerator(
             context,
             AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            SensorDelay.NORMAL,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -536,6 +779,11 @@ class AccelerometerMeasurementGeneratorTest {
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
+        assertEquals(
+            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            generator.gyroscopeSensorType
+        )
+        assertEquals(SensorDelay.NORMAL, generator.gyroscopeSensorDelay)
         assertSame(initializationStartedListener, generator.initializationStartedListener)
         assertSame(initializationCompletedListener, generator.initializationCompletedListener)
         assertSame(errorListener, generator.errorListener)
@@ -546,8 +794,10 @@ class AccelerometerMeasurementGeneratorTest {
         assertNull(generator.generatedMeasurementListener)
         assertNull(generator.resetListener)
         assertNull(generator.accelerometerMeasurementListener)
+        assertNull(generator.gyroscopeMeasurementListener)
         assertNull(generator.accuracyChangedListener)
         assertNull(generator.accelerometerSensor)
+        assertNull(generator.gyroscopeSensor)
         assertEquals(MeasurementsGenerator.DEFAULT_MIN_STATIC_SAMPLES, generator.minStaticSamples)
         assertEquals(MeasurementsGenerator.DEFAULT_MAX_DYNAMIC_SAMPLES, generator.maxDynamicSamples)
         assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, generator.windowSize)
@@ -610,22 +860,25 @@ class AccelerometerMeasurementGeneratorTest {
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
+
     }
 
     @Test
     fun constructor_whenStaticIntervalDetectedListener_setsExpectedValues() {
         val initializationStartedListener =
-            mockk<CalibrationMeasurementGenerator.OnInitializationStartedListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnInitializationStartedListener<GyroscopeMeasurementGenerator>>()
         val initializationCompletedListener =
-            mockk<CalibrationMeasurementGenerator.OnInitializationCompletedListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnInitializationCompletedListener<GyroscopeMeasurementGenerator>>()
         val errorListener =
-            mockk<CalibrationMeasurementGenerator.OnErrorListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnErrorListener<GyroscopeMeasurementGenerator>>()
         val staticIntervalDetectedListener =
-            mockk<CalibrationMeasurementGenerator.OnStaticIntervalDetectedListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnStaticIntervalDetectedListener<GyroscopeMeasurementGenerator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(
+        val generator = GyroscopeMeasurementGenerator(
             context,
             AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            SensorDelay.NORMAL,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -640,6 +893,11 @@ class AccelerometerMeasurementGeneratorTest {
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
+        assertEquals(
+            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            generator.gyroscopeSensorType
+        )
+        assertEquals(SensorDelay.NORMAL, generator.gyroscopeSensorDelay)
         assertSame(initializationStartedListener, generator.initializationStartedListener)
         assertSame(initializationCompletedListener, generator.initializationCompletedListener)
         assertSame(errorListener, generator.errorListener)
@@ -650,8 +908,10 @@ class AccelerometerMeasurementGeneratorTest {
         assertNull(generator.generatedMeasurementListener)
         assertNull(generator.resetListener)
         assertNull(generator.accelerometerMeasurementListener)
+        assertNull(generator.gyroscopeMeasurementListener)
         assertNull(generator.accuracyChangedListener)
         assertNull(generator.accelerometerSensor)
+        assertNull(generator.gyroscopeSensor)
         assertEquals(MeasurementsGenerator.DEFAULT_MIN_STATIC_SAMPLES, generator.minStaticSamples)
         assertEquals(MeasurementsGenerator.DEFAULT_MAX_DYNAMIC_SAMPLES, generator.maxDynamicSamples)
         assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, generator.windowSize)
@@ -714,24 +974,27 @@ class AccelerometerMeasurementGeneratorTest {
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
+
     }
 
     @Test
     fun constructor_whenDynamicIntervalDetectedListener_setsExpectedValues() {
         val initializationStartedListener =
-            mockk<CalibrationMeasurementGenerator.OnInitializationStartedListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnInitializationStartedListener<GyroscopeMeasurementGenerator>>()
         val initializationCompletedListener =
-            mockk<CalibrationMeasurementGenerator.OnInitializationCompletedListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnInitializationCompletedListener<GyroscopeMeasurementGenerator>>()
         val errorListener =
-            mockk<CalibrationMeasurementGenerator.OnErrorListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnErrorListener<GyroscopeMeasurementGenerator>>()
         val staticIntervalDetectedListener =
-            mockk<CalibrationMeasurementGenerator.OnStaticIntervalDetectedListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnStaticIntervalDetectedListener<GyroscopeMeasurementGenerator>>()
         val dynamicIntervalDetectedListener =
-            mockk<CalibrationMeasurementGenerator.OnDynamicIntervalDetectedListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnDynamicIntervalDetectedListener<GyroscopeMeasurementGenerator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(
+        val generator = GyroscopeMeasurementGenerator(
             context,
             AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            SensorDelay.NORMAL,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -747,6 +1010,11 @@ class AccelerometerMeasurementGeneratorTest {
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
+        assertEquals(
+            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            generator.gyroscopeSensorType
+        )
+        assertEquals(SensorDelay.NORMAL, generator.gyroscopeSensorDelay)
         assertSame(initializationStartedListener, generator.initializationStartedListener)
         assertSame(initializationCompletedListener, generator.initializationCompletedListener)
         assertSame(errorListener, generator.errorListener)
@@ -757,8 +1025,10 @@ class AccelerometerMeasurementGeneratorTest {
         assertNull(generator.generatedMeasurementListener)
         assertNull(generator.resetListener)
         assertNull(generator.accelerometerMeasurementListener)
+        assertNull(generator.gyroscopeMeasurementListener)
         assertNull(generator.accuracyChangedListener)
         assertNull(generator.accelerometerSensor)
+        assertNull(generator.gyroscopeSensor)
         assertEquals(MeasurementsGenerator.DEFAULT_MIN_STATIC_SAMPLES, generator.minStaticSamples)
         assertEquals(MeasurementsGenerator.DEFAULT_MAX_DYNAMIC_SAMPLES, generator.maxDynamicSamples)
         assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, generator.windowSize)
@@ -821,26 +1091,29 @@ class AccelerometerMeasurementGeneratorTest {
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
+
     }
 
     @Test
     fun constructor_whenStaticIntervalSkippedListener_setsExpectedValues() {
         val initializationStartedListener =
-            mockk<CalibrationMeasurementGenerator.OnInitializationStartedListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnInitializationStartedListener<GyroscopeMeasurementGenerator>>()
         val initializationCompletedListener =
-            mockk<CalibrationMeasurementGenerator.OnInitializationCompletedListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnInitializationCompletedListener<GyroscopeMeasurementGenerator>>()
         val errorListener =
-            mockk<CalibrationMeasurementGenerator.OnErrorListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnErrorListener<GyroscopeMeasurementGenerator>>()
         val staticIntervalDetectedListener =
-            mockk<CalibrationMeasurementGenerator.OnStaticIntervalDetectedListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnStaticIntervalDetectedListener<GyroscopeMeasurementGenerator>>()
         val dynamicIntervalDetectedListener =
-            mockk<CalibrationMeasurementGenerator.OnDynamicIntervalDetectedListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnDynamicIntervalDetectedListener<GyroscopeMeasurementGenerator>>()
         val staticIntervalSkippedListener =
-            mockk<CalibrationMeasurementGenerator.OnStaticIntervalSkippedListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnStaticIntervalSkippedListener<GyroscopeMeasurementGenerator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(
+        val generator = GyroscopeMeasurementGenerator(
             context,
             AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            SensorDelay.NORMAL,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -857,6 +1130,11 @@ class AccelerometerMeasurementGeneratorTest {
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
+        assertEquals(
+            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            generator.gyroscopeSensorType
+        )
+        assertEquals(SensorDelay.NORMAL, generator.gyroscopeSensorDelay)
         assertSame(initializationStartedListener, generator.initializationStartedListener)
         assertSame(initializationCompletedListener, generator.initializationCompletedListener)
         assertSame(errorListener, generator.errorListener)
@@ -867,8 +1145,10 @@ class AccelerometerMeasurementGeneratorTest {
         assertNull(generator.generatedMeasurementListener)
         assertNull(generator.resetListener)
         assertNull(generator.accelerometerMeasurementListener)
+        assertNull(generator.gyroscopeMeasurementListener)
         assertNull(generator.accuracyChangedListener)
         assertNull(generator.accelerometerSensor)
+        assertNull(generator.gyroscopeSensor)
         assertEquals(MeasurementsGenerator.DEFAULT_MIN_STATIC_SAMPLES, generator.minStaticSamples)
         assertEquals(MeasurementsGenerator.DEFAULT_MAX_DYNAMIC_SAMPLES, generator.maxDynamicSamples)
         assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, generator.windowSize)
@@ -931,28 +1211,31 @@ class AccelerometerMeasurementGeneratorTest {
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
+
     }
 
     @Test
     fun constructor_whenDynamicIntervalSkippedListener_setsExpectedValues() {
         val initializationStartedListener =
-            mockk<CalibrationMeasurementGenerator.OnInitializationStartedListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnInitializationStartedListener<GyroscopeMeasurementGenerator>>()
         val initializationCompletedListener =
-            mockk<CalibrationMeasurementGenerator.OnInitializationCompletedListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnInitializationCompletedListener<GyroscopeMeasurementGenerator>>()
         val errorListener =
-            mockk<CalibrationMeasurementGenerator.OnErrorListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnErrorListener<GyroscopeMeasurementGenerator>>()
         val staticIntervalDetectedListener =
-            mockk<CalibrationMeasurementGenerator.OnStaticIntervalDetectedListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnStaticIntervalDetectedListener<GyroscopeMeasurementGenerator>>()
         val dynamicIntervalDetectedListener =
-            mockk<CalibrationMeasurementGenerator.OnDynamicIntervalDetectedListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnDynamicIntervalDetectedListener<GyroscopeMeasurementGenerator>>()
         val staticIntervalSkippedListener =
-            mockk<CalibrationMeasurementGenerator.OnStaticIntervalSkippedListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnStaticIntervalSkippedListener<GyroscopeMeasurementGenerator>>()
         val dynamicIntervalSkippedListener =
-            mockk<CalibrationMeasurementGenerator.OnDynamicIntervalSkippedListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnDynamicIntervalSkippedListener<GyroscopeMeasurementGenerator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(
+        val generator = GyroscopeMeasurementGenerator(
             context,
             AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            SensorDelay.NORMAL,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -970,6 +1253,11 @@ class AccelerometerMeasurementGeneratorTest {
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
+        assertEquals(
+            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            generator.gyroscopeSensorType
+        )
+        assertEquals(SensorDelay.NORMAL, generator.gyroscopeSensorDelay)
         assertSame(initializationStartedListener, generator.initializationStartedListener)
         assertSame(initializationCompletedListener, generator.initializationCompletedListener)
         assertSame(errorListener, generator.errorListener)
@@ -980,8 +1268,10 @@ class AccelerometerMeasurementGeneratorTest {
         assertNull(generator.generatedMeasurementListener)
         assertNull(generator.resetListener)
         assertNull(generator.accelerometerMeasurementListener)
+        assertNull(generator.gyroscopeMeasurementListener)
         assertNull(generator.accuracyChangedListener)
         assertNull(generator.accelerometerSensor)
+        assertNull(generator.gyroscopeSensor)
         assertEquals(MeasurementsGenerator.DEFAULT_MIN_STATIC_SAMPLES, generator.minStaticSamples)
         assertEquals(MeasurementsGenerator.DEFAULT_MAX_DYNAMIC_SAMPLES, generator.maxDynamicSamples)
         assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, generator.windowSize)
@@ -1044,30 +1334,33 @@ class AccelerometerMeasurementGeneratorTest {
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
+
     }
 
     @Test
     fun constructor_whenGeneratedMeasurementListener_setsExpectedValues() {
         val initializationStartedListener =
-            mockk<CalibrationMeasurementGenerator.OnInitializationStartedListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnInitializationStartedListener<GyroscopeMeasurementGenerator>>()
         val initializationCompletedListener =
-            mockk<CalibrationMeasurementGenerator.OnInitializationCompletedListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnInitializationCompletedListener<GyroscopeMeasurementGenerator>>()
         val errorListener =
-            mockk<CalibrationMeasurementGenerator.OnErrorListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnErrorListener<GyroscopeMeasurementGenerator>>()
         val staticIntervalDetectedListener =
-            mockk<CalibrationMeasurementGenerator.OnStaticIntervalDetectedListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnStaticIntervalDetectedListener<GyroscopeMeasurementGenerator>>()
         val dynamicIntervalDetectedListener =
-            mockk<CalibrationMeasurementGenerator.OnDynamicIntervalDetectedListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnDynamicIntervalDetectedListener<GyroscopeMeasurementGenerator>>()
         val staticIntervalSkippedListener =
-            mockk<CalibrationMeasurementGenerator.OnStaticIntervalSkippedListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnStaticIntervalSkippedListener<GyroscopeMeasurementGenerator>>()
         val dynamicIntervalSkippedListener =
-            mockk<CalibrationMeasurementGenerator.OnDynamicIntervalSkippedListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnDynamicIntervalSkippedListener<GyroscopeMeasurementGenerator>>()
         val generatedMeasurementListener =
-            mockk<CalibrationMeasurementGenerator.OnGeneratedMeasurementListener<AccelerometerMeasurementGenerator, StandardDeviationBodyKinematics>>()
+            mockk<CalibrationMeasurementGenerator.OnGeneratedMeasurementListener<GyroscopeMeasurementGenerator, BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(
+        val generator = GyroscopeMeasurementGenerator(
             context,
             AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            SensorDelay.NORMAL,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -1086,6 +1379,11 @@ class AccelerometerMeasurementGeneratorTest {
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
+        assertEquals(
+            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            generator.gyroscopeSensorType
+        )
+        assertEquals(SensorDelay.NORMAL, generator.gyroscopeSensorDelay)
         assertSame(initializationStartedListener, generator.initializationStartedListener)
         assertSame(initializationCompletedListener, generator.initializationCompletedListener)
         assertSame(errorListener, generator.errorListener)
@@ -1096,8 +1394,10 @@ class AccelerometerMeasurementGeneratorTest {
         assertSame(generatedMeasurementListener, generator.generatedMeasurementListener)
         assertNull(generator.resetListener)
         assertNull(generator.accelerometerMeasurementListener)
+        assertNull(generator.gyroscopeMeasurementListener)
         assertNull(generator.accuracyChangedListener)
         assertNull(generator.accelerometerSensor)
+        assertNull(generator.gyroscopeSensor)
         assertEquals(MeasurementsGenerator.DEFAULT_MIN_STATIC_SAMPLES, generator.minStaticSamples)
         assertEquals(MeasurementsGenerator.DEFAULT_MAX_DYNAMIC_SAMPLES, generator.maxDynamicSamples)
         assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, generator.windowSize)
@@ -1160,32 +1460,35 @@ class AccelerometerMeasurementGeneratorTest {
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
+
     }
 
     @Test
     fun constructor_whenResetListener_setsExpectedValues() {
         val initializationStartedListener =
-            mockk<CalibrationMeasurementGenerator.OnInitializationStartedListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnInitializationStartedListener<GyroscopeMeasurementGenerator>>()
         val initializationCompletedListener =
-            mockk<CalibrationMeasurementGenerator.OnInitializationCompletedListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnInitializationCompletedListener<GyroscopeMeasurementGenerator>>()
         val errorListener =
-            mockk<CalibrationMeasurementGenerator.OnErrorListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnErrorListener<GyroscopeMeasurementGenerator>>()
         val staticIntervalDetectedListener =
-            mockk<CalibrationMeasurementGenerator.OnStaticIntervalDetectedListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnStaticIntervalDetectedListener<GyroscopeMeasurementGenerator>>()
         val dynamicIntervalDetectedListener =
-            mockk<CalibrationMeasurementGenerator.OnDynamicIntervalDetectedListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnDynamicIntervalDetectedListener<GyroscopeMeasurementGenerator>>()
         val staticIntervalSkippedListener =
-            mockk<CalibrationMeasurementGenerator.OnStaticIntervalSkippedListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnStaticIntervalSkippedListener<GyroscopeMeasurementGenerator>>()
         val dynamicIntervalSkippedListener =
-            mockk<CalibrationMeasurementGenerator.OnDynamicIntervalSkippedListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnDynamicIntervalSkippedListener<GyroscopeMeasurementGenerator>>()
         val generatedMeasurementListener =
-            mockk<CalibrationMeasurementGenerator.OnGeneratedMeasurementListener<AccelerometerMeasurementGenerator, StandardDeviationBodyKinematics>>()
+            mockk<CalibrationMeasurementGenerator.OnGeneratedMeasurementListener<GyroscopeMeasurementGenerator, BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>>()
         val resetListener =
-            mockk<CalibrationMeasurementGenerator.OnResetListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnResetListener<GyroscopeMeasurementGenerator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(
+        val generator = GyroscopeMeasurementGenerator(
             context,
             AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            SensorDelay.NORMAL,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -1205,6 +1508,11 @@ class AccelerometerMeasurementGeneratorTest {
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
+        assertEquals(
+            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            generator.gyroscopeSensorType
+        )
+        assertEquals(SensorDelay.NORMAL, generator.gyroscopeSensorDelay)
         assertSame(initializationStartedListener, generator.initializationStartedListener)
         assertSame(initializationCompletedListener, generator.initializationCompletedListener)
         assertSame(errorListener, generator.errorListener)
@@ -1215,8 +1523,10 @@ class AccelerometerMeasurementGeneratorTest {
         assertSame(generatedMeasurementListener, generator.generatedMeasurementListener)
         assertSame(resetListener, generator.resetListener)
         assertNull(generator.accelerometerMeasurementListener)
+        assertNull(generator.gyroscopeMeasurementListener)
         assertNull(generator.accuracyChangedListener)
         assertNull(generator.accelerometerSensor)
+        assertNull(generator.gyroscopeSensor)
         assertEquals(MeasurementsGenerator.DEFAULT_MIN_STATIC_SAMPLES, generator.minStaticSamples)
         assertEquals(MeasurementsGenerator.DEFAULT_MAX_DYNAMIC_SAMPLES, generator.maxDynamicSamples)
         assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, generator.windowSize)
@@ -1279,34 +1589,37 @@ class AccelerometerMeasurementGeneratorTest {
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
+
     }
 
     @Test
     fun constructor_whenAccelerometerMeasurementListener_setsExpectedValues() {
         val initializationStartedListener =
-            mockk<CalibrationMeasurementGenerator.OnInitializationStartedListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnInitializationStartedListener<GyroscopeMeasurementGenerator>>()
         val initializationCompletedListener =
-            mockk<CalibrationMeasurementGenerator.OnInitializationCompletedListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnInitializationCompletedListener<GyroscopeMeasurementGenerator>>()
         val errorListener =
-            mockk<CalibrationMeasurementGenerator.OnErrorListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnErrorListener<GyroscopeMeasurementGenerator>>()
         val staticIntervalDetectedListener =
-            mockk<CalibrationMeasurementGenerator.OnStaticIntervalDetectedListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnStaticIntervalDetectedListener<GyroscopeMeasurementGenerator>>()
         val dynamicIntervalDetectedListener =
-            mockk<CalibrationMeasurementGenerator.OnDynamicIntervalDetectedListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnDynamicIntervalDetectedListener<GyroscopeMeasurementGenerator>>()
         val staticIntervalSkippedListener =
-            mockk<CalibrationMeasurementGenerator.OnStaticIntervalSkippedListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnStaticIntervalSkippedListener<GyroscopeMeasurementGenerator>>()
         val dynamicIntervalSkippedListener =
-            mockk<CalibrationMeasurementGenerator.OnDynamicIntervalSkippedListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnDynamicIntervalSkippedListener<GyroscopeMeasurementGenerator>>()
         val generatedMeasurementListener =
-            mockk<CalibrationMeasurementGenerator.OnGeneratedMeasurementListener<AccelerometerMeasurementGenerator, StandardDeviationBodyKinematics>>()
+            mockk<CalibrationMeasurementGenerator.OnGeneratedMeasurementListener<GyroscopeMeasurementGenerator, BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>>()
         val resetListener =
-            mockk<CalibrationMeasurementGenerator.OnResetListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnResetListener<GyroscopeMeasurementGenerator>>()
         val accelerometerMeasurementListener =
             mockk<AccelerometerSensorCollector.OnMeasurementListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(
+        val generator = GyroscopeMeasurementGenerator(
             context,
             AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            SensorDelay.NORMAL,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -1327,6 +1640,11 @@ class AccelerometerMeasurementGeneratorTest {
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
+        assertEquals(
+            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            generator.gyroscopeSensorType
+        )
+        assertEquals(SensorDelay.NORMAL, generator.gyroscopeSensorDelay)
         assertSame(initializationStartedListener, generator.initializationStartedListener)
         assertSame(initializationCompletedListener, generator.initializationCompletedListener)
         assertSame(errorListener, generator.errorListener)
@@ -1337,8 +1655,10 @@ class AccelerometerMeasurementGeneratorTest {
         assertSame(generatedMeasurementListener, generator.generatedMeasurementListener)
         assertSame(resetListener, generator.resetListener)
         assertSame(accelerometerMeasurementListener, generator.accelerometerMeasurementListener)
+        assertNull(generator.gyroscopeMeasurementListener)
         assertNull(generator.accuracyChangedListener)
         assertNull(generator.accelerometerSensor)
+        assertNull(generator.gyroscopeSensor)
         assertEquals(MeasurementsGenerator.DEFAULT_MIN_STATIC_SAMPLES, generator.minStaticSamples)
         assertEquals(MeasurementsGenerator.DEFAULT_MAX_DYNAMIC_SAMPLES, generator.maxDynamicSamples)
         assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, generator.windowSize)
@@ -1401,35 +1721,38 @@ class AccelerometerMeasurementGeneratorTest {
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
+
     }
 
     @Test
-    fun constructor_whenAccuracyChangedListener_setsExpectedValues() {
+    fun constructor_whenGyroscopeMeasurementListener_setsExpectedValues() {
         val initializationStartedListener =
-            mockk<CalibrationMeasurementGenerator.OnInitializationStartedListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnInitializationStartedListener<GyroscopeMeasurementGenerator>>()
         val initializationCompletedListener =
-            mockk<CalibrationMeasurementGenerator.OnInitializationCompletedListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnInitializationCompletedListener<GyroscopeMeasurementGenerator>>()
         val errorListener =
-            mockk<CalibrationMeasurementGenerator.OnErrorListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnErrorListener<GyroscopeMeasurementGenerator>>()
         val staticIntervalDetectedListener =
-            mockk<CalibrationMeasurementGenerator.OnStaticIntervalDetectedListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnStaticIntervalDetectedListener<GyroscopeMeasurementGenerator>>()
         val dynamicIntervalDetectedListener =
-            mockk<CalibrationMeasurementGenerator.OnDynamicIntervalDetectedListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnDynamicIntervalDetectedListener<GyroscopeMeasurementGenerator>>()
         val staticIntervalSkippedListener =
-            mockk<CalibrationMeasurementGenerator.OnStaticIntervalSkippedListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnStaticIntervalSkippedListener<GyroscopeMeasurementGenerator>>()
         val dynamicIntervalSkippedListener =
-            mockk<CalibrationMeasurementGenerator.OnDynamicIntervalSkippedListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnDynamicIntervalSkippedListener<GyroscopeMeasurementGenerator>>()
         val generatedMeasurementListener =
-            mockk<CalibrationMeasurementGenerator.OnGeneratedMeasurementListener<AccelerometerMeasurementGenerator, StandardDeviationBodyKinematics>>()
+            mockk<CalibrationMeasurementGenerator.OnGeneratedMeasurementListener<GyroscopeMeasurementGenerator, BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>>()
         val resetListener =
-            mockk<CalibrationMeasurementGenerator.OnResetListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnResetListener<GyroscopeMeasurementGenerator>>()
         val accelerometerMeasurementListener =
             mockk<AccelerometerSensorCollector.OnMeasurementListener>()
-        val accuracyChangedListener = mockk<SensorCollector.OnAccuracyChangedListener>()
+        val gyroscopeMeasurementListener = mockk<GyroscopeSensorCollector.OnMeasurementListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(
+        val generator = GyroscopeMeasurementGenerator(
             context,
             AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            SensorDelay.NORMAL,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -1441,7 +1764,7 @@ class AccelerometerMeasurementGeneratorTest {
             generatedMeasurementListener,
             resetListener,
             accelerometerMeasurementListener,
-            accuracyChangedListener
+            gyroscopeMeasurementListener
         )
 
         // check default values
@@ -1451,6 +1774,11 @@ class AccelerometerMeasurementGeneratorTest {
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
+        assertEquals(
+            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            generator.gyroscopeSensorType
+        )
+        assertEquals(SensorDelay.NORMAL, generator.gyroscopeSensorDelay)
         assertSame(initializationStartedListener, generator.initializationStartedListener)
         assertSame(initializationCompletedListener, generator.initializationCompletedListener)
         assertSame(errorListener, generator.errorListener)
@@ -1461,8 +1789,10 @@ class AccelerometerMeasurementGeneratorTest {
         assertSame(generatedMeasurementListener, generator.generatedMeasurementListener)
         assertSame(resetListener, generator.resetListener)
         assertSame(accelerometerMeasurementListener, generator.accelerometerMeasurementListener)
-        assertSame(accuracyChangedListener, generator.accuracyChangedListener)
+        assertSame(gyroscopeMeasurementListener, generator.gyroscopeMeasurementListener)
+        assertNull(generator.accuracyChangedListener)
         assertNull(generator.accelerometerSensor)
+        assertNull(generator.gyroscopeSensor)
         assertEquals(MeasurementsGenerator.DEFAULT_MIN_STATIC_SAMPLES, generator.minStaticSamples)
         assertEquals(MeasurementsGenerator.DEFAULT_MAX_DYNAMIC_SAMPLES, generator.maxDynamicSamples)
         assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, generator.windowSize)
@@ -1525,19 +1855,156 @@ class AccelerometerMeasurementGeneratorTest {
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
+
+    }
+
+    @Test
+    fun constructor_whenAccuracyChangedListener_setsExpectedValues() {
+        val initializationStartedListener =
+            mockk<CalibrationMeasurementGenerator.OnInitializationStartedListener<GyroscopeMeasurementGenerator>>()
+        val initializationCompletedListener =
+            mockk<CalibrationMeasurementGenerator.OnInitializationCompletedListener<GyroscopeMeasurementGenerator>>()
+        val errorListener =
+            mockk<CalibrationMeasurementGenerator.OnErrorListener<GyroscopeMeasurementGenerator>>()
+        val staticIntervalDetectedListener =
+            mockk<CalibrationMeasurementGenerator.OnStaticIntervalDetectedListener<GyroscopeMeasurementGenerator>>()
+        val dynamicIntervalDetectedListener =
+            mockk<CalibrationMeasurementGenerator.OnDynamicIntervalDetectedListener<GyroscopeMeasurementGenerator>>()
+        val staticIntervalSkippedListener =
+            mockk<CalibrationMeasurementGenerator.OnStaticIntervalSkippedListener<GyroscopeMeasurementGenerator>>()
+        val dynamicIntervalSkippedListener =
+            mockk<CalibrationMeasurementGenerator.OnDynamicIntervalSkippedListener<GyroscopeMeasurementGenerator>>()
+        val generatedMeasurementListener =
+            mockk<CalibrationMeasurementGenerator.OnGeneratedMeasurementListener<GyroscopeMeasurementGenerator, BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>>()
+        val resetListener =
+            mockk<CalibrationMeasurementGenerator.OnResetListener<GyroscopeMeasurementGenerator>>()
+        val accelerometerMeasurementListener =
+            mockk<AccelerometerSensorCollector.OnMeasurementListener>()
+        val gyroscopeMeasurementListener = mockk<GyroscopeSensorCollector.OnMeasurementListener>()
+        val accuracyChangedListener = mockk<SensorCollector.OnAccuracyChangedListener>()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val generator = GyroscopeMeasurementGenerator(
+            context,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            SensorDelay.NORMAL,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            SensorDelay.NORMAL,
+            initializationStartedListener,
+            initializationCompletedListener,
+            errorListener,
+            staticIntervalDetectedListener,
+            dynamicIntervalDetectedListener,
+            staticIntervalSkippedListener,
+            dynamicIntervalSkippedListener,
+            generatedMeasurementListener,
+            resetListener,
+            accelerometerMeasurementListener,
+            gyroscopeMeasurementListener,
+            accuracyChangedListener
+        )
+
+        // check default values
+        assertSame(context, generator.context)
+        assertEquals(
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            generator.accelerometerSensorType
+        )
+        assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
+        assertEquals(
+            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            generator.gyroscopeSensorType
+        )
+        assertEquals(SensorDelay.NORMAL, generator.gyroscopeSensorDelay)
+        assertSame(initializationStartedListener, generator.initializationStartedListener)
+        assertSame(initializationCompletedListener, generator.initializationCompletedListener)
+        assertSame(errorListener, generator.errorListener)
+        assertSame(staticIntervalDetectedListener, generator.staticIntervalDetectedListener)
+        assertSame(dynamicIntervalDetectedListener, generator.dynamicIntervalDetectedListener)
+        assertSame(staticIntervalSkippedListener, generator.staticIntervalSkippedListener)
+        assertSame(dynamicIntervalSkippedListener, generator.dynamicIntervalSkippedListener)
+        assertSame(generatedMeasurementListener, generator.generatedMeasurementListener)
+        assertSame(resetListener, generator.resetListener)
+        assertSame(accelerometerMeasurementListener, generator.accelerometerMeasurementListener)
+        assertSame(gyroscopeMeasurementListener, generator.gyroscopeMeasurementListener)
+        assertSame(accuracyChangedListener, generator.accuracyChangedListener)
+        assertNull(generator.accelerometerSensor)
+        assertNull(generator.gyroscopeSensor)
+        assertEquals(MeasurementsGenerator.DEFAULT_MIN_STATIC_SAMPLES, generator.minStaticSamples)
+        assertEquals(MeasurementsGenerator.DEFAULT_MAX_DYNAMIC_SAMPLES, generator.maxDynamicSamples)
+        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, generator.windowSize)
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
+            generator.initialStaticSamples
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
+            generator.thresholdFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
+            generator.instantaneousNoiseLevelFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
+            generator.baseNoiseLevelAbsoluteThreshold,
+            0.0
+        )
+        val baseNoiseLevelAbsoluteThreshold1 =
+            generator.baseNoiseLevelAbsoluteThresholdAsMeasurement
+        assertEquals(
+            generator.baseNoiseLevelAbsoluteThreshold,
+            baseNoiseLevelAbsoluteThreshold1.value.toDouble(),
+            0.0
+        )
+        assertEquals(
+            AccelerationUnit.METERS_PER_SQUARED_SECOND,
+            baseNoiseLevelAbsoluteThreshold1.unit
+        )
+        val baseNoiseLevelAbsoluteThreshold2 =
+            Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        generator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevelAbsoluteThreshold2)
+        assertEquals(baseNoiseLevelAbsoluteThreshold1, baseNoiseLevelAbsoluteThreshold2)
+        assertNull(generator.accelerometerBaseNoiseLevel)
+        assertNull(generator.accelerometerBaseNoiseLevelAsMeasurement)
+        val baseNoiseLevel = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        assertFalse(generator.getAccelerometerBaseNoiseLevelAsMeasurement(baseNoiseLevel))
+        assertNull(generator.accelerometerBaseNoiseLevelPsd)
+        assertNull(generator.accelerometerBaseNoiseLevelRootPsd)
+        assertNull(generator.threshold)
+        assertNull(generator.thresholdAsMeasurement)
+        val threshold = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        assertFalse(generator.getThresholdAsMeasurement(threshold))
+        assertEquals(0, generator.processedStaticSamples)
+        assertEquals(0, generator.processedDynamicSamples)
+        assertFalse(generator.isStaticIntervalSkipped)
+        assertFalse(generator.isDynamicIntervalSkipped)
+        assertNull(generator.accelerometerAverageTimeInterval)
+        assertNull(generator.accelerometerAverageTimeIntervalAsTime)
+        val time = Time(0.0, TimeUnit.SECOND)
+        assertFalse(generator.getAccelerometerAverageTimeIntervalAsTime(time))
+        assertNull(generator.accelerometerTimeIntervalVariance)
+        assertNull(generator.accelerometerTimeIntervalStandardDeviation)
+        assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
+        assertFalse(generator.getTimeIntervalStandardDeviationAsTime(time))
+        assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertFalse(generator.running)
+        assertEquals(Status.IDLE, generator.status)
+
     }
 
     @Test
     fun initializationStartedListener_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         // check default value
         assertNull(generator.initializationStartedListener)
 
         // set new value
         val initializationStartedListener =
-            mockk<CalibrationMeasurementGenerator.OnInitializationStartedListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnInitializationStartedListener<GyroscopeMeasurementGenerator>>()
         generator.initializationStartedListener = initializationStartedListener
 
         // check
@@ -1547,14 +2014,14 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun initializationCompletedListener_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         // check default value
         assertNull(generator.initializationCompletedListener)
 
         // set new value
         val initializationCompletedListener =
-            mockk<CalibrationMeasurementGenerator.OnInitializationCompletedListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnInitializationCompletedListener<GyroscopeMeasurementGenerator>>()
         generator.initializationCompletedListener = initializationCompletedListener
 
         // check
@@ -1564,14 +2031,14 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun errorListener_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         // check default value
         assertNull(generator.errorListener)
 
         // set new value
         val errorListener =
-            mockk<CalibrationMeasurementGenerator.OnErrorListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnErrorListener<GyroscopeMeasurementGenerator>>()
         generator.errorListener = errorListener
 
         // check
@@ -1581,14 +2048,14 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun staticIntervalDetectedListener_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         // check default value
         assertNull(generator.staticIntervalDetectedListener)
 
         // set new value
         val staticIntervalDetectedListener =
-            mockk<CalibrationMeasurementGenerator.OnStaticIntervalDetectedListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnStaticIntervalDetectedListener<GyroscopeMeasurementGenerator>>()
         generator.staticIntervalDetectedListener = staticIntervalDetectedListener
 
         // check
@@ -1598,14 +2065,14 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun dynamicIntervalDetectedListener_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         // check default value
         assertNull(generator.dynamicIntervalDetectedListener)
 
         // set new value
         val dynamicIntervalDetectedListener =
-            mockk<CalibrationMeasurementGenerator.OnDynamicIntervalDetectedListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnDynamicIntervalDetectedListener<GyroscopeMeasurementGenerator>>()
         generator.dynamicIntervalDetectedListener = dynamicIntervalDetectedListener
 
         // check
@@ -1615,14 +2082,14 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun staticIntervalSkippedListener_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         // check default value
         assertNull(generator.staticIntervalSkippedListener)
 
         // set new value
         val staticIntervalSkippedListener =
-            mockk<CalibrationMeasurementGenerator.OnStaticIntervalSkippedListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnStaticIntervalSkippedListener<GyroscopeMeasurementGenerator>>()
         generator.staticIntervalSkippedListener = staticIntervalSkippedListener
 
         // check
@@ -1632,14 +2099,17 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun dynamicIntervalSkippedListener_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         // check default value
         assertNull(generator.dynamicIntervalSkippedListener)
 
         // set new value
+        assertNull(generator.dynamicIntervalSkippedListener)
+
+        // set new value
         val dynamicIntervalSkippedListener =
-            mockk<CalibrationMeasurementGenerator.OnDynamicIntervalSkippedListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnDynamicIntervalSkippedListener<GyroscopeMeasurementGenerator>>()
         generator.dynamicIntervalSkippedListener = dynamicIntervalSkippedListener
 
         // check
@@ -1649,14 +2119,14 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun generatedMeasurementListener_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         // check default value
         assertNull(generator.generatedMeasurementListener)
 
         // set new value
         val generatedMeasurementListener =
-            mockk<CalibrationMeasurementGenerator.OnGeneratedMeasurementListener<AccelerometerMeasurementGenerator, StandardDeviationBodyKinematics>>()
+            mockk<CalibrationMeasurementGenerator.OnGeneratedMeasurementListener<GyroscopeMeasurementGenerator, BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>>()
         generator.generatedMeasurementListener = generatedMeasurementListener
 
         // check
@@ -1666,14 +2136,14 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun resetListener_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         // check default value
         assertNull(generator.resetListener)
 
         // set new value
         val resetListener =
-            mockk<CalibrationMeasurementGenerator.OnResetListener<AccelerometerMeasurementGenerator>>()
+            mockk<CalibrationMeasurementGenerator.OnResetListener<GyroscopeMeasurementGenerator>>()
         generator.resetListener = resetListener
 
         // check
@@ -1683,7 +2153,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun accelerometerMeasurementListener_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         // check default value
         assertNull(generator.accelerometerMeasurementListener)
@@ -1698,9 +2168,25 @@ class AccelerometerMeasurementGeneratorTest {
     }
 
     @Test
+    fun gyroscopeMeasurementListener_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val generator = GyroscopeMeasurementGenerator(context)
+
+        // check default value
+        assertNull(generator.gyroscopeMeasurementListener)
+
+        // set new value
+        val gyroscopeMeasurementListener = mockk<GyroscopeSensorCollector.OnMeasurementListener>()
+        generator.gyroscopeMeasurementListener = gyroscopeMeasurementListener
+
+        // check
+        assertSame(gyroscopeMeasurementListener, generator.gyroscopeMeasurementListener)
+    }
+
+    @Test
     fun accuracyChangedListener_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         // check default value
         assertNull(generator.accuracyChangedListener)
@@ -1716,7 +2202,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun accelerometerSensor_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         // check default value
         assertNull(generator.accelerometerSensor)
@@ -1743,9 +2229,30 @@ class AccelerometerMeasurementGeneratorTest {
     }
 
     @Test
+    fun gyroscopeSensor_returnsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val generator = GyroscopeMeasurementGenerator(context)
+
+        // check default value
+        assertNull(generator.gyroscopeSensor)
+
+        // set new value
+        val gyroscopeCollector: GyroscopeSensorCollector? =
+            generator.getPrivateProperty("gyroscopeCollector")
+        requireNotNull(gyroscopeCollector)
+        val gyroscopeCollectorSpy = spyk(gyroscopeCollector)
+        val sensor = mockk<Sensor>()
+        every { gyroscopeCollectorSpy.sensor }.returns(sensor)
+        generator.setPrivateProperty("gyroscopeCollector", gyroscopeCollectorSpy)
+
+        // check
+        assertSame(sensor, generator.gyroscopeSensor)
+    }
+
+    @Test
     fun minStaticSamples_whenNotRunningAndValid_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         // check default value
         assertEquals(MeasurementsGenerator.DEFAULT_MIN_STATIC_SAMPLES, generator.minStaticSamples)
@@ -1760,7 +2267,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test(expected = IllegalArgumentException::class)
     fun minStaticSamples_whenInvalidValue_throwsIllegalArgumentException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         // check default value
         assertEquals(MeasurementsGenerator.DEFAULT_MIN_STATIC_SAMPLES, generator.minStaticSamples)
@@ -1772,7 +2279,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test(expected = IllegalStateException::class)
     fun minStaticSamples_whenRunning_throwsIllegalStateException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         // check default value
         assertEquals(MeasurementsGenerator.DEFAULT_MIN_STATIC_SAMPLES, generator.minStaticSamples)
@@ -1787,7 +2294,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun maxDynamicSamples_whenNotRunningAndValid_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         // check default value
         assertEquals(MeasurementsGenerator.DEFAULT_MAX_DYNAMIC_SAMPLES, generator.maxDynamicSamples)
@@ -1802,7 +2309,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test(expected = IllegalArgumentException::class)
     fun maxDynamicSamples_whenInvalidValue_throwsIllegalArgumentException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         // check default value
         assertEquals(MeasurementsGenerator.DEFAULT_MAX_DYNAMIC_SAMPLES, generator.maxDynamicSamples)
@@ -1814,7 +2321,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test(expected = IllegalStateException::class)
     fun maxDynamicSamples_whenRunning_throwsIllegalStateException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         // check default value
         assertEquals(MeasurementsGenerator.DEFAULT_MAX_DYNAMIC_SAMPLES, generator.maxDynamicSamples)
@@ -1829,7 +2336,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun windowSize_whenValid_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         // check default value
         assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, generator.windowSize)
@@ -1844,7 +2351,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test(expected = IllegalArgumentException::class)
     fun windowSize_whenInvalid_throwsIllegalArgumentException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         // check default value
         assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, generator.windowSize)
@@ -1855,7 +2362,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test(expected = IllegalStateException::class)
     fun windowSize_whenRunning_throwsIllegalStateException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         // check default value
         assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, generator.windowSize)
@@ -1869,7 +2376,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun initialStaticSamples_whenValid_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         // check default value
         assertEquals(
@@ -1887,7 +2394,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test(expected = IllegalArgumentException::class)
     fun initialStaticSamples_whenInvalid_throwsIllegalArgumentException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         // check default value
         assertEquals(
@@ -1901,7 +2408,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test(expected = IllegalStateException::class)
     fun initialStaticSamples_whenRunning_throwsIllegalStateException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         // check default value
         assertEquals(
@@ -1917,7 +2424,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun thresholdFactor_whenValid_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         // check default value
         assertEquals(
@@ -1936,7 +2443,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test(expected = IllegalArgumentException::class)
     fun thresholdFactor_whenInvalid_throwsIllegalArgumentException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         // check default value
         assertEquals(
@@ -1952,7 +2459,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test(expected = IllegalStateException::class)
     fun thresholdFactor_whenRunning_throwsIllegalStateException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         // check default value
         assertEquals(
@@ -1970,7 +2477,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun instantaneousNoiseLevelFactor_whenValid_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         // check default value
         assertEquals(
@@ -1989,7 +2496,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test(expected = IllegalArgumentException::class)
     fun instantaneousNoiseLevelFactor_whenInvalid_throwsIllegalArgumentException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         // check default value
         assertEquals(
@@ -2004,7 +2511,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test(expected = IllegalStateException::class)
     fun instantaneousNoiseLevelFactor_whenRunning_throwsIllegalStateException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         // check default value
         assertEquals(
@@ -2021,7 +2528,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun baseNoiseLevelAbsoluteThreshold_whenValid_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         // check default value
         assertEquals(
@@ -2044,7 +2551,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test(expected = IllegalArgumentException::class)
     fun baseNoiseLevelAbsoluteThreshold_whenInvalid_throwsIllegalArgumentException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         generator.baseNoiseLevelAbsoluteThreshold = 0.0
     }
@@ -2052,7 +2559,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test(expected = IllegalStateException::class)
     fun baseNoiseLevelAbsoluteThreshold_whenRunning_throwsIllegalStateException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         setPrivateProperty(CalibrationMeasurementGenerator::class, generator, "running", true)
 
@@ -2062,7 +2569,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun baseNoiseLevelAbsoluteThresholdAsMeasurement_whenValid_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         // check default value
         val baseNoiseLevelAbsoluteThreshold1 =
@@ -2109,7 +2616,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test(expected = IllegalArgumentException::class)
     fun baseNoiseLevelAbsoluteThresholdAsMeasurement_whenInvalid_throwsIllegalArgumentException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         generator.baseNoiseLevelAbsoluteThresholdAsMeasurement =
             Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
@@ -2118,7 +2625,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test(expected = IllegalStateException::class)
     fun baseNoiseLevelAbsoluteThresholdAsMeasurement_whenRunning_throwsIllegalStateException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         setPrivateProperty(CalibrationMeasurementGenerator::class, generator, "running", true)
 
@@ -2130,7 +2637,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun accelerometerBaseNoiseLevel_whenNotInitialized_returnsNull() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         // check
         assertNull(generator.accelerometerBaseNoiseLevel)
@@ -2143,9 +2650,9 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun accelerometerBaseNoiseLevel_whenInitialized_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
-        val measurementsGenerator: AccelerometerMeasurementsGenerator? =
+        val measurementsGenerator: GyroscopeMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
         val randomizer = UniformRandomizer()
@@ -2168,7 +2675,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun accelerometerBaseNoiseLevelAsMeasurement_whenNotInitialized_returnsNull() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         // check
         assertNull(generator.accelerometerBaseNoiseLevelAsMeasurement)
@@ -2181,9 +2688,9 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun accelerometerBaseNoiseLevelAsMeasurement_whenInitialized_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
-        val measurementsGenerator: AccelerometerMeasurementsGenerator? =
+        val measurementsGenerator: GyroscopeMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
         val randomizer = UniformRandomizer()
@@ -2209,7 +2716,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun getAccelerometerBaseNoiseLevelAsMeasurement_whenNotInitialized_returnsFalse() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         // check
         val baseNoiseLevel1 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
@@ -2223,9 +2730,9 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun getAccelerometerBaseNoiseLevelAsMeasurement_whenInitialized_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
-        val measurementsGenerator: AccelerometerMeasurementsGenerator? =
+        val measurementsGenerator: GyroscopeMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
         val randomizer = UniformRandomizer()
@@ -2258,7 +2765,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun accelerometerBaseNoiseLevelPsd_whenNotInitialized_returnsNull() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         // check
         assertNull(generator.accelerometerBaseNoiseLevelPsd)
@@ -2271,9 +2778,9 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun accelerometerBaseNoiseLevelPsd_whenInitialized_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
-        val measurementsGenerator: AccelerometerMeasurementsGenerator? =
+        val measurementsGenerator: GyroscopeMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
         val randomizer = UniformRandomizer()
@@ -2296,7 +2803,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun accelerometerBaseNoiseLevelRootPsd_whenNotInitialized_returnsNull() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         // check
         assertNull(generator.accelerometerBaseNoiseLevelRootPsd)
@@ -2309,9 +2816,9 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun accelerometerBaseNoiseLevelRootPsd_whenInitialized_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
-        val measurementsGenerator: AccelerometerMeasurementsGenerator? =
+        val measurementsGenerator: GyroscopeMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
         val randomizer = UniformRandomizer()
@@ -2336,7 +2843,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun threshold_whenNotInitialized_returnsNull() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         // check
         assertNull(generator.threshold)
@@ -2349,9 +2856,9 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun threshold_whenInitialized_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
-        val measurementsGenerator: AccelerometerMeasurementsGenerator? =
+        val measurementsGenerator: GyroscopeMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
         val randomizer = UniformRandomizer()
@@ -2374,7 +2881,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun thresholdAsMeasurement_whenNotInitialized_returnsNull() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         // check
         assertNull(generator.thresholdAsMeasurement)
@@ -2387,9 +2894,9 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun thresholdAsMeasurement_whenInitialized_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
-        val measurementsGenerator: AccelerometerMeasurementsGenerator? =
+        val measurementsGenerator: GyroscopeMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
         val randomizer = UniformRandomizer()
@@ -2413,7 +2920,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun getThresholdAsMeasurement_whenNotInitialized_returnsFalse() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         // check
         val threshold = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
@@ -2430,9 +2937,9 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun getThresholdAsMeasurement_whenInitialized_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
-        val measurementsGenerator: AccelerometerMeasurementsGenerator? =
+        val measurementsGenerator: GyroscopeMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
         val randomizer = UniformRandomizer()
@@ -2462,12 +2969,12 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun processedStaticSamples_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         // check default value
         assertEquals(0, generator.processedStaticSamples)
 
-        val measurementsGenerator: AccelerometerMeasurementsGenerator? =
+        val measurementsGenerator: GyroscopeMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
         val randomizer = UniformRandomizer()
@@ -2484,12 +2991,12 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun processedDynamicSamples_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         // check default value
         assertEquals(0, generator.processedDynamicSamples)
 
-        val measurementsGenerator: AccelerometerMeasurementsGenerator? =
+        val measurementsGenerator: GyroscopeMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
         val randomizer = UniformRandomizer()
@@ -2506,12 +3013,12 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun isStaticIntervalSkipped_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         // check default value
         assertFalse(generator.isStaticIntervalSkipped)
 
-        val measurementsGenerator: AccelerometerMeasurementsGenerator? =
+        val measurementsGenerator: GyroscopeMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
         val measurementsGeneratorSpy = spyk(measurementsGenerator)
@@ -2526,12 +3033,12 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun isDynamicIntervalSkipped_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         // check default value
         assertFalse(generator.isDynamicIntervalSkipped)
 
-        val measurementsGenerator: AccelerometerMeasurementsGenerator? =
+        val measurementsGenerator: GyroscopeMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
         val measurementsGeneratorSpy = spyk(measurementsGenerator)
@@ -2546,7 +3053,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun accelerometerAverageTimeInterval_whenNotInitialized_returnsNull() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         // check
         assertNull(generator.accelerometerAverageTimeInterval)
@@ -2559,7 +3066,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun accelerometerAverageTimeInterval_whenInitialized_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         val timeIntervalEstimator: TimeIntervalEstimator? = getPrivateProperty(
             CalibrationMeasurementGenerator::class,
@@ -2592,7 +3099,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun accelerometerAverageTimeIntervalAsTime_whenNotInitialized_returnsNull() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         // check
         assertNull(generator.accelerometerAverageTimeIntervalAsTime)
@@ -2605,7 +3112,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun accelerometerAverageTimeIntervalAsTime_whenInitialized_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         val timeIntervalEstimator: TimeIntervalEstimator? = getPrivateProperty(
             CalibrationMeasurementGenerator::class,
@@ -2639,7 +3146,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun getAccelerometerAverageTimeIntervalAsTime_whenNotInitialized_returnsFalse() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         // check
         val time = Time(0.0, TimeUnit.SECOND)
@@ -2653,7 +3160,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun getAccelerometerAverageTimeIntervalAsTime_whenInitialized_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         val timeIntervalEstimator: TimeIntervalEstimator? = getPrivateProperty(
             CalibrationMeasurementGenerator::class,
@@ -2695,7 +3202,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun accelerometerTimeIntervalVariance_whenNotInitialized_returnsNull() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         // check
         assertNull(generator.accelerometerTimeIntervalVariance)
@@ -2708,7 +3215,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun accelerometerTimeIntervalVariance_whenInitialized_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         val timeIntervalEstimator: TimeIntervalEstimator? = getPrivateProperty(
             CalibrationMeasurementGenerator::class,
@@ -2741,7 +3248,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun accelerometerTimeIntervalStandardDeviation_whenNotInitialized_returnsNull() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         // check
         assertNull(generator.accelerometerTimeIntervalStandardDeviation)
@@ -2754,7 +3261,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun accelerometerTimeIntervalStandardDeviation_whenInitialized_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         val timeIntervalEstimator: TimeIntervalEstimator? = getPrivateProperty(
             CalibrationMeasurementGenerator::class,
@@ -2787,7 +3294,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun accelerometerTimeIntervalStandardDeviationAsTime_whenNotInitialized_returnsNull() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         // check
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
@@ -2800,7 +3307,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun accelerometerTimeIntervalStandardDeviationAsTime_whenInitialized_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         val timeIntervalEstimator: TimeIntervalEstimator? = getPrivateProperty(
             CalibrationMeasurementGenerator::class,
@@ -2834,7 +3341,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun getTimeIntervalStandardDeviationAsTime_whenNotInitialized_returnsFalse() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         // check
         val time = Time(0.0, TimeUnit.SECOND)
@@ -2848,7 +3355,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun getTimeIntervalStandardDeviationAsTime_whenInitialized_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         val timeIntervalEstimator: TimeIntervalEstimator? = getPrivateProperty(
             CalibrationMeasurementGenerator::class,
@@ -2890,7 +3397,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun status_whenUnreliable_returnsFailed() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         setPrivateProperty(CalibrationMeasurementGenerator::class, generator, "unreliable", true)
 
@@ -2900,14 +3407,14 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun status_whenReliableAndIdle_returnsIdle() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         val unreliable: Boolean? =
             getPrivateProperty(CalibrationMeasurementGenerator::class, generator, "unreliable")
         requireNotNull(unreliable)
         assertFalse(unreliable)
 
-        val measurementsGenerator: AccelerometerMeasurementsGenerator? =
+        val measurementsGenerator: GyroscopeMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
         val measurementsGeneratorSpy = spyk(measurementsGenerator)
@@ -2920,14 +3427,14 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun status_whenReliableAndInitializing_returnsInitializing() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         val unreliable: Boolean? =
             getPrivateProperty(CalibrationMeasurementGenerator::class, generator, "unreliable")
         requireNotNull(unreliable)
         assertFalse(unreliable)
 
-        val measurementsGenerator: AccelerometerMeasurementsGenerator? =
+        val measurementsGenerator: GyroscopeMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
         val measurementsGeneratorSpy = spyk(measurementsGenerator)
@@ -2940,14 +3447,14 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun status_whenReliableAndInitializationCompleted_returnsInitializationCompleted() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         val unreliable: Boolean? =
             getPrivateProperty(CalibrationMeasurementGenerator::class, generator, "unreliable")
         requireNotNull(unreliable)
         assertFalse(unreliable)
 
-        val measurementsGenerator: AccelerometerMeasurementsGenerator? =
+        val measurementsGenerator: GyroscopeMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
         val measurementsGeneratorSpy = spyk(measurementsGenerator)
@@ -2960,14 +3467,14 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun status_whenReliableAndStaticInterval_returnsStaticInterval() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         val unreliable: Boolean? =
             getPrivateProperty(CalibrationMeasurementGenerator::class, generator, "unreliable")
         requireNotNull(unreliable)
         assertFalse(unreliable)
 
-        val measurementsGenerator: AccelerometerMeasurementsGenerator? =
+        val measurementsGenerator: GyroscopeMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
         val measurementsGeneratorSpy = spyk(measurementsGenerator)
@@ -2980,14 +3487,14 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun status_whenReliableAndDynamicInterval_returnsDynamicInterval() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         val unreliable: Boolean? =
             getPrivateProperty(CalibrationMeasurementGenerator::class, generator, "unreliable")
         requireNotNull(unreliable)
         assertFalse(unreliable)
 
-        val measurementsGenerator: AccelerometerMeasurementsGenerator? =
+        val measurementsGenerator: GyroscopeMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
         val measurementsGeneratorSpy = spyk(measurementsGenerator)
@@ -3000,14 +3507,14 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun status_whenReliableAndFailed_returnsFailed() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         val unreliable: Boolean? =
             getPrivateProperty(CalibrationMeasurementGenerator::class, generator, "unreliable")
         requireNotNull(unreliable)
         assertFalse(unreliable)
 
-        val measurementsGenerator: AccelerometerMeasurementsGenerator? =
+        val measurementsGenerator: GyroscopeMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
         val measurementsGeneratorSpy = spyk(measurementsGenerator)
@@ -3020,7 +3527,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun onAccelerometerMeasurementListener_whenInitializingAndNoMeasurements_setsInitialTimestamp() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         val listener: AccelerometerSensorCollector.OnMeasurementListener? = getPrivateProperty(
             CalibrationMeasurementGenerator::class,
@@ -3048,7 +3555,7 @@ class AccelerometerMeasurementGeneratorTest {
             accelerometerTimeIntervalEstimatorSpy
         )
 
-        val measurementsGenerator: AccelerometerMeasurementsGenerator? =
+        val measurementsGenerator: GyroscopeMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
         val measurementsGeneratorSpy = spyk(measurementsGenerator)
@@ -3059,6 +3566,15 @@ class AccelerometerMeasurementGeneratorTest {
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
 
         val randomizer = UniformRandomizer()
+        val wx = randomizer.nextDouble()
+        val wy = randomizer.nextDouble()
+        val wz = randomizer.nextDouble()
+        val kinematics = BodyKinematics()
+        kinematics.angularRateX = wx
+        kinematics.angularRateY = wy
+        kinematics.angularRateZ = wz
+        generator.setPrivateProperty("kinematics", kinematics)
+
         val ax = randomizer.nextFloat()
         val ay = randomizer.nextFloat()
         val az = randomizer.nextFloat()
@@ -3077,16 +3593,18 @@ class AccelerometerMeasurementGeneratorTest {
         requireNotNull(initialAccelerometerTimestamp)
         assertEquals(timestamp, initialAccelerometerTimestamp)
         assertEquals(1, generator.numberOfProcessedAccelerometerMeasurements)
-        val slot = slot<BodyKinematics>()
+        val slot = slot<TimedBodyKinematics>()
         verify(exactly = 1) { measurementsGeneratorSpy.process(capture(slot)) }
 
-        val bodyKinematics = slot.captured
-        assertEquals(ax.toDouble(), bodyKinematics.fx, 0.0)
-        assertEquals(ay.toDouble(), bodyKinematics.fy, 0.0)
-        assertEquals(az.toDouble(), bodyKinematics.fz, 0.0)
-        assertEquals(0.0, bodyKinematics.angularRateX, 0.0)
-        assertEquals(0.0, bodyKinematics.angularRateY, 0.0)
-        assertEquals(0.0, bodyKinematics.angularRateZ, 0.0)
+        val timedBodyKinematics = slot.captured
+        assertEquals(ax.toDouble(), timedBodyKinematics.kinematics.fx, 0.0)
+        assertEquals(ay.toDouble(), timedBodyKinematics.kinematics.fy, 0.0)
+        assertEquals(az.toDouble(), timedBodyKinematics.kinematics.fz, 0.0)
+        assertEquals(wx, timedBodyKinematics.kinematics.angularRateX, 0.0)
+        assertEquals(wy, timedBodyKinematics.kinematics.angularRateY, 0.0)
+        assertEquals(wz, timedBodyKinematics.kinematics.angularRateZ, 0.0)
+        assertSame(kinematics, timedBodyKinematics.kinematics)
+        assertEquals(0.0, timedBodyKinematics.timestampSeconds, 0.0)
 
         verify { accelerometerTimeIntervalEstimatorSpy wasNot Called }
     }
@@ -3094,7 +3612,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun onAccelerometerMeasurementListener_whenInitializingAndAvailableMeasurements_addsTimestamp() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         val listener: AccelerometerSensorCollector.OnMeasurementListener? = getPrivateProperty(
             CalibrationMeasurementGenerator::class,
@@ -3122,7 +3640,7 @@ class AccelerometerMeasurementGeneratorTest {
             accelerometerTimeIntervalEstimatorSpy
         )
 
-        val measurementsGenerator: AccelerometerMeasurementsGenerator? =
+        val measurementsGenerator: GyroscopeMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
         val measurementsGeneratorSpy = spyk(measurementsGenerator)
@@ -3140,6 +3658,15 @@ class AccelerometerMeasurementGeneratorTest {
         assertEquals(1, generator.numberOfProcessedAccelerometerMeasurements)
 
         val randomizer = UniformRandomizer()
+        val wx = randomizer.nextDouble()
+        val wy = randomizer.nextDouble()
+        val wz = randomizer.nextDouble()
+        val kinematics = BodyKinematics()
+        kinematics.angularRateX = wx
+        kinematics.angularRateY = wy
+        kinematics.angularRateZ = wz
+        generator.setPrivateProperty("kinematics", kinematics)
+
         val ax = randomizer.nextFloat()
         val ay = randomizer.nextFloat()
         val az = randomizer.nextFloat()
@@ -3155,22 +3682,24 @@ class AccelerometerMeasurementGeneratorTest {
 
         assertEquals(2, generator.numberOfProcessedAccelerometerMeasurements)
 
-        val slot = slot<BodyKinematics>()
+        val slot = slot<TimedBodyKinematics>()
         verify(exactly = 1) { measurementsGeneratorSpy.process(capture(slot)) }
 
-        val bodyKinematics = slot.captured
-        assertEquals(ax.toDouble(), bodyKinematics.fx, 0.0)
-        assertEquals(ay.toDouble(), bodyKinematics.fy, 0.0)
-        assertEquals(az.toDouble(), bodyKinematics.fz, 0.0)
-        assertEquals(0.0, bodyKinematics.angularRateX, 0.0)
-        assertEquals(0.0, bodyKinematics.angularRateY, 0.0)
-        assertEquals(0.0, bodyKinematics.angularRateZ, 0.0)
+        val timedBodyKinematics = slot.captured
+        assertEquals(ax.toDouble(), timedBodyKinematics.kinematics.fx, 0.0)
+        assertEquals(ay.toDouble(), timedBodyKinematics.kinematics.fy, 0.0)
+        assertEquals(az.toDouble(), timedBodyKinematics.kinematics.fz, 0.0)
+        assertEquals(wx, timedBodyKinematics.kinematics.angularRateX, 0.0)
+        assertEquals(wy, timedBodyKinematics.kinematics.angularRateY, 0.0)
+        assertEquals(wz, timedBodyKinematics.kinematics.angularRateZ, 0.0)
+        assertSame(kinematics, timedBodyKinematics.kinematics)
+        assertEquals(seconds, timedBodyKinematics.timestampSeconds, 0.0)
     }
 
     @Test
     fun onAccelerometerMeasurementListener_whenInitializationCompleted_setsInitialized() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         val listener: AccelerometerSensorCollector.OnMeasurementListener? = getPrivateProperty(
             CalibrationMeasurementGenerator::class,
@@ -3201,7 +3730,7 @@ class AccelerometerMeasurementGeneratorTest {
             accelerometerTimeIntervalEstimatorSpy
         )
 
-        val measurementsGenerator: AccelerometerMeasurementsGenerator? =
+        val measurementsGenerator: GyroscopeMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
         val measurementsGeneratorSpy = spyk(measurementsGenerator)
@@ -3213,6 +3742,15 @@ class AccelerometerMeasurementGeneratorTest {
         assertEquals(Status.INITIALIZATION_COMPLETED, generator.status)
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
 
+        val wx = randomizer.nextDouble()
+        val wy = randomizer.nextDouble()
+        val wz = randomizer.nextDouble()
+        val kinematics = BodyKinematics()
+        kinematics.angularRateX = wx
+        kinematics.angularRateY = wy
+        kinematics.angularRateZ = wz
+        generator.setPrivateProperty("kinematics", kinematics)
+
         val ax = randomizer.nextFloat()
         val ay = randomizer.nextFloat()
         val az = randomizer.nextFloat()
@@ -3223,16 +3761,18 @@ class AccelerometerMeasurementGeneratorTest {
         val accuracy = SensorAccuracy.HIGH
         listener.onMeasurement(ax, ay, az, bx, by, bz, timestamp, accuracy)
 
-        val slot = slot<BodyKinematics>()
+        val slot = slot<TimedBodyKinematics>()
         verify(exactly = 1) { measurementsGeneratorSpy.process(capture(slot)) }
 
-        val bodyKinematics = slot.captured
-        assertEquals(ax.toDouble(), bodyKinematics.fx, 0.0)
-        assertEquals(ay.toDouble(), bodyKinematics.fy, 0.0)
-        assertEquals(az.toDouble(), bodyKinematics.fz, 0.0)
-        assertEquals(0.0, bodyKinematics.angularRateX, 0.0)
-        assertEquals(0.0, bodyKinematics.angularRateY, 0.0)
-        assertEquals(0.0, bodyKinematics.angularRateZ, 0.0)
+        val timedBodyKinematics = slot.captured
+        assertEquals(ax.toDouble(), timedBodyKinematics.kinematics.fx, 0.0)
+        assertEquals(ay.toDouble(), timedBodyKinematics.kinematics.fy, 0.0)
+        assertEquals(az.toDouble(), timedBodyKinematics.kinematics.fz, 0.0)
+        assertEquals(wx, timedBodyKinematics.kinematics.angularRateX, 0.0)
+        assertEquals(wy, timedBodyKinematics.kinematics.angularRateY, 0.0)
+        assertEquals(wz, timedBodyKinematics.kinematics.angularRateZ, 0.0)
+        assertSame(kinematics, timedBodyKinematics.kinematics)
+        assertEquals(0.0, timedBodyKinematics.timestampSeconds, 0.0)
 
         verify(exactly = 1) { accelerometerTimeIntervalEstimatorSpy.averageTimeInterval }
         verify(exactly = 1) { measurementsGeneratorSpy.timeInterval = timeInterval }
@@ -3248,7 +3788,7 @@ class AccelerometerMeasurementGeneratorTest {
         val accelerometerMeasurementListener =
             mockk<AccelerometerSensorCollector.OnMeasurementListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(
+        val generator = GyroscopeMeasurementGenerator(
             context,
             accelerometerMeasurementListener = accelerometerMeasurementListener
         )
@@ -3279,7 +3819,7 @@ class AccelerometerMeasurementGeneratorTest {
             accelerometerTimeIntervalEstimatorSpy
         )
 
-        val measurementsGenerator: AccelerometerMeasurementsGenerator? =
+        val measurementsGenerator: GyroscopeMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
         val measurementsGeneratorSpy = spyk(measurementsGenerator)
@@ -3290,6 +3830,15 @@ class AccelerometerMeasurementGeneratorTest {
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
 
         val randomizer = UniformRandomizer()
+        val wx = randomizer.nextDouble()
+        val wy = randomizer.nextDouble()
+        val wz = randomizer.nextDouble()
+        val kinematics = BodyKinematics()
+        kinematics.angularRateX = wx
+        kinematics.angularRateY = wy
+        kinematics.angularRateZ = wz
+        generator.setPrivateProperty("kinematics", kinematics)
+
         val ax = randomizer.nextFloat()
         val ay = randomizer.nextFloat()
         val az = randomizer.nextFloat()
@@ -3308,16 +3857,18 @@ class AccelerometerMeasurementGeneratorTest {
         requireNotNull(initialAccelerometerTimestamp)
         assertEquals(timestamp, initialAccelerometerTimestamp)
         assertEquals(1, generator.numberOfProcessedAccelerometerMeasurements)
-        val slot = slot<BodyKinematics>()
+        val slot = slot<TimedBodyKinematics>()
         verify(exactly = 1) { measurementsGeneratorSpy.process(capture(slot)) }
 
-        val bodyKinematics = slot.captured
-        assertEquals(ax.toDouble(), bodyKinematics.fx, 0.0)
-        assertEquals(ay.toDouble(), bodyKinematics.fy, 0.0)
-        assertEquals(az.toDouble(), bodyKinematics.fz, 0.0)
-        assertEquals(0.0, bodyKinematics.angularRateX, 0.0)
-        assertEquals(0.0, bodyKinematics.angularRateY, 0.0)
-        assertEquals(0.0, bodyKinematics.angularRateZ, 0.0)
+        val timedBodyKinematics = slot.captured
+        assertEquals(ax.toDouble(), timedBodyKinematics.kinematics.fx, 0.0)
+        assertEquals(ay.toDouble(), timedBodyKinematics.kinematics.fy, 0.0)
+        assertEquals(az.toDouble(), timedBodyKinematics.kinematics.fz, 0.0)
+        assertEquals(wx, timedBodyKinematics.kinematics.angularRateX, 0.0)
+        assertEquals(wy, timedBodyKinematics.kinematics.angularRateY, 0.0)
+        assertEquals(wz, timedBodyKinematics.kinematics.angularRateZ, 0.0)
+        assertSame(kinematics, timedBodyKinematics.kinematics)
+        assertEquals(0.0, timedBodyKinematics.timestampSeconds, 0.0)
 
         verify { accelerometerTimeIntervalEstimatorSpy wasNot Called }
         verify(exactly = 1) {
@@ -3337,7 +3888,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun collectorAccuracyChangedListener_whenUnreliableAndNoListener_setsStopsAndSetsUnreliable() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         val accelerometerCollector: AccelerometerSensorCollector? = getPrivateProperty(
             CalibrationMeasurementGenerator::class,
@@ -3352,6 +3903,12 @@ class AccelerometerMeasurementGeneratorTest {
             "accelerometerCollector",
             accelerometerCollectorSpy
         )
+
+        val gyroscopeCollector: GyroscopeSensorCollector? =
+            generator.getPrivateProperty("gyroscopeCollector")
+        requireNotNull(gyroscopeCollector)
+        val gyroscopeCollectorSpy = spyk(gyroscopeCollector)
+        generator.setPrivateProperty("gyroscopeCollector", gyroscopeCollectorSpy)
 
         val unreliable1: Boolean? =
             getPrivateProperty(CalibrationMeasurementGenerator::class, generator, "unreliable")
@@ -3374,18 +3931,19 @@ class AccelerometerMeasurementGeneratorTest {
         assertTrue(unreliable2)
 
         verify(exactly = 1) { accelerometerCollectorSpy.stop() }
+        verify(exactly = 1) { gyroscopeCollectorSpy.stop() }
     }
 
     @Test
     fun collectorAccuracyChangedListener_whenUnreliableAndListenersAvailable_setsStopsAndSetsUnreliable() {
         val errorListener =
-            mockk<CalibrationMeasurementGenerator.OnErrorListener<AccelerometerMeasurementGenerator>>(
+            mockk<CalibrationMeasurementGenerator.OnErrorListener<GyroscopeMeasurementGenerator>>(
                 relaxUnitFun = true
             )
         val accuracyChangedListener =
             mockk<SensorCollector.OnAccuracyChangedListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(
+        val generator = GyroscopeMeasurementGenerator(
             context,
             errorListener = errorListener,
             accuracyChangedListener = accuracyChangedListener
@@ -3405,6 +3963,12 @@ class AccelerometerMeasurementGeneratorTest {
             accelerometerCollectorSpy
         )
 
+        val gyroscopeCollector: GyroscopeSensorCollector? =
+            generator.getPrivateProperty("gyroscopeCollector")
+        requireNotNull(gyroscopeCollector)
+        val gyroscopeCollectorSpy = spyk(gyroscopeCollector)
+        generator.setPrivateProperty("gyroscopeCollector", gyroscopeCollectorSpy)
+
         val unreliable1: Boolean? =
             getPrivateProperty(CalibrationMeasurementGenerator::class, generator, "unreliable")
         requireNotNull(unreliable1)
@@ -3426,6 +3990,7 @@ class AccelerometerMeasurementGeneratorTest {
         assertTrue(unreliable2)
 
         verify(exactly = 1) { accelerometerCollectorSpy.stop() }
+        verify(exactly = 1) { gyroscopeCollectorSpy.stop() }
         verify(exactly = 1) { errorListener.onError(generator, ErrorReason.UNRELIABLE_SENSOR) }
         verify(exactly = 1) { accuracyChangedListener.onAccuracyChanged(SensorAccuracy.UNRELIABLE) }
     }
@@ -3433,13 +3998,13 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun collectorAccuracyChangedListener_whenNotUnreliableAndListenersAvailable_makesNoAction() {
         val errorListener =
-            mockk<CalibrationMeasurementGenerator.OnErrorListener<AccelerometerMeasurementGenerator>>(
+            mockk<CalibrationMeasurementGenerator.OnErrorListener<GyroscopeMeasurementGenerator>>(
                 relaxUnitFun = true
             )
         val accuracyChangedListener =
             mockk<SensorCollector.OnAccuracyChangedListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(
+        val generator = GyroscopeMeasurementGenerator(
             context,
             errorListener = errorListener,
             accuracyChangedListener = accuracyChangedListener
@@ -3462,7 +4027,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun start_whenNotRunning_resetsAndStartsCollector() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         val accelerometerTimeIntervalEstimator: TimeIntervalEstimator? = getPrivateProperty(
             CalibrationMeasurementGenerator::class,
@@ -3478,7 +4043,7 @@ class AccelerometerMeasurementGeneratorTest {
             accelerometerTimeIntervalEstimatorSpy
         )
 
-        val measurementsGenerator: AccelerometerMeasurementsGenerator? =
+        val measurementsGenerator: GyroscopeMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
         val measurementsGeneratorSpy = spyk(measurementsGenerator)
@@ -3498,6 +4063,12 @@ class AccelerometerMeasurementGeneratorTest {
             "accelerometerCollector",
             accelerometerCollectorSpy
         )
+        val gyroscopeCollector: GyroscopeSensorCollector? =
+            generator.getPrivateProperty("gyroscopeCollector")
+        requireNotNull(gyroscopeCollector)
+        val gyroscopeCollectorSpy = spyk(gyroscopeCollector)
+        every { gyroscopeCollectorSpy.start() }.returns(true)
+        generator.setPrivateProperty("gyroscopeCollector", gyroscopeCollectorSpy)
 
         assertFalse(generator.running)
 
@@ -3510,12 +4081,13 @@ class AccelerometerMeasurementGeneratorTest {
         assertTrue(generator.running)
 
         verify(exactly = 1) { accelerometerCollectorSpy.start() }
+        verify(exactly = 1) { gyroscopeCollectorSpy.start() }
     }
 
     @Test
-    fun start_whenCollectorDoesNotStart_throwsIllegalStateException() {
+    fun start_whenAccelerometerCollectorDoesNotStart_throwsIllegalStateException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         val accelerometerTimeIntervalEstimator: TimeIntervalEstimator? = getPrivateProperty(
             CalibrationMeasurementGenerator::class,
@@ -3531,7 +4103,7 @@ class AccelerometerMeasurementGeneratorTest {
             accelerometerTimeIntervalEstimatorSpy
         )
 
-        val measurementsGenerator: AccelerometerMeasurementsGenerator? =
+        val measurementsGenerator: GyroscopeMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
         val measurementsGeneratorSpy = spyk(measurementsGenerator)
@@ -3552,11 +4124,17 @@ class AccelerometerMeasurementGeneratorTest {
             accelerometerCollectorSpy
         )
 
+        val gyroscopeCollector: GyroscopeSensorCollector? =
+            generator.getPrivateProperty("gyroscopeCollector")
+        requireNotNull(gyroscopeCollector)
+        val gyroscopeCollectorSpy = spyk(gyroscopeCollector)
+        every { gyroscopeCollectorSpy.start() }.returns(true)
+        generator.setPrivateProperty("gyroscopeCollector", gyroscopeCollectorSpy)
+
         assertFalse(generator.running)
 
         // start
         assertThrows(IllegalStateException::class.java) { generator.start() }
-
 
         verify(exactly = 1) { accelerometerTimeIntervalEstimatorSpy.reset() }
         verify(exactly = 1) { measurementsGeneratorSpy.reset() }
@@ -3564,12 +4142,78 @@ class AccelerometerMeasurementGeneratorTest {
         assertFalse(generator.running)
 
         verify(exactly = 1) { accelerometerCollectorSpy.start() }
+        verify { gyroscopeCollectorSpy wasNot Called }
+    }
+
+    @Test
+    fun start_whenGyroscopeCollectorDoesNotStart_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val generator = GyroscopeMeasurementGenerator(context)
+
+        val accelerometerTimeIntervalEstimator: TimeIntervalEstimator? = getPrivateProperty(
+            CalibrationMeasurementGenerator::class,
+            generator,
+            "accelerometerTimeIntervalEstimator"
+        )
+        requireNotNull(accelerometerTimeIntervalEstimator)
+        val accelerometerTimeIntervalEstimatorSpy = spyk(accelerometerTimeIntervalEstimator)
+        setPrivateProperty(
+            CalibrationMeasurementGenerator::class,
+            generator,
+            "accelerometerTimeIntervalEstimator",
+            accelerometerTimeIntervalEstimatorSpy
+        )
+
+        val measurementsGenerator: GyroscopeMeasurementsGenerator? =
+            generator.getPrivateProperty("measurementsGenerator")
+        requireNotNull(measurementsGenerator)
+        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+        generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
+
+        val accelerometerCollector: AccelerometerSensorCollector? = getPrivateProperty(
+            CalibrationMeasurementGenerator::class,
+            generator,
+            "accelerometerCollector"
+        )
+        requireNotNull(accelerometerCollector)
+        val accelerometerCollectorSpy = spyk(accelerometerCollector)
+        every { accelerometerCollectorSpy.start() }.returns(true)
+        setPrivateProperty(
+            CalibrationMeasurementGenerator::class,
+            generator,
+            "accelerometerCollector",
+            accelerometerCollectorSpy
+        )
+
+        val gyroscopeCollector: GyroscopeSensorCollector? =
+            generator.getPrivateProperty("gyroscopeCollector")
+        requireNotNull(gyroscopeCollector)
+        val gyroscopeCollectorSpy = spyk(gyroscopeCollector)
+        every { gyroscopeCollectorSpy.start() }.returns(false)
+        generator.setPrivateProperty("gyroscopeCollector", gyroscopeCollectorSpy)
+
+        assertFalse(generator.running)
+
+        // start
+        assertThrows(IllegalStateException::class.java) { generator.start() }
+
+        verify(exactly = 1) { accelerometerTimeIntervalEstimatorSpy.reset() }
+        verify(exactly = 1) { measurementsGeneratorSpy.reset() }
+
+        assertFalse(generator.running)
+
+        verify(exactly = 1) { accelerometerCollectorSpy.start() }
+        verify(exactly = 1) { gyroscopeCollectorSpy.start() }
+
+        // also collectors were stopped
+        verify(exactly = 1) { accelerometerCollectorSpy.stop() }
+        verify(exactly = 1) { gyroscopeCollectorSpy.stop() }
     }
 
     @Test
     fun start_whenRunning_throwsIllegalStateException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         setPrivateProperty(CalibrationMeasurementGenerator::class, generator, "running", true)
 
@@ -3587,7 +4231,7 @@ class AccelerometerMeasurementGeneratorTest {
             accelerometerTimeIntervalEstimatorSpy
         )
 
-        val measurementsGenerator: AccelerometerMeasurementsGenerator? =
+        val measurementsGenerator: GyroscopeMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
         val measurementsGeneratorSpy = spyk(measurementsGenerator)
@@ -3607,18 +4251,25 @@ class AccelerometerMeasurementGeneratorTest {
             accelerometerCollectorSpy
         )
 
+        val gyroscopeCollector: GyroscopeSensorCollector? =
+            generator.getPrivateProperty("gyroscopeCollector")
+        requireNotNull(gyroscopeCollector)
+        val gyroscopeCollectorSpy = spyk(gyroscopeCollector)
+        generator.setPrivateProperty("gyroscopeCollector", gyroscopeCollectorSpy)
+
         // start
         assertThrows(IllegalStateException::class.java) { generator.start() }
 
         verify { accelerometerTimeIntervalEstimatorSpy wasNot Called }
         verify { measurementsGeneratorSpy wasNot Called }
         verify { accelerometerCollectorSpy wasNot Called }
+        verify { gyroscopeCollectorSpy wasNot Called }
     }
 
     @Test
     fun stop_stopsCollectorAndSetsRunningToFalse() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         val accelerometerCollector: AccelerometerSensorCollector? = getPrivateProperty(
             CalibrationMeasurementGenerator::class,
@@ -3634,6 +4285,12 @@ class AccelerometerMeasurementGeneratorTest {
             accelerometerCollectorSpy
         )
 
+        val gyroscopeCollector: GyroscopeSensorCollector? =
+            generator.getPrivateProperty("gyroscopeCollector")
+        requireNotNull(gyroscopeCollector)
+        val gyroscopeCollectorSpy = spyk(gyroscopeCollector)
+        generator.setPrivateProperty("gyroscopeCollector", gyroscopeCollectorSpy)
+
         setPrivateProperty(CalibrationMeasurementGenerator::class, generator, "running", true)
         assertTrue(generator.running)
 
@@ -3648,7 +4305,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun reset_setsValuesToInitialState() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         val accelerometerTimeIntervalEstimator: TimeIntervalEstimator? = getPrivateProperty(
             CalibrationMeasurementGenerator::class,
@@ -3664,7 +4321,7 @@ class AccelerometerMeasurementGeneratorTest {
             accelerometerTimeIntervalEstimatorSpy
         )
 
-        val measurementsGenerator: AccelerometerMeasurementsGenerator? =
+        val measurementsGenerator: GyroscopeMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
         val measurementsGeneratorSpy = spyk(measurementsGenerator)
@@ -3723,7 +4380,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun mapErrorReason_whenNotUnreliable_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         val unreliable: Boolean? =
             getPrivateProperty(CalibrationMeasurementGenerator::class, generator, "unreliable")
@@ -3752,7 +4409,7 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun mapErrorReason_whenUnreliable_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
         setPrivateProperty(CalibrationMeasurementGenerator::class, generator, "unreliable", true)
 
@@ -3778,31 +4435,31 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun onInitializationStarted_whenNoListener_makesNoAction() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
-        val measurementsGeneratorListener: AccelerometerMeasurementsGeneratorListener? =
+        val measurementsGeneratorListener: GyroscopeMeasurementsGeneratorListener? =
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerMeasurementsGenerator>()
+        val internalGenerator = mockk<GyroscopeMeasurementsGenerator>()
         measurementsGeneratorListener.onInitializationStarted(internalGenerator)
     }
 
     @Test
     fun onInitializationStarted_whenListener_notifies() {
         val listener =
-            mockk<CalibrationMeasurementGenerator.OnInitializationStartedListener<AccelerometerMeasurementGenerator>>(
+            mockk<CalibrationMeasurementGenerator.OnInitializationStartedListener<GyroscopeMeasurementGenerator>>(
                 relaxUnitFun = true
             )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator =
-            AccelerometerMeasurementGenerator(context, initializationStartedListener = listener)
+            GyroscopeMeasurementGenerator(context, initializationStartedListener = listener)
 
-        val measurementsGeneratorListener: AccelerometerMeasurementsGeneratorListener? =
+        val measurementsGeneratorListener: GyroscopeMeasurementsGeneratorListener? =
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerMeasurementsGenerator>()
+        val internalGenerator = mockk<GyroscopeMeasurementsGenerator>()
         measurementsGeneratorListener.onInitializationStarted(internalGenerator)
 
         verify(exactly = 1) { listener.onInitializationStarted(generator) }
@@ -3811,13 +4468,13 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun onInitializationCompleted_whenNoListener_makesNoAction() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
-        val measurementsGeneratorListener: AccelerometerMeasurementsGeneratorListener? =
+        val measurementsGeneratorListener: GyroscopeMeasurementsGeneratorListener? =
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerMeasurementsGenerator>()
+        val internalGenerator = mockk<GyroscopeMeasurementsGenerator>()
         val randomizer = UniformRandomizer()
         val baseNoiseLevel = randomizer.nextDouble()
         measurementsGeneratorListener.onInitializationCompleted(internalGenerator, baseNoiseLevel)
@@ -3826,18 +4483,18 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun onInitializationCompleted_whenListener_notifies() {
         val listener =
-            mockk<CalibrationMeasurementGenerator.OnInitializationCompletedListener<AccelerometerMeasurementGenerator>>(
+            mockk<CalibrationMeasurementGenerator.OnInitializationCompletedListener<GyroscopeMeasurementGenerator>>(
                 relaxUnitFun = true
             )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator =
-            AccelerometerMeasurementGenerator(context, initializationCompletedListener = listener)
+            GyroscopeMeasurementGenerator(context, initializationCompletedListener = listener)
 
-        val measurementsGeneratorListener: AccelerometerMeasurementsGeneratorListener? =
+        val measurementsGeneratorListener: GyroscopeMeasurementsGeneratorListener? =
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerMeasurementsGenerator>()
+        val internalGenerator = mockk<GyroscopeMeasurementsGenerator>()
         val randomizer = UniformRandomizer()
         val baseNoiseLevel = randomizer.nextDouble()
         measurementsGeneratorListener.onInitializationCompleted(internalGenerator, baseNoiseLevel)
@@ -3848,13 +4505,13 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun onError_whenNoListener_makesNoAction() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
-        val measurementsGeneratorListener: AccelerometerMeasurementsGeneratorListener? =
+        val measurementsGeneratorListener: GyroscopeMeasurementsGeneratorListener? =
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerMeasurementsGenerator>()
+        val internalGenerator = mockk<GyroscopeMeasurementsGenerator>()
         measurementsGeneratorListener.onError(
             internalGenerator,
             TriadStaticIntervalDetector.ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED
@@ -3864,17 +4521,17 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun onError_whenListener_notifies() {
         val listener =
-            mockk<CalibrationMeasurementGenerator.OnErrorListener<AccelerometerMeasurementGenerator>>(
+            mockk<CalibrationMeasurementGenerator.OnErrorListener<GyroscopeMeasurementGenerator>>(
                 relaxUnitFun = true
             )
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context, errorListener = listener)
+        val generator = GyroscopeMeasurementGenerator(context, errorListener = listener)
 
-        val measurementsGeneratorListener: AccelerometerMeasurementsGeneratorListener? =
+        val measurementsGeneratorListener: GyroscopeMeasurementsGeneratorListener? =
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerMeasurementsGenerator>()
+        val internalGenerator = mockk<GyroscopeMeasurementsGenerator>()
         measurementsGeneratorListener.onError(
             internalGenerator,
             TriadStaticIntervalDetector.ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED
@@ -3891,31 +4548,31 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun onStaticIntervalDetected_whenNoListener_makesNoAction() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
-        val measurementsGeneratorListener: AccelerometerMeasurementsGeneratorListener? =
+        val measurementsGeneratorListener: GyroscopeMeasurementsGeneratorListener? =
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerMeasurementsGenerator>()
+        val internalGenerator = mockk<GyroscopeMeasurementsGenerator>()
         measurementsGeneratorListener.onStaticIntervalDetected(internalGenerator)
     }
 
     @Test
     fun onStaticIntervalDetected_whenListener_notifies() {
         val listener =
-            mockk<CalibrationMeasurementGenerator.OnStaticIntervalDetectedListener<AccelerometerMeasurementGenerator>>(
+            mockk<CalibrationMeasurementGenerator.OnStaticIntervalDetectedListener<GyroscopeMeasurementGenerator>>(
                 relaxUnitFun = true
             )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator =
-            AccelerometerMeasurementGenerator(context, staticIntervalDetectedListener = listener)
+            GyroscopeMeasurementGenerator(context, staticIntervalDetectedListener = listener)
 
-        val measurementsGeneratorListener: AccelerometerMeasurementsGeneratorListener? =
+        val measurementsGeneratorListener: GyroscopeMeasurementsGeneratorListener? =
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerMeasurementsGenerator>()
+        val internalGenerator = mockk<GyroscopeMeasurementsGenerator>()
         measurementsGeneratorListener.onStaticIntervalDetected(internalGenerator)
 
         verify(exactly = 1) { listener.onStaticIntervalDetected(generator) }
@@ -3924,31 +4581,31 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun onDynamicIntervalDetected_whenNoListener_makesNoAction() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
-        val measurementsGeneratorListener: AccelerometerMeasurementsGeneratorListener? =
+        val measurementsGeneratorListener: GyroscopeMeasurementsGeneratorListener? =
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerMeasurementsGenerator>()
+        val internalGenerator = mockk<GyroscopeMeasurementsGenerator>()
         measurementsGeneratorListener.onDynamicIntervalDetected(internalGenerator)
     }
 
     @Test
     fun onDynamicIntervalDetected_whenListener_notifies() {
         val listener =
-            mockk<CalibrationMeasurementGenerator.OnDynamicIntervalDetectedListener<AccelerometerMeasurementGenerator>>(
+            mockk<CalibrationMeasurementGenerator.OnDynamicIntervalDetectedListener<GyroscopeMeasurementGenerator>>(
                 relaxUnitFun = true
             )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator =
-            AccelerometerMeasurementGenerator(context, dynamicIntervalDetectedListener = listener)
+            GyroscopeMeasurementGenerator(context, dynamicIntervalDetectedListener = listener)
 
-        val measurementsGeneratorListener: AccelerometerMeasurementsGeneratorListener? =
+        val measurementsGeneratorListener: GyroscopeMeasurementsGeneratorListener? =
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerMeasurementsGenerator>()
+        val internalGenerator = mockk<GyroscopeMeasurementsGenerator>()
         measurementsGeneratorListener.onDynamicIntervalDetected(internalGenerator)
 
         verify(exactly = 1) { listener.onDynamicIntervalDetected(generator) }
@@ -3957,31 +4614,31 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun onStaticIntervalSkipped_whenNoListener_makesNoAction() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
-        val measurementsGeneratorListener: AccelerometerMeasurementsGeneratorListener? =
+        val measurementsGeneratorListener: GyroscopeMeasurementsGeneratorListener? =
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerMeasurementsGenerator>()
+        val internalGenerator = mockk<GyroscopeMeasurementsGenerator>()
         measurementsGeneratorListener.onStaticIntervalSkipped(internalGenerator)
     }
 
     @Test
     fun onStaticIntervalSkipped_whenListener_notifies() {
         val listener =
-            mockk<CalibrationMeasurementGenerator.OnStaticIntervalSkippedListener<AccelerometerMeasurementGenerator>>(
+            mockk<CalibrationMeasurementGenerator.OnStaticIntervalSkippedListener<GyroscopeMeasurementGenerator>>(
                 relaxUnitFun = true
             )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator =
-            AccelerometerMeasurementGenerator(context, staticIntervalSkippedListener = listener)
+            GyroscopeMeasurementGenerator(context, staticIntervalSkippedListener = listener)
 
-        val measurementsGeneratorListener: AccelerometerMeasurementsGeneratorListener? =
+        val measurementsGeneratorListener: GyroscopeMeasurementsGeneratorListener? =
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerMeasurementsGenerator>()
+        val internalGenerator = mockk<GyroscopeMeasurementsGenerator>()
         measurementsGeneratorListener.onStaticIntervalSkipped(internalGenerator)
 
         verify(exactly = 1) { listener.onStaticIntervalSkipped(generator) }
@@ -3990,31 +4647,31 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun onDynamicIntervalSkipped_whenNoListener_makesNoAction() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
-        val measurementsGeneratorListener: AccelerometerMeasurementsGeneratorListener? =
+        val measurementsGeneratorListener: GyroscopeMeasurementsGeneratorListener? =
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerMeasurementsGenerator>()
+        val internalGenerator = mockk<GyroscopeMeasurementsGenerator>()
         measurementsGeneratorListener.onDynamicIntervalSkipped(internalGenerator)
     }
 
     @Test
     fun onDynamicIntervalSkipped_whenListener_notifies() {
         val listener =
-            mockk<CalibrationMeasurementGenerator.OnDynamicIntervalSkippedListener<AccelerometerMeasurementGenerator>>(
+            mockk<CalibrationMeasurementGenerator.OnDynamicIntervalSkippedListener<GyroscopeMeasurementGenerator>>(
                 relaxUnitFun = true
             )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator =
-            AccelerometerMeasurementGenerator(context, dynamicIntervalSkippedListener = listener)
+            GyroscopeMeasurementGenerator(context, dynamicIntervalSkippedListener = listener)
 
-        val measurementsGeneratorListener: AccelerometerMeasurementsGeneratorListener? =
+        val measurementsGeneratorListener: GyroscopeMeasurementsGeneratorListener? =
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerMeasurementsGenerator>()
+        val internalGenerator = mockk<GyroscopeMeasurementsGenerator>()
         measurementsGeneratorListener.onDynamicIntervalSkipped(internalGenerator)
 
         verify(exactly = 1) { listener.onDynamicIntervalSkipped(generator) }
@@ -4023,33 +4680,33 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun onGeneratedMeasurement_whenNoListener_makesNoAction() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
-        val measurementsGeneratorListener: AccelerometerMeasurementsGeneratorListener? =
+        val measurementsGeneratorListener: GyroscopeMeasurementsGeneratorListener? =
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerMeasurementsGenerator>()
-        val measurement = StandardDeviationBodyKinematics()
+        val internalGenerator = mockk<GyroscopeMeasurementsGenerator>()
+        val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
         measurementsGeneratorListener.onGeneratedMeasurement(internalGenerator, measurement)
     }
 
     @Test
     fun onGeneratedMeasurement_whenListener_notifies() {
         val listener =
-            mockk<CalibrationMeasurementGenerator.OnGeneratedMeasurementListener<AccelerometerMeasurementGenerator, StandardDeviationBodyKinematics>>(
+            mockk<CalibrationMeasurementGenerator.OnGeneratedMeasurementListener<GyroscopeMeasurementGenerator, BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>>(
                 relaxUnitFun = true
             )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator =
-            AccelerometerMeasurementGenerator(context, generatedMeasurementListener = listener)
+            GyroscopeMeasurementGenerator(context, generatedMeasurementListener = listener)
 
-        val measurementsGeneratorListener: AccelerometerMeasurementsGeneratorListener? =
+        val measurementsGeneratorListener: GyroscopeMeasurementsGeneratorListener? =
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerMeasurementsGenerator>()
-        val measurement = StandardDeviationBodyKinematics()
+        val internalGenerator = mockk<GyroscopeMeasurementsGenerator>()
+        val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
         measurementsGeneratorListener.onGeneratedMeasurement(internalGenerator, measurement)
 
         verify(exactly = 1) { listener.onGeneratedMeasurement(generator, measurement) }
@@ -4058,30 +4715,30 @@ class AccelerometerMeasurementGeneratorTest {
     @Test
     fun onReset_whenNoListener_makesNoAction() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context)
+        val generator = GyroscopeMeasurementGenerator(context)
 
-        val measurementsGeneratorListener: AccelerometerMeasurementsGeneratorListener? =
+        val measurementsGeneratorListener: GyroscopeMeasurementsGeneratorListener? =
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerMeasurementsGenerator>()
+        val internalGenerator = mockk<GyroscopeMeasurementsGenerator>()
         measurementsGeneratorListener.onReset(internalGenerator)
     }
 
     @Test
     fun onReset_whenListener_notifies() {
         val listener =
-            mockk<CalibrationMeasurementGenerator.OnResetListener<AccelerometerMeasurementGenerator>>(
+            mockk<CalibrationMeasurementGenerator.OnResetListener<GyroscopeMeasurementGenerator>>(
                 relaxUnitFun = true
             )
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context, resetListener = listener)
+        val generator = GyroscopeMeasurementGenerator(context, resetListener = listener)
 
-        val measurementsGeneratorListener: AccelerometerMeasurementsGeneratorListener? =
+        val measurementsGeneratorListener: GyroscopeMeasurementsGeneratorListener? =
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerMeasurementsGenerator>()
+        val internalGenerator = mockk<GyroscopeMeasurementsGenerator>()
         measurementsGeneratorListener.onReset(internalGenerator)
 
         verify(exactly = 1) { listener.onReset(generator) }

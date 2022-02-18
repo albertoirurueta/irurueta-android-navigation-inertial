@@ -157,10 +157,6 @@ class GyroscopeMeasurementGenerator(
      * @param bz bias on device z-axis expressed in meters per squared second (m/s^2). Only
      * available when using [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED].
      * If available, this value remains constant with calibrated bias value.
-     * @param accelerometerTimestamp time in nanoseconds at which the measurement was made. Each
-     * measurement will be monotonically increasing using the same time base as
-     * [android.os.SystemClock.elapsedRealtimeNanos].
-     * @param accelerometerTimestamp accelerometer sensor accuracy.
      * @param diffSeconds elapsed seconds since accelerometer started.
      * @param result instance where processed sample result will be stored.
      */
@@ -171,8 +167,6 @@ class GyroscopeMeasurementGenerator(
         bx: Float?,
         by: Float?,
         bz: Float?,
-        accelerometerTimestamp: Long,
-        accelerometerAccuracy: SensorAccuracy?,
         diffSeconds: Double,
         result: TimedBodyKinematics
     ) {
@@ -239,7 +233,7 @@ class GyroscopeMeasurementGenerator(
         super.start()
         if (!gyroscopeCollector.start()) {
             stop()
-            throw java.lang.IllegalStateException("Unavailable gyroscope sensor")
+            throw IllegalStateException("Unavailable gyroscope sensor")
         }
     }
 
