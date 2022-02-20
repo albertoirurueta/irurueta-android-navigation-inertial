@@ -4067,6 +4067,7 @@ class GyroscopeMeasurementGeneratorTest {
             "accelerometerCollector",
             accelerometerCollectorSpy
         )
+
         val gyroscopeCollector: GyroscopeSensorCollector? =
             generator.getPrivateProperty("gyroscopeCollector")
         requireNotNull(gyroscopeCollector)
@@ -4304,6 +4305,7 @@ class GyroscopeMeasurementGeneratorTest {
         // check
         assertFalse(generator.running)
         verify(exactly = 1) { accelerometerCollectorSpy.stop() }
+        verify(exactly = 1) { gyroscopeCollectorSpy.stop() }
     }
 
     @Test

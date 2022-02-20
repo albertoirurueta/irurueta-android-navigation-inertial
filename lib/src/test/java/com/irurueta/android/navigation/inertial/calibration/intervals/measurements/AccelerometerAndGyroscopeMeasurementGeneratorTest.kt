@@ -3683,6 +3683,15 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
 
         val randomizer = UniformRandomizer()
+        val wx = randomizer.nextDouble()
+        val wy = randomizer.nextDouble()
+        val wz = randomizer.nextDouble()
+        val kinematics = BodyKinematics()
+        kinematics.angularRateX = wx
+        kinematics.angularRateY = wy
+        kinematics.angularRateZ = wz
+        generator.setPrivateProperty("kinematics", kinematics)
+
         val ax = randomizer.nextFloat()
         val ay = randomizer.nextFloat()
         val az = randomizer.nextFloat()
@@ -3706,9 +3715,10 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         assertEquals(ax.toDouble(), timedBodyKinematics.kinematics.fx, 0.0)
         assertEquals(ay.toDouble(), timedBodyKinematics.kinematics.fy, 0.0)
         assertEquals(az.toDouble(), timedBodyKinematics.kinematics.fz, 0.0)
-        assertEquals(0.0, timedBodyKinematics.kinematics.angularRateX, 0.0)
-        assertEquals(0.0, timedBodyKinematics.kinematics.angularRateY, 0.0)
-        assertEquals(0.0, timedBodyKinematics.kinematics.angularRateZ, 0.0)
+        assertEquals(wx, timedBodyKinematics.kinematics.angularRateX, 0.0)
+        assertEquals(wy, timedBodyKinematics.kinematics.angularRateY, 0.0)
+        assertEquals(wz, timedBodyKinematics.kinematics.angularRateZ, 0.0)
+        assertSame(kinematics, timedBodyKinematics.kinematics)
         assertEquals(0.0, timedBodyKinematics.timestampSeconds, 0.0)
 
         verify { accelerometerTimeIntervalEstimatorSpy wasNot Called }
@@ -3752,6 +3762,15 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         assertEquals(1, generator.numberOfProcessedAccelerometerMeasurements)
 
         val randomizer = UniformRandomizer()
+        val wx = randomizer.nextDouble()
+        val wy = randomizer.nextDouble()
+        val wz = randomizer.nextDouble()
+        val kinematics = BodyKinematics()
+        kinematics.angularRateX = wx
+        kinematics.angularRateY = wy
+        kinematics.angularRateZ = wz
+        generator.setPrivateProperty("kinematics", kinematics)
+
         val ax = randomizer.nextFloat()
         val ay = randomizer.nextFloat()
         val az = randomizer.nextFloat()
@@ -3774,9 +3793,10 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         assertEquals(ax.toDouble(), timedBodyKinematics.kinematics.fx, 0.0)
         assertEquals(ay.toDouble(), timedBodyKinematics.kinematics.fy, 0.0)
         assertEquals(az.toDouble(), timedBodyKinematics.kinematics.fz, 0.0)
-        assertEquals(0.0, timedBodyKinematics.kinematics.angularRateX, 0.0)
-        assertEquals(0.0, timedBodyKinematics.kinematics.angularRateY, 0.0)
-        assertEquals(0.0, timedBodyKinematics.kinematics.angularRateZ, 0.0)
+        assertEquals(wx, timedBodyKinematics.kinematics.angularRateX, 0.0)
+        assertEquals(wy, timedBodyKinematics.kinematics.angularRateY, 0.0)
+        assertEquals(wz, timedBodyKinematics.kinematics.angularRateZ, 0.0)
+        assertSame(kinematics, timedBodyKinematics.kinematics)
         assertEquals(seconds, timedBodyKinematics.timestampSeconds, 0.0)
     }
 
@@ -3817,6 +3837,15 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         assertEquals(Status.INITIALIZATION_COMPLETED, generator.status)
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
 
+        val wx = randomizer.nextDouble()
+        val wy = randomizer.nextDouble()
+        val wz = randomizer.nextDouble()
+        val kinematics = BodyKinematics()
+        kinematics.angularRateX = wx
+        kinematics.angularRateY = wy
+        kinematics.angularRateZ = wz
+        generator.setPrivateProperty("kinematics", kinematics)
+
         val ax = randomizer.nextFloat()
         val ay = randomizer.nextFloat()
         val az = randomizer.nextFloat()
@@ -3834,9 +3863,10 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         assertEquals(ax.toDouble(), timedBodyKinematics.kinematics.fx, 0.0)
         assertEquals(ay.toDouble(), timedBodyKinematics.kinematics.fy, 0.0)
         assertEquals(az.toDouble(), timedBodyKinematics.kinematics.fz, 0.0)
-        assertEquals(0.0, timedBodyKinematics.kinematics.angularRateX, 0.0)
-        assertEquals(0.0, timedBodyKinematics.kinematics.angularRateY, 0.0)
-        assertEquals(0.0, timedBodyKinematics.kinematics.angularRateZ, 0.0)
+        assertEquals(wx, timedBodyKinematics.kinematics.angularRateX, 0.0)
+        assertEquals(wy, timedBodyKinematics.kinematics.angularRateY, 0.0)
+        assertEquals(wz, timedBodyKinematics.kinematics.angularRateZ, 0.0)
+        assertSame(kinematics, timedBodyKinematics.kinematics)
         assertEquals(0.0, timedBodyKinematics.timestampSeconds, 0.0)
 
         verify(exactly = 1) { accelerometerTimeIntervalEstimatorSpy.averageTimeInterval }
@@ -3885,6 +3915,15 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
 
         val randomizer = UniformRandomizer()
+        val wx = randomizer.nextDouble()
+        val wy = randomizer.nextDouble()
+        val wz = randomizer.nextDouble()
+        val kinematics = BodyKinematics()
+        kinematics.angularRateX = wx
+        kinematics.angularRateY = wy
+        kinematics.angularRateZ = wz
+        generator.setPrivateProperty("kinematics", kinematics)
+
         val ax = randomizer.nextFloat()
         val ay = randomizer.nextFloat()
         val az = randomizer.nextFloat()
@@ -3908,9 +3947,10 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         assertEquals(ax.toDouble(), timedBodyKinematics.kinematics.fx, 0.0)
         assertEquals(ay.toDouble(), timedBodyKinematics.kinematics.fy, 0.0)
         assertEquals(az.toDouble(), timedBodyKinematics.kinematics.fz, 0.0)
-        assertEquals(0.0, timedBodyKinematics.kinematics.angularRateX, 0.0)
-        assertEquals(0.0, timedBodyKinematics.kinematics.angularRateY, 0.0)
-        assertEquals(0.0, timedBodyKinematics.kinematics.angularRateZ, 0.0)
+        assertEquals(wx, timedBodyKinematics.kinematics.angularRateX, 0.0)
+        assertEquals(wy, timedBodyKinematics.kinematics.angularRateY, 0.0)
+        assertEquals(wz, timedBodyKinematics.kinematics.angularRateZ, 0.0)
+        assertSame(kinematics, timedBodyKinematics.kinematics)
         assertEquals(0.0, timedBodyKinematics.timestampSeconds, 0.0)
 
         verify { accelerometerTimeIntervalEstimatorSpy wasNot Called }
@@ -3940,6 +3980,12 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         val accelerometerCollectorSpy = spyk(accelerometerCollector)
         generator.setPrivateProperty("accelerometerCollector", accelerometerCollectorSpy)
 
+        val gyroscopeCollector: GyroscopeSensorCollector? =
+            generator.getPrivateProperty("gyroscopeCollector")
+        requireNotNull(gyroscopeCollector)
+        val gyroscopeCollectorSpy = spyk(gyroscopeCollector)
+        generator.setPrivateProperty("gyroscopeCollector", gyroscopeCollectorSpy)
+
         val unreliable1: Boolean? = generator.getPrivateProperty("unreliable")
         requireNotNull(unreliable1)
         assertFalse(unreliable1)
@@ -3955,6 +4001,7 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         assertTrue(unreliable2)
 
         verify(exactly = 1) { accelerometerCollectorSpy.stop() }
+        verify(exactly = 1) { gyroscopeCollectorSpy.stop() }
     }
 
     @Test
@@ -3979,6 +4026,12 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         val accelerometerCollectorSpy = spyk(accelerometerCollector)
         generator.setPrivateProperty("accelerometerCollector", accelerometerCollectorSpy)
 
+        val gyroscopeCollector: GyroscopeSensorCollector? =
+            generator.getPrivateProperty("gyroscopeCollector")
+        requireNotNull(gyroscopeCollector)
+        val gyroscopeCollectorSpy = spyk(gyroscopeCollector)
+        generator.setPrivateProperty("gyroscopeCollector", gyroscopeCollectorSpy)
+
         val unreliable1: Boolean? = generator.getPrivateProperty("unreliable")
         requireNotNull(unreliable1)
         assertFalse(unreliable1)
@@ -3994,6 +4047,7 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         assertTrue(unreliable2)
 
         verify(exactly = 1) { accelerometerCollectorSpy.stop() }
+        verify(exactly = 1) { gyroscopeCollectorSpy.stop() }
         verify(exactly = 1) { errorListener.onError(generator, ErrorReason.UNRELIABLE_SENSOR) }
         verify(exactly = 1) { accuracyChangedListener.onAccuracyChanged(SensorAccuracy.UNRELIABLE) }
     }
@@ -4114,7 +4168,6 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         // start
         assertThrows(IllegalStateException::class.java) { generator.start() }
 
-
         verify(exactly = 1) { accelerometerTimeIntervalEstimatorSpy.reset() }
         verify(exactly = 1) { measurementsGeneratorSpy.reset() }
 
@@ -4165,17 +4218,17 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         // start
         assertThrows(IllegalStateException::class.java) { generator.start() }
 
-
         verify(exactly = 1) { accelerometerTimeIntervalEstimatorSpy.reset() }
         verify(exactly = 1) { measurementsGeneratorSpy.reset() }
-
-        verify(exactly = 1) { gyroscopeCollectorSpy.stop() }
-        verify(exactly = 1) { accelerometerCollectorSpy.stop() }
 
         assertFalse(generator.running)
 
         verify(exactly = 1) { accelerometerCollectorSpy.start() }
         verify(exactly = 1) { gyroscopeCollectorSpy.start() }
+
+        // also collectors were stopped
+        verify(exactly = 1) { accelerometerCollectorSpy.stop() }
+        verify(exactly = 1) { gyroscopeCollectorSpy.stop() }
     }
 
     @Test
@@ -4207,12 +4260,19 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         val accelerometerCollectorSpy = spyk(accelerometerCollector)
         generator.setPrivateProperty("accelerometerCollector", accelerometerCollectorSpy)
 
+        val gyroscopeCollector: GyroscopeSensorCollector? =
+            generator.getPrivateProperty("gyroscopeCollector")
+        requireNotNull(gyroscopeCollector)
+        val gyroscopeCollectorSpy = spyk(gyroscopeCollector)
+        generator.setPrivateProperty("gyroscopeCollector", gyroscopeCollectorSpy)
+
         // start
         assertThrows(IllegalStateException::class.java) { generator.start() }
 
         verify { accelerometerTimeIntervalEstimatorSpy wasNot Called }
         verify { measurementsGeneratorSpy wasNot Called }
         verify { accelerometerCollectorSpy wasNot Called }
+        verify { gyroscopeCollectorSpy wasNot Called }
     }
 
     @Test
@@ -4227,6 +4287,12 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         val accelerometerCollectorSpy = spyk(accelerometerCollector)
         generator.setPrivateProperty("accelerometerCollector", accelerometerCollectorSpy)
 
+        val gyroscopeCollector: GyroscopeSensorCollector? =
+            generator.getPrivateProperty("gyroscopeCollector")
+        requireNotNull(gyroscopeCollector)
+        val gyroscopeCollectorSpy = spyk(gyroscopeCollector)
+        generator.setPrivateProperty("gyroscopeCollector", gyroscopeCollectorSpy)
+
         generator.setPrivateProperty("running", true)
         assertTrue(generator.running)
 
@@ -4236,6 +4302,7 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         // check
         assertFalse(generator.running)
         verify(exactly = 1) { accelerometerCollectorSpy.stop() }
+        verify(exactly = 1) { gyroscopeCollectorSpy.stop() }
     }
 
     @Test
