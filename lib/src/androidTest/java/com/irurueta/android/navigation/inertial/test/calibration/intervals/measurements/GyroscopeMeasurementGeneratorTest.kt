@@ -13,17 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.irurueta.android.navigation.inertial.test.calibration.intervals
+package com.irurueta.android.navigation.inertial.test.calibration.intervals.measurements
 
 import android.util.Log
-import androidx.test.filters.RequiresDevice
 import androidx.test.platform.app.InstrumentationRegistry
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
-import com.irurueta.android.navigation.inertial.calibration.intervals.AccelerometerIntervalDetector
+import com.irurueta.android.navigation.inertial.calibration.intervals.measurements.GyroscopeMeasurementGenerator
 import org.junit.Before
 import org.junit.Test
 
-class AccelerometerIntervalDetectorTest {
+class GyroscopeMeasurementGeneratorTest {
 
     private val syncHelper = ThreadSyncHelper()
 
@@ -35,49 +34,50 @@ class AccelerometerIntervalDetectorTest {
         completed = 0
     }
 
-    @RequiresDevice
     @Test
-    fun startAndStop_detectsIntervals() {
+    fun startAndStop_generatesMeasurements() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val detector = AccelerometerIntervalDetector(context,
+        val generator = GyroscopeMeasurementGenerator(context,
             initializationStartedListener = {
-                Log.i(
-                    "AccelerometerIntervalDetectorTest",
-                    "Initialization started"
-                )
+                Log.i("GyroscopeMeasurementGeneratorTest", "Initialization started")
             },
             initializationCompletedListener = { _, baseNoiseLevel ->
                 Log.i(
-                    "AccelerometerIntervalDetectorTest",
+                    "GyroscopeMeasurementGeneratorTest",
                     "Initialization completed. Base noise level: $baseNoiseLevel m/s^2"
                 )
             },
             errorListener = { _, reason ->
-                Log.i(
-                    "AccelerometerIntervalDetectorTest",
-                    "Error: $reason"
-                )
+                Log.i("GyroscopeMeasurementGeneratorTest", "Error: $reason")
             },
-            staticIntervalDetectedListener = { _, _, _, _, _, _, _ ->
-                Log.i(
-                    "AccelerometerIntervalDetectorTest",
-                    "Static interval detected"
-                )
+            staticIntervalDetectedListener = {
+                Log.i("GyroscopeMeasurementGeneratorTest", "Static interval detected")
             },
-            dynamicIntervalDetectedListener = { _, _, _, _, _, _, _, _, _, _, _, _, _ ->
-                Log.i(
-                    "AccelerometerIntervalDetectorTest",
-                    "Dynamic interval detected"
-                )
+            dynamicIntervalDetectedListener = {
+                Log.i("GyroscopeMeasurementGeneratorTest", "Dynamic interval detected")
             },
-            resetListener = { Log.i("AccelerometerIntervalDetectorTest", "Reset") }
+            staticIntervalSkippedListener = {
+                Log.i("GyroscopeMeasurementGeneratorTest", "Static interval skipped")
+            },
+            dynamicIntervalSkippedListener = {
+                Log.i("GyroscopeMeasurementGeneratorTest", "Dynamic interval skipped")
+            },
+            generatedMeasurementListener = { _, _ ->
+                Log.i("GyroscopeMeasurementGeneratorTest", "Measurement generated")
+            },
+            resetListener = {
+                Log.i("GyroscopeMeasurementGeneratorTest", "Reset")
+            },
+            accuracyChangedListener = {
+                Log.i("GyroscopeMeasurementGeneratorTest", "Accuracy changed")
+            }
         )
 
-        detector.start()
+        generator.start()
 
         syncHelper.waitOnCondition({ completed < 1 }, timeout = TIMEOUT)
 
-        detector.stop()
+        generator.stop()
     }
 
     private companion object {
