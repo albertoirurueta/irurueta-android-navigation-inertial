@@ -29,7 +29,9 @@ import com.irurueta.android.navigation.inertial.setPrivateProperty
 import com.irurueta.navigation.inertial.BodyKinematics
 import com.irurueta.navigation.inertial.BodyMagneticFluxDensity
 import com.irurueta.navigation.inertial.calibration.*
-import com.irurueta.navigation.inertial.calibration.generators.*
+import com.irurueta.navigation.inertial.calibration.generators.AccelerometerGyroscopeAndMagnetometerMeasurementsGenerator
+import com.irurueta.navigation.inertial.calibration.generators.AccelerometerGyroscopeAndMagnetometerMeasurementsGeneratorListener
+import com.irurueta.navigation.inertial.calibration.generators.MeasurementsGenerator
 import com.irurueta.navigation.inertial.calibration.intervals.TriadStaticIntervalDetector
 import com.irurueta.statistics.UniformRandomizer
 import com.irurueta.units.*
@@ -4665,7 +4667,10 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertEquals(bx, timedBodyKinematicsAndMagneticFluxDensity.magneticFluxDensity.bx, 0.0)
         assertEquals(by, timedBodyKinematicsAndMagneticFluxDensity.magneticFluxDensity.by, 0.0)
         assertEquals(bz, timedBodyKinematicsAndMagneticFluxDensity.magneticFluxDensity.bz, 0.0)
-        assertEquals(magneticFluxDensity, timedBodyKinematicsAndMagneticFluxDensity.magneticFluxDensity)
+        assertEquals(
+            magneticFluxDensity,
+            timedBodyKinematicsAndMagneticFluxDensity.magneticFluxDensity
+        )
         assertEquals(0.0, timedBodyKinematicsAndMagneticFluxDensity.timestampSeconds, 0.0)
 
         verify { accelerometerTimeIntervalEstimatorSpy wasNot Called }
@@ -4753,7 +4758,10 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertEquals(bx, timedBodyKinematicsAndMagneticFluxDensity.magneticFluxDensity.bx, 0.0)
         assertEquals(by, timedBodyKinematicsAndMagneticFluxDensity.magneticFluxDensity.by, 0.0)
         assertEquals(bz, timedBodyKinematicsAndMagneticFluxDensity.magneticFluxDensity.bz, 0.0)
-        assertEquals(magneticFluxDensity, timedBodyKinematicsAndMagneticFluxDensity.magneticFluxDensity)
+        assertEquals(
+            magneticFluxDensity,
+            timedBodyKinematicsAndMagneticFluxDensity.magneticFluxDensity
+        )
         assertEquals(seconds, timedBodyKinematicsAndMagneticFluxDensity.timestampSeconds, 0.0)
     }
 
@@ -4833,7 +4841,10 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertEquals(bx, timedBodyKinematicsAndMagneticFluxDensity.magneticFluxDensity.bx, 0.0)
         assertEquals(by, timedBodyKinematicsAndMagneticFluxDensity.magneticFluxDensity.by, 0.0)
         assertEquals(bz, timedBodyKinematicsAndMagneticFluxDensity.magneticFluxDensity.bz, 0.0)
-        assertEquals(magneticFluxDensity, timedBodyKinematicsAndMagneticFluxDensity.magneticFluxDensity)
+        assertEquals(
+            magneticFluxDensity,
+            timedBodyKinematicsAndMagneticFluxDensity.magneticFluxDensity
+        )
         assertEquals(0.0, timedBodyKinematicsAndMagneticFluxDensity.timestampSeconds, 0.0)
 
         verify(exactly = 1) { accelerometerTimeIntervalEstimatorSpy.averageTimeInterval }
@@ -4927,7 +4938,10 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertEquals(bx, timedBodyKinematicsAndMagneticFluxDensity.magneticFluxDensity.bx, 0.0)
         assertEquals(by, timedBodyKinematicsAndMagneticFluxDensity.magneticFluxDensity.by, 0.0)
         assertEquals(bz, timedBodyKinematicsAndMagneticFluxDensity.magneticFluxDensity.bz, 0.0)
-        assertEquals(magneticFluxDensity, timedBodyKinematicsAndMagneticFluxDensity.magneticFluxDensity)
+        assertEquals(
+            magneticFluxDensity,
+            timedBodyKinematicsAndMagneticFluxDensity.magneticFluxDensity
+        )
         assertEquals(0.0, timedBodyKinematicsAndMagneticFluxDensity.timestampSeconds, 0.0)
 
         verify { accelerometerTimeIntervalEstimatorSpy wasNot Called }
@@ -5401,7 +5415,11 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         )
 
         // reset
-        callPrivateFunc(AccelerometerGyroscopeAndMagnetometerMeasurementGenerator::class, generator,"reset")
+        callPrivateFunc(
+            AccelerometerGyroscopeAndMagnetometerMeasurementGenerator::class,
+            generator,
+            "reset"
+        )
 
         assertEquals(Integer.MAX_VALUE, accelerometerTimeIntervalEstimatorSpy.totalSamples)
         verify(exactly = 1) { accelerometerTimeIntervalEstimatorSpy.reset() }
@@ -5569,7 +5587,10 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
             )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator =
-            AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(context, errorListener = listener)
+            AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
+                context,
+                errorListener = listener
+            )
 
         val measurementsGeneratorListener: AccelerometerGyroscopeAndMagnetometerMeasurementsGeneratorListener? =
             generator.getPrivateProperty("measurementsGeneratorListener")
@@ -5822,6 +5843,49 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
     }
 
     @Test
+    fun onGeneratedMagnetometerMeasurement_whenNoListener_makesNoAction() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(context)
+
+        val measurementsGeneratorListener: AccelerometerGyroscopeAndMagnetometerMeasurementsGeneratorListener? =
+            generator.getPrivateProperty("measurementsGeneratorListener")
+        requireNotNull(measurementsGeneratorListener)
+
+        val internalGenerator = mockk<AccelerometerGyroscopeAndMagnetometerMeasurementsGenerator>()
+        val measurement = StandardDeviationBodyMagneticFluxDensity()
+        measurementsGeneratorListener.onGeneratedMagnetometerMeasurement(
+            internalGenerator,
+            measurement
+        )
+    }
+
+    @Test
+    fun onGeneratedMagnetometerMeasurement_whenListener_makesNoAction() {
+        val listener =
+            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedMagnetometerMeasurementListener>(
+                relaxUnitFun = true
+            )
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
+            context,
+            generatedMagnetometerMeasurementListener = listener
+        )
+
+        val measurementsGeneratorListener: AccelerometerGyroscopeAndMagnetometerMeasurementsGeneratorListener? =
+            generator.getPrivateProperty("measurementsGeneratorListener")
+        requireNotNull(measurementsGeneratorListener)
+
+        val internalGenerator = mockk<AccelerometerGyroscopeAndMagnetometerMeasurementsGenerator>()
+        val measurement = StandardDeviationBodyMagneticFluxDensity()
+        measurementsGeneratorListener.onGeneratedMagnetometerMeasurement(
+            internalGenerator,
+            measurement
+        )
+
+        verify(exactly = 1) { listener.onGeneratedMagnetometerMeasurement(generator, measurement) }
+    }
+
+    @Test
     fun onReset_whenNoListener_makesNoAction() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(context)
@@ -5842,7 +5906,10 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
             )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator =
-            AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(context, resetListener = listener)
+            AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
+                context,
+                resetListener = listener
+            )
 
         val measurementsGeneratorListener: AccelerometerGyroscopeAndMagnetometerMeasurementsGeneratorListener? =
             generator.getPrivateProperty("measurementsGeneratorListener")
@@ -5956,6 +6023,50 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
                 accuracy
             )
         }
+    }
+
+    @Test
+    fun onMagnetometerMeasurementListener_whenNoListener_setsMagneticFluxDensity() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(context)
+
+        assertNull(generator.magnetometerMeasurementListener)
+
+        val magnetometerCollectorMeasurementListener: MagnetometerSensorCollector.OnMeasurementListener? =
+            generator.getPrivateProperty("magnetometerCollectorMeasurementListener")
+        requireNotNull(magnetometerCollectorMeasurementListener)
+
+        val magneticFluxDensity: BodyMagneticFluxDensity? =
+            generator.getPrivateProperty("magneticFluxDensity")
+        requireNotNull(magneticFluxDensity)
+        assertEquals(0.0, magneticFluxDensity.bx, 0.0)
+        assertEquals(0.0, magneticFluxDensity.by, 0.0)
+        assertEquals(0.0, magneticFluxDensity.bz, 0.0)
+
+        val randomizer = UniformRandomizer()
+        val bx = randomizer.nextFloat()
+        val by = randomizer.nextFloat()
+        val bz = randomizer.nextFloat()
+        val hardIronX = randomizer.nextFloat()
+        val hardIronY = randomizer.nextFloat()
+        val hardIronZ = randomizer.nextFloat()
+        val timestamp = SystemClock.elapsedRealtimeNanos()
+        val accuracy = SensorAccuracy.HIGH
+        magnetometerCollectorMeasurementListener.onMeasurement(
+            bx,
+            by,
+            bz,
+            hardIronX,
+            hardIronY,
+            hardIronZ,
+            timestamp,
+            accuracy
+        )
+
+        // check
+        assertEquals(bx.toDouble(), magneticFluxDensity.bx, 0.0)
+        assertEquals(by.toDouble(), magneticFluxDensity.by, 0.0)
+        assertEquals(bz.toDouble(), magneticFluxDensity.bz, 0.0)
     }
 
     private companion object {
