@@ -6069,6 +6069,68 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertEquals(bz.toDouble(), magneticFluxDensity.bz, 0.0)
     }
 
+    @Test
+    fun onMagnetometerMeasurementListener_whenListener_setsMagneticFluxDensity() {
+        val magnetometerMeasurementlistener =
+            mockk<MagnetometerSensorCollector.OnMeasurementListener>(relaxUnitFun = true)
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
+            context,
+            magnetometerMeasurementListener = magnetometerMeasurementlistener
+        )
+
+        assertNull(generator.magnetometerMeasurementListener)
+
+        val magnetometerCollectorMeasurementListener: MagnetometerSensorCollector.OnMeasurementListener? =
+            generator.getPrivateProperty("magnetometerCollectorMeasurementListener")
+        requireNotNull(magnetometerCollectorMeasurementListener)
+
+        val magneticFluxDensity: BodyMagneticFluxDensity? =
+            generator.getPrivateProperty("magneticFluxDensity")
+        requireNotNull(magneticFluxDensity)
+        assertEquals(0.0, magneticFluxDensity.bx, 0.0)
+        assertEquals(0.0, magneticFluxDensity.by, 0.0)
+        assertEquals(0.0, magneticFluxDensity.bz, 0.0)
+
+        val randomizer = UniformRandomizer()
+        val bx = randomizer.nextFloat()
+        val by = randomizer.nextFloat()
+        val bz = randomizer.nextFloat()
+        val hardIronX = randomizer.nextFloat()
+        val hardIronY = randomizer.nextFloat()
+        val hardIronZ = randomizer.nextFloat()
+        val timestamp = SystemClock.elapsedRealtimeNanos()
+        val accuracy = SensorAccuracy.HIGH
+        magnetometerCollectorMeasurementListener.onMeasurement(
+            bx,
+            by,
+            bz,
+            hardIronX,
+            hardIronY,
+            hardIronZ,
+            timestamp,
+            accuracy
+        )
+
+        // check
+        assertEquals(bx.toDouble(), magneticFluxDensity.bx, 0.0)
+        assertEquals(by.toDouble(), magneticFluxDensity.by, 0.0)
+        assertEquals(bz.toDouble(), magneticFluxDensity.bz, 0.0)
+
+        verify(exactly = 1) {
+            magnetometerMeasurementlistener.onMeasurement(
+                bx,
+                by,
+                bz,
+                hardIronX,
+                hardIronY,
+                hardIronZ,
+                timestamp,
+                accuracy
+            )
+        }
+    }
+
     private companion object {
         const val MIN_STATIC_SAMPLES = 501
 
