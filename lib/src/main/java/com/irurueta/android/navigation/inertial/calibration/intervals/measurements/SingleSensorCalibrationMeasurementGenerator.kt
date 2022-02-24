@@ -72,39 +72,6 @@ abstract class SingleSensorCalibrationMeasurementGenerator<C : SingleSensorCalib
     protected abstract val measurementsGenerator: G
 
     /**
-     * Internal listener for accelerometer sensor collector.
-     * Handles measurements collected by the accelerometer sensor so that they are processed by
-     * the internal measurement generator.
-     */
-    private val accelerometerCollectorMeasurementListener =
-        AccelerometerSensorCollector.OnMeasurementListener { ax, ay, az, bx, by, bz, timestamp, accuracy ->
-            val status = status
-            var diffSeconds = 0.0
-            if (status == Status.INITIALIZING) {
-                // during initialization phase, also estimate time interval duration.
-                if (numberOfProcessedAccelerometerMeasurements > 0) {
-                    val diff = timestamp - initialAccelerometerTimestamp
-                    diffSeconds = TimeConverter.nanosecondToSecond(diff.toDouble())
-                    accelerometerTimeIntervalEstimator.addTimestamp(diffSeconds)
-                } else {
-                    initialAccelerometerTimestamp = timestamp
-                }
-            }
-
-            processSample(ax, ay, az, diffSeconds, sample)
-            processSampleInInternalGenerator()
-            numberOfProcessedAccelerometerMeasurements++
-
-            if (status == Status.INITIALIZATION_COMPLETED) {
-                // once initialized, set time interval into internal detector
-                updateTimeIntervalOfInternalGenerator()
-                initialized = true
-            }
-
-            notifyAccelerometerMeasurement(ax, ay, az, bx, by, bz, timestamp, accuracy)
-        }
-
-    /**
      * Processes sample in internal measurements generator.
      */
     override fun processSampleInInternalGenerator() {

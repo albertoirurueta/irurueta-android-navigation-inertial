@@ -3622,7 +3622,7 @@ class MagnetometerMeasurementGeneratorTest {
         val generator = MagnetometerMeasurementGenerator(context)
 
         val listener: AccelerometerSensorCollector.OnMeasurementListener? = getPrivateProperty(
-            SingleSensorCalibrationMeasurementGenerator::class,
+            CalibrationMeasurementGenerator::class,
             generator,
             "accelerometerCollectorMeasurementListener"
         )
