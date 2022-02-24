@@ -47,7 +47,7 @@ class AccelerometerMeasurementGenerator(
     resetListener: OnResetListener<AccelerometerMeasurementGenerator>? = null,
     accelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? = null,
     accuracyChangedListener: SensorCollector.OnAccuracyChangedListener? = null
-) : CalibrationMeasurementGenerator<
+) : SingleSensorCalibrationMeasurementGenerator<
         AccelerometerMeasurementGenerator, StandardDeviationBodyKinematics,
         AccelerometerMeasurementsGenerator, AccelerometerMeasurementsGeneratorListener,
         BodyKinematics>(
@@ -151,15 +151,6 @@ class AccelerometerMeasurementGenerator(
      * @param ax acceleration on device x-axis expressed in meters per squared second (m/s^2).
      * @param ay acceleration on device y-axis expressed in meters per squared second (m/s^2).
      * @param az acceleration on device z-axis expressed in meters per squared second (m/s^2).
-     * @param bx bias on device x-axis expressed in meters per squared second (m/s^2). Only
-     * available when using [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED].
-     * If available, this value remains constant with calibrated bias value.
-     * @param by bias on device y-axis expressed in meters per squared second (m/s^2). Only
-     * available when using [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED].
-     * If available, this value remains constant with calibrated bias value.
-     * @param bz bias on device z-axis expressed in meters per squared second (m/s^2). Only
-     * available when using [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED].
-     * If available, this value remains constant with calibrated bias value.
      * @param diffSeconds elapsed seconds since accelerometer started.
      * @param result instance where processed sample result will be stored.
      */
@@ -167,9 +158,6 @@ class AccelerometerMeasurementGenerator(
         ax: Float,
         ay: Float,
         az: Float,
-        bx: Float?,
-        by: Float?,
-        bz: Float?,
         diffSeconds: Double,
         result: BodyKinematics
     ) {
