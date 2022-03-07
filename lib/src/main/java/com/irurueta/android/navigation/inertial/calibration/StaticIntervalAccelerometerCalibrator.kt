@@ -20,13 +20,13 @@ import android.location.Location
 import android.util.Log
 import com.irurueta.algebra.Matrix
 import com.irurueta.android.navigation.inertial.GravityHelper
-import com.irurueta.android.navigation.inertial.calibration.intervals.AccelerometerIntervalDetector
-import com.irurueta.android.navigation.inertial.calibration.intervals.IntervalDetector
+import com.irurueta.android.navigation.inertial.calibration.intervals.measurements.AccelerometerMeasurementGenerator
+import com.irurueta.android.navigation.inertial.calibration.intervals.measurements.SingleSensorCalibrationMeasurementGenerator
 import com.irurueta.android.navigation.inertial.calibration.noise.AccumulatedMeasurementEstimator
 import com.irurueta.android.navigation.inertial.calibration.noise.GravityNormEstimator
 import com.irurueta.android.navigation.inertial.calibration.noise.StopMode
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.GravitySensorCollector
+import com.irurueta.android.navigation.inertial.collectors.SensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.android.navigation.inertial.toNEDPosition
 import com.irurueta.navigation.NavigationException
@@ -37,161 +37,192 @@ import com.irurueta.navigation.inertial.calibration.StandardDeviationBodyKinemat
 import com.irurueta.navigation.inertial.calibration.accelerometer.*
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.DefaultAccelerometerQualityScoreMapper
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.QualityScoreMapper
+import com.irurueta.numerical.robust.RobustEstimatorMethod
 import com.irurueta.units.Acceleration
 import com.irurueta.units.AccelerationUnit
-import kotlin.math.pow
-import kotlin.math.sqrt
 
 /**
  * Collects accelerometer measurements by detecting periods when device remains static,
  * and using such static periods, measurements are obtained to solve calibration parameters.
  *
  * @property context Android context.
- * @property sensorType One of the supported accelerometer sensor types.
- * @property sensorDelay Delay of sensor between samples.
+ * @property accelerometerSensorType One of the supported accelerometer sensor types.
+ * @property accelerometerSensorDelay Delay of sensor between samples.
  * @property solveCalibrationWhenEnoughMeasurements true to automatically solve calibration once
  * enough measurements are available, false otherwise.
  * @property initializationStartedListener listener to notify when initialization starts.
  * @property initializationCompletedListener listener to notify when initialization completes.
  * @property errorListener listener to notify errors.
- * @property unreliableGravityNormEstimationListener listener to notify when gravity norm estimation
- * becomes unreliable. This is only used if no location is provided.
- * @property initialBiasAvailableListener listener to notify when a guess of bias values is
- * obtained.
- * @property newCalibrationMeasurementAvailableListener listener to notify when a new calibration
- * measurement is obtained.
- * @property readyToSolveCalibrationListener listener to notify when calibrator is ready to be
- * solved.
+ * @property staticIntervalDetectedListener listener to notify when a static interval is detected.
+ * @property dynamicIntervalDetectedListener listener to notify when a dynamic interval is detected.
+ * @property staticIntervalSkippedListener listener to notify when a static interval is skipped if
+ * its duration is too short.
+ * @property dynamicIntervalSkippedListener listener to notify when a dynamic interval is skipped if
+ * its duration is too long.
+ * @property generatedAccelerometerMeasurementListener listener to notify when a new accelerometer
+ * calibration measurement is generated.
+ * @property readyToSolveCalibrationListener listener to notify when enough measurements have been
+ * collected and calibrator is ready to solve calibration.
  * @property calibrationSolvingStartedListener listener to notify when calibration solving starts.
- * @property calibrationCompletedListener listener to notify when calibration is successfully
- * completed.
- * @property stoppedListener listener to notify when measurement collection stops.
- * @property accelerometerMeasurementListener listener to notify collected accelerometer
- * measurements.
- * @property gravityMeasurementListener listener to notify collected gravity measurements.
- * @property qualityScoreMapper mapper to convert collected measurements into quality scores,
- * based on the amount of standard deviation (the larger the variability, the worse the score
- * will be).
+ * @property calibrationCompletedListener listener to notify when calibration solving completes.
+ * @property stoppedListener listener to notify when calibrator is stopped.
+ * @property unreliableGravityNormEstimationListener listener to notify when gravity norm
+ * estimation becomes unreliable. This is only used if no location is provided.
+ * @property initialAccelerometerBiasAvailableListener listener to notify when a guess of bias values is
+ * obtained.
+ * @property accuracyChangedListener listener to notify when sensor accuracy changes.
+ * @property accelerometerQualityScoreMapper mapper to convert collected accelerometer measurements
+ * into quality scores, based on the amount of standard deviation (the larger the variability, the
+ * worse the score will be).
  */
 class StaticIntervalAccelerometerCalibrator private constructor(
     context: Context,
-    val sensorType: AccelerometerSensorCollector.SensorType,
-    sensorDelay: SensorDelay,
+    accelerometerSensorType: AccelerometerSensorCollector.SensorType,
+    accelerometerSensorDelay: SensorDelay,
     solveCalibrationWhenEnoughMeasurements: Boolean,
     initializationStartedListener: OnInitializationStartedListener<StaticIntervalAccelerometerCalibrator>?,
     initializationCompletedListener: OnInitializationCompletedListener<StaticIntervalAccelerometerCalibrator>?,
     errorListener: OnErrorListener<StaticIntervalAccelerometerCalibrator>?,
-    var unreliableGravityNormEstimationListener: OnUnreliableGravityEstimationListener?,
-    var initialBiasAvailableListener: OnInitialBiasAvailableListener?,
-    newCalibrationMeasurementAvailableListener: OnNewCalibrationMeasurementAvailableListener<StaticIntervalAccelerometerCalibrator, StandardDeviationBodyKinematics>?,
+    staticIntervalDetectedListener: OnStaticIntervalDetectedListener<StaticIntervalAccelerometerCalibrator>?,
+    dynamicIntervalDetectedListener: OnDynamicIntervalDetectedListener<StaticIntervalAccelerometerCalibrator>?,
+    staticIntervalSkippedListener: OnStaticIntervalSkippedListener<StaticIntervalAccelerometerCalibrator>?,
+    dynamicIntervalSkippedListener: OnDynamicIntervalSkippedListener<StaticIntervalAccelerometerCalibrator>?,
+    var generatedAccelerometerMeasurementListener: OnGeneratedAccelerometerMeasurementListener?,
     readyToSolveCalibrationListener: OnReadyToSolveCalibrationListener<StaticIntervalAccelerometerCalibrator>?,
     calibrationSolvingStartedListener: OnCalibrationSolvingStartedListener<StaticIntervalAccelerometerCalibrator>?,
     calibrationCompletedListener: OnCalibrationCompletedListener<StaticIntervalAccelerometerCalibrator>?,
     stoppedListener: OnStoppedListener<StaticIntervalAccelerometerCalibrator>?,
-    var accelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener?,
-    var gravityMeasurementListener: GravitySensorCollector.OnMeasurementListener?,
-    qualityScoreMapper: QualityScoreMapper<StandardDeviationBodyKinematics>
-) : StaticIntervalCalibrator<StaticIntervalAccelerometerCalibrator,
-        StandardDeviationBodyKinematics, AccelerometerIntervalDetector, AccelerationUnit,
-        Acceleration, AccelerationTriad>(
+    var unreliableGravityNormEstimationListener: OnUnreliableGravityEstimationListener?,
+    var initialAccelerometerBiasAvailableListener: OnInitialAccelerometerBiasAvailableListener?,
+    accuracyChangedListener: SensorCollector.OnAccuracyChangedListener?,
+    val accelerometerQualityScoreMapper: QualityScoreMapper<StandardDeviationBodyKinematics>
+) : StaticIntervalWithMeasurementGeneratorCalibrator<StaticIntervalAccelerometerCalibrator, BodyKinematics>(
     context,
-    sensorDelay, solveCalibrationWhenEnoughMeasurements, initializationStartedListener,
-    initializationCompletedListener, errorListener, newCalibrationMeasurementAvailableListener,
-    readyToSolveCalibrationListener, calibrationSolvingStartedListener,
-    calibrationCompletedListener, stoppedListener, qualityScoreMapper
+    accelerometerSensorType,
+    accelerometerSensorDelay,
+    solveCalibrationWhenEnoughMeasurements,
+    initializationStartedListener,
+    initializationCompletedListener,
+    errorListener,
+    staticIntervalDetectedListener,
+    dynamicIntervalDetectedListener,
+    staticIntervalSkippedListener,
+    dynamicIntervalSkippedListener,
+    readyToSolveCalibrationListener,
+    calibrationSolvingStartedListener,
+    calibrationCompletedListener,
+    stoppedListener,
+    accuracyChangedListener
 ) {
-
     /**
      * Constructor.
      *
      * @param context Android context.
-     * @param sensorType One of the supported accelerometer sensor types.
-     * @param sensorDelay Delay of sensor between samples.
+     * @param accelerometerSensorType One of the supported accelerometer sensor types.
+     * @param accelerometerSensorDelay Delay of sensor between samples.
      * @param solveCalibrationWhenEnoughMeasurements true to automatically solve calibration once
      * enough measurements are available, false otherwise.
-     * @param isGroundTruthInitialBias true if estimated bias is assumed to be the true value,
-     * false if estimated bias is assumed to be only an initial guess. When [sensorType] is
-     * [AccelerometerSensorCollector.SensorType.ACCELEROMETER], bias guess is zero,
-     * otherwise when it is [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED],
-     * bias guess is the device calibrated values.
+     * @param isAccelerometerGroundTruthInitialBias true if estimated accelerometer bias is assumed
+     * to be the true value, false if estimated bias is assumed to be only an initial guess. When
+     * [accelerometerSensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER], bias
+     * guess is zero, otherwise when it is
+     * [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED], bias guess is the
+     * device calibrated values.
      * @param location location where device is located at. When location is provided, gravity norm
      * is assumed to be the theoretical value determined by WGS84 Earth model, otherwise, if no
      * location is provided, gravity norm is estimated using a gravity sensor.
      * @param initializationStartedListener listener to notify when initialization starts.
      * @param initializationCompletedListener listener to notify when initialization completes.
      * @param errorListener listener to notify errors.
+     * @param staticIntervalDetectedListener listener to notify when a static interval is detected.
+     * @param dynamicIntervalDetectedListener listener to notify when a dynamic interval is
+     * detected.
+     * @param staticIntervalSkippedListener listener to notify when a static interval is skipped if
+     * its duration is too short.
+     * @param dynamicIntervalSkippedListener listener to notify when a dynamic interval is skipped
+     * if its duration is too long.
+     * @param generatedAccelerometerMeasurementListener listener to notify when a new accelerometer
+     * calibration measurement is generated.
+     * @param readyToSolveCalibrationListener listener to notify when enough measurements have been
+     * collected and calibrator is ready to solve calibration.
+     * @param calibrationSolvingStartedListener listener to notify when calibration solving starts.
+     * @param calibrationCompletedListener listener to notify when calibration solving completes.
+     * @para stoppedListener listener to notify when calibrator is stopped.
      * @param unreliableGravityNormEstimationListener listener to notify when gravity norm
      * estimation becomes unreliable. This is only used if no location is provided.
-     * @param initialBiasAvailableListener listener to notify when a guess of bias values is
-     * obtained.
-     * @param newCalibrationMeasurementAvailableListener listener to notify when a new calibration
-     * measurement is obtained.
-     * @param readyToSolveCalibrationListener listener to notify when calibrator is ready to be
-     * solved.
-     * @param calibrationSolvingStartedListener listener to notify when calibration solving starts.
-     * @param calibrationCompletedListener listener to notify when calibration is successfully
-     * completed.
-     * @param stoppedListener listener to notify when measurement collection stops.
-     * @param accelerometerMeasurementListener listener to notify collected accelerometer
-     * measurements.
-     * @param gravityMeasurementListener listener to notify collected gravity measurements.
-     * @param qualityScoreMapper mapper to convert collected measurements into quality scores,
-     * based on the amount of standard deviation (the larger the variability, the worse the score
-     * will be).
+     * @param initialAccelerometerBiasAvailableListener listener to notify when a guess of bias
+     * values is obtained.
+     * @param accuracyChangedListener listener to notify when sensor accuracy changes.
+     * @param accelerometerQualityScoreMapper mapper to convert collected accelerometer measurements
+     * into quality scores, based on the amount of standard deviation (the larger the variability,
+     * the worse the score will be).
      */
     constructor(
         context: Context,
-        sensorType: AccelerometerSensorCollector.SensorType =
+        accelerometerSensorType: AccelerometerSensorCollector.SensorType =
             AccelerometerSensorCollector.SensorType.ACCELEROMETER,
-        sensorDelay: SensorDelay = SensorDelay.FASTEST,
+        accelerometerSensorDelay: SensorDelay = SensorDelay.FASTEST,
         solveCalibrationWhenEnoughMeasurements: Boolean = true,
-        isGroundTruthInitialBias: Boolean = false,
+        isAccelerometerGroundTruthInitialBias: Boolean = false,
         location: Location? = null,
         initializationStartedListener: OnInitializationStartedListener<StaticIntervalAccelerometerCalibrator>? = null,
         initializationCompletedListener: OnInitializationCompletedListener<StaticIntervalAccelerometerCalibrator>? = null,
         errorListener: OnErrorListener<StaticIntervalAccelerometerCalibrator>? = null,
-        unreliableGravityNormEstimationListener: OnUnreliableGravityEstimationListener? = null,
-        initialBiasAvailableListener: OnInitialBiasAvailableListener? = null,
-        newCalibrationMeasurementAvailableListener: OnNewCalibrationMeasurementAvailableListener<StaticIntervalAccelerometerCalibrator, StandardDeviationBodyKinematics>? = null,
+        staticIntervalDetectedListener: OnStaticIntervalDetectedListener<StaticIntervalAccelerometerCalibrator>? = null,
+        dynamicIntervalDetectedListener: OnDynamicIntervalDetectedListener<StaticIntervalAccelerometerCalibrator>? = null,
+        staticIntervalSkippedListener: OnStaticIntervalSkippedListener<StaticIntervalAccelerometerCalibrator>? = null,
+        dynamicIntervalSkippedListener: OnDynamicIntervalSkippedListener<StaticIntervalAccelerometerCalibrator>? = null,
+        generatedAccelerometerMeasurementListener: OnGeneratedAccelerometerMeasurementListener? = null,
         readyToSolveCalibrationListener: OnReadyToSolveCalibrationListener<StaticIntervalAccelerometerCalibrator>? = null,
         calibrationSolvingStartedListener: OnCalibrationSolvingStartedListener<StaticIntervalAccelerometerCalibrator>? = null,
         calibrationCompletedListener: OnCalibrationCompletedListener<StaticIntervalAccelerometerCalibrator>? = null,
         stoppedListener: OnStoppedListener<StaticIntervalAccelerometerCalibrator>? = null,
-        accelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? = null,
-        gravityMeasurementListener: GravitySensorCollector.OnMeasurementListener? = null,
-        qualityScoreMapper: QualityScoreMapper<StandardDeviationBodyKinematics> = DefaultAccelerometerQualityScoreMapper()
+        unreliableGravityNormEstimationListener: OnUnreliableGravityEstimationListener? = null,
+        initialAccelerometerBiasAvailableListener: OnInitialAccelerometerBiasAvailableListener? = null,
+        accuracyChangedListener: SensorCollector.OnAccuracyChangedListener? = null,
+        accelerometerQualityScoreMapper: QualityScoreMapper<StandardDeviationBodyKinematics> =
+            DefaultAccelerometerQualityScoreMapper()
     ) : this(
         context,
-        sensorType,
-        sensorDelay,
+        accelerometerSensorType,
+        accelerometerSensorDelay,
         solveCalibrationWhenEnoughMeasurements,
         initializationStartedListener,
         initializationCompletedListener,
         errorListener,
-        unreliableGravityNormEstimationListener,
-        initialBiasAvailableListener,
-        newCalibrationMeasurementAvailableListener,
+        staticIntervalDetectedListener,
+        dynamicIntervalDetectedListener,
+        staticIntervalSkippedListener,
+        dynamicIntervalSkippedListener,
+        generatedAccelerometerMeasurementListener,
         readyToSolveCalibrationListener,
         calibrationSolvingStartedListener,
         calibrationCompletedListener,
         stoppedListener,
-        accelerometerMeasurementListener,
-        gravityMeasurementListener,
-        qualityScoreMapper
+        unreliableGravityNormEstimationListener,
+        initialAccelerometerBiasAvailableListener,
+        accuracyChangedListener,
+        accelerometerQualityScoreMapper
     ) {
-        this.isGroundTruthInitialBias = isGroundTruthInitialBias
+        this.isAccelerometerGroundTruthInitialBias = isAccelerometerGroundTruthInitialBias
         this.location = location
         requiredMeasurements = minimumRequiredMeasurements
-        robustPreliminarySubsetSize = minimumRequiredMeasurements
+        accelerometerRobustPreliminarySubsetSize = minimumRequiredMeasurements
     }
 
+    /**
+     * Listener used by internal generator to handle events when initialization is started.
+     */
+    private val generatorInitializationStartedListener =
+        SingleSensorCalibrationMeasurementGenerator.OnInitializationStartedListener<AccelerometerMeasurementGenerator> {
+            initializationStartedListener?.onInitializationStarted(this@StaticIntervalAccelerometerCalibrator)
+        }
 
     /**
-     * Listener used by internal interval detector to handle events when initialization is
-     * completed.
+     * Listener used by internal generator to handle events when initialization is completed.
      */
-    override val intervalDetectorInitializationCompletedListener =
-        IntervalDetector.OnInitializationCompletedListener<AccelerometerIntervalDetector> { _, _ ->
+    private val generatorInitializationCompletedListener =
+        SingleSensorCalibrationMeasurementGenerator.OnInitializationCompletedListener<AccelerometerMeasurementGenerator> { _, _ ->
             gravityNorm = gravityNormEstimator.averageNorm
             initializationCompletedListener?.onInitializationCompleted(
                 this@StaticIntervalAccelerometerCalibrator
@@ -199,25 +230,59 @@ class StaticIntervalAccelerometerCalibrator private constructor(
         }
 
     /**
-     * Listener used by the internal interval detector when a static period ends and a dynamic
-     * period starts. This listener contains accumulated accelerometer average values during static
-     * period, that will be used as a measurement to solve calibration.
+     * Listener used by internal generator to handle events when an error occurs.
      */
-    private val intervalDetectorDynamicIntervalDetectedListener =
-        IntervalDetector.OnDynamicIntervalDetectedListener<AccelerometerIntervalDetector> { _, _, _, _, _, _, _, accumulatedAvgX, accumulatedAvgY, accumulatedAvgZ, accumulatedStdX, accumulatedStdY, accumulatedStdZ ->
-            // add one measurement
-            val kinematics = BodyKinematics(accumulatedAvgX, accumulatedAvgY, accumulatedAvgZ)
-            val stdNorm = sqrt(
-                accumulatedStdX.pow(2.0) + accumulatedStdY.pow(2.0) + accumulatedStdZ.pow(2.0)
+    private val generatorErrorListener =
+        SingleSensorCalibrationMeasurementGenerator.OnErrorListener<AccelerometerMeasurementGenerator> { _, reason ->
+            errorListener?.onError(
+                this@StaticIntervalAccelerometerCalibrator,
+                CalibratorErrorReason.mapErrorReason(reason)
             )
-            val measurement = StandardDeviationBodyKinematics(kinematics, stdNorm, 0.0)
-            measurements.add(measurement)
+        }
 
-            val reqMeasurements =
-                requiredMeasurements.coerceAtLeast(minimumRequiredMeasurements)
-            val measurementsSize = measurements.size
+    /**
+     * Listener used by internal generator to handle events when a static interval is detected.
+     */
+    private val generatorStaticIntervalDetectedListener =
+        SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalDetectedListener<AccelerometerMeasurementGenerator> {
+            staticIntervalDetectedListener?.onStaticIntervalDetected(this@StaticIntervalAccelerometerCalibrator)
+        }
 
-            newCalibrationMeasurementAvailableListener?.onNewCalibrationMeasurementAvailable(
+    /**
+     * Listener used by internal generator to handle events when a dynamic interval is detected.
+     */
+    private val generatorDynamicIntervalDetectedListener =
+        SingleSensorCalibrationMeasurementGenerator.OnDynamicIntervalDetectedListener<AccelerometerMeasurementGenerator> {
+            dynamicIntervalDetectedListener?.onDynamicIntervalDetected(this@StaticIntervalAccelerometerCalibrator)
+        }
+
+    /**
+     * Listener used by internal generator to handle events when a static interval is skipped.
+     */
+    private val generatorStaticIntervalSkippedListener =
+        SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalSkippedListener<AccelerometerMeasurementGenerator> {
+            staticIntervalSkippedListener?.onStaticIntervalSkipped(this@StaticIntervalAccelerometerCalibrator)
+        }
+
+    /**
+     * Listener used by internal generator to handle events when a dynamic interval is skipped.
+     */
+    private val generatorDynamicIntervalSkippedListener =
+        SingleSensorCalibrationMeasurementGenerator.OnDynamicIntervalSkippedListener<AccelerometerMeasurementGenerator> {
+            dynamicIntervalSkippedListener?.onDynamicIntervalSkipped(this@StaticIntervalAccelerometerCalibrator)
+        }
+
+    /**
+     * Listener used by internal generator to handle events when a new measurement is generated.
+     */
+    private val generatorGeneratedMeasurementListener =
+        SingleSensorCalibrationMeasurementGenerator.OnGeneratedMeasurementListener<AccelerometerMeasurementGenerator, StandardDeviationBodyKinematics> { _, measurement ->
+            accelerometerMeasurements.add(measurement)
+
+            val reqMeasurements = requiredMeasurements.coerceAtLeast(minimumRequiredMeasurements)
+            val measurementsSize = accelerometerMeasurements.size
+
+            generatedAccelerometerMeasurementListener?.onGeneratedAccelerometerMeasurement(
                 this@StaticIntervalAccelerometerCalibrator,
                 measurement,
                 measurementsSize,
@@ -231,11 +296,11 @@ class StaticIntervalAccelerometerCalibrator private constructor(
                     this@StaticIntervalAccelerometerCalibrator
                 )
 
-                // stop interval detector since no more measurements need to be collected
+                // stop internal generator since no more measurements need to be collected
                 internalStop(true)
 
                 // build calibrator
-                internalCalibrator = buildInternalCalibrator()
+                accelerometerInternalCalibrator = buildAccelerometerInternalCalibrator()
 
                 if (solveCalibrationWhenEnoughMeasurements) {
                     // execute calibration
@@ -251,7 +316,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
      * [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED] is used, otherwise zero
      * bias is assumed as an initial guess).
      */
-    private val intervalDetectorMeasurementListener =
+    private val generatorDetectorMeasurementListener =
         AccelerometerSensorCollector.OnMeasurementListener { _, _, _, bx, by, bz, _, _ ->
             if (isFirstMeasurement) {
                 updateInitialBiases(bx, by, bz)
@@ -275,26 +340,28 @@ class StaticIntervalAccelerometerCalibrator private constructor(
      */
     private val gravityNormUnreliableListener =
         AccumulatedMeasurementEstimator.OnUnreliableListener<GravityNormEstimator> {
-            resultUnreliable = true
-            unreliableGravityNormEstimationListener?.onUnreliableGravityEstimation(
-                this@StaticIntervalAccelerometerCalibrator
-            )
+            accelerometerResultUnreliable = true
+            unreliableGravityNormEstimationListener?.onUnreliableGravityEstimation(this@StaticIntervalAccelerometerCalibrator)
         }
 
     /**
-     * Internal interval detector to detect periods when device remains static.
+     * Internal generator to generate measurements for calibration.
      */
-    override val intervalDetector: AccelerometerIntervalDetector =
-        AccelerometerIntervalDetector(
-            context,
-            sensorType,
-            sensorDelay,
-            intervalDetectorInitializationStartedListener,
-            intervalDetectorInitializationCompletedListener,
-            intervalDetectorErrorListener,
-            dynamicIntervalDetectedListener = intervalDetectorDynamicIntervalDetectedListener,
-            measurementListener = intervalDetectorMeasurementListener
-        )
+    override val generator = AccelerometerMeasurementGenerator(
+        context,
+        accelerometerSensorType,
+        accelerometerSensorDelay,
+        generatorInitializationStartedListener,
+        generatorInitializationCompletedListener,
+        generatorErrorListener,
+        generatorStaticIntervalDetectedListener,
+        generatorDynamicIntervalDetectedListener,
+        generatorStaticIntervalSkippedListener,
+        generatorDynamicIntervalSkippedListener,
+        generatorGeneratedMeasurementListener,
+        accelerometerMeasurementListener = generatorDetectorMeasurementListener,
+        accuracyChangedListener = accuracyChangedListener
+    )
 
     /**
      * Gravity norm estimator. It is used to estimate gravity norm when no location is provided.
@@ -302,7 +369,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
     private val gravityNormEstimator: GravityNormEstimator =
         GravityNormEstimator(
             context,
-            sensorDelay,
+            accelerometerSensorDelay,
             initialStaticSamples,
             stopMode = StopMode.MAX_SAMPLES_ONLY,
             completedListener = gravityNormCompletedListener,
@@ -310,10 +377,10 @@ class StaticIntervalAccelerometerCalibrator private constructor(
         )
 
     /**
-     * Internal calibrator used to solve the calibration parameters once enough measurements are
-     * collected at static intervals.
+     * Internal accelerometer calibrator used to solve the calibration parameters once enough
+     * measurements are collected at static intervals.
      */
-    private var internalCalibrator: AccelerometerNonLinearCalibrator? = null
+    private var accelerometerInternalCalibrator: AccelerometerNonLinearCalibrator? = null
 
     /**
      * Contains gravity norm (either obtained by the gravity sensor, or determined by current
@@ -323,101 +390,106 @@ class StaticIntervalAccelerometerCalibrator private constructor(
         private set
 
     /**
-     * Indicates if result is unreliable. This can happen if no location is provided and gravity
-     * estimation becomes unreliable. When this happens result of calibration should probably be
-     * discarded.
+     * Indicates if accelerometer result is unreliable. This can happen if no location is provided
+     * and gravity estimation becomes unreliable. When this happens result of calibration should
+     * probably be discarded.
      */
-    var resultUnreliable = false
+    var accelerometerResultUnreliable = false
         private set
 
     /**
-     * Gets X-coordinate of bias used as an initial guess and expressed in meters per squared second
-     * (m/s^2).
+     * Gets x-coordinate of accelerometer bias used as an initial guess and expressed in meters per
+     * squared second (m/s^2).
      * This value is determined once the calibrator starts.
-     * If [sensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED], this
-     * will be equal to the value used internally by the device as part of the accelerometer
-     * hardware calibration.
-     * If [sensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER], then
+     * If [accelerometerSensorType] is
+     * [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED], this will be equal to
+     * the value used internally by the device as part of the accelerometer hardware calibration.
+     * If [accelerometerSensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER], then
      * accelerometer sensor measurements are assumed to be already bias compensated, and the initial
      * bias is assumed to be zero.
-     * If [isGroundTruthInitialBias] is true, this is assumed to be the true bias, and [estimatedBiasX] will be
-     * equal to this value, otherwise [estimatedBiasX] will be the estimated bias after solving
-     * calibration, which will differ from [estimatedBiasX].
+     * If [isAccelerometerGroundTruthInitialBias] is true, this is assumed to be the true bias, and
+     * [estimatedAccelerometerBiasX] will be equal to this value, otherwise
+     * [estimatedAccelerometerBiasX] will be the estimated bias after solving calibration, which
+     * will differ from [estimatedAccelerometerBiasX].
      */
-    var initialBiasX: Double? = null
+    var accelerometerInitialBiasX: Double? = null
         private set
 
     /**
-     * Gets Y-coordinate of bias used as an initial guess and expressed in meters per squared second
-     * (m/s^2).
+     * Gets y-coordinate of accelerometer bias used as an initial guess and expressed in meters per
+     * squared second (m/s^2).
      * This value is determined once the calibrator starts.
-     * If [sensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED], this
-     * will be equal to the value used internally by the device as part of the accelerometer
-     * hardware calibration.
-     * If [sensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER], then
+     * If [accelerometerSensorType] is
+     * [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED], this will be equal to
+     * the value used internally by the device as part of the accelerometer hardware calibration.
+     * If [accelerometerSensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER], then
      * accelerometer sensor measurements are assumed to be already bias compensated, and the initial
      * bias is assumed to be zero.
-     * If [isGroundTruthInitialBias] is true, this is assumed to be the true bias, and [estimatedBiasY] will be
-     * equal to this value, otherwise [estimatedBiasY] will be the estimated bias after solving
-     * calibration, which will differ from [estimatedBiasY].
+     * If [isAccelerometerGroundTruthInitialBias] is true, this is assumed to be the true bias, and
+     * [estimatedAccelerometerBiasY] will be equal to this value, otherwise
+     * [estimatedAccelerometerBiasY] will be the estimated bias after solving calibration, which
+     * will differ from [estimatedAccelerometerBiasY].
      */
-    var initialBiasY: Double? = null
+    var accelerometerInitialBiasY: Double? = null
         private set
 
     /**
-     * Gets Z-coordinate of bias used as an initial guess and expressed in meters per squared second
-     * (m/s^2).
+     * Gets z-coordinate of accelerometer bias used as an initial guess and expressed in meters per
+     * squared second (m/s^2).
      * This value is determined once the calibrator starts.
-     * If [sensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED], this
-     * will be equal to the value used internally by the device as part of the accelerometer
-     * hardware calibration.
-     * If [sensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER], then
+     * If [accelerometerSensorType] is
+     * [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED], this will be equal to
+     * the value used internally by the device as part of the accelerometer hardware calibration.
+     * If [accelerometerSensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER], then
      * accelerometer sensor measurements are assumed to be already bias compensated, and the initial
      * bias is assumed to be zero.
-     * If [isGroundTruthInitialBias] is true, this is assumed to be the true bias, and [estimatedBiasZ] will be
-     * equal to this value, otherwise [estimatedBiasZ] will be the estimated bias after solving
-     * calibration, which will differ from [estimatedBiasZ].
+     * If [isAccelerometerGroundTruthInitialBias] is true, this is assumed to be the true bias, and
+     * [estimatedAccelerometerBiasZ] will be equal to this value, otherwise
+     * [estimatedAccelerometerBiasZ] will be the estimated bias after solving calibration, which
+     * will differ from [estimatedAccelerometerBiasZ].
      */
-    var initialBiasZ: Double? = null
+    var accelerometerInitialBiasZ: Double? = null
         private set
 
     /**
-     * Gets X-coordinate of bias used as an initial guess.
+     * Gets accelerometer X-coordinate of bias used as an initial guess.
      * This value is determined once the calibrator starts.
-     * If [sensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED], this
-     * will be equal to the value used internally by the device as part of the accelerometer
-     * hardware calibration.
-     * If [sensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER], then
+     * If [accelerometerSensorType] is
+     * [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED], this will be equal to
+     * the value used internally by the device as part of the accelerometer hardware calibration.
+     * If [accelerometerSensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER], then
      * accelerometer sensor measurements are assumed to be already bias compensated, and the initial
      * bias is assumed to be zero.
-     * If [isGroundTruthInitialBias] is true, this is assumed to be the true bias, and [estimatedBiasX] will be
-     * equal to this value, otherwise [estimatedBiasX] will be the estimated bias after solving
-     * calibration, which will differ from [estimatedBiasX].
+     * If [isAccelerometerGroundTruthInitialBias] is true, this is assumed to be the true bias, and
+     * [estimatedAccelerometerBiasX] will be equal to this value, otherwise
+     * [estimatedAccelerometerBiasX] will be the estimated bias after solving calibration, which
+     * will differ from [estimatedAccelerometerBiasX].
      */
-    val initialBiasXAsMeasurement: Acceleration?
+    val accelerometerInitialBiasXAsMeasurement: Acceleration?
         get() {
-            val initialBiasX = this.initialBiasX ?: return null
+            val initialBiasX = this.accelerometerInitialBiasX ?: return null
             return Acceleration(initialBiasX, AccelerationUnit.METERS_PER_SQUARED_SECOND)
         }
 
     /**
-     * Gets X-coordinate of bias used as an initial guess.
+     * Gets accelerometer X-coordinate of bias used as an initial guess.
      * This value is determined once the calibrator starts.
-     * If [sensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED], this
-     * will be equal to the value used internally by the device as part of the accelerometer
-     * hardware calibration.
-     * If [sensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER], then
+     * If [accelerometerSensorType] is
+     * [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED], this will be equal to
+     * the value used internally by the device as part of the accelerometer hardware calibration.
+     * If [accelerometerSensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER], then
      * accelerometer sensor measurements are assumed to be already bias compensated, and the initial
      * bias is assumed to be zero.
-     * If [isGroundTruthInitialBias] is true, this is assumed to be the true bias, and [estimatedBiasX] will be
-     * equal to this value, otherwise [estimatedBiasX] will be the estimated bias after solving
-     * calibration, which will differ from [estimatedBiasX].
+     * If [isAccelerometerGroundTruthInitialBias] is true, this is assumed to be the true bias, and
+     * [estimatedAccelerometerBiasX] will be equal to this value, otherwise
+     * [estimatedAccelerometerBiasX] will be the estimated bias after solving calibration, which
+     * will differ from [estimatedAccelerometerBiasX].
      *
      * @param result instance where result will be stored.
      * @return true if initial bias is available, false otherwise.
      */
-    fun getInitialBiasXAsMeasurement(result: Acceleration): Boolean {
-        val initialBiasX = this.initialBiasX
+    fun getAccelerometerInitialBiasXAsMeasurement(result: Acceleration): Boolean {
+        val initialBiasX = this.accelerometerInitialBiasX
         return if (initialBiasX != null) {
             result.value = initialBiasX
             result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
@@ -428,39 +500,44 @@ class StaticIntervalAccelerometerCalibrator private constructor(
     }
 
     /**
-     * Gets Y-coordinate of bias used as an initial guess.
+     * Gets accelerometer Y-coordinate of bias used as an initial guess.
      * This value is determined once the calibrator starts.
-     * If [sensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED], this
-     * will be equal to the value used internally by the device as part of the accelerometer
-     * hardware calibration.
-     * If [sensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER], then
+     * If [accelerometerSensorType] is
+     * [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED], this will be equal to
+     * the value used internally by the device as part of the accelerometer hardware calibration.
+     * If [accelerometerSensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER], then
      * accelerometer sensor measurements are assumed to be already bias compensated, and the initial
      * bias is assumed to be zero.
-     * If [isGroundTruthInitialBias] is true, this is assumed to be the true bias, and [estimatedBiasY] will be
-     * equal to this value, otherwise [estimatedBiasY] will be the estimated bias after solving
-     * calibration, which will differ from [estimatedBiasY].
+     * If [isAccelerometerGroundTruthInitialBias] is true, this is assumed to be the true bias, and
+     * [estimatedAccelerometerBiasY] will be equal to this value, otherwise
+     * [estimatedAccelerometerBiasY] will be the estimated bias after solving calibration, which
+     * will differ from [estimatedAccelerometerBiasY].
      */
-    val initialBiasYAsMeasurement: Acceleration?
+    val accelerometerInitialBiasYAsMeasurement: Acceleration?
         get() {
-            val initialBiasY = this.initialBiasY ?: return null
+            val initialBiasY = this.accelerometerInitialBiasY ?: return null
             return Acceleration(initialBiasY, AccelerationUnit.METERS_PER_SQUARED_SECOND)
         }
 
     /**
-     * Gets Y-coordinate of bias used as an initial guess.
+     * Gets accelerometer Y-coordinate of bias used as an initial guess.
      * This value is determined once the calibrator starts.
-     * If [sensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED], this
-     * will be equal to the value used internally by the device as part of the accelerometer
-     * hardware calibration.
-     * If [sensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER], then
+     * If [accelerometerSensorType] is
+     * [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED], this will be equal to
+     * the value used internally by the device as part of the accelerometer hardware calibration.
+     * If [accelerometerSensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER], then
      * accelerometer sensor measurements are assumed to be already bias compensated, and the initial
      * bias is assumed to be zero.
-     * If [isGroundTruthInitialBias] is true, this is assumed to be the true bias, and [estimatedBiasY] will be
-     * equal to this value, otherwise [estimatedBiasY] will be the estimated bias after solving
-     * calibration, which will differ from [estimatedBiasY].
+     * If [isAccelerometerGroundTruthInitialBias] is true, this is assumed to be the true bias, and
+     * [estimatedAccelerometerBiasY] will be equal to this value, otherwise
+     * [estimatedAccelerometerBiasY] will be the estimated bias after solving calibration, which
+     * will differ from [estimatedAccelerometerBiasY].
+     *
+     * @param result instance where result will be stored.
+     * @return true if initial bias is available, false otherwise.
      */
-    fun getInitialBiasYAsMeasurement(result: Acceleration): Boolean {
-        val initialBiasY = this.initialBiasY
+    fun getAccelerometerInitialBiasYAsMeasurement(result: Acceleration): Boolean {
+        val initialBiasY = this.accelerometerInitialBiasY
         return if (initialBiasY != null) {
             result.value = initialBiasY
             result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
@@ -471,39 +548,44 @@ class StaticIntervalAccelerometerCalibrator private constructor(
     }
 
     /**
-     * Gets Z-coordinate of bias used as an initial guess.
+     * Gets accelerometer Z-coordinate of bias used as an initial guess.
      * This value is determined once the calibrator starts.
-     * If [sensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED], this
-     * will be equal to the value used internally by the device as part of the accelerometer
-     * hardware calibration.
-     * If [sensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER], then
+     * If [accelerometerSensorType] is
+     * [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED], this will be equal to
+     * the value used internally by the device as part of the accelerometer hardware calibration.
+     * If [accelerometerSensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER], then
      * accelerometer sensor measurements are assumed to be already bias compensated, and the initial
      * bias is assumed to be zero.
-     * If [isGroundTruthInitialBias] is true, this is assumed to be the true bias, and [estimatedBiasZ] will be
-     * equal to this value, otherwise [estimatedBiasZ] will be the estimated bias after solving
-     * calibration, which will differ from [estimatedBiasZ].
+     * If [isAccelerometerGroundTruthInitialBias] is true, this is assumed to be the true bias, and
+     * [estimatedAccelerometerBiasZ] will be equal to this value, otherwise
+     * [estimatedAccelerometerBiasZ] will be the estimated bias after solving calibration, which
+     * will differ from [estimatedAccelerometerBiasZ].
      */
-    val initialBiasZAsMeasurement: Acceleration?
+    val accelerometerInitialBiasZAsMeasurement: Acceleration?
         get() {
-            val initialBiasZ = this.initialBiasZ ?: return null
+            val initialBiasZ = this.accelerometerInitialBiasZ ?: return null
             return Acceleration(initialBiasZ, AccelerationUnit.METERS_PER_SQUARED_SECOND)
         }
 
     /**
-     * Gets Z-coordinate of bias used as an initial guess.
+     * Gets accelerometer Z-coordinate of bias used as an initial guess.
      * This value is determined once the calibrator starts.
-     * If [sensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED], this
-     * will be equal to the value used internally by the device as part of the accelerometer
-     * hardware calibration.
-     * If [sensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER], then
+     * If [accelerometerSensorType] is
+     * [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED], this will be equal to
+     * the value used internally by the device as part of the accelerometer hardware calibration.
+     * If [accelerometerSensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER], then
      * accelerometer sensor measurements are assumed to be already bias compensated, and the initial
      * bias is assumed to be zero.
-     * If [isGroundTruthInitialBias] is true, this is assumed to be the true bias, and [estimatedBiasZ] will be
-     * equal to this value, otherwise [estimatedBiasZ] will be the estimated bias after solving
-     * calibration, which will differ from [estimatedBiasZ].
+     * If [isAccelerometerGroundTruthInitialBias] is true, this is assumed to be the true bias, and
+     * [estimatedAccelerometerBiasZ] will be equal to this value, otherwise
+     * [estimatedAccelerometerBiasZ] will be the estimated bias after solving calibration, which
+     * will differ from [estimatedAccelerometerBiasZ].
+     *
+     * @param result instance where result will be stored.
+     * @return true if initial bias is available, false otherwise.
      */
-    fun getInitialBiasZAsMeasurement(result: Acceleration): Boolean {
-        val initialBiasZ = this.initialBiasZ
+    fun getAccelerometerInitialBiasZAsMeasurement(result: Acceleration): Boolean {
+        val initialBiasZ = this.accelerometerInitialBiasZ
         return if (initialBiasZ != null) {
             result.value = initialBiasZ
             result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
@@ -514,23 +596,24 @@ class StaticIntervalAccelerometerCalibrator private constructor(
     }
 
     /**
-     * Gets initial bias coordinates used as an initial guess.
+     * Gets initial bias coordinate used as an initial guess.
      * This value is determined once the calibrator starts.
-     * If [sensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED], this
-     * will be equal to the values used internally by the device as part of the accelerometer
-     * hardware calibration.
-     * If [sensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER], then
+     * If [accelerometerSensorType] is
+     * [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED], this will be equal to
+     * the values used internally by the device as part of the accelerometer hardware calibration.
+     * If [accelerometerSensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER], then
      * accelerometer sensor measurements are assumed to be already bias compensated, and the initial
      * bias is assumed to be zero.
-     * If [isGroundTruthInitialBias] is true, this is assumed to be the true bias, and [estimatedBiasAsTriad]
-     * will be equal to this value, otherwise [estimatedBiasAsTriad] will be the estimated bias
-     * after solving calibration, which will differ from [estimatedBiasAsTriad].
+     * If [isAccelerometerGroundTruthInitialBias] is true, this is assumed to be the true bias, and
+     * [estimatedAccelerometerBiasAsTriad] will be equal to this value, otherwise
+     * [estimatedAccelerometerBiasAsTriad] will be the estimated bias after solving calibration,
+     * which will differ from [estimatedAccelerometerBiasAsTriad].
      */
-    val initialBiasAsTriad: AccelerationTriad?
+    val accelerometerInitialBiasAsTriad: AccelerationTriad?
         get() {
-            val initialBiasX = this.initialBiasX
-            val initialBiasY = this.initialBiasY
-            val initialBiasZ = this.initialBiasZ
+            val initialBiasX = this.accelerometerInitialBiasX
+            val initialBiasY = this.accelerometerInitialBiasY
+            val initialBiasZ = this.accelerometerInitialBiasZ
             return if (initialBiasX != null && initialBiasY != null && initialBiasZ != null) {
                 AccelerationTriad(
                     AccelerationUnit.METERS_PER_SQUARED_SECOND,
@@ -546,23 +629,24 @@ class StaticIntervalAccelerometerCalibrator private constructor(
     /**
      * Gets initial bias coordinates used as an initial guess.
      * This value is determined once the calibrator starts.
-     * If [sensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED], this
-     * will be equal to the values used internally by the device as part of the accelerometer
-     * hardware calibration.
-     * If [sensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER], then
+     * If [accelerometerSensorType] is
+     * [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED], this will be equal to
+     * the values used internally by the device as part of the accelerometer hardware calibration.
+     * If [accelerometerSensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER], then
      * accelerometer sensor measurements are assumed to be already bias compensated, and the initial
      * bias is assumed to be zero.
-     * If [isGroundTruthInitialBias] is true, this is assumed to be the true bias, and [estimatedBiasAsTriad]
-     * will be equal to this value, otherwise [estimatedBiasAsTriad] will be the estimated bias
-     * after solving calibration, which will differ from [estimatedBiasAsTriad].
+     * If [isAccelerometerGroundTruthInitialBias] is true, this is assumed to be the true bias, and
+     * [estimatedAccelerometerBiasAsTriad] will be equal to this value, otherwise
+     * [estimatedAccelerometerBiasAsTriad] will be the estimated bias after solving calibration,
+     * which will differ from [estimatedAccelerometerBiasAsTriad].
      *
      * @param result instance where result will be stored.
      * @return true if result is available, false otherwise.
      */
-    fun getInitialBiasAsTriad(result: AccelerationTriad): Boolean {
-        val initialBiasX = this.initialBiasX
-        val initialBiasY = this.initialBiasY
-        val initialBiasZ = this.initialBiasZ
+    fun getAccelerometerInitialBiasAsTriad(result: AccelerationTriad): Boolean {
+        val initialBiasX = this.accelerometerInitialBiasX
+        val initialBiasY = this.accelerometerInitialBiasY
+        val initialBiasZ = this.accelerometerInitialBiasZ
         return if (initialBiasX != null && initialBiasY != null && initialBiasZ != null) {
             result.setValueCoordinatesAndUnit(
                 initialBiasX,
@@ -577,14 +661,14 @@ class StaticIntervalAccelerometerCalibrator private constructor(
     }
 
     /**
-     * Indicates whether initial bias is considered a ground-truth known bias.
+     * Indicates whether accelerometer initial bias is considered a ground-truth known bias.
      * When true, estimated biases are exactly equal to initial biases, otherwise
      * initial biases are just an initial guess and estimated ones might differ after
      * solving calibration.
      *
      * @throws IllegalStateException if calibrator is already running.
      */
-    var isGroundTruthInitialBias: Boolean = false
+    var isAccelerometerGroundTruthInitialBias: Boolean = false
         @Throws(IllegalStateException::class)
         set(value) {
             check(!running)
@@ -623,25 +707,25 @@ class StaticIntervalAccelerometerCalibrator private constructor(
      * This can be used to obtain additional information about the sensor.
      */
     val accelerometerSensor
-        get() = intervalDetector.sensor
+        get() = generator.accelerometerSensor
 
     /**
      * Gets gravity sensor being used for gravity estimation.
-     * This can be used to obtain aditional information about the sensor.
+     * This can be used to obtain additional information about the sensor.
      */
     val gravitySensor
         get() = gravityNormEstimator.sensor
 
     /**
-     * Gets or sets initial scaling factors and cross couping errors matrix.
+     * Gets or sets initial accelerometer scaling factors and cross couping errors matrix.
      *
      * @throws IllegalStateException if calibrator is currently running.
      * @throws IllegalArgumentException if provided matrix is not 3x3.
      */
-    var initialMa: Matrix
+    var accelerometerInitialMa: Matrix
         get() {
             val result = Matrix(BodyKinematics.COMPONENTS, BodyKinematics.COMPONENTS)
-            getInitialMa(result)
+            getAccelerometerInitialMa(result)
             return result
         }
         @Throws(IllegalStateException::class, IllegalArgumentException::class)
@@ -649,41 +733,273 @@ class StaticIntervalAccelerometerCalibrator private constructor(
             check(!running)
             require(value.rows == BodyKinematics.COMPONENTS && value.columns == BodyKinematics.COMPONENTS)
 
-            initialSx = value.getElementAtIndex(0)
-            initialMyx = value.getElementAtIndex(1)
-            initialMzx = value.getElementAtIndex(2)
+            accelerometerInitialSx = value.getElementAtIndex(0)
+            accelerometerInitialMyx = value.getElementAtIndex(1)
+            accelerometerInitialMzx = value.getElementAtIndex(2)
 
-            initialMxy = value.getElementAtIndex(3)
-            initialSy = value.getElementAtIndex(4)
-            initialMzy = value.getElementAtIndex(5)
+            accelerometerInitialMxy = value.getElementAtIndex(3)
+            accelerometerInitialSy = value.getElementAtIndex(4)
+            accelerometerInitialMzy = value.getElementAtIndex(5)
 
-            initialMxz = value.getElementAtIndex(6)
-            initialMyz = value.getElementAtIndex(7)
-            initialSz = value.getElementAtIndex(8)
+            accelerometerInitialMxz = value.getElementAtIndex(6)
+            accelerometerInitialMyz = value.getElementAtIndex(7)
+            accelerometerInitialSz = value.getElementAtIndex(8)
         }
 
     /**
-     * Gets initial scale factors and cross coupling errors matrix.
+     * Gets initial accelerometer scale factors and cross coupling errors matrix.
      *
      * @param result instance where data will be stored.
      * @throws IllegalArgumentException if provided result matrix is not 3x3.
      */
     @Throws(IllegalArgumentException::class)
-    fun getInitialMa(result: Matrix) {
+    fun getAccelerometerInitialMa(result: Matrix) {
         require(result.rows == BodyKinematics.COMPONENTS && result.columns == BodyKinematics.COMPONENTS)
 
-        result.setElementAtIndex(0, initialSx)
-        result.setElementAtIndex(1, initialMyx)
-        result.setElementAtIndex(2, initialMzx)
+        result.setElementAtIndex(0, accelerometerInitialSx)
+        result.setElementAtIndex(1, accelerometerInitialMyx)
+        result.setElementAtIndex(2, accelerometerInitialMzx)
 
-        result.setElementAtIndex(3, initialMxy)
-        result.setElementAtIndex(4, initialSy)
-        result.setElementAtIndex(5, initialMzy)
+        result.setElementAtIndex(3, accelerometerInitialMxy)
+        result.setElementAtIndex(4, accelerometerInitialSy)
+        result.setElementAtIndex(5, accelerometerInitialMzy)
 
-        result.setElementAtIndex(6, initialMxz)
-        result.setElementAtIndex(7, initialMyz)
-        result.setElementAtIndex(8, initialSz)
+        result.setElementAtIndex(6, accelerometerInitialMxz)
+        result.setElementAtIndex(7, accelerometerInitialMyz)
+        result.setElementAtIndex(8, accelerometerInitialSz)
     }
+
+    /**
+     * Gets or sets initial x scaling factor for accelerometer calibration.
+     *
+     * @throws IllegalStateException if calibrator is currently running.
+     */
+    var accelerometerInitialSx: Double = 0.0
+        @Throws(IllegalStateException::class)
+        set(value) {
+            check(!running)
+            field = value
+        }
+
+    /**
+     * Gets or sets initial y scaling factor for accelerometer calibration.
+     *
+     * @throws IllegalStateException if calibrator is currently running.
+     */
+    var accelerometerInitialSy: Double = 0.0
+        @Throws(IllegalStateException::class)
+        set(value) {
+            check(!running)
+            field = value
+        }
+
+    /**
+     * Gets or sets initial z scaling factor for accelerometer calibration.
+     *
+     * @throws IllegalStateException if calibrator is currently running.
+     */
+    var accelerometerInitialSz: Double = 0.0
+        @Throws(IllegalStateException::class)
+        set(value) {
+            check(!running)
+            field = value
+        }
+
+    /**
+     * Gets or sets initial x-y cross coupling error for accelerometer calibration.
+     *
+     * @throws IllegalStateException if calibrator is currently running.
+     */
+    var accelerometerInitialMxy: Double = 0.0
+        @Throws(IllegalStateException::class)
+        set(value) {
+            check(!running)
+            field = value
+        }
+
+    /**
+     * Gets or sets initial x-z cross coupling error for accelerometer calibration.
+     *
+     * @throws IllegalStateException if calibrator is currently running.
+     */
+    var accelerometerInitialMxz: Double = 0.0
+        @Throws(IllegalStateException::class)
+        set(value) {
+            check(!running)
+            field = value
+        }
+
+    /**
+     * Gets or sets initial y-x cross coupling error for accelerometer calibration.
+     *
+     * @throws IllegalStateException if calibrator is currently running.
+     */
+    var accelerometerInitialMyx: Double = 0.0
+        @Throws(IllegalStateException::class)
+        set(value) {
+            check(!running)
+            field = value
+        }
+
+    /**
+     * Gets or sets initial y-z cross coupling error for accelerometer calibration.
+     *
+     * @throws IllegalStateException if calibrator is currently running.
+     */
+    var accelerometerInitialMyz: Double = 0.0
+        @Throws(IllegalStateException::class)
+        set(value) {
+            check(!running)
+            field = value
+        }
+
+    /**
+     * Gets or sets initial z-x cross coupling error for accelerometer calibration.
+     *
+     * @throws IllegalStateException if calibrator is currently running.
+     */
+    var accelerometerInitialMzx: Double = 0.0
+        @Throws(IllegalStateException::class)
+        set(value) {
+            check(!running)
+            field = value
+        }
+
+    /**
+     * Gets or sets initial z-y cross coupling error for accelerometer calibration.
+     *
+     * @throws IllegalStateException if calibrator is currently running.
+     */
+    var accelerometerInitialMzy: Double = 0.0
+        @Throws(IllegalStateException::class)
+        set(value) {
+            check(!running)
+            field = value
+        }
+
+    /**
+     * Sets initial scaling factors for accelerometer calibration.
+     *
+     * @param accelerometerInitialSx initial x scaling factor.
+     * @param accelerometerInitialSy initial y scaling factor.
+     * @param accelerometerInitialSz initial z scaling factor.
+     * @throws IllegalStateException if calibrator is currently running.
+     */
+    @Throws(IllegalStateException::class)
+    fun setAccelerometerInitialScalingFactors(
+        accelerometerInitialSx: Double,
+        accelerometerInitialSy: Double,
+        accelerometerInitialSz: Double
+    ) {
+        check(!running)
+        this.accelerometerInitialSx = accelerometerInitialSx
+        this.accelerometerInitialSy = accelerometerInitialSy
+        this.accelerometerInitialSz = accelerometerInitialSz
+    }
+
+    /**
+     * Sets initial cross coupling errors for accelerometer calibration.
+     *
+     * @param accelerometerInitialMxy initial x-y cross coupling error.
+     * @param accelerometerInitialMxz initial x-z cross coupling error.
+     * @param accelerometerInitialMyx initial y-x cross coupling error.
+     * @param accelerometerInitialMyz initial y-z cross coupling error.
+     * @param accelerometerInitialMzx initial z-x cross coupling error.
+     * @param accelerometerInitialMzy initial z-y cross coupling error.
+     * @throws IllegalStateException if calibrator is currently running.
+     */
+    @Throws(IllegalStateException::class)
+    fun setAccelerometerInitialCrossCouplingErrors(
+        accelerometerInitialMxy: Double,
+        accelerometerInitialMxz: Double,
+        accelerometerInitialMyx: Double,
+        accelerometerInitialMyz: Double,
+        accelerometerInitialMzx: Double,
+        accelerometerInitialMzy: Double
+    ) {
+        check(!running)
+        this.accelerometerInitialMxy = accelerometerInitialMxy
+        this.accelerometerInitialMxz = accelerometerInitialMxz
+        this.accelerometerInitialMyx = accelerometerInitialMyx
+        this.accelerometerInitialMyz = accelerometerInitialMyz
+        this.accelerometerInitialMzx = accelerometerInitialMzx
+        this.accelerometerInitialMzy = accelerometerInitialMzy
+    }
+
+    /**
+     * Sets initial scaling factors and cross couping errors for accelerometer calibration.
+     *
+     * @param accelerometerInitialSx initial x scaling factor.
+     * @param accelerometerInitialSy initial y scaling factor.
+     * @param accelerometerInitialSz initial z scaling factor.
+     * @param accelerometerInitialMxy initial x-y cross coupling error.
+     * @param accelerometerInitialMxz initial x-z cross coupling error.
+     * @param accelerometerInitialMyx initial y-x cross coupling error.
+     * @param accelerometerInitialMyz initial y-z cross coupling error.
+     * @param accelerometerInitialMzx initial z-x cross coupling error.
+     * @param accelerometerInitialMzy initial z-y cross coupling error.
+     * @throws IllegalStateException if calibrator is currently running.
+     */
+    @Throws(IllegalStateException::class)
+    fun setAccelerometerInitialScalingFactorsAndCrossCouplingErrors(
+        accelerometerInitialSx: Double,
+        accelerometerInitialSy: Double,
+        accelerometerInitialSz: Double,
+        accelerometerInitialMxy: Double,
+        accelerometerInitialMxz: Double,
+        accelerometerInitialMyx: Double,
+        accelerometerInitialMyz: Double,
+        accelerometerInitialMzx: Double,
+        accelerometerInitialMzy: Double
+    ) {
+        setAccelerometerInitialScalingFactors(
+            accelerometerInitialSx,
+            accelerometerInitialSy,
+            accelerometerInitialSz
+        )
+        setAccelerometerInitialCrossCouplingErrors(
+            accelerometerInitialMxy,
+            accelerometerInitialMxz,
+            accelerometerInitialMyx,
+            accelerometerInitialMyz,
+            accelerometerInitialMzx,
+            accelerometerInitialMzy
+        )
+    }
+
+    /**
+     * Indicates or specifies whether z-axis is assumed to be common for magnetometer and
+     * gyroscope. When enabled, this eliminates 3 variables from Ma matrix during accelerometer
+     * calibration.
+     *
+     * @throws IllegalStateException if calibrator is currently running.
+     */
+    var isAccelerometerCommonAxisUsed: Boolean = DEFAULT_USE_COMMON_Z_AXIS
+        @Throws(IllegalStateException::class)
+        set(value) {
+            check(!running)
+            field = value
+        }
+
+    /**
+     * Gets minimum number of required measurements to start accelerometer calibration.
+     * Each time that the device is kept static, a new measurement is collected.
+     * When the required number of measurements for all sensors is collected, calibration can start.
+     */
+    val minimumRequiredAccelerometerMeasurements: Int
+        get() = if (isAccelerometerCommonAxisUsed) {
+            if (isAccelerometerGroundTruthInitialBias) {
+                ACCELEROMETER_KNOWN_BIAS_MINIMUM_MEASUREMENTS_COMMON_Z_AXIS
+            } else {
+                ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_COMMON_Z_AXIS
+            }
+        } else {
+            if (isAccelerometerGroundTruthInitialBias) {
+                ACCELEROMETER_KNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL
+            } else {
+                ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL
+            }
+        }
 
     /**
      * Gets minimum number of required measurements to start calibration.
@@ -691,19 +1007,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
      * When the required number of measurements is collected, calibration can start.
      */
     override val minimumRequiredMeasurements: Int
-        get() = if (isCommonAxisUsed) {
-            if (isGroundTruthInitialBias) {
-                KNOWN_BIAS_MINIMUM_MEASUREMENTS_COMMON_Z_AXIS
-            } else {
-                UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_COMMON_Z_AXIS
-            }
-        } else {
-            if (isGroundTruthInitialBias) {
-                KNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL
-            } else {
-                UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL
-            }
-        }
+        get() = minimumRequiredAccelerometerMeasurements
 
     /**
      * Gets estimated average of gravity norm expressed in meters per squared second (m/s^2).
@@ -811,6 +1115,136 @@ class StaticIntervalAccelerometerCalibrator private constructor(
         }
 
     /**
+     * Indicates robust method used to solve accelerometer calibration.
+     * If null, no robust method is used at all, and instead an LMSE solution is found.
+     *
+     * @throws IllegalStateException if calibrator is currently running.
+     */
+    var accelerometerRobustMethod: RobustEstimatorMethod? = null
+        @Throws(IllegalStateException::class)
+        set(value) {
+            check(!running)
+            field = value
+        }
+
+    /**
+     * Confidence of estimated accelerometer calibration result expressed as a value between 0.0
+     * and 1.0.
+     * By default 99% of confidence is used, which indicates that with a probability of 99%
+     * estimation will be accurate because chosen sub-samples will be inliers (in other terms,
+     * outliers will be correctly discarded).
+     * This properly is only taken into account if a not-null [accelerometerRobustMethod] is
+     * specified.
+     *
+     * @throws IllegalArgumentException if provided value is not between 0.0 and 1.0 (both
+     * included).
+     * @throws IllegalStateException if calibrator is currently running.
+     */
+    var accelerometerRobustConfidence: Double = ROBUST_DEFAULT_CONFIDENCE
+        @Throws(IllegalArgumentException::class, IllegalStateException::class)
+        set(value) {
+            require(value in 0.0..1.0)
+            check(!running)
+
+            field = value
+        }
+
+    /**
+     * Maximum number of iterations to attempt to find a robust accelerometer calibration solution.
+     * By default this is 5000.
+     * This properly is only taken into account if a not-null [accelerometerRobustMethod] is
+     * specified.
+     *
+     * @throws IllegalArgumentException if provided value is zero or negative.
+     * @throws IllegalStateException if calibrator is currently running.
+     */
+    var accelerometerRobustMaxIterations: Int = ROBUST_DEFAULT_MAX_ITERATIONS
+        @Throws(IllegalArgumentException::class, IllegalStateException::class)
+        set(value) {
+            require(value > 0)
+            check(!running)
+            field = value
+        }
+
+    /**
+     * Size of preliminary subsets picked while finding a robust accelerometer calibration solution.
+     * By default this is the [minimumRequiredAccelerometerMeasurements], which results in the
+     * smallest number of iterations to complete robust algorithms.
+     * Larger values can be used to ensure that error in each preliminary solution is minimized
+     * among more measurements (thus, softening the effect of outliers), but this comes at the
+     * expense of larger number of iterations.
+     * This properly is only taken into account if a not-null [accelerometerRobustMethod] is
+     * specified.
+     *
+     * @throws IllegalArgumentException if provided value is less than [minimumRequiredMeasurements]
+     * at the moment the setter is called.
+     * @throws IllegalStateException if calibrator is currently running.
+     */
+    var accelerometerRobustPreliminarySubsetSize: Int = 0
+        @Throws(IllegalArgumentException::class, IllegalStateException::class)
+        set(value) {
+            require(value >= minimumRequiredMeasurements)
+            check(!running)
+            field = value
+        }
+
+    /**
+     * Threshold to be used to determine whether a measurement is considered an outlier by robust
+     * accelerometer calibration algorithms or not.
+     * Threshold varies depending on chosen [accelerometerRobustMethod].
+     * By default, if null is provided, the estimated [accelerometerBaseNoiseLevel] will be used to
+     * determine a suitable threshold. Otherwise, if a value is provided, such value will be used
+     * instead.
+     * This properly is only taken into account if a not-null [accelerometerRobustMethod] is
+     * specified.
+     *
+     * @throws IllegalArgumentException if provided value is zero or negative.
+     * @throws IllegalStateException if calibrator is currently running.
+     */
+    var accelerometerRobustThreshold: Double? = null
+        @Throws(IllegalArgumentException::class, IllegalStateException::class)
+        set(value) {
+            require(value == null || value > 0.0)
+            check(!running)
+            field = value
+        }
+
+    /**
+     * Factor to be used respect estimated accelerometer base noise level to consider a measurement
+     * an outlier when using robust calibration methods.
+     * By default this is 3.0 times [accelerometerBaseNoiseLevel], which considering the noise level
+     * as the standard deviation of a Gaussian distribution, should account for 99% of the cases.
+     * Any measurement having an error greater than that in the estimated solution, will be
+     * considered an outlier and be discarded.
+     *
+     * @throws IllegalArgumentException if provided value is zero or negative.
+     * @throws IllegalStateException if calibrator is currently running.
+     */
+    var accelerometerRobustThresholdFactor: Double = DEFAULT_ROBUST_THRESHOLD_FACTOR
+        @Throws(IllegalArgumentException::class, IllegalStateException::class)
+        set(value) {
+            require(value > 0.0)
+            check(!running)
+            field = value
+        }
+
+    /**
+     * Additional factor to be taken into account for robust methods based on LMedS or PROMedS,
+     * where factor is not directly related to LMSE, but to a smaller value.
+     * This only applies to accelerometer calibration.
+     *
+     * @throws IllegalArgumentException if provided value is zero or negative.
+     * @throws IllegalStateException if calibrator is currently running.
+     */
+    var accelerometerRobustStopThresholdFactor: Double = DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR
+        @Throws(IllegalArgumentException::class, IllegalStateException::class)
+        set(value) {
+            require(value > 0.0)
+            check(!running)
+            field = value
+        }
+
+    /**
      * Gets estimated accelerometer scale factors and cross coupling errors, or null if not
      * available.
      * This is the product of matrix Ta containing cross coupling errors and Ka
@@ -850,97 +1284,99 @@ class StaticIntervalAccelerometerCalibrator private constructor(
      * </pre>
      * Values of this matrix are unit-less.
      */
-    val estimatedMa
-        get() = internalCalibrator?.estimatedMa
+    val estimatedAccelerometerMa
+        get() = accelerometerInternalCalibrator?.estimatedMa
 
     /**
-     * Gets estimated x-axis scale factor or null if not available.
+     * Gets estimated accelerometer x-axis scale factor or null if not available.
      */
-    override val estimatedSx
-        get() = internalCalibrator?.estimatedSx
+    val estimatedAccelerometerSx: Double?
+        get() = accelerometerInternalCalibrator?.estimatedSx
 
     /**
-     * Gets estimated y-axis scale factor or null if not available.
+     * Gets estimated accelerometer y-axis scale factor or null if not available.
      */
-    override val estimatedSy
-        get() = internalCalibrator?.estimatedSy
+    val estimatedAccelerometerSy: Double?
+        get() = accelerometerInternalCalibrator?.estimatedSy
 
     /**
-     * Gets estimated z-axis scale factor or null if not available.
+     * Gets estimated accelerometer z-axis scale factor or null if not available.
      */
-    override val estimatedSz
-        get() = internalCalibrator?.estimatedSz
+    val estimatedAccelerometerSz: Double?
+        get() = accelerometerInternalCalibrator?.estimatedSz
 
     /**
-     * Gets estimated x-y cross-coupling error or null if not available.
+     * Gets estimated accelerometer x-y cross-coupling error or null if not available.
      */
-    override val estimatedMxy
-        get() = internalCalibrator?.estimatedMxy
+    val estimatedAccelerometerMxy: Double?
+        get() = accelerometerInternalCalibrator?.estimatedMxy
 
     /**
-     * Gets estimated x-z cross-coupling error or null if not available.
+     * Gets estimated accelerometer x-z cross-coupling error or null if not available.
      */
-    override val estimatedMxz
-        get() = internalCalibrator?.estimatedMxz
+    val estimatedAccelerometerMxz: Double?
+        get() = accelerometerInternalCalibrator?.estimatedMxz
 
     /**
-     * Gets estimated y-x cross-coupling error or null if not available.
+     * Gets estimated accelerometer y-x cross-coupling error or null if not available.
      */
-    override val estimatedMyx
-        get() = internalCalibrator?.estimatedMyx
+    val estimatedAccelerometerMyx: Double?
+        get() = accelerometerInternalCalibrator?.estimatedMyx
 
     /**
-     * Gets estimated y-z cross-coupling error or null if not available.
+     * Gets estimated accelerometer y-z cross-coupling error or null if not available.
      */
-    override val estimatedMyz
-        get() = internalCalibrator?.estimatedMyz
+    val estimatedAccelerometerMyz: Double?
+        get() = accelerometerInternalCalibrator?.estimatedMyz
 
     /**
-     * Gets estimated z-x cross-coupling error or null if not available.
+     * Gets estimated accelerometer z-x cross-coupling error or null if not available.
      */
-    override val estimatedMzx
-        get() = internalCalibrator?.estimatedMzx
+    val estimatedAccelerometerMzx: Double?
+        get() = accelerometerInternalCalibrator?.estimatedMzx
 
     /**
-     * Gets estimated z-y cross-coupling error or null if not available.
+     * Gets estimated accelerometer z-y cross-coupling error or null if not available.
      */
-    override val estimatedMzy
-        get() = internalCalibrator?.estimatedMzy
+    val estimatedAccelerometerMzy: Double?
+        get() = accelerometerInternalCalibrator?.estimatedMzy
 
     /**
      * Gets estimated covariance matrix for estimated accelerometer parameters or null if not
      * available.
-     * When bias is known, diagonal elements of the covariance matrix contains variance for the
-     * following parameters (following indicated order): sx, sy, sz, mxy, mxz, myz, mzx, mzy.
-     * When bias is not known, diagonal elements of the covariance matrix contains variance for
-     * the following parameters (following indicated order): bx, by, bz, sx, sy, sz, mxy, mxz,
-     * myx, myz, mzx, mzy.
+     * When bias is known, diagonal elements of the covariance matrix contains variance
+     * for the following parameters (following indicated order): sx, sy, sz, mxy, mxz, myz, mzx,
+     * mzy.
+     * When bias is not known, diagonal elements of the covariance matrix contains
+     * variance for the following parameters (following indicated order): bx, by, bz, sx, sy, sz,
+     * mxy, mxz, myx, myz, mzx, mzy, where bx, by, bz corresponds to bias or hard iron coordinates.
      */
-    override val estimatedCovariance
-        get() = internalCalibrator?.estimatedCovariance
+    val estimatedAccelerometerCovariance: Matrix?
+        get() = accelerometerInternalCalibrator?.estimatedCovariance
 
     /**
-     * Gets estimated chi square value or null if not available.
+     * Gets estimated chi square value for accelerometer or null if not available.
      */
-    override val estimatedChiSq
-        get() = internalCalibrator?.estimatedChiSq
+    val estimatedAccelerometerChiSq: Double?
+        get() = accelerometerInternalCalibrator?.estimatedChiSq
 
     /**
-     * Gets estimated mean square error respect to provided measurements or null if not available.
+     * Gets estimated mean square error respect to provided accelerometer measurements or null if
+     * not available.
      */
-    override val estimatedMse
-        get() = internalCalibrator?.estimatedMse
+    val estimatedAccelerometerMse: Double?
+        get() = accelerometerInternalCalibrator?.estimatedMse
 
     /**
      * Gets x coordinate of estimated accelerometer bias expressed in meters per squared second
      * (m/s^2).
-     * If [isGroundTruthInitialBias] is true, this will be equal to [initialBiasX], otherwise it
-     * will be the estimated value obtained after solving calibration, that might differ from
-     * [initialBiasX].
+     * If [isAccelerometerGroundTruthInitialBias] is true, this will be equal to
+     * [accelerometerInitialBiasX], otherwise it will be the estimated value obtained after solving
+     * calibration, that might differ from [accelerometerInitialBiasX].
      */
-    val estimatedBiasX: Double?
+    val estimatedAccelerometerBiasX: Double?
         get() {
-            return when (val internalCalibrator = this.internalCalibrator) {
+            return when (val internalCalibrator = this.accelerometerInternalCalibrator) {
                 is UnknownBiasAccelerometerCalibrator -> {
                     internalCalibrator.estimatedBiasFx
                 }
@@ -956,13 +1392,13 @@ class StaticIntervalAccelerometerCalibrator private constructor(
     /**
      * Gets y coordinate of estimated accelerometer bias expressed in meters per squared second
      * (m/s^2).
-     * If [isGroundTruthInitialBias] is true, this will be equal to [initialBiasY], otherwise it
-     * will be the estimated value obtained after solving calibration, that might differ from
-     * [initialBiasY].
+     * If [isAccelerometerGroundTruthInitialBias] is true, this will be equal to
+     * [accelerometerInitialBiasY], otherwise it will be the estimated value obtained after solving
+     * calibration, that might differ from [accelerometerInitialBiasY].
      */
-    val estimatedBiasY: Double?
+    val estimatedAccelerometerBiasY: Double?
         get() {
-            return when (val internalCalibrator = this.internalCalibrator) {
+            return when (val internalCalibrator = this.accelerometerInternalCalibrator) {
                 is UnknownBiasAccelerometerCalibrator -> {
                     internalCalibrator.estimatedBiasFy
                 }
@@ -978,13 +1414,13 @@ class StaticIntervalAccelerometerCalibrator private constructor(
     /**
      * Gets z coordinate of estimated accelerometer bias expressed in meters per squared second
      * (m/s^2).
-     * If [isGroundTruthInitialBias] is true, this will be equal to [initialBiasZ], otherwise it
-     * will be the estimated value obtained after solving calibration, that might differ from
-     * [initialBiasZ].
+     * If [isAccelerometerGroundTruthInitialBias] is true, this will be equal to
+     * [accelerometerInitialBiasZ], otherwise it will be the estimated value obtained after solving
+     * calibration, that might differ from [accelerometerInitialBiasZ].
      */
-    val estimatedBiasZ: Double?
+    val estimatedAccelerometerBiasZ: Double?
         get() {
-            return when (val internalCalibrator = this.internalCalibrator) {
+            return when (val internalCalibrator = this.accelerometerInternalCalibrator) {
                 is UnknownBiasAccelerometerCalibrator -> {
                     internalCalibrator.estimatedBiasFz
                 }
@@ -999,13 +1435,13 @@ class StaticIntervalAccelerometerCalibrator private constructor(
 
     /**
      * Gets x coordinate of estimated accelerometer bias.
-     * If [isGroundTruthInitialBias] is true, this will be equal to [initialBiasXAsMeasurement],
-     * otherwise it will be the estimated value obtained after solving calibration, that might
-     * differ from [initialBiasXAsMeasurement].
+     * If [isAccelerometerGroundTruthInitialBias] is true, this will be equal to
+     * [accelerometerInitialBiasX], otherwise it will be the estimated value obtained after solving
+     * calibration, that might differ from [accelerometerInitialBiasX].
      */
-    val estimatedBiasXAsMeasurement: Acceleration?
+    val estimatedAccelerometerBiasXAsMeasurement: Acceleration?
         get() {
-            return when (val internalCalibrator = this.internalCalibrator) {
+            return when (val internalCalibrator = this.accelerometerInternalCalibrator) {
                 is UnknownBiasAccelerometerCalibrator -> {
                     internalCalibrator.estimatedBiasFxAsAcceleration
                 }
@@ -1020,15 +1456,15 @@ class StaticIntervalAccelerometerCalibrator private constructor(
 
     /**
      * Gets x coordinate of estimated accelerometer bias.
-     * If [isGroundTruthInitialBias] is true, result will be equal to [initialBiasXAsMeasurement],
-     * otherwise it will be the estimated value obtained after solving calibration, that might
-     * differ from [initialBiasXAsMeasurement].
+     * If [isAccelerometerGroundTruthInitialBias] is true, this will be equal to
+     * [accelerometerInitialBiasX], otherwise it will be the estimated value obtained after solving
+     * calibration, that might differ from [accelerometerInitialBiasX].
      *
      * @param result instance where result will be stored.
      * @return true if result is available, false otherwise.
      */
-    fun getEstimatedBiasXAsMeasurement(result: Acceleration): Boolean {
-        return when (val internalCalibrator = this.internalCalibrator) {
+    fun getEstimatedAccelerometerBiasXAsMeasurement(result: Acceleration): Boolean {
+        return when (val internalCalibrator = this.accelerometerInternalCalibrator) {
             is UnknownBiasAccelerometerCalibrator -> {
                 internalCalibrator.getEstimatedBiasFxAsAcceleration(result)
             }
@@ -1044,13 +1480,13 @@ class StaticIntervalAccelerometerCalibrator private constructor(
 
     /**
      * Gets y coordinate of estimated accelerometer bias.
-     * If [isGroundTruthInitialBias] is true, this will be equal to [initialBiasYAsMeasurement],
-     * otherwise it will be the estimated value obtained after solving calibration, that might
-     * differ from [initialBiasYAsMeasurement].
+     * If [isAccelerometerGroundTruthInitialBias] is true, this will be equal to
+     * [accelerometerInitialBiasY], otherwise it will be the estimated value obtained after solving
+     * calibration, that might differ from [accelerometerInitialBiasY].
      */
-    val estimatedBiasYAsMeasurement: Acceleration?
+    val estimatedAccelerometerBiasYAsMeasurement: Acceleration?
         get() {
-            return when (val internalCalibrator = this.internalCalibrator) {
+            return when (val internalCalibrator = this.accelerometerInternalCalibrator) {
                 is UnknownBiasAccelerometerCalibrator -> {
                     internalCalibrator.estimatedBiasFyAsAcceleration
                 }
@@ -1065,15 +1501,15 @@ class StaticIntervalAccelerometerCalibrator private constructor(
 
     /**
      * Gets y coordinate of estimated accelerometer bias.
-     * If [isGroundTruthInitialBias] is true, result will be equal to [initialBiasYAsMeasurement],
-     * otherwise it will be the estimated value obtained after solving calibration, that might
-     * differ from [initialBiasYAsMeasurement].
+     * If [isAccelerometerGroundTruthInitialBias] is true, this will be equal to
+     * [accelerometerInitialBiasY], otherwise it will be the estimated value obtained after solving
+     * calibration, that might differ from [accelerometerInitialBiasY].
      *
      * @param result instance where result will be stored.
      * @return true if result is available, false otherwise.
      */
-    fun getEstimatedBiasYAsMeasurement(result: Acceleration): Boolean {
-        return when (val internalCalibrator = this.internalCalibrator) {
+    fun getEstimatedAccelerometerBiasYAsMeasurement(result: Acceleration): Boolean {
+        return when (val internalCalibrator = this.accelerometerInternalCalibrator) {
             is UnknownBiasAccelerometerCalibrator -> {
                 internalCalibrator.getEstimatedBiasFyAsAcceleration(result)
             }
@@ -1089,13 +1525,13 @@ class StaticIntervalAccelerometerCalibrator private constructor(
 
     /**
      * Gets z coordinate of estimated accelerometer bias.
-     * If [isGroundTruthInitialBias] is true, this will be equal to [initialBiasZAsMeasurement],
-     * otherwise it will be the estimated value obtained after solving calibration, that might
-     * differ from [initialBiasZAsMeasurement].
+     * If [isAccelerometerGroundTruthInitialBias] is true, this will be equal to
+     * [accelerometerInitialBiasZ], otherwise it will be the estimated value obtained after solving
+     * calibration, that might differ from [accelerometerInitialBiasZ].
      */
-    val estimatedBiasZAsMeasurement: Acceleration?
+    val estimatedAccelerometerBiasZAsMeasurement: Acceleration?
         get() {
-            return when (val internalCalibrator = this.internalCalibrator) {
+            return when (val internalCalibrator = this.accelerometerInternalCalibrator) {
                 is UnknownBiasAccelerometerCalibrator -> {
                     internalCalibrator.estimatedBiasFzAsAcceleration
                 }
@@ -1110,15 +1546,15 @@ class StaticIntervalAccelerometerCalibrator private constructor(
 
     /**
      * Gets z coordinate of estimated accelerometer bias.
-     * If [isGroundTruthInitialBias] is true, result will be equal to [initialBiasZAsMeasurement],
-     * otherwise it will be the estimated value obtained after solving calibration, that might
-     * differ from [initialBiasZAsMeasurement].
+     * If [isAccelerometerGroundTruthInitialBias] is true, this will be equal to
+     * [accelerometerInitialBiasZ], otherwise it will be the estimated value obtained after solving
+     * calibration, that might differ from [accelerometerInitialBiasZ].
      *
      * @param result instance where result will be stored.
      * @return true if result is available, false otherwise.
      */
-    fun getEstimatedBiasZAsMeasurement(result: Acceleration): Boolean {
-        return when (val internalCalibrator = this.internalCalibrator) {
+    fun getEstimatedAccelerometerBiasZAsMeasurement(result: Acceleration): Boolean {
+        return when (val internalCalibrator = this.accelerometerInternalCalibrator) {
             is UnknownBiasAccelerometerCalibrator -> {
                 internalCalibrator.getEstimatedBiasFzAsAcceleration(result)
             }
@@ -1134,13 +1570,13 @@ class StaticIntervalAccelerometerCalibrator private constructor(
 
     /**
      * Gets estimated accelerometer bias.
-     * If [isGroundTruthInitialBias] is true, this will be equal to [initialBiasAsTriad],
-     * otherwise it will be the estimated value obtained after solving calibration, that might
-     * differ from [initialBiasAsTriad].
+     * If [isAccelerometerGroundTruthInitialBias] is true, this will be equal to
+     * [accelerometerInitialBiasAsTriad], otherwise it will be the estimated value obtained after
+     * solving calibration, that might differ from [accelerometerInitialBiasAsTriad].
      */
-    val estimatedBiasAsTriad: AccelerationTriad?
+    val estimatedAccelerometerBiasAsTriad: AccelerationTriad?
         get() {
-            return when (val internalCalibrator = this.internalCalibrator) {
+            return when (val internalCalibrator = this.accelerometerInternalCalibrator) {
                 is UnknownBiasAccelerometerCalibrator -> {
                     internalCalibrator.estimatedBiasAsTriad
                 }
@@ -1155,15 +1591,15 @@ class StaticIntervalAccelerometerCalibrator private constructor(
 
     /**
      * Gets estimated accelerometer bias.
-     * If [isGroundTruthInitialBias] is true, result will be equal to [initialBiasAsTriad],
-     * otherwise it will be the estimated value obtained after solving calibration, that might
-     * differ from [initialBiasAsTriad].
+     * If [isAccelerometerGroundTruthInitialBias] is true, this will be equal to
+     * [accelerometerInitialBiasAsTriad], otherwise it will be the estimated value obtained after
+     * solving calibration, that might differ from [accelerometerInitialBiasAsTriad].
      *
      * @param result instance where result will be stored.
      * @return true if result is available, false otherwise.
      */
-    fun getEstimatedBiasAsTriad(result: AccelerationTriad): Boolean {
-        return when (val internalCalibrator = this.internalCalibrator) {
+    fun getEstimatedAccelerometerBiasAsTriad(result: AccelerationTriad): Boolean {
+        return when (val internalCalibrator = this.accelerometerInternalCalibrator) {
             is UnknownBiasAccelerometerCalibrator -> {
                 internalCalibrator.getEstimatedBiasAsTriad(result)
             }
@@ -1181,15 +1617,32 @@ class StaticIntervalAccelerometerCalibrator private constructor(
      * Gets norm of estimated standard deviation of accelerometer bias expressed in meters per
      * squared second (m/s^2), or null if not available.
      */
-    val estimatedBiasStandardDeviationNorm: Double?
+    val estimatedAccelerometerBiasStandardDeviationNorm: Double?
         get() {
-            val internalCalibrator = this.internalCalibrator ?: return null
+            val internalCalibrator = this.accelerometerInternalCalibrator ?: return null
             return if (internalCalibrator is AccelerometerBiasUncertaintySource) {
                 internalCalibrator.estimatedBiasStandardDeviationNorm
             } else {
                 null
             }
         }
+
+    /**
+     * List of accelerometer measurements that have been collected so far to be used for
+     * accelerometer calibration.
+     * Items in return list can be modified if needed, but beware that this might
+     * have consequences on solved calibration result.
+     */
+    val accelerometerMeasurements = mutableListOf<StandardDeviationBodyKinematics>()
+
+    /**
+     * Indicates whether enough measurements have been picked at static intervals so that the
+     * calibration process can be solved.
+     */
+    override val isReadyToSolveCalibration
+        get() = accelerometerMeasurements.size >= requiredMeasurements.coerceAtLeast(
+            minimumRequiredMeasurements
+        )
 
     /**
      * Starts calibrator.
@@ -1239,17 +1692,20 @@ class StaticIntervalAccelerometerCalibrator private constructor(
     override fun internalCalibrate(): Boolean {
         return try {
             calibrationSolvingStartedListener?.onCalibrationSolvingStarted(this)
-            internalCalibrator?.calibrate()
+            accelerometerInternalCalibrator?.calibrate()
             calibrationCompletedListener?.onCalibrationCompleted(this)
             running = false
             true
         } catch (e: NavigationException) {
             Log.e(
-                StaticIntervalAccelerometerCalibrator::class.qualifiedName,
+                SingleSensorStaticIntervalAccelerometerCalibrator::class.qualifiedName,
                 "Calibration estimation failed",
                 e
             )
-            errorListener?.onError(this, CalibratorErrorReason.NUMERICAL_INSTABILITY_DURING_CALIBRATION)
+            errorListener?.onError(
+                this,
+                CalibratorErrorReason.NUMERICAL_INSTABILITY_DURING_CALIBRATION
+            )
             running = false
             false
         }
@@ -1259,14 +1715,15 @@ class StaticIntervalAccelerometerCalibrator private constructor(
      * Resets calibrator to its initial state.
      */
     override fun reset() {
-        super.reset()
-        gravityNorm = null
-        resultUnreliable = false
-        initialBiasX = null
-        initialBiasY = null
-        initialBiasZ = null
+        accelerometerMeasurements.clear()
 
-        internalCalibrator = null
+        gravityNorm = null
+        accelerometerResultUnreliable = false
+        accelerometerInitialBiasX = null
+        accelerometerInitialBiasY = null
+        accelerometerInitialBiasZ = null
+
+        accelerometerInternalCalibrator = null
     }
 
     /**
@@ -1295,11 +1752,11 @@ class StaticIntervalAccelerometerCalibrator private constructor(
             initialBiasZ = 0.0
         }
 
-        this.initialBiasX = initialBiasX
-        this.initialBiasY = initialBiasY
-        this.initialBiasZ = initialBiasZ
+        accelerometerInitialBiasX = initialBiasX
+        accelerometerInitialBiasY = initialBiasY
+        accelerometerInitialBiasZ = initialBiasZ
 
-        initialBiasAvailableListener?.onInitialBiasAvailable(
+        initialAccelerometerBiasAvailableListener?.onInitialBiasAvailable(
             this,
             initialBiasX,
             initialBiasY,
@@ -1314,100 +1771,100 @@ class StaticIntervalAccelerometerCalibrator private constructor(
      * @throws IllegalStateException if no suitable calibrator can be built.
      */
     @Throws(IllegalStateException::class)
-    private fun buildInternalCalibrator(): AccelerometerNonLinearCalibrator {
-        return if (robustMethod == null) {
-            buildNonRobustCalibrator()
+    private fun buildAccelerometerInternalCalibrator(): AccelerometerNonLinearCalibrator {
+        return if (accelerometerRobustMethod == null) {
+            buildAccelerometerNonRobustCalibrator()
         } else {
-            buildRobustCalibrator()
+            buildAccelerometerRobustCalibrator()
         }
     }
 
     /**
-     * Internally builds a non-robust accelerometer calibrator based on all provided parameters.
+     * Internally build a non-robust accelerometer calibrator based on all provided parameters.
      *
      * @return an internal accelerometer calibrator.
      * @throws IllegalStateException if no suitable calibrator can be built.
      */
     @Throws(IllegalStateException::class)
-    private fun buildNonRobustCalibrator(): AccelerometerNonLinearCalibrator {
+    private fun buildAccelerometerNonRobustCalibrator(): AccelerometerNonLinearCalibrator {
         val location = this.location
         val gravityNorm = this.gravityNorm
-        if (isGroundTruthInitialBias) {
+        if (isAccelerometerGroundTruthInitialBias) {
             if (location != null) {
                 return KnownBiasAndPositionAccelerometerCalibrator(
                     location.toNEDPosition(),
-                    measurements,
-                    isCommonAxisUsed,
-                    initialBiasX ?: 0.0,
-                    initialBiasY ?: 0.0,
-                    initialBiasZ ?: 0.0,
-                    initialSx,
-                    initialSy,
-                    initialSz,
-                    initialMxy,
-                    initialMxz,
-                    initialMyx,
-                    initialMyz,
-                    initialMzx,
-                    initialMzy
+                    accelerometerMeasurements,
+                    isAccelerometerCommonAxisUsed,
+                    accelerometerInitialBiasX ?: 0.0,
+                    accelerometerInitialBiasY ?: 0.0,
+                    accelerometerInitialBiasZ ?: 0.0,
+                    accelerometerInitialSx,
+                    accelerometerInitialSy,
+                    accelerometerInitialSz,
+                    accelerometerInitialMxy,
+                    accelerometerInitialMxz,
+                    accelerometerInitialMyx,
+                    accelerometerInitialMyz,
+                    accelerometerInitialMzx,
+                    accelerometerInitialMzy
                 )
             } else {
                 checkNotNull(gravityNorm)
                 return KnownBiasAndGravityNormAccelerometerCalibrator(
                     gravityNorm,
-                    measurements,
-                    isCommonAxisUsed,
-                    initialBiasX ?: 0.0,
-                    initialBiasY ?: 0.0,
-                    initialBiasZ ?: 0.0,
-                    initialSx,
-                    initialSy,
-                    initialSz,
-                    initialMxy,
-                    initialMxz,
-                    initialMyx,
-                    initialMyz,
-                    initialMzx,
-                    initialMzy
+                    accelerometerMeasurements,
+                    isAccelerometerCommonAxisUsed,
+                    accelerometerInitialBiasX ?: 0.0,
+                    accelerometerInitialBiasY ?: 0.0,
+                    accelerometerInitialBiasZ ?: 0.0,
+                    accelerometerInitialSx,
+                    accelerometerInitialSy,
+                    accelerometerInitialSz,
+                    accelerometerInitialMxy,
+                    accelerometerInitialMxz,
+                    accelerometerInitialMyx,
+                    accelerometerInitialMyz,
+                    accelerometerInitialMzx,
+                    accelerometerInitialMzy
                 )
             }
         } else {
             if (location != null) {
                 return KnownPositionAccelerometerCalibrator(
                     location.toNEDPosition(),
-                    measurements,
-                    isCommonAxisUsed,
-                    initialBiasX ?: 0.0,
-                    initialBiasY ?: 0.0,
-                    initialBiasZ ?: 0.0,
-                    initialSx,
-                    initialSy,
-                    initialSz,
-                    initialMxy,
-                    initialMxz,
-                    initialMyx,
-                    initialMyz,
-                    initialMzx,
-                    initialMzy
+                    accelerometerMeasurements,
+                    isAccelerometerCommonAxisUsed,
+                    accelerometerInitialBiasX ?: 0.0,
+                    accelerometerInitialBiasY ?: 0.0,
+                    accelerometerInitialBiasZ ?: 0.0,
+                    accelerometerInitialSx,
+                    accelerometerInitialSy,
+                    accelerometerInitialSz,
+                    accelerometerInitialMxy,
+                    accelerometerInitialMxz,
+                    accelerometerInitialMyx,
+                    accelerometerInitialMyz,
+                    accelerometerInitialMzx,
+                    accelerometerInitialMzy
                 )
             } else {
                 checkNotNull(gravityNorm)
                 return KnownGravityNormAccelerometerCalibrator(
                     gravityNorm,
-                    measurements,
-                    isCommonAxisUsed,
-                    initialBiasX ?: 0.0,
-                    initialBiasY ?: 0.0,
-                    initialBiasZ ?: 0.0,
-                    initialSx,
-                    initialSy,
-                    initialSz,
-                    initialMxy,
-                    initialMxz,
-                    initialMyx,
-                    initialMyz,
-                    initialMzx,
-                    initialMzy
+                    accelerometerMeasurements,
+                    isAccelerometerCommonAxisUsed,
+                    accelerometerInitialBiasX ?: 0.0,
+                    accelerometerInitialBiasY ?: 0.0,
+                    accelerometerInitialBiasZ ?: 0.0,
+                    accelerometerInitialSx,
+                    accelerometerInitialSy,
+                    accelerometerInitialSz,
+                    accelerometerInitialMxy,
+                    accelerometerInitialMxz,
+                    accelerometerInitialMyx,
+                    accelerometerInitialMyz,
+                    accelerometerInitialMzx,
+                    accelerometerInitialMzy
                 )
             }
         }
@@ -1420,19 +1877,19 @@ class StaticIntervalAccelerometerCalibrator private constructor(
      * @throws IllegalStateException if no suitable calibrator can be built.
      */
     @Throws(IllegalStateException::class)
-    private fun buildRobustCalibrator(): AccelerometerNonLinearCalibrator {
+    private fun buildAccelerometerRobustCalibrator(): AccelerometerNonLinearCalibrator {
         val location = this.location
-        return if (isGroundTruthInitialBias) {
+        return if (isAccelerometerGroundTruthInitialBias) {
             if (location != null) {
-                buildRobustKnownBiasAndPositionCalibrator(location)
+                buildAccelerometerRobustKnownBiasAndPositionCalibrator(location)
             } else {
-                buildRobustKnownBiasAndGravityCalibrator()
+                buildAccelerometerRobustKnownBiasAndGravityCalibrator()
             }
         } else {
             if (location != null) {
-                buildRobustKnownPositionCalibrator(location)
+                buildAccelerometerRobustKnownPositionCalibrator(location)
             } else {
-                buildRobustKnownGravityCalibrator()
+                buildAccelerometerRobustKnownGravityCalibrator()
             }
         }
     }
@@ -1445,30 +1902,31 @@ class StaticIntervalAccelerometerCalibrator private constructor(
      * @throws IllegalStateException if no suitable calibrator can be built.
      */
     @Throws(IllegalStateException::class)
-    private fun buildRobustKnownBiasAndPositionCalibrator(location: Location): RobustKnownBiasAndPositionAccelerometerCalibrator {
-        val baseNoiseLevel = this.baseNoiseLevel
-        val robustThreshold = this.robustThreshold
+    private fun buildAccelerometerRobustKnownBiasAndPositionCalibrator(location: Location): RobustKnownBiasAndPositionAccelerometerCalibrator {
+        val baseNoiseLevel = accelerometerBaseNoiseLevel
+        val robustThreshold = accelerometerRobustThreshold
 
         val result = RobustKnownBiasAndPositionAccelerometerCalibrator.create(
             location.toNEDPosition(),
-            measurements,
-            isCommonAxisUsed,
-            robustMethod
+            accelerometerMeasurements,
+            isAccelerometerCommonAxisUsed,
+            accelerometerRobustMethod
         )
         result.setBiasCoordinates(
-            initialBiasX ?: 0.0,
-            initialBiasY ?: 0.0,
-            initialBiasZ ?: 0.0
+            accelerometerInitialBiasX ?: 0.0,
+            accelerometerInitialBiasY ?: 0.0,
+            accelerometerInitialBiasZ ?: 0.0
         )
         result.setInitialScalingFactorsAndCrossCouplingErrors(
-            initialSx, initialSy, initialSz,
-            initialMxy, initialMxz, initialMyx,
-            initialMyz, initialMzx, initialMzy
+            accelerometerInitialSx, accelerometerInitialSy, accelerometerInitialSz,
+            accelerometerInitialMxy, accelerometerInitialMxz, accelerometerInitialMyx,
+            accelerometerInitialMyz, accelerometerInitialMzx, accelerometerInitialMzy
         )
-        result.confidence = robustConfidence
-        result.maxIterations = robustMaxIterations
-        result.preliminarySubsetSize =
-            robustPreliminarySubsetSize.coerceAtLeast(minimumRequiredMeasurements)
+        result.confidence = accelerometerRobustConfidence
+        result.maxIterations = accelerometerRobustMaxIterations
+        result.preliminarySubsetSize = accelerometerRobustPreliminarySubsetSize.coerceAtLeast(
+            minimumRequiredAccelerometerMeasurements
+        )
 
         // set threshold and quality scores
         when (result) {
@@ -1477,7 +1935,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
                     result.threshold = robustThreshold
                 } else {
                     checkNotNull(baseNoiseLevel)
-                    result.threshold = robustThresholdFactor * baseNoiseLevel
+                    result.threshold = accelerometerRobustThresholdFactor * baseNoiseLevel
                 }
             }
             is MSACRobustKnownBiasAndPositionAccelerometerCalibrator -> {
@@ -1485,7 +1943,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
                     result.threshold = robustThreshold
                 } else {
                     checkNotNull(baseNoiseLevel)
-                    result.threshold = robustThresholdFactor * baseNoiseLevel
+                    result.threshold = accelerometerRobustThresholdFactor * baseNoiseLevel
                 }
             }
             is PROSACRobustKnownBiasAndPositionAccelerometerCalibrator -> {
@@ -1493,9 +1951,9 @@ class StaticIntervalAccelerometerCalibrator private constructor(
                     result.threshold = robustThreshold
                 } else {
                     checkNotNull(baseNoiseLevel)
-                    result.threshold = robustThresholdFactor * baseNoiseLevel
+                    result.threshold = accelerometerRobustThresholdFactor * baseNoiseLevel
                 }
-                result.qualityScores = buildQualityScores()
+                result.qualityScores = buildAccelerometerQualityScores()
             }
             is LMedSRobustKnownBiasAndPositionAccelerometerCalibrator -> {
                 if (robustThreshold != null) {
@@ -1503,7 +1961,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
                 } else {
                     checkNotNull(baseNoiseLevel)
                     result.stopThreshold =
-                        robustThresholdFactor * robustStopThresholdFactor * baseNoiseLevel
+                        accelerometerRobustThresholdFactor * accelerometerRobustStopThresholdFactor * baseNoiseLevel
                 }
             }
             is PROMedSRobustKnownBiasAndPositionAccelerometerCalibrator -> {
@@ -1512,9 +1970,9 @@ class StaticIntervalAccelerometerCalibrator private constructor(
                 } else {
                     checkNotNull(baseNoiseLevel)
                     result.stopThreshold =
-                        robustThresholdFactor * robustStopThresholdFactor * baseNoiseLevel
+                        accelerometerRobustThresholdFactor * accelerometerRobustStopThresholdFactor * baseNoiseLevel
                 }
-                result.qualityScores = buildQualityScores()
+                result.qualityScores = buildAccelerometerQualityScores()
             }
         }
 
@@ -1528,33 +1986,34 @@ class StaticIntervalAccelerometerCalibrator private constructor(
      * @throws IllegalStateException if no suitable calibrator can be built.
      */
     @Throws(IllegalStateException::class)
-    private fun buildRobustKnownBiasAndGravityCalibrator(): RobustKnownBiasAndGravityNormAccelerometerCalibrator {
+    private fun buildAccelerometerRobustKnownBiasAndGravityCalibrator(): RobustKnownBiasAndGravityNormAccelerometerCalibrator {
         val gravityNorm = this.gravityNorm
         checkNotNull(gravityNorm)
 
-        val baseNoiseLevel = this.baseNoiseLevel
-        val robustThreshold = this.robustThreshold
+        val baseNoiseLevel = accelerometerBaseNoiseLevel
+        val robustThreshold = accelerometerRobustThreshold
 
         val result = RobustKnownBiasAndGravityNormAccelerometerCalibrator.create(
             gravityNorm,
-            measurements,
-            isCommonAxisUsed,
-            robustMethod
+            accelerometerMeasurements,
+            isAccelerometerCommonAxisUsed,
+            accelerometerRobustMethod
         )
         result.setBiasCoordinates(
-            initialBiasX ?: 0.0,
-            initialBiasY ?: 0.0,
-            initialBiasZ ?: 0.0
+            accelerometerInitialBiasX ?: 0.0,
+            accelerometerInitialBiasY ?: 0.0,
+            accelerometerInitialBiasZ ?: 0.0
         )
         result.setInitialScalingFactorsAndCrossCouplingErrors(
-            initialSx, initialSy, initialSz,
-            initialMxy, initialMxz, initialMyx,
-            initialMyz, initialMzx, initialMzy
+            accelerometerInitialSx, accelerometerInitialSy, accelerometerInitialSz,
+            accelerometerInitialMxy, accelerometerInitialMxz, accelerometerInitialMyx,
+            accelerometerInitialMyz, accelerometerInitialMzx, accelerometerInitialMzy
         )
-        result.confidence = robustConfidence
-        result.maxIterations = robustMaxIterations
-        result.preliminarySubsetSize =
-            robustPreliminarySubsetSize.coerceAtLeast(minimumRequiredMeasurements)
+        result.confidence = accelerometerRobustConfidence
+        result.maxIterations = accelerometerRobustMaxIterations
+        result.preliminarySubsetSize = accelerometerRobustPreliminarySubsetSize.coerceAtLeast(
+            minimumRequiredAccelerometerMeasurements
+        )
 
         // set threshold
         when (result) {
@@ -1563,7 +2022,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
                     result.threshold = robustThreshold
                 } else {
                     checkNotNull(baseNoiseLevel)
-                    result.threshold = robustThresholdFactor * baseNoiseLevel
+                    result.threshold = accelerometerRobustThresholdFactor * baseNoiseLevel
                 }
             }
             is MSACRobustKnownBiasAndGravityNormAccelerometerCalibrator -> {
@@ -1571,7 +2030,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
                     result.threshold = robustThreshold
                 } else {
                     checkNotNull(baseNoiseLevel)
-                    result.threshold = robustThresholdFactor * baseNoiseLevel
+                    result.threshold = accelerometerRobustThresholdFactor * baseNoiseLevel
                 }
             }
             is PROSACRobustKnownBiasAndGravityNormAccelerometerCalibrator -> {
@@ -1579,9 +2038,9 @@ class StaticIntervalAccelerometerCalibrator private constructor(
                     result.threshold = robustThreshold
                 } else {
                     checkNotNull(baseNoiseLevel)
-                    result.threshold = robustThresholdFactor * baseNoiseLevel
+                    result.threshold = accelerometerRobustThresholdFactor * baseNoiseLevel
                 }
-                result.qualityScores = buildQualityScores()
+                result.qualityScores = buildAccelerometerQualityScores()
             }
             is LMedSRobustKnownBiasAndGravityNormAccelerometerCalibrator -> {
                 if (robustThreshold != null) {
@@ -1589,7 +2048,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
                 } else {
                     checkNotNull(baseNoiseLevel)
                     result.stopThreshold =
-                        robustThresholdFactor * robustStopThresholdFactor * baseNoiseLevel
+                        accelerometerRobustThresholdFactor * accelerometerRobustStopThresholdFactor * baseNoiseLevel
                 }
             }
             is PROMedSRobustKnownBiasAndGravityNormAccelerometerCalibrator -> {
@@ -1598,9 +2057,9 @@ class StaticIntervalAccelerometerCalibrator private constructor(
                 } else {
                     checkNotNull(baseNoiseLevel)
                     result.stopThreshold =
-                        robustThresholdFactor * robustStopThresholdFactor * baseNoiseLevel
+                        accelerometerRobustThresholdFactor * accelerometerRobustStopThresholdFactor * baseNoiseLevel
                 }
-                result.qualityScores = buildQualityScores()
+                result.qualityScores = buildAccelerometerQualityScores()
             }
         }
 
@@ -1615,30 +2074,31 @@ class StaticIntervalAccelerometerCalibrator private constructor(
      * @throws IllegalStateException if no suitable calibrator can be built.
      */
     @Throws(IllegalStateException::class)
-    private fun buildRobustKnownPositionCalibrator(location: Location): RobustKnownPositionAccelerometerCalibrator {
-        val baseNoiseLevel = this.baseNoiseLevel
-        val robustThreshold = this.robustThreshold
+    private fun buildAccelerometerRobustKnownPositionCalibrator(location: Location): RobustKnownPositionAccelerometerCalibrator {
+        val baseNoiseLevel = accelerometerBaseNoiseLevel
+        val robustThreshold = accelerometerRobustThreshold
 
         val result = RobustKnownPositionAccelerometerCalibrator.create(
             location.toNEDPosition(),
-            measurements,
-            isCommonAxisUsed,
-            robustMethod
+            accelerometerMeasurements,
+            isAccelerometerCommonAxisUsed,
+            accelerometerRobustMethod
         )
         result.setInitialBias(
-            initialBiasX ?: 0.0,
-            initialBiasY ?: 0.0,
-            initialBiasZ ?: 0.0
+            accelerometerInitialBiasX ?: 0.0,
+            accelerometerInitialBiasY ?: 0.0,
+            accelerometerInitialBiasZ ?: 0.0
         )
         result.setInitialScalingFactorsAndCrossCouplingErrors(
-            initialSx, initialSy, initialSz,
-            initialMxy, initialMxz, initialMyx,
-            initialMyz, initialMzx, initialMzy
+            accelerometerInitialSx, accelerometerInitialSy, accelerometerInitialSz,
+            accelerometerInitialMxy, accelerometerInitialMxz, accelerometerInitialMyx,
+            accelerometerInitialMyz, accelerometerInitialMzx, accelerometerInitialMzy
         )
-        result.confidence = robustConfidence
-        result.maxIterations = robustMaxIterations
-        result.preliminarySubsetSize =
-            robustPreliminarySubsetSize.coerceAtLeast(minimumRequiredMeasurements)
+        result.confidence = accelerometerRobustConfidence
+        result.maxIterations = accelerometerRobustMaxIterations
+        result.preliminarySubsetSize = accelerometerRobustPreliminarySubsetSize.coerceAtLeast(
+            minimumRequiredAccelerometerMeasurements
+        )
 
         // set threshold
         when (result) {
@@ -1647,7 +2107,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
                     result.threshold = robustThreshold
                 } else {
                     checkNotNull(baseNoiseLevel)
-                    result.threshold = robustThresholdFactor * baseNoiseLevel
+                    result.threshold = accelerometerRobustThresholdFactor * baseNoiseLevel
                 }
             }
             is MSACRobustKnownPositionAccelerometerCalibrator -> {
@@ -1655,7 +2115,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
                     result.threshold = robustThreshold
                 } else {
                     checkNotNull(baseNoiseLevel)
-                    result.threshold = robustThresholdFactor * baseNoiseLevel
+                    result.threshold = accelerometerRobustThresholdFactor * baseNoiseLevel
                 }
             }
             is PROSACRobustKnownPositionAccelerometerCalibrator -> {
@@ -1663,9 +2123,9 @@ class StaticIntervalAccelerometerCalibrator private constructor(
                     result.threshold = robustThreshold
                 } else {
                     checkNotNull(baseNoiseLevel)
-                    result.threshold = robustThresholdFactor * baseNoiseLevel
+                    result.threshold = accelerometerRobustThresholdFactor * baseNoiseLevel
                 }
-                result.qualityScores = buildQualityScores()
+                result.qualityScores = buildAccelerometerQualityScores()
             }
             is LMedSRobustKnownPositionAccelerometerCalibrator -> {
                 if (robustThreshold != null) {
@@ -1673,7 +2133,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
                 } else {
                     checkNotNull(baseNoiseLevel)
                     result.stopThreshold =
-                        robustThresholdFactor * robustStopThresholdFactor * baseNoiseLevel
+                        accelerometerRobustThresholdFactor * accelerometerRobustStopThresholdFactor * baseNoiseLevel
                 }
             }
             is PROMedSRobustKnownPositionAccelerometerCalibrator -> {
@@ -1682,9 +2142,9 @@ class StaticIntervalAccelerometerCalibrator private constructor(
                 } else {
                     checkNotNull(baseNoiseLevel)
                     result.stopThreshold =
-                        robustThresholdFactor * robustStopThresholdFactor * baseNoiseLevel
+                        accelerometerRobustThresholdFactor * accelerometerRobustStopThresholdFactor * baseNoiseLevel
                 }
-                result.qualityScores = buildQualityScores()
+                result.qualityScores = buildAccelerometerQualityScores()
             }
         }
 
@@ -1698,33 +2158,34 @@ class StaticIntervalAccelerometerCalibrator private constructor(
      * @throws IllegalStateException if no suitable calibrator can be built.
      */
     @Throws(IllegalStateException::class)
-    private fun buildRobustKnownGravityCalibrator(): RobustKnownGravityNormAccelerometerCalibrator {
+    private fun buildAccelerometerRobustKnownGravityCalibrator(): RobustKnownGravityNormAccelerometerCalibrator {
         val gravityNorm = this.gravityNorm
         checkNotNull(gravityNorm)
 
-        val baseNoiseLevel = this.baseNoiseLevel
-        val robustThreshold = this.robustThreshold
+        val baseNoiseLevel = accelerometerBaseNoiseLevel
+        val robustThreshold = accelerometerRobustThreshold
 
         val result = RobustKnownGravityNormAccelerometerCalibrator.create(
             gravityNorm,
-            measurements,
-            isCommonAxisUsed,
-            robustMethod
+            accelerometerMeasurements,
+            isAccelerometerCommonAxisUsed,
+            accelerometerRobustMethod
         )
         result.setInitialBias(
-            initialBiasX ?: 0.0,
-            initialBiasY ?: 0.0,
-            initialBiasZ ?: 0.0
+            accelerometerInitialBiasX ?: 0.0,
+            accelerometerInitialBiasY ?: 0.0,
+            accelerometerInitialBiasZ ?: 0.0
         )
         result.setInitialScalingFactorsAndCrossCouplingErrors(
-            initialSx, initialSy, initialSz,
-            initialMxy, initialMxz, initialMyx,
-            initialMyz, initialMzx, initialMzy
+            accelerometerInitialSx, accelerometerInitialSy, accelerometerInitialSz,
+            accelerometerInitialMxy, accelerometerInitialMxz, accelerometerInitialMyx,
+            accelerometerInitialMyz, accelerometerInitialMzx, accelerometerInitialMzy
         )
-        result.confidence = robustConfidence
-        result.maxIterations = robustMaxIterations
-        result.preliminarySubsetSize =
-            robustPreliminarySubsetSize.coerceAtLeast(minimumRequiredMeasurements)
+        result.confidence = accelerometerRobustConfidence
+        result.maxIterations = accelerometerRobustMaxIterations
+        result.preliminarySubsetSize = accelerometerRobustPreliminarySubsetSize.coerceAtLeast(
+            minimumRequiredAccelerometerMeasurements
+        )
 
         // set threshold
         when (result) {
@@ -1733,7 +2194,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
                     result.threshold = robustThreshold
                 } else {
                     checkNotNull(baseNoiseLevel)
-                    result.threshold = robustThresholdFactor * baseNoiseLevel
+                    result.threshold = accelerometerRobustThresholdFactor * baseNoiseLevel
                 }
             }
             is MSACRobustKnownGravityNormAccelerometerCalibrator -> {
@@ -1741,7 +2202,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
                     result.threshold = robustThreshold
                 } else {
                     checkNotNull(baseNoiseLevel)
-                    result.threshold = robustThresholdFactor * baseNoiseLevel
+                    result.threshold = accelerometerRobustThresholdFactor * baseNoiseLevel
                 }
             }
             is PROSACRobustKnownGravityNormAccelerometerCalibrator -> {
@@ -1749,9 +2210,9 @@ class StaticIntervalAccelerometerCalibrator private constructor(
                     result.threshold = robustThreshold
                 } else {
                     checkNotNull(baseNoiseLevel)
-                    result.threshold = robustThresholdFactor * baseNoiseLevel
+                    result.threshold = accelerometerRobustThresholdFactor * baseNoiseLevel
                 }
-                result.qualityScores = buildQualityScores()
+                result.qualityScores = buildAccelerometerQualityScores()
             }
             is LMedSRobustKnownGravityNormAccelerometerCalibrator -> {
                 if (robustThreshold != null) {
@@ -1759,7 +2220,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
                 } else {
                     checkNotNull(baseNoiseLevel)
                     result.stopThreshold =
-                        robustThresholdFactor * robustStopThresholdFactor * baseNoiseLevel
+                        accelerometerRobustThresholdFactor * accelerometerRobustStopThresholdFactor * baseNoiseLevel
                 }
             }
             is PROMedSRobustKnownGravityNormAccelerometerCalibrator -> {
@@ -1768,60 +2229,39 @@ class StaticIntervalAccelerometerCalibrator private constructor(
                 } else {
                     checkNotNull(baseNoiseLevel)
                     result.stopThreshold =
-                        robustThresholdFactor * robustStopThresholdFactor * baseNoiseLevel
+                        accelerometerRobustStopThresholdFactor * accelerometerRobustStopThresholdFactor * baseNoiseLevel
                 }
-                result.qualityScores = buildQualityScores()
+                result.qualityScores = buildAccelerometerQualityScores()
             }
         }
 
         return result
     }
 
+    /**
+     * Builds required quality scores for PROSAC and PROMedS robust methods used for accelerometer
+     * calibration.
+     * Quality scores are build for each measurement. By default the standard deviation
+     * of each measurement is taken into account, so that the larger the standard deviation
+     * the poorer the measurement is considered (lower score).
+     *
+     * @return build quality score array.
+     */
+    private fun buildAccelerometerQualityScores(): DoubleArray {
+        val size = accelerometerMeasurements.size
+        val qualityScores = DoubleArray(size)
+        accelerometerMeasurements.forEachIndexed { index, measurement ->
+            qualityScores[index] = accelerometerQualityScoreMapper.map(measurement)
+        }
+        return qualityScores
+    }
+
     companion object {
         /**
-         * Number of unknowns when common z-axis is assumed for both the accelerometer and
-         * gyroscope and bias is unknown.
+         * Indicates whether by default a common z-axis is assumed for both accelerometer,
+         * gyroscope and magnetometer.
          */
-        private const val UNKNOWN_BIAS_COMMON_Z_AXIS_UNKNOWNS = 9
-
-        /**
-         * Number of unknowns for the general calibration case when bias is unknown.
-         */
-        private const val UNKNOWN_BIAS_GENERAL_UNKNOWNS = 12
-
-        /**
-         * Number of unknowns when common z-axis is assumed for both the accelerometer and
-         * gyroscope and bias is known.
-         */
-        private const val KNOWN_BIAS_COMMON_Z_AXIS_UNKNOWNS = 6
-
-        /**
-         * Number of unknowns for the general calibration case when bias is known.
-         */
-        private const val KNOWN_BIAS_GENERAL_UNKNOWNS = 9
-
-        /**
-         * Required minimum number of measurements when common z-axis is assumed and bias is
-         * unknown.
-         */
-        const val UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_COMMON_Z_AXIS =
-            UNKNOWN_BIAS_COMMON_Z_AXIS_UNKNOWNS + 1
-
-        /**
-         * Required minimum number of measurements for the general case when bias is unknown.
-         */
-        const val UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL = UNKNOWN_BIAS_GENERAL_UNKNOWNS + 1
-
-        /**
-         * Required minimum number of measurements when common z-axis is assumed and bias is known.
-         */
-        const val KNOWN_BIAS_MINIMUM_MEASUREMENTS_COMMON_Z_AXIS =
-            KNOWN_BIAS_COMMON_Z_AXIS_UNKNOWNS + 1
-
-        /**
-         * Required minimum number of measurements for the general case when bias is known.
-         */
-        const val KNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL = KNOWN_BIAS_GENERAL_UNKNOWNS + 1
+        const val DEFAULT_USE_COMMON_Z_AXIS = false
 
         /**
          * Default confidence to find a robust calibration. By default this is 99%.
@@ -1836,8 +2276,9 @@ class StaticIntervalAccelerometerCalibrator private constructor(
         /**
          * Default factor to be used respect estimated base noise level to consider a measurement
          * an outlier when using robust calibration methods.
-         * By default this is 3.0 times [baseNoiseLevel], which considering the noise level as
-         * the standard deviation of a Gaussian distribution, should account for 99% of the cases.
+         * By default this is 3.0 times [accelerometerBaseNoiseLevel], which considering the noise
+         * level as the standard deviation of a Gaussian distribution, should account for 99% of
+         * the cases.
          * Any measurement having an error greater than that in the estimated solution, will be
          * considered an outlier and be discarded.
          */
@@ -1848,6 +2289,73 @@ class StaticIntervalAccelerometerCalibrator private constructor(
          * directly related to LMSE, but to a smaller value.
          */
         const val DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR = 1e-2
+
+        /**
+         * Number of unknowns when common z-axis is assumed for both the accelerometer and
+         * gyroscope and bias is unknown.
+         */
+        private const val ACCELEROMETER_UNKNOWN_BIAS_COMMON_Z_AXIS_UNKNOWNS = 9
+
+        /**
+         * Number of unknowns for the general calibration case when bias is unknown.
+         */
+        private const val ACCELEROMETER_UNKNOWN_BIAS_GENERAL_UNKNOWNS = 12
+
+        /**
+         * Number of unknowns when common z-axis is assumed for both the accelerometer and
+         * gyroscope and bias is known.
+         */
+        private const val ACCELEROMETER_KNOWN_BIAS_COMMON_Z_AXIS_UNKNOWNS = 6
+
+        /**
+         * Number of unknowns for the general calibration case when bias is known.
+         */
+        private const val ACCELEROMETER_KNOWN_BIAS_GENERAL_UNKNOWNS = 9
+
+        /**
+         * Required minimum number of measurements when common z-axis is assumed and bias is
+         * unknown.
+         */
+        const val ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_COMMON_Z_AXIS =
+            ACCELEROMETER_UNKNOWN_BIAS_COMMON_Z_AXIS_UNKNOWNS + 1
+
+        /**
+         * Required minimum number of measurements for the general case when bias is unknown.
+         */
+        const val ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL =
+            ACCELEROMETER_UNKNOWN_BIAS_GENERAL_UNKNOWNS + 1
+
+        /**
+         * Required minimum number of measurements when common z-axis is assumed and bias is known.
+         */
+        const val ACCELEROMETER_KNOWN_BIAS_MINIMUM_MEASUREMENTS_COMMON_Z_AXIS =
+            ACCELEROMETER_KNOWN_BIAS_COMMON_Z_AXIS_UNKNOWNS + 1
+
+        /**
+         * Required minimum number of measurements for the general case when bias is known.
+         */
+        const val ACCELEROMETER_KNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL =
+            ACCELEROMETER_KNOWN_BIAS_GENERAL_UNKNOWNS + 1
+    }
+
+    /**
+     * Interface to notify when a new accelerometer calibration measurement is generated.
+     */
+    fun interface OnGeneratedAccelerometerMeasurementListener {
+        /**
+         * Called when a new accelerometer calibration measurement is generated.
+         *
+         * @param calibrator calibrator that raised the event.
+         * @param measurement generated accelerometer calibration measurement.
+         * @param measurementsFoundSoFar number of measurements that have been found so far.
+         * @param requiredMeasurements required number of measurements to solve calibration.
+         */
+        fun onGeneratedAccelerometerMeasurement(
+            calibrator: StaticIntervalAccelerometerCalibrator,
+            measurement: StandardDeviationBodyKinematics,
+            measurementsFoundSoFar: Int,
+            requiredMeasurements: Int
+        )
     }
 
     /**
@@ -1865,15 +2373,17 @@ class StaticIntervalAccelerometerCalibrator private constructor(
     }
 
     /**
-     * Interface to notify when initial bias guess is available.
-     * If [isGroundTruthInitialBias] is true, then initial bias is considered the true value after
-     * solving calibration, otherwise, initial bias is considered only an initial guess.
+     * Interface to notify when initial accelerometer bias guess is available.
+     * If [isAccelerometerGroundTruthInitialBias] is true, then initial bias is considered true true
+     * value after solving calibration, otherwise, initial bias is considered only an initial guess.
      */
-    fun interface OnInitialBiasAvailableListener {
+    fun interface OnInitialAccelerometerBiasAvailableListener {
+
         /**
-         * Called when initial bias is available.
-         * If [isGroundTruthInitialBias] is true, then initial bias is considered the true value
-         * after solving calibration, otherwise, initial bias is considered only an initial guess.
+         * Called when initial accelerometer bias is available.
+         * If [isAccelerometerGroundTruthInitialBias] is true, then initial bias is considered the
+         * true value after solving calibration, otherwise, initial bias is considered only an
+         * initial guess.
          *
          * @param calibrator calibrator that raised the event.
          * @param biasX x-coordinate of bias expressed in meters per squared second (m/s^2).

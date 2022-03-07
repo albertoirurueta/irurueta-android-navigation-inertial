@@ -9,7 +9,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
 import com.irurueta.android.navigation.inertial.LocationService
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
-import com.irurueta.android.navigation.inertial.calibration.StaticIntervalAccelerometerCalibrator
+import com.irurueta.android.navigation.inertial.calibration.SingleSensorStaticIntervalAccelerometerCalibrator
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
 import com.irurueta.android.navigation.inertial.test.LocationActivity
 import com.irurueta.numerical.robust.RobustEstimatorMethod
@@ -151,8 +151,8 @@ class StaticIntervalAccelerometerCalibratorTest {
     private fun buildCalibrator(
         context: Context,
         sensorType: AccelerometerSensorCollector.SensorType
-    ): StaticIntervalAccelerometerCalibrator {
-        val calibrator = StaticIntervalAccelerometerCalibrator(context,
+    ): SingleSensorStaticIntervalAccelerometerCalibrator {
+        val calibrator = SingleSensorStaticIntervalAccelerometerCalibrator(context,
             sensorType = sensorType,
             initializationStartedListener = {
                 Log.i(
@@ -224,7 +224,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         return calibrator
     }
 
-    private fun logCalibrationResult(calibrator: StaticIntervalAccelerometerCalibrator) {
+    private fun logCalibrationResult(calibrator: SingleSensorStaticIntervalAccelerometerCalibrator) {
         Log.i(
             "StaticIntervalAccelerometerCalibratorTest",
             "Result unreliable: ${calibrator.resultUnreliable}"

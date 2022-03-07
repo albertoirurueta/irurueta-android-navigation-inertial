@@ -43,6 +43,7 @@ import kotlin.math.sqrt
  * Collects magnetometer measurements by detecting periods when device captures a constant magnetic
  * field (typically when device orientation remains static).
  * Such static periods are used to obtain measurements and solve calibration parameters.
+ * This calibrator DOES NOT require an accelerometer. Only a magnetometer is needed.
  *
  * @property context Android context.
  * @property sensorType One of the supported magnetometer sensor types.
@@ -62,28 +63,26 @@ import kotlin.math.sqrt
  * @property calibrationCompletedListener listener to notify when calibration is successfully
  * completed.
  * @property stoppedListener listener to notify when measurement collection stops.
- * @property magnetometerMeasurementListener listener to notify collected magnetometer measurements.
  * @property qualityScoreMapper mapper to convert collected measurements into quality scores,
  * based on the amount ot standard deviation (the larger the variability, the worse the score
  * will be).
  */
-class StaticIntervalMagnetometerCalibrator private constructor(
+class SingleSensorStaticIntervalMagnetometerCalibrator private constructor(
     context: Context,
     val sensorType: MagnetometerSensorCollector.SensorType,
     sensorDelay: SensorDelay,
     solveCalibrationWhenEnoughMeasurements: Boolean,
-    initializationStartedListener: OnInitializationStartedListener<StaticIntervalMagnetometerCalibrator>?,
-    initializationCompletedListener: OnInitializationCompletedListener<StaticIntervalMagnetometerCalibrator>?,
-    errorListener: OnErrorListener<StaticIntervalMagnetometerCalibrator>?,
+    initializationStartedListener: OnInitializationStartedListener<SingleSensorStaticIntervalMagnetometerCalibrator>?,
+    initializationCompletedListener: OnInitializationCompletedListener<SingleSensorStaticIntervalMagnetometerCalibrator>?,
+    errorListener: OnErrorListener<SingleSensorStaticIntervalMagnetometerCalibrator>?,
     var initialHardIronAvailableListener: OnInitialHardIronAvailableListener?,
-    newCalibrationMeasurementAvailableListener: OnNewCalibrationMeasurementAvailableListener<StaticIntervalMagnetometerCalibrator, StandardDeviationBodyMagneticFluxDensity>?,
-    readyToSolveCalibrationListener: OnReadyToSolveCalibrationListener<StaticIntervalMagnetometerCalibrator>?,
-    calibrationSolvingStartedListener: OnCalibrationSolvingStartedListener<StaticIntervalMagnetometerCalibrator>?,
-    calibrationCompletedListener: OnCalibrationCompletedListener<StaticIntervalMagnetometerCalibrator>?,
-    stoppedListener: OnStoppedListener<StaticIntervalMagnetometerCalibrator>?,
-    var magnetometerMeasurementListener: MagnetometerSensorCollector.OnMeasurementListener?,
+    newCalibrationMeasurementAvailableListener: OnNewCalibrationMeasurementAvailableListener<SingleSensorStaticIntervalMagnetometerCalibrator, StandardDeviationBodyMagneticFluxDensity>?,
+    readyToSolveCalibrationListener: OnReadyToSolveCalibrationListener<SingleSensorStaticIntervalMagnetometerCalibrator>?,
+    calibrationSolvingStartedListener: OnCalibrationSolvingStartedListener<SingleSensorStaticIntervalMagnetometerCalibrator>?,
+    calibrationCompletedListener: OnCalibrationCompletedListener<SingleSensorStaticIntervalMagnetometerCalibrator>?,
+    stoppedListener: OnStoppedListener<SingleSensorStaticIntervalMagnetometerCalibrator>?,
     qualityScoreMapper: QualityScoreMapper<StandardDeviationBodyMagneticFluxDensity>
-) : StaticIntervalCalibrator<StaticIntervalMagnetometerCalibrator,
+) : SingleSensorStaticIntervalCalibrator<SingleSensorStaticIntervalMagnetometerCalibrator,
         StandardDeviationBodyMagneticFluxDensity, MagnetometerIntervalDetector,
         MagneticFluxDensityUnit, MagneticFluxDensity, MagneticFluxDensityTriad>(
     context,
@@ -117,7 +116,6 @@ class StaticIntervalMagnetometerCalibrator private constructor(
      * @param calibrationCompletedListener listener to notify when calibration is successfully
      * completed.
      * @param stoppedListener listener to notify when measurement collection stops.
-     * @param magnetometerMeasurementListener listener to notify collected magnetometer measurements.
      * @param qualityScoreMapper mapper to convert collected measurements into quality scores,
      * based on the amount ot standard deviation (the larger the variability, the worse the score
      * will be).
@@ -132,16 +130,15 @@ class StaticIntervalMagnetometerCalibrator private constructor(
         sensorDelay: SensorDelay = SensorDelay.FASTEST,
         solveCalibrationWhenEnoughMeasurements: Boolean = true,
         isGroundTruthInitialHardIron: Boolean = false,
-        initializationStartedListener: OnInitializationStartedListener<StaticIntervalMagnetometerCalibrator>? = null,
-        initializationCompletedListener: OnInitializationCompletedListener<StaticIntervalMagnetometerCalibrator>? = null,
-        errorListener: OnErrorListener<StaticIntervalMagnetometerCalibrator>? = null,
+        initializationStartedListener: OnInitializationStartedListener<SingleSensorStaticIntervalMagnetometerCalibrator>? = null,
+        initializationCompletedListener: OnInitializationCompletedListener<SingleSensorStaticIntervalMagnetometerCalibrator>? = null,
+        errorListener: OnErrorListener<SingleSensorStaticIntervalMagnetometerCalibrator>? = null,
         initialHardIronAvailableListener: OnInitialHardIronAvailableListener? = null,
-        newCalibrationMeasurementAvailableListener: OnNewCalibrationMeasurementAvailableListener<StaticIntervalMagnetometerCalibrator, StandardDeviationBodyMagneticFluxDensity>? = null,
-        readyToSolveCalibrationListener: OnReadyToSolveCalibrationListener<StaticIntervalMagnetometerCalibrator>? = null,
-        calibrationSolvingStartedListener: OnCalibrationSolvingStartedListener<StaticIntervalMagnetometerCalibrator>? = null,
-        calibrationCompletedListener: OnCalibrationCompletedListener<StaticIntervalMagnetometerCalibrator>? = null,
-        stoppedListener: OnStoppedListener<StaticIntervalMagnetometerCalibrator>? = null,
-        magnetometerMeasurementListener: MagnetometerSensorCollector.OnMeasurementListener? = null,
+        newCalibrationMeasurementAvailableListener: OnNewCalibrationMeasurementAvailableListener<SingleSensorStaticIntervalMagnetometerCalibrator, StandardDeviationBodyMagneticFluxDensity>? = null,
+        readyToSolveCalibrationListener: OnReadyToSolveCalibrationListener<SingleSensorStaticIntervalMagnetometerCalibrator>? = null,
+        calibrationSolvingStartedListener: OnCalibrationSolvingStartedListener<SingleSensorStaticIntervalMagnetometerCalibrator>? = null,
+        calibrationCompletedListener: OnCalibrationCompletedListener<SingleSensorStaticIntervalMagnetometerCalibrator>? = null,
+        stoppedListener: OnStoppedListener<SingleSensorStaticIntervalMagnetometerCalibrator>? = null,
         qualityScoreMapper: QualityScoreMapper<StandardDeviationBodyMagneticFluxDensity> = DefaultMagnetometerQualityScoreMapper()
     ) : this(
         context,
@@ -157,7 +154,6 @@ class StaticIntervalMagnetometerCalibrator private constructor(
         calibrationSolvingStartedListener,
         calibrationCompletedListener,
         stoppedListener,
-        magnetometerMeasurementListener,
         qualityScoreMapper
     ) {
         this.location = location
@@ -187,7 +183,7 @@ class StaticIntervalMagnetometerCalibrator private constructor(
             val measurementsSize = measurements.size
 
             newCalibrationMeasurementAvailableListener?.onNewCalibrationMeasurementAvailable(
-                this@StaticIntervalMagnetometerCalibrator,
+                this@SingleSensorStaticIntervalMagnetometerCalibrator,
                 measurement,
                 measurementsSize,
                 reqMeasurements
@@ -197,7 +193,7 @@ class StaticIntervalMagnetometerCalibrator private constructor(
             val isReadyToCalibrate = measurementsSize >= reqMeasurements
             if (isReadyToCalibrate) {
                 readyToSolveCalibrationListener?.onReadyToSolveCalibration(
-                    this@StaticIntervalMagnetometerCalibrator
+                    this@SingleSensorStaticIntervalMagnetometerCalibrator
                 )
 
                 // stop interval detector since no norm measurements need to be collected
@@ -1040,11 +1036,14 @@ class StaticIntervalMagnetometerCalibrator private constructor(
             true
         } catch (e: NavigationException) {
             Log.e(
-                StaticIntervalMagnetometerCalibrator::class.qualifiedName,
+                SingleSensorStaticIntervalMagnetometerCalibrator::class.qualifiedName,
                 "Calibration estimation failed",
                 e
             )
-            errorListener?.onError(this, CalibratorErrorReason.NUMERICAL_INSTABILITY_DURING_CALIBRATION)
+            errorListener?.onError(
+                this,
+                CalibratorErrorReason.NUMERICAL_INSTABILITY_DURING_CALIBRATION
+            )
             running = false
             false
         }
@@ -1458,7 +1457,7 @@ class StaticIntervalMagnetometerCalibrator private constructor(
          * @param hardIronZ z-coordinate of hard iron expressed in micro-Teslas (µT).
          */
         fun onInitialHardIronAvailable(
-            calibrator: StaticIntervalMagnetometerCalibrator,
+            calibrator: SingleSensorStaticIntervalMagnetometerCalibrator,
             hardIronX: Double,
             hardIronY: Double,
             hardIronZ: Double

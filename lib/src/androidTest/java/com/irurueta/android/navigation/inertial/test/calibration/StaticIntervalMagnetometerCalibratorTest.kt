@@ -9,7 +9,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
 import com.irurueta.android.navigation.inertial.LocationService
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
-import com.irurueta.android.navigation.inertial.calibration.StaticIntervalMagnetometerCalibrator
+import com.irurueta.android.navigation.inertial.calibration.SingleSensorStaticIntervalMagnetometerCalibrator
 import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
 import com.irurueta.android.navigation.inertial.test.LocationActivity
 import com.irurueta.numerical.robust.RobustEstimatorMethod
@@ -115,8 +115,8 @@ class StaticIntervalMagnetometerCalibratorTest {
         context: Context,
         location: Location,
         sensorType: MagnetometerSensorCollector.SensorType
-    ): StaticIntervalMagnetometerCalibrator {
-        val calibrator = StaticIntervalMagnetometerCalibrator(
+    ): SingleSensorStaticIntervalMagnetometerCalibrator {
+        val calibrator = SingleSensorStaticIntervalMagnetometerCalibrator(
             context,
             location,
             sensorType = sensorType,
@@ -185,7 +185,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         return calibrator
     }
 
-    private fun logCalibrationResult(calibrator: StaticIntervalMagnetometerCalibrator) {
+    private fun logCalibrationResult(calibrator: SingleSensorStaticIntervalMagnetometerCalibrator) {
         Log.i(
             "StaticIntervalMagnetometerCalibratorTest",
             "Initial bias. x: ${calibrator.initialHardIronX}, y: ${calibrator.initialHardIronY}, z: ${calibrator.initialHardIronZ} T"

@@ -37,6 +37,38 @@ import com.irurueta.units.Acceleration
  * Static and dynamic intervals are always measured using the accelerometer.
  * Additionally, the gyroscope and magnetometer are also used, and measurements are generated to
  * calibrate either accelerometers, gyroscopes or magnetometers.
+ *
+ * @property context Android context.
+ * @property accelerometerSensorType One of the supported accelerometer sensor types.
+ * @property accelerometerSensorDelay Delay of accelerometer sensor between samples.
+ * @property gyroscopeSensorType One of the supported gyroscope sensor types.
+ * @property gyroscopeSensorDelay Delay of gyroscope sensor between samples.
+ * @property magnetometerSensorType One of the supported gyroscope sensor types.
+ * @property magnetometerSensorDelay Delay of magnetometer sensor between samples.
+ * @property initializationStartedListener listener to notify when initialization starts.
+ * @property initializationCompletedListener listener to notify when initialization successfully
+ * completes.
+ * @property errorListener listener to notify errors.
+ * @property staticIntervalDetectedListener listener to notify when a static interval is detected.
+ * @property dynamicIntervalDetectedListener listener to notify when a dynamic interval is detected.
+ * @property staticIntervalSkippedListener listener to notify when a static interval is skipped if
+ * its duration is too short.
+ * @property dynamicIntervalSkippedListener listener to notify when a dynamic interval is skipped if
+ * its duration is too long.
+ * @property generatedAccelerometerMeasurementListener listener to notify when a new accelerometer
+ * calibration measurement is generated.
+ * @property generatedGyroscopeMeasurementListener listener to notify when a new gyroscope
+ * calibration measurement is generated.
+ * @property generatedMagnetometerMeasurementListener listener to notify when a new magnetometer
+ * calibration measurement is generated.
+ * @property resetListener listener to notify when generator is restarted.
+ * @property accelerometerMeasurementListener listener to notify when a new accelerometer
+ * measurement is received.
+ * @property gyroscopeMeasurementListener listener to notify when a new gyroscope measurement is
+ * received.
+ * @property magnetometerMeasurementListener listener to notify when a new magnetometer measurement
+ * is received.
+ * @property accuracyChangedListener listener to notify when sensor accuracy changes.
  */
 class AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
     context: Context,

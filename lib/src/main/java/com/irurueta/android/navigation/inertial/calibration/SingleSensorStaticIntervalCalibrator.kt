@@ -18,7 +18,6 @@ package com.irurueta.android.navigation.inertial.calibration
 import android.content.Context
 import com.irurueta.algebra.Matrix
 import com.irurueta.android.navigation.inertial.calibration.intervals.IntervalDetector
-import com.irurueta.android.navigation.inertial.calibration.intervals.ErrorReason
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.navigation.inertial.calibration.Triad
 import com.irurueta.navigation.inertial.calibration.intervals.TriadStaticIntervalDetector
@@ -30,8 +29,28 @@ import com.irurueta.units.Time
 /**
  * Base class for static interval calibrators, which detects static periods of sensor measurements
  * to solve calibration.
+ * Implementations of this class only use a single sensor (no combination of accelerometer and
+ * another sensor is used).
  *
- * @param C an implementation of [StaticIntervalCalibrator].
+ * @property context Android context.
+ * @property sensorDelay Delay of sensor between samples.
+ * @property solveCalibrationWhenEnoughMeasurements true to automatically solve calibration once
+ * enough measurements are available, false otherwise.
+ * @property initializationStartedListener listener to notify when initialization starts.
+ * @property initializationCompletedListener listener to notify when initialization completes.
+ * @property errorListener listener to notify errors.
+ * @property newCalibrationMeasurementAvailableListener listener to notify when a new calibration
+ * measurement is obtained.
+ * @property readyToSolveCalibrationListener listener to notify when calibrator is ready to be
+ * solved.
+ * @property calibrationSolvingStartedListener listener to notify when calibration solving starts.
+ * @property calibrationCompletedListener listener to notify when calibration is successfully
+ * completed.
+ * @property stoppedListener listener to notify when measurement collection stops.
+ * @property qualityScoreMapper mapper to convert collected measurements into quality scores,
+ * based on the amount of standard deviation (the larger the variability, the worse the score
+ * will be).
+ * @param C an implementation of [SingleSensorStaticIntervalCalibrator].
  * @param R reading type of collected measurements during static period that is used for solving
  * calibration.
  * @param I an implementation of [IntervalDetector]
@@ -39,7 +58,7 @@ import com.irurueta.units.Time
  * @param M a type of measurement.
  * @param T a triad type.
  */
-abstract class StaticIntervalCalibrator<C : StaticIntervalCalibrator<C, R, I, U, M, T>, R,
+abstract class SingleSensorStaticIntervalCalibrator<C : SingleSensorStaticIntervalCalibrator<C, R, I, U, M, T>, R,
         I : IntervalDetector<I, *, U, M, T, *, *>, U : Enum<*>, M : Measurement<U>,
         T : Triad<U, M>>(
     val context: Context,
@@ -53,7 +72,7 @@ abstract class StaticIntervalCalibrator<C : StaticIntervalCalibrator<C, R, I, U,
     var calibrationSolvingStartedListener: OnCalibrationSolvingStartedListener<C>?,
     var calibrationCompletedListener: OnCalibrationCompletedListener<C>?,
     var stoppedListener: OnStoppedListener<C>?,
-    var qualityScoreMapper: QualityScoreMapper<R>
+    val qualityScoreMapper: QualityScoreMapper<R>
 ) {
     /**
      * Listener used by internal detector to handle events when initialization starts.
@@ -61,7 +80,7 @@ abstract class StaticIntervalCalibrator<C : StaticIntervalCalibrator<C, R, I, U,
     @Suppress("UNCHECKED_CAST")
     protected val intervalDetectorInitializationStartedListener =
         IntervalDetector.OnInitializationStartedListener<I> {
-            initializationStartedListener?.onInitializationStarted(this@StaticIntervalCalibrator as C)
+            initializationStartedListener?.onInitializationStarted(this@SingleSensorStaticIntervalCalibrator as C)
         }
 
     /**
@@ -71,7 +90,7 @@ abstract class StaticIntervalCalibrator<C : StaticIntervalCalibrator<C, R, I, U,
     @Suppress("UNCHECKED_CAST")
     protected open val intervalDetectorInitializationCompletedListener =
         IntervalDetector.OnInitializationCompletedListener<I> { _, _ ->
-            initializationCompletedListener?.onInitializationCompleted(this@StaticIntervalCalibrator as C)
+            initializationCompletedListener?.onInitializationCompleted(this@SingleSensorStaticIntervalCalibrator as C)
         }
 
     @Suppress("UNCHECKED_CAST")
@@ -79,8 +98,8 @@ abstract class StaticIntervalCalibrator<C : StaticIntervalCalibrator<C, R, I, U,
         IntervalDetector.OnErrorListener<I> { _, reason ->
             stop()
             errorListener?.onError(
-                this@StaticIntervalCalibrator as C,
-                mapErrorReason(reason)
+                this@SingleSensorStaticIntervalCalibrator as C,
+                CalibratorErrorReason.mapErrorReason(reason)
             )
         }
 
@@ -121,7 +140,7 @@ abstract class StaticIntervalCalibrator<C : StaticIntervalCalibrator<C, R, I, U,
      * Gets or sets length of number of samples to keep within the window being processed to
      * determine instantaneous sensor noise level during initialization of the interval
      * detector. Window size must always be larger than allowed minimum value, which is 2 and
-     * must have and odd value.
+     * must have an odd value.
      *
      * @throws IllegalArgumentException if provided value is not valid.
      * @throws IllegalStateException if calibrator is currently running.
@@ -226,7 +245,7 @@ abstract class StaticIntervalCalibrator<C : StaticIntervalCalibrator<C, R, I, U,
     }
 
     /**
-     * Gets magnetometer measurement base noise level that has been detected during initialization
+     * Gets sensor measurement base noise level that has been detected during initialization
      * expressed in meters per squared second (m/s^2) for accelerometer or Teslas (T) for
      * magnetometer.
      * This is only available once initialization is completed.
@@ -235,14 +254,14 @@ abstract class StaticIntervalCalibrator<C : StaticIntervalCalibrator<C, R, I, U,
         get() = intervalDetector.baseNoiseLevel
 
     /**
-     * Gets magnetometer measurement base noise level that has been detected during initialization.
+     * Gets sensor measurement base noise level that has been detected during initialization.
      * This is only available once initialization is completed.
      */
     val baseNoiseLevelAsMeasurement
         get() = intervalDetector.baseNoiseLevelAsMeasurement
 
     /**
-     * Gets magnetometer measurement base noise level that has been detected during initialization.
+     * Gets sensor measurement base noise level that has been detected during initialization.
      * This is only available once initialization is completed.
      *
      * @param result instance where result will be stored.
@@ -756,7 +775,7 @@ abstract class StaticIntervalCalibrator<C : StaticIntervalCalibrator<C, R, I, U,
     abstract val estimatedMzy: Double?
 
     /**
-     * Gets estimated covariance matrix for estimated magnetometer parameters or null if not
+     * Gets estimated covariance matrix for estimated sensor parameters or null if not
      * available.
      * When bias or hard iron is known, diagonal elements of the covariance matrix contains variance
      * for the following parameters (following indicated order): sx, sy, sz, mxy, mxz, myz, mzx,
@@ -791,6 +810,7 @@ abstract class StaticIntervalCalibrator<C : StaticIntervalCalibrator<C, R, I, U,
      * @throws IllegalStateException if calibrator is already running or magnetometer sensor is
      * missing.
      */
+    @Throws(IllegalStateException::class)
     open fun start() {
         check(!running)
 
@@ -909,27 +929,12 @@ abstract class StaticIntervalCalibrator<C : StaticIntervalCalibrator<C, R, I, U,
          * directly related to LMSE, but to a smaller value.
          */
         const val DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR = 1e-2
-
-        /**
-         * Maps interval detector error reasons into error reasons returned by
-         * [StaticIntervalCalibrator].
-         */
-        private fun mapErrorReason(reason: ErrorReason): CalibratorErrorReason {
-            return when (reason) {
-                ErrorReason.UNRELIABLE_SENSOR
-                -> CalibratorErrorReason.UNRELIABLE_SENSOR
-                ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
-                -> CalibratorErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
-                ErrorReason.OVERALL_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
-                -> CalibratorErrorReason.OVERALL_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
-            }
-        }
     }
 
     /**
      * Interface to notify when calibrator starts initialization.
      */
-    fun interface OnInitializationStartedListener<C : StaticIntervalCalibrator<C, *, *, *, *, *>> {
+    fun interface OnInitializationStartedListener<C : SingleSensorStaticIntervalCalibrator<C, *, *, *, *, *>> {
         /**
          * Called when calibrator starts initialization to determine base noise level when device
          * remains static.
@@ -942,7 +947,7 @@ abstract class StaticIntervalCalibrator<C : StaticIntervalCalibrator<C, R, I, U,
     /**
      * Interface to notify when calibrator successfully completes initialization.
      */
-    fun interface OnInitializationCompletedListener<C : StaticIntervalCalibrator<C, *, *, *, *, *>> {
+    fun interface OnInitializationCompletedListener<C : SingleSensorStaticIntervalCalibrator<C, *, *, *, *, *>> {
         /**
          * Called when calibrator successfully completes initialization to determine base noise
          * level when device remains static.
@@ -955,10 +960,10 @@ abstract class StaticIntervalCalibrator<C : StaticIntervalCalibrator<C, R, I, U,
     /**
      * Interface to notify when an error occurs.
      */
-    fun interface OnErrorListener<C : StaticIntervalCalibrator<C, *, *, *, *, *>> {
+    fun interface OnErrorListener<C : SingleSensorStaticIntervalCalibrator<C, *, *, *, *, *>> {
         /**
          * Called when an error is detected, either at initialization because excessive noise
-         * is detected, because magnetometer sensor becomes unreliable or because obtained
+         * is detected, because a sensor becomes unreliable or because obtained
          * measurements produce a numerically unstable calibration solution.
          *
          * @param calibrator calibrator that raised the event.
@@ -973,7 +978,7 @@ abstract class StaticIntervalCalibrator<C : StaticIntervalCalibrator<C, R, I, U,
      * measurements stop being static).
      * When enough of these measurements are obtained, calibration can actually be solved.
      */
-    fun interface OnNewCalibrationMeasurementAvailableListener<C : StaticIntervalCalibrator<C, R, *, *, *, *>, R> {
+    fun interface OnNewCalibrationMeasurementAvailableListener<C : SingleSensorStaticIntervalCalibrator<C, R, *, *, *, *>, R> {
         /**
          * Called when a new measurement for calibration is found.
          * A new measurement each time a static period finishes (when sensor measurements
@@ -999,7 +1004,7 @@ abstract class StaticIntervalCalibrator<C : StaticIntervalCalibrator<C, R, I, U,
     /**
      * Interface to notify when enough measurements are obtained to start solving calibration.
      */
-    fun interface OnReadyToSolveCalibrationListener<C : StaticIntervalCalibrator<C, *, *, *, *, *>> {
+    fun interface OnReadyToSolveCalibrationListener<C : SingleSensorStaticIntervalCalibrator<C, *, *, *, *, *>> {
         /**
          * Called when enough measurements are obtained to start solving calibration.
          *
@@ -1011,22 +1016,22 @@ abstract class StaticIntervalCalibrator<C : StaticIntervalCalibrator<C, R, I, U,
     /**
      * Interface to notify when calibration starts being solved.
      */
-    fun interface OnCalibrationSolvingStartedListener<C : StaticIntervalCalibrator<C, *, *, *, *, *>> {
+    fun interface OnCalibrationSolvingStartedListener<C : SingleSensorStaticIntervalCalibrator<C, *, *, *, *, *>> {
         /**
          * Called when calibration starts being solved after enough measurements are found.
          * Calibration can automatically started when enough measurements are available if
          * [solveCalibrationWhenEnoughMeasurements] is true, otherwise [calibrate] must be called
          * after enough measurements are found, which raises this event.
          *
-         * @param calibration calibrator that raised the event.
+         * @param calibrator calibrator that raised the event.
          */
-        fun onCalibrationSolvingStarted(calibration: C)
+        fun onCalibrationSolvingStarted(calibrator: C)
     }
 
     /**
      * Interface to notify when calibration is solved and completed.
      */
-    fun interface OnCalibrationCompletedListener<C : StaticIntervalCalibrator<C, *, *, *, *, *>> {
+    fun interface OnCalibrationCompletedListener<C : SingleSensorStaticIntervalCalibrator<C, *, *, *, *, *>> {
         /**
          * Called when calibration successfully completes.
          *
@@ -1040,40 +1045,14 @@ abstract class StaticIntervalCalibrator<C : StaticIntervalCalibrator<C, R, I, U,
      * This happens automatically when enough measurements are found after periods when
      * device stops being static, or if an error occurs.
      */
-    fun interface OnStoppedListener<C : StaticIntervalCalibrator<C, *, *, *, *, *>> {
+    fun interface OnStoppedListener<C : SingleSensorStaticIntervalCalibrator<C, *, *, *, *, *>> {
         /**
-         * Called when calibration on measurement collection stops.
+         * Called when measurement collection stops.
          * This happens automatically when enough measurements are found after periods when
          * device stops being static, or if an error occurs.
          *
          * @param calibrator calibrator that raised the event.
          */
         fun onStopped(calibrator: C)
-    }
-
-    /**
-     * Reasons why this calibrator can fail
-     */
-    enum class CalibratorErrorReason {
-        /**
-         * If a sudden movement is detected during initialization.
-         */
-        SUDDEN_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION,
-
-        /**
-         * If overall noise level is excessive during initialization.
-         */
-        OVERALL_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION,
-
-        /**
-         * If sensor becomes unreliable.
-         */
-        UNRELIABLE_SENSOR,
-
-        /**
-         * Occurs if obtained measurements cannot yield a numerically stable solution
-         * during calibration estimation.
-         */
-        NUMERICAL_INSTABILITY_DURING_CALIBRATION
     }
 }
