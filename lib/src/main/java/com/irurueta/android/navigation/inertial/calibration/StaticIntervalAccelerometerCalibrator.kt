@@ -234,6 +234,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
      */
     private val generatorErrorListener =
         SingleSensorCalibrationMeasurementGenerator.OnErrorListener<AccelerometerMeasurementGenerator> { _, reason ->
+            stop()
             errorListener?.onError(
                 this@StaticIntervalAccelerometerCalibrator,
                 CalibratorErrorReason.mapErrorReason(reason)

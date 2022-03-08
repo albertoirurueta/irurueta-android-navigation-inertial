@@ -20,8 +20,10 @@ import android.location.Location
 import androidx.test.core.app.ApplicationProvider
 import com.irurueta.algebra.Matrix
 import com.irurueta.android.navigation.inertial.GravityHelper
+import com.irurueta.android.navigation.inertial.calibration.intervals.ErrorReason
 import com.irurueta.android.navigation.inertial.calibration.intervals.measurements.AccelerometerMeasurementGenerator
 import com.irurueta.android.navigation.inertial.calibration.intervals.measurements.SingleSensorCalibrationMeasurementGenerator
+import com.irurueta.android.navigation.inertial.calibration.noise.GravityNormEstimator
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
@@ -37,6 +39,7 @@ import com.irurueta.units.Acceleration
 import com.irurueta.units.AccelerationUnit
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.spyk
 import io.mockk.verify
 import org.junit.Assert.*
 import org.junit.Test
@@ -5297,6 +5300,314 @@ class StaticIntervalAccelerometerCalibratorTest {
         generatorInitializationStartedListener.onInitializationStarted(generator)
 
         verify(exactly = 1) { initializationStartedListener.onInitializationStarted(calibrator) }
+    }
+
+    @Test
+    fun onInitializationCompleted_whenNoListenerAvailable_setsGravityNorm() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerCalibrator(context)
+
+        // check initial value
+        assertNull(calibrator.gravityNorm)
+
+        val generatorInitializationCompletedListener: SingleSensorCalibrationMeasurementGenerator.OnInitializationCompletedListener<AccelerometerMeasurementGenerator>? =
+            calibrator.getPrivateProperty("generatorInitializationCompletedListener")
+        requireNotNull(generatorInitializationCompletedListener)
+
+        val gravityNormEstimator: GravityNormEstimator? =
+            calibrator.getPrivateProperty("gravityNormEstimator")
+        requireNotNull(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        val gravityNorm = GravityHelper.getGravityNormForLocation(getLocation())
+        every { gravityNormEstimatorSpy.averageNorm }.returns(gravityNorm)
+        calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
+
+        val randomizer = UniformRandomizer()
+        val baseNoiseLevel = randomizer.nextDouble()
+        val generator = mockk<AccelerometerMeasurementGenerator>()
+        generatorInitializationCompletedListener.onInitializationCompleted(
+            generator,
+            baseNoiseLevel
+        )
+
+        // check
+        assertEquals(gravityNorm, calibrator.gravityNorm)
+    }
+
+    @Test
+    fun onInitializationCompleted_whenListenerAvailable_setsGravityNormAndNotifies() {
+        val initializationCompletedListener =
+            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalAccelerometerCalibrator>>(
+                relaxUnitFun = true
+            )
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerCalibrator(
+            context,
+            initializationCompletedListener = initializationCompletedListener
+        )
+
+        // check initial value
+        assertNull(calibrator.gravityNorm)
+
+        val generatorInitializationCompletedListener: SingleSensorCalibrationMeasurementGenerator.OnInitializationCompletedListener<AccelerometerMeasurementGenerator>? =
+            calibrator.getPrivateProperty("generatorInitializationCompletedListener")
+        requireNotNull(generatorInitializationCompletedListener)
+
+        val gravityNormEstimator: GravityNormEstimator? =
+            calibrator.getPrivateProperty("gravityNormEstimator")
+        requireNotNull(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        val gravityNorm = GravityHelper.getGravityNormForLocation(getLocation())
+        every { gravityNormEstimatorSpy.averageNorm }.returns(gravityNorm)
+        calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
+
+        val randomizer = UniformRandomizer()
+        val baseNoiseLevel = randomizer.nextDouble()
+        val generator = mockk<AccelerometerMeasurementGenerator>()
+        generatorInitializationCompletedListener.onInitializationCompleted(
+            generator,
+            baseNoiseLevel
+        )
+
+        // check
+        assertEquals(gravityNorm, calibrator.gravityNorm)
+
+        verify(exactly = 1) { initializationCompletedListener.onInitializationCompleted(calibrator) }
+    }
+
+    @Test
+    fun onError_whenNoListeners_stopsCollectorAndGravityNormEstimator() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerCalibrator(context)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+        assertTrue(calibrator.running)
+
+        val generator: AccelerometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        val gravityNormEstimator: GravityNormEstimator? =
+            calibrator.getPrivateProperty("gravityNormEstimator")
+        requireNotNull(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        every { gravityNormEstimatorSpy.running }.returns(true)
+        calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
+
+        val generatorErrorListener: SingleSensorCalibrationMeasurementGenerator.OnErrorListener<AccelerometerMeasurementGenerator>? =
+            calibrator.getPrivateProperty("generatorErrorListener")
+        requireNotNull(generatorErrorListener)
+
+        generatorErrorListener.onError(generatorSpy, ErrorReason.UNRELIABLE_SENSOR)
+
+        // check
+        assertFalse(calibrator.running)
+        verify(exactly = 1) { generatorSpy.stop() }
+        verify(exactly = 1) { gravityNormEstimatorSpy.stop() }
+    }
+
+    @Test
+    fun onError_whenListenersAvailable_stopsAndNotifies() {
+        val errorListener =
+            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalAccelerometerCalibrator>>(
+                relaxUnitFun = true
+            )
+        val stoppedListener =
+            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalAccelerometerCalibrator>>(
+                relaxUnitFun = true
+            )
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerCalibrator(
+            context,
+            errorListener = errorListener,
+            stoppedListener = stoppedListener
+        )
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+        assertTrue(calibrator.running)
+
+        val generator: AccelerometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        val gravityNormEstimator: GravityNormEstimator? =
+            calibrator.getPrivateProperty("gravityNormEstimator")
+        requireNotNull(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        every { gravityNormEstimatorSpy.running }.returns(true)
+        calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
+
+        val generatorErrorListener: SingleSensorCalibrationMeasurementGenerator.OnErrorListener<AccelerometerMeasurementGenerator>? =
+            calibrator.getPrivateProperty("generatorErrorListener")
+        requireNotNull(generatorErrorListener)
+
+        generatorErrorListener.onError(generatorSpy, ErrorReason.UNRELIABLE_SENSOR)
+
+        // check
+        assertFalse(calibrator.running)
+        verify(exactly = 1) { generatorSpy.stop() }
+        verify(exactly = 1) { gravityNormEstimatorSpy.stop() }
+        verify(exactly = 1) {
+            errorListener.onError(
+                calibrator,
+                CalibratorErrorReason.UNRELIABLE_SENSOR
+            )
+        }
+        verify(exactly = 1) { stoppedListener.onStopped(calibrator) }
+    }
+
+    @Test
+    fun onStaticIntervalDetected_whenNoListenerAvailable_makesNoAction() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerCalibrator(context)
+
+        val generatorStaticIntervalDetectedListener: SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalDetectedListener<AccelerometerMeasurementGenerator>? =
+            calibrator.getPrivateProperty("generatorStaticIntervalDetectedListener")
+        requireNotNull(generatorStaticIntervalDetectedListener)
+
+        val generator = mockk<AccelerometerMeasurementGenerator>()
+        generatorStaticIntervalDetectedListener.onStaticIntervalDetected(generator)
+    }
+
+    @Test
+    fun onStaticIntervalDetected_whenListenerAvailable_notifies() {
+        val staticIntervalDetectedListener =
+            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<StaticIntervalAccelerometerCalibrator>>(
+                relaxUnitFun = true
+            )
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerCalibrator(
+            context,
+            staticIntervalDetectedListener = staticIntervalDetectedListener
+        )
+
+        val generatorStaticIntervalDetectedListener: SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalDetectedListener<AccelerometerMeasurementGenerator>? =
+            calibrator.getPrivateProperty("generatorStaticIntervalDetectedListener")
+        requireNotNull(generatorStaticIntervalDetectedListener)
+
+        val generator = mockk<AccelerometerMeasurementGenerator>()
+        generatorStaticIntervalDetectedListener.onStaticIntervalDetected(generator)
+
+        verify(exactly = 1) { staticIntervalDetectedListener.onStaticIntervalDetected(calibrator) }
+    }
+
+    @Test
+    fun onDynamicIntervalDetected_whenNoListenerAvailable_makesNoAction() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerCalibrator(context)
+
+        val generatorDynamicIntervalDetectedListener: SingleSensorCalibrationMeasurementGenerator.OnDynamicIntervalDetectedListener<AccelerometerMeasurementGenerator>? =
+            calibrator.getPrivateProperty("generatorDynamicIntervalDetectedListener")
+        requireNotNull(generatorDynamicIntervalDetectedListener)
+
+        val generator = mockk<AccelerometerMeasurementGenerator>()
+        generatorDynamicIntervalDetectedListener.onDynamicIntervalDetected(generator)
+    }
+
+    @Test
+    fun onDynamicIntervalDetected_whenListenerAvailable_notifies() {
+        val dynamicIntervalDetectedListener =
+            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener<StaticIntervalAccelerometerCalibrator>>(
+                relaxUnitFun = true
+            )
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerCalibrator(
+            context,
+            dynamicIntervalDetectedListener = dynamicIntervalDetectedListener
+        )
+
+        val generatorDynamicIntervalDetectedListener: SingleSensorCalibrationMeasurementGenerator.OnDynamicIntervalDetectedListener<AccelerometerMeasurementGenerator>? =
+            calibrator.getPrivateProperty("generatorDynamicIntervalDetectedListener")
+        requireNotNull(generatorDynamicIntervalDetectedListener)
+
+        val generator = mockk<AccelerometerMeasurementGenerator>()
+        generatorDynamicIntervalDetectedListener.onDynamicIntervalDetected(generator)
+
+        verify(exactly = 1) { dynamicIntervalDetectedListener.onDynamicIntervalDetected(calibrator) }
+    }
+
+    @Test
+    fun onStaticIntervalSkipped_whenNoListenerAvailable_makesNoAction() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerCalibrator(context)
+
+        val generatorStaticIntervalSkippedListener: SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalSkippedListener<AccelerometerMeasurementGenerator>? =
+            calibrator.getPrivateProperty("generatorStaticIntervalSkippedListener")
+        requireNotNull(generatorStaticIntervalSkippedListener)
+
+        val generator = mockk<AccelerometerMeasurementGenerator>()
+        generatorStaticIntervalSkippedListener.onStaticIntervalSkipped(generator)
+    }
+
+    @Test
+    fun onStaticIntervalSkipped_whenListenerAvailable_notifies() {
+        val staticIntervalSkippedListener =
+            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalSkippedListener<StaticIntervalAccelerometerCalibrator>>(
+                relaxUnitFun = true
+            )
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerCalibrator(
+            context,
+            staticIntervalSkippedListener = staticIntervalSkippedListener
+        )
+
+        val generatorStaticIntervalSkippedListener: SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalSkippedListener<AccelerometerMeasurementGenerator>? =
+            calibrator.getPrivateProperty("generatorStaticIntervalSkippedListener")
+        requireNotNull(generatorStaticIntervalSkippedListener)
+
+        val generator = mockk<AccelerometerMeasurementGenerator>()
+        generatorStaticIntervalSkippedListener.onStaticIntervalSkipped(generator)
+
+        verify(exactly = 1) { staticIntervalSkippedListener.onStaticIntervalSkipped(calibrator) }
+    }
+
+    @Test
+    fun onDynamicIntervalSkipped_whenNoListenerAvailable_makesNoAction() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerCalibrator(context)
+
+        val generatorDynamicIntervalSkippedListener: SingleSensorCalibrationMeasurementGenerator.OnDynamicIntervalSkippedListener<AccelerometerMeasurementGenerator>? =
+            calibrator.getPrivateProperty("generatorDynamicIntervalSkippedListener")
+        requireNotNull(generatorDynamicIntervalSkippedListener)
+
+        val generator = mockk<AccelerometerMeasurementGenerator>()
+        generatorDynamicIntervalSkippedListener.onDynamicIntervalSkipped(generator)
+    }
+
+    @Test
+    fun onDynamicIntervalSkipped_whenListenerAvailable_notifies() {
+        val dynamicIntervalSkippedListener =
+            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalSkippedListener<StaticIntervalAccelerometerCalibrator>>(
+                relaxUnitFun = true
+            )
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerCalibrator(
+            context,
+            dynamicIntervalSkippedListener = dynamicIntervalSkippedListener
+        )
+
+        val generatorDynamicIntervalSkippedListener: SingleSensorCalibrationMeasurementGenerator.OnDynamicIntervalSkippedListener<AccelerometerMeasurementGenerator>? =
+            calibrator.getPrivateProperty("generatorDynamicIntervalSkippedListener")
+        requireNotNull(generatorDynamicIntervalSkippedListener)
+
+        val generator = mockk<AccelerometerMeasurementGenerator>()
+        generatorDynamicIntervalSkippedListener.onDynamicIntervalSkipped(generator)
+                
+        verify(exactly = 1) { dynamicIntervalSkippedListener.onDynamicIntervalSkipped(calibrator) }
     }
 
     private companion object {
