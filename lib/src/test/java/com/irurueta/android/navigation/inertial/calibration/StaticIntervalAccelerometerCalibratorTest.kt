@@ -17,34 +17,44 @@ package com.irurueta.android.navigation.inertial.calibration
 
 import android.content.Context
 import android.location.Location
+import android.os.SystemClock
 import androidx.test.core.app.ApplicationProvider
 import com.irurueta.algebra.Matrix
 import com.irurueta.android.navigation.inertial.GravityHelper
 import com.irurueta.android.navigation.inertial.calibration.intervals.ErrorReason
 import com.irurueta.android.navigation.inertial.calibration.intervals.measurements.AccelerometerMeasurementGenerator
 import com.irurueta.android.navigation.inertial.calibration.intervals.measurements.SingleSensorCalibrationMeasurementGenerator
+import com.irurueta.android.navigation.inertial.calibration.noise.AccumulatedMeasurementEstimator
 import com.irurueta.android.navigation.inertial.calibration.noise.GravityNormEstimator
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
 import com.irurueta.android.navigation.inertial.collectors.SensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.android.navigation.inertial.getPrivateProperty
 import com.irurueta.android.navigation.inertial.setPrivateProperty
+import com.irurueta.android.navigation.inertial.toNEDPosition
+import com.irurueta.navigation.frames.CoordinateTransformation
+import com.irurueta.navigation.frames.FrameType
+import com.irurueta.navigation.frames.NEDFrame
+import com.irurueta.navigation.frames.converters.NEDtoECEFFrameConverter
 import com.irurueta.navigation.inertial.calibration.AccelerationTriad
+import com.irurueta.navigation.inertial.calibration.BodyKinematicsGenerator
+import com.irurueta.navigation.inertial.calibration.IMUErrors
 import com.irurueta.navigation.inertial.calibration.StandardDeviationBodyKinematics
+import com.irurueta.navigation.inertial.calibration.accelerometer.AccelerometerNonLinearCalibrator
 import com.irurueta.navigation.inertial.calibration.intervals.TriadStaticIntervalDetector
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.QualityScoreMapper
+import com.irurueta.navigation.inertial.estimators.ECEFKinematicsEstimator
 import com.irurueta.numerical.robust.RobustEstimatorMethod
 import com.irurueta.statistics.UniformRandomizer
 import com.irurueta.units.Acceleration
 import com.irurueta.units.AccelerationUnit
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.spyk
-import io.mockk.verify
+import io.mockk.*
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import java.util.*
 
 @RunWith(RobolectricTestRunner::class)
 class StaticIntervalAccelerometerCalibratorTest {
@@ -5606,8 +5616,881 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val generator = mockk<AccelerometerMeasurementGenerator>()
         generatorDynamicIntervalSkippedListener.onDynamicIntervalSkipped(generator)
-                
+
         verify(exactly = 1) { dynamicIntervalSkippedListener.onDynamicIntervalSkipped(calibrator) }
+    }
+
+    @Test
+    fun onGeneratedMeasurement_addsMeasurement() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerCalibrator(context)
+
+        assertTrue(calibrator.accelerometerMeasurements.isEmpty())
+
+        val generatorGeneratedMeasurementListener: SingleSensorCalibrationMeasurementGenerator.OnGeneratedMeasurementListener<AccelerometerMeasurementGenerator, StandardDeviationBodyKinematics>? =
+            calibrator.getPrivateProperty("generatorGeneratedMeasurementListener")
+        requireNotNull(generatorGeneratedMeasurementListener)
+
+        val generator = mockk<AccelerometerMeasurementGenerator>()
+        val measurement = StandardDeviationBodyKinematics()
+        generatorGeneratedMeasurementListener.onGeneratedMeasurement(generator, measurement)
+
+        assertEquals(1, calibrator.accelerometerMeasurements.size)
+        assertSame(measurement, calibrator.accelerometerMeasurements[0])
+    }
+
+    @Test
+    fun onGeneratedMeasurement_whenListenerAvailable_notifies() {
+        val generatedAccelerometerMeasurementListener =
+            mockk<StaticIntervalAccelerometerCalibrator.OnGeneratedAccelerometerMeasurementListener>(
+                relaxUnitFun = true
+            )
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerCalibrator(
+            context,
+            generatedAccelerometerMeasurementListener = generatedAccelerometerMeasurementListener
+        )
+
+        assertTrue(calibrator.accelerometerMeasurements.isEmpty())
+
+        val generatorGeneratedMeasurementListener: SingleSensorCalibrationMeasurementGenerator.OnGeneratedMeasurementListener<AccelerometerMeasurementGenerator, StandardDeviationBodyKinematics>? =
+            calibrator.getPrivateProperty("generatorGeneratedMeasurementListener")
+        requireNotNull(generatorGeneratedMeasurementListener)
+
+        val generator = mockk<AccelerometerMeasurementGenerator>()
+        val measurement = StandardDeviationBodyKinematics()
+        generatorGeneratedMeasurementListener.onGeneratedMeasurement(generator, measurement)
+
+        assertEquals(1, calibrator.accelerometerMeasurements.size)
+        assertSame(measurement, calibrator.accelerometerMeasurements[0])
+
+        verify(exactly = 1) {
+            generatedAccelerometerMeasurementListener.onGeneratedAccelerometerMeasurement(
+                calibrator,
+                measurement,
+                1,
+                StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL
+            )
+        }
+    }
+
+    @Test
+    fun onGeneratedMeasurement_whenReadyToCalibrate_stopsAndBuildCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerCalibrator(
+            context,
+            solveCalibrationWhenEnoughMeasurements = false,
+            location = location
+        )
+
+        assertEquals(
+            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
+            calibrator.requiredMeasurements
+        )
+        assertFalse(calibrator.isReadyToSolveCalibration)
+
+        // add enough measurements
+        val measurement = StandardDeviationBodyKinematics()
+        for (i in 1..calibrator.requiredMeasurements) {
+            calibrator.accelerometerMeasurements.add(measurement)
+        }
+        assertTrue(calibrator.isReadyToSolveCalibration)
+
+        val gravityNormEstimator: GravityNormEstimator? =
+            calibrator.getPrivateProperty("gravityNormEstimator")
+        requireNotNull(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        every { gravityNormEstimatorSpy.running }.returns(true)
+        calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
+
+        val generator: AccelerometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        var accelerometerInternalCalibrator: AccelerometerNonLinearCalibrator? =
+            calibrator.getPrivateProperty("accelerometerInternalCalibrator")
+        assertNull(accelerometerInternalCalibrator)
+
+        val generatorGeneratedMeasurementListener: SingleSensorCalibrationMeasurementGenerator.OnGeneratedMeasurementListener<AccelerometerMeasurementGenerator, StandardDeviationBodyKinematics>? =
+            calibrator.getPrivateProperty("generatorGeneratedMeasurementListener")
+        requireNotNull(generatorGeneratedMeasurementListener)
+
+        generatorGeneratedMeasurementListener.onGeneratedMeasurement(generatorSpy, measurement)
+
+        verify(exactly = 1) { gravityNormEstimatorSpy.stop() }
+        verify(exactly = 1) { generatorSpy.stop() }
+
+        accelerometerInternalCalibrator =
+            calibrator.getPrivateProperty("accelerometerInternalCalibrator")
+        assertNotNull(accelerometerInternalCalibrator)
+    }
+
+    @Test
+    fun onGeneratedMeasurement_whenReadyToSolveCalibrationListenerAvailable_notifies() {
+        val location = getLocation()
+        val readyToSolveCalibrationListener =
+            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener<StaticIntervalAccelerometerCalibrator>>(
+                relaxUnitFun = true
+            )
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerCalibrator(
+            context,
+            readyToSolveCalibrationListener = readyToSolveCalibrationListener,
+            solveCalibrationWhenEnoughMeasurements = false,
+            location = location
+        )
+
+        assertEquals(
+            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
+            calibrator.requiredMeasurements
+        )
+        assertFalse(calibrator.isReadyToSolveCalibration)
+
+        // add enough measurements
+        val measurement = StandardDeviationBodyKinematics()
+        for (i in 1..calibrator.requiredMeasurements) {
+            calibrator.accelerometerMeasurements.add(measurement)
+        }
+        assertTrue(calibrator.isReadyToSolveCalibration)
+
+        val gravityNormEstimator: GravityNormEstimator? =
+            calibrator.getPrivateProperty("gravityNormEstimator")
+        requireNotNull(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        every { gravityNormEstimatorSpy.running }.returns(true)
+        calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
+
+        val generator: AccelerometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        var accelerometerInternalCalibrator: AccelerometerNonLinearCalibrator? =
+            calibrator.getPrivateProperty("accelerometerInternalCalibrator")
+        assertNull(accelerometerInternalCalibrator)
+
+        val generatorGeneratedMeasurementListener: SingleSensorCalibrationMeasurementGenerator.OnGeneratedMeasurementListener<AccelerometerMeasurementGenerator, StandardDeviationBodyKinematics>? =
+            calibrator.getPrivateProperty("generatorGeneratedMeasurementListener")
+        requireNotNull(generatorGeneratedMeasurementListener)
+
+        generatorGeneratedMeasurementListener.onGeneratedMeasurement(generatorSpy, measurement)
+
+        verify(exactly = 1) { readyToSolveCalibrationListener.onReadyToSolveCalibration(calibrator) }
+        verify(exactly = 1) { gravityNormEstimatorSpy.stop() }
+        verify(exactly = 1) { generatorSpy.stop() }
+
+        accelerometerInternalCalibrator =
+            calibrator.getPrivateProperty("accelerometerInternalCalibrator")
+        assertNotNull(accelerometerInternalCalibrator)
+    }
+
+    @Test
+    fun onGeneratedMeasurement_whenSolveCalibrationEnabled_solvesCalibration() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerCalibrator(
+            context,
+            solveCalibrationWhenEnoughMeasurements = true,
+            location = location
+        )
+
+        assertEquals(
+            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
+            calibrator.requiredMeasurements
+        )
+        assertFalse(calibrator.isReadyToSolveCalibration)
+
+        // add enough measurements
+        val requiredMeasurements = calibrator.requiredMeasurements
+        assertEquals(13, requiredMeasurements)
+        val minimumRequiredMeasurements = calibrator.minimumRequiredMeasurements
+        assertEquals(13, minimumRequiredMeasurements)
+        val reqMeasurements = requiredMeasurements.coerceAtLeast(minimumRequiredMeasurements)
+
+        val nedPosition = location.toNEDPosition()
+
+        val ba = generateBa()
+        val bg = generateBg()
+        val ma = generateMaGeneral()
+        val mg = generateMg()
+        val gg = generateGg()
+
+        val accelNoiseRootPSD = 0.0
+        val gyroNoiseRootPSD = 0.0
+        val accelQuantLevel = 0.0
+        val gyroQuantLevel = 0.0
+
+        val errors = IMUErrors(
+            ba,
+            bg,
+            ma,
+            mg,
+            gg,
+            accelNoiseRootPSD,
+            gyroNoiseRootPSD,
+            accelQuantLevel,
+            gyroQuantLevel
+        )
+
+        val randomizer = UniformRandomizer()
+        val random = Random()
+
+        for (i in 1..reqMeasurements) {
+            val roll = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
+            val pitch = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
+            val yaw = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
+            val nedC = CoordinateTransformation(
+                roll,
+                pitch,
+                yaw,
+                FrameType.BODY_FRAME,
+                FrameType.LOCAL_NAVIGATION_FRAME
+            )
+
+            val nedFrame = NEDFrame(nedPosition, nedC)
+            val ecefFrame = NEDtoECEFFrameConverter.convertNEDtoECEFAndReturnNew(nedFrame)
+
+            val trueKinematics = ECEFKinematicsEstimator.estimateKinematicsAndReturnNew(
+                TIME_INTERVAL_SECONDS, ecefFrame, ecefFrame
+            )
+
+            val measuredKinematics = BodyKinematicsGenerator
+                .generate(TIME_INTERVAL_SECONDS, trueKinematics, errors, random)
+
+            val measurement =
+                StandardDeviationBodyKinematics(measuredKinematics, ACCUMULATED_STD, 0.0)
+            calibrator.accelerometerMeasurements.add(measurement)
+        }
+        assertTrue(calibrator.isReadyToSolveCalibration)
+
+        val gravityNormEstimator: GravityNormEstimator? =
+            calibrator.getPrivateProperty("gravityNormEstimator")
+        requireNotNull(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        every { gravityNormEstimatorSpy.running }.returns(true)
+        calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
+
+        val generator: AccelerometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        var accelerometerInternalCalibrator: AccelerometerNonLinearCalibrator? =
+            calibrator.getPrivateProperty("accelerometerInternalCalibrator")
+        assertNull(accelerometerInternalCalibrator)
+
+        val generatorGeneratedMeasurementListener: SingleSensorCalibrationMeasurementGenerator.OnGeneratedMeasurementListener<AccelerometerMeasurementGenerator, StandardDeviationBodyKinematics>? =
+            calibrator.getPrivateProperty("generatorGeneratedMeasurementListener")
+        requireNotNull(generatorGeneratedMeasurementListener)
+
+        val measurement =
+            StandardDeviationBodyKinematics(calibrator.accelerometerMeasurements.last())
+        generatorGeneratedMeasurementListener.onGeneratedMeasurement(generatorSpy, measurement)
+
+        verify(exactly = 1) { gravityNormEstimatorSpy.stop() }
+        verify(exactly = 1) { generatorSpy.stop() }
+
+        accelerometerInternalCalibrator =
+            calibrator.getPrivateProperty("accelerometerInternalCalibrator")
+        assertNotNull(accelerometerInternalCalibrator)
+
+        assertNotNull(calibrator.estimatedAccelerometerMa)
+        assertNotNull(calibrator.estimatedAccelerometerSx)
+        assertNotNull(calibrator.estimatedAccelerometerSy)
+        assertNotNull(calibrator.estimatedAccelerometerSz)
+        assertNotNull(calibrator.estimatedAccelerometerMxy)
+        assertNotNull(calibrator.estimatedAccelerometerMxz)
+        assertNotNull(calibrator.estimatedAccelerometerMyx)
+        assertNotNull(calibrator.estimatedAccelerometerMyz)
+        assertNotNull(calibrator.estimatedAccelerometerMzx)
+        assertNotNull(calibrator.estimatedAccelerometerMzy)
+        assertNotNull(calibrator.estimatedAccelerometerCovariance)
+        assertNotNull(calibrator.estimatedAccelerometerChiSq)
+        assertNotNull(calibrator.estimatedAccelerometerMse)
+        assertNotNull(calibrator.estimatedAccelerometerBiasX)
+        assertNotNull(calibrator.estimatedAccelerometerBiasY)
+        assertNotNull(calibrator.estimatedAccelerometerBiasZ)
+        assertNotNull(calibrator.estimatedAccelerometerBiasXAsMeasurement)
+        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        assertTrue(calibrator.getEstimatedAccelerometerBiasXAsMeasurement(acceleration))
+        assertNotNull(calibrator.estimatedAccelerometerBiasYAsMeasurement)
+        assertTrue(calibrator.getEstimatedAccelerometerBiasYAsMeasurement(acceleration))
+        assertNotNull(calibrator.estimatedAccelerometerBiasZAsMeasurement)
+        assertTrue(calibrator.getEstimatedAccelerometerBiasZAsMeasurement(acceleration))
+        assertNotNull(calibrator.estimatedAccelerometerBiasAsTriad)
+        val triad = AccelerationTriad()
+        assertTrue(calibrator.getEstimatedAccelerometerBiasAsTriad(triad))
+        assertNotNull(calibrator.estimatedAccelerometerBiasStandardDeviationNorm)
+    }
+
+    @Test
+    fun onGeneratedMeasurement_whenSolveCalibrationEnabledAndListenersAvailable_solvesCalibrationAndNotifies() {
+        val readyToSolveCalibrationListener =
+            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener<StaticIntervalAccelerometerCalibrator>>(
+                relaxUnitFun = true
+            )
+        val stoppedListener =
+            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalAccelerometerCalibrator>>(
+                relaxUnitFun = true
+            )
+        val calibrationSolvingStartedListener =
+            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalAccelerometerCalibrator>>(
+                relaxUnitFun = true
+            )
+        val calibrationCompletedListener =
+            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<StaticIntervalAccelerometerCalibrator>>(
+                relaxUnitFun = true
+            )
+        val errorListener =
+            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalAccelerometerCalibrator>>(
+                relaxUnitFun = true
+            )
+
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerCalibrator(
+            context,
+            solveCalibrationWhenEnoughMeasurements = true,
+            location = location,
+            readyToSolveCalibrationListener = readyToSolveCalibrationListener,
+            stoppedListener = stoppedListener,
+            calibrationSolvingStartedListener = calibrationSolvingStartedListener,
+            calibrationCompletedListener = calibrationCompletedListener,
+            errorListener = errorListener
+        )
+
+        assertEquals(
+            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
+            calibrator.requiredMeasurements
+        )
+        assertFalse(calibrator.isReadyToSolveCalibration)
+
+        // add enough measurements
+        val requiredMeasurements = calibrator.requiredMeasurements
+        assertEquals(13, requiredMeasurements)
+        val minimumRequiredMeasurements = calibrator.minimumRequiredMeasurements
+        assertEquals(13, minimumRequiredMeasurements)
+        val reqMeasurements = requiredMeasurements.coerceAtLeast(minimumRequiredMeasurements)
+
+        val nedPosition = location.toNEDPosition()
+
+        val ba = generateBa()
+        val bg = generateBg()
+        val ma = generateMaGeneral()
+        val mg = generateMg()
+        val gg = generateGg()
+
+        val accelNoiseRootPSD = 0.0
+        val gyroNoiseRootPSD = 0.0
+        val accelQuantLevel = 0.0
+        val gyroQuantLevel = 0.0
+
+        val errors = IMUErrors(
+            ba,
+            bg,
+            ma,
+            mg,
+            gg,
+            accelNoiseRootPSD,
+            gyroNoiseRootPSD,
+            accelQuantLevel,
+            gyroQuantLevel
+        )
+
+        val randomizer = UniformRandomizer()
+        val random = Random()
+
+        for (i in 1..reqMeasurements) {
+            val roll = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
+            val pitch = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
+            val yaw = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
+            val nedC = CoordinateTransformation(
+                roll,
+                pitch,
+                yaw,
+                FrameType.BODY_FRAME,
+                FrameType.LOCAL_NAVIGATION_FRAME
+            )
+
+            val nedFrame = NEDFrame(nedPosition, nedC)
+            val ecefFrame = NEDtoECEFFrameConverter.convertNEDtoECEFAndReturnNew(nedFrame)
+
+            val trueKinematics = ECEFKinematicsEstimator.estimateKinematicsAndReturnNew(
+                TIME_INTERVAL_SECONDS, ecefFrame, ecefFrame
+            )
+
+            val measuredKinematics = BodyKinematicsGenerator
+                .generate(TIME_INTERVAL_SECONDS, trueKinematics, errors, random)
+
+            val measurement =
+                StandardDeviationBodyKinematics(measuredKinematics, ACCUMULATED_STD, 0.0)
+            calibrator.accelerometerMeasurements.add(measurement)
+        }
+        assertTrue(calibrator.isReadyToSolveCalibration)
+
+        val gravityNormEstimator: GravityNormEstimator? =
+            calibrator.getPrivateProperty("gravityNormEstimator")
+        requireNotNull(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        every { gravityNormEstimatorSpy.running }.returns(true)
+        calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
+
+        val generator: AccelerometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        var accelerometerInternalCalibrator: AccelerometerNonLinearCalibrator? =
+            calibrator.getPrivateProperty("accelerometerInternalCalibrator")
+        assertNull(accelerometerInternalCalibrator)
+
+        val generatorGeneratedMeasurementListener: SingleSensorCalibrationMeasurementGenerator.OnGeneratedMeasurementListener<AccelerometerMeasurementGenerator, StandardDeviationBodyKinematics>? =
+            calibrator.getPrivateProperty("generatorGeneratedMeasurementListener")
+        requireNotNull(generatorGeneratedMeasurementListener)
+
+        val measurement =
+            StandardDeviationBodyKinematics(calibrator.accelerometerMeasurements.last())
+        generatorGeneratedMeasurementListener.onGeneratedMeasurement(generatorSpy, measurement)
+
+        verify(exactly = 1) { gravityNormEstimatorSpy.stop() }
+        verify(exactly = 1) { generatorSpy.stop() }
+
+        accelerometerInternalCalibrator =
+            calibrator.getPrivateProperty("accelerometerInternalCalibrator")
+        assertNotNull(accelerometerInternalCalibrator)
+
+        assertNotNull(calibrator.estimatedAccelerometerMa)
+        assertNotNull(calibrator.estimatedAccelerometerSx)
+        assertNotNull(calibrator.estimatedAccelerometerSy)
+        assertNotNull(calibrator.estimatedAccelerometerSz)
+        assertNotNull(calibrator.estimatedAccelerometerMxy)
+        assertNotNull(calibrator.estimatedAccelerometerMxz)
+        assertNotNull(calibrator.estimatedAccelerometerMyx)
+        assertNotNull(calibrator.estimatedAccelerometerMyz)
+        assertNotNull(calibrator.estimatedAccelerometerMzx)
+        assertNotNull(calibrator.estimatedAccelerometerMzy)
+        assertNotNull(calibrator.estimatedAccelerometerCovariance)
+        assertNotNull(calibrator.estimatedAccelerometerChiSq)
+        assertNotNull(calibrator.estimatedAccelerometerMse)
+        assertNotNull(calibrator.estimatedAccelerometerBiasX)
+        assertNotNull(calibrator.estimatedAccelerometerBiasY)
+        assertNotNull(calibrator.estimatedAccelerometerBiasZ)
+        assertNotNull(calibrator.estimatedAccelerometerBiasXAsMeasurement)
+        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        assertTrue(calibrator.getEstimatedAccelerometerBiasXAsMeasurement(acceleration))
+        assertNotNull(calibrator.estimatedAccelerometerBiasYAsMeasurement)
+        assertTrue(calibrator.getEstimatedAccelerometerBiasYAsMeasurement(acceleration))
+        assertNotNull(calibrator.estimatedAccelerometerBiasZAsMeasurement)
+        assertTrue(calibrator.getEstimatedAccelerometerBiasZAsMeasurement(acceleration))
+        assertNotNull(calibrator.estimatedAccelerometerBiasAsTriad)
+        val triad = AccelerationTriad()
+        assertTrue(calibrator.getEstimatedAccelerometerBiasAsTriad(triad))
+        assertNotNull(calibrator.estimatedAccelerometerBiasStandardDeviationNorm)
+
+        verify(exactly = 1) { readyToSolveCalibrationListener.onReadyToSolveCalibration(calibrator) }
+        verify(exactly = 1) { stoppedListener.onStopped(calibrator) }
+        verify(exactly = 1) {
+            calibrationSolvingStartedListener.onCalibrationSolvingStarted(
+                calibrator
+            )
+        }
+        verify(exactly = 1) { calibrationCompletedListener.onCalibrationCompleted(calibrator) }
+        verify { errorListener wasNot Called }
+    }
+
+    @Test
+    fun onAccelerometerMeasurement_whenFirstMeasurement_updatesInitialBiases() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerCalibrator(context)
+
+        assertNull(calibrator.accelerometerInitialBiasX)
+        assertNull(calibrator.accelerometerInitialBiasY)
+        assertNull(calibrator.accelerometerInitialBiasZ)
+
+        val generator: AccelerometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(0)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        val generatorDetectorMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
+            calibrator.getPrivateProperty("generatorDetectorMeasurementListener")
+        requireNotNull(generatorDetectorMeasurementListener)
+
+        val randomizer = UniformRandomizer()
+        val ax = randomizer.nextFloat()
+        val ay = randomizer.nextFloat()
+        val az = randomizer.nextFloat()
+        val bx = randomizer.nextFloat()
+        val by = randomizer.nextFloat()
+        val bz = randomizer.nextFloat()
+        val timestamp = SystemClock.elapsedRealtimeNanos()
+        val accuracy = SensorAccuracy.HIGH
+        generatorDetectorMeasurementListener.onMeasurement(
+            ax,
+            ay,
+            az,
+            bx,
+            by,
+            bz,
+            timestamp,
+            accuracy
+        )
+
+        val initialBiasX = calibrator.accelerometerInitialBiasX
+        requireNotNull(initialBiasX)
+        val initialBiasY = calibrator.accelerometerInitialBiasY
+        requireNotNull(initialBiasY)
+        val initialBiasZ = calibrator.accelerometerInitialBiasZ
+        requireNotNull(initialBiasZ)
+        assertEquals(bx.toDouble(), initialBiasX, 0.0)
+        assertEquals(by.toDouble(), initialBiasY, 0.0)
+        assertEquals(bz.toDouble(), initialBiasZ, 0.0)
+    }
+
+    @Test
+    fun onAccelerometerMeasurement_whenFirstMeasurementAndNoBiasX_updatesInitialBiases() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerCalibrator(context)
+
+        assertNull(calibrator.accelerometerInitialBiasX)
+        assertNull(calibrator.accelerometerInitialBiasY)
+        assertNull(calibrator.accelerometerInitialBiasZ)
+
+        val generator: AccelerometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(0)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        val generatorDetectorMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
+            calibrator.getPrivateProperty("generatorDetectorMeasurementListener")
+        requireNotNull(generatorDetectorMeasurementListener)
+
+        val randomizer = UniformRandomizer()
+        val ax = randomizer.nextFloat()
+        val ay = randomizer.nextFloat()
+        val az = randomizer.nextFloat()
+        val by = randomizer.nextFloat()
+        val bz = randomizer.nextFloat()
+        val timestamp = SystemClock.elapsedRealtimeNanos()
+        val accuracy = SensorAccuracy.HIGH
+        generatorDetectorMeasurementListener.onMeasurement(
+            ax,
+            ay,
+            az,
+            null,
+            by,
+            bz,
+            timestamp,
+            accuracy
+        )
+
+        val initialBiasX = calibrator.accelerometerInitialBiasX
+        requireNotNull(initialBiasX)
+        val initialBiasY = calibrator.accelerometerInitialBiasY
+        requireNotNull(initialBiasY)
+        val initialBiasZ = calibrator.accelerometerInitialBiasZ
+        requireNotNull(initialBiasZ)
+        assertEquals(0.0, initialBiasX, 0.0)
+        assertEquals(0.0, initialBiasY, 0.0)
+        assertEquals(0.0, initialBiasZ, 0.0)
+    }
+
+    @Test
+    fun onAccelerometerMeasurement_whenFirstMeasurementAndNoBiasY_updatesInitialBiases() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerCalibrator(context)
+
+        assertNull(calibrator.accelerometerInitialBiasX)
+        assertNull(calibrator.accelerometerInitialBiasY)
+        assertNull(calibrator.accelerometerInitialBiasZ)
+
+        val generator: AccelerometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(0)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        val generatorDetectorMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
+            calibrator.getPrivateProperty("generatorDetectorMeasurementListener")
+        requireNotNull(generatorDetectorMeasurementListener)
+
+        val randomizer = UniformRandomizer()
+        val ax = randomizer.nextFloat()
+        val ay = randomizer.nextFloat()
+        val az = randomizer.nextFloat()
+        val bx = randomizer.nextFloat()
+        val bz = randomizer.nextFloat()
+        val timestamp = SystemClock.elapsedRealtimeNanos()
+        val accuracy = SensorAccuracy.HIGH
+        generatorDetectorMeasurementListener.onMeasurement(
+            ax,
+            ay,
+            az,
+            bx,
+            null,
+            bz,
+            timestamp,
+            accuracy
+        )
+
+        val initialBiasX = calibrator.accelerometerInitialBiasX
+        requireNotNull(initialBiasX)
+        val initialBiasY = calibrator.accelerometerInitialBiasY
+        requireNotNull(initialBiasY)
+        val initialBiasZ = calibrator.accelerometerInitialBiasZ
+        requireNotNull(initialBiasZ)
+        assertEquals(0.0, initialBiasX, 0.0)
+        assertEquals(0.0, initialBiasY, 0.0)
+        assertEquals(0.0, initialBiasZ, 0.0)
+    }
+
+    @Test
+    fun onAccelerometerMeasurement_whenFirstMeasurementAndNoBiasZ_updatesInitialBiases() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerCalibrator(context)
+
+        assertNull(calibrator.accelerometerInitialBiasX)
+        assertNull(calibrator.accelerometerInitialBiasY)
+        assertNull(calibrator.accelerometerInitialBiasZ)
+
+        val generator: AccelerometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(0)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        val generatorDetectorMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
+            calibrator.getPrivateProperty("generatorDetectorMeasurementListener")
+        requireNotNull(generatorDetectorMeasurementListener)
+
+        val randomizer = UniformRandomizer()
+        val ax = randomizer.nextFloat()
+        val ay = randomizer.nextFloat()
+        val az = randomizer.nextFloat()
+        val bx = randomizer.nextFloat()
+        val by = randomizer.nextFloat()
+        val timestamp = SystemClock.elapsedRealtimeNanos()
+        val accuracy = SensorAccuracy.HIGH
+        generatorDetectorMeasurementListener.onMeasurement(
+            ax,
+            ay,
+            az,
+            bx,
+            by,
+            null,
+            timestamp,
+            accuracy
+        )
+
+        val initialBiasX = calibrator.accelerometerInitialBiasX
+        requireNotNull(initialBiasX)
+        val initialBiasY = calibrator.accelerometerInitialBiasY
+        requireNotNull(initialBiasY)
+        val initialBiasZ = calibrator.accelerometerInitialBiasZ
+        requireNotNull(initialBiasZ)
+        assertEquals(0.0, initialBiasX, 0.0)
+        assertEquals(0.0, initialBiasY, 0.0)
+        assertEquals(0.0, initialBiasZ, 0.0)
+    }
+
+    @Test
+    fun onAccelerometerMeasurement_whenFirstMeasurementAndListener_updatesInitialBiasesAndNotifies() {
+        val initialAccelerometerBiasAvailableListener =
+            mockk<StaticIntervalAccelerometerCalibrator.OnInitialAccelerometerBiasAvailableListener>(
+                relaxUnitFun = true
+            )
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerCalibrator(
+            context,
+            initialAccelerometerBiasAvailableListener = initialAccelerometerBiasAvailableListener
+        )
+
+        assertNull(calibrator.accelerometerInitialBiasX)
+        assertNull(calibrator.accelerometerInitialBiasY)
+        assertNull(calibrator.accelerometerInitialBiasZ)
+
+        val generator: AccelerometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(0)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        val generatorDetectorMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
+            calibrator.getPrivateProperty("generatorDetectorMeasurementListener")
+        requireNotNull(generatorDetectorMeasurementListener)
+
+        val randomizer = UniformRandomizer()
+        val ax = randomizer.nextFloat()
+        val ay = randomizer.nextFloat()
+        val az = randomizer.nextFloat()
+        val bx = randomizer.nextFloat()
+        val by = randomizer.nextFloat()
+        val bz = randomizer.nextFloat()
+        val timestamp = SystemClock.elapsedRealtimeNanos()
+        val accuracy = SensorAccuracy.HIGH
+        generatorDetectorMeasurementListener.onMeasurement(
+            ax,
+            ay,
+            az,
+            bx,
+            by,
+            bz,
+            timestamp,
+            accuracy
+        )
+
+        val initialBiasX = calibrator.accelerometerInitialBiasX
+        requireNotNull(initialBiasX)
+        val initialBiasY = calibrator.accelerometerInitialBiasY
+        requireNotNull(initialBiasY)
+        val initialBiasZ = calibrator.accelerometerInitialBiasZ
+        requireNotNull(initialBiasZ)
+        assertEquals(bx.toDouble(), initialBiasX, 0.0)
+        assertEquals(by.toDouble(), initialBiasY, 0.0)
+        assertEquals(bz.toDouble(), initialBiasZ, 0.0)
+
+        verify(exactly = 1) {
+            initialAccelerometerBiasAvailableListener.onInitialBiasAvailable(
+                calibrator,
+                bx.toDouble(),
+                by.toDouble(),
+                bz.toDouble()
+            )
+        }
+    }
+
+    @Test
+    fun onAccelerometerMeasurement_whenNotFirstMeasurement_makesNoAction() {
+        val initialAccelerometerBiasAvailableListener =
+            mockk<StaticIntervalAccelerometerCalibrator.OnInitialAccelerometerBiasAvailableListener>(
+                relaxUnitFun = true
+            )
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerCalibrator(
+            context,
+            initialAccelerometerBiasAvailableListener = initialAccelerometerBiasAvailableListener
+        )
+
+        assertNull(calibrator.accelerometerInitialBiasX)
+        assertNull(calibrator.accelerometerInitialBiasY)
+        assertNull(calibrator.accelerometerInitialBiasZ)
+
+        val generator: AccelerometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(2)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        val generatorDetectorMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
+            calibrator.getPrivateProperty("generatorDetectorMeasurementListener")
+        requireNotNull(generatorDetectorMeasurementListener)
+
+        val randomizer = UniformRandomizer()
+        val ax = randomizer.nextFloat()
+        val ay = randomizer.nextFloat()
+        val az = randomizer.nextFloat()
+        val bx = randomizer.nextFloat()
+        val by = randomizer.nextFloat()
+        val bz = randomizer.nextFloat()
+        val timestamp = SystemClock.elapsedRealtimeNanos()
+        val accuracy = SensorAccuracy.HIGH
+        generatorDetectorMeasurementListener.onMeasurement(
+            ax,
+            ay,
+            az,
+            bx,
+            by,
+            bz,
+            timestamp,
+            accuracy
+        )
+
+        assertNull(calibrator.accelerometerInitialBiasX)
+        assertNull(calibrator.accelerometerInitialBiasY)
+        assertNull(calibrator.accelerometerInitialBiasZ)
+
+        verify { initialAccelerometerBiasAvailableListener wasNot Called }
+    }
+
+    @Test
+    fun onGravityNormCompletedListener_setsGravityNorm() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerCalibrator(context)
+
+        assertNull(calibrator.gravityNorm)
+
+        val gravityNormCompletedListener: AccumulatedMeasurementEstimator.OnEstimationCompletedListener<GravityNormEstimator>? =
+            calibrator.getPrivateProperty("gravityNormCompletedListener")
+        requireNotNull(gravityNormCompletedListener)
+
+        val randomizer = UniformRandomizer()
+        val gravityNorm = randomizer.nextDouble()
+        val gravityNormEstimator = mockk<GravityNormEstimator>()
+        every { gravityNormEstimator.averageNorm }.returns(gravityNorm)
+        gravityNormCompletedListener.onEstimationCompleted(gravityNormEstimator)
+
+        assertEquals(gravityNorm, calibrator.gravityNorm)
+    }
+
+    @Test
+    fun onGravityNormUnreliable_whenNoListenerAvailable_setsResultAsUnreliable() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerCalibrator(context)
+
+        assertFalse(calibrator.accelerometerResultUnreliable)
+
+        val gravityNormUnreliableListener: AccumulatedMeasurementEstimator.OnUnreliableListener<GravityNormEstimator>? =
+            calibrator.getPrivateProperty("gravityNormUnreliableListener")
+        requireNotNull(gravityNormUnreliableListener)
+
+        val gravityNormEstimator = mockk<GravityNormEstimator>()
+        gravityNormUnreliableListener.onUnreliable(gravityNormEstimator)
+
+        assertTrue(calibrator.accelerometerResultUnreliable)
+    }
+
+    @Test
+    fun onGravityNormUnreliable_whenListenerAvailable_setsResultAsUnreliableAndNotifies() {
+        val unreliableGravityNormEstimatorListener =
+            mockk<StaticIntervalAccelerometerCalibrator.OnUnreliableGravityEstimationListener>(
+                relaxUnitFun = true
+            )
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerCalibrator(
+            context,
+            unreliableGravityNormEstimationListener = unreliableGravityNormEstimatorListener
+        )
+
+        assertFalse(calibrator.accelerometerResultUnreliable)
+
+        val gravityNormUnreliableListener: AccumulatedMeasurementEstimator.OnUnreliableListener<GravityNormEstimator>? =
+            calibrator.getPrivateProperty("gravityNormUnreliableListener")
+        requireNotNull(gravityNormUnreliableListener)
+
+        val gravityNormEstimator = mockk<GravityNormEstimator>()
+        gravityNormUnreliableListener.onUnreliable(gravityNormEstimator)
+
+        assertTrue(calibrator.accelerometerResultUnreliable)
+
+        verify(exactly = 1) {
+            unreliableGravityNormEstimatorListener.onUnreliableGravityEstimation(
+                calibrator
+            )
+        }
     }
 
     private companion object {

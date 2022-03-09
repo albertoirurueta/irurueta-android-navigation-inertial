@@ -320,7 +320,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
     private val generatorDetectorMeasurementListener =
         AccelerometerSensorCollector.OnMeasurementListener { _, _, _, bx, by, bz, _, _ ->
             if (isFirstMeasurement) {
-                updateInitialBiases(bx, by, bz)
+                updateAccelerometerInitialBiases(bx, by, bz)
             }
         }
 
@@ -1739,7 +1739,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
      * @param bz z-coordinate of initial bias to be set expressed in meters per squared second
      * (m/s^2).
      */
-    private fun updateInitialBiases(bx: Float?, by: Float?, bz: Float?) {
+    private fun updateAccelerometerInitialBiases(bx: Float?, by: Float?, bz: Float?) {
         val initialBiasX: Double
         val initialBiasY: Double
         val initialBiasZ: Double
