@@ -318,7 +318,7 @@ abstract class CalibrationMeasurementGenerator<I>(
      * @param result instance where result will be stored.
      * @return true if result is available, false otherwise.
      */
-    fun getTimeIntervalStandardDeviationAsTime(result: Time): Boolean {
+    fun getAccelerometerTimeIntervalStandardDeviationAsTime(result: Time): Boolean {
         return if (initialized) {
             accelerometerTimeIntervalEstimator.getTimeIntervalStandardDeviationAsTime(result)
             true

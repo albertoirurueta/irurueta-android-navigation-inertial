@@ -49,6 +49,8 @@ import com.irurueta.numerical.robust.RobustEstimatorMethod
 import com.irurueta.statistics.UniformRandomizer
 import com.irurueta.units.Acceleration
 import com.irurueta.units.AccelerationUnit
+import com.irurueta.units.Time
+import com.irurueta.units.TimeUnit
 import io.mockk.*
 import org.junit.Assert.*
 import org.junit.Test
@@ -6491,6 +6493,415 @@ class StaticIntervalAccelerometerCalibratorTest {
                 calibrator
             )
         }
+    }
+
+    @Test
+    fun accelerometerBaseNoiseLevel_getsGeneratorBaseNoiseLevel() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerCalibrator(context)
+
+        val generator: AccelerometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        val randomizer = UniformRandomizer()
+        val baseNoiseLevel = randomizer.nextDouble()
+        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        assertEquals(baseNoiseLevel, calibrator.accelerometerBaseNoiseLevel)
+
+        verify(exactly = 1) { generatorSpy.accelerometerBaseNoiseLevel }
+    }
+
+    @Test
+    fun accelerometerBaseNoiseLevelAsMeasurement_getsGeneratorBaseNoiseLevel() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerCalibrator(context)
+
+        val generator: AccelerometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        val randomizer = UniformRandomizer()
+        val baseNoiseLevel = randomizer.nextDouble()
+        val baseNoiseLevel1 =
+            Acceleration(baseNoiseLevel, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        every { generatorSpy.accelerometerBaseNoiseLevelAsMeasurement }.returns(baseNoiseLevel1)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        val baseNoiseLevel2 = calibrator.accelerometerBaseNoiseLevelAsMeasurement
+        assertSame(baseNoiseLevel1, baseNoiseLevel2)
+        verify(exactly = 1) { generatorSpy.accelerometerBaseNoiseLevelAsMeasurement }
+    }
+
+    @Test
+    fun getAccelerometerBaseNoiseLevelAsMeasurement_getsGeneratorBaseNoiseLevel() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerCalibrator(context)
+
+        // check default value
+        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        assertFalse(calibrator.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration))
+
+        val generator: AccelerometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        val randomizer = UniformRandomizer()
+        val baseNoiseLevel = randomizer.nextDouble()
+        every { generatorSpy.getAccelerometerBaseNoiseLevelAsMeasurement(any()) }.answers { answer ->
+            val result = answer.invocation.args[0] as Acceleration
+            result.value = baseNoiseLevel
+            result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
+            return@answers true
+        }
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        assertTrue(calibrator.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration))
+
+        // check
+        assertEquals(baseNoiseLevel, acceleration.value.toDouble(), 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, acceleration.unit)
+        verify(exactly = 1) { generatorSpy.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration) }
+    }
+
+    @Test
+    fun accelerometerBaseNoiseLevelPsd_getsGeneratorBaseNoiseLevelPsd() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerCalibrator(context)
+
+        val generator: AccelerometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        val randomizer = UniformRandomizer()
+        val baseNoiseLevelPsd = randomizer.nextDouble()
+        every { generatorSpy.accelerometerBaseNoiseLevelPsd }.returns(baseNoiseLevelPsd)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        assertEquals(baseNoiseLevelPsd, calibrator.accelerometerBaseNoiseLevelPsd)
+        verify(exactly = 1) { generatorSpy.accelerometerBaseNoiseLevelPsd }
+    }
+
+    @Test
+    fun accelerometerBaseNoiseLevelRootPsd_getsGeneratorBaseNoiseLevelRootPsd() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerCalibrator(context)
+
+        val generator: AccelerometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        val randomizer = UniformRandomizer()
+        val baseNoiseLevelRootPsd = randomizer.nextDouble()
+        every { generatorSpy.accelerometerBaseNoiseLevelRootPsd }.returns(baseNoiseLevelRootPsd)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        assertEquals(baseNoiseLevelRootPsd, calibrator.accelerometerBaseNoiseLevelRootPsd)
+        verify(exactly = 1) { generatorSpy.accelerometerBaseNoiseLevelRootPsd }
+    }
+
+    @Test
+    fun threshold_getsGeneratorThreshold() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerCalibrator(context)
+
+        // check default value
+        assertNull(calibrator.threshold)
+
+        val generator: AccelerometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        val randomizer = UniformRandomizer()
+        val threshold = randomizer.nextDouble()
+        every { generatorSpy.threshold }.returns(threshold)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        assertEquals(threshold, calibrator.threshold)
+        verify(exactly = 1) { generatorSpy.threshold }
+    }
+
+    @Test
+    fun thresholdAsMeasurement_getsGeneratorThresholdAsMeasurement() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerCalibrator(context)
+
+        // check default value
+        assertNull(calibrator.thresholdAsMeasurement)
+
+        val generator: AccelerometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        val randomizer = UniformRandomizer()
+        val threshold = randomizer.nextDouble()
+        val acceleration = Acceleration(threshold, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        every { generatorSpy.thresholdAsMeasurement }.returns(acceleration)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        assertSame(acceleration, calibrator.thresholdAsMeasurement)
+        verify(exactly = 1) { generatorSpy.thresholdAsMeasurement }
+    }
+
+    @Test
+    fun getThresholdAsMeasurement_getsGeneratorThresholdAsMeasurement() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerCalibrator(context)
+
+        // check default value
+        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
+
+        val generator: AccelerometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        val randomizer = UniformRandomizer()
+        val threshold = randomizer.nextDouble()
+        every { generatorSpy.getThresholdAsMeasurement(any()) }.answers { answer ->
+            val result = answer.invocation.args[0] as Acceleration
+            result.value = threshold
+            result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
+            return@answers true
+        }
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        assertTrue(calibrator.getThresholdAsMeasurement(acceleration))
+        assertEquals(threshold, acceleration.value.toDouble(), 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, acceleration.unit)
+        verify(exactly = 1) { generatorSpy.getThresholdAsMeasurement(acceleration) }
+    }
+
+    @Test
+    fun processedStaticSamples_getsGeneratorProcessedStaticSamples() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerCalibrator(context)
+
+        val generator: AccelerometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        val randomizer = UniformRandomizer()
+        val processedStaticSamples = randomizer.nextInt()
+        every { generatorSpy.processedStaticSamples }.returns(processedStaticSamples)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        assertEquals(processedStaticSamples, calibrator.processedStaticSamples)
+        verify(exactly = 1) { generatorSpy.processedStaticSamples }
+    }
+
+    @Test
+    fun processedDynamicSamples_getsGeneratorProcessedDynamicSamples() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerCalibrator(context)
+
+        val generator: AccelerometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        val randomizer = UniformRandomizer()
+        val processedDynamicSamples = randomizer.nextInt()
+        every { generatorSpy.processedDynamicSamples }.returns(processedDynamicSamples)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        assertEquals(processedDynamicSamples, calibrator.processedDynamicSamples)
+        verify(exactly = 1) { generatorSpy.processedDynamicSamples }
+    }
+
+    @Test
+    fun isStaticIntervalSkipped_getsGeneratorStaticIntervalSkipped() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerCalibrator(context)
+
+        val generator: AccelerometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        every { generatorSpy.isStaticIntervalSkipped }.returns(true)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        assertTrue(calibrator.isStaticIntervalSkipped)
+        verify(exactly = 1) { generatorSpy.isStaticIntervalSkipped }
+    }
+
+    @Test
+    fun isDynamicIntervalSkipped_getsGeneratorStaticIntervalSkipped() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerCalibrator(context)
+
+        val generator: AccelerometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        every { generatorSpy.isDynamicIntervalSkipped }.returns(true)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        assertTrue(calibrator.isDynamicIntervalSkipped)
+        verify(exactly = 1) { generatorSpy.isDynamicIntervalSkipped }
+    }
+
+    @Test
+    fun accelerometerAverageTimeInterval_getsGeneratorAccelerometerAverageTimeInterval() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerCalibrator(context)
+
+        val generator: AccelerometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        val randomizer = UniformRandomizer()
+        val averageTimeInterval = randomizer.nextDouble()
+        every { generatorSpy.accelerometerAverageTimeInterval }.returns(averageTimeInterval)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        assertEquals(averageTimeInterval, calibrator.accelerometerAverageTimeInterval)
+        verify(exactly = 1) { generatorSpy.accelerometerAverageTimeInterval }
+    }
+
+    @Test
+    fun accelerometerAverageTimeIntervalAsTime_getsGeneratorAverageTimeInterval() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerCalibrator(context)
+
+        val generator: AccelerometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        val randomizer = UniformRandomizer()
+        val averageTimeInterval = randomizer.nextDouble()
+        val time = Time(averageTimeInterval, TimeUnit.SECOND)
+        every { generatorSpy.accelerometerAverageTimeIntervalAsTime }.returns(time)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        assertSame(time, calibrator.accelerometerAverageTimeIntervalAsTime)
+        verify(exactly = 1) { generatorSpy.accelerometerAverageTimeIntervalAsTime }
+    }
+
+    @Test
+    fun getAccelerometerAverageTimeIntervalAsTime_getsGeneratorAverageTimeInterval() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerCalibrator(context)
+
+        // check default value
+        val time = Time(0.0, TimeUnit.SECOND)
+        assertFalse(calibrator.getAccelerometerAverageTimeIntervalAsTime(time))
+
+        val generator: AccelerometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        val randomizer = UniformRandomizer()
+        val averageTimeInterval = randomizer.nextDouble()
+        every { generatorSpy.getAccelerometerAverageTimeIntervalAsTime(any()) }.answers { answer ->
+            val result = answer.invocation.args[0] as Time
+            result.value = averageTimeInterval
+            result.unit = TimeUnit.SECOND
+            return@answers true
+        }
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        assertTrue(calibrator.getAccelerometerAverageTimeIntervalAsTime(time))
+        assertEquals(averageTimeInterval, time.value.toDouble(), 0.0)
+        assertEquals(TimeUnit.SECOND, time.unit)
+        verify(exactly = 1) { generatorSpy.getAccelerometerAverageTimeIntervalAsTime(time) }
+    }
+
+    @Test
+    fun accelerometerTimeIntervalVariance_getsGeneratorAccelerometerTimeIntervalVariance() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerCalibrator(context)
+
+        // check default value
+        assertNull(calibrator.accelerometerTimeIntervalVariance)
+
+        val generator: AccelerometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        val randomizer = UniformRandomizer()
+        val timeIntervalVariance = randomizer.nextDouble()
+        every { generatorSpy.accelerometerTimeIntervalVariance }.returns(timeIntervalVariance)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        assertEquals(timeIntervalVariance, calibrator.accelerometerTimeIntervalVariance)
+        verify(exactly = 1) { generatorSpy.accelerometerTimeIntervalVariance }
+    }
+
+    @Test
+    fun accelerometerTimeIntervalStandardDeviation_getsGeneratorAccelerometerTimeIntervalStandardDeviation() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerCalibrator(context)
+
+        // check default value
+        assertNull(calibrator.accelerometerTimeIntervalStandardDeviation)
+
+        val generator: AccelerometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        val randomizer = UniformRandomizer()
+        val timeIntervalStandardDeviation = randomizer.nextDouble()
+        every { generatorSpy.accelerometerTimeIntervalStandardDeviation }.returns(
+            timeIntervalStandardDeviation
+        )
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        assertEquals(
+            timeIntervalStandardDeviation,
+            calibrator.accelerometerTimeIntervalStandardDeviation
+        )
+        verify(exactly = 1) { generatorSpy.accelerometerTimeIntervalStandardDeviation }
+    }
+
+    @Test
+    fun accelerometerTimeIntervalStandardDeviationAsTime_getsGeneratorAccelerometerTimeIntervalStandardDeviationAsTime() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerCalibrator(context)
+
+        // check default value
+        val generator: AccelerometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        val randomizer = UniformRandomizer()
+        val value = randomizer.nextDouble()
+        val time = Time(value, TimeUnit.SECOND)
+        every { generatorSpy.accelerometerTimeIntervalStandardDeviationAsTime }.returns(time)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        assertSame(time, calibrator.accelerometerTimeIntervalStandardDeviationAsTime)
+        verify(exactly = 1) { generatorSpy.accelerometerTimeIntervalStandardDeviationAsTime }
+    }
+
+    @Test
+    fun getAccelerometerTimeIntervalStandardDeviationAsTime_getsGeneratorAccelerometerTimeIntervalStandardDeviationAsTime() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerCalibrator(context)
+
+        // check default value
+        val time = Time(0.0, TimeUnit.SECOND)
+        assertFalse(calibrator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
+
+        val generator: AccelerometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        val randomizer = UniformRandomizer()
+        val value = randomizer.nextDouble()
+        every { generatorSpy.getAccelerometerTimeIntervalStandardDeviationAsTime(any()) }.answers { answer ->
+            val result = answer.invocation.args[0] as Time
+            result.value = value
+            result.unit = TimeUnit.SECOND
+            return@answers true
+        }
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        assertTrue(calibrator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
+        assertEquals(value, time.value.toDouble(), 0.0)
+        assertEquals(TimeUnit.SECOND, time.unit)
+        verify(exactly = 1) { generatorSpy.getAccelerometerTimeIntervalStandardDeviationAsTime(time) }
     }
 
     private companion object {

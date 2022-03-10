@@ -2379,7 +2379,6 @@ class StaticIntervalAccelerometerCalibrator private constructor(
      * value after solving calibration, otherwise, initial bias is considered only an initial guess.
      */
     fun interface OnInitialAccelerometerBiasAvailableListener {
-
         /**
          * Called when initial accelerometer bias is available.
          * If [isAccelerometerGroundTruthInitialBias] is true, then initial bias is considered the

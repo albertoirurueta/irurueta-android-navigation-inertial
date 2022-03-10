@@ -133,7 +133,7 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalVariance)
         assertNull(generator.accelerometerTimeIntervalStandardDeviation)
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
-        assertFalse(generator.getTimeIntervalStandardDeviationAsTime(time))
+        assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
@@ -232,7 +232,7 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalVariance)
         assertNull(generator.accelerometerTimeIntervalStandardDeviation)
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
-        assertFalse(generator.getTimeIntervalStandardDeviationAsTime(time))
+        assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
@@ -332,7 +332,7 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalVariance)
         assertNull(generator.accelerometerTimeIntervalStandardDeviation)
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
-        assertFalse(generator.getTimeIntervalStandardDeviationAsTime(time))
+        assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
@@ -433,7 +433,7 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalVariance)
         assertNull(generator.accelerometerTimeIntervalStandardDeviation)
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
-        assertFalse(generator.getTimeIntervalStandardDeviationAsTime(time))
+        assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
@@ -535,7 +535,7 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalVariance)
         assertNull(generator.accelerometerTimeIntervalStandardDeviation)
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
-        assertFalse(generator.getTimeIntervalStandardDeviationAsTime(time))
+        assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
@@ -640,7 +640,7 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalVariance)
         assertNull(generator.accelerometerTimeIntervalStandardDeviation)
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
-        assertFalse(generator.getTimeIntervalStandardDeviationAsTime(time))
+        assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
@@ -748,7 +748,7 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalVariance)
         assertNull(generator.accelerometerTimeIntervalStandardDeviation)
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
-        assertFalse(generator.getTimeIntervalStandardDeviationAsTime(time))
+        assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
@@ -858,7 +858,7 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalVariance)
         assertNull(generator.accelerometerTimeIntervalStandardDeviation)
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
-        assertFalse(generator.getTimeIntervalStandardDeviationAsTime(time))
+        assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
@@ -971,7 +971,7 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalVariance)
         assertNull(generator.accelerometerTimeIntervalStandardDeviation)
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
-        assertFalse(generator.getTimeIntervalStandardDeviationAsTime(time))
+        assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
@@ -1087,7 +1087,7 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalVariance)
         assertNull(generator.accelerometerTimeIntervalStandardDeviation)
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
-        assertFalse(generator.getTimeIntervalStandardDeviationAsTime(time))
+        assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
@@ -1206,7 +1206,7 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalVariance)
         assertNull(generator.accelerometerTimeIntervalStandardDeviation)
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
-        assertFalse(generator.getTimeIntervalStandardDeviationAsTime(time))
+        assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
@@ -1328,7 +1328,7 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalVariance)
         assertNull(generator.accelerometerTimeIntervalStandardDeviation)
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
-        assertFalse(generator.getTimeIntervalStandardDeviationAsTime(time))
+        assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
@@ -1456,7 +1456,7 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalVariance)
         assertNull(generator.accelerometerTimeIntervalStandardDeviation)
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
-        assertFalse(generator.getTimeIntervalStandardDeviationAsTime(time))
+        assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
@@ -1590,7 +1590,7 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalVariance)
         assertNull(generator.accelerometerTimeIntervalStandardDeviation)
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
-        assertFalse(generator.getTimeIntervalStandardDeviationAsTime(time))
+        assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
@@ -1726,7 +1726,7 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalVariance)
         assertNull(generator.accelerometerTimeIntervalStandardDeviation)
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
-        assertFalse(generator.getTimeIntervalStandardDeviationAsTime(time))
+        assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
@@ -1865,7 +1865,7 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalVariance)
         assertNull(generator.accelerometerTimeIntervalStandardDeviation)
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
-        assertFalse(generator.getTimeIntervalStandardDeviationAsTime(time))
+        assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
@@ -2006,7 +2006,7 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalVariance)
         assertNull(generator.accelerometerTimeIntervalStandardDeviation)
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
-        assertFalse(generator.getTimeIntervalStandardDeviationAsTime(time))
+        assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
@@ -2149,7 +2149,7 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalVariance)
         assertNull(generator.accelerometerTimeIntervalStandardDeviation)
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
-        assertFalse(generator.getTimeIntervalStandardDeviationAsTime(time))
+        assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
@@ -3525,13 +3525,13 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
     }
 
     @Test
-    fun getTimeIntervalStandardDeviationAsTime_whenNotInitialized_returnsFalse() {
+    fun getAccelerometerTimeIntervalStandardDeviationAsTime_whenNotInitialized_returnsFalse() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerAndGyroscopeMeasurementGenerator(context)
 
         // check
         val time = Time(0.0, TimeUnit.SECOND)
-        assertFalse(generator.getTimeIntervalStandardDeviationAsTime(time))
+        assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         val initialized: Boolean? =
             getPrivateProperty(CalibrationMeasurementGenerator::class, generator, "initialized")
         requireNotNull(initialized)
@@ -3539,7 +3539,7 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
     }
 
     @Test
-    fun getTimeIntervalStandardDeviationAsTime_whenInitialized_returnsExpectedValue() {
+    fun getAccelerometerTimeIntervalStandardDeviationAsTime_whenInitialized_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerAndGyroscopeMeasurementGenerator(context)
 
@@ -3565,7 +3565,7 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         )
 
         val time = Time(0.0, TimeUnit.SECOND)
-        assertFalse(generator.getTimeIntervalStandardDeviationAsTime(time))
+        assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
 
         assertEquals(0.0, time.value.toDouble(), 0.0)
         assertEquals(TimeUnit.SECOND, time.unit)
@@ -3574,7 +3574,7 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         setPrivateProperty(CalibrationMeasurementGenerator::class, generator, "initialized", true)
 
         // check
-        assertTrue(generator.getTimeIntervalStandardDeviationAsTime(time))
+        assertTrue(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
 
         assertEquals(value, time.value.toDouble(), 0.0)
         assertEquals(TimeUnit.SECOND, time.unit)

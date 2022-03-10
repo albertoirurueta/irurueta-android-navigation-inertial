@@ -348,8 +348,8 @@ abstract class StaticIntervalWithMeasurementGeneratorCalibrator<C : StaticInterv
      * @param result instance where result will be stored.
      * @return true if result is available, false otherwise.
      */
-    fun getTimeIntervalStandardDeviationAsTime(result: Time): Boolean {
-        return generator.getTimeIntervalStandardDeviationAsTime(result)
+    fun getAccelerometerTimeIntervalStandardDeviationAsTime(result: Time): Boolean {
+        return generator.getAccelerometerTimeIntervalStandardDeviationAsTime(result)
     }
 
     /**
