@@ -612,9 +612,9 @@ class StaticIntervalAccelerometerCalibrator private constructor(
      */
     val accelerometerInitialBiasAsTriad: AccelerationTriad?
         get() {
-            val initialBiasX = this.accelerometerInitialBiasX
-            val initialBiasY = this.accelerometerInitialBiasY
-            val initialBiasZ = this.accelerometerInitialBiasZ
+            val initialBiasX = accelerometerInitialBiasX
+            val initialBiasY = accelerometerInitialBiasY
+            val initialBiasZ = accelerometerInitialBiasZ
             return if (initialBiasX != null && initialBiasY != null && initialBiasZ != null) {
                 AccelerationTriad(
                     AccelerationUnit.METERS_PER_SQUARED_SECOND,
@@ -645,9 +645,9 @@ class StaticIntervalAccelerometerCalibrator private constructor(
      * @return true if result is available, false otherwise.
      */
     fun getAccelerometerInitialBiasAsTriad(result: AccelerationTriad): Boolean {
-        val initialBiasX = this.accelerometerInitialBiasX
-        val initialBiasY = this.accelerometerInitialBiasY
-        val initialBiasZ = this.accelerometerInitialBiasZ
+        val initialBiasX = accelerometerInitialBiasX
+        val initialBiasY = accelerometerInitialBiasY
+        val initialBiasZ = accelerometerInitialBiasZ
         return if (initialBiasX != null && initialBiasY != null && initialBiasZ != null) {
             result.setValueCoordinatesAndUnit(
                 initialBiasX,
