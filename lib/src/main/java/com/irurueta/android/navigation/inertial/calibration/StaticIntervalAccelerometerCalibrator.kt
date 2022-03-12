@@ -1377,7 +1377,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
      */
     val estimatedAccelerometerBiasX: Double?
         get() {
-            return when (val internalCalibrator = this.accelerometerInternalCalibrator) {
+            return when (val internalCalibrator = accelerometerInternalCalibrator) {
                 is UnknownBiasAccelerometerCalibrator -> {
                     internalCalibrator.estimatedBiasFx
                 }
@@ -1399,7 +1399,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
      */
     val estimatedAccelerometerBiasY: Double?
         get() {
-            return when (val internalCalibrator = this.accelerometerInternalCalibrator) {
+            return when (val internalCalibrator = accelerometerInternalCalibrator) {
                 is UnknownBiasAccelerometerCalibrator -> {
                     internalCalibrator.estimatedBiasFy
                 }
@@ -1421,7 +1421,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
      */
     val estimatedAccelerometerBiasZ: Double?
         get() {
-            return when (val internalCalibrator = this.accelerometerInternalCalibrator) {
+            return when (val internalCalibrator = accelerometerInternalCalibrator) {
                 is UnknownBiasAccelerometerCalibrator -> {
                     internalCalibrator.estimatedBiasFz
                 }
@@ -1442,7 +1442,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
      */
     val estimatedAccelerometerBiasXAsMeasurement: Acceleration?
         get() {
-            return when (val internalCalibrator = this.accelerometerInternalCalibrator) {
+            return when (val internalCalibrator = accelerometerInternalCalibrator) {
                 is UnknownBiasAccelerometerCalibrator -> {
                     internalCalibrator.estimatedBiasFxAsAcceleration
                 }
@@ -1465,7 +1465,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
      * @return true if result is available, false otherwise.
      */
     fun getEstimatedAccelerometerBiasXAsMeasurement(result: Acceleration): Boolean {
-        return when (val internalCalibrator = this.accelerometerInternalCalibrator) {
+        return when (val internalCalibrator = accelerometerInternalCalibrator) {
             is UnknownBiasAccelerometerCalibrator -> {
                 internalCalibrator.getEstimatedBiasFxAsAcceleration(result)
             }
@@ -1487,7 +1487,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
      */
     val estimatedAccelerometerBiasYAsMeasurement: Acceleration?
         get() {
-            return when (val internalCalibrator = this.accelerometerInternalCalibrator) {
+            return when (val internalCalibrator = accelerometerInternalCalibrator) {
                 is UnknownBiasAccelerometerCalibrator -> {
                     internalCalibrator.estimatedBiasFyAsAcceleration
                 }
@@ -1510,7 +1510,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
      * @return true if result is available, false otherwise.
      */
     fun getEstimatedAccelerometerBiasYAsMeasurement(result: Acceleration): Boolean {
-        return when (val internalCalibrator = this.accelerometerInternalCalibrator) {
+        return when (val internalCalibrator = accelerometerInternalCalibrator) {
             is UnknownBiasAccelerometerCalibrator -> {
                 internalCalibrator.getEstimatedBiasFyAsAcceleration(result)
             }
@@ -1532,7 +1532,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
      */
     val estimatedAccelerometerBiasZAsMeasurement: Acceleration?
         get() {
-            return when (val internalCalibrator = this.accelerometerInternalCalibrator) {
+            return when (val internalCalibrator = accelerometerInternalCalibrator) {
                 is UnknownBiasAccelerometerCalibrator -> {
                     internalCalibrator.estimatedBiasFzAsAcceleration
                 }
@@ -1555,7 +1555,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
      * @return true if result is available, false otherwise.
      */
     fun getEstimatedAccelerometerBiasZAsMeasurement(result: Acceleration): Boolean {
-        return when (val internalCalibrator = this.accelerometerInternalCalibrator) {
+        return when (val internalCalibrator = accelerometerInternalCalibrator) {
             is UnknownBiasAccelerometerCalibrator -> {
                 internalCalibrator.getEstimatedBiasFzAsAcceleration(result)
             }
@@ -1577,7 +1577,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
      */
     val estimatedAccelerometerBiasAsTriad: AccelerationTriad?
         get() {
-            return when (val internalCalibrator = this.accelerometerInternalCalibrator) {
+            return when (val internalCalibrator = accelerometerInternalCalibrator) {
                 is UnknownBiasAccelerometerCalibrator -> {
                     internalCalibrator.estimatedBiasAsTriad
                 }
@@ -1600,7 +1600,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
      * @return true if result is available, false otherwise.
      */
     fun getEstimatedAccelerometerBiasAsTriad(result: AccelerationTriad): Boolean {
-        return when (val internalCalibrator = this.accelerometerInternalCalibrator) {
+        return when (val internalCalibrator = accelerometerInternalCalibrator) {
             is UnknownBiasAccelerometerCalibrator -> {
                 internalCalibrator.getEstimatedBiasAsTriad(result)
             }
@@ -1620,7 +1620,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
      */
     val estimatedAccelerometerBiasStandardDeviationNorm: Double?
         get() {
-            val internalCalibrator = this.accelerometerInternalCalibrator ?: return null
+            val internalCalibrator = accelerometerInternalCalibrator ?: return null
             return if (internalCalibrator is AccelerometerBiasUncertaintySource) {
                 internalCalibrator.estimatedBiasStandardDeviationNorm
             } else {

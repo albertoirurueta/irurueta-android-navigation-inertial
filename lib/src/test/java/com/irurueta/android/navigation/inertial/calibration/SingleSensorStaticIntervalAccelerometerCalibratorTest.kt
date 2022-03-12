@@ -7377,7 +7377,7 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
     }
 
     @Test
-    fun estimatedBiasX_whenNoIntervalCalibrator_returnsNull() {
+    fun estimatedBiasX_whenNoInternalCalibrator_returnsNull() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = SingleSensorStaticIntervalAccelerometerCalibrator(context)
 
@@ -7414,7 +7414,7 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
     }
 
     @Test
-    fun estimatedBiasY_whenNoIntervalCalibrator_returnsNull() {
+    fun estimatedBiasY_whenNoInternalCalibrator_returnsNull() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = SingleSensorStaticIntervalAccelerometerCalibrator(context)
 
@@ -7451,7 +7451,7 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
     }
 
     @Test
-    fun estimatedBiasZ_whenNoIntervalCalibrator_returnsNull() {
+    fun estimatedBiasZ_whenNoInternalCalibrator_returnsNull() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = SingleSensorStaticIntervalAccelerometerCalibrator(context)
 
