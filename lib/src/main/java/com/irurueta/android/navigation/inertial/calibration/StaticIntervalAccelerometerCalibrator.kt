@@ -2230,7 +2230,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
                 } else {
                     checkNotNull(baseNoiseLevel)
                     result.stopThreshold =
-                        accelerometerRobustStopThresholdFactor * accelerometerRobustStopThresholdFactor * baseNoiseLevel
+                        accelerometerRobustThresholdFactor * accelerometerRobustStopThresholdFactor * baseNoiseLevel
                 }
                 result.qualityScores = buildAccelerometerQualityScores()
             }
