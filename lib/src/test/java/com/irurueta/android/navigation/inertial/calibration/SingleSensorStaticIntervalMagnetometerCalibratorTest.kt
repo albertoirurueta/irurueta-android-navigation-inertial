@@ -7390,79 +7390,6 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
     }
 
     @Test
-    fun buildInternalCalibrator_whenNonRobustGroundTruthHardIronNotSetAndNoCommonAxis_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val location = getLocation()
-        val calibrator = SingleSensorStaticIntervalMagnetometerCalibrator(
-            context,
-            location,
-            isGroundTruthInitialHardIron = true
-        )
-
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
-            calibrator.measurements.add(measurement)
-        }
-
-        calibrator.isCommonAxisUsed = false
-
-        val randomizer = UniformRandomizer()
-        val initialSx = randomizer.nextDouble()
-        val initialSy = randomizer.nextDouble()
-        val initialSz = randomizer.nextDouble()
-        val initialMxy = randomizer.nextDouble()
-        val initialMxz = randomizer.nextDouble()
-        val initialMyx = randomizer.nextDouble()
-        val initialMyz = randomizer.nextDouble()
-        val initialMzx = randomizer.nextDouble()
-        val initialMzy = randomizer.nextDouble()
-        calibrator.setInitialScalingFactorsAndCrossCouplingErrors(
-            initialSx,
-            initialSy,
-            initialSz,
-            initialMxy,
-            initialMxz,
-            initialMyx,
-            initialMyz,
-            initialMzx,
-            initialMzy
-        )
-
-        assertNull(calibrator.robustMethod)
-        assertTrue(calibrator.isGroundTruthInitialHardIron)
-
-        val internalCalibrator: MagnetometerNonLinearCalibrator? =
-            calibrator.callPrivateFuncWithResult("buildInternalCalibrator")
-        requireNotNull(internalCalibrator)
-
-        // check
-        val internalCalibrator2 =
-            internalCalibrator as KnownHardIronPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
-        assertSame(calibrator.measurements, internalCalibrator2.measurements)
-        assertFalse(internalCalibrator2.isCommonAxisUsed)
-        assertEquals(0.0, internalCalibrator2.hardIronX, 0.0)
-        assertEquals(0.0, internalCalibrator2.hardIronY, 0.0)
-        assertEquals(0.0, internalCalibrator2.hardIronZ, 0.0)
-        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
-        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
-        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
-        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
-        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
-        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
-        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
-        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
-        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
-
-        assertTrue(internalCalibrator2.isReady)
-        assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
-        assertEquals(
-            calibrator.minimumRequiredMeasurements,
-            internalCalibrator2.minimumRequiredMeasurements
-        )
-    }
-
-    @Test
     fun buildInternalCalibrator_whenNonRobustGroundTruthHardIronSetAndNoCommonAxis_buildsExpectedCalibrator() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val location = getLocation()
@@ -7542,7 +7469,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
     }
 
     @Test
-    fun buildInternalCalibrator_whenNonRobustGroundTruthHardIronNotSetAndCommonAxis_buildsExpectedCalibrator() {
+    fun buildInternalCalibrator_whenNonRobustGroundTruthHardIronSetAndCommonAxis_buildsExpectedCalibrator() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val location = getLocation()
         val calibrator = SingleSensorStaticIntervalMagnetometerCalibrator(
@@ -7615,7 +7542,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
     }
 
     @Test
-    fun buildInternalCalibrator_whenNonRobustNoGroundTruthHardIronNotSetAndNoCommonAxis_buildsExpectedCalibrator() {
+    fun buildInternalCalibrator_whenNonRobustGroundTruthHardIronNotSetAndNoCommonAxis_buildsExpectedCalibrator() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val location = getLocation()
         val calibrator = SingleSensorStaticIntervalMagnetometerCalibrator(
@@ -7688,7 +7615,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
     }
 
     @Test
-    fun buildInternalCalibrator_whenNonRobustNoGroundTruthHardIronSetAndNoCommonAxis_buildsExpectedCalibrator() {
+    fun buildInternalCalibrator_whenNonRobustGroundTruthHardIronNotSetAndCommonAxis_buildsExpectedCalibrator() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val location = getLocation()
         val calibrator = SingleSensorStaticIntervalMagnetometerCalibrator(
@@ -7705,12 +7632,6 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
         calibrator.isCommonAxisUsed = false
 
         val randomizer = UniformRandomizer()
-        val initialHardIronX = randomizer.nextDouble()
-        val initialHardIronY = randomizer.nextDouble()
-        val initialHardIronZ = randomizer.nextDouble()
-        calibrator.setPrivateProperty("initialHardIronX", initialHardIronX)
-        calibrator.setPrivateProperty("initialHardIronY", initialHardIronY)
-        calibrator.setPrivateProperty("initialHardIronZ", initialHardIronZ)
         val initialSx = randomizer.nextDouble()
         val initialSy = randomizer.nextDouble()
         val initialSz = randomizer.nextDouble()
@@ -7745,79 +7666,6 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
         assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
         assertSame(calibrator.measurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
-        assertEquals(initialHardIronX, internalCalibrator2.initialHardIronX, 0.0)
-        assertEquals(initialHardIronY, internalCalibrator2.initialHardIronY, 0.0)
-        assertEquals(initialHardIronZ, internalCalibrator2.initialHardIronZ, 0.0)
-        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
-        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
-        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
-        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
-        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
-        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
-        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
-        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
-        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
-
-        assertTrue(internalCalibrator2.isReady)
-        assertEquals(13, internalCalibrator2.minimumRequiredMeasurements)
-        assertEquals(
-            calibrator.minimumRequiredMeasurements,
-            internalCalibrator2.minimumRequiredMeasurements
-        )
-    }
-
-    @Test
-    fun buildInternalCalibrator_whenNonRobustNoGroundTruthHardIronNotSetAndCommonAxis_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val location = getLocation()
-        val calibrator = SingleSensorStaticIntervalMagnetometerCalibrator(
-            context,
-            location,
-            isGroundTruthInitialHardIron = false
-        )
-
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
-            calibrator.measurements.add(measurement)
-        }
-
-        calibrator.isCommonAxisUsed = true
-
-        val randomizer = UniformRandomizer()
-        val initialSx = randomizer.nextDouble()
-        val initialSy = randomizer.nextDouble()
-        val initialSz = randomizer.nextDouble()
-        val initialMxy = randomizer.nextDouble()
-        val initialMxz = randomizer.nextDouble()
-        val initialMyx = randomizer.nextDouble()
-        val initialMyz = randomizer.nextDouble()
-        val initialMzx = randomizer.nextDouble()
-        val initialMzy = randomizer.nextDouble()
-        calibrator.setInitialScalingFactorsAndCrossCouplingErrors(
-            initialSx,
-            initialSy,
-            initialSz,
-            initialMxy,
-            initialMxz,
-            initialMyx,
-            initialMyz,
-            initialMzx,
-            initialMzy
-        )
-
-        assertNull(calibrator.robustMethod)
-        assertFalse(calibrator.isGroundTruthInitialHardIron)
-
-        val internalCalibrator: MagnetometerNonLinearCalibrator? =
-            calibrator.callPrivateFuncWithResult("buildInternalCalibrator")
-        requireNotNull(internalCalibrator)
-
-        // check
-        val internalCalibrator2 =
-            internalCalibrator as KnownPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
-        assertSame(calibrator.measurements, internalCalibrator2.measurements)
-        assertTrue(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.initialHardIronX, 0.0)
         assertEquals(0.0, internalCalibrator2.initialHardIronY, 0.0)
         assertEquals(0.0, internalCalibrator2.initialHardIronZ, 0.0)
@@ -7832,7 +7680,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
         assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
 
         assertTrue(internalCalibrator2.isReady)
-        assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(13, internalCalibrator2.minimumRequiredMeasurements)
         assertEquals(
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
