@@ -75,9 +75,9 @@ abstract class StaticIntervalWithMeasurementGeneratorCalibrator<C : StaticInterv
     protected abstract val generator: CalibrationMeasurementGenerator<I>
 
     /**
-     * Indicates whether the interval detector has picked the first magnetometer measurement.
+     * Indicates whether the generator has picked the first accelerometer measurement.
      */
-    protected val isFirstMeasurement
+    protected val isFirstAccelerometerMeasurement
         get() = generator.numberOfProcessedAccelerometerMeasurements <= FIRST_MEASUREMENT
 
     /**

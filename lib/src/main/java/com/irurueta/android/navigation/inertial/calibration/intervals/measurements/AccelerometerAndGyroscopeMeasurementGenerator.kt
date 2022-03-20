@@ -28,7 +28,10 @@ import com.irurueta.navigation.inertial.calibration.TimedBodyKinematics
 import com.irurueta.navigation.inertial.calibration.generators.AccelerometerAndGyroscopeMeasurementsGenerator
 import com.irurueta.navigation.inertial.calibration.generators.AccelerometerAndGyroscopeMeasurementsGeneratorListener
 import com.irurueta.navigation.inertial.calibration.intervals.TriadStaticIntervalDetector
+import com.irurueta.navigation.inertial.calibration.noise.AccumulatedAngularSpeedTriadNoiseEstimator
 import com.irurueta.units.Acceleration
+import com.irurueta.units.AngularSpeed
+import com.irurueta.units.AngularSpeedUnit
 
 /**
  * Generates measurements that can later be used both by accelerometer and gyroscope calibrators.
@@ -249,6 +252,21 @@ class AccelerometerAndGyroscopeMeasurementGenerator(
             kinematics.angularRateY = wy.toDouble()
             kinematics.angularRateZ = wz.toDouble()
 
+            if (status == Status.INITIALIZING) {
+                gyroscopeAccumulatedNoiseEstimator.addTriad(
+                    kinematics.angularRateX,
+                    kinematics.angularRateY,
+                    kinematics.angularRateZ
+                )
+            }
+
+            numberOfProcessedGyroscopeMeasurements++
+
+            if (status == Status.INITIALIZATION_COMPLETED) {
+                gyroscopeBaseNoiseLevel =
+                    gyroscopeAccumulatedNoiseEstimator.standardDeviationNorm
+            }
+
             gyroscopeMeasurementListener?.onMeasurement(wx, wy, wz, bx, by, bz, timestamp, accuracy)
         }
 
@@ -277,6 +295,12 @@ class AccelerometerAndGyroscopeMeasurementGenerator(
     private val kinematics = BodyKinematics()
 
     /**
+     * Estimates accumulated average and noise of gyroscope values during static periods.
+     */
+    private val gyroscopeAccumulatedNoiseEstimator =
+        AccumulatedAngularSpeedTriadNoiseEstimator()
+
+    /**
      * Sample used by internal measurement generator.
      */
     override val sample = TimedBodyKinematics()
@@ -287,6 +311,44 @@ class AccelerometerAndGyroscopeMeasurementGenerator(
      */
     val gyroscopeSensor
         get() = gyroscopeCollector.sensor
+
+    /**
+     * Number of gyroscope measurements that have been processed.
+     */
+    var numberOfProcessedGyroscopeMeasurements: Int = 0
+        private set
+
+    /**
+     * Gets gyroscope measurement base noise level that has been detected during initialization
+     * expressed in radians per second (rad/s).
+     * This is only available once generator completes initialization.
+     */
+    var gyroscopeBaseNoiseLevel: Double? = null
+        private set
+
+    /**
+     * Gets gyroscope measurement base noise level that has been detected during initialization.
+     * This is only available once generator completes initialization.
+     */
+    val gyroscopeBaseNoiseLevelAsMeasurement: AngularSpeed?
+        get() {
+            val value = gyroscopeBaseNoiseLevel ?: return null
+            return AngularSpeed(value, AngularSpeedUnit.RADIANS_PER_SECOND)
+        }
+
+    /**
+     * Gets gyroscope measurement base noise level that has been detected during initialization.
+     * This is only available once generator completes initialization.
+     *
+     * @param result instance where result will be stored.
+     * @return true if result is available, false otherwise.
+     */
+    fun getGyroscopeBaseNoiseLevelAsMeasurement(result: AngularSpeed): Boolean {
+        val value = gyroscopeBaseNoiseLevel ?: return false
+        result.value = value
+        result.unit = AngularSpeedUnit.RADIANS_PER_SECOND
+        return true
+    }
 
     /**
      * Gets or sets minimum number of samples required in a static interval to be taken into
@@ -600,7 +662,10 @@ class AccelerometerAndGyroscopeMeasurementGenerator(
         unreliable = false
         initialAccelerometerTimestamp = 0L
         numberOfProcessedAccelerometerMeasurements = 0
+        numberOfProcessedGyroscopeMeasurements = 0
         initialized = false
+        gyroscopeBaseNoiseLevel = null
+        gyroscopeAccumulatedNoiseEstimator.reset()
     }
 
     /**

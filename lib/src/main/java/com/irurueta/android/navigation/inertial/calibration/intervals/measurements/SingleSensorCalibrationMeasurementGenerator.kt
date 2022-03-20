@@ -305,7 +305,7 @@ abstract class SingleSensorCalibrationMeasurementGenerator<C : SingleSensorCalib
         }
 
     /**
-     * Gets sensor measurement base noise level that has been detected during initialization.
+     * Gets accelerometer measurement base noise level that has been detected during initialization.
      * This is only available once detector completes initialization.
      */
     override val accelerometerBaseNoiseLevelAsMeasurement

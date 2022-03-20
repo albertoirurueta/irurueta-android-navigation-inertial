@@ -33,6 +33,8 @@ import com.irurueta.navigation.inertial.calibration.generators.AccelerometerGyro
 import com.irurueta.navigation.inertial.calibration.generators.AccelerometerGyroscopeAndMagnetometerMeasurementsGeneratorListener
 import com.irurueta.navigation.inertial.calibration.generators.MeasurementsGenerator
 import com.irurueta.navigation.inertial.calibration.intervals.TriadStaticIntervalDetector
+import com.irurueta.navigation.inertial.calibration.noise.AccumulatedAngularSpeedTriadNoiseEstimator
+import com.irurueta.navigation.inertial.calibration.noise.AccumulatedMagneticFluxDensityTriadNoiseEstimator
 import com.irurueta.statistics.UniformRandomizer
 import com.irurueta.units.*
 import io.mockk.*
@@ -150,8 +152,18 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedGyroscopeMeasurements)
+        assertEquals(0, generator.numberOfProcessedMagnetometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
+        assertNull(generator.gyroscopeBaseNoiseLevel)
+        assertNull(generator.gyroscopeBaseNoiseLevelAsMeasurement)
+        val angularSpeed = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertFalse(generator.getGyroscopeBaseNoiseLevelAsMeasurement(angularSpeed))
+        assertNull(generator.magnetometerBaseNoiseLevel)
+        assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
+        val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -263,8 +275,18 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedGyroscopeMeasurements)
+        assertEquals(0, generator.numberOfProcessedMagnetometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
+        assertNull(generator.gyroscopeBaseNoiseLevel)
+        assertNull(generator.gyroscopeBaseNoiseLevelAsMeasurement)
+        val angularSpeed = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertFalse(generator.getGyroscopeBaseNoiseLevelAsMeasurement(angularSpeed))
+        assertNull(generator.magnetometerBaseNoiseLevel)
+        assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
+        val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -377,8 +399,18 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedGyroscopeMeasurements)
+        assertEquals(0, generator.numberOfProcessedMagnetometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
+        assertNull(generator.gyroscopeBaseNoiseLevel)
+        assertNull(generator.gyroscopeBaseNoiseLevelAsMeasurement)
+        val angularSpeed = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertFalse(generator.getGyroscopeBaseNoiseLevelAsMeasurement(angularSpeed))
+        assertNull(generator.magnetometerBaseNoiseLevel)
+        assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
+        val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -492,8 +524,18 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedGyroscopeMeasurements)
+        assertEquals(0, generator.numberOfProcessedMagnetometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
+        assertNull(generator.gyroscopeBaseNoiseLevel)
+        assertNull(generator.gyroscopeBaseNoiseLevelAsMeasurement)
+        val angularSpeed = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertFalse(generator.getGyroscopeBaseNoiseLevelAsMeasurement(angularSpeed))
+        assertNull(generator.magnetometerBaseNoiseLevel)
+        assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
+        val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -608,8 +650,18 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedGyroscopeMeasurements)
+        assertEquals(0, generator.numberOfProcessedMagnetometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
+        assertNull(generator.gyroscopeBaseNoiseLevel)
+        assertNull(generator.gyroscopeBaseNoiseLevelAsMeasurement)
+        val angularSpeed = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertFalse(generator.getGyroscopeBaseNoiseLevelAsMeasurement(angularSpeed))
+        assertNull(generator.magnetometerBaseNoiseLevel)
+        assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
+        val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -725,8 +777,18 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedGyroscopeMeasurements)
+        assertEquals(0, generator.numberOfProcessedMagnetometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
+        assertNull(generator.gyroscopeBaseNoiseLevel)
+        assertNull(generator.gyroscopeBaseNoiseLevelAsMeasurement)
+        val angularSpeed = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertFalse(generator.getGyroscopeBaseNoiseLevelAsMeasurement(angularSpeed))
+        assertNull(generator.magnetometerBaseNoiseLevel)
+        assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
+        val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -843,8 +905,18 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedGyroscopeMeasurements)
+        assertEquals(0, generator.numberOfProcessedMagnetometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
+        assertNull(generator.gyroscopeBaseNoiseLevel)
+        assertNull(generator.gyroscopeBaseNoiseLevelAsMeasurement)
+        val angularSpeed = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertFalse(generator.getGyroscopeBaseNoiseLevelAsMeasurement(angularSpeed))
+        assertNull(generator.magnetometerBaseNoiseLevel)
+        assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
+        val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -964,8 +1036,18 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedGyroscopeMeasurements)
+        assertEquals(0, generator.numberOfProcessedMagnetometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
+        assertNull(generator.gyroscopeBaseNoiseLevel)
+        assertNull(generator.gyroscopeBaseNoiseLevelAsMeasurement)
+        val angularSpeed = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertFalse(generator.getGyroscopeBaseNoiseLevelAsMeasurement(angularSpeed))
+        assertNull(generator.magnetometerBaseNoiseLevel)
+        assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
+        val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -1088,8 +1170,18 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedGyroscopeMeasurements)
+        assertEquals(0, generator.numberOfProcessedMagnetometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
+        assertNull(generator.gyroscopeBaseNoiseLevel)
+        assertNull(generator.gyroscopeBaseNoiseLevelAsMeasurement)
+        val angularSpeed = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertFalse(generator.getGyroscopeBaseNoiseLevelAsMeasurement(angularSpeed))
+        assertNull(generator.magnetometerBaseNoiseLevel)
+        assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
+        val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -1215,8 +1307,18 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedGyroscopeMeasurements)
+        assertEquals(0, generator.numberOfProcessedMagnetometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
+        assertNull(generator.gyroscopeBaseNoiseLevel)
+        assertNull(generator.gyroscopeBaseNoiseLevelAsMeasurement)
+        val angularSpeed = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertFalse(generator.getGyroscopeBaseNoiseLevelAsMeasurement(angularSpeed))
+        assertNull(generator.magnetometerBaseNoiseLevel)
+        assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
+        val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -1345,8 +1447,18 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedGyroscopeMeasurements)
+        assertEquals(0, generator.numberOfProcessedMagnetometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
+        assertNull(generator.gyroscopeBaseNoiseLevel)
+        assertNull(generator.gyroscopeBaseNoiseLevelAsMeasurement)
+        val angularSpeed = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertFalse(generator.getGyroscopeBaseNoiseLevelAsMeasurement(angularSpeed))
+        assertNull(generator.magnetometerBaseNoiseLevel)
+        assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
+        val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -1478,8 +1590,18 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedGyroscopeMeasurements)
+        assertEquals(0, generator.numberOfProcessedMagnetometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
+        assertNull(generator.gyroscopeBaseNoiseLevel)
+        assertNull(generator.gyroscopeBaseNoiseLevelAsMeasurement)
+        val angularSpeed = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertFalse(generator.getGyroscopeBaseNoiseLevelAsMeasurement(angularSpeed))
+        assertNull(generator.magnetometerBaseNoiseLevel)
+        assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
+        val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -1614,8 +1736,18 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedGyroscopeMeasurements)
+        assertEquals(0, generator.numberOfProcessedMagnetometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
+        assertNull(generator.gyroscopeBaseNoiseLevel)
+        assertNull(generator.gyroscopeBaseNoiseLevelAsMeasurement)
+        val angularSpeed = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertFalse(generator.getGyroscopeBaseNoiseLevelAsMeasurement(angularSpeed))
+        assertNull(generator.magnetometerBaseNoiseLevel)
+        assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
+        val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -1753,8 +1885,18 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedGyroscopeMeasurements)
+        assertEquals(0, generator.numberOfProcessedMagnetometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
+        assertNull(generator.gyroscopeBaseNoiseLevel)
+        assertNull(generator.gyroscopeBaseNoiseLevelAsMeasurement)
+        val angularSpeed = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertFalse(generator.getGyroscopeBaseNoiseLevelAsMeasurement(angularSpeed))
+        assertNull(generator.magnetometerBaseNoiseLevel)
+        assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
+        val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -1898,8 +2040,18 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedGyroscopeMeasurements)
+        assertEquals(0, generator.numberOfProcessedMagnetometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
+        assertNull(generator.gyroscopeBaseNoiseLevel)
+        assertNull(generator.gyroscopeBaseNoiseLevelAsMeasurement)
+        val angularSpeed = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertFalse(generator.getGyroscopeBaseNoiseLevelAsMeasurement(angularSpeed))
+        assertNull(generator.magnetometerBaseNoiseLevel)
+        assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
+        val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -2049,8 +2201,18 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedGyroscopeMeasurements)
+        assertEquals(0, generator.numberOfProcessedMagnetometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
+        assertNull(generator.gyroscopeBaseNoiseLevel)
+        assertNull(generator.gyroscopeBaseNoiseLevelAsMeasurement)
+        val angularSpeed = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertFalse(generator.getGyroscopeBaseNoiseLevelAsMeasurement(angularSpeed))
+        assertNull(generator.magnetometerBaseNoiseLevel)
+        assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
+        val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -2206,8 +2368,18 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedGyroscopeMeasurements)
+        assertEquals(0, generator.numberOfProcessedMagnetometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
+        assertNull(generator.gyroscopeBaseNoiseLevel)
+        assertNull(generator.gyroscopeBaseNoiseLevelAsMeasurement)
+        val angularSpeed = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertFalse(generator.getGyroscopeBaseNoiseLevelAsMeasurement(angularSpeed))
+        assertNull(generator.magnetometerBaseNoiseLevel)
+        assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
+        val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -2366,8 +2538,18 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedGyroscopeMeasurements)
+        assertEquals(0, generator.numberOfProcessedMagnetometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
+        assertNull(generator.gyroscopeBaseNoiseLevel)
+        assertNull(generator.gyroscopeBaseNoiseLevelAsMeasurement)
+        val angularSpeed = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertFalse(generator.getGyroscopeBaseNoiseLevelAsMeasurement(angularSpeed))
+        assertNull(generator.magnetometerBaseNoiseLevel)
+        assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
+        val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -2529,8 +2711,18 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedGyroscopeMeasurements)
+        assertEquals(0, generator.numberOfProcessedMagnetometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
+        assertNull(generator.gyroscopeBaseNoiseLevel)
+        assertNull(generator.gyroscopeBaseNoiseLevelAsMeasurement)
+        val angularSpeed = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertFalse(generator.getGyroscopeBaseNoiseLevelAsMeasurement(angularSpeed))
+        assertNull(generator.magnetometerBaseNoiseLevel)
+        assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
+        val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -2694,8 +2886,18 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedGyroscopeMeasurements)
+        assertEquals(0, generator.numberOfProcessedMagnetometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
+        assertNull(generator.gyroscopeBaseNoiseLevel)
+        assertNull(generator.gyroscopeBaseNoiseLevelAsMeasurement)
+        val angularSpeed = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertFalse(generator.getGyroscopeBaseNoiseLevelAsMeasurement(angularSpeed))
+        assertNull(generator.magnetometerBaseNoiseLevel)
+        assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
+        val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -2862,8 +3064,18 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedGyroscopeMeasurements)
+        assertEquals(0, generator.numberOfProcessedMagnetometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
+        assertNull(generator.gyroscopeBaseNoiseLevel)
+        assertNull(generator.gyroscopeBaseNoiseLevelAsMeasurement)
+        val angularSpeed = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertFalse(generator.getGyroscopeBaseNoiseLevelAsMeasurement(angularSpeed))
+        assertNull(generator.magnetometerBaseNoiseLevel)
+        assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
+        val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -3032,8 +3244,18 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedGyroscopeMeasurements)
+        assertEquals(0, generator.numberOfProcessedMagnetometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
+        assertNull(generator.gyroscopeBaseNoiseLevel)
+        assertNull(generator.gyroscopeBaseNoiseLevelAsMeasurement)
+        val angularSpeed = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertFalse(generator.getGyroscopeBaseNoiseLevelAsMeasurement(angularSpeed))
+        assertNull(generator.magnetometerBaseNoiseLevel)
+        assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
+        val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -5593,7 +5815,7 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
     }
 
     @Test
-    fun reset_setsValuesToInitialState() {
+    fun reset_setsValuesToInitialStateAndResetsAccumulatedNoiseEstimators() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(context)
 
@@ -5631,7 +5853,34 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
             "numberOfProcessedAccelerometerMeasurements",
             1
         )
+        generator.setPrivateProperty("numberOfProcessedGyroscopeMeasurements", 1)
+        generator.setPrivateProperty("numberOfProcessedMagnetometerMeasurements", 1)
         setPrivateProperty(CalibrationMeasurementGenerator::class, generator, "initialized", true)
+
+        val gyroscopeAccumulatedNoiseEstimator: AccumulatedAngularSpeedTriadNoiseEstimator? =
+            generator.getPrivateProperty("gyroscopeAccumulatedNoiseEstimator")
+        requireNotNull(gyroscopeAccumulatedNoiseEstimator)
+        val gyroscopeAccumulatedNoiseEstimatorSpy = spyk(gyroscopeAccumulatedNoiseEstimator)
+        generator.setPrivateProperty(
+            "gyroscopeAccumulatedNoiseEstimator",
+            gyroscopeAccumulatedNoiseEstimatorSpy
+        )
+        val randomizer = UniformRandomizer()
+        val gyroscopeBaseNoiseLevel = randomizer.nextDouble()
+        generator.setPrivateProperty("gyroscopeBaseNoiseLevel", gyroscopeBaseNoiseLevel)
+        assertEquals(gyroscopeBaseNoiseLevel, generator.gyroscopeBaseNoiseLevel)
+
+        val magnetometerAccumulatedNoiseEstimator: AccumulatedMagneticFluxDensityTriadNoiseEstimator? =
+            generator.getPrivateProperty("magnetometerAccumulatedNoiseEstimator")
+        requireNotNull(magnetometerAccumulatedNoiseEstimator)
+        val magnetometerAccumulatedNoiseEstimatorSpy = spyk(magnetometerAccumulatedNoiseEstimator)
+        generator.setPrivateProperty(
+            "magnetometerAccumulatedNoiseEstimator",
+            magnetometerAccumulatedNoiseEstimatorSpy
+        )
+        val magnetometerBaseNoiseLevel = randomizer.nextDouble()
+        generator.setPrivateProperty("magnetometerBaseNoiseLevel", magnetometerBaseNoiseLevel)
+        assertEquals(magnetometerBaseNoiseLevel, generator.magnetometerBaseNoiseLevel)
 
         assertEquals(
             TimeIntervalEstimator.DEFAULT_TOTAL_SAMPLES,
@@ -5659,13 +5908,29 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         )
         requireNotNull(initialAccelerometerTimestamp)
         assertEquals(0L, initialAccelerometerTimestamp)
-        val numberOfProcessedAccelerometerMeasurements: Int? = getPrivateProperty(
-            CalibrationMeasurementGenerator::class,
-            generator,
-            "numberOfProcessedAccelerometerMeasurements"
+        assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedGyroscopeMeasurements)
+        assertEquals(0, generator.numberOfProcessedMagnetometerMeasurements)
+        assertNull(generator.gyroscopeBaseNoiseLevel)
+        assertNull(generator.gyroscopeBaseNoiseLevelAsMeasurement)
+        assertFalse(
+            generator.getGyroscopeBaseNoiseLevelAsMeasurement(
+                AngularSpeed(
+                    0.0,
+                    AngularSpeedUnit.RADIANS_PER_SECOND
+                )
+            )
         )
-        requireNotNull(numberOfProcessedAccelerometerMeasurements)
-        assertEquals(0, numberOfProcessedAccelerometerMeasurements)
+        assertNull(generator.magnetometerBaseNoiseLevel)
+        assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
+        assertFalse(
+            generator.getMagnetometerBaseNoiseLevelAsMeasurement(
+                MagneticFluxDensity(
+                    0.0,
+                    MagneticFluxDensityUnit.TESLA
+                )
+            )
+        )
         val initialized: Boolean? =
             getPrivateProperty(CalibrationMeasurementGenerator::class, generator, "initialized")
         requireNotNull(initialized)
@@ -6167,6 +6432,7 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(context)
 
         assertNull(generator.gyroscopeMeasurementListener)
+        assertEquals(0, generator.numberOfProcessedGyroscopeMeasurements)
 
         val gyroscopeCollectorMeasurementListener: GyroscopeSensorCollector.OnMeasurementListener? =
             generator.getPrivateProperty("gyroscopeCollectorMeasurementListener")
@@ -6202,6 +6468,7 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertEquals(wx.toDouble(), kinematics.angularRateX, 0.0)
         assertEquals(wy.toDouble(), kinematics.angularRateY, 0.0)
         assertEquals(wz.toDouble(), kinematics.angularRateZ, 0.0)
+        assertEquals(1, generator.numberOfProcessedGyroscopeMeasurements)
     }
 
     @Test
@@ -6215,6 +6482,7 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         )
 
         assertSame(gyroscopeMeasurementListener, generator.gyroscopeMeasurementListener)
+        assertEquals(0, generator.numberOfProcessedGyroscopeMeasurements)
 
         val gyroscopeCollectorMeasurementListener: GyroscopeSensorCollector.OnMeasurementListener? =
             generator.getPrivateProperty("gyroscopeCollectorMeasurementListener")
@@ -6250,6 +6518,7 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertEquals(wx.toDouble(), kinematics.angularRateX, 0.0)
         assertEquals(wy.toDouble(), kinematics.angularRateY, 0.0)
         assertEquals(wz.toDouble(), kinematics.angularRateZ, 0.0)
+        assertEquals(1, generator.numberOfProcessedGyroscopeMeasurements)
 
         verify(exactly = 1) {
             gyroscopeMeasurementListener.onMeasurement(
@@ -6266,11 +6535,158 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
     }
 
     @Test
+    fun onGyroscopeMeasurementListener_whenInitializing_accumulatesNoise() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(context)
+
+        assertEquals(0, generator.numberOfProcessedGyroscopeMeasurements)
+
+        val measurementsGenerator: AccelerometerGyroscopeAndMagnetometerMeasurementsGenerator? =
+            generator.getPrivateProperty("measurementsGenerator")
+        requireNotNull(measurementsGenerator)
+        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+        every { measurementsGeneratorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZING)
+        generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
+
+        val gyroscopeAccumulatedNoiseEstimator: AccumulatedAngularSpeedTriadNoiseEstimator? =
+            generator.getPrivateProperty("gyroscopeAccumulatedNoiseEstimator")
+        requireNotNull(gyroscopeAccumulatedNoiseEstimator)
+        val gyroscopeAccumulatedNoiseEstimatorSpy = spyk(gyroscopeAccumulatedNoiseEstimator)
+        generator.setPrivateProperty(
+            "gyroscopeAccumulatedNoiseEstimator",
+            gyroscopeAccumulatedNoiseEstimatorSpy
+        )
+
+        val gyroscopeCollectorMeasurementListener: GyroscopeSensorCollector.OnMeasurementListener? =
+            generator.getPrivateProperty("gyroscopeCollectorMeasurementListener")
+        requireNotNull(gyroscopeCollectorMeasurementListener)
+
+        val kinematics: BodyKinematics? = generator.getPrivateProperty("kinematics")
+        requireNotNull(kinematics)
+        assertEquals(0.0, kinematics.angularRateX, 0.0)
+        assertEquals(0.0, kinematics.angularRateY, 0.0)
+        assertEquals(0.0, kinematics.angularRateZ, 0.0)
+
+        val randomizer = UniformRandomizer()
+        val wx = randomizer.nextFloat()
+        val wy = randomizer.nextFloat()
+        val wz = randomizer.nextFloat()
+        val bx = randomizer.nextFloat()
+        val by = randomizer.nextFloat()
+        val bz = randomizer.nextFloat()
+        val timestamp = SystemClock.elapsedRealtimeNanos()
+        val accuracy = SensorAccuracy.HIGH
+        gyroscopeCollectorMeasurementListener.onMeasurement(
+            wx,
+            wy,
+            wz,
+            bx,
+            by,
+            bz,
+            timestamp,
+            accuracy
+        )
+
+        // check
+        assertEquals(wx.toDouble(), kinematics.angularRateX, 0.0)
+        assertEquals(wy.toDouble(), kinematics.angularRateY, 0.0)
+        assertEquals(wz.toDouble(), kinematics.angularRateZ, 0.0)
+        assertEquals(1, generator.numberOfProcessedGyroscopeMeasurements)
+
+        verify(exactly = 1) {
+            gyroscopeAccumulatedNoiseEstimatorSpy.addTriad(
+                wx.toDouble(),
+                wy.toDouble(),
+                wz.toDouble()
+            )
+        }
+    }
+
+    @Test
+    fun onGyroscopeMeasurementListener_whenInitializationCompleted_setsGyroscopeBaseNoiseLevel() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(context)
+
+        assertEquals(0, generator.numberOfProcessedGyroscopeMeasurements)
+        assertNull(generator.gyroscopeBaseNoiseLevel)
+        assertNull(generator.gyroscopeBaseNoiseLevelAsMeasurement)
+        val angularSpeed1 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertFalse(generator.getGyroscopeBaseNoiseLevelAsMeasurement(angularSpeed1))
+
+        val measurementsGenerator: AccelerometerGyroscopeAndMagnetometerMeasurementsGenerator? =
+            generator.getPrivateProperty("measurementsGenerator")
+        requireNotNull(measurementsGenerator)
+        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+        every { measurementsGeneratorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZATION_COMPLETED)
+        generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
+
+        val gyroscopeAccumulatedNoiseEstimator: AccumulatedAngularSpeedTriadNoiseEstimator? =
+            generator.getPrivateProperty("gyroscopeAccumulatedNoiseEstimator")
+        requireNotNull(gyroscopeAccumulatedNoiseEstimator)
+        val gyroscopeAccumulatedNoiseEstimatorSpy = spyk(gyroscopeAccumulatedNoiseEstimator)
+        val randomizer = UniformRandomizer()
+        val baseNoiseLevel = randomizer.nextDouble()
+        every { gyroscopeAccumulatedNoiseEstimatorSpy.standardDeviationNorm }.returns(baseNoiseLevel)
+        generator.setPrivateProperty(
+            "gyroscopeAccumulatedNoiseEstimator",
+            gyroscopeAccumulatedNoiseEstimatorSpy
+        )
+
+        val gyroscopeCollectorMeasurementListener: GyroscopeSensorCollector.OnMeasurementListener? =
+            generator.getPrivateProperty("gyroscopeCollectorMeasurementListener")
+        requireNotNull(gyroscopeCollectorMeasurementListener)
+
+        val kinematics: BodyKinematics? = generator.getPrivateProperty("kinematics")
+        requireNotNull(kinematics)
+        assertEquals(0.0, kinematics.angularRateX, 0.0)
+        assertEquals(0.0, kinematics.angularRateY, 0.0)
+        assertEquals(0.0, kinematics.angularRateZ, 0.0)
+
+        val wx = randomizer.nextFloat()
+        val wy = randomizer.nextFloat()
+        val wz = randomizer.nextFloat()
+        val bx = randomizer.nextFloat()
+        val by = randomizer.nextFloat()
+        val bz = randomizer.nextFloat()
+        val timestamp = SystemClock.elapsedRealtimeNanos()
+        val accuracy = SensorAccuracy.HIGH
+        gyroscopeCollectorMeasurementListener.onMeasurement(
+            wx,
+            wy,
+            wz,
+            bx,
+            by,
+            bz,
+            timestamp,
+            accuracy
+        )
+
+        // check
+        assertEquals(wx.toDouble(), kinematics.angularRateX, 0.0)
+        assertEquals(wy.toDouble(), kinematics.angularRateY, 0.0)
+        assertEquals(wz.toDouble(), kinematics.angularRateZ, 0.0)
+        assertEquals(1, generator.numberOfProcessedGyroscopeMeasurements)
+
+        verify(exactly = 1) {
+            gyroscopeAccumulatedNoiseEstimatorSpy.standardDeviationNorm
+        }
+        assertEquals(baseNoiseLevel, generator.gyroscopeBaseNoiseLevel)
+        val angularSpeed2 = generator.gyroscopeBaseNoiseLevelAsMeasurement
+        requireNotNull(angularSpeed2)
+        assertEquals(baseNoiseLevel, angularSpeed2.value.toDouble(), 0.0)
+        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, angularSpeed2.unit)
+        val angularSpeed3 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertTrue(generator.getGyroscopeBaseNoiseLevelAsMeasurement(angularSpeed3))
+        assertEquals(angularSpeed2, angularSpeed3)
+    }
+
+    @Test
     fun onMagnetometerMeasurementListener_whenNoListener_setsMagneticFluxDensity() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(context)
 
         assertNull(generator.magnetometerMeasurementListener)
+        assertEquals(0, generator.numberOfProcessedMagnetometerMeasurements)
 
         val magnetometerCollectorMeasurementListener: MagnetometerSensorCollector.OnMeasurementListener? =
             generator.getPrivateProperty("magnetometerCollectorMeasurementListener")
@@ -6304,9 +6720,13 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         )
 
         // check
-        assertEquals(bx.toDouble(), magneticFluxDensity.bx, 0.0)
-        assertEquals(by.toDouble(), magneticFluxDensity.by, 0.0)
-        assertEquals(bz.toDouble(), magneticFluxDensity.bz, 0.0)
+        val bxTesla = MagneticFluxDensityConverter.microTeslaToTesla(bx.toDouble())
+        val byTesla = MagneticFluxDensityConverter.microTeslaToTesla(by.toDouble())
+        val bzTesla = MagneticFluxDensityConverter.microTeslaToTesla(bz.toDouble())
+        assertEquals(bxTesla, magneticFluxDensity.bx, 0.0)
+        assertEquals(byTesla, magneticFluxDensity.by, 0.0)
+        assertEquals(bzTesla, magneticFluxDensity.bz, 0.0)
+        assertEquals(1, generator.numberOfProcessedMagnetometerMeasurements)
     }
 
     @Test
@@ -6320,6 +6740,7 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         )
 
         assertSame(magnetometerMeasurementlistener, generator.magnetometerMeasurementListener)
+        assertEquals(0, generator.numberOfProcessedMagnetometerMeasurements)
 
         val magnetometerCollectorMeasurementListener: MagnetometerSensorCollector.OnMeasurementListener? =
             generator.getPrivateProperty("magnetometerCollectorMeasurementListener")
@@ -6353,9 +6774,13 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         )
 
         // check
-        assertEquals(bx.toDouble(), magneticFluxDensity.bx, 0.0)
-        assertEquals(by.toDouble(), magneticFluxDensity.by, 0.0)
-        assertEquals(bz.toDouble(), magneticFluxDensity.bz, 0.0)
+        val bxTesla = MagneticFluxDensityConverter.microTeslaToTesla(bx.toDouble())
+        val byTesla = MagneticFluxDensityConverter.microTeslaToTesla(by.toDouble())
+        val bzTesla = MagneticFluxDensityConverter.microTeslaToTesla(bz.toDouble())
+        assertEquals(bxTesla, magneticFluxDensity.bx, 0.0)
+        assertEquals(byTesla, magneticFluxDensity.by, 0.0)
+        assertEquals(bzTesla, magneticFluxDensity.bz, 0.0)
+        assertEquals(1, generator.numberOfProcessedMagnetometerMeasurements)
 
         verify(exactly = 1) {
             magnetometerMeasurementlistener.onMeasurement(
@@ -6369,6 +6794,163 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
                 accuracy
             )
         }
+    }
+
+    @Test
+    fun onMagnetometerMeasurementListener_whenInitializing_accumulatesNoise() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(context)
+
+        assertEquals(0, generator.numberOfProcessedMagnetometerMeasurements)
+
+        val measurementsGenerator: AccelerometerGyroscopeAndMagnetometerMeasurementsGenerator? =
+            generator.getPrivateProperty("measurementsGenerator")
+        requireNotNull(measurementsGenerator)
+        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+        every { measurementsGeneratorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZING)
+        generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
+
+        val magnetometerAccumulatedNoiseEstimator: AccumulatedMagneticFluxDensityTriadNoiseEstimator? =
+            generator.getPrivateProperty("magnetometerAccumulatedNoiseEstimator")
+        requireNotNull(magnetometerAccumulatedNoiseEstimator)
+        val magnetometerAccumulatedNoiseEstimatorSpy = spyk(magnetometerAccumulatedNoiseEstimator)
+        generator.setPrivateProperty(
+            "magnetometerAccumulatedNoiseEstimator",
+            magnetometerAccumulatedNoiseEstimatorSpy
+        )
+
+        val magnetometerCollectorMeasurementListener: MagnetometerSensorCollector.OnMeasurementListener? =
+            generator.getPrivateProperty("magnetometerCollectorMeasurementListener")
+        requireNotNull(magnetometerCollectorMeasurementListener)
+
+        val magneticFluxDensity: BodyMagneticFluxDensity? =
+            generator.getPrivateProperty("magneticFluxDensity")
+        requireNotNull(magneticFluxDensity)
+        assertEquals(0.0, magneticFluxDensity.bx, 0.0)
+        assertEquals(0.0, magneticFluxDensity.by, 0.0)
+        assertEquals(0.0, magneticFluxDensity.bz, 0.0)
+
+        val randomizer = UniformRandomizer()
+        val bx = randomizer.nextFloat()
+        val by = randomizer.nextFloat()
+        val bz = randomizer.nextFloat()
+        val hardIronX = randomizer.nextFloat()
+        val hardIronY = randomizer.nextFloat()
+        val hardIronZ = randomizer.nextFloat()
+        val timestamp = SystemClock.elapsedRealtimeNanos()
+        val accuracy = SensorAccuracy.HIGH
+        magnetometerCollectorMeasurementListener.onMeasurement(
+            bx,
+            by,
+            bz,
+            hardIronX,
+            hardIronY,
+            hardIronZ,
+            timestamp,
+            accuracy
+        )
+
+        // check
+        val bxTesla = MagneticFluxDensityConverter.microTeslaToTesla(bx.toDouble())
+        val byTesla = MagneticFluxDensityConverter.microTeslaToTesla(by.toDouble())
+        val bzTesla = MagneticFluxDensityConverter.microTeslaToTesla(bz.toDouble())
+        assertEquals(bxTesla, magneticFluxDensity.bx, 0.0)
+        assertEquals(byTesla, magneticFluxDensity.by, 0.0)
+        assertEquals(bzTesla, magneticFluxDensity.bz, 0.0)
+        assertEquals(1, generator.numberOfProcessedMagnetometerMeasurements)
+
+        verify(exactly = 1) {
+            magnetometerAccumulatedNoiseEstimatorSpy.addTriad(
+                bxTesla,
+                byTesla,
+                bzTesla
+            )
+        }
+    }
+
+    @Test
+    fun onMagnetometerMeasurementListener_whenInitializationCompleted_setsMagnetometerBaseNoiseLevel() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(context)
+
+        assertEquals(0, generator.numberOfProcessedMagnetometerMeasurements)
+        assertNull(generator.magnetometerBaseNoiseLevel)
+        assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
+        val magneticFluxDensity1 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity1))
+
+        val measurementsGenerator: AccelerometerGyroscopeAndMagnetometerMeasurementsGenerator? =
+            generator.getPrivateProperty("measurementsGenerator")
+        requireNotNull(measurementsGenerator)
+        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+        every { measurementsGeneratorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZATION_COMPLETED)
+        generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
+
+        val magnetometerAccumulatedNoiseEstimator: AccumulatedMagneticFluxDensityTriadNoiseEstimator? =
+            generator.getPrivateProperty("magnetometerAccumulatedNoiseEstimator")
+        requireNotNull(magnetometerAccumulatedNoiseEstimator)
+        val magnetometerAccumulatedNoiseEstimatorSpy = spyk(magnetometerAccumulatedNoiseEstimator)
+        val randomizer = UniformRandomizer()
+        val baseNoiseLevel = randomizer.nextDouble()
+        every { magnetometerAccumulatedNoiseEstimatorSpy.standardDeviationNorm }.returns(
+            baseNoiseLevel
+        )
+        generator.setPrivateProperty(
+            "magnetometerAccumulatedNoiseEstimator",
+            magnetometerAccumulatedNoiseEstimatorSpy
+        )
+
+        val magnetometerCollectorMeasurementListener: MagnetometerSensorCollector.OnMeasurementListener? =
+            generator.getPrivateProperty("magnetometerCollectorMeasurementListener")
+        requireNotNull(magnetometerCollectorMeasurementListener)
+
+        val magneticFluxDensity: BodyMagneticFluxDensity? =
+            generator.getPrivateProperty("magneticFluxDensity")
+        requireNotNull(magneticFluxDensity)
+        assertEquals(0.0, magneticFluxDensity.bx, 0.0)
+        assertEquals(0.0, magneticFluxDensity.by, 0.0)
+        assertEquals(0.0, magneticFluxDensity.bz, 0.0)
+
+        val bx = randomizer.nextFloat()
+        val by = randomizer.nextFloat()
+        val bz = randomizer.nextFloat()
+        val hardIronX = randomizer.nextFloat()
+        val hardIronY = randomizer.nextFloat()
+        val hardIronZ = randomizer.nextFloat()
+        val timestamp = SystemClock.elapsedRealtimeNanos()
+        val accuracy = SensorAccuracy.HIGH
+        magnetometerCollectorMeasurementListener.onMeasurement(
+            bx,
+            by,
+            bz,
+            hardIronX,
+            hardIronY,
+            hardIronZ,
+            timestamp,
+            accuracy
+        )
+
+        // check
+        val bxTesla = MagneticFluxDensityConverter.microTeslaToTesla(bx.toDouble())
+        val byTesla = MagneticFluxDensityConverter.microTeslaToTesla(by.toDouble())
+        val bzTesla = MagneticFluxDensityConverter.microTeslaToTesla(bz.toDouble())
+        assertEquals(bxTesla, magneticFluxDensity.bx, 0.0)
+        assertEquals(byTesla, magneticFluxDensity.by, 0.0)
+        assertEquals(bzTesla, magneticFluxDensity.bz, 0.0)
+        assertEquals(1, generator.numberOfProcessedMagnetometerMeasurements)
+
+        verify(exactly = 1) {
+            magnetometerAccumulatedNoiseEstimatorSpy.standardDeviationNorm
+        }
+
+        assertEquals(baseNoiseLevel, generator.magnetometerBaseNoiseLevel)
+        val magneticFluxDensity2 = generator.magnetometerBaseNoiseLevelAsMeasurement
+        requireNotNull(magneticFluxDensity2)
+        assertEquals(baseNoiseLevel, magneticFluxDensity2.value.toDouble(), 0.0)
+        assertEquals(MagneticFluxDensityUnit.TESLA, magneticFluxDensity2.unit)
+        val magneticFluxDensity3 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        assertTrue(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity3))
+        assertEquals(magneticFluxDensity2, magneticFluxDensity3)
     }
 
     private companion object {

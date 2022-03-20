@@ -193,6 +193,62 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNull(calibrator.estimatedAccelerometerBiasStandardDeviationNorm)
         assertTrue(calibrator.accelerometerMeasurements.isEmpty())
         assertFalse(calibrator.isReadyToSolveCalibration)
+        assertFalse(calibrator.running)
+        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
+            calibrator.initialStaticSamples
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
+            calibrator.thresholdFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
+            calibrator.instantaneousNoiseLevelFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
+            calibrator.baseNoiseLevelAbsoluteThreshold,
+            0.0
+        )
+        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
+        assertEquals(
+            calibrator.baseNoiseLevelAbsoluteThreshold,
+            baseNoiseLevel1.value.toDouble(),
+            0.0
+        )
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, baseNoiseLevel1.unit)
+        val baseNoiseLevel2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
+        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
+        assertNull(calibrator.accelerometerBaseNoiseLevel)
+        assertNull(calibrator.accelerometerBaseNoiseLevelAsMeasurement)
+        assertFalse(calibrator.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration))
+        assertNull(calibrator.accelerometerBaseNoiseLevelPsd)
+        assertNull(calibrator.accelerometerBaseNoiseLevelRootPsd)
+        assertNull(calibrator.threshold)
+        assertNull(calibrator.thresholdAsMeasurement)
+        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
+        assertEquals(0, calibrator.processedStaticSamples)
+        assertEquals(0, calibrator.processedDynamicSamples)
+        assertFalse(calibrator.isStaticIntervalSkipped)
+        assertFalse(calibrator.isDynamicIntervalSkipped)
+        assertNull(calibrator.accelerometerAverageTimeInterval)
+        assertNull(calibrator.accelerometerAverageTimeIntervalAsTime)
+        val time = Time(0.0, TimeUnit.SECOND)
+        assertFalse(calibrator.getAccelerometerAverageTimeIntervalAsTime(time))
+        assertNull(calibrator.accelerometerTimeIntervalVariance)
+        assertNull(calibrator.accelerometerTimeIntervalStandardDeviation)
+        assertNull(calibrator.accelerometerTimeIntervalStandardDeviationAsTime)
+        assertFalse(calibrator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
+        assertEquals(
+            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
+            calibrator.requiredMeasurements
+        )
+        assertEquals(0, calibrator.numberOfProcessedAccelerometerMeasurements)
     }
 
     @Test
@@ -331,6 +387,62 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNull(calibrator.estimatedAccelerometerBiasStandardDeviationNorm)
         assertTrue(calibrator.accelerometerMeasurements.isEmpty())
         assertFalse(calibrator.isReadyToSolveCalibration)
+        assertFalse(calibrator.running)
+        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
+            calibrator.initialStaticSamples
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
+            calibrator.thresholdFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
+            calibrator.instantaneousNoiseLevelFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
+            calibrator.baseNoiseLevelAbsoluteThreshold,
+            0.0
+        )
+        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
+        assertEquals(
+            calibrator.baseNoiseLevelAbsoluteThreshold,
+            baseNoiseLevel1.value.toDouble(),
+            0.0
+        )
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, baseNoiseLevel1.unit)
+        val baseNoiseLevel2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
+        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
+        assertNull(calibrator.accelerometerBaseNoiseLevel)
+        assertNull(calibrator.accelerometerBaseNoiseLevelAsMeasurement)
+        assertFalse(calibrator.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration))
+        assertNull(calibrator.accelerometerBaseNoiseLevelPsd)
+        assertNull(calibrator.accelerometerBaseNoiseLevelRootPsd)
+        assertNull(calibrator.threshold)
+        assertNull(calibrator.thresholdAsMeasurement)
+        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
+        assertEquals(0, calibrator.processedStaticSamples)
+        assertEquals(0, calibrator.processedDynamicSamples)
+        assertFalse(calibrator.isStaticIntervalSkipped)
+        assertFalse(calibrator.isDynamicIntervalSkipped)
+        assertNull(calibrator.accelerometerAverageTimeInterval)
+        assertNull(calibrator.accelerometerAverageTimeIntervalAsTime)
+        val time = Time(0.0, TimeUnit.SECOND)
+        assertFalse(calibrator.getAccelerometerAverageTimeIntervalAsTime(time))
+        assertNull(calibrator.accelerometerTimeIntervalVariance)
+        assertNull(calibrator.accelerometerTimeIntervalStandardDeviation)
+        assertNull(calibrator.accelerometerTimeIntervalStandardDeviationAsTime)
+        assertFalse(calibrator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
+        assertEquals(
+            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
+            calibrator.requiredMeasurements
+        )
+        assertEquals(0, calibrator.numberOfProcessedAccelerometerMeasurements)
     }
 
     @Test
@@ -470,6 +582,62 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNull(calibrator.estimatedAccelerometerBiasStandardDeviationNorm)
         assertTrue(calibrator.accelerometerMeasurements.isEmpty())
         assertFalse(calibrator.isReadyToSolveCalibration)
+        assertFalse(calibrator.running)
+        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
+            calibrator.initialStaticSamples
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
+            calibrator.thresholdFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
+            calibrator.instantaneousNoiseLevelFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
+            calibrator.baseNoiseLevelAbsoluteThreshold,
+            0.0
+        )
+        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
+        assertEquals(
+            calibrator.baseNoiseLevelAbsoluteThreshold,
+            baseNoiseLevel1.value.toDouble(),
+            0.0
+        )
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, baseNoiseLevel1.unit)
+        val baseNoiseLevel2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
+        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
+        assertNull(calibrator.accelerometerBaseNoiseLevel)
+        assertNull(calibrator.accelerometerBaseNoiseLevelAsMeasurement)
+        assertFalse(calibrator.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration))
+        assertNull(calibrator.accelerometerBaseNoiseLevelPsd)
+        assertNull(calibrator.accelerometerBaseNoiseLevelRootPsd)
+        assertNull(calibrator.threshold)
+        assertNull(calibrator.thresholdAsMeasurement)
+        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
+        assertEquals(0, calibrator.processedStaticSamples)
+        assertEquals(0, calibrator.processedDynamicSamples)
+        assertFalse(calibrator.isStaticIntervalSkipped)
+        assertFalse(calibrator.isDynamicIntervalSkipped)
+        assertNull(calibrator.accelerometerAverageTimeInterval)
+        assertNull(calibrator.accelerometerAverageTimeIntervalAsTime)
+        val time = Time(0.0, TimeUnit.SECOND)
+        assertFalse(calibrator.getAccelerometerAverageTimeIntervalAsTime(time))
+        assertNull(calibrator.accelerometerTimeIntervalVariance)
+        assertNull(calibrator.accelerometerTimeIntervalStandardDeviation)
+        assertNull(calibrator.accelerometerTimeIntervalStandardDeviationAsTime)
+        assertFalse(calibrator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
+        assertEquals(
+            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
+            calibrator.requiredMeasurements
+        )
+        assertEquals(0, calibrator.numberOfProcessedAccelerometerMeasurements)
     }
 
     @Test
@@ -610,6 +778,62 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNull(calibrator.estimatedAccelerometerBiasStandardDeviationNorm)
         assertTrue(calibrator.accelerometerMeasurements.isEmpty())
         assertFalse(calibrator.isReadyToSolveCalibration)
+        assertFalse(calibrator.running)
+        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
+            calibrator.initialStaticSamples
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
+            calibrator.thresholdFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
+            calibrator.instantaneousNoiseLevelFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
+            calibrator.baseNoiseLevelAbsoluteThreshold,
+            0.0
+        )
+        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
+        assertEquals(
+            calibrator.baseNoiseLevelAbsoluteThreshold,
+            baseNoiseLevel1.value.toDouble(),
+            0.0
+        )
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, baseNoiseLevel1.unit)
+        val baseNoiseLevel2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
+        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
+        assertNull(calibrator.accelerometerBaseNoiseLevel)
+        assertNull(calibrator.accelerometerBaseNoiseLevelAsMeasurement)
+        assertFalse(calibrator.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration))
+        assertNull(calibrator.accelerometerBaseNoiseLevelPsd)
+        assertNull(calibrator.accelerometerBaseNoiseLevelRootPsd)
+        assertNull(calibrator.threshold)
+        assertNull(calibrator.thresholdAsMeasurement)
+        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
+        assertEquals(0, calibrator.processedStaticSamples)
+        assertEquals(0, calibrator.processedDynamicSamples)
+        assertFalse(calibrator.isStaticIntervalSkipped)
+        assertFalse(calibrator.isDynamicIntervalSkipped)
+        assertNull(calibrator.accelerometerAverageTimeInterval)
+        assertNull(calibrator.accelerometerAverageTimeIntervalAsTime)
+        val time = Time(0.0, TimeUnit.SECOND)
+        assertFalse(calibrator.getAccelerometerAverageTimeIntervalAsTime(time))
+        assertNull(calibrator.accelerometerTimeIntervalVariance)
+        assertNull(calibrator.accelerometerTimeIntervalStandardDeviation)
+        assertNull(calibrator.accelerometerTimeIntervalStandardDeviationAsTime)
+        assertFalse(calibrator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
+        assertEquals(
+            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
+            calibrator.requiredMeasurements
+        )
+        assertEquals(0, calibrator.numberOfProcessedAccelerometerMeasurements)
     }
 
     @Test
@@ -751,6 +975,62 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNull(calibrator.estimatedAccelerometerBiasStandardDeviationNorm)
         assertTrue(calibrator.accelerometerMeasurements.isEmpty())
         assertFalse(calibrator.isReadyToSolveCalibration)
+        assertFalse(calibrator.running)
+        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
+            calibrator.initialStaticSamples
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
+            calibrator.thresholdFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
+            calibrator.instantaneousNoiseLevelFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
+            calibrator.baseNoiseLevelAbsoluteThreshold,
+            0.0
+        )
+        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
+        assertEquals(
+            calibrator.baseNoiseLevelAbsoluteThreshold,
+            baseNoiseLevel1.value.toDouble(),
+            0.0
+        )
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, baseNoiseLevel1.unit)
+        val baseNoiseLevel2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
+        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
+        assertNull(calibrator.accelerometerBaseNoiseLevel)
+        assertNull(calibrator.accelerometerBaseNoiseLevelAsMeasurement)
+        assertFalse(calibrator.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration))
+        assertNull(calibrator.accelerometerBaseNoiseLevelPsd)
+        assertNull(calibrator.accelerometerBaseNoiseLevelRootPsd)
+        assertNull(calibrator.threshold)
+        assertNull(calibrator.thresholdAsMeasurement)
+        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
+        assertEquals(0, calibrator.processedStaticSamples)
+        assertEquals(0, calibrator.processedDynamicSamples)
+        assertFalse(calibrator.isStaticIntervalSkipped)
+        assertFalse(calibrator.isDynamicIntervalSkipped)
+        assertNull(calibrator.accelerometerAverageTimeInterval)
+        assertNull(calibrator.accelerometerAverageTimeIntervalAsTime)
+        val time = Time(0.0, TimeUnit.SECOND)
+        assertFalse(calibrator.getAccelerometerAverageTimeIntervalAsTime(time))
+        assertNull(calibrator.accelerometerTimeIntervalVariance)
+        assertNull(calibrator.accelerometerTimeIntervalStandardDeviation)
+        assertNull(calibrator.accelerometerTimeIntervalStandardDeviationAsTime)
+        assertFalse(calibrator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
+        assertEquals(
+            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_COMMON_Z_AXIS,
+            calibrator.requiredMeasurements
+        )
+        assertEquals(0, calibrator.numberOfProcessedAccelerometerMeasurements)
     }
 
     @Test
@@ -895,6 +1175,62 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNull(calibrator.estimatedAccelerometerBiasStandardDeviationNorm)
         assertTrue(calibrator.accelerometerMeasurements.isEmpty())
         assertFalse(calibrator.isReadyToSolveCalibration)
+        assertFalse(calibrator.running)
+        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
+            calibrator.initialStaticSamples
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
+            calibrator.thresholdFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
+            calibrator.instantaneousNoiseLevelFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
+            calibrator.baseNoiseLevelAbsoluteThreshold,
+            0.0
+        )
+        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
+        assertEquals(
+            calibrator.baseNoiseLevelAbsoluteThreshold,
+            baseNoiseLevel1.value.toDouble(),
+            0.0
+        )
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, baseNoiseLevel1.unit)
+        val baseNoiseLevel2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
+        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
+        assertNull(calibrator.accelerometerBaseNoiseLevel)
+        assertNull(calibrator.accelerometerBaseNoiseLevelAsMeasurement)
+        assertFalse(calibrator.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration))
+        assertNull(calibrator.accelerometerBaseNoiseLevelPsd)
+        assertNull(calibrator.accelerometerBaseNoiseLevelRootPsd)
+        assertNull(calibrator.threshold)
+        assertNull(calibrator.thresholdAsMeasurement)
+        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
+        assertEquals(0, calibrator.processedStaticSamples)
+        assertEquals(0, calibrator.processedDynamicSamples)
+        assertFalse(calibrator.isStaticIntervalSkipped)
+        assertFalse(calibrator.isDynamicIntervalSkipped)
+        assertNull(calibrator.accelerometerAverageTimeInterval)
+        assertNull(calibrator.accelerometerAverageTimeIntervalAsTime)
+        val time = Time(0.0, TimeUnit.SECOND)
+        assertFalse(calibrator.getAccelerometerAverageTimeIntervalAsTime(time))
+        assertNull(calibrator.accelerometerTimeIntervalVariance)
+        assertNull(calibrator.accelerometerTimeIntervalStandardDeviation)
+        assertNull(calibrator.accelerometerTimeIntervalStandardDeviationAsTime)
+        assertFalse(calibrator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
+        assertEquals(
+            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_COMMON_Z_AXIS,
+            calibrator.requiredMeasurements
+        )
+        assertEquals(0, calibrator.numberOfProcessedAccelerometerMeasurements)
     }
 
     @Test
@@ -1041,6 +1377,62 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNull(calibrator.estimatedAccelerometerBiasStandardDeviationNorm)
         assertTrue(calibrator.accelerometerMeasurements.isEmpty())
         assertFalse(calibrator.isReadyToSolveCalibration)
+        assertFalse(calibrator.running)
+        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
+            calibrator.initialStaticSamples
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
+            calibrator.thresholdFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
+            calibrator.instantaneousNoiseLevelFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
+            calibrator.baseNoiseLevelAbsoluteThreshold,
+            0.0
+        )
+        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
+        assertEquals(
+            calibrator.baseNoiseLevelAbsoluteThreshold,
+            baseNoiseLevel1.value.toDouble(),
+            0.0
+        )
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, baseNoiseLevel1.unit)
+        val baseNoiseLevel2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
+        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
+        assertNull(calibrator.accelerometerBaseNoiseLevel)
+        assertNull(calibrator.accelerometerBaseNoiseLevelAsMeasurement)
+        assertFalse(calibrator.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration))
+        assertNull(calibrator.accelerometerBaseNoiseLevelPsd)
+        assertNull(calibrator.accelerometerBaseNoiseLevelRootPsd)
+        assertNull(calibrator.threshold)
+        assertNull(calibrator.thresholdAsMeasurement)
+        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
+        assertEquals(0, calibrator.processedStaticSamples)
+        assertEquals(0, calibrator.processedDynamicSamples)
+        assertFalse(calibrator.isStaticIntervalSkipped)
+        assertFalse(calibrator.isDynamicIntervalSkipped)
+        assertNull(calibrator.accelerometerAverageTimeInterval)
+        assertNull(calibrator.accelerometerAverageTimeIntervalAsTime)
+        val time = Time(0.0, TimeUnit.SECOND)
+        assertFalse(calibrator.getAccelerometerAverageTimeIntervalAsTime(time))
+        assertNull(calibrator.accelerometerTimeIntervalVariance)
+        assertNull(calibrator.accelerometerTimeIntervalStandardDeviation)
+        assertNull(calibrator.accelerometerTimeIntervalStandardDeviationAsTime)
+        assertFalse(calibrator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
+        assertEquals(
+            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_COMMON_Z_AXIS,
+            calibrator.requiredMeasurements
+        )
+        assertEquals(0, calibrator.numberOfProcessedAccelerometerMeasurements)
     }
 
     @Test
@@ -1190,6 +1582,62 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNull(calibrator.estimatedAccelerometerBiasStandardDeviationNorm)
         assertTrue(calibrator.accelerometerMeasurements.isEmpty())
         assertFalse(calibrator.isReadyToSolveCalibration)
+        assertFalse(calibrator.running)
+        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
+            calibrator.initialStaticSamples
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
+            calibrator.thresholdFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
+            calibrator.instantaneousNoiseLevelFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
+            calibrator.baseNoiseLevelAbsoluteThreshold,
+            0.0
+        )
+        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
+        assertEquals(
+            calibrator.baseNoiseLevelAbsoluteThreshold,
+            baseNoiseLevel1.value.toDouble(),
+            0.0
+        )
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, baseNoiseLevel1.unit)
+        val baseNoiseLevel2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
+        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
+        assertNull(calibrator.accelerometerBaseNoiseLevel)
+        assertNull(calibrator.accelerometerBaseNoiseLevelAsMeasurement)
+        assertFalse(calibrator.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration))
+        assertNull(calibrator.accelerometerBaseNoiseLevelPsd)
+        assertNull(calibrator.accelerometerBaseNoiseLevelRootPsd)
+        assertNull(calibrator.threshold)
+        assertNull(calibrator.thresholdAsMeasurement)
+        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
+        assertEquals(0, calibrator.processedStaticSamples)
+        assertEquals(0, calibrator.processedDynamicSamples)
+        assertFalse(calibrator.isStaticIntervalSkipped)
+        assertFalse(calibrator.isDynamicIntervalSkipped)
+        assertNull(calibrator.accelerometerAverageTimeInterval)
+        assertNull(calibrator.accelerometerAverageTimeIntervalAsTime)
+        val time = Time(0.0, TimeUnit.SECOND)
+        assertFalse(calibrator.getAccelerometerAverageTimeIntervalAsTime(time))
+        assertNull(calibrator.accelerometerTimeIntervalVariance)
+        assertNull(calibrator.accelerometerTimeIntervalStandardDeviation)
+        assertNull(calibrator.accelerometerTimeIntervalStandardDeviationAsTime)
+        assertFalse(calibrator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
+        assertEquals(
+            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_COMMON_Z_AXIS,
+            calibrator.requiredMeasurements
+        )
+        assertEquals(0, calibrator.numberOfProcessedAccelerometerMeasurements)
     }
 
     @Test
@@ -1342,6 +1790,62 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNull(calibrator.estimatedAccelerometerBiasStandardDeviationNorm)
         assertTrue(calibrator.accelerometerMeasurements.isEmpty())
         assertFalse(calibrator.isReadyToSolveCalibration)
+        assertFalse(calibrator.running)
+        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
+            calibrator.initialStaticSamples
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
+            calibrator.thresholdFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
+            calibrator.instantaneousNoiseLevelFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
+            calibrator.baseNoiseLevelAbsoluteThreshold,
+            0.0
+        )
+        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
+        assertEquals(
+            calibrator.baseNoiseLevelAbsoluteThreshold,
+            baseNoiseLevel1.value.toDouble(),
+            0.0
+        )
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, baseNoiseLevel1.unit)
+        val baseNoiseLevel2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
+        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
+        assertNull(calibrator.accelerometerBaseNoiseLevel)
+        assertNull(calibrator.accelerometerBaseNoiseLevelAsMeasurement)
+        assertFalse(calibrator.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration))
+        assertNull(calibrator.accelerometerBaseNoiseLevelPsd)
+        assertNull(calibrator.accelerometerBaseNoiseLevelRootPsd)
+        assertNull(calibrator.threshold)
+        assertNull(calibrator.thresholdAsMeasurement)
+        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
+        assertEquals(0, calibrator.processedStaticSamples)
+        assertEquals(0, calibrator.processedDynamicSamples)
+        assertFalse(calibrator.isStaticIntervalSkipped)
+        assertFalse(calibrator.isDynamicIntervalSkipped)
+        assertNull(calibrator.accelerometerAverageTimeInterval)
+        assertNull(calibrator.accelerometerAverageTimeIntervalAsTime)
+        val time = Time(0.0, TimeUnit.SECOND)
+        assertFalse(calibrator.getAccelerometerAverageTimeIntervalAsTime(time))
+        assertNull(calibrator.accelerometerTimeIntervalVariance)
+        assertNull(calibrator.accelerometerTimeIntervalStandardDeviation)
+        assertNull(calibrator.accelerometerTimeIntervalStandardDeviationAsTime)
+        assertFalse(calibrator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
+        assertEquals(
+            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_COMMON_Z_AXIS,
+            calibrator.requiredMeasurements
+        )
+        assertEquals(0, calibrator.numberOfProcessedAccelerometerMeasurements)
     }
 
     @Test
@@ -1497,6 +2001,62 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNull(calibrator.estimatedAccelerometerBiasStandardDeviationNorm)
         assertTrue(calibrator.accelerometerMeasurements.isEmpty())
         assertFalse(calibrator.isReadyToSolveCalibration)
+        assertFalse(calibrator.running)
+        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
+            calibrator.initialStaticSamples
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
+            calibrator.thresholdFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
+            calibrator.instantaneousNoiseLevelFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
+            calibrator.baseNoiseLevelAbsoluteThreshold,
+            0.0
+        )
+        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
+        assertEquals(
+            calibrator.baseNoiseLevelAbsoluteThreshold,
+            baseNoiseLevel1.value.toDouble(),
+            0.0
+        )
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, baseNoiseLevel1.unit)
+        val baseNoiseLevel2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
+        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
+        assertNull(calibrator.accelerometerBaseNoiseLevel)
+        assertNull(calibrator.accelerometerBaseNoiseLevelAsMeasurement)
+        assertFalse(calibrator.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration))
+        assertNull(calibrator.accelerometerBaseNoiseLevelPsd)
+        assertNull(calibrator.accelerometerBaseNoiseLevelRootPsd)
+        assertNull(calibrator.threshold)
+        assertNull(calibrator.thresholdAsMeasurement)
+        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
+        assertEquals(0, calibrator.processedStaticSamples)
+        assertEquals(0, calibrator.processedDynamicSamples)
+        assertFalse(calibrator.isStaticIntervalSkipped)
+        assertFalse(calibrator.isDynamicIntervalSkipped)
+        assertNull(calibrator.accelerometerAverageTimeInterval)
+        assertNull(calibrator.accelerometerAverageTimeIntervalAsTime)
+        val time = Time(0.0, TimeUnit.SECOND)
+        assertFalse(calibrator.getAccelerometerAverageTimeIntervalAsTime(time))
+        assertNull(calibrator.accelerometerTimeIntervalVariance)
+        assertNull(calibrator.accelerometerTimeIntervalStandardDeviation)
+        assertNull(calibrator.accelerometerTimeIntervalStandardDeviationAsTime)
+        assertFalse(calibrator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
+        assertEquals(
+            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_COMMON_Z_AXIS,
+            calibrator.requiredMeasurements
+        )
+        assertEquals(0, calibrator.numberOfProcessedAccelerometerMeasurements)
     }
 
     @Test
@@ -1655,6 +2215,62 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNull(calibrator.estimatedAccelerometerBiasStandardDeviationNorm)
         assertTrue(calibrator.accelerometerMeasurements.isEmpty())
         assertFalse(calibrator.isReadyToSolveCalibration)
+        assertFalse(calibrator.running)
+        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
+            calibrator.initialStaticSamples
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
+            calibrator.thresholdFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
+            calibrator.instantaneousNoiseLevelFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
+            calibrator.baseNoiseLevelAbsoluteThreshold,
+            0.0
+        )
+        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
+        assertEquals(
+            calibrator.baseNoiseLevelAbsoluteThreshold,
+            baseNoiseLevel1.value.toDouble(),
+            0.0
+        )
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, baseNoiseLevel1.unit)
+        val baseNoiseLevel2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
+        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
+        assertNull(calibrator.accelerometerBaseNoiseLevel)
+        assertNull(calibrator.accelerometerBaseNoiseLevelAsMeasurement)
+        assertFalse(calibrator.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration))
+        assertNull(calibrator.accelerometerBaseNoiseLevelPsd)
+        assertNull(calibrator.accelerometerBaseNoiseLevelRootPsd)
+        assertNull(calibrator.threshold)
+        assertNull(calibrator.thresholdAsMeasurement)
+        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
+        assertEquals(0, calibrator.processedStaticSamples)
+        assertEquals(0, calibrator.processedDynamicSamples)
+        assertFalse(calibrator.isStaticIntervalSkipped)
+        assertFalse(calibrator.isDynamicIntervalSkipped)
+        assertNull(calibrator.accelerometerAverageTimeInterval)
+        assertNull(calibrator.accelerometerAverageTimeIntervalAsTime)
+        val time = Time(0.0, TimeUnit.SECOND)
+        assertFalse(calibrator.getAccelerometerAverageTimeIntervalAsTime(time))
+        assertNull(calibrator.accelerometerTimeIntervalVariance)
+        assertNull(calibrator.accelerometerTimeIntervalStandardDeviation)
+        assertNull(calibrator.accelerometerTimeIntervalStandardDeviationAsTime)
+        assertFalse(calibrator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
+        assertEquals(
+            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_COMMON_Z_AXIS,
+            calibrator.requiredMeasurements
+        )
+        assertEquals(0, calibrator.numberOfProcessedAccelerometerMeasurements)
     }
 
     @Test
@@ -1816,6 +2432,62 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNull(calibrator.estimatedAccelerometerBiasStandardDeviationNorm)
         assertTrue(calibrator.accelerometerMeasurements.isEmpty())
         assertFalse(calibrator.isReadyToSolveCalibration)
+        assertFalse(calibrator.running)
+        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
+            calibrator.initialStaticSamples
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
+            calibrator.thresholdFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
+            calibrator.instantaneousNoiseLevelFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
+            calibrator.baseNoiseLevelAbsoluteThreshold,
+            0.0
+        )
+        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
+        assertEquals(
+            calibrator.baseNoiseLevelAbsoluteThreshold,
+            baseNoiseLevel1.value.toDouble(),
+            0.0
+        )
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, baseNoiseLevel1.unit)
+        val baseNoiseLevel2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
+        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
+        assertNull(calibrator.accelerometerBaseNoiseLevel)
+        assertNull(calibrator.accelerometerBaseNoiseLevelAsMeasurement)
+        assertFalse(calibrator.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration))
+        assertNull(calibrator.accelerometerBaseNoiseLevelPsd)
+        assertNull(calibrator.accelerometerBaseNoiseLevelRootPsd)
+        assertNull(calibrator.threshold)
+        assertNull(calibrator.thresholdAsMeasurement)
+        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
+        assertEquals(0, calibrator.processedStaticSamples)
+        assertEquals(0, calibrator.processedDynamicSamples)
+        assertFalse(calibrator.isStaticIntervalSkipped)
+        assertFalse(calibrator.isDynamicIntervalSkipped)
+        assertNull(calibrator.accelerometerAverageTimeInterval)
+        assertNull(calibrator.accelerometerAverageTimeIntervalAsTime)
+        val time = Time(0.0, TimeUnit.SECOND)
+        assertFalse(calibrator.getAccelerometerAverageTimeIntervalAsTime(time))
+        assertNull(calibrator.accelerometerTimeIntervalVariance)
+        assertNull(calibrator.accelerometerTimeIntervalStandardDeviation)
+        assertNull(calibrator.accelerometerTimeIntervalStandardDeviationAsTime)
+        assertFalse(calibrator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
+        assertEquals(
+            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_COMMON_Z_AXIS,
+            calibrator.requiredMeasurements
+        )
+        assertEquals(0, calibrator.numberOfProcessedAccelerometerMeasurements)
     }
 
     @Test
@@ -1980,6 +2652,62 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNull(calibrator.estimatedAccelerometerBiasStandardDeviationNorm)
         assertTrue(calibrator.accelerometerMeasurements.isEmpty())
         assertFalse(calibrator.isReadyToSolveCalibration)
+        assertFalse(calibrator.running)
+        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
+            calibrator.initialStaticSamples
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
+            calibrator.thresholdFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
+            calibrator.instantaneousNoiseLevelFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
+            calibrator.baseNoiseLevelAbsoluteThreshold,
+            0.0
+        )
+        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
+        assertEquals(
+            calibrator.baseNoiseLevelAbsoluteThreshold,
+            baseNoiseLevel1.value.toDouble(),
+            0.0
+        )
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, baseNoiseLevel1.unit)
+        val baseNoiseLevel2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
+        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
+        assertNull(calibrator.accelerometerBaseNoiseLevel)
+        assertNull(calibrator.accelerometerBaseNoiseLevelAsMeasurement)
+        assertFalse(calibrator.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration))
+        assertNull(calibrator.accelerometerBaseNoiseLevelPsd)
+        assertNull(calibrator.accelerometerBaseNoiseLevelRootPsd)
+        assertNull(calibrator.threshold)
+        assertNull(calibrator.thresholdAsMeasurement)
+        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
+        assertEquals(0, calibrator.processedStaticSamples)
+        assertEquals(0, calibrator.processedDynamicSamples)
+        assertFalse(calibrator.isStaticIntervalSkipped)
+        assertFalse(calibrator.isDynamicIntervalSkipped)
+        assertNull(calibrator.accelerometerAverageTimeInterval)
+        assertNull(calibrator.accelerometerAverageTimeIntervalAsTime)
+        val time = Time(0.0, TimeUnit.SECOND)
+        assertFalse(calibrator.getAccelerometerAverageTimeIntervalAsTime(time))
+        assertNull(calibrator.accelerometerTimeIntervalVariance)
+        assertNull(calibrator.accelerometerTimeIntervalStandardDeviation)
+        assertNull(calibrator.accelerometerTimeIntervalStandardDeviationAsTime)
+        assertFalse(calibrator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
+        assertEquals(
+            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_COMMON_Z_AXIS,
+            calibrator.requiredMeasurements
+        )
+        assertEquals(0, calibrator.numberOfProcessedAccelerometerMeasurements)
     }
 
     @Test
@@ -2150,6 +2878,62 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNull(calibrator.estimatedAccelerometerBiasStandardDeviationNorm)
         assertTrue(calibrator.accelerometerMeasurements.isEmpty())
         assertFalse(calibrator.isReadyToSolveCalibration)
+        assertFalse(calibrator.running)
+        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
+            calibrator.initialStaticSamples
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
+            calibrator.thresholdFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
+            calibrator.instantaneousNoiseLevelFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
+            calibrator.baseNoiseLevelAbsoluteThreshold,
+            0.0
+        )
+        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
+        assertEquals(
+            calibrator.baseNoiseLevelAbsoluteThreshold,
+            baseNoiseLevel1.value.toDouble(),
+            0.0
+        )
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, baseNoiseLevel1.unit)
+        val baseNoiseLevel2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
+        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
+        assertNull(calibrator.accelerometerBaseNoiseLevel)
+        assertNull(calibrator.accelerometerBaseNoiseLevelAsMeasurement)
+        assertFalse(calibrator.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration))
+        assertNull(calibrator.accelerometerBaseNoiseLevelPsd)
+        assertNull(calibrator.accelerometerBaseNoiseLevelRootPsd)
+        assertNull(calibrator.threshold)
+        assertNull(calibrator.thresholdAsMeasurement)
+        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
+        assertEquals(0, calibrator.processedStaticSamples)
+        assertEquals(0, calibrator.processedDynamicSamples)
+        assertFalse(calibrator.isStaticIntervalSkipped)
+        assertFalse(calibrator.isDynamicIntervalSkipped)
+        assertNull(calibrator.accelerometerAverageTimeInterval)
+        assertNull(calibrator.accelerometerAverageTimeIntervalAsTime)
+        val time = Time(0.0, TimeUnit.SECOND)
+        assertFalse(calibrator.getAccelerometerAverageTimeIntervalAsTime(time))
+        assertNull(calibrator.accelerometerTimeIntervalVariance)
+        assertNull(calibrator.accelerometerTimeIntervalStandardDeviation)
+        assertNull(calibrator.accelerometerTimeIntervalStandardDeviationAsTime)
+        assertFalse(calibrator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
+        assertEquals(
+            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_COMMON_Z_AXIS,
+            calibrator.requiredMeasurements
+        )
+        assertEquals(0, calibrator.numberOfProcessedAccelerometerMeasurements)
     }
 
     @Test
@@ -2323,6 +3107,62 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNull(calibrator.estimatedAccelerometerBiasStandardDeviationNorm)
         assertTrue(calibrator.accelerometerMeasurements.isEmpty())
         assertFalse(calibrator.isReadyToSolveCalibration)
+        assertFalse(calibrator.running)
+        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
+            calibrator.initialStaticSamples
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
+            calibrator.thresholdFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
+            calibrator.instantaneousNoiseLevelFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
+            calibrator.baseNoiseLevelAbsoluteThreshold,
+            0.0
+        )
+        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
+        assertEquals(
+            calibrator.baseNoiseLevelAbsoluteThreshold,
+            baseNoiseLevel1.value.toDouble(),
+            0.0
+        )
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, baseNoiseLevel1.unit)
+        val baseNoiseLevel2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
+        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
+        assertNull(calibrator.accelerometerBaseNoiseLevel)
+        assertNull(calibrator.accelerometerBaseNoiseLevelAsMeasurement)
+        assertFalse(calibrator.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration))
+        assertNull(calibrator.accelerometerBaseNoiseLevelPsd)
+        assertNull(calibrator.accelerometerBaseNoiseLevelRootPsd)
+        assertNull(calibrator.threshold)
+        assertNull(calibrator.thresholdAsMeasurement)
+        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
+        assertEquals(0, calibrator.processedStaticSamples)
+        assertEquals(0, calibrator.processedDynamicSamples)
+        assertFalse(calibrator.isStaticIntervalSkipped)
+        assertFalse(calibrator.isDynamicIntervalSkipped)
+        assertNull(calibrator.accelerometerAverageTimeInterval)
+        assertNull(calibrator.accelerometerAverageTimeIntervalAsTime)
+        val time = Time(0.0, TimeUnit.SECOND)
+        assertFalse(calibrator.getAccelerometerAverageTimeIntervalAsTime(time))
+        assertNull(calibrator.accelerometerTimeIntervalVariance)
+        assertNull(calibrator.accelerometerTimeIntervalStandardDeviation)
+        assertNull(calibrator.accelerometerTimeIntervalStandardDeviationAsTime)
+        assertFalse(calibrator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
+        assertEquals(
+            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_COMMON_Z_AXIS,
+            calibrator.requiredMeasurements
+        )
+        assertEquals(0, calibrator.numberOfProcessedAccelerometerMeasurements)
     }
 
     @Test
@@ -2499,6 +3339,62 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNull(calibrator.estimatedAccelerometerBiasStandardDeviationNorm)
         assertTrue(calibrator.accelerometerMeasurements.isEmpty())
         assertFalse(calibrator.isReadyToSolveCalibration)
+        assertFalse(calibrator.running)
+        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
+            calibrator.initialStaticSamples
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
+            calibrator.thresholdFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
+            calibrator.instantaneousNoiseLevelFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
+            calibrator.baseNoiseLevelAbsoluteThreshold,
+            0.0
+        )
+        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
+        assertEquals(
+            calibrator.baseNoiseLevelAbsoluteThreshold,
+            baseNoiseLevel1.value.toDouble(),
+            0.0
+        )
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, baseNoiseLevel1.unit)
+        val baseNoiseLevel2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
+        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
+        assertNull(calibrator.accelerometerBaseNoiseLevel)
+        assertNull(calibrator.accelerometerBaseNoiseLevelAsMeasurement)
+        assertFalse(calibrator.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration))
+        assertNull(calibrator.accelerometerBaseNoiseLevelPsd)
+        assertNull(calibrator.accelerometerBaseNoiseLevelRootPsd)
+        assertNull(calibrator.threshold)
+        assertNull(calibrator.thresholdAsMeasurement)
+        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
+        assertEquals(0, calibrator.processedStaticSamples)
+        assertEquals(0, calibrator.processedDynamicSamples)
+        assertFalse(calibrator.isStaticIntervalSkipped)
+        assertFalse(calibrator.isDynamicIntervalSkipped)
+        assertNull(calibrator.accelerometerAverageTimeInterval)
+        assertNull(calibrator.accelerometerAverageTimeIntervalAsTime)
+        val time = Time(0.0, TimeUnit.SECOND)
+        assertFalse(calibrator.getAccelerometerAverageTimeIntervalAsTime(time))
+        assertNull(calibrator.accelerometerTimeIntervalVariance)
+        assertNull(calibrator.accelerometerTimeIntervalStandardDeviation)
+        assertNull(calibrator.accelerometerTimeIntervalStandardDeviationAsTime)
+        assertFalse(calibrator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
+        assertEquals(
+            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_COMMON_Z_AXIS,
+            calibrator.requiredMeasurements
+        )
+        assertEquals(0, calibrator.numberOfProcessedAccelerometerMeasurements)
     }
 
     @Test
@@ -2678,6 +3574,62 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNull(calibrator.estimatedAccelerometerBiasStandardDeviationNorm)
         assertTrue(calibrator.accelerometerMeasurements.isEmpty())
         assertFalse(calibrator.isReadyToSolveCalibration)
+        assertFalse(calibrator.running)
+        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
+            calibrator.initialStaticSamples
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
+            calibrator.thresholdFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
+            calibrator.instantaneousNoiseLevelFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
+            calibrator.baseNoiseLevelAbsoluteThreshold,
+            0.0
+        )
+        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
+        assertEquals(
+            calibrator.baseNoiseLevelAbsoluteThreshold,
+            baseNoiseLevel1.value.toDouble(),
+            0.0
+        )
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, baseNoiseLevel1.unit)
+        val baseNoiseLevel2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
+        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
+        assertNull(calibrator.accelerometerBaseNoiseLevel)
+        assertNull(calibrator.accelerometerBaseNoiseLevelAsMeasurement)
+        assertFalse(calibrator.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration))
+        assertNull(calibrator.accelerometerBaseNoiseLevelPsd)
+        assertNull(calibrator.accelerometerBaseNoiseLevelRootPsd)
+        assertNull(calibrator.threshold)
+        assertNull(calibrator.thresholdAsMeasurement)
+        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
+        assertEquals(0, calibrator.processedStaticSamples)
+        assertEquals(0, calibrator.processedDynamicSamples)
+        assertFalse(calibrator.isStaticIntervalSkipped)
+        assertFalse(calibrator.isDynamicIntervalSkipped)
+        assertNull(calibrator.accelerometerAverageTimeInterval)
+        assertNull(calibrator.accelerometerAverageTimeIntervalAsTime)
+        val time = Time(0.0, TimeUnit.SECOND)
+        assertFalse(calibrator.getAccelerometerAverageTimeIntervalAsTime(time))
+        assertNull(calibrator.accelerometerTimeIntervalVariance)
+        assertNull(calibrator.accelerometerTimeIntervalStandardDeviation)
+        assertNull(calibrator.accelerometerTimeIntervalStandardDeviationAsTime)
+        assertFalse(calibrator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
+        assertEquals(
+            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_COMMON_Z_AXIS,
+            calibrator.requiredMeasurements
+        )
+        assertEquals(0, calibrator.numberOfProcessedAccelerometerMeasurements)
     }
 
     @Test
@@ -2860,6 +3812,62 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNull(calibrator.estimatedAccelerometerBiasStandardDeviationNorm)
         assertTrue(calibrator.accelerometerMeasurements.isEmpty())
         assertFalse(calibrator.isReadyToSolveCalibration)
+        assertFalse(calibrator.running)
+        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
+            calibrator.initialStaticSamples
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
+            calibrator.thresholdFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
+            calibrator.instantaneousNoiseLevelFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
+            calibrator.baseNoiseLevelAbsoluteThreshold,
+            0.0
+        )
+        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
+        assertEquals(
+            calibrator.baseNoiseLevelAbsoluteThreshold,
+            baseNoiseLevel1.value.toDouble(),
+            0.0
+        )
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, baseNoiseLevel1.unit)
+        val baseNoiseLevel2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
+        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
+        assertNull(calibrator.accelerometerBaseNoiseLevel)
+        assertNull(calibrator.accelerometerBaseNoiseLevelAsMeasurement)
+        assertFalse(calibrator.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration))
+        assertNull(calibrator.accelerometerBaseNoiseLevelPsd)
+        assertNull(calibrator.accelerometerBaseNoiseLevelRootPsd)
+        assertNull(calibrator.threshold)
+        assertNull(calibrator.thresholdAsMeasurement)
+        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
+        assertEquals(0, calibrator.processedStaticSamples)
+        assertEquals(0, calibrator.processedDynamicSamples)
+        assertFalse(calibrator.isStaticIntervalSkipped)
+        assertFalse(calibrator.isDynamicIntervalSkipped)
+        assertNull(calibrator.accelerometerAverageTimeInterval)
+        assertNull(calibrator.accelerometerAverageTimeIntervalAsTime)
+        val time = Time(0.0, TimeUnit.SECOND)
+        assertFalse(calibrator.getAccelerometerAverageTimeIntervalAsTime(time))
+        assertNull(calibrator.accelerometerTimeIntervalVariance)
+        assertNull(calibrator.accelerometerTimeIntervalStandardDeviation)
+        assertNull(calibrator.accelerometerTimeIntervalStandardDeviationAsTime)
+        assertFalse(calibrator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
+        assertEquals(
+            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_COMMON_Z_AXIS,
+            calibrator.requiredMeasurements
+        )
+        assertEquals(0, calibrator.numberOfProcessedAccelerometerMeasurements)
     }
 
     @Test
@@ -3048,6 +4056,62 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNull(calibrator.estimatedAccelerometerBiasStandardDeviationNorm)
         assertTrue(calibrator.accelerometerMeasurements.isEmpty())
         assertFalse(calibrator.isReadyToSolveCalibration)
+        assertFalse(calibrator.running)
+        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
+            calibrator.initialStaticSamples
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
+            calibrator.thresholdFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
+            calibrator.instantaneousNoiseLevelFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
+            calibrator.baseNoiseLevelAbsoluteThreshold,
+            0.0
+        )
+        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
+        assertEquals(
+            calibrator.baseNoiseLevelAbsoluteThreshold,
+            baseNoiseLevel1.value.toDouble(),
+            0.0
+        )
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, baseNoiseLevel1.unit)
+        val baseNoiseLevel2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
+        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
+        assertNull(calibrator.accelerometerBaseNoiseLevel)
+        assertNull(calibrator.accelerometerBaseNoiseLevelAsMeasurement)
+        assertFalse(calibrator.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration))
+        assertNull(calibrator.accelerometerBaseNoiseLevelPsd)
+        assertNull(calibrator.accelerometerBaseNoiseLevelRootPsd)
+        assertNull(calibrator.threshold)
+        assertNull(calibrator.thresholdAsMeasurement)
+        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
+        assertEquals(0, calibrator.processedStaticSamples)
+        assertEquals(0, calibrator.processedDynamicSamples)
+        assertFalse(calibrator.isStaticIntervalSkipped)
+        assertFalse(calibrator.isDynamicIntervalSkipped)
+        assertNull(calibrator.accelerometerAverageTimeInterval)
+        assertNull(calibrator.accelerometerAverageTimeIntervalAsTime)
+        val time = Time(0.0, TimeUnit.SECOND)
+        assertFalse(calibrator.getAccelerometerAverageTimeIntervalAsTime(time))
+        assertNull(calibrator.accelerometerTimeIntervalVariance)
+        assertNull(calibrator.accelerometerTimeIntervalStandardDeviation)
+        assertNull(calibrator.accelerometerTimeIntervalStandardDeviationAsTime)
+        assertFalse(calibrator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
+        assertEquals(
+            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_COMMON_Z_AXIS,
+            calibrator.requiredMeasurements
+        )
+        assertEquals(0, calibrator.numberOfProcessedAccelerometerMeasurements)
     }
 
     @Test
@@ -3242,6 +4306,62 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNull(calibrator.estimatedAccelerometerBiasStandardDeviationNorm)
         assertTrue(calibrator.accelerometerMeasurements.isEmpty())
         assertFalse(calibrator.isReadyToSolveCalibration)
+        assertFalse(calibrator.running)
+        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
+            calibrator.initialStaticSamples
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
+            calibrator.thresholdFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
+            calibrator.instantaneousNoiseLevelFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
+            calibrator.baseNoiseLevelAbsoluteThreshold,
+            0.0
+        )
+        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
+        assertEquals(
+            calibrator.baseNoiseLevelAbsoluteThreshold,
+            baseNoiseLevel1.value.toDouble(),
+            0.0
+        )
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, baseNoiseLevel1.unit)
+        val baseNoiseLevel2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
+        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
+        assertNull(calibrator.accelerometerBaseNoiseLevel)
+        assertNull(calibrator.accelerometerBaseNoiseLevelAsMeasurement)
+        assertFalse(calibrator.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration))
+        assertNull(calibrator.accelerometerBaseNoiseLevelPsd)
+        assertNull(calibrator.accelerometerBaseNoiseLevelRootPsd)
+        assertNull(calibrator.threshold)
+        assertNull(calibrator.thresholdAsMeasurement)
+        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
+        assertEquals(0, calibrator.processedStaticSamples)
+        assertEquals(0, calibrator.processedDynamicSamples)
+        assertFalse(calibrator.isStaticIntervalSkipped)
+        assertFalse(calibrator.isDynamicIntervalSkipped)
+        assertNull(calibrator.accelerometerAverageTimeInterval)
+        assertNull(calibrator.accelerometerAverageTimeIntervalAsTime)
+        val time = Time(0.0, TimeUnit.SECOND)
+        assertFalse(calibrator.getAccelerometerAverageTimeIntervalAsTime(time))
+        assertNull(calibrator.accelerometerTimeIntervalVariance)
+        assertNull(calibrator.accelerometerTimeIntervalStandardDeviation)
+        assertNull(calibrator.accelerometerTimeIntervalStandardDeviationAsTime)
+        assertFalse(calibrator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
+        assertEquals(
+            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_COMMON_Z_AXIS,
+            calibrator.requiredMeasurements
+        )
+        assertEquals(0, calibrator.numberOfProcessedAccelerometerMeasurements)
     }
 
     @Test
@@ -3438,6 +4558,62 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNull(calibrator.estimatedAccelerometerBiasStandardDeviationNorm)
         assertTrue(calibrator.accelerometerMeasurements.isEmpty())
         assertFalse(calibrator.isReadyToSolveCalibration)
+        assertFalse(calibrator.running)
+        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
+            calibrator.initialStaticSamples
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
+            calibrator.thresholdFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
+            calibrator.instantaneousNoiseLevelFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
+            calibrator.baseNoiseLevelAbsoluteThreshold,
+            0.0
+        )
+        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
+        assertEquals(
+            calibrator.baseNoiseLevelAbsoluteThreshold,
+            baseNoiseLevel1.value.toDouble(),
+            0.0
+        )
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, baseNoiseLevel1.unit)
+        val baseNoiseLevel2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
+        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
+        assertNull(calibrator.accelerometerBaseNoiseLevel)
+        assertNull(calibrator.accelerometerBaseNoiseLevelAsMeasurement)
+        assertFalse(calibrator.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration))
+        assertNull(calibrator.accelerometerBaseNoiseLevelPsd)
+        assertNull(calibrator.accelerometerBaseNoiseLevelRootPsd)
+        assertNull(calibrator.threshold)
+        assertNull(calibrator.thresholdAsMeasurement)
+        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
+        assertEquals(0, calibrator.processedStaticSamples)
+        assertEquals(0, calibrator.processedDynamicSamples)
+        assertFalse(calibrator.isStaticIntervalSkipped)
+        assertFalse(calibrator.isDynamicIntervalSkipped)
+        assertNull(calibrator.accelerometerAverageTimeInterval)
+        assertNull(calibrator.accelerometerAverageTimeIntervalAsTime)
+        val time = Time(0.0, TimeUnit.SECOND)
+        assertFalse(calibrator.getAccelerometerAverageTimeIntervalAsTime(time))
+        assertNull(calibrator.accelerometerTimeIntervalVariance)
+        assertNull(calibrator.accelerometerTimeIntervalStandardDeviation)
+        assertNull(calibrator.accelerometerTimeIntervalStandardDeviationAsTime)
+        assertFalse(calibrator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
+        assertEquals(
+            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_COMMON_Z_AXIS,
+            calibrator.requiredMeasurements
+        )
+        assertEquals(0, calibrator.numberOfProcessedAccelerometerMeasurements)
     }
 
     @Test
@@ -3636,6 +4812,62 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNull(calibrator.estimatedAccelerometerBiasStandardDeviationNorm)
         assertTrue(calibrator.accelerometerMeasurements.isEmpty())
         assertFalse(calibrator.isReadyToSolveCalibration)
+        assertFalse(calibrator.running)
+        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
+            calibrator.initialStaticSamples
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
+            calibrator.thresholdFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
+            calibrator.instantaneousNoiseLevelFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
+            calibrator.baseNoiseLevelAbsoluteThreshold,
+            0.0
+        )
+        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
+        assertEquals(
+            calibrator.baseNoiseLevelAbsoluteThreshold,
+            baseNoiseLevel1.value.toDouble(),
+            0.0
+        )
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, baseNoiseLevel1.unit)
+        val baseNoiseLevel2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
+        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
+        assertNull(calibrator.accelerometerBaseNoiseLevel)
+        assertNull(calibrator.accelerometerBaseNoiseLevelAsMeasurement)
+        assertFalse(calibrator.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration))
+        assertNull(calibrator.accelerometerBaseNoiseLevelPsd)
+        assertNull(calibrator.accelerometerBaseNoiseLevelRootPsd)
+        assertNull(calibrator.threshold)
+        assertNull(calibrator.thresholdAsMeasurement)
+        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
+        assertEquals(0, calibrator.processedStaticSamples)
+        assertEquals(0, calibrator.processedDynamicSamples)
+        assertFalse(calibrator.isStaticIntervalSkipped)
+        assertFalse(calibrator.isDynamicIntervalSkipped)
+        assertNull(calibrator.accelerometerAverageTimeInterval)
+        assertNull(calibrator.accelerometerAverageTimeIntervalAsTime)
+        val time = Time(0.0, TimeUnit.SECOND)
+        assertFalse(calibrator.getAccelerometerAverageTimeIntervalAsTime(time))
+        assertNull(calibrator.accelerometerTimeIntervalVariance)
+        assertNull(calibrator.accelerometerTimeIntervalStandardDeviation)
+        assertNull(calibrator.accelerometerTimeIntervalStandardDeviationAsTime)
+        assertFalse(calibrator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
+        assertEquals(
+            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_COMMON_Z_AXIS,
+            calibrator.requiredMeasurements
+        )
+        assertEquals(0, calibrator.numberOfProcessedAccelerometerMeasurements)
     }
 
     @Test
@@ -4416,7 +5648,7 @@ class StaticIntervalAccelerometerCalibratorTest {
     }
 
     @Test
-    fun setAccelerometerInitialScalingFactors_whenNotRunning_setsExpectedValue() {
+    fun setAccelerometerInitialScalingFactors_whenNotRunning_setsExpectedValues() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
@@ -5387,7 +6619,7 @@ class StaticIntervalAccelerometerCalibratorTest {
     }
 
     @Test
-    fun onError_whenNoListeners_stopsCollectorAndGravityNormEstimator() {
+    fun onError_whenNoListeners_stopsGeneratorAndGravityNormEstimator() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
@@ -5676,7 +6908,7 @@ class StaticIntervalAccelerometerCalibratorTest {
     }
 
     @Test
-    fun onGeneratedMeasurement_whenReadyToCalibrate_stopsAndBuildCalibrator() {
+    fun onGeneratedMeasurement_whenReadyToCalibrate_stopsAndBuildsCalibrator() {
         val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(
@@ -6121,9 +7353,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(0)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
-        val generatorDetectorMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
-            calibrator.getPrivateProperty("generatorDetectorMeasurementListener")
-        requireNotNull(generatorDetectorMeasurementListener)
+        val generatorAccelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
+            calibrator.getPrivateProperty("generatorAccelerometerMeasurementListener")
+        requireNotNull(generatorAccelerometerMeasurementListener)
 
         val randomizer = UniformRandomizer()
         val ax = randomizer.nextFloat()
@@ -6134,7 +7366,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         val bz = randomizer.nextFloat()
         val timestamp = SystemClock.elapsedRealtimeNanos()
         val accuracy = SensorAccuracy.HIGH
-        generatorDetectorMeasurementListener.onMeasurement(
+        generatorAccelerometerMeasurementListener.onMeasurement(
             ax,
             ay,
             az,
@@ -6172,9 +7404,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(0)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
-        val generatorDetectorMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
-            calibrator.getPrivateProperty("generatorDetectorMeasurementListener")
-        requireNotNull(generatorDetectorMeasurementListener)
+        val generatorAccelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
+            calibrator.getPrivateProperty("generatorAccelerometerMeasurementListener")
+        requireNotNull(generatorAccelerometerMeasurementListener)
 
         val randomizer = UniformRandomizer()
         val ax = randomizer.nextFloat()
@@ -6184,7 +7416,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         val bz = randomizer.nextFloat()
         val timestamp = SystemClock.elapsedRealtimeNanos()
         val accuracy = SensorAccuracy.HIGH
-        generatorDetectorMeasurementListener.onMeasurement(
+        generatorAccelerometerMeasurementListener.onMeasurement(
             ax,
             ay,
             az,
@@ -6222,9 +7454,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(0)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
-        val generatorDetectorMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
-            calibrator.getPrivateProperty("generatorDetectorMeasurementListener")
-        requireNotNull(generatorDetectorMeasurementListener)
+        val generatorAccelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
+            calibrator.getPrivateProperty("generatorAccelerometerMeasurementListener")
+        requireNotNull(generatorAccelerometerMeasurementListener)
 
         val randomizer = UniformRandomizer()
         val ax = randomizer.nextFloat()
@@ -6234,7 +7466,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         val bz = randomizer.nextFloat()
         val timestamp = SystemClock.elapsedRealtimeNanos()
         val accuracy = SensorAccuracy.HIGH
-        generatorDetectorMeasurementListener.onMeasurement(
+        generatorAccelerometerMeasurementListener.onMeasurement(
             ax,
             ay,
             az,
@@ -6272,9 +7504,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(0)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
-        val generatorDetectorMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
-            calibrator.getPrivateProperty("generatorDetectorMeasurementListener")
-        requireNotNull(generatorDetectorMeasurementListener)
+        val generatorAccelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
+            calibrator.getPrivateProperty("generatorAccelerometerMeasurementListener")
+        requireNotNull(generatorAccelerometerMeasurementListener)
 
         val randomizer = UniformRandomizer()
         val ax = randomizer.nextFloat()
@@ -6284,7 +7516,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         val by = randomizer.nextFloat()
         val timestamp = SystemClock.elapsedRealtimeNanos()
         val accuracy = SensorAccuracy.HIGH
-        generatorDetectorMeasurementListener.onMeasurement(
+        generatorAccelerometerMeasurementListener.onMeasurement(
             ax,
             ay,
             az,
@@ -6329,9 +7561,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(0)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
-        val generatorDetectorMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
-            calibrator.getPrivateProperty("generatorDetectorMeasurementListener")
-        requireNotNull(generatorDetectorMeasurementListener)
+        val generatorAccelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
+            calibrator.getPrivateProperty("generatorAccelerometerMeasurementListener")
+        requireNotNull(generatorAccelerometerMeasurementListener)
 
         val randomizer = UniformRandomizer()
         val ax = randomizer.nextFloat()
@@ -6342,7 +7574,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         val bz = randomizer.nextFloat()
         val timestamp = SystemClock.elapsedRealtimeNanos()
         val accuracy = SensorAccuracy.HIGH
-        generatorDetectorMeasurementListener.onMeasurement(
+        generatorAccelerometerMeasurementListener.onMeasurement(
             ax,
             ay,
             az,
@@ -6396,9 +7628,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(2)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
-        val generatorDetectorMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
-            calibrator.getPrivateProperty("generatorDetectorMeasurementListener")
-        requireNotNull(generatorDetectorMeasurementListener)
+        val generatorAccelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
+            calibrator.getPrivateProperty("generatorAccelerometerMeasurementListener")
+        requireNotNull(generatorAccelerometerMeasurementListener)
 
         val randomizer = UniformRandomizer()
         val ax = randomizer.nextFloat()
@@ -6409,7 +7641,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         val bz = randomizer.nextFloat()
         val timestamp = SystemClock.elapsedRealtimeNanos()
         val accuracy = SensorAccuracy.HIGH
-        generatorDetectorMeasurementListener.onMeasurement(
+        generatorAccelerometerMeasurementListener.onMeasurement(
             ax,
             ay,
             az,
@@ -6859,7 +8091,6 @@ class StaticIntervalAccelerometerCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
-        // check default value
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)

@@ -16,7 +16,11 @@
 package com.irurueta.android.navigation.inertial.calibration.intervals.measurements
 
 import android.content.Context
-import com.irurueta.android.navigation.inertial.collectors.*
+import com.irurueta.android.navigation.inertial.calibration.intervals.Status
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.SensorCollector
+import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.navigation.inertial.BodyKinematics
 import com.irurueta.navigation.inertial.calibration.BodyKinematicsSequence
 import com.irurueta.navigation.inertial.calibration.StandardDeviationTimedBodyKinematics
@@ -24,6 +28,9 @@ import com.irurueta.navigation.inertial.calibration.TimedBodyKinematics
 import com.irurueta.navigation.inertial.calibration.generators.GyroscopeMeasurementsGenerator
 import com.irurueta.navigation.inertial.calibration.generators.GyroscopeMeasurementsGeneratorListener
 import com.irurueta.navigation.inertial.calibration.intervals.TriadStaticIntervalDetector
+import com.irurueta.navigation.inertial.calibration.noise.AccumulatedAngularSpeedTriadNoiseEstimator
+import com.irurueta.units.AngularSpeed
+import com.irurueta.units.AngularSpeedUnit
 
 /**
  * Generates measurements that can later be used by gyroscope calibrators.
@@ -197,6 +204,12 @@ class GyroscopeMeasurementGenerator(
     private val kinematics = BodyKinematics()
 
     /**
+     * Estimates accumulated average and noise of gyroscope values during static periods.
+     */
+    private val gyroscopeAccumulatedNoiseEstimator =
+        AccumulatedAngularSpeedTriadNoiseEstimator()
+
+    /**
      * Sample used by internal measurement generator.
      */
     override val sample = TimedBodyKinematics()
@@ -212,6 +225,21 @@ class GyroscopeMeasurementGenerator(
             kinematics.angularRateX = wx.toDouble()
             kinematics.angularRateY = wy.toDouble()
             kinematics.angularRateZ = wz.toDouble()
+
+            if (status == Status.INITIALIZING) {
+                gyroscopeAccumulatedNoiseEstimator.addTriad(
+                    kinematics.angularRateX,
+                    kinematics.angularRateY,
+                    kinematics.angularRateZ
+                )
+            }
+
+            numberOfProcessedGyroscopeMeasurements++
+
+            if (status == Status.INITIALIZATION_COMPLETED) {
+                gyroscopeBaseNoiseLevel =
+                    gyroscopeAccumulatedNoiseEstimator.standardDeviationNorm
+            }
 
             gyroscopeMeasurementListener?.onMeasurement(wx, wy, wz, bx, by, bz, timestamp, accuracy)
         }
@@ -236,6 +264,44 @@ class GyroscopeMeasurementGenerator(
         get() = gyroscopeCollector.sensor
 
     /**
+     * Number of gyroscope measurements that have been processed.
+     */
+    var numberOfProcessedGyroscopeMeasurements: Int = 0
+        private set
+
+    /**
+     * Gets gyroscope measurement base noise level that has been detected during initialization
+     * expressed in radians per second (rad/s).
+     * This is only available once generator completes initialization.
+     */
+    var gyroscopeBaseNoiseLevel: Double? = null
+        private set
+
+    /**
+     * Gets gyroscope measurement base noise level that has been detected during initialization.
+     * This is only available once generator completes initialization.
+     */
+    val gyroscopeBaseNoiseLevelAsMeasurement: AngularSpeed?
+        get() {
+            val value = gyroscopeBaseNoiseLevel ?: return null
+            return AngularSpeed(value, AngularSpeedUnit.RADIANS_PER_SECOND)
+        }
+
+    /**
+     * Gets gyroscope measurement base noise level that has been detected during initialization.
+     * This is only available once generator completes initialization.
+     *
+     * @param result instance where result will be stored.
+     * @return true if result is available, false otherwise.
+     */
+    fun getGyroscopeBaseNoiseLevelAsMeasurement(result: AngularSpeed): Boolean {
+        val value = gyroscopeBaseNoiseLevel ?: return false
+        result.value = value
+        result.unit = AngularSpeedUnit.RADIANS_PER_SECOND
+        return true
+    }
+
+    /**
      * Starts collection of sensor measurements.
      *
      * @throws IllegalStateException if detector is already running or sensor is not available.
@@ -243,6 +309,9 @@ class GyroscopeMeasurementGenerator(
     @Throws(IllegalStateException::class)
     override fun start() {
         super.start()
+
+        reset()
+
         if (!gyroscopeCollector.start()) {
             stop()
             throw IllegalStateException("Unavailable gyroscope sensor")
@@ -255,5 +324,14 @@ class GyroscopeMeasurementGenerator(
     override fun stop() {
         gyroscopeCollector.stop()
         super.stop()
+    }
+
+    /**
+     * Resets generator to its initial state.
+     */
+    private fun reset() {
+        numberOfProcessedGyroscopeMeasurements = 0
+        gyroscopeBaseNoiseLevel = null
+        gyroscopeAccumulatedNoiseEstimator.reset()
     }
 }

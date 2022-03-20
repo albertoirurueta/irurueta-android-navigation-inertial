@@ -25,7 +25,6 @@ import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCol
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.android.navigation.inertial.toNEDPosition
 import com.irurueta.navigation.NavigationException
-import com.irurueta.navigation.inertial.BodyKinematics
 import com.irurueta.navigation.inertial.BodyMagneticFluxDensity
 import com.irurueta.navigation.inertial.calibration.MagneticFluxDensityTriad
 import com.irurueta.navigation.inertial.calibration.StandardDeviationBodyMagneticFluxDensity
@@ -34,6 +33,7 @@ import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.Qu
 import com.irurueta.navigation.inertial.calibration.magnetometer.*
 import com.irurueta.navigation.inertial.wmm.WorldMagneticModel
 import com.irurueta.units.MagneticFluxDensity
+import com.irurueta.units.MagneticFluxDensityConverter
 import com.irurueta.units.MagneticFluxDensityUnit
 import java.util.*
 import kotlin.math.pow
@@ -256,7 +256,7 @@ class SingleSensorStaticIntervalMagnetometerCalibrator private constructor(
      * If [isGroundTruthInitialHardIron] is true, this is assumed to be the true hard iron, and
      * [estimatedHardIronX] will be equal to this value, otherwise [estimatedHardIronX] will be
      * the estimated hard iron after solving calibration, which will differ from
-     * [estimatedHardIronX].
+     * [initialHardIronX].
      */
     var initialHardIronX: Double? = null
         private set
@@ -273,7 +273,7 @@ class SingleSensorStaticIntervalMagnetometerCalibrator private constructor(
      * If [isGroundTruthInitialHardIron] is true, this is assumed to be the true hard iron, and
      * [estimatedHardIronY] will be equal to this value, otherwise [estimatedHardIronY] will be
      * the estimated hard iron after solving calibration, which will differ from
-     * [estimatedHardIronY].
+     * [initialHardIronY].
      */
     var initialHardIronY: Double? = null
         private set
@@ -290,7 +290,7 @@ class SingleSensorStaticIntervalMagnetometerCalibrator private constructor(
      * If [isGroundTruthInitialHardIron] is true, this is assumed to be the true hard iron, and
      * [estimatedHardIronZ] will be equal to this value, otherwise [estimatedHardIronZ] will be
      * the estimated hard iron after solving calibration, which will differ from
-     * [estimatedHardIronZ].
+     * [initialHardIronZ].
      */
     var initialHardIronZ: Double? = null
         private set
@@ -307,7 +307,7 @@ class SingleSensorStaticIntervalMagnetometerCalibrator private constructor(
      * If [isGroundTruthInitialHardIron] is true, this is assumed to be the true hard iron, and
      * [estimatedHardIronX] will be equal to this value, otherwise [estimatedHardIronX] will be
      * the estimated hard iron after solving calibration, which will differ from
-     * [estimatedHardIronX].
+     * [initialHardIronX].
      */
     val initialHardIronXAsMeasurement: MagneticFluxDensity?
         get() {
@@ -327,7 +327,7 @@ class SingleSensorStaticIntervalMagnetometerCalibrator private constructor(
      * If [isGroundTruthInitialHardIron] is true, this is assumed to be the true hard iron, and
      * [estimatedHardIronX] will be equal to this value, otherwise [estimatedHardIronX] will be
      * the estimated hard iron after solving calibration, which will differ from
-     * [estimatedHardIronX].
+     * [initialHardIronX].
      *
      * @param result instance where result will be stored.
      * @return true if initial hard iron is available, false otherwise.
@@ -355,7 +355,7 @@ class SingleSensorStaticIntervalMagnetometerCalibrator private constructor(
      * If [isGroundTruthInitialHardIron] is true, this is assumed to be the true hard iron, and
      * [estimatedHardIronY] will be equal to this value, otherwise [estimatedHardIronY] will be
      * the estimated hard iron after solving calibration, which will differ from
-     * [estimatedHardIronY].
+     * [initialHardIronY].
      */
     val initialHardIronYAsMeasurement: MagneticFluxDensity?
         get() {
@@ -375,7 +375,7 @@ class SingleSensorStaticIntervalMagnetometerCalibrator private constructor(
      * If [isGroundTruthInitialHardIron] is true, this is assumed to be the true hard iron, and
      * [estimatedHardIronY] will be equal to this value, otherwise [estimatedHardIronY] will be
      * the estimated hard iron after solving calibration, which will differ from
-     * [estimatedHardIronY].
+     * [initialHardIronY].
      *
      * @param result instance where result will be stored.
      * @return true if initial hard iron is available, false otherwise.
@@ -403,7 +403,7 @@ class SingleSensorStaticIntervalMagnetometerCalibrator private constructor(
      * If [isGroundTruthInitialHardIron] is true, this is assumed to be the true hard iron, and
      * [estimatedHardIronZ] will be equal to this value, otherwise [estimatedHardIronZ] will be
      * the estimated hard iron after solving calibration, which will differ from
-     * [estimatedHardIronZ].
+     * [initialHardIronZ].
      */
     val initialHardIronZAsMeasurement: MagneticFluxDensity?
         get() {
@@ -423,7 +423,7 @@ class SingleSensorStaticIntervalMagnetometerCalibrator private constructor(
      * If [isGroundTruthInitialHardIron] is true, this is assumed to be the true hard iron, and
      * [estimatedHardIronZ] will be equal to this value, otherwise [estimatedHardIronZ] will be
      * the estimated hard iron after solving calibration, which will differ from
-     * [estimatedHardIronZ].
+     * [initialHardIronZ].
      *
      * @param result instance where result will be stored.
      * @return true if initial hard iron is available, false otherwise.
@@ -592,14 +592,15 @@ class SingleSensorStaticIntervalMagnetometerCalibrator private constructor(
      */
     var initialMm: Matrix
         get() {
-            val result = Matrix(BodyKinematics.COMPONENTS, BodyKinematics.COMPONENTS)
+            val result =
+                Matrix(MagneticFluxDensityTriad.COMPONENTS, MagneticFluxDensityTriad.COMPONENTS)
             getInitialMm(result)
             return result
         }
         @Throws(IllegalStateException::class, IllegalArgumentException::class)
         set(value) {
             check(!running)
-            require(value.rows == BodyKinematics.COMPONENTS && value.columns == BodyKinematics.COMPONENTS)
+            require(value.rows == MagneticFluxDensityTriad.COMPONENTS && value.columns == MagneticFluxDensityTriad.COMPONENTS)
 
             initialSx = value.getElementAtIndex(0)
             initialMyx = value.getElementAtIndex(1)
@@ -623,7 +624,7 @@ class SingleSensorStaticIntervalMagnetometerCalibrator private constructor(
      */
     @Throws(IllegalArgumentException::class)
     fun getInitialMm(result: Matrix) {
-        require(result.rows == BodyKinematics.COMPONENTS && result.columns == BodyKinematics.COMPONENTS)
+        require(result.rows == MagneticFluxDensityTriad.COMPONENTS && result.columns == MagneticFluxDensityTriad.COMPONENTS)
 
         result.setElementAtIndex(0, initialSx)
         result.setElementAtIndex(1, initialMyx)
@@ -1066,18 +1067,18 @@ class SingleSensorStaticIntervalMagnetometerCalibrator private constructor(
      * hardware calibrated hard irons are retrieved if
      * [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED] is used.
      *
-     * @param hardIronX x-coordinate of initial hard iron to be set expressed in Teslas (T).
-     * @param hardIronY y-coordinate of initial hard iron to be set expressed in Teslas (T).
-     * @param hardIronZ z-coordinate of initial hard iron to be set expressed in Teslas (T).
+     * @param hardIronX x-coordinate of initial hard iron to be set expressed in micro-Teslas (µT).
+     * @param hardIronY y-coordinate of initial hard iron to be set expressed in micro-Teslas (µT).
+     * @param hardIronZ z-coordinate of initial hard iron to be set expressed in micro-Teslas (mT).
      */
     private fun updateInitialHardIrons(hardIronX: Float?, hardIronY: Float?, hardIronZ: Float?) {
         val initialHardIronX: Double
         val initialHardIronY: Double
         val initialHardIronZ: Double
         if (hardIronX != null && hardIronY != null && hardIronZ != null) {
-            initialHardIronX = hardIronX.toDouble()
-            initialHardIronY = hardIronY.toDouble()
-            initialHardIronZ = hardIronZ.toDouble()
+            initialHardIronX = MagneticFluxDensityConverter.microTeslaToTesla(hardIronX.toDouble())
+            initialHardIronY = MagneticFluxDensityConverter.microTeslaToTesla(hardIronY.toDouble())
+            initialHardIronZ = MagneticFluxDensityConverter.microTeslaToTesla(hardIronZ.toDouble())
         } else {
             initialHardIronX = 0.0
             initialHardIronY = 0.0

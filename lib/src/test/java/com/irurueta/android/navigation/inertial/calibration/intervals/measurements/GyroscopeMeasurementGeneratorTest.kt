@@ -35,6 +35,7 @@ import com.irurueta.navigation.inertial.calibration.generators.GyroscopeMeasurem
 import com.irurueta.navigation.inertial.calibration.generators.GyroscopeMeasurementsGeneratorListener
 import com.irurueta.navigation.inertial.calibration.generators.MeasurementsGenerator
 import com.irurueta.navigation.inertial.calibration.intervals.TriadStaticIntervalDetector
+import com.irurueta.navigation.inertial.calibration.noise.AccumulatedAngularSpeedTriadNoiseEstimator
 import com.irurueta.statistics.UniformRandomizer
 import com.irurueta.units.*
 import io.mockk.*
@@ -137,8 +138,13 @@ class GyroscopeMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedGyroscopeMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
+        assertNull(generator.gyroscopeBaseNoiseLevel)
+        assertNull(generator.gyroscopeBaseNoiseLevelAsMeasurement)
+        val angularSpeed = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertFalse(generator.getGyroscopeBaseNoiseLevelAsMeasurement(angularSpeed))
     }
 
     @Test
@@ -235,9 +241,13 @@ class GyroscopeMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedGyroscopeMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
-
+        assertNull(generator.gyroscopeBaseNoiseLevel)
+        assertNull(generator.gyroscopeBaseNoiseLevelAsMeasurement)
+        val angularSpeed = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertFalse(generator.getGyroscopeBaseNoiseLevelAsMeasurement(angularSpeed))
     }
 
     @Test
@@ -335,9 +345,13 @@ class GyroscopeMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedGyroscopeMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
-
+        assertNull(generator.gyroscopeBaseNoiseLevel)
+        assertNull(generator.gyroscopeBaseNoiseLevelAsMeasurement)
+        val angularSpeed = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertFalse(generator.getGyroscopeBaseNoiseLevelAsMeasurement(angularSpeed))
     }
 
     @Test
@@ -436,9 +450,13 @@ class GyroscopeMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedGyroscopeMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
-
+        assertNull(generator.gyroscopeBaseNoiseLevel)
+        assertNull(generator.gyroscopeBaseNoiseLevelAsMeasurement)
+        val angularSpeed = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertFalse(generator.getGyroscopeBaseNoiseLevelAsMeasurement(angularSpeed))
     }
 
     @Test
@@ -538,9 +556,13 @@ class GyroscopeMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedGyroscopeMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
-
+        assertNull(generator.gyroscopeBaseNoiseLevel)
+        assertNull(generator.gyroscopeBaseNoiseLevelAsMeasurement)
+        val angularSpeed = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertFalse(generator.getGyroscopeBaseNoiseLevelAsMeasurement(angularSpeed))
     }
 
     @Test
@@ -643,9 +665,13 @@ class GyroscopeMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedGyroscopeMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
-
+        assertNull(generator.gyroscopeBaseNoiseLevel)
+        assertNull(generator.gyroscopeBaseNoiseLevelAsMeasurement)
+        val angularSpeed = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertFalse(generator.getGyroscopeBaseNoiseLevelAsMeasurement(angularSpeed))
     }
 
     @Test
@@ -751,9 +777,13 @@ class GyroscopeMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedGyroscopeMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
-
+        assertNull(generator.gyroscopeBaseNoiseLevel)
+        assertNull(generator.gyroscopeBaseNoiseLevelAsMeasurement)
+        val angularSpeed = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertFalse(generator.getGyroscopeBaseNoiseLevelAsMeasurement(angularSpeed))
     }
 
     @Test
@@ -862,9 +892,13 @@ class GyroscopeMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedGyroscopeMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
-
+        assertNull(generator.gyroscopeBaseNoiseLevel)
+        assertNull(generator.gyroscopeBaseNoiseLevelAsMeasurement)
+        val angularSpeed = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertFalse(generator.getGyroscopeBaseNoiseLevelAsMeasurement(angularSpeed))
     }
 
     @Test
@@ -976,9 +1010,13 @@ class GyroscopeMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedGyroscopeMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
-
+        assertNull(generator.gyroscopeBaseNoiseLevel)
+        assertNull(generator.gyroscopeBaseNoiseLevelAsMeasurement)
+        val angularSpeed = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertFalse(generator.getGyroscopeBaseNoiseLevelAsMeasurement(angularSpeed))
     }
 
     @Test
@@ -1093,9 +1131,13 @@ class GyroscopeMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedGyroscopeMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
-
+        assertNull(generator.gyroscopeBaseNoiseLevel)
+        assertNull(generator.gyroscopeBaseNoiseLevelAsMeasurement)
+        val angularSpeed = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertFalse(generator.getGyroscopeBaseNoiseLevelAsMeasurement(angularSpeed))
     }
 
     @Test
@@ -1213,9 +1255,13 @@ class GyroscopeMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedGyroscopeMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
-
+        assertNull(generator.gyroscopeBaseNoiseLevel)
+        assertNull(generator.gyroscopeBaseNoiseLevelAsMeasurement)
+        val angularSpeed = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertFalse(generator.getGyroscopeBaseNoiseLevelAsMeasurement(angularSpeed))
     }
 
     @Test
@@ -1336,9 +1382,13 @@ class GyroscopeMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedGyroscopeMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
-
+        assertNull(generator.gyroscopeBaseNoiseLevel)
+        assertNull(generator.gyroscopeBaseNoiseLevelAsMeasurement)
+        val angularSpeed = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertFalse(generator.getGyroscopeBaseNoiseLevelAsMeasurement(angularSpeed))
     }
 
     @Test
@@ -1462,9 +1512,13 @@ class GyroscopeMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedGyroscopeMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
-
+        assertNull(generator.gyroscopeBaseNoiseLevel)
+        assertNull(generator.gyroscopeBaseNoiseLevelAsMeasurement)
+        val angularSpeed = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertFalse(generator.getGyroscopeBaseNoiseLevelAsMeasurement(angularSpeed))
     }
 
     @Test
@@ -1591,9 +1645,13 @@ class GyroscopeMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedGyroscopeMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
-
+        assertNull(generator.gyroscopeBaseNoiseLevel)
+        assertNull(generator.gyroscopeBaseNoiseLevelAsMeasurement)
+        val angularSpeed = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertFalse(generator.getGyroscopeBaseNoiseLevelAsMeasurement(angularSpeed))
     }
 
     @Test
@@ -1723,9 +1781,13 @@ class GyroscopeMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedGyroscopeMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
-
+        assertNull(generator.gyroscopeBaseNoiseLevel)
+        assertNull(generator.gyroscopeBaseNoiseLevelAsMeasurement)
+        val angularSpeed = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertFalse(generator.getGyroscopeBaseNoiseLevelAsMeasurement(angularSpeed))
     }
 
     @Test
@@ -1857,9 +1919,13 @@ class GyroscopeMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedGyroscopeMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
-
+        assertNull(generator.gyroscopeBaseNoiseLevel)
+        assertNull(generator.gyroscopeBaseNoiseLevelAsMeasurement)
+        val angularSpeed = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertFalse(generator.getGyroscopeBaseNoiseLevelAsMeasurement(angularSpeed))
     }
 
     @Test
@@ -1993,9 +2059,13 @@ class GyroscopeMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedGyroscopeMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
-
+        assertNull(generator.gyroscopeBaseNoiseLevel)
+        assertNull(generator.gyroscopeBaseNoiseLevelAsMeasurement)
+        val angularSpeed = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertFalse(generator.getGyroscopeBaseNoiseLevelAsMeasurement(angularSpeed))
     }
 
     @Test
@@ -4309,7 +4379,7 @@ class GyroscopeMeasurementGeneratorTest {
     }
 
     @Test
-    fun reset_setsValuesToInitialState() {
+    fun reset_setsValuesToInitialStateAndResetsAccumulatedNoiseEstimator() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = GyroscopeMeasurementGenerator(context)
 
@@ -4346,7 +4416,21 @@ class GyroscopeMeasurementGeneratorTest {
             "numberOfProcessedAccelerometerMeasurements",
             1
         )
+        generator.setPrivateProperty("numberOfProcessedGyroscopeMeasurements", 1)
         setPrivateProperty(CalibrationMeasurementGenerator::class, generator, "initialized", true)
+
+        val gyroscopeAccumulatedNoiseEstimator: AccumulatedAngularSpeedTriadNoiseEstimator? =
+            generator.getPrivateProperty("gyroscopeAccumulatedNoiseEstimator")
+        requireNotNull(gyroscopeAccumulatedNoiseEstimator)
+        val gyroscopeAccumulatedNoiseEstimatorSpy = spyk(gyroscopeAccumulatedNoiseEstimator)
+        generator.setPrivateProperty(
+            "gyroscopeAccumulatedNoiseEstimator",
+            gyroscopeAccumulatedNoiseEstimatorSpy
+        )
+        val randomizer = UniformRandomizer()
+        val gyroscopeBaseNoiseLevel = randomizer.nextDouble()
+        generator.setPrivateProperty("gyroscopeBaseNoiseLevel", gyroscopeBaseNoiseLevel)
+        assertEquals(gyroscopeBaseNoiseLevel, generator.gyroscopeBaseNoiseLevel)
 
         assertEquals(
             TimeIntervalEstimator.DEFAULT_TOTAL_SAMPLES,
@@ -4355,6 +4439,7 @@ class GyroscopeMeasurementGeneratorTest {
 
         // reset
         callPrivateFunc(SingleSensorCalibrationMeasurementGenerator::class, generator, "reset")
+        callPrivateFunc(GyroscopeMeasurementGenerator::class, generator, "reset")
 
         assertEquals(Integer.MAX_VALUE, accelerometerTimeIntervalEstimatorSpy.totalSamples)
         verify(exactly = 1) { accelerometerTimeIntervalEstimatorSpy.reset() }
@@ -4370,13 +4455,18 @@ class GyroscopeMeasurementGeneratorTest {
         )
         requireNotNull(initialAccelerometerTimestamp)
         assertEquals(0L, initialAccelerometerTimestamp)
-        val numberOfProcessedAccelerometerMeasurements: Int? = getPrivateProperty(
-            CalibrationMeasurementGenerator::class,
-            generator,
-            "numberOfProcessedAccelerometerMeasurements"
+        assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedGyroscopeMeasurements)
+        assertNull(generator.gyroscopeBaseNoiseLevel)
+        assertNull(generator.gyroscopeBaseNoiseLevelAsMeasurement)
+        assertFalse(
+            generator.getGyroscopeBaseNoiseLevelAsMeasurement(
+                AngularSpeed(
+                    0.0,
+                    AngularSpeedUnit.RADIANS_PER_SECOND
+                )
+            )
         )
-        requireNotNull(numberOfProcessedAccelerometerMeasurements)
-        assertEquals(0, numberOfProcessedAccelerometerMeasurements)
         val initialized: Boolean? =
             getPrivateProperty(CalibrationMeasurementGenerator::class, generator, "initialized")
         requireNotNull(initialized)
@@ -4756,6 +4846,7 @@ class GyroscopeMeasurementGeneratorTest {
         val generator = GyroscopeMeasurementGenerator(context)
 
         assertNull(generator.gyroscopeMeasurementListener)
+        assertEquals(0, generator.numberOfProcessedGyroscopeMeasurements)
 
         val gyroscopeCollectorMeasurementListener: GyroscopeSensorCollector.OnMeasurementListener? =
             generator.getPrivateProperty("gyroscopeCollectorMeasurementListener")
@@ -4791,6 +4882,7 @@ class GyroscopeMeasurementGeneratorTest {
         assertEquals(wx.toDouble(), kinematics.angularRateX, 0.0)
         assertEquals(wy.toDouble(), kinematics.angularRateY, 0.0)
         assertEquals(wz.toDouble(), kinematics.angularRateZ, 0.0)
+        assertEquals(1, generator.numberOfProcessedGyroscopeMeasurements)
     }
 
     @Test
@@ -4804,6 +4896,7 @@ class GyroscopeMeasurementGeneratorTest {
         )
 
         assertSame(gyroscopeMeasurementListener, generator.gyroscopeMeasurementListener)
+        assertEquals(0, generator.numberOfProcessedGyroscopeMeasurements)
 
         val gyroscopeCollectorMeasurementListener: GyroscopeSensorCollector.OnMeasurementListener? =
             generator.getPrivateProperty("gyroscopeCollectorMeasurementListener")
@@ -4839,6 +4932,7 @@ class GyroscopeMeasurementGeneratorTest {
         assertEquals(wx.toDouble(), kinematics.angularRateX, 0.0)
         assertEquals(wy.toDouble(), kinematics.angularRateY, 0.0)
         assertEquals(wz.toDouble(), kinematics.angularRateZ, 0.0)
+        assertEquals(1, generator.numberOfProcessedGyroscopeMeasurements)
 
         verify(exactly = 1) {
             gyroscopeMeasurementListener.onMeasurement(
@@ -4852,6 +4946,152 @@ class GyroscopeMeasurementGeneratorTest {
                 accuracy
             )
         }
+    }
+
+    @Test
+    fun onGyroscopeMeasurementListener_whenInitializing_accumulatesNoise() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val generator = GyroscopeMeasurementGenerator(context)
+
+        assertEquals(0, generator.numberOfProcessedGyroscopeMeasurements)
+
+        val measurementsGenerator: GyroscopeMeasurementsGenerator? =
+            generator.getPrivateProperty("measurementsGenerator")
+        requireNotNull(measurementsGenerator)
+        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+        every { measurementsGeneratorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZING)
+        generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
+
+        val gyroscopeAccumulatedNoiseEstimator: AccumulatedAngularSpeedTriadNoiseEstimator? =
+            generator.getPrivateProperty("gyroscopeAccumulatedNoiseEstimator")
+        requireNotNull(gyroscopeAccumulatedNoiseEstimator)
+        val gyroscopeAccumulatedNoiseEstimatorSpy = spyk(gyroscopeAccumulatedNoiseEstimator)
+        generator.setPrivateProperty(
+            "gyroscopeAccumulatedNoiseEstimator",
+            gyroscopeAccumulatedNoiseEstimatorSpy
+        )
+
+        val gyroscopeCollectorMeasurementListener: GyroscopeSensorCollector.OnMeasurementListener? =
+            generator.getPrivateProperty("gyroscopeCollectorMeasurementListener")
+        requireNotNull(gyroscopeCollectorMeasurementListener)
+
+        val kinematics: BodyKinematics? = generator.getPrivateProperty("kinematics")
+        requireNotNull(kinematics)
+        assertEquals(0.0, kinematics.angularRateX, 0.0)
+        assertEquals(0.0, kinematics.angularRateY, 0.0)
+        assertEquals(0.0, kinematics.angularRateZ, 0.0)
+
+        val randomizer = UniformRandomizer()
+        val wx = randomizer.nextFloat()
+        val wy = randomizer.nextFloat()
+        val wz = randomizer.nextFloat()
+        val bx = randomizer.nextFloat()
+        val by = randomizer.nextFloat()
+        val bz = randomizer.nextFloat()
+        val timestamp = SystemClock.elapsedRealtimeNanos()
+        val accuracy = SensorAccuracy.HIGH
+        gyroscopeCollectorMeasurementListener.onMeasurement(
+            wx,
+            wy,
+            wz,
+            bx,
+            by,
+            bz,
+            timestamp,
+            accuracy
+        )
+
+        // check
+        assertEquals(wx.toDouble(), kinematics.angularRateX, 0.0)
+        assertEquals(wy.toDouble(), kinematics.angularRateY, 0.0)
+        assertEquals(wz.toDouble(), kinematics.angularRateZ, 0.0)
+        assertEquals(1, generator.numberOfProcessedGyroscopeMeasurements)
+
+        verify(exactly = 1) {
+            gyroscopeAccumulatedNoiseEstimatorSpy.addTriad(
+                wx.toDouble(),
+                wy.toDouble(),
+                wz.toDouble()
+            )
+        }
+    }
+
+    @Test
+    fun onGyroscopeMeasurementListener_whenInitializationCompleted_setsGyroscopeBaseNoiseLevel() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val generator = GyroscopeMeasurementGenerator(context)
+
+        assertEquals(0, generator.numberOfProcessedGyroscopeMeasurements)
+        assertNull(generator.gyroscopeBaseNoiseLevel)
+        assertNull(generator.gyroscopeBaseNoiseLevelAsMeasurement)
+        val angularSpeed1 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertFalse(generator.getGyroscopeBaseNoiseLevelAsMeasurement(angularSpeed1))
+
+        val measurementsGenerator: GyroscopeMeasurementsGenerator? =
+            generator.getPrivateProperty("measurementsGenerator")
+        requireNotNull(measurementsGenerator)
+        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+        every { measurementsGeneratorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZATION_COMPLETED)
+        generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
+
+        val gyroscopeAccumulatedNoiseEstimator: AccumulatedAngularSpeedTriadNoiseEstimator? =
+            generator.getPrivateProperty("gyroscopeAccumulatedNoiseEstimator")
+        requireNotNull(gyroscopeAccumulatedNoiseEstimator)
+        val gyroscopeAccumulatedNoiseEstimatorSpy = spyk(gyroscopeAccumulatedNoiseEstimator)
+        val randomizer = UniformRandomizer()
+        val baseNoiseLevel = randomizer.nextDouble()
+        every { gyroscopeAccumulatedNoiseEstimatorSpy.standardDeviationNorm }.returns(baseNoiseLevel)
+        generator.setPrivateProperty(
+            "gyroscopeAccumulatedNoiseEstimator",
+            gyroscopeAccumulatedNoiseEstimatorSpy
+        )
+
+        val gyroscopeCollectorMeasurementListener: GyroscopeSensorCollector.OnMeasurementListener? =
+            generator.getPrivateProperty("gyroscopeCollectorMeasurementListener")
+        requireNotNull(gyroscopeCollectorMeasurementListener)
+
+        val kinematics: BodyKinematics? = generator.getPrivateProperty("kinematics")
+        requireNotNull(kinematics)
+        assertEquals(0.0, kinematics.angularRateX, 0.0)
+        assertEquals(0.0, kinematics.angularRateY, 0.0)
+        assertEquals(0.0, kinematics.angularRateZ, 0.0)
+
+        val wx = randomizer.nextFloat()
+        val wy = randomizer.nextFloat()
+        val wz = randomizer.nextFloat()
+        val bx = randomizer.nextFloat()
+        val by = randomizer.nextFloat()
+        val bz = randomizer.nextFloat()
+        val timestamp = SystemClock.elapsedRealtimeNanos()
+        val accuracy = SensorAccuracy.HIGH
+        gyroscopeCollectorMeasurementListener.onMeasurement(
+            wx,
+            wy,
+            wz,
+            bx,
+            by,
+            bz,
+            timestamp,
+            accuracy
+        )
+
+        // check
+        assertEquals(wx.toDouble(), kinematics.angularRateX, 0.0)
+        assertEquals(wy.toDouble(), kinematics.angularRateY, 0.0)
+        assertEquals(wz.toDouble(), kinematics.angularRateZ, 0.0)
+        assertEquals(1, generator.numberOfProcessedGyroscopeMeasurements)
+
+        verify(exactly = 1) {
+            gyroscopeAccumulatedNoiseEstimatorSpy.standardDeviationNorm
+        }
+        assertEquals(baseNoiseLevel, generator.gyroscopeBaseNoiseLevel)
+        val angularSpeed2 = generator.gyroscopeBaseNoiseLevelAsMeasurement
+        requireNotNull(angularSpeed2)
+        assertEquals(baseNoiseLevel, angularSpeed2.value.toDouble(), 0.0)
+        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, angularSpeed2.unit)
+        val angularSpeed3 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertTrue(generator.getGyroscopeBaseNoiseLevelAsMeasurement(angularSpeed3))
+        assertEquals(angularSpeed2, angularSpeed3)
     }
 
     private companion object {

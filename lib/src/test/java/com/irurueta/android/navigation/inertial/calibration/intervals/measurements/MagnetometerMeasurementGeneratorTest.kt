@@ -34,6 +34,7 @@ import com.irurueta.navigation.inertial.calibration.generators.MagnetometerMeasu
 import com.irurueta.navigation.inertial.calibration.generators.MagnetometerMeasurementsGeneratorListener
 import com.irurueta.navigation.inertial.calibration.generators.MeasurementsGenerator
 import com.irurueta.navigation.inertial.calibration.intervals.TriadStaticIntervalDetector
+import com.irurueta.navigation.inertial.calibration.noise.AccumulatedMagneticFluxDensityTriadNoiseEstimator
 import com.irurueta.statistics.UniformRandomizer
 import com.irurueta.units.*
 import io.mockk.*
@@ -142,8 +143,13 @@ class MagnetometerMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedMagnetometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
+        assertNull(generator.magnetometerBaseNoiseLevel)
+        assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
+        val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -246,8 +252,13 @@ class MagnetometerMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedMagnetometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
+        assertNull(generator.magnetometerBaseNoiseLevel)
+        assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
+        val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -351,8 +362,13 @@ class MagnetometerMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedMagnetometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
+        assertNull(generator.magnetometerBaseNoiseLevel)
+        assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
+        val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -457,8 +473,13 @@ class MagnetometerMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedMagnetometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
+        assertNull(generator.magnetometerBaseNoiseLevel)
+        assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
+        val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -564,8 +585,13 @@ class MagnetometerMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedMagnetometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
+        assertNull(generator.magnetometerBaseNoiseLevel)
+        assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
+        val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -674,8 +700,13 @@ class MagnetometerMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedMagnetometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
+        assertNull(generator.magnetometerBaseNoiseLevel)
+        assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
+        val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -787,8 +818,13 @@ class MagnetometerMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedMagnetometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
+        assertNull(generator.magnetometerBaseNoiseLevel)
+        assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
+        val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -903,8 +939,13 @@ class MagnetometerMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedMagnetometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
+        assertNull(generator.magnetometerBaseNoiseLevel)
+        assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
+        val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -1022,8 +1063,13 @@ class MagnetometerMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedMagnetometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
+        assertNull(generator.magnetometerBaseNoiseLevel)
+        assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
+        val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -1144,8 +1190,13 @@ class MagnetometerMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedMagnetometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
+        assertNull(generator.magnetometerBaseNoiseLevel)
+        assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
+        val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -1269,8 +1320,13 @@ class MagnetometerMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedMagnetometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
+        assertNull(generator.magnetometerBaseNoiseLevel)
+        assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
+        val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -1397,8 +1453,13 @@ class MagnetometerMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedMagnetometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
+        assertNull(generator.magnetometerBaseNoiseLevel)
+        assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
+        val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -1528,8 +1589,13 @@ class MagnetometerMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedMagnetometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
+        assertNull(generator.magnetometerBaseNoiseLevel)
+        assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
+        val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -1662,8 +1728,13 @@ class MagnetometerMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedMagnetometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
+        assertNull(generator.magnetometerBaseNoiseLevel)
+        assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
+        val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -1799,8 +1870,13 @@ class MagnetometerMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedMagnetometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
+        assertNull(generator.magnetometerBaseNoiseLevel)
+        assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
+        val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -1939,8 +2015,13 @@ class MagnetometerMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedMagnetometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
+        assertNull(generator.magnetometerBaseNoiseLevel)
+        assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
+        val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -2081,8 +2162,13 @@ class MagnetometerMeasurementGeneratorTest {
         assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedMagnetometerMeasurements)
         assertFalse(generator.running)
         assertEquals(Status.IDLE, generator.status)
+        assertNull(generator.magnetometerBaseNoiseLevel)
+        assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
+        val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -4380,7 +4466,7 @@ class MagnetometerMeasurementGeneratorTest {
     }
 
     @Test
-    fun reset_setsValuesToInitialState() {
+    fun reset_setsValuesToInitialStateAndResetsAccumulatedNoiseEstimator() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = MagnetometerMeasurementGenerator(context)
 
@@ -4422,7 +4508,21 @@ class MagnetometerMeasurementGeneratorTest {
             "numberOfProcessedAccelerometerMeasurements",
             1
         )
+        generator.setPrivateProperty("numberOfProcessedMagnetometerMeasurements", 1)
         setPrivateProperty(CalibrationMeasurementGenerator::class, generator, "initialized", true)
+
+        val magnetometerAccumulatedNoiseEstimator: AccumulatedMagneticFluxDensityTriadNoiseEstimator? =
+            generator.getPrivateProperty("magnetometerAccumulatedNoiseEstimator")
+        requireNotNull(magnetometerAccumulatedNoiseEstimator)
+        val magnetometerAccumulatedNoiseEstimatorSpy = spyk(magnetometerAccumulatedNoiseEstimator)
+        generator.setPrivateProperty(
+            "magnetometerAccumulatedNoiseEstimator",
+            magnetometerAccumulatedNoiseEstimatorSpy
+        )
+        val randomizer = UniformRandomizer()
+        val magnetometerBaseNoiseLevel = randomizer.nextDouble()
+        generator.setPrivateProperty("magnetometerBaseNoiseLevel", magnetometerBaseNoiseLevel)
+        assertEquals(magnetometerBaseNoiseLevel, generator.magnetometerBaseNoiseLevel)
 
         assertEquals(
             TimeIntervalEstimator.DEFAULT_TOTAL_SAMPLES,
@@ -4431,6 +4531,7 @@ class MagnetometerMeasurementGeneratorTest {
 
         // reset
         callPrivateFunc(SingleSensorCalibrationMeasurementGenerator::class, generator, "reset")
+        callPrivateFunc(MagnetometerMeasurementGenerator::class, generator, "reset")
 
         assertEquals(Integer.MAX_VALUE, accelerometerTimeIntervalEstimatorSpy.totalSamples)
         verify(exactly = 1) { accelerometerTimeIntervalEstimatorSpy.reset() }
@@ -4446,13 +4547,21 @@ class MagnetometerMeasurementGeneratorTest {
         )
         requireNotNull(initialAccelerometerTimestamp)
         assertEquals(0L, initialAccelerometerTimestamp)
-        val numberOfProcessedAccelerometerMeasurements: Int? = getPrivateProperty(
-            CalibrationMeasurementGenerator::class,
-            generator,
-            "numberOfProcessedAccelerometerMeasurements"
+
+        assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedMagnetometerMeasurements)
+        assertNull(generator.magnetometerBaseNoiseLevel)
+        assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
+        assertFalse(
+            generator.getMagnetometerBaseNoiseLevelAsMeasurement(
+                MagneticFluxDensity(
+                    0.0,
+                    MagneticFluxDensityUnit.TESLA
+                )
+            )
         )
-        requireNotNull(numberOfProcessedAccelerometerMeasurements)
-        assertEquals(0, numberOfProcessedAccelerometerMeasurements)
+        verify(exactly = 1) { magnetometerAccumulatedNoiseEstimatorSpy.reset() }
+
         val initialized: Boolean? =
             getPrivateProperty(CalibrationMeasurementGenerator::class, generator, "initialized")
         requireNotNull(initialized)
@@ -4832,6 +4941,7 @@ class MagnetometerMeasurementGeneratorTest {
         val generator = MagnetometerMeasurementGenerator(context)
 
         assertNull(generator.magnetometerMeasurementListener)
+        assertEquals(0, generator.numberOfProcessedMagnetometerMeasurements)
 
         val magnetometerCollectorMeasurementListener: MagnetometerSensorCollector.OnMeasurementListener? =
             generator.getPrivateProperty("magnetometerCollectorMeasurementListener")
@@ -4865,9 +4975,13 @@ class MagnetometerMeasurementGeneratorTest {
         )
 
         // check
-        assertEquals(bx.toDouble(), magneticFluxDensity.bx, 0.0)
-        assertEquals(by.toDouble(), magneticFluxDensity.by, 0.0)
-        assertEquals(bz.toDouble(), magneticFluxDensity.bz, 0.0)
+        val bxTesla = MagneticFluxDensityConverter.microTeslaToTesla(bx.toDouble())
+        val byTesla = MagneticFluxDensityConverter.microTeslaToTesla(by.toDouble())
+        val bzTesla = MagneticFluxDensityConverter.microTeslaToTesla(bz.toDouble())
+        assertEquals(bxTesla, magneticFluxDensity.bx, 0.0)
+        assertEquals(byTesla, magneticFluxDensity.by, 0.0)
+        assertEquals(bzTesla, magneticFluxDensity.bz, 0.0)
+        assertEquals(1, generator.numberOfProcessedMagnetometerMeasurements)
     }
 
     @Test
@@ -4881,6 +4995,7 @@ class MagnetometerMeasurementGeneratorTest {
         )
 
         assertSame(magnetometerMeasurementListener, generator.magnetometerMeasurementListener)
+        assertEquals(0, generator.numberOfProcessedMagnetometerMeasurements)
 
         val magnetometerCollectorMeasurementListener: MagnetometerSensorCollector.OnMeasurementListener? =
             generator.getPrivateProperty("magnetometerCollectorMeasurementListener")
@@ -4914,9 +5029,13 @@ class MagnetometerMeasurementGeneratorTest {
         )
 
         // check
-        assertEquals(bx.toDouble(), magneticFluxDensity.bx, 0.0)
-        assertEquals(by.toDouble(), magneticFluxDensity.by, 0.0)
-        assertEquals(bz.toDouble(), magneticFluxDensity.bz, 0.0)
+        val bxTesla = MagneticFluxDensityConverter.microTeslaToTesla(bx.toDouble())
+        val byTesla = MagneticFluxDensityConverter.microTeslaToTesla(by.toDouble())
+        val bzTesla = MagneticFluxDensityConverter.microTeslaToTesla(bz.toDouble())
+        assertEquals(bxTesla, magneticFluxDensity.bx, 0.0)
+        assertEquals(byTesla, magneticFluxDensity.by, 0.0)
+        assertEquals(bzTesla, magneticFluxDensity.bz, 0.0)
+        assertEquals(1, generator.numberOfProcessedMagnetometerMeasurements)
 
         verify(exactly = 1) {
             magnetometerMeasurementListener.onMeasurement(
@@ -4930,6 +5049,163 @@ class MagnetometerMeasurementGeneratorTest {
                 accuracy
             )
         }
+    }
+
+    @Test
+    fun onMagnetometerMeasurementListener_whenInitializing_accumulatesNoise() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val generator = MagnetometerMeasurementGenerator(context)
+
+        assertEquals(0, generator.numberOfProcessedMagnetometerMeasurements)
+
+        val measurementsGenerator: MagnetometerMeasurementsGenerator? =
+            generator.getPrivateProperty("measurementsGenerator")
+        requireNotNull(measurementsGenerator)
+        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+        every { measurementsGeneratorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZING)
+        generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
+
+        val magnetometerAccumulatedNoiseEstimator: AccumulatedMagneticFluxDensityTriadNoiseEstimator? =
+            generator.getPrivateProperty("magnetometerAccumulatedNoiseEstimator")
+        requireNotNull(magnetometerAccumulatedNoiseEstimator)
+        val magnetometerAccumulatedNoiseEstimatorSpy = spyk(magnetometerAccumulatedNoiseEstimator)
+        generator.setPrivateProperty(
+            "magnetometerAccumulatedNoiseEstimator",
+            magnetometerAccumulatedNoiseEstimatorSpy
+        )
+
+        val magnetometerCollectorMeasurementListener: MagnetometerSensorCollector.OnMeasurementListener? =
+            generator.getPrivateProperty("magnetometerCollectorMeasurementListener")
+        requireNotNull(magnetometerCollectorMeasurementListener)
+
+        val magneticFluxDensity: BodyMagneticFluxDensity? =
+            generator.getPrivateProperty("magneticFluxDensity")
+        requireNotNull(magneticFluxDensity)
+        assertEquals(0.0, magneticFluxDensity.bx, 0.0)
+        assertEquals(0.0, magneticFluxDensity.by, 0.0)
+        assertEquals(0.0, magneticFluxDensity.bz, 0.0)
+
+        val randomizer = UniformRandomizer()
+        val bx = randomizer.nextFloat()
+        val by = randomizer.nextFloat()
+        val bz = randomizer.nextFloat()
+        val hardIronX = randomizer.nextFloat()
+        val hardIronY = randomizer.nextFloat()
+        val hardIronZ = randomizer.nextFloat()
+        val timestamp = SystemClock.elapsedRealtimeNanos()
+        val accuracy = SensorAccuracy.HIGH
+        magnetometerCollectorMeasurementListener.onMeasurement(
+            bx,
+            by,
+            bz,
+            hardIronX,
+            hardIronY,
+            hardIronZ,
+            timestamp,
+            accuracy
+        )
+
+        // check
+        val bxTesla = MagneticFluxDensityConverter.microTeslaToTesla(bx.toDouble())
+        val byTesla = MagneticFluxDensityConverter.microTeslaToTesla(by.toDouble())
+        val bzTesla = MagneticFluxDensityConverter.microTeslaToTesla(bz.toDouble())
+        assertEquals(bxTesla, magneticFluxDensity.bx, 0.0)
+        assertEquals(byTesla, magneticFluxDensity.by, 0.0)
+        assertEquals(bzTesla, magneticFluxDensity.bz, 0.0)
+        assertEquals(1, generator.numberOfProcessedMagnetometerMeasurements)
+
+        verify(exactly = 1) {
+            magnetometerAccumulatedNoiseEstimatorSpy.addTriad(
+                bxTesla,
+                byTesla,
+                bzTesla
+            )
+        }
+    }
+
+    @Test
+    fun onMagnetometerMeasurementListener_whenInitializationCompleted_setsMagnetometerBaseNoiseLevel() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val generator = MagnetometerMeasurementGenerator(context)
+
+        assertEquals(0, generator.numberOfProcessedMagnetometerMeasurements)
+        assertNull(generator.magnetometerBaseNoiseLevel)
+        assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
+        val magneticFluxDensity1 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity1))
+
+        val measurementsGenerator: MagnetometerMeasurementsGenerator? =
+            generator.getPrivateProperty("measurementsGenerator")
+        requireNotNull(measurementsGenerator)
+        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+        every { measurementsGeneratorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZATION_COMPLETED)
+        generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
+
+        val magnetometerAccumulatedNoiseEstimator: AccumulatedMagneticFluxDensityTriadNoiseEstimator? =
+            generator.getPrivateProperty("magnetometerAccumulatedNoiseEstimator")
+        requireNotNull(magnetometerAccumulatedNoiseEstimator)
+        val magnetometerAccumulatedNoiseEstimatorSpy = spyk(magnetometerAccumulatedNoiseEstimator)
+        val randomizer = UniformRandomizer()
+        val baseNoiseLevel = randomizer.nextDouble()
+        every { magnetometerAccumulatedNoiseEstimatorSpy.standardDeviationNorm }.returns(
+            baseNoiseLevel
+        )
+        generator.setPrivateProperty(
+            "magnetometerAccumulatedNoiseEstimator",
+            magnetometerAccumulatedNoiseEstimatorSpy
+        )
+
+        val magnetometerCollectorMeasurementListener: MagnetometerSensorCollector.OnMeasurementListener? =
+            generator.getPrivateProperty("magnetometerCollectorMeasurementListener")
+        requireNotNull(magnetometerCollectorMeasurementListener)
+
+        val magneticFluxDensity: BodyMagneticFluxDensity? =
+            generator.getPrivateProperty("magneticFluxDensity")
+        requireNotNull(magneticFluxDensity)
+        assertEquals(0.0, magneticFluxDensity.bx, 0.0)
+        assertEquals(0.0, magneticFluxDensity.by, 0.0)
+        assertEquals(0.0, magneticFluxDensity.bz, 0.0)
+
+        val bx = randomizer.nextFloat()
+        val by = randomizer.nextFloat()
+        val bz = randomizer.nextFloat()
+        val hardIronX = randomizer.nextFloat()
+        val hardIronY = randomizer.nextFloat()
+        val hardIronZ = randomizer.nextFloat()
+        val timestamp = SystemClock.elapsedRealtimeNanos()
+        val accuracy = SensorAccuracy.HIGH
+        magnetometerCollectorMeasurementListener.onMeasurement(
+            bx,
+            by,
+            bz,
+            hardIronX,
+            hardIronY,
+            hardIronZ,
+            timestamp,
+            accuracy
+        )
+
+        // check
+        val bxTesla = MagneticFluxDensityConverter.microTeslaToTesla(bx.toDouble())
+        val byTesla = MagneticFluxDensityConverter.microTeslaToTesla(by.toDouble())
+        val bzTesla = MagneticFluxDensityConverter.microTeslaToTesla(bz.toDouble())
+        assertEquals(bxTesla, magneticFluxDensity.bx, 0.0)
+        assertEquals(byTesla, magneticFluxDensity.by, 0.0)
+        assertEquals(bzTesla, magneticFluxDensity.bz, 0.0)
+        assertEquals(1, generator.numberOfProcessedMagnetometerMeasurements)
+
+        verify(exactly = 1) {
+            magnetometerAccumulatedNoiseEstimatorSpy.standardDeviationNorm
+        }
+
+        assertEquals(baseNoiseLevel, generator.magnetometerBaseNoiseLevel)
+        val magneticFluxDensity2 = generator.magnetometerBaseNoiseLevelAsMeasurement
+        requireNotNull(magneticFluxDensity2)
+        assertEquals(baseNoiseLevel, magneticFluxDensity2.value.toDouble(), 0.0)
+        assertEquals(MagneticFluxDensityUnit.TESLA, magneticFluxDensity2.unit)
+        val magneticFluxDensity3 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        assertTrue(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity3))
+        assertEquals(magneticFluxDensity2, magneticFluxDensity3)
     }
 
     private companion object {

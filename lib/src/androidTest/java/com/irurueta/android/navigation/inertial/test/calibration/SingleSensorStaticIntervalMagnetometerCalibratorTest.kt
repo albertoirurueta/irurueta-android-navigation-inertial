@@ -19,7 +19,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
-class StaticIntervalMagnetometerCalibratorTest {
+class SingleSensorStaticIntervalMagnetometerCalibratorTest {
 
     private val syncHelper = ThreadSyncHelper()
 
@@ -122,20 +122,20 @@ class StaticIntervalMagnetometerCalibratorTest {
             sensorType = sensorType,
             initializationStartedListener = {
                 Log.i(
-                    "StaticIntervalMagnetometerCalibratorTest",
+                    "SingleSensorStaticIntervalMagnetometerCalibratorTest",
                     "Initialization started"
                 )
 
             },
             initializationCompletedListener = {
                 Log.i(
-                    "StaticIntervalMagnetometerCalibratorTest",
+                    "SingleSensorStaticIntervalMagnetometerCalibratorTest",
                     "Initialization completed."
                 )
             },
             errorListener = { _, errorReason ->
                 Log.i(
-                    "StaticIntervalMagnetometerCalibratorTest",
+                    "SingleSensorStaticIntervalMagnetometerCalibratorTest",
                     "Error: $errorReason"
                 )
 
@@ -143,31 +143,31 @@ class StaticIntervalMagnetometerCalibratorTest {
             },
             initialHardIronAvailableListener = { _, hardIronX, hardIronY, hardIronZ ->
                 Log.i(
-                    "StaticIntervalMagnetometerCalibratorTest",
+                    "SingleSensorStaticIntervalMagnetometerCalibratorTest",
                     "Initial bias available. x: $hardIronX, y: $hardIronY, z: $hardIronZ T"
                 )
             },
             newCalibrationMeasurementAvailableListener = { _, _, measurementsFoundSoFar, requiredMeasurements ->
                 Log.i(
-                    "StaticIntervalMagnetometerCalibratorTest",
+                    "SingleSensorStaticIntervalMagnetometerCalibratorTest",
                     "New measurement available. $measurementsFoundSoFar / $requiredMeasurements"
                 )
             },
             readyToSolveCalibrationListener = {
                 Log.i(
-                    "StaticIntervalMagnetometerCalibratorTest",
+                    "SingleSensorStaticIntervalMagnetometerCalibratorTest",
                     "Ready to solve calibration"
                 )
             },
             calibrationSolvingStartedListener = {
                 Log.i(
-                    "StaticIntervalMagnetometerCalibratorTest",
+                    "SingleSensorStaticIntervalMagnetometerCalibratorTest",
                     "Calibration solving started"
                 )
             },
             calibrationCompletedListener = {
                 Log.i(
-                    "StaticIntervalMagnetometerCalibratorTest",
+                    "SingleSensorStaticIntervalMagnetometerCalibratorTest",
                     "Calibration completed"
                 )
 
@@ -175,7 +175,7 @@ class StaticIntervalMagnetometerCalibratorTest {
             },
             stoppedListener = {
                 Log.i(
-                    "StaticIntervalMagnetometerCalibratorTest",
+                    "SingleSensorStaticIntervalMagnetometerCalibratorTest",
                     "Calibrator stopped"
                 )
             }
@@ -187,162 +187,195 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     private fun logCalibrationResult(calibrator: SingleSensorStaticIntervalMagnetometerCalibrator) {
         Log.i(
-            "StaticIntervalMagnetometerCalibratorTest",
+            "SingleSensorStaticIntervalMagnetometerCalibratorTest",
             "Initial bias. x: ${calibrator.initialHardIronX}, y: ${calibrator.initialHardIronY}, z: ${calibrator.initialHardIronZ} T"
         )
         Log.i(
-            "StaticIntervalMagnetometerCalibratorTest",
+            "SingleSensorStaticIntervalMagnetometerCalibratorTest",
             "is ground truth initial bias: ${calibrator.isGroundTruthInitialHardIron}"
         )
-        Log.i("StaticIntervalMagnetometerCalibratorTest", "Location: ${calibrator.location}")
         Log.i(
-            "StaticIntervalMagnetometerCalibratorTest",
+            "SingleSensorStaticIntervalMagnetometerCalibratorTest",
+            "Location: ${calibrator.location}"
+        )
+        Log.i(
+            "SingleSensorStaticIntervalMagnetometerCalibratorTest",
             "Accelerometer sensor: ${calibrator.magnetometerSensor}"
         )
-        Log.i("StaticIntervalMagnetometerCalibratorTest", "Window size: ${calibrator.windowSize}")
         Log.i(
-            "StaticIntervalMagnetometerCalibratorTest",
+            "SingleSensorStaticIntervalMagnetometerCalibratorTest",
+            "Window size: ${calibrator.windowSize}"
+        )
+        Log.i(
+            "SingleSensorStaticIntervalMagnetometerCalibratorTest",
             "Initial static samples: ${calibrator.initialStaticSamples}"
         )
         Log.i(
-            "StaticIntervalMagnetometerCalibratorTest",
+            "SingleSensorStaticIntervalMagnetometerCalibratorTest",
             "Threshold factor: ${calibrator.thresholdFactor}"
         )
         Log.i(
-            "StaticIntervalMagnetometerCalibratorTest",
+            "SingleSensorStaticIntervalMagnetometerCalibratorTest",
             "Instantaneous noise level factor: ${calibrator.instantaneousNoiseLevelFactor}"
         )
         Log.i(
-            "StaticIntervalMagnetometerCalibratorTest",
+            "SingleSensorStaticIntervalMagnetometerCalibratorTest",
             "Base noise level absolute threshold: ${calibrator.baseNoiseLevelAbsoluteThreshold} T"
         )
         Log.i(
-            "StaticIntervalMagnetometerCalibratorTest",
+            "SingleSensorStaticIntervalMagnetometerCalibratorTest",
             "Base noise level: ${calibrator.baseNoiseLevel} T"
         )
         Log.i(
-            "StaticIntervalMagnetometerCalibratorTest",
+            "SingleSensorStaticIntervalMagnetometerCalibratorTest",
             "Base noise level PSD: ${calibrator.baseNoiseLevelPsd} T^2 * s"
         )
         Log.i(
-            "StaticIntervalMagnetometerCalibratorTest",
+            "SingleSensorStaticIntervalMagnetometerCalibratorTest",
             "Base noise level root PSD: ${calibrator.baseNoiseLevelRootPsd} T * s^0.5"
         )
         Log.i(
-            "StaticIntervalMagnetometerCalibratorTest",
+            "SingleSensorStaticIntervalMagnetometerCalibratorTest",
             "Threshold: ${calibrator.threshold} T"
         )
         Log.i(
-            "StaticIntervalMagnetometerCalibratorTest",
+            "SingleSensorStaticIntervalMagnetometerCalibratorTest",
             "Average time interval: ${calibrator.averageTimeInterval} s"
         )
         Log.i(
-            "StaticIntervalMagnetometerCalibratorTest",
+            "SingleSensorStaticIntervalMagnetometerCalibratorTest",
             "Time interval variance: ${calibrator.timeIntervalVariance} s^2"
         )
         Log.i(
-            "StaticIntervalMagnetometerCalibratorTest",
+            "SingleSensorStaticIntervalMagnetometerCalibratorTest",
             "Time interval standard deviation: ${calibrator.timeIntervalStandardDeviation} s"
         )
-        Log.i("StaticIntervalMagnetometerCalibratorTest", "Initial sx: ${calibrator.initialSx}")
-        Log.i("StaticIntervalMagnetometerCalibratorTest", "Initial sy: ${calibrator.initialSy}")
-        Log.i("StaticIntervalMagnetometerCalibratorTest", "Initial sz: ${calibrator.initialSz}")
-        Log.i("StaticIntervalMagnetometerCalibratorTest", "Initial mxy: ${calibrator.initialMxy}")
-        Log.i("StaticIntervalMagnetometerCalibratorTest", "Initial mxz: ${calibrator.initialMxz}")
-        Log.i("StaticIntervalMagnetometerCalibratorTest", "Initial myx: ${calibrator.initialMyx}")
-        Log.i("StaticIntervalMagnetometerCalibratorTest", "Initial myz: ${calibrator.initialMyz}")
-        Log.i("StaticIntervalMagnetometerCalibratorTest", "Initial mzx: ${calibrator.initialMzx}")
-        Log.i("StaticIntervalMagnetometerCalibratorTest", "Initial mzy: ${calibrator.initialMzy}")
         Log.i(
-            "StaticIntervalMagnetometerCalibratorTest",
+            "SingleSensorStaticIntervalMagnetometerCalibratorTest",
+            "Initial sx: ${calibrator.initialSx}"
+        )
+        Log.i(
+            "SingleSensorStaticIntervalMagnetometerCalibratorTest",
+            "Initial sy: ${calibrator.initialSy}"
+        )
+        Log.i(
+            "SingleSensorStaticIntervalMagnetometerCalibratorTest",
+            "Initial sz: ${calibrator.initialSz}"
+        )
+        Log.i(
+            "SingleSensorStaticIntervalMagnetometerCalibratorTest",
+            "Initial mxy: ${calibrator.initialMxy}"
+        )
+        Log.i(
+            "SingleSensorStaticIntervalMagnetometerCalibratorTest",
+            "Initial mxz: ${calibrator.initialMxz}"
+        )
+        Log.i(
+            "SingleSensorStaticIntervalMagnetometerCalibratorTest",
+            "Initial myx: ${calibrator.initialMyx}"
+        )
+        Log.i(
+            "SingleSensorStaticIntervalMagnetometerCalibratorTest",
+            "Initial myz: ${calibrator.initialMyz}"
+        )
+        Log.i(
+            "SingleSensorStaticIntervalMagnetometerCalibratorTest",
+            "Initial mzx: ${calibrator.initialMzx}"
+        )
+        Log.i(
+            "SingleSensorStaticIntervalMagnetometerCalibratorTest",
+            "Initial mzy: ${calibrator.initialMzy}"
+        )
+        Log.i(
+            "SingleSensorStaticIntervalMagnetometerCalibratorTest",
             "Is common axis used: ${calibrator.isCommonAxisUsed}"
         )
         Log.i(
-            "StaticIntervalMagnetometerCalibratorTest",
+            "SingleSensorStaticIntervalMagnetometerCalibratorTest",
             "Minimum required measurements: ${calibrator.minimumRequiredMeasurements}"
         )
         Log.i(
-            "StaticIntervalMagnetometerCalibratorTest",
+            "SingleSensorStaticIntervalMagnetometerCalibratorTest",
             "Required measurements: ${calibrator.requiredMeasurements}"
         )
         Log.i(
-            "StaticIntervalMagnetometerCalibratorTest",
+            "SingleSensorStaticIntervalMagnetometerCalibratorTest",
             "Robust method: ${calibrator.robustMethod}"
         )
         Log.i(
-            "StaticIntervalMagnetometerCalibratorTest",
+            "SingleSensorStaticIntervalMagnetometerCalibratorTest",
             "Robust confidence: ${calibrator.robustConfidence}"
         )
         Log.i(
-            "StaticIntervalMagnetometerCalibratorTest",
+            "SingleSensorStaticIntervalMagnetometerCalibratorTest",
             "Robust max iterations: ${calibrator.robustMaxIterations}"
         )
         Log.i(
-            "StaticIntervalMagnetometerCalibratorTest",
+            "SingleSensorStaticIntervalMagnetometerCalibratorTest",
             "Robust preliminary subset size: ${calibrator.robustPreliminarySubsetSize}"
         )
         Log.i(
-            "StaticIntervalMagnetometerCalibratorTest",
+            "SingleSensorStaticIntervalMagnetometerCalibratorTest",
             "Robust threshold: ${calibrator.robustThreshold}"
         )
         Log.i(
-            "StaticIntervalMagnetometerCalibratorTest",
+            "SingleSensorStaticIntervalMagnetometerCalibratorTest",
             "Robust threshold factor: ${calibrator.robustThresholdFactor}"
         )
         Log.i(
-            "StaticIntervalMagnetometerCalibratorTest",
+            "SingleSensorStaticIntervalMagnetometerCalibratorTest",
             "Robust stop threshold factor: ${calibrator.robustStopThresholdFactor}"
         )
         Log.i(
-            "StaticIntervalMagnetometerCalibratorTest",
+            "SingleSensorStaticIntervalMagnetometerCalibratorTest",
             "Estimated sx: ${calibrator.estimatedSx}"
         )
         Log.i(
-            "StaticIntervalMagnetometerCalibratorTest",
+            "SingleSensorStaticIntervalMagnetometerCalibratorTest",
             "Estimated sy: ${calibrator.estimatedSy}"
         )
         Log.i(
-            "StaticIntervalMagnetometerCalibratorTest",
+            "SingleSensorStaticIntervalMagnetometerCalibratorTest",
             "Estimated sz: ${calibrator.estimatedSz}"
         )
         Log.i(
-            "StaticIntervalMagnetometerCalibratorTest",
+            "SingleSensorStaticIntervalMagnetometerCalibratorTest",
             "Estimated mxy: ${calibrator.estimatedMxy}"
         )
         Log.i(
-            "StaticIntervalMagnetometerCalibratorTest",
+            "SingleSensorStaticIntervalMagnetometerCalibratorTest",
             "Estimated mxz: ${calibrator.estimatedMxz}"
         )
         Log.i(
-            "StaticIntervalMagnetometerCalibratorTest",
+            "SingleSensorStaticIntervalMagnetometerCalibratorTest",
             "Estimated myx: ${calibrator.estimatedMyx}"
         )
         Log.i(
-            "StaticIntervalMagnetometerCalibratorTest",
+            "SingleSensorStaticIntervalMagnetometerCalibratorTest",
             "Estimated myz: ${calibrator.estimatedMyz}"
         )
         Log.i(
-            "StaticIntervalMagnetometerCalibratorTest",
+            "SingleSensorStaticIntervalMagnetometerCalibratorTest",
             "Estimated mzx: ${calibrator.estimatedMzx}"
         )
         Log.i(
-            "StaticIntervalMagnetometerCalibratorTest",
+            "SingleSensorStaticIntervalMagnetometerCalibratorTest",
             "Estimated mzy: ${calibrator.estimatedMzy}"
         )
         Log.i(
-            "StaticIntervalMagnetometerCalibratorTest",
+            "SingleSensorStaticIntervalMagnetometerCalibratorTest",
             "Estimated covariance: ${calibrator.estimatedCovariance?.buffer}"
         )
         Log.i(
-            "StaticIntervalMagnetometerCalibratorTest",
+            "SingleSensorStaticIntervalMagnetometerCalibratorTest",
             "Estimated chi sq: ${calibrator.estimatedChiSq}"
         )
         Log.i(
-            "StaticIntervalMagnetometerCalibratorTest",
+            "SingleSensorStaticIntervalMagnetometerCalibratorTest",
             "Estimated mse: ${calibrator.estimatedMse}"
         )
         Log.i(
-            "StaticIntervalMagnetometerCalibratorTest",
+            "SingleSensorStaticIntervalMagnetometerCalibratorTest",
             "Estimated bias. x: ${calibrator.estimatedHardIronX}, y: ${calibrator.estimatedHardIronY}, z: ${calibrator.estimatedHardIronZ} T"
         )
     }

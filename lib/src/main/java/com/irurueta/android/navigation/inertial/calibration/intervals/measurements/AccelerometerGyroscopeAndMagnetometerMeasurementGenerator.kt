@@ -26,7 +26,9 @@ import com.irurueta.navigation.inertial.calibration.*
 import com.irurueta.navigation.inertial.calibration.generators.AccelerometerGyroscopeAndMagnetometerMeasurementsGenerator
 import com.irurueta.navigation.inertial.calibration.generators.AccelerometerGyroscopeAndMagnetometerMeasurementsGeneratorListener
 import com.irurueta.navigation.inertial.calibration.intervals.TriadStaticIntervalDetector
-import com.irurueta.units.Acceleration
+import com.irurueta.navigation.inertial.calibration.noise.AccumulatedAngularSpeedTriadNoiseEstimator
+import com.irurueta.navigation.inertial.calibration.noise.AccumulatedMagneticFluxDensityTriadNoiseEstimator
+import com.irurueta.units.*
 
 /**
  * Generates measurements that can later be used by accelerometer, gyroscope and magnetometer
@@ -267,6 +269,21 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
             kinematics.angularRateY = wy.toDouble()
             kinematics.angularRateZ = wz.toDouble()
 
+            if (status == Status.INITIALIZING) {
+                gyroscopeAccumulatedNoiseEstimator.addTriad(
+                    kinematics.angularRateX,
+                    kinematics.angularRateY,
+                    kinematics.angularRateZ
+                )
+            }
+
+            numberOfProcessedGyroscopeMeasurements++
+
+            if (status == Status.INITIALIZATION_COMPLETED) {
+                gyroscopeBaseNoiseLevel =
+                    gyroscopeAccumulatedNoiseEstimator.standardDeviationNorm
+            }
+
             gyroscopeMeasurementListener?.onMeasurement(wx, wy, wz, bx, by, bz, timestamp, accuracy)
         }
 
@@ -277,9 +294,24 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
      */
     private val magnetometerCollectorMeasurementListener =
         MagnetometerSensorCollector.OnMeasurementListener { bx, by, bz, hardIronX, hardIronY, hardIronZ, timestamp, accuracy ->
-            magneticFluxDensity.bx = bx.toDouble()
-            magneticFluxDensity.by = by.toDouble()
-            magneticFluxDensity.bz = bz.toDouble()
+            val bxTesla = MagneticFluxDensityConverter.microTeslaToTesla(bx.toDouble())
+            val byTesla = MagneticFluxDensityConverter.microTeslaToTesla(by.toDouble())
+            val bzTesla = MagneticFluxDensityConverter.microTeslaToTesla(bz.toDouble())
+
+            magneticFluxDensity.bx = bxTesla
+            magneticFluxDensity.by = byTesla
+            magneticFluxDensity.bz = bzTesla
+
+            if (status == Status.INITIALIZING) {
+                magnetometerAccumulatedNoiseEstimator.addTriad(bxTesla, byTesla, bzTesla)
+            }
+
+            numberOfProcessedMagnetometerMeasurements++
+
+            if (status == Status.INITIALIZATION_COMPLETED) {
+                magnetometerBaseNoiseLevel =
+                    magnetometerAccumulatedNoiseEstimator.standardDeviationNorm
+            }
 
             magnetometerMeasurementListener?.onMeasurement(
                 bx,
@@ -335,6 +367,18 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
     private val magneticFluxDensity = BodyMagneticFluxDensity()
 
     /**
+     * Estimates accumulated average and noise of gyroscope values during static periods.
+     */
+    private val gyroscopeAccumulatedNoiseEstimator =
+        AccumulatedAngularSpeedTriadNoiseEstimator()
+
+    /**
+     * Estimates accumulated average and noise of magnetometer values during static periods.
+     */
+    private val magnetometerAccumulatedNoiseEstimator =
+        AccumulatedMagneticFluxDensityTriadNoiseEstimator()
+
+    /**
      * Sample used by internal measurement generator.
      */
     override val sample = TimedBodyKinematicsAndMagneticFluxDensity()
@@ -352,6 +396,82 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
      */
     val magnetometerSensor
         get() = magnetometerCollector.sensor
+
+    /**
+     * Number of gyroscope measurements that have been processed.
+     */
+    var numberOfProcessedGyroscopeMeasurements: Int = 0
+        private set
+
+    /**
+     * Number of magnetometer measurements that have been processed.
+     */
+    var numberOfProcessedMagnetometerMeasurements: Int = 0
+        private set
+
+    /**
+     * Gets gyroscope measurement base noise level that has been detected during initialization
+     * expressed in radians per second (rad/s).
+     * This is only available once generator completes initialization.
+     */
+    var gyroscopeBaseNoiseLevel: Double? = null
+        private set
+
+    /**
+     * Gets gyroscope measurement base noise level that has been detected during initialization.
+     * This is only available once generator completes initialization.
+     */
+    val gyroscopeBaseNoiseLevelAsMeasurement: AngularSpeed?
+        get() {
+            val value = gyroscopeBaseNoiseLevel ?: return null
+            return AngularSpeed(value, AngularSpeedUnit.RADIANS_PER_SECOND)
+        }
+
+    /**
+     * Gets gyroscope measurement base noise level that has been detected during initialization.
+     * This is only available once generator completes initialization.
+     *
+     * @param result instance where result will be stored.
+     * @return true if result is available, false otherwise.
+     */
+    fun getGyroscopeBaseNoiseLevelAsMeasurement(result: AngularSpeed): Boolean {
+        val value = gyroscopeBaseNoiseLevel ?: return false
+        result.value = value
+        result.unit = AngularSpeedUnit.RADIANS_PER_SECOND
+        return true
+    }
+
+    /**
+     * Gets magnetometer measurement base noise level that has been detected during initialization
+     * expressed in Teslas (T).
+     * This is only available once generator completes initialization.
+     */
+    var magnetometerBaseNoiseLevel: Double? = null
+        private set
+
+    /**
+     * Gets magnetometer measurement base noise level that has been detected during initialization.
+     * This is only available once generator completes initialization.
+     */
+    val magnetometerBaseNoiseLevelAsMeasurement: MagneticFluxDensity?
+        get() {
+            val value = magnetometerBaseNoiseLevel ?: return null
+            return MagneticFluxDensity(value, MagneticFluxDensityUnit.TESLA)
+        }
+
+    /**
+     * Gets magnetometer measurement base noise level that has been detected during initialization.
+     * This is only available once generator completes initialization.
+     *
+     * @param result instance where result will be stored.
+     * @return true if result is available, false otherwise.
+     */
+    fun getMagnetometerBaseNoiseLevelAsMeasurement(result: MagneticFluxDensity): Boolean {
+        val value = magnetometerBaseNoiseLevel ?: return false
+        result.value = value
+        result.unit = MagneticFluxDensityUnit.TESLA
+        return true
+    }
 
     /**
      * Gets or sets minimum number of samples required in a static interval to be taken into
@@ -670,7 +790,13 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
         unreliable = false
         initialAccelerometerTimestamp = 0L
         numberOfProcessedAccelerometerMeasurements = 0
+        numberOfProcessedGyroscopeMeasurements = 0
+        numberOfProcessedMagnetometerMeasurements = 0
         initialized = false
+        gyroscopeBaseNoiseLevel = null
+        magnetometerBaseNoiseLevel = null
+        gyroscopeAccumulatedNoiseEstimator.reset()
+        magnetometerAccumulatedNoiseEstimator.reset()
     }
 
     /**
