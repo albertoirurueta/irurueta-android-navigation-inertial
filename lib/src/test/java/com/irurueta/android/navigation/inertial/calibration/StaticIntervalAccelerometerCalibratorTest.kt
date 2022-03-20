@@ -8807,7 +8807,7 @@ class StaticIntervalAccelerometerCalibratorTest {
     }
 
     @Test
-    fun start_whenNotRunningAndGravityNormEstimated_resetsAndStartsIntervalDetector() {
+    fun start_whenNotRunningAndGravityNormEstimated_resetsAndStartsGenerator() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
