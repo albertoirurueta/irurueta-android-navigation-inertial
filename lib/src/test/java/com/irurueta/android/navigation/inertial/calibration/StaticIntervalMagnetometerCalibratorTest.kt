@@ -10862,6 +10862,2830 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertTrue(ex.cause is IllegalStateException)
     }
 
+    @Test
+    fun buildMagnetometerInternalCalibrator_whenMSACGroundTruthHardIronNotSetAndNoCommonAxis_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalMagnetometerCalibrator(
+            context,
+            location,
+            isMagnetometerGroundTruthInitialHardIron = false
+        )
+
+        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
+        for (i in 1..13) {
+            calibrator.magnetometerMeasurements.add(measurement)
+        }
+
+        calibrator.isMagnetometerCommonAxisUsed = false
+
+        val randomizer = UniformRandomizer()
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setMagnetometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.magnetometerRobustMethod = RobustEstimatorMethod.MSAC
+        calibrator.magnetometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.magnetometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.magnetometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.magnetometerRobustThreshold = ROBUST_THRESHOLD
+
+        assertEquals(RobustEstimatorMethod.MSAC, calibrator.magnetometerRobustMethod)
+        assertFalse(calibrator.isMagnetometerGroundTruthInitialHardIron)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        val robustThreshold = calibrator.magnetometerRobustThreshold
+        requireNotNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
+
+        val internalCalibrator: MagnetometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as MSACRobustKnownPositionAndInstantMagnetometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
+        assertFalse(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(0.0, internalCalibrator2.initialHardIronX, 0.0)
+        assertEquals(0.0, internalCalibrator2.initialHardIronY, 0.0)
+        assertEquals(0.0, internalCalibrator2.initialHardIronZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ROBUST_CONFIDENCE, internalCalibrator2.confidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
+        assertEquals(ROBUST_THRESHOLD, internalCalibrator2.threshold, 0.0)
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(13, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildMagnetometerInternalCalibrator_whenMSACGroundTruthHardIronNotSetAndCommonAxis_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalMagnetometerCalibrator(
+            context,
+            location,
+            isMagnetometerGroundTruthInitialHardIron = false
+        )
+
+        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
+        for (i in 1..13) {
+            calibrator.magnetometerMeasurements.add(measurement)
+        }
+
+        calibrator.isMagnetometerCommonAxisUsed = true
+
+        val randomizer = UniformRandomizer()
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setMagnetometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.magnetometerRobustMethod = RobustEstimatorMethod.MSAC
+        calibrator.magnetometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.magnetometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.magnetometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.magnetometerRobustThreshold = ROBUST_THRESHOLD
+
+        assertEquals(RobustEstimatorMethod.MSAC, calibrator.magnetometerRobustMethod)
+        assertFalse(calibrator.isMagnetometerGroundTruthInitialHardIron)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        val robustThreshold = calibrator.magnetometerRobustThreshold
+        requireNotNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
+
+        val internalCalibrator: MagnetometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as MSACRobustKnownPositionAndInstantMagnetometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
+        assertTrue(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(0.0, internalCalibrator2.initialHardIronX, 0.0)
+        assertEquals(0.0, internalCalibrator2.initialHardIronY, 0.0)
+        assertEquals(0.0, internalCalibrator2.initialHardIronZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ROBUST_CONFIDENCE, internalCalibrator2.confidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
+        assertEquals(ROBUST_THRESHOLD, internalCalibrator2.threshold, 0.0)
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildMagnetometerInternalCalibrator_whenMSACGroundTruthHardIronSetAndNoCommonAxis_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalMagnetometerCalibrator(
+            context,
+            location,
+            isMagnetometerGroundTruthInitialHardIron = true
+        )
+
+        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
+        for (i in 1..13) {
+            calibrator.magnetometerMeasurements.add(measurement)
+        }
+
+        calibrator.isMagnetometerCommonAxisUsed = false
+
+        val randomizer = UniformRandomizer()
+        val initialHardIronX = randomizer.nextDouble()
+        val initialHardIronY = randomizer.nextDouble()
+        val initialHardIronZ = randomizer.nextDouble()
+        calibrator.setPrivateProperty("magnetometerInitialHardIronX", initialHardIronX)
+        calibrator.setPrivateProperty("magnetometerInitialHardIronY", initialHardIronY)
+        calibrator.setPrivateProperty("magnetometerInitialHardIronZ", initialHardIronZ)
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setMagnetometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.magnetometerRobustMethod = RobustEstimatorMethod.MSAC
+        calibrator.magnetometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.magnetometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.magnetometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.magnetometerRobustThreshold = ROBUST_THRESHOLD
+
+        assertEquals(RobustEstimatorMethod.MSAC, calibrator.magnetometerRobustMethod)
+        assertTrue(calibrator.isMagnetometerGroundTruthInitialHardIron)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        val robustThreshold = calibrator.magnetometerRobustThreshold
+        requireNotNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
+
+        val internalCalibrator: MagnetometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as MSACRobustKnownHardIronPositionAndInstantMagnetometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
+        assertFalse(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(initialHardIronX, internalCalibrator2.hardIronX, 0.0)
+        assertEquals(initialHardIronY, internalCalibrator2.hardIronY, 0.0)
+        assertEquals(initialHardIronZ, internalCalibrator2.hardIronZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ROBUST_CONFIDENCE, internalCalibrator2.confidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
+        assertEquals(ROBUST_THRESHOLD, internalCalibrator2.threshold, 0.0)
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildMagnetometerInternalCalibrator_whenMSACGroundTruthHardIronSetAndCommonAxis_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalMagnetometerCalibrator(
+            context,
+            location,
+            isMagnetometerGroundTruthInitialHardIron = true
+        )
+
+        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
+        for (i in 1..13) {
+            calibrator.magnetometerMeasurements.add(measurement)
+        }
+
+        calibrator.isMagnetometerCommonAxisUsed = true
+
+        val randomizer = UniformRandomizer()
+        val initialHardIronX = randomizer.nextDouble()
+        val initialHardIronY = randomizer.nextDouble()
+        val initialHardIronZ = randomizer.nextDouble()
+        calibrator.setPrivateProperty("magnetometerInitialHardIronX", initialHardIronX)
+        calibrator.setPrivateProperty("magnetometerInitialHardIronY", initialHardIronY)
+        calibrator.setPrivateProperty("magnetometerInitialHardIronZ", initialHardIronZ)
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setMagnetometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.magnetometerRobustMethod = RobustEstimatorMethod.MSAC
+        calibrator.magnetometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.magnetometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.magnetometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.magnetometerRobustThreshold = ROBUST_THRESHOLD
+
+        assertEquals(RobustEstimatorMethod.MSAC, calibrator.magnetometerRobustMethod)
+        assertTrue(calibrator.isMagnetometerGroundTruthInitialHardIron)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        val robustThreshold = calibrator.magnetometerRobustThreshold
+        requireNotNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
+
+        val internalCalibrator: MagnetometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as MSACRobustKnownHardIronPositionAndInstantMagnetometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
+        assertTrue(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(initialHardIronX, internalCalibrator2.hardIronX, 0.0)
+        assertEquals(initialHardIronY, internalCalibrator2.hardIronY, 0.0)
+        assertEquals(initialHardIronZ, internalCalibrator2.hardIronZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ROBUST_CONFIDENCE, internalCalibrator2.confidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
+        assertEquals(ROBUST_THRESHOLD, internalCalibrator2.threshold, 0.0)
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(7, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildMagnetometerInternalCalibrator_whenMSACGroundTruthHardIronNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalMagnetometerCalibrator(
+            context,
+            location,
+            isMagnetometerGroundTruthInitialHardIron = false
+        )
+
+        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
+        for (i in 1..13) {
+            calibrator.magnetometerMeasurements.add(measurement)
+        }
+
+        calibrator.isMagnetometerCommonAxisUsed = false
+
+        val randomizer = UniformRandomizer()
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setMagnetometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.magnetometerRobustMethod = RobustEstimatorMethod.MSAC
+        calibrator.magnetometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.magnetometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.magnetometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.magnetometerRobustThreshold = null
+        calibrator.magnetometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
+
+        val generator: MagnetometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        val baseNoiseLevel = randomizer.nextDouble()
+        every { generatorSpy.magnetometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        assertEquals(RobustEstimatorMethod.MSAC, calibrator.magnetometerRobustMethod)
+        assertFalse(calibrator.isMagnetometerGroundTruthInitialHardIron)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        val robustThreshold = calibrator.magnetometerRobustThreshold
+        assertNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
+        assertEquals(baseNoiseLevel, calibrator.magnetometerBaseNoiseLevel)
+
+        val internalCalibrator: MagnetometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as MSACRobustKnownPositionAndInstantMagnetometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
+        assertFalse(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(0.0, internalCalibrator2.initialHardIronX, 0.0)
+        assertEquals(0.0, internalCalibrator2.initialHardIronY, 0.0)
+        assertEquals(0.0, internalCalibrator2.initialHardIronZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ROBUST_CONFIDENCE, internalCalibrator2.confidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
+        assertEquals(ROBUST_THRESHOLD_FACTOR * baseNoiseLevel, internalCalibrator2.threshold, 0.0)
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(13, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildMagnetometerInternalCalibrator_whenMSACGroundTruthHardIronSetAndNoRobustThreshold_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalMagnetometerCalibrator(
+            context,
+            location,
+            isMagnetometerGroundTruthInitialHardIron = true
+        )
+
+        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
+        for (i in 1..13) {
+            calibrator.magnetometerMeasurements.add(measurement)
+        }
+
+        calibrator.isMagnetometerCommonAxisUsed = false
+
+        val randomizer = UniformRandomizer()
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setMagnetometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.magnetometerRobustMethod = RobustEstimatorMethod.MSAC
+        calibrator.magnetometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.magnetometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.magnetometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.magnetometerRobustThreshold = null
+        calibrator.magnetometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
+
+        val generator: MagnetometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        val baseNoiseLevel = randomizer.nextDouble()
+        every { generatorSpy.magnetometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        assertEquals(RobustEstimatorMethod.MSAC, calibrator.magnetometerRobustMethod)
+        assertTrue(calibrator.isMagnetometerGroundTruthInitialHardIron)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        val robustThreshold = calibrator.magnetometerRobustThreshold
+        assertNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
+        assertEquals(baseNoiseLevel, calibrator.magnetometerBaseNoiseLevel)
+
+        val internalCalibrator: MagnetometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as MSACRobustKnownHardIronPositionAndInstantMagnetometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
+        assertFalse(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(0.0, internalCalibrator2.hardIronX, 0.0)
+        assertEquals(0.0, internalCalibrator2.hardIronY, 0.0)
+        assertEquals(0.0, internalCalibrator2.hardIronZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ROBUST_CONFIDENCE, internalCalibrator2.confidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
+        assertEquals(ROBUST_THRESHOLD_FACTOR * baseNoiseLevel, internalCalibrator2.threshold, 0.0)
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildMagnetometerInternalCalibrator_whenMSACGroundTruthHardIronNotSetNoRobustThresholdAndMissingBaseNoiseLevel_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalMagnetometerCalibrator(
+            context,
+            location,
+            isMagnetometerGroundTruthInitialHardIron = false
+        )
+
+        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
+        for (i in 1..13) {
+            calibrator.magnetometerMeasurements.add(measurement)
+        }
+
+        calibrator.isMagnetometerCommonAxisUsed = false
+
+        val randomizer = UniformRandomizer()
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setMagnetometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.magnetometerRobustMethod = RobustEstimatorMethod.MSAC
+        calibrator.magnetometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.magnetometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.magnetometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.magnetometerRobustThreshold = null
+        calibrator.magnetometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
+
+        assertEquals(RobustEstimatorMethod.MSAC, calibrator.magnetometerRobustMethod)
+        assertFalse(calibrator.isMagnetometerGroundTruthInitialHardIron)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        val robustThreshold = calibrator.magnetometerRobustThreshold
+        assertNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
+        assertNull(calibrator.magnetometerBaseNoiseLevel)
+
+        val ex = assertThrows(InvocationTargetException::class.java) {
+            assertNull(calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator"))
+        }
+        assertTrue(ex.cause is IllegalStateException)
+    }
+
+    @Test
+    fun buildMagnetometerInternalCalibrator_whenMSACGroundTruthHardIronSetNoRobustThresholdAndMissingBaseNoiseLevel_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalMagnetometerCalibrator(
+            context,
+            location,
+            isMagnetometerGroundTruthInitialHardIron = true
+        )
+
+        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
+        for (i in 1..13) {
+            calibrator.magnetometerMeasurements.add(measurement)
+        }
+
+        calibrator.isMagnetometerCommonAxisUsed = false
+
+        val randomizer = UniformRandomizer()
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setMagnetometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.magnetometerRobustMethod = RobustEstimatorMethod.MSAC
+        calibrator.magnetometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.magnetometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.magnetometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.magnetometerRobustThreshold = null
+        calibrator.magnetometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
+
+        assertEquals(RobustEstimatorMethod.MSAC, calibrator.magnetometerRobustMethod)
+        assertTrue(calibrator.isMagnetometerGroundTruthInitialHardIron)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        val robustThreshold = calibrator.magnetometerRobustThreshold
+        assertNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
+        assertNull(calibrator.magnetometerBaseNoiseLevel)
+
+        val ex = assertThrows(InvocationTargetException::class.java) {
+            assertNull(calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator"))
+        }
+        assertTrue(ex.cause is IllegalStateException)
+    }
+
+    @Test
+    fun buildMagnetometerInternalCalibrator_whenPROSACGroundTruthHardIronNotSetAndNoCommonAxis_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalMagnetometerCalibrator(
+            context,
+            location,
+            isMagnetometerGroundTruthInitialHardIron = false
+        )
+
+        val randomizer = UniformRandomizer()
+        val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
+        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
+        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+            magneticFluxDensityStandardDeviation
+        )
+        for (i in 1..13) {
+            calibrator.magnetometerMeasurements.add(measurement)
+        }
+
+        calibrator.isMagnetometerCommonAxisUsed = false
+
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setMagnetometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.magnetometerRobustMethod = RobustEstimatorMethod.PROSAC
+        calibrator.magnetometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.magnetometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.magnetometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.magnetometerRobustThreshold = ROBUST_THRESHOLD
+
+        assertEquals(RobustEstimatorMethod.PROSAC, calibrator.magnetometerRobustMethod)
+        assertFalse(calibrator.isMagnetometerGroundTruthInitialHardIron)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        val robustThreshold = calibrator.magnetometerRobustThreshold
+        requireNotNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
+
+        val internalCalibrator: MagnetometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as PROSACRobustKnownPositionAndInstantMagnetometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
+        assertFalse(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(0.0, internalCalibrator2.initialHardIronX, 0.0)
+        assertEquals(0.0, internalCalibrator2.initialHardIronY, 0.0)
+        assertEquals(0.0, internalCalibrator2.initialHardIronZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ROBUST_CONFIDENCE, internalCalibrator2.confidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
+        assertEquals(ROBUST_THRESHOLD, internalCalibrator2.threshold, 0.0)
+        assertEquals(calibrator.magnetometerMeasurements.size, internalCalibrator2.qualityScores.size)
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(13, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildMagnetometerInternalCalibrator_whenPROSACGroundTruthHardIronNotSetAndCommonAxis_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalMagnetometerCalibrator(
+            context,
+            location,
+            isMagnetometerGroundTruthInitialHardIron = false
+        )
+
+        val randomizer = UniformRandomizer()
+        val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
+        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
+        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+            magneticFluxDensityStandardDeviation
+        )
+        for (i in 1..13) {
+            calibrator.magnetometerMeasurements.add(measurement)
+        }
+
+        calibrator.isMagnetometerCommonAxisUsed = true
+
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setMagnetometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.magnetometerRobustMethod = RobustEstimatorMethod.PROSAC
+        calibrator.magnetometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.magnetometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.magnetometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.magnetometerRobustThreshold = ROBUST_THRESHOLD
+
+        assertEquals(RobustEstimatorMethod.PROSAC, calibrator.magnetometerRobustMethod)
+        assertFalse(calibrator.isMagnetometerGroundTruthInitialHardIron)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        val robustThreshold = calibrator.magnetometerRobustThreshold
+        requireNotNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
+
+        val internalCalibrator: MagnetometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as PROSACRobustKnownPositionAndInstantMagnetometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
+        assertTrue(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(0.0, internalCalibrator2.initialHardIronX, 0.0)
+        assertEquals(0.0, internalCalibrator2.initialHardIronY, 0.0)
+        assertEquals(0.0, internalCalibrator2.initialHardIronZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ROBUST_CONFIDENCE, internalCalibrator2.confidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
+        assertEquals(ROBUST_THRESHOLD, internalCalibrator2.threshold, 0.0)
+        assertEquals(calibrator.magnetometerMeasurements.size, internalCalibrator2.qualityScores.size)
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildMagnetometerInternalCalibrator_whenPROSACGroundTruthHardIronSetAndNoCommonAxis_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalMagnetometerCalibrator(
+            context,
+            location,
+            isMagnetometerGroundTruthInitialHardIron = true
+        )
+
+        val randomizer = UniformRandomizer()
+        val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
+        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
+        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+            magneticFluxDensityStandardDeviation
+        )
+        for (i in 1..13) {
+            calibrator.magnetometerMeasurements.add(measurement)
+        }
+
+        calibrator.isMagnetometerCommonAxisUsed = false
+
+        val initialHardIronX = randomizer.nextDouble()
+        val initialHardIronY = randomizer.nextDouble()
+        val initialHardIronZ = randomizer.nextDouble()
+        calibrator.setPrivateProperty("magnetometerInitialHardIronX", initialHardIronX)
+        calibrator.setPrivateProperty("magnetometerInitialHardIronY", initialHardIronY)
+        calibrator.setPrivateProperty("magnetometerInitialHardIronZ", initialHardIronZ)
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setMagnetometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.magnetometerRobustMethod = RobustEstimatorMethod.PROSAC
+        calibrator.magnetometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.magnetometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.magnetometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.magnetometerRobustThreshold = ROBUST_THRESHOLD
+
+        assertEquals(RobustEstimatorMethod.PROSAC, calibrator.magnetometerRobustMethod)
+        assertTrue(calibrator.isMagnetometerGroundTruthInitialHardIron)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        val robustThreshold = calibrator.magnetometerRobustThreshold
+        requireNotNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
+
+        val internalCalibrator: MagnetometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as PROSACRobustKnownHardIronPositionAndInstantMagnetometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
+        assertFalse(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(initialHardIronX, internalCalibrator2.hardIronX, 0.0)
+        assertEquals(initialHardIronY, internalCalibrator2.hardIronY, 0.0)
+        assertEquals(initialHardIronZ, internalCalibrator2.hardIronZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ROBUST_CONFIDENCE, internalCalibrator2.confidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
+        assertEquals(ROBUST_THRESHOLD, internalCalibrator2.threshold, 0.0)
+        assertEquals(calibrator.magnetometerMeasurements.size, internalCalibrator2.qualityScores.size)
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildMagnetometerInternalCalibrator_whenPROSACGroundTruthHardIronSetAndCommonAxis_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalMagnetometerCalibrator(
+            context,
+            location,
+            isMagnetometerGroundTruthInitialHardIron = true
+        )
+
+        val randomizer = UniformRandomizer()
+        val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
+        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
+        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+            magneticFluxDensityStandardDeviation
+        )
+        for (i in 1..13) {
+            calibrator.magnetometerMeasurements.add(measurement)
+        }
+
+        calibrator.isMagnetometerCommonAxisUsed = true
+
+        val initialHardIronX = randomizer.nextDouble()
+        val initialHardIronY = randomizer.nextDouble()
+        val initialHardIronZ = randomizer.nextDouble()
+        calibrator.setPrivateProperty("magnetometerInitialHardIronX", initialHardIronX)
+        calibrator.setPrivateProperty("magnetometerInitialHardIronY", initialHardIronY)
+        calibrator.setPrivateProperty("magnetometerInitialHardIronZ", initialHardIronZ)
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setMagnetometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.magnetometerRobustMethod = RobustEstimatorMethod.PROSAC
+        calibrator.magnetometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.magnetometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.magnetometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.magnetometerRobustThreshold = ROBUST_THRESHOLD
+
+        assertEquals(RobustEstimatorMethod.PROSAC, calibrator.magnetometerRobustMethod)
+        assertTrue(calibrator.isMagnetometerGroundTruthInitialHardIron)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        val robustThreshold = calibrator.magnetometerRobustThreshold
+        requireNotNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
+
+        val internalCalibrator: MagnetometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as PROSACRobustKnownHardIronPositionAndInstantMagnetometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
+        assertTrue(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(initialHardIronX, internalCalibrator2.hardIronX, 0.0)
+        assertEquals(initialHardIronY, internalCalibrator2.hardIronY, 0.0)
+        assertEquals(initialHardIronZ, internalCalibrator2.hardIronZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ROBUST_CONFIDENCE, internalCalibrator2.confidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
+        assertEquals(ROBUST_THRESHOLD, internalCalibrator2.threshold, 0.0)
+        assertEquals(calibrator.magnetometerMeasurements.size, internalCalibrator2.qualityScores.size)
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(7, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildMagnetometerInternalCalibrator_whenPROSACGroundTruthHardIronNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalMagnetometerCalibrator(
+            context,
+            location,
+            isMagnetometerGroundTruthInitialHardIron = false
+        )
+
+        val randomizer = UniformRandomizer()
+        val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
+        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
+        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+            magneticFluxDensityStandardDeviation
+        )
+        for (i in 1..13) {
+            calibrator.magnetometerMeasurements.add(measurement)
+        }
+
+        calibrator.isMagnetometerCommonAxisUsed = false
+
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setMagnetometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.magnetometerRobustMethod = RobustEstimatorMethod.PROSAC
+        calibrator.magnetometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.magnetometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.magnetometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.magnetometerRobustThreshold = null
+        calibrator.magnetometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
+
+        val generator: MagnetometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        val baseNoiseLevel = randomizer.nextDouble()
+        every { generatorSpy.magnetometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        assertEquals(RobustEstimatorMethod.PROSAC, calibrator.magnetometerRobustMethod)
+        assertFalse(calibrator.isMagnetometerGroundTruthInitialHardIron)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        val robustThreshold = calibrator.magnetometerRobustThreshold
+        assertNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
+        assertEquals(baseNoiseLevel, calibrator.magnetometerBaseNoiseLevel)
+
+        val internalCalibrator: MagnetometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as PROSACRobustKnownPositionAndInstantMagnetometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
+        assertFalse(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(0.0, internalCalibrator2.initialHardIronX, 0.0)
+        assertEquals(0.0, internalCalibrator2.initialHardIronY, 0.0)
+        assertEquals(0.0, internalCalibrator2.initialHardIronZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ROBUST_CONFIDENCE, internalCalibrator2.confidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
+        assertEquals(ROBUST_THRESHOLD_FACTOR * baseNoiseLevel, internalCalibrator2.threshold, 0.0)
+        assertEquals(calibrator.magnetometerMeasurements.size, internalCalibrator2.qualityScores.size)
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(13, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildMagnetometerInternalCalibrator_whenPROSACGroundTruthHardIronSetAndNoRobustThreshold_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalMagnetometerCalibrator(
+            context,
+            location,
+            isMagnetometerGroundTruthInitialHardIron = true
+        )
+
+        val randomizer = UniformRandomizer()
+        val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
+        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
+        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+            magneticFluxDensityStandardDeviation
+        )
+        for (i in 1..13) {
+            calibrator.magnetometerMeasurements.add(measurement)
+        }
+
+        calibrator.isMagnetometerCommonAxisUsed = false
+
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setMagnetometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.magnetometerRobustMethod = RobustEstimatorMethod.PROSAC
+        calibrator.magnetometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.magnetometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.magnetometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.magnetometerRobustThreshold = null
+        calibrator.magnetometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
+
+        val generator: MagnetometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        val baseNoiseLevel = randomizer.nextDouble()
+        every { generatorSpy.magnetometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        assertEquals(RobustEstimatorMethod.PROSAC, calibrator.magnetometerRobustMethod)
+        assertTrue(calibrator.isMagnetometerGroundTruthInitialHardIron)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        val robustThreshold = calibrator.magnetometerRobustThreshold
+        assertNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
+        assertEquals(baseNoiseLevel, calibrator.magnetometerBaseNoiseLevel)
+
+        val internalCalibrator: MagnetometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as PROSACRobustKnownHardIronPositionAndInstantMagnetometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
+        assertFalse(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(0.0, internalCalibrator2.hardIronX, 0.0)
+        assertEquals(0.0, internalCalibrator2.hardIronY, 0.0)
+        assertEquals(0.0, internalCalibrator2.hardIronZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ROBUST_CONFIDENCE, internalCalibrator2.confidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
+        assertEquals(ROBUST_THRESHOLD_FACTOR * baseNoiseLevel, internalCalibrator2.threshold, 0.0)
+        assertEquals(calibrator.magnetometerMeasurements.size, internalCalibrator2.qualityScores.size)
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildMagnetometerInternalCalibrator_whenPROSACGroundTruthHardIronNotSetNoRobustThresholdAndMissingBaseNoiseLevel_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalMagnetometerCalibrator(
+            context,
+            location,
+            isMagnetometerGroundTruthInitialHardIron = false
+        )
+
+        val randomizer = UniformRandomizer()
+        val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
+        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
+        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+            magneticFluxDensityStandardDeviation
+        )
+        for (i in 1..13) {
+            calibrator.magnetometerMeasurements.add(measurement)
+        }
+
+        calibrator.isMagnetometerCommonAxisUsed = false
+
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setMagnetometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.magnetometerRobustMethod = RobustEstimatorMethod.PROSAC
+        calibrator.magnetometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.magnetometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.magnetometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.magnetometerRobustThreshold = null
+        calibrator.magnetometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
+
+        assertEquals(RobustEstimatorMethod.PROSAC, calibrator.magnetometerRobustMethod)
+        assertFalse(calibrator.isMagnetometerGroundTruthInitialHardIron)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        val robustThreshold = calibrator.magnetometerRobustThreshold
+        assertNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
+        assertNull(calibrator.magnetometerBaseNoiseLevel)
+
+        val ex = assertThrows(InvocationTargetException::class.java) {
+            assertNull(calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator"))
+        }
+        assertTrue(ex.cause is IllegalStateException)
+    }
+
+    @Test
+    fun buildMagnetometerInternalCalibrator_whenPROSACGroundTruthHardIronSetNoRobustThresholdAndMissingBaseNoiseLevel_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalMagnetometerCalibrator(
+            context,
+            location,
+            isMagnetometerGroundTruthInitialHardIron = true
+        )
+
+        val randomizer = UniformRandomizer()
+        val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
+        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
+        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+            magneticFluxDensityStandardDeviation
+        )
+        for (i in 1..13) {
+            calibrator.magnetometerMeasurements.add(measurement)
+        }
+
+        calibrator.isMagnetometerCommonAxisUsed = false
+
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setMagnetometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.magnetometerRobustMethod = RobustEstimatorMethod.PROSAC
+        calibrator.magnetometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.magnetometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.magnetometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.magnetometerRobustThreshold = null
+        calibrator.magnetometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
+
+        assertEquals(RobustEstimatorMethod.PROSAC, calibrator.magnetometerRobustMethod)
+        assertTrue(calibrator.isMagnetometerGroundTruthInitialHardIron)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        val robustThreshold = calibrator.magnetometerRobustThreshold
+        assertNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
+        assertNull(calibrator.magnetometerBaseNoiseLevel)
+
+        val ex = assertThrows(InvocationTargetException::class.java) {
+            assertNull(calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator"))
+        }
+        assertTrue(ex.cause is IllegalStateException)
+    }
+
+    @Test
+    fun buildMagnetometerInternalCalibrator_whenLMedSGroundTruthHardIronNotSetAndNoCommonAxis_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalMagnetometerCalibrator(
+            context,
+            location,
+            isMagnetometerGroundTruthInitialHardIron = false
+        )
+
+        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
+        for (i in 1..13) {
+            calibrator.magnetometerMeasurements.add(measurement)
+        }
+
+        calibrator.isMagnetometerCommonAxisUsed = false
+
+        val randomizer = UniformRandomizer()
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setMagnetometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.magnetometerRobustMethod = RobustEstimatorMethod.LMedS
+        calibrator.magnetometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.magnetometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.magnetometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.magnetometerRobustThreshold = ROBUST_THRESHOLD
+
+        assertEquals(RobustEstimatorMethod.LMedS, calibrator.magnetometerRobustMethod)
+        assertFalse(calibrator.isMagnetometerGroundTruthInitialHardIron)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        val robustThreshold = calibrator.magnetometerRobustThreshold
+        requireNotNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
+
+        val internalCalibrator: MagnetometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as LMedSRobustKnownPositionAndInstantMagnetometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
+        assertFalse(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(0.0, internalCalibrator2.initialHardIronX, 0.0)
+        assertEquals(0.0, internalCalibrator2.initialHardIronY, 0.0)
+        assertEquals(0.0, internalCalibrator2.initialHardIronZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ROBUST_CONFIDENCE, internalCalibrator2.confidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
+        assertEquals(ROBUST_THRESHOLD, internalCalibrator2.stopThreshold, 0.0)
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(13, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildMagnetometerInternalCalibrator_whenLMedSGroundTruthHardIronNotSetAndCommonAxis_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalMagnetometerCalibrator(
+            context,
+            location,
+            isMagnetometerGroundTruthInitialHardIron = false
+        )
+
+        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
+        for (i in 1..13) {
+            calibrator.magnetometerMeasurements.add(measurement)
+        }
+
+        calibrator.isMagnetometerCommonAxisUsed = true
+
+        val randomizer = UniformRandomizer()
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setMagnetometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.magnetometerRobustMethod = RobustEstimatorMethod.LMedS
+        calibrator.magnetometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.magnetometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.magnetometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.magnetometerRobustThreshold = ROBUST_THRESHOLD
+
+        assertEquals(RobustEstimatorMethod.LMedS, calibrator.magnetometerRobustMethod)
+        assertFalse(calibrator.isMagnetometerGroundTruthInitialHardIron)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        val robustThreshold = calibrator.magnetometerRobustThreshold
+        requireNotNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
+
+        val internalCalibrator: MagnetometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as LMedSRobustKnownPositionAndInstantMagnetometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
+        assertTrue(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(0.0, internalCalibrator2.initialHardIronX, 0.0)
+        assertEquals(0.0, internalCalibrator2.initialHardIronY, 0.0)
+        assertEquals(0.0, internalCalibrator2.initialHardIronZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ROBUST_CONFIDENCE, internalCalibrator2.confidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
+        assertEquals(ROBUST_THRESHOLD, internalCalibrator2.stopThreshold, 0.0)
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildMagnetometerInternalCalibrator_whenLMedSGroundTruthHardIronSetAndNoCommonAxis_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalMagnetometerCalibrator(
+            context,
+            location,
+            isMagnetometerGroundTruthInitialHardIron = true
+        )
+
+        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
+        for (i in 1..13) {
+            calibrator.magnetometerMeasurements.add(measurement)
+        }
+
+        calibrator.isMagnetometerCommonAxisUsed = false
+
+        val randomizer = UniformRandomizer()
+        val initialHardIronX = randomizer.nextDouble()
+        val initialHardIronY = randomizer.nextDouble()
+        val initialHardIronZ = randomizer.nextDouble()
+        calibrator.setPrivateProperty("magnetometerInitialHardIronX", initialHardIronX)
+        calibrator.setPrivateProperty("magnetometerInitialHardIronY", initialHardIronY)
+        calibrator.setPrivateProperty("magnetometerInitialHardIronZ", initialHardIronZ)
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setMagnetometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.magnetometerRobustMethod = RobustEstimatorMethod.LMedS
+        calibrator.magnetometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.magnetometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.magnetometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.magnetometerRobustThreshold = ROBUST_THRESHOLD
+
+        assertEquals(RobustEstimatorMethod.LMedS, calibrator.magnetometerRobustMethod)
+        assertTrue(calibrator.isMagnetometerGroundTruthInitialHardIron)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        val robustThreshold = calibrator.magnetometerRobustThreshold
+        requireNotNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
+
+        val internalCalibrator: MagnetometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as LMedSRobustKnownHardIronPositionAndInstantMagnetometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
+        assertFalse(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(initialHardIronX, internalCalibrator2.hardIronX, 0.0)
+        assertEquals(initialHardIronY, internalCalibrator2.hardIronY, 0.0)
+        assertEquals(initialHardIronZ, internalCalibrator2.hardIronZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ROBUST_CONFIDENCE, internalCalibrator2.confidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
+        assertEquals(ROBUST_THRESHOLD, internalCalibrator2.stopThreshold, 0.0)
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildMagnetometerInternalCalibrator_whenLMedSGroundTruthHardIronSetAndCommonAxis_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalMagnetometerCalibrator(
+            context,
+            location,
+            isMagnetometerGroundTruthInitialHardIron = true
+        )
+
+        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
+        for (i in 1..13) {
+            calibrator.magnetometerMeasurements.add(measurement)
+        }
+
+        calibrator.isMagnetometerCommonAxisUsed = true
+
+        val randomizer = UniformRandomizer()
+        val initialHardIronX = randomizer.nextDouble()
+        val initialHardIronY = randomizer.nextDouble()
+        val initialHardIronZ = randomizer.nextDouble()
+        calibrator.setPrivateProperty("magnetometerInitialHardIronX", initialHardIronX)
+        calibrator.setPrivateProperty("magnetometerInitialHardIronY", initialHardIronY)
+        calibrator.setPrivateProperty("magnetometerInitialHardIronZ", initialHardIronZ)
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setMagnetometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.magnetometerRobustMethod = RobustEstimatorMethod.LMedS
+        calibrator.magnetometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.magnetometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.magnetometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.magnetometerRobustThreshold = ROBUST_THRESHOLD
+
+        assertEquals(RobustEstimatorMethod.LMedS, calibrator.magnetometerRobustMethod)
+        assertTrue(calibrator.isMagnetometerGroundTruthInitialHardIron)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        val robustThreshold = calibrator.magnetometerRobustThreshold
+        requireNotNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
+
+        val internalCalibrator: MagnetometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as LMedSRobustKnownHardIronPositionAndInstantMagnetometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
+        assertTrue(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(initialHardIronX, internalCalibrator2.hardIronX, 0.0)
+        assertEquals(initialHardIronY, internalCalibrator2.hardIronY, 0.0)
+        assertEquals(initialHardIronZ, internalCalibrator2.hardIronZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ROBUST_CONFIDENCE, internalCalibrator2.confidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
+        assertEquals(ROBUST_THRESHOLD, internalCalibrator2.stopThreshold, 0.0)
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(7, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildMagnetometerInternalCalibrator_whenLMedSGroundTruthHardIronNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalMagnetometerCalibrator(
+            context,
+            location,
+            isMagnetometerGroundTruthInitialHardIron = false
+        )
+
+        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
+        for (i in 1..13) {
+            calibrator.magnetometerMeasurements.add(measurement)
+        }
+
+        calibrator.isMagnetometerCommonAxisUsed = false
+
+        val randomizer = UniformRandomizer()
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setMagnetometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.magnetometerRobustMethod = RobustEstimatorMethod.LMedS
+        calibrator.magnetometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.magnetometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.magnetometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.magnetometerRobustThreshold = null
+        calibrator.magnetometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
+        calibrator.magnetometerRobustStopThresholdFactor = ROBUST_STOP_THRESHOLD_FACTOR
+
+        val generator: MagnetometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        val baseNoiseLevel = randomizer.nextDouble()
+        every { generatorSpy.magnetometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        assertEquals(RobustEstimatorMethod.LMedS, calibrator.magnetometerRobustMethod)
+        assertFalse(calibrator.isMagnetometerGroundTruthInitialHardIron)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        val robustThreshold = calibrator.magnetometerRobustThreshold
+        assertNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
+        assertEquals(baseNoiseLevel, calibrator.magnetometerBaseNoiseLevel)
+
+        val internalCalibrator: MagnetometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as LMedSRobustKnownPositionAndInstantMagnetometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
+        assertFalse(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(0.0, internalCalibrator2.initialHardIronX, 0.0)
+        assertEquals(0.0, internalCalibrator2.initialHardIronY, 0.0)
+        assertEquals(0.0, internalCalibrator2.initialHardIronZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ROBUST_CONFIDENCE, internalCalibrator2.confidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
+        assertEquals(
+            ROBUST_THRESHOLD_FACTOR * ROBUST_STOP_THRESHOLD_FACTOR * baseNoiseLevel,
+            internalCalibrator2.stopThreshold,
+            0.0
+        )
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(13, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildMagnetometerInternalCalibrator_whenLMedSGroundTruthHardIronSetAndNoRobustThreshold_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalMagnetometerCalibrator(
+            context,
+            location,
+            isMagnetometerGroundTruthInitialHardIron = true
+        )
+
+        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
+        for (i in 1..13) {
+            calibrator.magnetometerMeasurements.add(measurement)
+        }
+
+        calibrator.isMagnetometerCommonAxisUsed = false
+
+        val randomizer = UniformRandomizer()
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setMagnetometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.magnetometerRobustMethod = RobustEstimatorMethod.LMedS
+        calibrator.magnetometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.magnetometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.magnetometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.magnetometerRobustThreshold = null
+        calibrator.magnetometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
+        calibrator.magnetometerRobustStopThresholdFactor = ROBUST_STOP_THRESHOLD_FACTOR
+
+        val generator: MagnetometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        val baseNoiseLevel = randomizer.nextDouble()
+        every { generatorSpy.magnetometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        assertEquals(RobustEstimatorMethod.LMedS, calibrator.magnetometerRobustMethod)
+        assertTrue(calibrator.isMagnetometerGroundTruthInitialHardIron)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        val robustThreshold = calibrator.magnetometerRobustThreshold
+        assertNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
+        assertEquals(baseNoiseLevel, calibrator.magnetometerBaseNoiseLevel)
+
+        val internalCalibrator: MagnetometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as LMedSRobustKnownHardIronPositionAndInstantMagnetometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
+        assertFalse(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(0.0, internalCalibrator2.hardIronX, 0.0)
+        assertEquals(0.0, internalCalibrator2.hardIronY, 0.0)
+        assertEquals(0.0, internalCalibrator2.hardIronZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ROBUST_CONFIDENCE, internalCalibrator2.confidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
+        assertEquals(
+            ROBUST_THRESHOLD_FACTOR * ROBUST_STOP_THRESHOLD_FACTOR * baseNoiseLevel,
+            internalCalibrator2.stopThreshold,
+            0.0
+        )
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildMagnetometerInternalCalibrator_whenLMedSGroundTruthHardIronNotSetNoRobustThresholdAndMissingBaseNoiseLevel_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalMagnetometerCalibrator(
+            context,
+            location,
+            isMagnetometerGroundTruthInitialHardIron = false
+        )
+
+        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
+        for (i in 1..13) {
+            calibrator.magnetometerMeasurements.add(measurement)
+        }
+
+        calibrator.isMagnetometerCommonAxisUsed = false
+
+        val randomizer = UniformRandomizer()
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setMagnetometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.magnetometerRobustMethod = RobustEstimatorMethod.LMedS
+        calibrator.magnetometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.magnetometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.magnetometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.magnetometerRobustThreshold = null
+        calibrator.magnetometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
+
+        assertEquals(RobustEstimatorMethod.LMedS, calibrator.magnetometerRobustMethod)
+        assertFalse(calibrator.isMagnetometerGroundTruthInitialHardIron)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        val robustThreshold = calibrator.magnetometerRobustThreshold
+        assertNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
+        assertNull(calibrator.magnetometerBaseNoiseLevel)
+
+        val ex = assertThrows(InvocationTargetException::class.java) {
+            assertNull(calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator"))
+        }
+        assertTrue(ex.cause is IllegalStateException)
+    }
+
+    @Test
+    fun buildMagnetometerInternalCalibrator_whenLMedSGroundTruthHardIronSetNoRobustThresholdAndMissingBaseNoiseLevel_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalMagnetometerCalibrator(
+            context,
+            location,
+            isMagnetometerGroundTruthInitialHardIron = true
+        )
+
+        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
+        for (i in 1..13) {
+            calibrator.magnetometerMeasurements.add(measurement)
+        }
+
+        calibrator.isMagnetometerCommonAxisUsed = false
+
+        val randomizer = UniformRandomizer()
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setMagnetometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.magnetometerRobustMethod = RobustEstimatorMethod.LMedS
+        calibrator.magnetometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.magnetometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.magnetometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.magnetometerRobustThreshold = null
+        calibrator.magnetometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
+
+        assertEquals(RobustEstimatorMethod.LMedS, calibrator.magnetometerRobustMethod)
+        assertTrue(calibrator.isMagnetometerGroundTruthInitialHardIron)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        val robustThreshold = calibrator.magnetometerRobustThreshold
+        assertNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
+        assertNull(calibrator.magnetometerBaseNoiseLevel)
+
+        val ex = assertThrows(InvocationTargetException::class.java) {
+            assertNull(calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator"))
+        }
+        assertTrue(ex.cause is IllegalStateException)
+    }
+
+    @Test
+    fun buildMagnetometerInternalCalibrator_whenPROMedSGroundTruthHardIronNotSetAndNoCommonAxis_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalMagnetometerCalibrator(
+            context,
+            location,
+            isMagnetometerGroundTruthInitialHardIron = false
+        )
+
+        val randomizer = UniformRandomizer()
+        val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
+        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
+        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+            magneticFluxDensityStandardDeviation
+        )
+        for (i in 1..13) {
+            calibrator.magnetometerMeasurements.add(measurement)
+        }
+
+        calibrator.isMagnetometerCommonAxisUsed = false
+
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setMagnetometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.magnetometerRobustMethod = RobustEstimatorMethod.PROMedS
+        calibrator.magnetometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.magnetometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.magnetometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.magnetometerRobustThreshold = ROBUST_THRESHOLD
+
+        assertEquals(RobustEstimatorMethod.PROMedS, calibrator.magnetometerRobustMethod)
+        assertFalse(calibrator.isMagnetometerGroundTruthInitialHardIron)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        val robustThreshold = calibrator.magnetometerRobustThreshold
+        requireNotNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
+
+        val internalCalibrator: MagnetometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as PROMedSRobustKnownPositionAndInstantMagnetometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
+        assertFalse(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(0.0, internalCalibrator2.initialHardIronX, 0.0)
+        assertEquals(0.0, internalCalibrator2.initialHardIronY, 0.0)
+        assertEquals(0.0, internalCalibrator2.initialHardIronZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ROBUST_CONFIDENCE, internalCalibrator2.confidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
+        assertEquals(ROBUST_THRESHOLD, internalCalibrator2.stopThreshold, 0.0)
+        assertEquals(calibrator.magnetometerMeasurements.size, internalCalibrator2.qualityScores.size)
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(13, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildMagnetometerInternalCalibrator_whenPROMedSGroundTruthHardIronNotSetAndCommonAxis_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalMagnetometerCalibrator(
+            context,
+            location,
+            isMagnetometerGroundTruthInitialHardIron = false
+        )
+
+        val randomizer = UniformRandomizer()
+        val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
+        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
+        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+            magneticFluxDensityStandardDeviation
+        )
+        for (i in 1..13) {
+            calibrator.magnetometerMeasurements.add(measurement)
+        }
+
+        calibrator.isMagnetometerCommonAxisUsed = true
+
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setMagnetometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.magnetometerRobustMethod = RobustEstimatorMethod.PROMedS
+        calibrator.magnetometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.magnetometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.magnetometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.magnetometerRobustThreshold = ROBUST_THRESHOLD
+
+        assertEquals(RobustEstimatorMethod.PROMedS, calibrator.magnetometerRobustMethod)
+        assertFalse(calibrator.isMagnetometerGroundTruthInitialHardIron)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        val robustThreshold = calibrator.magnetometerRobustThreshold
+        requireNotNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
+
+        val internalCalibrator: MagnetometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as PROMedSRobustKnownPositionAndInstantMagnetometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
+        assertTrue(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(0.0, internalCalibrator2.initialHardIronX, 0.0)
+        assertEquals(0.0, internalCalibrator2.initialHardIronY, 0.0)
+        assertEquals(0.0, internalCalibrator2.initialHardIronZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ROBUST_CONFIDENCE, internalCalibrator2.confidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
+        assertEquals(ROBUST_THRESHOLD, internalCalibrator2.stopThreshold, 0.0)
+        assertEquals(calibrator.magnetometerMeasurements.size, internalCalibrator2.qualityScores.size)
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildMagnetometerInternalCalibrator_whenPROMedSGroundTruthHardIronSetAndNoCommonAxis_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalMagnetometerCalibrator(
+            context,
+            location,
+            isMagnetometerGroundTruthInitialHardIron = true
+        )
+
+        val randomizer = UniformRandomizer()
+        val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
+        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
+        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+            magneticFluxDensityStandardDeviation
+        )
+        for (i in 1..13) {
+            calibrator.magnetometerMeasurements.add(measurement)
+        }
+
+        calibrator.isMagnetometerCommonAxisUsed = false
+
+        val initialHardIronX = randomizer.nextDouble()
+        val initialHardIronY = randomizer.nextDouble()
+        val initialHardIronZ = randomizer.nextDouble()
+        calibrator.setPrivateProperty("magnetometerInitialHardIronX", initialHardIronX)
+        calibrator.setPrivateProperty("magnetometerInitialHardIronY", initialHardIronY)
+        calibrator.setPrivateProperty("magnetometerInitialHardIronZ", initialHardIronZ)
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setMagnetometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.magnetometerRobustMethod = RobustEstimatorMethod.PROMedS
+        calibrator.magnetometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.magnetometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.magnetometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.magnetometerRobustThreshold = ROBUST_THRESHOLD
+
+        assertEquals(RobustEstimatorMethod.PROMedS, calibrator.magnetometerRobustMethod)
+        assertTrue(calibrator.isMagnetometerGroundTruthInitialHardIron)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        val robustThreshold = calibrator.magnetometerRobustThreshold
+        requireNotNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
+
+        val internalCalibrator: MagnetometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as PROMedSRobustKnownHardIronPositionAndInstantMagnetometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
+        assertFalse(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(initialHardIronX, internalCalibrator2.hardIronX, 0.0)
+        assertEquals(initialHardIronY, internalCalibrator2.hardIronY, 0.0)
+        assertEquals(initialHardIronZ, internalCalibrator2.hardIronZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ROBUST_CONFIDENCE, internalCalibrator2.confidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
+        assertEquals(ROBUST_THRESHOLD, internalCalibrator2.stopThreshold, 0.0)
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildMagnetometerInternalCalibrator_whenPROMedSGroundTruthHardIronSetAndCommonAxis_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalMagnetometerCalibrator(
+            context,
+            location,
+            isMagnetometerGroundTruthInitialHardIron = true
+        )
+
+        val randomizer = UniformRandomizer()
+        val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
+        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
+        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+            magneticFluxDensityStandardDeviation
+        )
+        for (i in 1..13) {
+            calibrator.magnetometerMeasurements.add(measurement)
+        }
+
+        calibrator.isMagnetometerCommonAxisUsed = true
+
+        val initialHardIronX = randomizer.nextDouble()
+        val initialHardIronY = randomizer.nextDouble()
+        val initialHardIronZ = randomizer.nextDouble()
+        calibrator.setPrivateProperty("magnetometerInitialHardIronX", initialHardIronX)
+        calibrator.setPrivateProperty("magnetometerInitialHardIronY", initialHardIronY)
+        calibrator.setPrivateProperty("magnetometerInitialHardIronZ", initialHardIronZ)
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setMagnetometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.magnetometerRobustMethod = RobustEstimatorMethod.PROMedS
+        calibrator.magnetometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.magnetometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.magnetometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.magnetometerRobustThreshold = ROBUST_THRESHOLD
+
+        assertEquals(RobustEstimatorMethod.PROMedS, calibrator.magnetometerRobustMethod)
+        assertTrue(calibrator.isMagnetometerGroundTruthInitialHardIron)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        val robustThreshold = calibrator.magnetometerRobustThreshold
+        requireNotNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
+
+        val internalCalibrator: MagnetometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as PROMedSRobustKnownHardIronPositionAndInstantMagnetometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
+        assertTrue(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(initialHardIronX, internalCalibrator2.hardIronX, 0.0)
+        assertEquals(initialHardIronY, internalCalibrator2.hardIronY, 0.0)
+        assertEquals(initialHardIronZ, internalCalibrator2.hardIronZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ROBUST_CONFIDENCE, internalCalibrator2.confidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
+        assertEquals(ROBUST_THRESHOLD, internalCalibrator2.stopThreshold, 0.0)
+        assertEquals(calibrator.magnetometerMeasurements.size, internalCalibrator2.qualityScores.size)
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(7, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildMagnetometerInternalCalibrator_whenPROMedSGroundTruthHardIronNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalMagnetometerCalibrator(
+            context,
+            location,
+            isMagnetometerGroundTruthInitialHardIron = false
+        )
+
+        val randomizer = UniformRandomizer()
+        val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
+        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
+        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+            magneticFluxDensityStandardDeviation
+        )
+        for (i in 1..13) {
+            calibrator.magnetometerMeasurements.add(measurement)
+        }
+
+        calibrator.isMagnetometerCommonAxisUsed = false
+
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setMagnetometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.magnetometerRobustMethod = RobustEstimatorMethod.PROMedS
+        calibrator.magnetometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.magnetometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.magnetometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.magnetometerRobustThreshold = null
+        calibrator.magnetometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
+        calibrator.magnetometerRobustStopThresholdFactor = ROBUST_STOP_THRESHOLD_FACTOR
+
+        val generator: MagnetometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        val baseNoiseLevel = randomizer.nextDouble()
+        every { generatorSpy.magnetometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        assertEquals(RobustEstimatorMethod.PROMedS, calibrator.magnetometerRobustMethod)
+        assertFalse(calibrator.isMagnetometerGroundTruthInitialHardIron)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        val robustThreshold = calibrator.magnetometerRobustThreshold
+        assertNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
+        assertEquals(baseNoiseLevel, calibrator.magnetometerBaseNoiseLevel)
+
+        val internalCalibrator: MagnetometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as PROMedSRobustKnownPositionAndInstantMagnetometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
+        assertFalse(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(0.0, internalCalibrator2.initialHardIronX, 0.0)
+        assertEquals(0.0, internalCalibrator2.initialHardIronY, 0.0)
+        assertEquals(0.0, internalCalibrator2.initialHardIronZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ROBUST_CONFIDENCE, internalCalibrator2.confidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
+        assertEquals(
+            ROBUST_THRESHOLD_FACTOR * ROBUST_STOP_THRESHOLD_FACTOR * baseNoiseLevel,
+            internalCalibrator2.stopThreshold,
+            0.0
+        )
+        assertEquals(calibrator.magnetometerMeasurements.size, internalCalibrator2.qualityScores.size)
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(13, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildMagnetometerInternalCalibrator_whenPROMedSGroundTruthHardIronSetAndNoRobustThreshold_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalMagnetometerCalibrator(
+            context,
+            location,
+            isMagnetometerGroundTruthInitialHardIron = true
+        )
+
+        val randomizer = UniformRandomizer()
+        val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
+        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
+        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+            magneticFluxDensityStandardDeviation
+        )
+        for (i in 1..13) {
+            calibrator.magnetometerMeasurements.add(measurement)
+        }
+
+        calibrator.isMagnetometerCommonAxisUsed = false
+
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setMagnetometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.magnetometerRobustMethod = RobustEstimatorMethod.PROMedS
+        calibrator.magnetometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.magnetometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.magnetometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.magnetometerRobustThreshold = null
+        calibrator.magnetometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
+        calibrator.magnetometerRobustStopThresholdFactor = ROBUST_STOP_THRESHOLD_FACTOR
+
+        val generator: MagnetometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        val baseNoiseLevel = randomizer.nextDouble()
+        every { generatorSpy.magnetometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        assertEquals(RobustEstimatorMethod.PROMedS, calibrator.magnetometerRobustMethod)
+        assertTrue(calibrator.isMagnetometerGroundTruthInitialHardIron)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        val robustThreshold = calibrator.magnetometerRobustThreshold
+        assertNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
+        assertEquals(ROBUST_STOP_THRESHOLD_FACTOR, calibrator.magnetometerRobustStopThresholdFactor, 0.0)
+        assertEquals(baseNoiseLevel, calibrator.magnetometerBaseNoiseLevel)
+
+        val internalCalibrator: MagnetometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as PROMedSRobustKnownHardIronPositionAndInstantMagnetometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
+        assertFalse(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(0.0, internalCalibrator2.hardIronX, 0.0)
+        assertEquals(0.0, internalCalibrator2.hardIronY, 0.0)
+        assertEquals(0.0, internalCalibrator2.hardIronZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ROBUST_CONFIDENCE, internalCalibrator2.confidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
+        assertEquals(
+            ROBUST_THRESHOLD_FACTOR * ROBUST_STOP_THRESHOLD_FACTOR * baseNoiseLevel,
+            internalCalibrator2.stopThreshold,
+            0.0
+        )
+        assertEquals(calibrator.magnetometerMeasurements.size, internalCalibrator2.qualityScores.size)
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildMagnetometerInternalCalibrator_whenPROMedSGroundTruthHardIronNotSetNoRobustThresholdAndMissingBaseNoiseLevel_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalMagnetometerCalibrator(
+            context,
+            location,
+            isMagnetometerGroundTruthInitialHardIron = false
+        )
+
+        val randomizer = UniformRandomizer()
+        val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
+        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
+        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+            magneticFluxDensityStandardDeviation
+        )
+        for (i in 1..13) {
+            calibrator.magnetometerMeasurements.add(measurement)
+        }
+
+        calibrator.isMagnetometerCommonAxisUsed = false
+
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setMagnetometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.magnetometerRobustMethod = RobustEstimatorMethod.PROMedS
+        calibrator.magnetometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.magnetometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.magnetometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.magnetometerRobustThreshold = null
+        calibrator.magnetometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
+
+        assertEquals(RobustEstimatorMethod.PROMedS, calibrator.magnetometerRobustMethod)
+        assertFalse(calibrator.isMagnetometerGroundTruthInitialHardIron)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        val robustThreshold = calibrator.magnetometerRobustThreshold
+        assertNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
+        assertNull(calibrator.magnetometerBaseNoiseLevel)
+
+        val ex = assertThrows(InvocationTargetException::class.java) {
+            assertNull(calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator"))
+        }
+        assertTrue(ex.cause is IllegalStateException)
+    }
+
+    @Test
+    fun buildMagnetometerInternalCalibrator_whenPROMedSGroundTruthHardIronSetNoRobustThresholdAndMissingBaseNoiseLevel_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalMagnetometerCalibrator(
+            context,
+            location,
+            isMagnetometerGroundTruthInitialHardIron = true
+        )
+
+        val randomizer = UniformRandomizer()
+        val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
+        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
+        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+            magneticFluxDensityStandardDeviation
+        )
+        for (i in 1..13) {
+            calibrator.magnetometerMeasurements.add(measurement)
+        }
+
+        calibrator.isMagnetometerCommonAxisUsed = false
+
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setMagnetometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.magnetometerRobustMethod = RobustEstimatorMethod.PROMedS
+        calibrator.magnetometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.magnetometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.magnetometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.magnetometerRobustThreshold = null
+        calibrator.magnetometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
+
+        assertEquals(RobustEstimatorMethod.PROMedS, calibrator.magnetometerRobustMethod)
+        assertTrue(calibrator.isMagnetometerGroundTruthInitialHardIron)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        val robustThreshold = calibrator.magnetometerRobustThreshold
+        assertNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
+        assertNull(calibrator.magnetometerBaseNoiseLevel)
+
+        val ex = assertThrows(InvocationTargetException::class.java) {
+            assertNull(calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator"))
+        }
+        assertTrue(ex.cause is IllegalStateException)
+    }
+
     private companion object {
         const val MM_SIZE = 3
 
