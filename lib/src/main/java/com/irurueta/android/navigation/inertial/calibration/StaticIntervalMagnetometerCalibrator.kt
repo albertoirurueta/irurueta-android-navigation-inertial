@@ -125,6 +125,12 @@ class StaticIntervalMagnetometerCalibrator private constructor(
      * @param magnetometerSensorDelay Delay of magnetometer sensor between samples.
      * @param solveCalibrationWhenEnoughMeasurements true to automatically solve calibration once
      * enough measurements are available, false otherwise.
+     * @param isMagnetometerGroundTruthInitialHardIron true if estimated magnetometer hard iron is
+     * assumed to be the true value, false if estimated hard iron is assumed to be only an initial
+     * guess. When [magnetometerSensorType] is
+     * [MagnetometerSensorCollector.SensorType.MAGNETOMETER], hard iron guess is zero, otherwise
+     * when it is [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED], hard iron
+     * guess is the device calibrated values.
      * @param initializationStartedListener listener to notify when initialization starts.
      * @param initializationCompletedListener listener to notify when initialization completes.
      * @param errorListener listener to notify errors.
@@ -1016,7 +1022,7 @@ class StaticIntervalMagnetometerCalibrator private constructor(
      * By default 99% of confidence is used, which indicates that with a probability of 99%
      * estimation will be accurate because chosen sub-samples will be inliers (in other terms,
      * outliers will be correctly discarded).
-     * This properly is only taken into account if a not-null [magnetometerRobustMethod] is
+     * This property is only taken into account if a not-null [magnetometerRobustMethod] is
      * specified.
      *
      * @throws IllegalArgumentException if provided value is not between 0.0 and 1.0 (both
@@ -1059,14 +1065,14 @@ class StaticIntervalMagnetometerCalibrator private constructor(
      * This properly is only taken into account if a not-null [magnetometerRobustMethod] is
      * specified.
      *
-     * @throws IllegalArgumentException if provided value is less than [minimumRequiredMeasurements]
-     * at the moment the setter is called.
+     * @throws IllegalArgumentException if provided value is less than
+     * [minimumRequiredMagnetometerMeasurements] at the moment the setter is called.
      * @throws IllegalStateException if calibrator is currently running.
      */
     var magnetometerRobustPreliminarySubsetSize: Int = 0
         @Throws(IllegalArgumentException::class, IllegalStateException::class)
         set(value) {
-            require(value >= minimumRequiredMeasurements)
+            require(value >= minimumRequiredMagnetometerMeasurements)
             check(!running)
             field = value
         }
@@ -1592,17 +1598,17 @@ class StaticIntervalMagnetometerCalibrator private constructor(
     /**
      * Updates initial hard iron values when first magnetometer measurement is received, so
      * that hardware calibrated biases are retrieved if
-     * [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED] is used.
+     * [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED] is used.
      *
      * @param hardIronX hard iron on device x-axis expressed in micro-Teslas (µT). Only
-     * available when using [SensorType.MAGNETOMETER_UNCALIBRATED]. If available, this value
-     * remains constant with calibrated bias value.
+     * available when using [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED].
+     * If available, this value remains constant with calibrated bias value.
      * @param hardIronY hard iron on device y-axis expressed in micro-Teslas (µT). Only
-     * available when using [SensorType.MAGNETOMETER_UNCALIBRATED]. If available, this value
-     * remains constant with calibrated bias value.
+     * available when using [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED].
+     * If available, this value remains constant with calibrated bias value.
      * @param hardIronZ hard iron on device y-axis expressed in micro-Teslas (µT). Only
-     * available when using [SensorType.MAGNETOMETER_UNCALIBRATED]. If available, this value
-     * remains constant with calibrated bias value.
+     * available when using [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED].
+     * If available, this value remains constant with calibrated bias value.
      */
     private fun updateMagnetometerInitialHardIrons(
         hardIronX: Double?,
@@ -1766,7 +1772,9 @@ class StaticIntervalMagnetometerCalibrator private constructor(
         result.confidence = magnetometerRobustConfidence
         result.maxIterations = magnetometerRobustMaxIterations
         result.preliminarySubsetSize =
-            magnetometerRobustPreliminarySubsetSize.coerceAtLeast(minimumRequiredMeasurements)
+            magnetometerRobustPreliminarySubsetSize.coerceAtLeast(
+                minimumRequiredMagnetometerMeasurements
+            )
 
         // set threshold and quality scores
         when (result) {
@@ -1855,7 +1863,9 @@ class StaticIntervalMagnetometerCalibrator private constructor(
         result.confidence = magnetometerRobustConfidence
         result.maxIterations = magnetometerRobustMaxIterations
         result.preliminarySubsetSize =
-            magnetometerRobustPreliminarySubsetSize.coerceAtLeast(minimumRequiredMeasurements)
+            magnetometerRobustPreliminarySubsetSize.coerceAtLeast(
+                minimumRequiredMagnetometerMeasurements
+            )
 
         // set threshold and quality scores
         when (result) {
@@ -1916,7 +1926,7 @@ class StaticIntervalMagnetometerCalibrator private constructor(
      *
      * @return build quality score array.
      */
-    protected fun buildMagnetometerQualityScores(): DoubleArray {
+    private fun buildMagnetometerQualityScores(): DoubleArray {
         val size = magnetometerMeasurements.size
         val qualityScores = DoubleArray(size)
         magnetometerMeasurements.forEachIndexed { index, measurement ->
@@ -2019,7 +2029,7 @@ class StaticIntervalMagnetometerCalibrator private constructor(
     fun interface OnGeneratedMagnetometerMeasurementListener {
 
         /**
-         * Called whe a new magnetometer calibration measurement is generated.
+         * Called when a new magnetometer calibration measurement is generated.
          *
          * @param calibrator calibrator that raised the event.
          * @param measurement generated magnetometer calibration measurement.

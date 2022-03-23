@@ -173,7 +173,7 @@ class StaticIntervalAccelerometerCalibratorTest {
             accelerometerSensorType = sensorType,
             initializationStartedListener = {
                 Log.i(
-                    "StaticIntervalAccelerometerCalibrator",
+                    "StaticIntervalAccelerometerCalibratorTest",
                     "Initialization started"
                 )
             },

@@ -1134,7 +1134,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
      * By default 99% of confidence is used, which indicates that with a probability of 99%
      * estimation will be accurate because chosen sub-samples will be inliers (in other terms,
      * outliers will be correctly discarded).
-     * This properly is only taken into account if a not-null [accelerometerRobustMethod] is
+     * This property is only taken into account if a not-null [accelerometerRobustMethod] is
      * specified.
      *
      * @throws IllegalArgumentException if provided value is not between 0.0 and 1.0 (both
@@ -1177,14 +1177,14 @@ class StaticIntervalAccelerometerCalibrator private constructor(
      * This properly is only taken into account if a not-null [accelerometerRobustMethod] is
      * specified.
      *
-     * @throws IllegalArgumentException if provided value is less than [minimumRequiredMeasurements]
-     * at the moment the setter is called.
+     * @throws IllegalArgumentException if provided value is less than
+     * [minimumRequiredAccelerometerMeasurements] at the moment the setter is called.
      * @throws IllegalStateException if calibrator is currently running.
      */
     var accelerometerRobustPreliminarySubsetSize: Int = 0
         @Throws(IllegalArgumentException::class, IllegalStateException::class)
         set(value) {
-            require(value >= minimumRequiredMeasurements)
+            require(value >= minimumRequiredAccelerometerMeasurements)
             check(!running)
             field = value
         }
@@ -2375,7 +2375,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
 
     /**
      * Interface to notify when initial accelerometer bias guess is available.
-     * If [isAccelerometerGroundTruthInitialBias] is true, then initial bias is considered true true
+     * If [isAccelerometerGroundTruthInitialBias] is true, then initial bias is considered the true
      * value after solving calibration, otherwise, initial bias is considered only an initial guess.
      */
     fun interface OnInitialAccelerometerBiasAvailableListener {

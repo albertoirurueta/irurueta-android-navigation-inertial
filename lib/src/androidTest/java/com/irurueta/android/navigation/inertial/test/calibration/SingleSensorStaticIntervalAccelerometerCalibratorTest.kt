@@ -171,19 +171,19 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
             sensorType = sensorType,
             initializationStartedListener = {
                 Log.i(
-                    "SingleSensorStaticIntervalAccelerometerCalibrator",
+                    "SingleSensorStaticIntervalAccelerometerCalibratorTest",
                     "Initialization started"
                 )
             },
             initializationCompletedListener = {
                 Log.i(
-                    "SingleSensorStaticIntervalAccelerometerCalibrator",
+                    "SingleSensorStaticIntervalAccelerometerCalibratorTest",
                     "Initialization completed."
                 )
             },
             errorListener = { _, errorReason ->
                 Log.i(
-                    "SingleSensorStaticIntervalAccelerometerCalibrator",
+                    "SingleSensorStaticIntervalAccelerometerCalibratorTest",
                     "Error: $errorReason"
                 )
 
@@ -191,37 +191,37 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
             },
             unreliableGravityNormEstimationListener = {
                 Log.i(
-                    "SingleSensorStaticIntervalAccelerometerCalibrator",
+                    "SingleSensorStaticIntervalAccelerometerCalibratorTest",
                     "Unreliable gravity"
                 )
             },
             initialBiasAvailableListener = { _, biasX, biasY, biasZ ->
                 Log.i(
-                    "SingleSensorStaticIntervalAccelerometerCalibrator",
+                    "SingleSensorStaticIntervalAccelerometerCalibratorTest",
                     "Initial bias available. x: $biasX, y: $biasY, z: $biasZ m/s^2"
                 )
             },
             newCalibrationMeasurementAvailableListener = { _, _, measurementsFoundSoFar, requiredMeasurements ->
                 Log.i(
-                    "SingleSensorStaticIntervalAccelerometerCalibrator",
+                    "SingleSensorStaticIntervalAccelerometerCalibratorTest",
                     "New measurement available. $measurementsFoundSoFar / $requiredMeasurements"
                 )
             },
             readyToSolveCalibrationListener = {
                 Log.i(
-                    "SingleSensorStaticIntervalAccelerometerCalibrator",
+                    "SingleSensorStaticIntervalAccelerometerCalibratorTest",
                     "Ready to solve calibration"
                 )
             },
             calibrationSolvingStartedListener = {
                 Log.i(
-                    "SingleSensorStaticIntervalAccelerometerCalibrator",
+                    "SingleSensorStaticIntervalAccelerometerCalibratorTest",
                     "Calibration solving started"
                 )
             },
             calibrationCompletedListener = {
                 Log.i(
-                    "SingleSensorStaticIntervalAccelerometerCalibrator",
+                    "SingleSensorStaticIntervalAccelerometerCalibratorTest",
                     "Calibration completed"
                 )
 
@@ -229,7 +229,7 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
             },
             stoppedListener = {
                 Log.i(
-                    "SingleSensorStaticIntervalAccelerometerCalibrator",
+                    "SingleSensorStaticIntervalAccelerometerCalibratorTest",
                     "Calibrator stopped"
                 )
             }
@@ -247,10 +247,6 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
         Log.i(
             "SingleSensorStaticIntervalAccelerometerCalibrator",
             "Initial bias. x: ${calibrator.initialBiasX}, y: ${calibrator.initialBiasY}, z: ${calibrator.initialBiasZ} m/s^2"
-        )
-        Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
-            "Result unreliable: ${calibrator.resultUnreliable}"
         )
         Log.i(
             "SingleSensorStaticIntervalAccelerometerCalibrator",

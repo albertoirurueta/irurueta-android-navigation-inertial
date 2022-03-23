@@ -10228,7 +10228,10 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertFalse(calibrator.isMagnetometerGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.magnetometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.magnetometerRobustThreshold
         requireNotNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
@@ -10316,7 +10319,10 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertFalse(calibrator.isMagnetometerGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.magnetometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.magnetometerRobustThreshold
         requireNotNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
@@ -10410,7 +10416,10 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertTrue(calibrator.isMagnetometerGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.magnetometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.magnetometerRobustThreshold
         requireNotNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
@@ -10504,7 +10513,10 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertTrue(calibrator.isMagnetometerGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.magnetometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.magnetometerRobustThreshold
         requireNotNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
@@ -10601,7 +10613,10 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertFalse(calibrator.isMagnetometerGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.magnetometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.magnetometerRobustThreshold
         assertNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
@@ -10699,7 +10714,10 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertTrue(calibrator.isMagnetometerGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.magnetometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.magnetometerRobustThreshold
         assertNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
@@ -10789,7 +10807,10 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertFalse(calibrator.isMagnetometerGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.magnetometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.magnetometerRobustThreshold
         assertNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
@@ -10850,7 +10871,10 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertTrue(calibrator.isMagnetometerGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.magnetometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.magnetometerRobustThreshold
         assertNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
@@ -10910,7 +10934,10 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertFalse(calibrator.isMagnetometerGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.magnetometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.magnetometerRobustThreshold
         requireNotNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
@@ -10998,7 +11025,10 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertFalse(calibrator.isMagnetometerGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.magnetometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.magnetometerRobustThreshold
         requireNotNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
@@ -11092,7 +11122,10 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertTrue(calibrator.isMagnetometerGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.magnetometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.magnetometerRobustThreshold
         requireNotNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
@@ -11186,7 +11219,10 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertTrue(calibrator.isMagnetometerGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.magnetometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.magnetometerRobustThreshold
         requireNotNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
@@ -11283,7 +11319,10 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertFalse(calibrator.isMagnetometerGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.magnetometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.magnetometerRobustThreshold
         assertNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
@@ -11381,7 +11420,10 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertTrue(calibrator.isMagnetometerGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.magnetometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.magnetometerRobustThreshold
         assertNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
@@ -11471,7 +11513,10 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertFalse(calibrator.isMagnetometerGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.magnetometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.magnetometerRobustThreshold
         assertNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
@@ -11532,7 +11577,10 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertTrue(calibrator.isMagnetometerGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.magnetometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.magnetometerRobustThreshold
         assertNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
@@ -11596,7 +11644,10 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertFalse(calibrator.isMagnetometerGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.magnetometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.magnetometerRobustThreshold
         requireNotNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
@@ -11627,7 +11678,10 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
         assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
         assertEquals(ROBUST_THRESHOLD, internalCalibrator2.threshold, 0.0)
-        assertEquals(calibrator.magnetometerMeasurements.size, internalCalibrator2.qualityScores.size)
+        assertEquals(
+            calibrator.magnetometerMeasurements.size,
+            internalCalibrator2.qualityScores.size
+        )
 
         assertTrue(internalCalibrator2.isReady)
         assertEquals(13, internalCalibrator2.minimumRequiredMeasurements)
@@ -11689,7 +11743,10 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertFalse(calibrator.isMagnetometerGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.magnetometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.magnetometerRobustThreshold
         requireNotNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
@@ -11720,7 +11777,10 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
         assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
         assertEquals(ROBUST_THRESHOLD, internalCalibrator2.threshold, 0.0)
-        assertEquals(calibrator.magnetometerMeasurements.size, internalCalibrator2.qualityScores.size)
+        assertEquals(
+            calibrator.magnetometerMeasurements.size,
+            internalCalibrator2.qualityScores.size
+        )
 
         assertTrue(internalCalibrator2.isReady)
         assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
@@ -11788,7 +11848,10 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertTrue(calibrator.isMagnetometerGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.magnetometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.magnetometerRobustThreshold
         requireNotNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
@@ -11819,7 +11882,10 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
         assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
         assertEquals(ROBUST_THRESHOLD, internalCalibrator2.threshold, 0.0)
-        assertEquals(calibrator.magnetometerMeasurements.size, internalCalibrator2.qualityScores.size)
+        assertEquals(
+            calibrator.magnetometerMeasurements.size,
+            internalCalibrator2.qualityScores.size
+        )
 
         assertTrue(internalCalibrator2.isReady)
         assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
@@ -11887,7 +11953,10 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertTrue(calibrator.isMagnetometerGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.magnetometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.magnetometerRobustThreshold
         requireNotNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
@@ -11918,7 +11987,10 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
         assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
         assertEquals(ROBUST_THRESHOLD, internalCalibrator2.threshold, 0.0)
-        assertEquals(calibrator.magnetometerMeasurements.size, internalCalibrator2.qualityScores.size)
+        assertEquals(
+            calibrator.magnetometerMeasurements.size,
+            internalCalibrator2.qualityScores.size
+        )
 
         assertTrue(internalCalibrator2.isReady)
         assertEquals(7, internalCalibrator2.minimumRequiredMeasurements)
@@ -11989,7 +12061,10 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertFalse(calibrator.isMagnetometerGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.magnetometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.magnetometerRobustThreshold
         assertNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
@@ -12021,7 +12096,10 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
         assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
         assertEquals(ROBUST_THRESHOLD_FACTOR * baseNoiseLevel, internalCalibrator2.threshold, 0.0)
-        assertEquals(calibrator.magnetometerMeasurements.size, internalCalibrator2.qualityScores.size)
+        assertEquals(
+            calibrator.magnetometerMeasurements.size,
+            internalCalibrator2.qualityScores.size
+        )
 
         assertTrue(internalCalibrator2.isReady)
         assertEquals(13, internalCalibrator2.minimumRequiredMeasurements)
@@ -12092,7 +12170,10 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertTrue(calibrator.isMagnetometerGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.magnetometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.magnetometerRobustThreshold
         assertNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
@@ -12124,7 +12205,10 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
         assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
         assertEquals(ROBUST_THRESHOLD_FACTOR * baseNoiseLevel, internalCalibrator2.threshold, 0.0)
-        assertEquals(calibrator.magnetometerMeasurements.size, internalCalibrator2.qualityScores.size)
+        assertEquals(
+            calibrator.magnetometerMeasurements.size,
+            internalCalibrator2.qualityScores.size
+        )
 
         assertTrue(internalCalibrator2.isReady)
         assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
@@ -12187,7 +12271,10 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertFalse(calibrator.isMagnetometerGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.magnetometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.magnetometerRobustThreshold
         assertNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
@@ -12252,7 +12339,10 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertTrue(calibrator.isMagnetometerGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.magnetometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.magnetometerRobustThreshold
         assertNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
@@ -12312,7 +12402,10 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertFalse(calibrator.isMagnetometerGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.magnetometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.magnetometerRobustThreshold
         requireNotNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
@@ -12400,7 +12493,10 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertFalse(calibrator.isMagnetometerGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.magnetometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.magnetometerRobustThreshold
         requireNotNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
@@ -12494,7 +12590,10 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertTrue(calibrator.isMagnetometerGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.magnetometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.magnetometerRobustThreshold
         requireNotNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
@@ -12588,7 +12687,10 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertTrue(calibrator.isMagnetometerGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.magnetometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.magnetometerRobustThreshold
         requireNotNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
@@ -12686,7 +12788,10 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertFalse(calibrator.isMagnetometerGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.magnetometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.magnetometerRobustThreshold
         assertNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
@@ -12789,7 +12894,10 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertTrue(calibrator.isMagnetometerGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.magnetometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.magnetometerRobustThreshold
         assertNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
@@ -12883,7 +12991,10 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertFalse(calibrator.isMagnetometerGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.magnetometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.magnetometerRobustThreshold
         assertNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
@@ -12944,7 +13055,10 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertTrue(calibrator.isMagnetometerGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.magnetometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.magnetometerRobustThreshold
         assertNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
@@ -13008,7 +13122,10 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertFalse(calibrator.isMagnetometerGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.magnetometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.magnetometerRobustThreshold
         requireNotNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
@@ -13039,7 +13156,10 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
         assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
         assertEquals(ROBUST_THRESHOLD, internalCalibrator2.stopThreshold, 0.0)
-        assertEquals(calibrator.magnetometerMeasurements.size, internalCalibrator2.qualityScores.size)
+        assertEquals(
+            calibrator.magnetometerMeasurements.size,
+            internalCalibrator2.qualityScores.size
+        )
 
         assertTrue(internalCalibrator2.isReady)
         assertEquals(13, internalCalibrator2.minimumRequiredMeasurements)
@@ -13101,7 +13221,10 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertFalse(calibrator.isMagnetometerGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.magnetometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.magnetometerRobustThreshold
         requireNotNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
@@ -13132,7 +13255,10 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
         assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
         assertEquals(ROBUST_THRESHOLD, internalCalibrator2.stopThreshold, 0.0)
-        assertEquals(calibrator.magnetometerMeasurements.size, internalCalibrator2.qualityScores.size)
+        assertEquals(
+            calibrator.magnetometerMeasurements.size,
+            internalCalibrator2.qualityScores.size
+        )
 
         assertTrue(internalCalibrator2.isReady)
         assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
@@ -13200,7 +13326,10 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertTrue(calibrator.isMagnetometerGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.magnetometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.magnetometerRobustThreshold
         requireNotNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
@@ -13298,7 +13427,10 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertTrue(calibrator.isMagnetometerGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.magnetometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.magnetometerRobustThreshold
         requireNotNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
@@ -13329,7 +13461,10 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
         assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
         assertEquals(ROBUST_THRESHOLD, internalCalibrator2.stopThreshold, 0.0)
-        assertEquals(calibrator.magnetometerMeasurements.size, internalCalibrator2.qualityScores.size)
+        assertEquals(
+            calibrator.magnetometerMeasurements.size,
+            internalCalibrator2.qualityScores.size
+        )
 
         assertTrue(internalCalibrator2.isReady)
         assertEquals(7, internalCalibrator2.minimumRequiredMeasurements)
@@ -13401,7 +13536,10 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertFalse(calibrator.isMagnetometerGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.magnetometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.magnetometerRobustThreshold
         assertNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
@@ -13437,7 +13575,10 @@ class StaticIntervalMagnetometerCalibratorTest {
             internalCalibrator2.stopThreshold,
             0.0
         )
-        assertEquals(calibrator.magnetometerMeasurements.size, internalCalibrator2.qualityScores.size)
+        assertEquals(
+            calibrator.magnetometerMeasurements.size,
+            internalCalibrator2.qualityScores.size
+        )
 
         assertTrue(internalCalibrator2.isReady)
         assertEquals(13, internalCalibrator2.minimumRequiredMeasurements)
@@ -13509,11 +13650,18 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertTrue(calibrator.isMagnetometerGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.magnetometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.magnetometerRobustThreshold
         assertNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
-        assertEquals(ROBUST_STOP_THRESHOLD_FACTOR, calibrator.magnetometerRobustStopThresholdFactor, 0.0)
+        assertEquals(
+            ROBUST_STOP_THRESHOLD_FACTOR,
+            calibrator.magnetometerRobustStopThresholdFactor,
+            0.0
+        )
         assertEquals(baseNoiseLevel, calibrator.magnetometerBaseNoiseLevel)
 
         val internalCalibrator: MagnetometerNonLinearCalibrator? =
@@ -13546,7 +13694,10 @@ class StaticIntervalMagnetometerCalibratorTest {
             internalCalibrator2.stopThreshold,
             0.0
         )
-        assertEquals(calibrator.magnetometerMeasurements.size, internalCalibrator2.qualityScores.size)
+        assertEquals(
+            calibrator.magnetometerMeasurements.size,
+            internalCalibrator2.qualityScores.size
+        )
 
         assertTrue(internalCalibrator2.isReady)
         assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
@@ -13609,7 +13760,10 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertFalse(calibrator.isMagnetometerGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.magnetometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.magnetometerRobustThreshold
         assertNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
@@ -13674,7 +13828,10 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertTrue(calibrator.isMagnetometerGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.magnetometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.magnetometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.magnetometerRobustThreshold
         assertNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
