@@ -6711,7 +6711,7 @@ class StaticIntervalMagnetometerCalibratorTest {
     }
 
     @Test(expected = IllegalStateException::class)
-    fun magnetometerRobustStopThresholdFactor_whenRunning_throwsIllegalArgumentException() {
+    fun magnetometerRobustStopThresholdFactor_whenRunning_throwsIllegalStateException() {
         val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
