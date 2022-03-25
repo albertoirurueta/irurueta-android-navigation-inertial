@@ -7142,7 +7142,7 @@ class StaticIntervalMagnetometerCalibratorTest {
     }
 
     @Test
-    fun onInitializationCompleted_whenListenerAvailable_makesNoAction() {
+    fun onInitializationCompleted_whenListenerAvailable_notifies() {
         val initializationCompletedListener =
             mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalMagnetometerCalibrator>>(
                 relaxUnitFun = true
