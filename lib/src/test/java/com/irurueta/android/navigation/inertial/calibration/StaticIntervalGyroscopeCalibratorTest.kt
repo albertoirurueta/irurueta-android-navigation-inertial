@@ -26,11 +26,14 @@ import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.getPrivateProperty
 import com.irurueta.android.navigation.inertial.setPrivateProperty
 import com.irurueta.geometry.Quaternion
+import com.irurueta.navigation.NavigationException
 import com.irurueta.navigation.frames.*
 import com.irurueta.navigation.frames.converters.NEDtoECEFFrameConverter
 import com.irurueta.navigation.inertial.BodyKinematics
 import com.irurueta.navigation.inertial.calibration.*
+import com.irurueta.navigation.inertial.calibration.gyroscope.EasyGyroscopeCalibrator
 import com.irurueta.navigation.inertial.calibration.gyroscope.GyroscopeNonLinearCalibrator
+import com.irurueta.navigation.inertial.calibration.gyroscope.KnownBiasEasyGyroscopeCalibrator
 import com.irurueta.navigation.inertial.calibration.gyroscope.QuaternionIntegrator
 import com.irurueta.navigation.inertial.calibration.intervals.TriadStaticIntervalDetector
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.QualityScoreMapper
@@ -11309,7 +11312,779 @@ class StaticIntervalGyroscopeCalibratorTest {
         assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, triad.unit)
     }
 
-    // TODO: start_whenNotRunning_resetsAndStartsGenerator
+    @Test
+    fun start_whenNotRunning_resetsAndStartsGenerator() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalGyroscopeCalibrator(context)
+
+        assertFalse(calibrator.running)
+
+        val measurements = calibrator.gyroscopeMeasurements
+        val measurementsSpy = spyk(measurements)
+        calibrator.setPrivateProperty("gyroscopeMeasurements", measurementsSpy)
+
+        calibrator.setPrivateProperty("gyroscopeInitialBiasX", 0.0)
+        calibrator.setPrivateProperty("gyroscopeInitialBiasY", 0.0)
+        calibrator.setPrivateProperty("gyroscopeInitialBiasZ", 0.0)
+
+        val internalCalibrator = mockk<GyroscopeNonLinearCalibrator>()
+        calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibrator)
+
+        val generator: GyroscopeMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        justRun { generatorSpy.start() }
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        calibrator.start()
+
+        // check
+        verify(exactly = 1) { measurementsSpy.clear() }
+        assertNull(calibrator.gyroscopeInitialBiasX)
+        assertNull(calibrator.gyroscopeInitialBiasY)
+        assertNull(calibrator.gyroscopeInitialBiasZ)
+        assertNull(calibrator.getPrivateProperty("gyroscopeInternalCalibrator"))
+
+        assertTrue(calibrator.running)
+
+        verify(exactly = 1) { generatorSpy.start() }
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun start_whenRunning_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalGyroscopeCalibrator(context)
+
+        assertFalse(calibrator.running)
+
+        calibrator.start()
+
+        assertTrue(calibrator.running)
+
+        calibrator.start()
+    }
+
+    @Test
+    fun stop_whenNoListenerAvailable_stopsGenerator() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalGyroscopeCalibrator(context)
+
+        val generator: GyroscopeMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        justRun { generatorSpy.stop() }
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+        assertTrue(calibrator.running)
+
+        calibrator.stop()
+
+        assertFalse(calibrator.running)
+        verify(exactly = 1) { generatorSpy.stop() }
+    }
+
+    @Test
+    fun stop_whenListenerAvailable_notifies() {
+        val stoppedListener =
+            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalGyroscopeCalibrator>>(
+                relaxUnitFun = true
+            )
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalGyroscopeCalibrator(
+            context,
+            stoppedListener = stoppedListener
+        )
+
+        val generator: GyroscopeMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        justRun { generatorSpy.stop() }
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+        assertTrue(calibrator.running)
+
+        calibrator.stop()
+
+        assertFalse(calibrator.running)
+        verify(exactly = 1) { generatorSpy.stop() }
+        verify(exactly = 1) { stoppedListener.onStopped(calibrator) }
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun calibrate_whenNotReadyToSolveCalibration_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalGyroscopeCalibrator(context)
+
+        calibrator.calibrate()
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun calibrate_whenRunning_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalGyroscopeCalibrator(context)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        calibrator.calibrate()
+    }
+
+    @Test
+    fun calibrate_whenReadyNotRunningAndNoInternalCalibrator_makesNoAction() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalGyroscopeCalibrator(context)
+
+        val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
+        for (i in 1..13) {
+            calibrator.gyroscopeMeasurements.add(measurement)
+        }
+
+        assertTrue(calibrator.isReadyToSolveCalibration)
+        assertFalse(calibrator.running)
+
+        assertTrue(calibrator.calibrate())
+
+        assertFalse(calibrator.running)
+    }
+
+    @Test
+    fun calibrate_whenReadyNotRunningAndInternalCalibratorandListeners_callsInternalCalibratorAndNotifies() {
+        val calibrationSolvingStartedListener =
+            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalGyroscopeCalibrator>>(
+                relaxUnitFun = true
+            )
+        val calibrationCompletedListener =
+            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<StaticIntervalGyroscopeCalibrator>>(
+                relaxUnitFun = true
+            )
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalGyroscopeCalibrator(
+            context,
+            calibrationSolvingStartedListener = calibrationSolvingStartedListener,
+            calibrationCompletedListener = calibrationCompletedListener
+        )
+
+        val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
+        for (i in 1..13) {
+            calibrator.gyroscopeMeasurements.add(measurement)
+        }
+
+        assertTrue(calibrator.isReadyToSolveCalibration)
+        assertFalse(calibrator.running)
+
+        val internalCalibrator = mockk<GyroscopeNonLinearCalibrator>()
+        justRun { internalCalibrator.calibrate() }
+        calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibrator)
+
+        assertTrue(calibrator.calibrate())
+
+        assertFalse(calibrator.running)
+        verify(exactly = 1) {
+            calibrationSolvingStartedListener.onCalibrationSolvingStarted(
+                calibrator
+            )
+        }
+        verify(exactly = 1) { calibrationCompletedListener.onCalibrationCompleted(calibrator) }
+    }
+
+    @Test
+    fun calibrate_whenFailure_setsAsNotRunning() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalGyroscopeCalibrator(context)
+
+        val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
+        for (i in 1..13) {
+            calibrator.gyroscopeMeasurements.add(measurement)
+        }
+
+        assertTrue(calibrator.isReadyToSolveCalibration)
+        assertFalse(calibrator.running)
+
+        val internalCalibrator = mockk<GyroscopeNonLinearCalibrator>()
+        every { internalCalibrator.calibrate() }.throws(NavigationException())
+        calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibrator)
+
+        assertFalse(calibrator.calibrate())
+
+        assertFalse(calibrator.running)
+    }
+
+    @Test
+    fun calibrate_whenFailureAndErrorListener_setsAsNotRunning() {
+        val errorListener =
+            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalGyroscopeCalibrator>>(
+                relaxUnitFun = true
+            )
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalGyroscopeCalibrator(
+            context,
+            errorListener = errorListener
+        )
+
+        val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
+        for (i in 1..13) {
+            calibrator.gyroscopeMeasurements.add(measurement)
+        }
+
+        assertTrue(calibrator.isReadyToSolveCalibration)
+        assertFalse(calibrator.running)
+
+        val internalCalibrator = mockk<GyroscopeNonLinearCalibrator>()
+        every { internalCalibrator.calibrate() }.throws(NavigationException())
+        calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibrator)
+
+        assertFalse(calibrator.calibrate())
+
+        assertFalse(calibrator.running)
+        verify(exactly = 1) {
+            errorListener.onError(
+                calibrator,
+                CalibratorErrorReason.NUMERICAL_INSTABILITY_DURING_CALIBRATION
+            )
+        }
+    }
+
+    @Test
+    fun estimatedGyroscopeBiasX_whenNoInternalCalibrator_returnsNull() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalGyroscopeCalibrator(context)
+
+        assertNull(calibrator.getPrivateProperty("gyroscopeInternalCalibrator"))
+        assertNull(calibrator.estimatedGyroscopeBiasX)
+    }
+
+    @Test
+    fun estimatedGyroscopeBiasX_whenUnknownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalGyroscopeCalibrator(context)
+
+        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasX = randomizer.nextDouble()
+        every { internalCalibratorSpy.estimatedBiasX }.returns(estimatedBiasX)
+        calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
+
+        assertEquals(estimatedBiasX, calibrator.estimatedGyroscopeBiasX)
+    }
+
+    @Test
+    fun estimatedGyroscopeBiasX_whenKnownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalGyroscopeCalibrator(context)
+
+        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasX = randomizer.nextDouble()
+        every { internalCalibratorSpy.biasX }.returns(estimatedBiasX)
+        calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
+
+        assertEquals(estimatedBiasX, calibrator.estimatedGyroscopeBiasX)
+    }
+
+    @Test
+    fun estimatedGyroscopeBiasY_whenNoInternalCalibrator_returnsNull() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalGyroscopeCalibrator(context)
+
+        assertNull(calibrator.getPrivateProperty("gyroscopeInternalCalibrator"))
+        assertNull(calibrator.estimatedGyroscopeBiasY)
+    }
+
+    @Test
+    fun estimatedGyroscopeBiasY_whenUnknownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalGyroscopeCalibrator(context)
+
+        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasY = randomizer.nextDouble()
+        every { internalCalibratorSpy.estimatedBiasY }.returns(estimatedBiasY)
+        calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
+
+        assertEquals(estimatedBiasY, calibrator.estimatedGyroscopeBiasY)
+    }
+
+    @Test
+    fun estimatedGyroscopeBiasY_whenKnownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalGyroscopeCalibrator(context)
+
+        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasY = randomizer.nextDouble()
+        every { internalCalibratorSpy.biasY }.returns(estimatedBiasY)
+        calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
+
+        assertEquals(estimatedBiasY, calibrator.estimatedGyroscopeBiasY)
+    }
+
+    @Test
+    fun estimatedGyroscopeBiasZ_whenNoInternalCalibrator_returnsNull() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalGyroscopeCalibrator(context)
+
+        assertNull(calibrator.getPrivateProperty("gyroscopeInternalCalibrator"))
+        assertNull(calibrator.estimatedGyroscopeBiasZ)
+    }
+
+    @Test
+    fun estimatedGyroscopeBiasZ_whenUnknownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalGyroscopeCalibrator(context)
+
+        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasZ = randomizer.nextDouble()
+        every { internalCalibratorSpy.estimatedBiasZ }.returns(estimatedBiasZ)
+        calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
+
+        assertEquals(estimatedBiasZ, calibrator.estimatedGyroscopeBiasZ)
+    }
+
+    @Test
+    fun estimatedGyroscopeBiasZ_whenKnownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalGyroscopeCalibrator(context)
+
+        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasZ = randomizer.nextDouble()
+        every { internalCalibratorSpy.biasZ }.returns(estimatedBiasZ)
+        calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
+
+        assertEquals(estimatedBiasZ, calibrator.estimatedGyroscopeBiasZ)
+    }
+
+    @Test
+    fun estimatedGyroscopeBiasXAsMeasurement_whenNoInternalCalibrator_returnsNull() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalGyroscopeCalibrator(context)
+
+        assertNull(calibrator.getPrivateProperty("gyroscopeInternalCalibrator"))
+        assertNull(calibrator.estimatedGyroscopeBiasXAsMeasurement)
+    }
+
+    @Test
+    fun estimatedGyroscopeBiasXAsMeasurement_whenUnknownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalGyroscopeCalibrator(context)
+
+        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasX = randomizer.nextDouble()
+        val w = AngularSpeed(estimatedBiasX, AngularSpeedUnit.RADIANS_PER_SECOND)
+        every { internalCalibratorSpy.estimatedBiasAngularSpeedX }.returns(w)
+        calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
+
+        assertEquals(w, calibrator.estimatedGyroscopeBiasXAsMeasurement)
+    }
+
+    @Test
+    fun estimatedGyroscopeBiasXAsMeasurement_whenKnownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalGyroscopeCalibrator(context)
+
+        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasX = randomizer.nextDouble()
+        val w = AngularSpeed(estimatedBiasX, AngularSpeedUnit.RADIANS_PER_SECOND)
+        every { internalCalibratorSpy.biasAngularSpeedX }.returns(w)
+        calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
+
+        assertEquals(w, calibrator.estimatedGyroscopeBiasXAsMeasurement)
+    }
+
+    @Test
+    fun getEstimatedGyroscopeBiasXAsMeasurement_whenNoInternalCalibrator_returnsNull() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalGyroscopeCalibrator(context)
+
+        assertNull(calibrator.getPrivateProperty("gyroscopeInternalCalibrator"))
+        val w = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertFalse(calibrator.getEstimatedGyroscopeBiasXAsMeasurement(w))
+    }
+
+    @Test
+    fun getEstimatedGyroscopeBiasXAsMeasurement_whenUnknownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalGyroscopeCalibrator(context)
+
+        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasX = randomizer.nextDouble()
+        every { internalCalibratorSpy.getEstimatedBiasAngularSpeedX(any()) }.answers { answer ->
+            val result = answer.invocation.args[0] as AngularSpeed
+            result.value = estimatedBiasX
+            result.unit = AngularSpeedUnit.RADIANS_PER_SECOND
+            return@answers true
+        }
+        calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
+
+        val w = AngularSpeed(estimatedBiasX, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertTrue(calibrator.getEstimatedGyroscopeBiasXAsMeasurement(w))
+
+        assertEquals(estimatedBiasX, w.value.toDouble(), 0.0)
+        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, w.unit)
+    }
+
+    @Test
+    fun getEstimatedGyroscopeBiasXAsMeasurement_whenKnownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalGyroscopeCalibrator(context)
+
+        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasX = randomizer.nextDouble()
+        every { internalCalibratorSpy.getBiasAngularSpeedX(any()) }.answers { answer ->
+            val result = answer.invocation.args[0] as AngularSpeed
+            result.value = estimatedBiasX
+            result.unit = AngularSpeedUnit.RADIANS_PER_SECOND
+        }
+        calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
+
+        val w = AngularSpeed(estimatedBiasX, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertTrue(calibrator.getEstimatedGyroscopeBiasXAsMeasurement(w))
+
+        assertEquals(estimatedBiasX, w.value.toDouble(), 0.0)
+        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, w.unit)
+    }
+
+    @Test
+    fun estimatedGyroscopeBiasYAsMeasurement_whenNoInternalCalibrator_returnsNull() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalGyroscopeCalibrator(context)
+
+        assertNull(calibrator.getPrivateProperty("gyroscopeInternalCalibrator"))
+        assertNull(calibrator.estimatedGyroscopeBiasYAsMeasurement)
+    }
+
+    @Test
+    fun estimatedGyroscopeBiasYAsMeasurement_whenUnknownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalGyroscopeCalibrator(context)
+
+        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasY = randomizer.nextDouble()
+        val w = AngularSpeed(estimatedBiasY, AngularSpeedUnit.RADIANS_PER_SECOND)
+        every { internalCalibratorSpy.estimatedBiasAngularSpeedY }.returns(w)
+        calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
+
+        assertEquals(w, calibrator.estimatedGyroscopeBiasYAsMeasurement)
+    }
+
+    @Test
+    fun estimatedGyroscopeBiasYAsMeasurement_whenKnownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalGyroscopeCalibrator(context)
+
+        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasY = randomizer.nextDouble()
+        val w = AngularSpeed(estimatedBiasY, AngularSpeedUnit.RADIANS_PER_SECOND)
+        every { internalCalibratorSpy.biasAngularSpeedY }.returns(w)
+        calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
+
+        assertEquals(w, calibrator.estimatedGyroscopeBiasYAsMeasurement)
+    }
+
+    @Test
+    fun getEstimatedGyroscopeBiasYAsMeasurement_whenNoInternalCalibrator_returnsNull() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalGyroscopeCalibrator(context)
+
+        assertNull(calibrator.getPrivateProperty("gyroscopeInternalCalibrator"))
+        val w = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertFalse(calibrator.getEstimatedGyroscopeBiasYAsMeasurement(w))
+    }
+
+    @Test
+    fun getEstimatedGyroscopeBiasYAsMeasurement_whenUnknownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalGyroscopeCalibrator(context)
+
+        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasY = randomizer.nextDouble()
+        every { internalCalibratorSpy.getEstimatedBiasAngularSpeedY(any()) }.answers { answer ->
+            val result = answer.invocation.args[0] as AngularSpeed
+            result.value = estimatedBiasY
+            result.unit = AngularSpeedUnit.RADIANS_PER_SECOND
+            return@answers true
+        }
+        calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
+
+        val w = AngularSpeed(estimatedBiasY, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertTrue(calibrator.getEstimatedGyroscopeBiasYAsMeasurement(w))
+
+        assertEquals(estimatedBiasY, w.value.toDouble(), 0.0)
+        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, w.unit)
+    }
+
+    @Test
+    fun getEstimatedGyroscopeBiasYAsMeasurement_whenKnownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalGyroscopeCalibrator(context)
+
+        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasY = randomizer.nextDouble()
+        every { internalCalibratorSpy.getBiasAngularSpeedY(any()) }.answers { answer ->
+            val result = answer.invocation.args[0] as AngularSpeed
+            result.value = estimatedBiasY
+            result.unit = AngularSpeedUnit.RADIANS_PER_SECOND
+        }
+        calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
+
+        val w = AngularSpeed(estimatedBiasY, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertTrue(calibrator.getEstimatedGyroscopeBiasYAsMeasurement(w))
+
+        assertEquals(estimatedBiasY, w.value.toDouble(), 0.0)
+        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, w.unit)
+    }
+
+    @Test
+    fun estimatedGyroscopeBiasZAsMeasurement_whenNoInternalCalibrator_returnsNull() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalGyroscopeCalibrator(context)
+
+        assertNull(calibrator.getPrivateProperty("gyroscopeInternalCalibrator"))
+        assertNull(calibrator.estimatedGyroscopeBiasZAsMeasurement)
+    }
+
+    @Test
+    fun estimatedGyroscopeBiasZAsMeasurement_whenUnknownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalGyroscopeCalibrator(context)
+
+        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasZ = randomizer.nextDouble()
+        val w = AngularSpeed(estimatedBiasZ, AngularSpeedUnit.RADIANS_PER_SECOND)
+        every { internalCalibratorSpy.estimatedBiasAngularSpeedZ }.returns(w)
+        calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
+
+        assertEquals(w, calibrator.estimatedGyroscopeBiasZAsMeasurement)
+    }
+
+    @Test
+    fun estimatedGyroscopeBiasZAsMeasurement_whenKnownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalGyroscopeCalibrator(context)
+
+        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasZ = randomizer.nextDouble()
+        val w = AngularSpeed(estimatedBiasZ, AngularSpeedUnit.RADIANS_PER_SECOND)
+        every { internalCalibratorSpy.biasAngularSpeedZ }.returns(w)
+        calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
+
+        assertEquals(w, calibrator.estimatedGyroscopeBiasZAsMeasurement)
+    }
+
+    @Test
+    fun getEstimatedGyroscopeBiasZAsMeasurement_whenNoInternalCalibrator_returnsNull() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalGyroscopeCalibrator(context)
+
+        assertNull(calibrator.getPrivateProperty("gyroscopeInternalCalibrator"))
+        val w = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertFalse(calibrator.getEstimatedGyroscopeBiasZAsMeasurement(w))
+    }
+
+    @Test
+    fun getEstimatedGyroscopeBiasZAsMeasurement_whenUnknownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalGyroscopeCalibrator(context)
+
+        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasZ = randomizer.nextDouble()
+        every { internalCalibratorSpy.getEstimatedBiasAngularSpeedZ(any()) }.answers { answer ->
+            val result = answer.invocation.args[0] as AngularSpeed
+            result.value = estimatedBiasZ
+            result.unit = AngularSpeedUnit.RADIANS_PER_SECOND
+            return@answers true
+        }
+        calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
+
+        val w = AngularSpeed(estimatedBiasZ, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertTrue(calibrator.getEstimatedGyroscopeBiasZAsMeasurement(w))
+
+        assertEquals(estimatedBiasZ, w.value.toDouble(), 0.0)
+        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, w.unit)
+    }
+
+    @Test
+    fun getEstimatedGyroscopeBiasZAsMeasurement_whenKnownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalGyroscopeCalibrator(context)
+
+        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasZ = randomizer.nextDouble()
+        every { internalCalibratorSpy.getBiasAngularSpeedZ(any()) }.answers { answer ->
+            val result = answer.invocation.args[0] as AngularSpeed
+            result.value = estimatedBiasZ
+            result.unit = AngularSpeedUnit.RADIANS_PER_SECOND
+        }
+        calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
+
+        val w = AngularSpeed(estimatedBiasZ, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertTrue(calibrator.getEstimatedGyroscopeBiasZAsMeasurement(w))
+
+        assertEquals(estimatedBiasZ, w.value.toDouble(), 0.0)
+        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, w.unit)
+    }
+
+    @Test
+    fun estimatedGyroscopeBiasAsTriad_whenNoInternalCalibrator_returnsNull() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalGyroscopeCalibrator(context)
+
+        assertNull(calibrator.getPrivateProperty("gyroscopeInternalCalibrator"))
+        assertNull(calibrator.estimatedGyroscopeBiasAsTriad)
+    }
+
+    @Test
+    fun estimatedGyroscopeBiasAsTriad_whenUnknownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalGyroscopeCalibrator(context)
+
+        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasX = randomizer.nextDouble()
+        val estimatedBiasY = randomizer.nextDouble()
+        val estimatedBiasZ = randomizer.nextDouble()
+        val triad = AngularSpeedTriad(
+            AngularSpeedUnit.RADIANS_PER_SECOND,
+            estimatedBiasX,
+            estimatedBiasY,
+            estimatedBiasZ
+        )
+        every { internalCalibratorSpy.estimatedBiasAsTriad }.returns(triad)
+        calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
+
+        assertSame(triad, calibrator.estimatedGyroscopeBiasAsTriad)
+    }
+
+    @Test
+    fun estimatedGyroscopeBiasAsTriad_whenKnownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalGyroscopeCalibrator(context)
+
+        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasX = randomizer.nextDouble()
+        val estimatedBiasY = randomizer.nextDouble()
+        val estimatedBiasZ = randomizer.nextDouble()
+        val triad = AngularSpeedTriad(
+            AngularSpeedUnit.RADIANS_PER_SECOND,
+            estimatedBiasX,
+            estimatedBiasY,
+            estimatedBiasZ
+        )
+        every { internalCalibratorSpy.biasX }.returns(estimatedBiasX)
+        every { internalCalibratorSpy.biasY }.returns(estimatedBiasY)
+        every { internalCalibratorSpy.biasZ }.returns(estimatedBiasZ)
+        calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
+
+        assertEquals(triad, calibrator.estimatedGyroscopeBiasAsTriad)
+    }
+
+    @Test
+    fun getEstimatedGyroscopeBiasAsTriad_whenNoInternalCalibrator_returnsNull() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalGyroscopeCalibrator(context)
+
+        assertNull(calibrator.getPrivateProperty("gyroscopeInternalCalibrator"))
+        val triad = AngularSpeedTriad()
+        assertFalse(calibrator.getEstimatedGyroscopeBiasAsTriad(triad))
+    }
+
+    @Test
+    fun getEstimatedGyroscopeBiasAsTriad_whenUnknownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalGyroscopeCalibrator(context)
+
+        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasX = randomizer.nextDouble()
+        val estimatedBiasY = randomizer.nextDouble()
+        val estimatedBiasZ = randomizer.nextDouble()
+        every { internalCalibratorSpy.getEstimatedBiasAsTriad(any()) }.answers { answer ->
+            val result = answer.invocation.args[0] as AngularSpeedTriad
+            result.setValueCoordinatesAndUnit(
+                estimatedBiasX,
+                estimatedBiasY,
+                estimatedBiasZ,
+                AngularSpeedUnit.RADIANS_PER_SECOND
+            )
+            return@answers true
+        }
+        calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
+
+        val triad = AngularSpeedTriad(
+            AngularSpeedUnit.RADIANS_PER_SECOND,
+            estimatedBiasX,
+            estimatedBiasY,
+            estimatedBiasZ
+        )
+        assertTrue(calibrator.getEstimatedGyroscopeBiasAsTriad(triad))
+
+        assertEquals(estimatedBiasX, triad.valueX, 0.0)
+        assertEquals(estimatedBiasY, triad.valueY, 0.0)
+        assertEquals(estimatedBiasZ, triad.valueZ, 0.0)
+        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, triad.unit)
+    }
+
+    @Test
+    fun getEstimatedGyroscopeBiasAsTriad_whenKnownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalGyroscopeCalibrator(context)
+
+        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasX = randomizer.nextDouble()
+        val estimatedBiasY = randomizer.nextDouble()
+        val estimatedBiasZ = randomizer.nextDouble()
+        every { internalCalibratorSpy.biasX }.returns(estimatedBiasX)
+        every { internalCalibratorSpy.biasY }.returns(estimatedBiasY)
+        every { internalCalibratorSpy.biasZ }.returns(estimatedBiasZ)
+        calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
+
+        val triad = AngularSpeedTriad(
+            AngularSpeedUnit.RADIANS_PER_SECOND,
+            estimatedBiasX,
+            estimatedBiasY,
+            estimatedBiasZ
+        )
+        assertTrue(calibrator.getEstimatedGyroscopeBiasAsTriad(triad))
+
+        assertEquals(estimatedBiasX, triad.valueX, 0.0)
+        assertEquals(estimatedBiasY, triad.valueY, 0.0)
+        assertEquals(estimatedBiasZ, triad.valueZ, 0.0)
+        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, triad.unit)
+    }
 
     private companion object {
         const val INITIAL_STATIC_SAMPLES = 2500
