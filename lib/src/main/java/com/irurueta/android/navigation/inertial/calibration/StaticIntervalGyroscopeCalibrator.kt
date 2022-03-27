@@ -2659,7 +2659,6 @@ class StaticIntervalGyroscopeCalibrator private constructor(
                 }
                 result.qualityScores = buildGyroscopeQualityScores()
             }
-
         }
         return result
     }
