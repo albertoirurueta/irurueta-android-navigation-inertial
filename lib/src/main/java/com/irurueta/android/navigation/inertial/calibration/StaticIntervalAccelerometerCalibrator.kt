@@ -1896,7 +1896,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
     }
 
     /**
-     * Internally build a robust accelerometer calibrator when bias and position is known.
+     * Internally builds a robust accelerometer calibrator when bias and position is known.
      *
      * @param location current device location.
      * @return an internal accelerometer calibrator.
@@ -1981,7 +1981,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
     }
 
     /**
-     * Internally build a robust accelerometer calibrator when bias and gravity is known.
+     * Internally builds a robust accelerometer calibrator when bias and gravity is known.
      *
      * @return an internal accelerometer calibrator.
      * @throws IllegalStateException if no suitable calibrator can be built.
@@ -2068,7 +2068,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
     }
 
     /**
-     * Internally build a robust accelerometer calibrator when position is known.
+     * Internally builds a robust accelerometer calibrator when position is known.
      *
      * @param location current device location.
      * @return an internal accelerometer calibrator.
@@ -2153,7 +2153,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
     }
 
     /**
-     * Internally build a robust accelerometer calibrator when gravity is known.
+     * Internally builds a robust accelerometer calibrator when gravity is known.
      *
      * @return an internal accelerometer calibrator.
      * @throws IllegalStateException if no suitable calibrator can be built.
