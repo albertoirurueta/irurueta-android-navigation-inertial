@@ -20,6 +20,7 @@ import android.location.Location
 import android.util.Log
 import com.irurueta.algebra.Matrix
 import com.irurueta.android.navigation.inertial.GravityHelper
+import com.irurueta.android.navigation.inertial.calibration.builder.AccelerometerInternalCalibratorBuilder
 import com.irurueta.android.navigation.inertial.calibration.intervals.AccelerometerIntervalDetector
 import com.irurueta.android.navigation.inertial.calibration.intervals.IntervalDetector
 import com.irurueta.android.navigation.inertial.calibration.noise.AccumulatedMeasurementEstimator
@@ -27,7 +28,6 @@ import com.irurueta.android.navigation.inertial.calibration.noise.GravityNormEst
 import com.irurueta.android.navigation.inertial.calibration.noise.StopMode
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
-import com.irurueta.android.navigation.inertial.toNEDPosition
 import com.irurueta.navigation.NavigationException
 import com.irurueta.navigation.inertial.BodyKinematics
 import com.irurueta.navigation.inertial.calibration.AccelerationTriad
@@ -1305,466 +1305,35 @@ class SingleSensorStaticIntervalAccelerometerCalibrator private constructor(
      */
     @Throws(IllegalStateException::class)
     private fun buildInternalCalibrator(): AccelerometerNonLinearCalibrator {
-        return if (robustMethod == null) {
-            buildNonRobustCalibrator()
-        } else {
-            buildRobustCalibrator()
-        }
-    }
-
-    /**
-     * Internally builds a non-robust accelerometer calibrator based on all provided parameters.
-     *
-     * @return an internal accelerometer calibrator.
-     * @throws IllegalStateException if no suitable calibrator can be built.
-     */
-    @Throws(IllegalStateException::class)
-    private fun buildNonRobustCalibrator(): AccelerometerNonLinearCalibrator {
-        val location = this.location
-        val gravityNorm = this.gravityNorm
-        if (isGroundTruthInitialBias) {
-            if (location != null) {
-                return KnownBiasAndPositionAccelerometerCalibrator(
-                    location.toNEDPosition(),
-                    measurements,
-                    isCommonAxisUsed,
-                    initialBiasX ?: 0.0,
-                    initialBiasY ?: 0.0,
-                    initialBiasZ ?: 0.0,
-                    initialSx,
-                    initialSy,
-                    initialSz,
-                    initialMxy,
-                    initialMxz,
-                    initialMyx,
-                    initialMyz,
-                    initialMzx,
-                    initialMzy
-                )
-            } else {
-                checkNotNull(gravityNorm)
-                return KnownBiasAndGravityNormAccelerometerCalibrator(
-                    gravityNorm,
-                    measurements,
-                    isCommonAxisUsed,
-                    initialBiasX ?: 0.0,
-                    initialBiasY ?: 0.0,
-                    initialBiasZ ?: 0.0,
-                    initialSx,
-                    initialSy,
-                    initialSz,
-                    initialMxy,
-                    initialMxz,
-                    initialMyx,
-                    initialMyz,
-                    initialMzx,
-                    initialMzy
-                )
-            }
-        } else {
-            if (location != null) {
-                return KnownPositionAccelerometerCalibrator(
-                    location.toNEDPosition(),
-                    measurements,
-                    isCommonAxisUsed,
-                    initialBiasX ?: 0.0,
-                    initialBiasY ?: 0.0,
-                    initialBiasZ ?: 0.0,
-                    initialSx,
-                    initialSy,
-                    initialSz,
-                    initialMxy,
-                    initialMxz,
-                    initialMyx,
-                    initialMyz,
-                    initialMzx,
-                    initialMzy
-                )
-            } else {
-                checkNotNull(gravityNorm)
-                return KnownGravityNormAccelerometerCalibrator(
-                    gravityNorm,
-                    measurements,
-                    isCommonAxisUsed,
-                    initialBiasX ?: 0.0,
-                    initialBiasY ?: 0.0,
-                    initialBiasZ ?: 0.0,
-                    initialSx,
-                    initialSy,
-                    initialSz,
-                    initialMxy,
-                    initialMxz,
-                    initialMyx,
-                    initialMyz,
-                    initialMzx,
-                    initialMzy
-                )
-            }
-        }
-    }
-
-    /**
-     * Internally builds a robust accelerometer calibrator based on all provided parameters.
-     *
-     * @return an internal accelerometer calibrator.
-     * @throws IllegalStateException if no suitable calibrator can be built.
-     */
-    @Throws(IllegalStateException::class)
-    private fun buildRobustCalibrator(): AccelerometerNonLinearCalibrator {
-        val location = this.location
-        return if (isGroundTruthInitialBias) {
-            if (location != null) {
-                buildRobustKnownBiasAndPositionCalibrator(location)
-            } else {
-                buildRobustKnownBiasAndGravityCalibrator()
-            }
-        } else {
-            if (location != null) {
-                buildRobustKnownPositionCalibrator(location)
-            } else {
-                buildRobustKnownGravityCalibrator()
-            }
-        }
-    }
-
-    /**
-     * Internally build a robust accelerometer calibrator when bias and position is known.
-     *
-     * @param location current device location.
-     * @return an internal accelerometer calibrator.
-     * @throws IllegalStateException if no suitable calibrator can be built.
-     */
-    @Throws(IllegalStateException::class)
-    private fun buildRobustKnownBiasAndPositionCalibrator(location: Location): RobustKnownBiasAndPositionAccelerometerCalibrator {
-        val baseNoiseLevel = this.baseNoiseLevel
-        val robustThreshold = this.robustThreshold
-
-        val result = RobustKnownBiasAndPositionAccelerometerCalibrator.create(
-            location.toNEDPosition(),
+        return AccelerometerInternalCalibratorBuilder(
             measurements,
-            isCommonAxisUsed,
-            robustMethod
-        )
-        result.setBiasCoordinates(
-            initialBiasX ?: 0.0,
-            initialBiasY ?: 0.0,
-            initialBiasZ ?: 0.0
-        )
-        result.setInitialScalingFactorsAndCrossCouplingErrors(
-            initialSx, initialSy, initialSz,
-            initialMxy, initialMxz, initialMyx,
-            initialMyz, initialMzx, initialMzy
-        )
-        result.confidence = robustConfidence
-        result.maxIterations = robustMaxIterations
-        result.preliminarySubsetSize =
-            robustPreliminarySubsetSize.coerceAtLeast(minimumRequiredMeasurements)
-
-        // set threshold and quality scores
-        when (result) {
-            is RANSACRobustKnownBiasAndPositionAccelerometerCalibrator -> {
-                if (robustThreshold != null) {
-                    result.threshold = robustThreshold
-                } else {
-                    checkNotNull(baseNoiseLevel)
-                    result.threshold = robustThresholdFactor * baseNoiseLevel
-                }
-            }
-            is MSACRobustKnownBiasAndPositionAccelerometerCalibrator -> {
-                if (robustThreshold != null) {
-                    result.threshold = robustThreshold
-                } else {
-                    checkNotNull(baseNoiseLevel)
-                    result.threshold = robustThresholdFactor * baseNoiseLevel
-                }
-            }
-            is PROSACRobustKnownBiasAndPositionAccelerometerCalibrator -> {
-                if (robustThreshold != null) {
-                    result.threshold = robustThreshold
-                } else {
-                    checkNotNull(baseNoiseLevel)
-                    result.threshold = robustThresholdFactor * baseNoiseLevel
-                }
-                result.qualityScores = buildQualityScores()
-            }
-            is LMedSRobustKnownBiasAndPositionAccelerometerCalibrator -> {
-                if (robustThreshold != null) {
-                    result.stopThreshold = robustThreshold
-                } else {
-                    checkNotNull(baseNoiseLevel)
-                    result.stopThreshold =
-                        robustThresholdFactor * robustStopThresholdFactor * baseNoiseLevel
-                }
-            }
-            is PROMedSRobustKnownBiasAndPositionAccelerometerCalibrator -> {
-                if (robustThreshold != null) {
-                    result.stopThreshold = robustThreshold
-                } else {
-                    checkNotNull(baseNoiseLevel)
-                    result.stopThreshold =
-                        robustThresholdFactor * robustStopThresholdFactor * baseNoiseLevel
-                }
-                result.qualityScores = buildQualityScores()
-            }
-        }
-
-        return result
-    }
-
-    /**
-     * Internally build a robust accelerometer calibrator when bias and gravity is known.
-     *
-     * @return an internal accelerometer calibrator.
-     * @throws IllegalStateException if no suitable calibrator can be built.
-     */
-    @Throws(IllegalStateException::class)
-    private fun buildRobustKnownBiasAndGravityCalibrator(): RobustKnownBiasAndGravityNormAccelerometerCalibrator {
-        val gravityNorm = this.gravityNorm
-        checkNotNull(gravityNorm)
-
-        val baseNoiseLevel = this.baseNoiseLevel
-        val robustThreshold = this.robustThreshold
-
-        val result = RobustKnownBiasAndGravityNormAccelerometerCalibrator.create(
+            robustPreliminarySubsetSize,
+            minimumRequiredMeasurements,
+            robustMethod,
+            robustConfidence,
+            robustMaxIterations,
+            robustThreshold,
+            robustThresholdFactor,
+            robustStopThresholdFactor,
+            location,
             gravityNorm,
-            measurements,
+            isGroundTruthInitialBias,
             isCommonAxisUsed,
-            robustMethod
-        )
-        result.setBiasCoordinates(
-            initialBiasX ?: 0.0,
-            initialBiasY ?: 0.0,
-            initialBiasZ ?: 0.0
-        )
-        result.setInitialScalingFactorsAndCrossCouplingErrors(
-            initialSx, initialSy, initialSz,
-            initialMxy, initialMxz, initialMyx,
-            initialMyz, initialMzx, initialMzy
-        )
-        result.confidence = robustConfidence
-        result.maxIterations = robustMaxIterations
-        result.preliminarySubsetSize =
-            robustPreliminarySubsetSize.coerceAtLeast(minimumRequiredMeasurements)
-
-        // set threshold
-        when (result) {
-            is RANSACRobustKnownBiasAndGravityNormAccelerometerCalibrator -> {
-                if (robustThreshold != null) {
-                    result.threshold = robustThreshold
-                } else {
-                    checkNotNull(baseNoiseLevel)
-                    result.threshold = robustThresholdFactor * baseNoiseLevel
-                }
-            }
-            is MSACRobustKnownBiasAndGravityNormAccelerometerCalibrator -> {
-                if (robustThreshold != null) {
-                    result.threshold = robustThreshold
-                } else {
-                    checkNotNull(baseNoiseLevel)
-                    result.threshold = robustThresholdFactor * baseNoiseLevel
-                }
-            }
-            is PROSACRobustKnownBiasAndGravityNormAccelerometerCalibrator -> {
-                if (robustThreshold != null) {
-                    result.threshold = robustThreshold
-                } else {
-                    checkNotNull(baseNoiseLevel)
-                    result.threshold = robustThresholdFactor * baseNoiseLevel
-                }
-                result.qualityScores = buildQualityScores()
-            }
-            is LMedSRobustKnownBiasAndGravityNormAccelerometerCalibrator -> {
-                if (robustThreshold != null) {
-                    result.stopThreshold = robustThreshold
-                } else {
-                    checkNotNull(baseNoiseLevel)
-                    result.stopThreshold =
-                        robustThresholdFactor * robustStopThresholdFactor * baseNoiseLevel
-                }
-            }
-            is PROMedSRobustKnownBiasAndGravityNormAccelerometerCalibrator -> {
-                if (robustThreshold != null) {
-                    result.stopThreshold = robustThreshold
-                } else {
-                    checkNotNull(baseNoiseLevel)
-                    result.stopThreshold =
-                        robustThresholdFactor * robustStopThresholdFactor * baseNoiseLevel
-                }
-                result.qualityScores = buildQualityScores()
-            }
-        }
-
-        return result
-    }
-
-    /**
-     * Internally build a robust accelerometer calibrator when position is known.
-     *
-     * @param location current device location.
-     * @return an internal accelerometer calibrator.
-     * @throws IllegalStateException if no suitable calibrator can be built.
-     */
-    @Throws(IllegalStateException::class)
-    private fun buildRobustKnownPositionCalibrator(location: Location): RobustKnownPositionAccelerometerCalibrator {
-        val baseNoiseLevel = this.baseNoiseLevel
-        val robustThreshold = this.robustThreshold
-
-        val result = RobustKnownPositionAccelerometerCalibrator.create(
-            location.toNEDPosition(),
-            measurements,
-            isCommonAxisUsed,
-            robustMethod
-        )
-        result.setInitialBias(
-            initialBiasX ?: 0.0,
-            initialBiasY ?: 0.0,
-            initialBiasZ ?: 0.0
-        )
-        result.setInitialScalingFactorsAndCrossCouplingErrors(
-            initialSx, initialSy, initialSz,
-            initialMxy, initialMxz, initialMyx,
-            initialMyz, initialMzx, initialMzy
-        )
-        result.confidence = robustConfidence
-        result.maxIterations = robustMaxIterations
-        result.preliminarySubsetSize =
-            robustPreliminarySubsetSize.coerceAtLeast(minimumRequiredMeasurements)
-
-        // set threshold
-        when (result) {
-            is RANSACRobustKnownPositionAccelerometerCalibrator -> {
-                if (robustThreshold != null) {
-                    result.threshold = robustThreshold
-                } else {
-                    checkNotNull(baseNoiseLevel)
-                    result.threshold = robustThresholdFactor * baseNoiseLevel
-                }
-            }
-            is MSACRobustKnownPositionAccelerometerCalibrator -> {
-                if (robustThreshold != null) {
-                    result.threshold = robustThreshold
-                } else {
-                    checkNotNull(baseNoiseLevel)
-                    result.threshold = robustThresholdFactor * baseNoiseLevel
-                }
-            }
-            is PROSACRobustKnownPositionAccelerometerCalibrator -> {
-                if (robustThreshold != null) {
-                    result.threshold = robustThreshold
-                } else {
-                    checkNotNull(baseNoiseLevel)
-                    result.threshold = robustThresholdFactor * baseNoiseLevel
-                }
-                result.qualityScores = buildQualityScores()
-            }
-            is LMedSRobustKnownPositionAccelerometerCalibrator -> {
-                if (robustThreshold != null) {
-                    result.stopThreshold = robustThreshold
-                } else {
-                    checkNotNull(baseNoiseLevel)
-                    result.stopThreshold =
-                        robustThresholdFactor * robustStopThresholdFactor * baseNoiseLevel
-                }
-            }
-            is PROMedSRobustKnownPositionAccelerometerCalibrator -> {
-                if (robustThreshold != null) {
-                    result.stopThreshold = robustThreshold
-                } else {
-                    checkNotNull(baseNoiseLevel)
-                    result.stopThreshold =
-                        robustThresholdFactor * robustStopThresholdFactor * baseNoiseLevel
-                }
-                result.qualityScores = buildQualityScores()
-            }
-        }
-
-        return result
-    }
-
-    /**
-     * Internally build a robust accelerometer calibrator when gravity is known.
-     *
-     * @return an internal accelerometer calibrator.
-     * @throws IllegalStateException if no suitable calibrator can be built.
-     */
-    @Throws(IllegalStateException::class)
-    private fun buildRobustKnownGravityCalibrator(): RobustKnownGravityNormAccelerometerCalibrator {
-        val gravityNorm = this.gravityNorm
-        checkNotNull(gravityNorm)
-
-        val baseNoiseLevel = this.baseNoiseLevel
-        val robustThreshold = this.robustThreshold
-
-        val result = RobustKnownGravityNormAccelerometerCalibrator.create(
-            gravityNorm,
-            measurements,
-            isCommonAxisUsed,
-            robustMethod
-        )
-        result.setInitialBias(
-            initialBiasX ?: 0.0,
-            initialBiasY ?: 0.0,
-            initialBiasZ ?: 0.0
-        )
-        result.setInitialScalingFactorsAndCrossCouplingErrors(
-            initialSx, initialSy, initialSz,
-            initialMxy, initialMxz, initialMyx,
-            initialMyz, initialMzx, initialMzy
-        )
-        result.confidence = robustConfidence
-        result.maxIterations = robustMaxIterations
-        result.preliminarySubsetSize =
-            robustPreliminarySubsetSize.coerceAtLeast(minimumRequiredMeasurements)
-
-        // set threshold
-        when (result) {
-            is RANSACRobustKnownGravityNormAccelerometerCalibrator -> {
-                if (robustThreshold != null) {
-                    result.threshold = robustThreshold
-                } else {
-                    checkNotNull(baseNoiseLevel)
-                    result.threshold = robustThresholdFactor * baseNoiseLevel
-                }
-            }
-            is MSACRobustKnownGravityNormAccelerometerCalibrator -> {
-                if (robustThreshold != null) {
-                    result.threshold = robustThreshold
-                } else {
-                    checkNotNull(baseNoiseLevel)
-                    result.threshold = robustThresholdFactor * baseNoiseLevel
-                }
-            }
-            is PROSACRobustKnownGravityNormAccelerometerCalibrator -> {
-                if (robustThreshold != null) {
-                    result.threshold = robustThreshold
-                } else {
-                    checkNotNull(baseNoiseLevel)
-                    result.threshold = robustThresholdFactor * baseNoiseLevel
-                }
-                result.qualityScores = buildQualityScores()
-            }
-            is LMedSRobustKnownGravityNormAccelerometerCalibrator -> {
-                if (robustThreshold != null) {
-                    result.stopThreshold = robustThreshold
-                } else {
-                    checkNotNull(baseNoiseLevel)
-                    result.stopThreshold =
-                        robustThresholdFactor * robustStopThresholdFactor * baseNoiseLevel
-                }
-            }
-            is PROMedSRobustKnownGravityNormAccelerometerCalibrator -> {
-                if (robustThreshold != null) {
-                    result.stopThreshold = robustThreshold
-                } else {
-                    checkNotNull(baseNoiseLevel)
-                    result.stopThreshold =
-                        robustThresholdFactor * robustStopThresholdFactor * baseNoiseLevel
-                }
-                result.qualityScores = buildQualityScores()
-            }
-        }
-
-        return result
+            initialBiasX,
+            initialBiasY,
+            initialBiasZ,
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy,
+            baseNoiseLevel,
+            qualityScoreMapper
+        ).build()
     }
 
     companion object {
