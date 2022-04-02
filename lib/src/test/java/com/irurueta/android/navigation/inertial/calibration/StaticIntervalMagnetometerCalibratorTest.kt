@@ -9947,6 +9947,11 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMagnetometerMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
+
+        val calendar = GregorianCalendar()
+        calendar.time = calibrator.timestamp
+        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
+        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -10020,6 +10025,11 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMagnetometerMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
+
+        val calendar = GregorianCalendar()
+        calendar.time = calibrator.timestamp
+        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
+        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -10099,6 +10109,11 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMagnetometerMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
+
+        val calendar = GregorianCalendar()
+        calendar.time = calibrator.timestamp
+        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
+        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -10178,6 +10193,11 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMagnetometerMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
+
+        val calendar = GregorianCalendar()
+        calendar.time = calibrator.timestamp
+        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
+        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -10269,6 +10289,11 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
+
+        val calendar = GregorianCalendar()
+        calendar.time = calibrator.timestamp
+        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
+        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -10360,6 +10385,11 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
+
+        val calendar = GregorianCalendar()
+        calendar.time = calibrator.timestamp
+        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
+        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -10457,6 +10487,11 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
+
+        val calendar = GregorianCalendar()
+        calendar.time = calibrator.timestamp
+        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
+        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -10554,6 +10589,11 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
+
+        val calendar = GregorianCalendar()
+        calendar.time = calibrator.timestamp
+        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
+        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -10655,6 +10695,11 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
+
+        val calendar = GregorianCalendar()
+        calendar.time = calibrator.timestamp
+        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
+        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -10756,6 +10801,11 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
+
+        val calendar = GregorianCalendar()
+        calendar.time = calibrator.timestamp
+        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
+        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -10975,6 +11025,11 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
+
+        val calendar = GregorianCalendar()
+        calendar.time = calibrator.timestamp
+        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
+        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -11066,6 +11121,11 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
+
+        val calendar = GregorianCalendar()
+        calendar.time = calibrator.timestamp
+        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
+        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -11163,6 +11223,11 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
+
+        val calendar = GregorianCalendar()
+        calendar.time = calibrator.timestamp
+        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
+        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -11260,6 +11325,11 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
+
+        val calendar = GregorianCalendar()
+        calendar.time = calibrator.timestamp
+        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
+        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -11361,6 +11431,11 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
+
+        val calendar = GregorianCalendar()
+        calendar.time = calibrator.timestamp
+        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
+        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -11462,6 +11537,11 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
+
+        val calendar = GregorianCalendar()
+        calendar.time = calibrator.timestamp
+        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
+        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -11689,6 +11769,11 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
+
+        val calendar = GregorianCalendar()
+        calendar.time = calibrator.timestamp
+        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
+        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -11788,6 +11873,11 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
+
+        val calendar = GregorianCalendar()
+        calendar.time = calibrator.timestamp
+        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
+        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -11893,6 +11983,11 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
+
+        val calendar = GregorianCalendar()
+        calendar.time = calibrator.timestamp
+        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
+        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -11998,6 +12093,11 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
+
+        val calendar = GregorianCalendar()
+        calendar.time = calibrator.timestamp
+        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
+        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -12107,6 +12207,11 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
+
+        val calendar = GregorianCalendar()
+        calendar.time = calibrator.timestamp
+        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
+        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -12216,6 +12321,11 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
+
+        val calendar = GregorianCalendar()
+        calendar.time = calibrator.timestamp
+        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
+        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -12443,6 +12553,11 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
+
+        val calendar = GregorianCalendar()
+        calendar.time = calibrator.timestamp
+        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
+        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -12534,6 +12649,11 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
+
+        val calendar = GregorianCalendar()
+        calendar.time = calibrator.timestamp
+        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
+        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -12631,6 +12751,11 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
+
+        val calendar = GregorianCalendar()
+        calendar.time = calibrator.timestamp
+        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
+        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -12728,6 +12853,11 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
+
+        val calendar = GregorianCalendar()
+        calendar.time = calibrator.timestamp
+        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
+        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -12834,6 +12964,11 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
+
+        val calendar = GregorianCalendar()
+        calendar.time = calibrator.timestamp
+        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
+        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -12940,6 +13075,11 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
+
+        val calendar = GregorianCalendar()
+        calendar.time = calibrator.timestamp
+        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
+        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -13167,6 +13307,11 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
+
+        val calendar = GregorianCalendar()
+        calendar.time = calibrator.timestamp
+        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
+        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -13266,6 +13411,11 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
+
+        val calendar = GregorianCalendar()
+        calendar.time = calibrator.timestamp
+        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
+        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -13367,6 +13517,11 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
+
+        val calendar = GregorianCalendar()
+        calendar.time = calibrator.timestamp
+        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
+        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -13472,6 +13627,11 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
+
+        val calendar = GregorianCalendar()
+        calendar.time = calibrator.timestamp
+        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
+        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -13586,6 +13746,11 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
+
+        val calendar = GregorianCalendar()
+        calendar.time = calibrator.timestamp
+        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
+        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -13705,6 +13870,11 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
+
+        val calendar = GregorianCalendar()
+        calendar.time = calibrator.timestamp
+        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
+        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test

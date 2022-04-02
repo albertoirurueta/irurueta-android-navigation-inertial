@@ -326,7 +326,7 @@ class AccelerometerInternalCalibratorBuilder private constructor(
         return if (robustMethod == null) {
             buildNonRobustCalibrator()
         } else {
-            buildAccelerometerRobustCalibrator()
+            buildRobustCalibrator()
         }
     }
 
@@ -428,19 +428,19 @@ class AccelerometerInternalCalibratorBuilder private constructor(
      * @throws IllegalStateException if no suitable calibrator can be built.
      */
     @Throws(IllegalStateException::class)
-    private fun buildAccelerometerRobustCalibrator(): AccelerometerNonLinearCalibrator {
+    private fun buildRobustCalibrator(): AccelerometerNonLinearCalibrator {
         val location = this.location
         return if (isGroundTruthInitialBias) {
             if (location != null) {
-                buildAccelerometerRobustKnownBiasAndPositionCalibrator(location)
+                buildRobustKnownBiasAndPositionCalibrator(location)
             } else {
-                buildAccelerometerRobustKnownBiasAndGravityCalibrator()
+                buildRobustKnownBiasAndGravityCalibrator()
             }
         } else {
             if (location != null) {
-                buildAccelerometerRobustKnownPositionCalibrator(location)
+                buildRobustKnownPositionCalibrator(location)
             } else {
-                buildAccelerometerRobustKnownGravityCalibrator()
+                buildRobustKnownGravityCalibrator()
             }
         }
     }
@@ -453,7 +453,7 @@ class AccelerometerInternalCalibratorBuilder private constructor(
      * @throws IllegalStateException if no suitable calibrator can be built.
      */
     @Throws(IllegalStateException::class)
-    private fun buildAccelerometerRobustKnownBiasAndPositionCalibrator(location: Location): RobustKnownBiasAndPositionAccelerometerCalibrator {
+    private fun buildRobustKnownBiasAndPositionCalibrator(location: Location): RobustKnownBiasAndPositionAccelerometerCalibrator {
         val baseNoiseLevel = baseNoiseLevel
         val robustThreshold = robustThreshold
 
@@ -504,7 +504,7 @@ class AccelerometerInternalCalibratorBuilder private constructor(
                     checkNotNull(baseNoiseLevel)
                     result.threshold = robustThresholdFactor * baseNoiseLevel
                 }
-                result.qualityScores = buildAccelerometerQualityScores()
+                result.qualityScores = buildQualityScores()
             }
             is LMedSRobustKnownBiasAndPositionAccelerometerCalibrator -> {
                 if (robustThreshold != null) {
@@ -523,7 +523,7 @@ class AccelerometerInternalCalibratorBuilder private constructor(
                     result.stopThreshold =
                         robustThresholdFactor * robustStopThresholdFactor * baseNoiseLevel
                 }
-                result.qualityScores = buildAccelerometerQualityScores()
+                result.qualityScores = buildQualityScores()
             }
         }
 
@@ -537,7 +537,7 @@ class AccelerometerInternalCalibratorBuilder private constructor(
      * @throws IllegalStateException if no suitable calibrator can be built.
      */
     @Throws(IllegalStateException::class)
-    private fun buildAccelerometerRobustKnownBiasAndGravityCalibrator(): RobustKnownBiasAndGravityNormAccelerometerCalibrator {
+    private fun buildRobustKnownBiasAndGravityCalibrator(): RobustKnownBiasAndGravityNormAccelerometerCalibrator {
         val gravityNorm = this.gravityNorm
         checkNotNull(gravityNorm)
 
@@ -591,7 +591,7 @@ class AccelerometerInternalCalibratorBuilder private constructor(
                     checkNotNull(baseNoiseLevel)
                     result.threshold = robustThresholdFactor * baseNoiseLevel
                 }
-                result.qualityScores = buildAccelerometerQualityScores()
+                result.qualityScores = buildQualityScores()
             }
             is LMedSRobustKnownBiasAndGravityNormAccelerometerCalibrator -> {
                 if (robustThreshold != null) {
@@ -610,7 +610,7 @@ class AccelerometerInternalCalibratorBuilder private constructor(
                     result.stopThreshold =
                         robustThresholdFactor * robustStopThresholdFactor * baseNoiseLevel
                 }
-                result.qualityScores = buildAccelerometerQualityScores()
+                result.qualityScores = buildQualityScores()
             }
         }
 
@@ -625,7 +625,7 @@ class AccelerometerInternalCalibratorBuilder private constructor(
      * @throws IllegalStateException if no suitable calibrator can be built.
      */
     @Throws(IllegalStateException::class)
-    private fun buildAccelerometerRobustKnownPositionCalibrator(location: Location): RobustKnownPositionAccelerometerCalibrator {
+    private fun buildRobustKnownPositionCalibrator(location: Location): RobustKnownPositionAccelerometerCalibrator {
         val baseNoiseLevel = baseNoiseLevel
         val robustThreshold = robustThreshold
 
@@ -676,7 +676,7 @@ class AccelerometerInternalCalibratorBuilder private constructor(
                     checkNotNull(baseNoiseLevel)
                     result.threshold = robustThresholdFactor * baseNoiseLevel
                 }
-                result.qualityScores = buildAccelerometerQualityScores()
+                result.qualityScores = buildQualityScores()
             }
             is LMedSRobustKnownPositionAccelerometerCalibrator -> {
                 if (robustThreshold != null) {
@@ -695,7 +695,7 @@ class AccelerometerInternalCalibratorBuilder private constructor(
                     result.stopThreshold =
                         robustThresholdFactor * robustStopThresholdFactor * baseNoiseLevel
                 }
-                result.qualityScores = buildAccelerometerQualityScores()
+                result.qualityScores = buildQualityScores()
             }
         }
 
@@ -709,7 +709,7 @@ class AccelerometerInternalCalibratorBuilder private constructor(
      * @throws IllegalStateException if no suitable calibrator can be built.
      */
     @Throws(IllegalStateException::class)
-    private fun buildAccelerometerRobustKnownGravityCalibrator(): RobustKnownGravityNormAccelerometerCalibrator {
+    private fun buildRobustKnownGravityCalibrator(): RobustKnownGravityNormAccelerometerCalibrator {
         val gravityNorm = this.gravityNorm
         checkNotNull(gravityNorm)
 
@@ -763,7 +763,7 @@ class AccelerometerInternalCalibratorBuilder private constructor(
                     checkNotNull(baseNoiseLevel)
                     result.threshold = robustThresholdFactor * baseNoiseLevel
                 }
-                result.qualityScores = buildAccelerometerQualityScores()
+                result.qualityScores = buildQualityScores()
             }
             is LMedSRobustKnownGravityNormAccelerometerCalibrator -> {
                 if (robustThreshold != null) {
@@ -782,7 +782,7 @@ class AccelerometerInternalCalibratorBuilder private constructor(
                     result.stopThreshold =
                         robustThresholdFactor * robustStopThresholdFactor * baseNoiseLevel
                 }
-                result.qualityScores = buildAccelerometerQualityScores()
+                result.qualityScores = buildQualityScores()
             }
         }
 
@@ -798,7 +798,7 @@ class AccelerometerInternalCalibratorBuilder private constructor(
      *
      * @return build quality score array.
      */
-    private fun buildAccelerometerQualityScores(): DoubleArray {
+    private fun buildQualityScores(): DoubleArray {
         val size = measurements.size
         val qualityScores = DoubleArray(size)
         measurements.forEachIndexed { index, measurement ->

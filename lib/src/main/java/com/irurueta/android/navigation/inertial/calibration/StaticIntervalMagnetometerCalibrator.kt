@@ -1675,6 +1675,7 @@ class StaticIntervalMagnetometerCalibrator private constructor(
                 magnetometerMeasurements,
                 isMagnetometerCommonAxisUsed
             )
+            result.setTime(timestamp)
             result.setHardIronCoordinates(
                 magnetometerInitialHardIronX ?: 0.0,
                 magnetometerInitialHardIronY ?: 0.0,
@@ -1699,6 +1700,7 @@ class StaticIntervalMagnetometerCalibrator private constructor(
                 magnetometerMeasurements,
                 isMagnetometerCommonAxisUsed
             )
+            result.setTime(timestamp)
             result.setInitialHardIron(
                 magnetometerInitialHardIronX ?: 0.0,
                 magnetometerInitialHardIronY ?: 0.0,
@@ -1752,6 +1754,7 @@ class StaticIntervalMagnetometerCalibrator private constructor(
             isMagnetometerCommonAxisUsed,
             magnetometerRobustMethod
         )
+        result.setTime(timestamp)
         result.setHardIronCoordinates(
             magnetometerInitialHardIronX ?: 0.0,
             magnetometerInitialHardIronY ?: 0.0,
@@ -1843,6 +1846,7 @@ class StaticIntervalMagnetometerCalibrator private constructor(
             isMagnetometerCommonAxisUsed,
             magnetometerRobustMethod
         )
+        result.setTime(timestamp)
         result.setInitialHardIron(
             magnetometerInitialHardIronX ?: 0.0,
             magnetometerInitialHardIronY ?: 0.0,
