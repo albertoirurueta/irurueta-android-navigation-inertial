@@ -2487,9 +2487,9 @@ class StaticIntervalGyroscopeCalibrator private constructor(
     }
 
     /**
-     * Internally build a non-robust magnetometer calibrator based on all provided parameters.
+     * Internally build a non-robust gyroscope calibrator based on all provided parameters.
      *
-     * @return an internal accelerometer calibrator.
+     * @return an internal gyroscope calibrator.
      * @throws IllegalStateException if no suitable calibrator can be built.
      */
     @Throws(IllegalStateException::class)
@@ -2558,7 +2558,7 @@ class StaticIntervalGyroscopeCalibrator private constructor(
     /**
      * Internally builds a robust gyroscope calibrator based on all provided parameters.
      *
-     * @return an internal magnetometer calibrator.
+     * @return an internal gyroscope calibrator.
      * @throws IllegalStateException if no suitable calibrator can be built.
      */
     @Throws(IllegalStateException::class)

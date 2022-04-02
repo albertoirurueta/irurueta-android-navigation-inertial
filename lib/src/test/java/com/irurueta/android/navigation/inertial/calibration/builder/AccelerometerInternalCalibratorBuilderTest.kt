@@ -1,3 +1,18 @@
+/*
+ * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.irurueta.android.navigation.inertial.calibration.builder
 
 import android.location.Location
@@ -201,12 +216,12 @@ class AccelerometerInternalCalibratorBuilderTest {
     fun robustPreliminarySubsetSize_whenValid_setsExpectedValue() {
         val randomizer = UniformRandomizer()
 
-        val measurements1 = emptyList<StandardDeviationBodyKinematics>()
+        val measurements = emptyList<StandardDeviationBodyKinematics>()
         val robustPreliminarySubsetSize1 = ROBUST_PRELIMINARY_SUBSET_SIZE
         val minimumRequiredMeasurements =
             randomizer.nextInt(robustPreliminarySubsetSize1, 2 * robustPreliminarySubsetSize1)
         val builder = AccelerometerInternalCalibratorBuilder(
-            measurements1,
+            measurements,
             robustPreliminarySubsetSize1,
             minimumRequiredMeasurements
         )
@@ -226,13 +241,13 @@ class AccelerometerInternalCalibratorBuilderTest {
     fun robustPreliminarySubsetSize_whenInvalid_throwsIllegalArgumentException() {
         val randomizer = UniformRandomizer()
 
-        val measurements1 = emptyList<StandardDeviationBodyKinematics>()
+        val measurements = emptyList<StandardDeviationBodyKinematics>()
         val robustPreliminarySubsetSize = 0
         val minimumRequiredMeasurements =
             randomizer.nextInt(robustPreliminarySubsetSize, 2 * robustPreliminarySubsetSize)
 
         AccelerometerInternalCalibratorBuilder(
-            measurements1,
+            measurements,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements
         )
@@ -813,7 +828,7 @@ class AccelerometerInternalCalibratorBuilderTest {
         )
 
         // check default value
-        assertNull(builder.initialBiasY)
+        assertNull(builder.initialBiasZ)
 
         // set new value
         val initialBiasZ = randomizer.nextDouble()
