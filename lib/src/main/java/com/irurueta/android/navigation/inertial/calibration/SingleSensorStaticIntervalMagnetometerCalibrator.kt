@@ -19,11 +19,11 @@ import android.content.Context
 import android.location.Location
 import android.util.Log
 import com.irurueta.algebra.Matrix
+import com.irurueta.android.navigation.inertial.calibration.builder.MagnetometerInternalCalibratorBuilder
 import com.irurueta.android.navigation.inertial.calibration.intervals.IntervalDetector
 import com.irurueta.android.navigation.inertial.calibration.intervals.MagnetometerIntervalDetector
 import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
-import com.irurueta.android.navigation.inertial.toNEDPosition
 import com.irurueta.navigation.NavigationException
 import com.irurueta.navigation.inertial.BodyMagneticFluxDensity
 import com.irurueta.navigation.inertial.calibration.MagneticFluxDensityTriad
@@ -1105,110 +1105,23 @@ class SingleSensorStaticIntervalMagnetometerCalibrator private constructor(
      */
     @Throws(IllegalStateException::class)
     private fun buildInternalCalibrator(): MagnetometerNonLinearCalibrator {
-        return if (robustMethod == null) {
-            buildNonRobustCalibrator()
-        } else {
-            buildRobustCalibrator()
-        }
-    }
-
-    /**
-     * Internally builds a non-robust magnetometer calibrator based on all provided parameters.
-     *
-     * @return an internal magnetometer calibrator.
-     * @throws IllegalStateException if no suitable calibrator can be built.
-     */
-    @Throws(IllegalStateException::class)
-    private fun buildNonRobustCalibrator(): MagnetometerNonLinearCalibrator {
-        return if (isGroundTruthInitialHardIron) {
-            val result = KnownHardIronPositionAndInstantMagnetometerCalibrator(
-                location.toNEDPosition(),
-                measurements,
-                isCommonAxisUsed
-            )
-            result.setHardIronCoordinates(
-                initialHardIronX ?: 0.0,
-                initialHardIronY ?: 0.0,
-                initialHardIronZ ?: 0.0
-            )
-            result.setInitialScalingFactorsAndCrossCouplingErrors(
-                initialSx,
-                initialSy,
-                initialSz,
-                initialMxy,
-                initialMxz,
-                initialMyx,
-                initialMyz,
-                initialMzx,
-                initialMzy
-            )
-            result.magneticModel = worldMagneticModel
-            result
-        } else {
-            val result = KnownPositionAndInstantMagnetometerCalibrator(
-                location.toNEDPosition(),
-                measurements,
-                isCommonAxisUsed
-            )
-            result.setInitialHardIron(
-                initialHardIronX ?: 0.0,
-                initialHardIronY ?: 0.0,
-                initialHardIronZ ?: 0.0
-            )
-            result.setInitialScalingFactorsAndCrossCouplingErrors(
-                initialSx,
-                initialSy,
-                initialSz,
-                initialMxy,
-                initialMxz,
-                initialMyx,
-                initialMyz,
-                initialMzx,
-                initialMzy
-            )
-            result.magneticModel = worldMagneticModel
-            result
-        }
-    }
-
-    /**
-     * Internally builds a robust magnetometer calibrator based on all provided parameters.
-     *
-     * @return an internal magnetometer calibrator.
-     * @throws IllegalStateException if no suitable calibrator can be built.
-     */
-    @Throws(IllegalStateException::class)
-    private fun buildRobustCalibrator(): MagnetometerNonLinearCalibrator {
-        return if (isGroundTruthInitialHardIron) {
-            buildKnownHardIronPositionAndInstantRobustCalibrator()
-        } else {
-            buildKnownPositionAndInstantRobustCalibrator()
-        }
-    }
-
-    /**
-     * Internally builds a robust magnetometer calibrator when hard iron is known.
-     *
-     * @return an internal magnetometer calibrator.
-     * @throws IllegalStateException if no suitable calibrator can be built.
-     */
-    @Throws(IllegalStateException::class)
-    private fun buildKnownHardIronPositionAndInstantRobustCalibrator(): MagnetometerNonLinearCalibrator {
-        val baseNoiseLevel = this.baseNoiseLevel
-        val robustThreshold = this.robustThreshold
-
-        val result = RobustKnownHardIronPositionAndInstantMagnetometerCalibrator.create(
-            location.toNEDPosition(),
+        return MagnetometerInternalCalibratorBuilder(
             measurements,
+            location,
+            robustPreliminarySubsetSize,
+            requiredMeasurements,
+            robustMethod,
+            timestamp,
+            robustConfidence,
+            robustMaxIterations,
+            robustThreshold,
+            robustThresholdFactor,
+            robustStopThresholdFactor,
+            isGroundTruthInitialHardIron,
             isCommonAxisUsed,
-            robustMethod
-        )
-        result.setHardIronCoordinates(
-            initialHardIronX ?: 0.0,
-            initialHardIronY ?: 0.0,
-            initialHardIronZ ?: 0.0
-        )
-        result.setInitialScalingFactorsAndCrossCouplingErrors(
+            initialHardIronX,
+            initialHardIronY,
+            initialHardIronZ,
             initialSx,
             initialSy,
             initialSz,
@@ -1217,151 +1130,11 @@ class SingleSensorStaticIntervalMagnetometerCalibrator private constructor(
             initialMyx,
             initialMyz,
             initialMzx,
-            initialMzy
-        )
-        result.magneticModel = worldMagneticModel
-        result.confidence = robustConfidence
-        result.maxIterations = robustMaxIterations
-        result.preliminarySubsetSize =
-            robustPreliminarySubsetSize.coerceAtLeast(minimumRequiredMeasurements)
-
-        // set threshold and quality scores
-        when (result) {
-            is RANSACRobustKnownHardIronPositionAndInstantMagnetometerCalibrator -> {
-                if (robustThreshold != null) {
-                    result.threshold = robustThreshold
-                } else {
-                    checkNotNull(baseNoiseLevel)
-                    result.threshold = robustThresholdFactor * baseNoiseLevel
-                }
-            }
-            is MSACRobustKnownHardIronPositionAndInstantMagnetometerCalibrator -> {
-                if (robustThreshold != null) {
-                    result.threshold = robustThreshold
-                } else {
-                    checkNotNull(baseNoiseLevel)
-                    result.threshold = robustThresholdFactor * baseNoiseLevel
-                }
-            }
-            is PROSACRobustKnownHardIronPositionAndInstantMagnetometerCalibrator -> {
-                if (robustThreshold != null) {
-                    result.threshold = robustThreshold
-                } else {
-                    checkNotNull(baseNoiseLevel)
-                    result.threshold = robustThresholdFactor * baseNoiseLevel
-                }
-                result.qualityScores = buildQualityScores()
-            }
-            is LMedSRobustKnownHardIronPositionAndInstantMagnetometerCalibrator -> {
-                if (robustThreshold != null) {
-                    result.stopThreshold = robustThreshold
-                } else {
-                    checkNotNull(baseNoiseLevel)
-                    result.stopThreshold =
-                        robustThresholdFactor * robustStopThresholdFactor * baseNoiseLevel
-                }
-            }
-            is PROMedSRobustKnownHardIronPositionAndInstantMagnetometerCalibrator -> {
-                if (robustThreshold != null) {
-                    result.stopThreshold = robustThreshold
-                } else {
-                    checkNotNull(baseNoiseLevel)
-                    result.stopThreshold =
-                        robustThresholdFactor * robustStopThresholdFactor * baseNoiseLevel
-                }
-                result.qualityScores = buildQualityScores()
-            }
-        }
-        return result
-    }
-
-    /**
-     * Internally builds a robust magnetometer calibrator when hard iron is not known.
-     *
-     * @return an internal magnetometer calibrator.
-     * @throws IllegalStateException if no suitable calibrator can be built.
-     */
-    @Throws(IllegalStateException::class)
-    private fun buildKnownPositionAndInstantRobustCalibrator(): MagnetometerNonLinearCalibrator {
-        val baseNoiseLevel = this.baseNoiseLevel
-        val robustThreshold = this.robustThreshold
-
-        val result = RobustKnownPositionAndInstantMagnetometerCalibrator.create(
-            location.toNEDPosition(),
-            measurements,
-            isCommonAxisUsed,
-            robustMethod
-        )
-        result.setInitialHardIron(
-            initialHardIronX ?: 0.0,
-            initialHardIronY ?: 0.0,
-            initialHardIronZ ?: 0.0
-        )
-        result.setInitialScalingFactorsAndCrossCouplingErrors(
-            initialSx,
-            initialSy,
-            initialSz,
-            initialMxy,
-            initialMxz,
-            initialMyx,
-            initialMyz,
-            initialMzx,
-            initialMzy
-        )
-        result.magneticModel = worldMagneticModel
-        result.confidence = robustConfidence
-        result.maxIterations = robustMaxIterations
-        result.preliminarySubsetSize =
-            robustPreliminarySubsetSize.coerceAtLeast(minimumRequiredMeasurements)
-
-        // set threshold and quality scores
-        when (result) {
-            is RANSACRobustKnownPositionAndInstantMagnetometerCalibrator -> {
-                if (robustThreshold != null) {
-                    result.threshold = robustThreshold
-                } else {
-                    checkNotNull(baseNoiseLevel)
-                    result.threshold = robustThresholdFactor * baseNoiseLevel
-                }
-            }
-            is MSACRobustKnownPositionAndInstantMagnetometerCalibrator -> {
-                if (robustThreshold != null) {
-                    result.threshold = robustThreshold
-                } else {
-                    checkNotNull(baseNoiseLevel)
-                    result.threshold = robustThresholdFactor * baseNoiseLevel
-                }
-            }
-            is PROSACRobustKnownPositionAndInstantMagnetometerCalibrator -> {
-                if (robustThreshold != null) {
-                    result.threshold = robustThreshold
-                } else {
-                    checkNotNull(baseNoiseLevel)
-                    result.threshold = robustThresholdFactor * baseNoiseLevel
-                }
-                result.qualityScores = buildQualityScores()
-            }
-            is LMedSRobustKnownPositionAndInstantMagnetometerCalibrator -> {
-                if (robustThreshold != null) {
-                    result.stopThreshold = robustThreshold
-                } else {
-                    checkNotNull(baseNoiseLevel)
-                    result.stopThreshold =
-                        robustThresholdFactor * robustStopThresholdFactor * baseNoiseLevel
-                }
-            }
-            is PROMedSRobustKnownPositionAndInstantMagnetometerCalibrator -> {
-                if (robustThreshold != null) {
-                    result.stopThreshold = robustThreshold
-                } else {
-                    checkNotNull(baseNoiseLevel)
-                    result.stopThreshold =
-                        robustThresholdFactor * robustStopThresholdFactor * baseNoiseLevel
-                }
-                result.qualityScores = buildQualityScores()
-            }
-        }
-        return result
+            initialMzy,
+            baseNoiseLevel,
+            worldMagneticModel,
+            qualityScoreMapper
+        ).build()
     }
 
     companion object {
