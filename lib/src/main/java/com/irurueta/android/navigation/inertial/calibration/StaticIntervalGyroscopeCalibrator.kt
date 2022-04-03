@@ -18,6 +18,7 @@ package com.irurueta.android.navigation.inertial.calibration
 import android.content.Context
 import android.util.Log
 import com.irurueta.algebra.Matrix
+import com.irurueta.android.navigation.inertial.calibration.builder.GyroscopeInternalCalibratorBuilder
 import com.irurueta.android.navigation.inertial.calibration.intervals.measurements.GyroscopeMeasurementGenerator
 import com.irurueta.android.navigation.inertial.calibration.intervals.measurements.SingleSensorCalibrationMeasurementGenerator
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
@@ -2479,117 +2480,21 @@ class StaticIntervalGyroscopeCalibrator private constructor(
      */
     @Throws(IllegalStateException::class)
     private fun buildGyroscopeInternalCalibrator(): GyroscopeNonLinearCalibrator {
-        return if (gyroscopeRobustMethod == null) {
-            buildGyroscopeNonRobustCalibrator()
-        } else {
-            buildGyroscopeRobustCalibrator()
-        }
-    }
-
-    /**
-     * Internally build a non-robust gyroscope calibrator based on all provided parameters.
-     *
-     * @return an internal gyroscope calibrator.
-     * @throws IllegalStateException if no suitable calibrator can be built.
-     */
-    @Throws(IllegalStateException::class)
-    private fun buildGyroscopeNonRobustCalibrator(): GyroscopeNonLinearCalibrator {
-        return if (isGyroscopeGroundTruthInitialBias) {
-            val result = KnownBiasEasyGyroscopeCalibrator()
-            result.sequences = gyroscopeMeasurements
-            result.isCommonAxisUsed = isGyroscopeCommonAxisUsed
-            result.setBiasCoordinates(
-                gyroscopeInitialBiasX ?: 0.0,
-                gyroscopeInitialBiasY ?: 0.0,
-                gyroscopeInitialBiasZ ?: 0.0
-            )
-            result.setInitialScalingFactorsAndCrossCouplingErrors(
-                gyroscopeInitialSx,
-                gyroscopeInitialSy,
-                gyroscopeInitialSz,
-                gyroscopeInitialMxy,
-                gyroscopeInitialMxz,
-                gyroscopeInitialMyx,
-                gyroscopeInitialMyz,
-                gyroscopeInitialMzx,
-                gyroscopeInitialMzy
-            )
-            result.isGDependentCrossBiasesEstimated = isGDependentCrossBiasesEstimated
-            result.initialGg = gyroscopeInitialGg
-            result.setAccelerometerBias(
-                estimatedAccelerometerBiasX ?: 0.0,
-                estimatedAccelerometerBiasY ?: 0.0,
-                estimatedAccelerometerBiasZ ?: 0.0
-            )
-            result.accelerometerMa = accelerometerMa
-            result
-        } else {
-            val result = EasyGyroscopeCalibrator()
-            result.sequences = gyroscopeMeasurements
-            result.isCommonAxisUsed = isGyroscopeCommonAxisUsed
-            result.setInitialBias(
-                gyroscopeInitialBiasX ?: 0.0,
-                gyroscopeInitialBiasY ?: 0.0,
-                gyroscopeInitialBiasZ ?: 0.0
-            )
-            result.setInitialScalingFactorsAndCrossCouplingErrors(
-                gyroscopeInitialSx,
-                gyroscopeInitialSy,
-                gyroscopeInitialSz,
-                gyroscopeInitialMxy,
-                gyroscopeInitialMxz,
-                gyroscopeInitialMyx,
-                gyroscopeInitialMyz,
-                gyroscopeInitialMzx,
-                gyroscopeInitialMzy
-            )
-            result.isGDependentCrossBiasesEstimated = isGDependentCrossBiasesEstimated
-            result.initialGg = gyroscopeInitialGg
-            result.setAccelerometerBias(
-                estimatedAccelerometerBiasX ?: 0.0,
-                estimatedAccelerometerBiasY ?: 0.0,
-                estimatedAccelerometerBiasZ ?: 0.0
-            )
-            result.accelerometerMa = accelerometerMa
-            result
-        }
-    }
-
-    /**
-     * Internally builds a robust gyroscope calibrator based on all provided parameters.
-     *
-     * @return an internal gyroscope calibrator.
-     * @throws IllegalStateException if no suitable calibrator can be built.
-     */
-    @Throws(IllegalStateException::class)
-    private fun buildGyroscopeRobustCalibrator(): GyroscopeNonLinearCalibrator {
-        return if (isGyroscopeGroundTruthInitialBias) {
-            buildGyroscopeKnownBiasRobustCalibrator()
-        } else {
-            buildGyroscopeUnknownBiasRobustCalibrator()
-        }
-    }
-
-    /**
-     * Internally builds a robust gyroscope calibrator when bias is known.
-     *
-     * @return an internal gyroscope calibrator.
-     * @throws IllegalStateException if no suitable calibrator can be built.
-     */
-    @Throws(IllegalStateException::class)
-    private fun buildGyroscopeKnownBiasRobustCalibrator(): GyroscopeNonLinearCalibrator {
-        val baseNoiseLevel = gyroscopeBaseNoiseLevel
-        val robustThreshold = gyroscopeRobustThreshold
-
-        val result = RobustKnownBiasEasyGyroscopeCalibrator.create(gyroscopeRobustMethod)
-        result.sequences = gyroscopeMeasurements
-        result.isCommonAxisUsed = isGyroscopeCommonAxisUsed
-        result.setBiasCoordinates(
-            gyroscopeInitialBiasX ?: 0.0,
-            gyroscopeInitialBiasY ?: 0.0,
-            gyroscopeInitialBiasZ ?: 0.0
-        )
-        result.setInitialScalingFactorsAndCrossCouplingErrors(
+        return GyroscopeInternalCalibratorBuilder(
+            gyroscopeMeasurements,
+            gyroscopeRobustPreliminarySubsetSize,
+            minimumRequiredGyroscopeMeasurements,
+            gyroscopeRobustMethod,
+            gyroscopeRobustConfidence,
+            gyroscopeRobustMaxIterations,
+            gyroscopeRobustThreshold,
+            gyroscopeRobustThresholdFactor,
+            gyroscopeRobustStopThresholdFactor,
+            isGyroscopeGroundTruthInitialBias,
+            isGyroscopeCommonAxisUsed,
+            gyroscopeInitialBiasX,
+            gyroscopeInitialBiasY,
+            gyroscopeInitialBiasZ,
             gyroscopeInitialSx,
             gyroscopeInitialSy,
             gyroscopeInitialSz,
@@ -2598,180 +2503,24 @@ class StaticIntervalGyroscopeCalibrator private constructor(
             gyroscopeInitialMyx,
             gyroscopeInitialMyz,
             gyroscopeInitialMzx,
-            gyroscopeInitialMzy
-        )
-        result.isGDependentCrossBiasesEstimated = isGDependentCrossBiasesEstimated
-        result.initialGg = gyroscopeInitialGg
-        result.setAccelerometerBias(
-            estimatedAccelerometerBiasX ?: 0.0,
-            estimatedAccelerometerBiasY ?: 0.0,
-            estimatedAccelerometerBiasZ ?: 0.0
-        )
-        result.accelerometerMa = accelerometerMa
-        result.confidence = gyroscopeRobustConfidence
-        result.maxIterations = gyroscopeRobustMaxIterations
-        result.preliminarySubsetSize =
-            gyroscopeRobustPreliminarySubsetSize.coerceAtLeast(minimumRequiredGyroscopeMeasurements)
-
-        // set threshold and quality scores
-        when (result) {
-            is RANSACRobustKnownBiasEasyGyroscopeCalibrator -> {
-                if (robustThreshold != null) {
-                    result.threshold = robustThreshold
-                } else {
-                    checkNotNull(baseNoiseLevel)
-                    result.threshold = gyroscopeRobustThresholdFactor * baseNoiseLevel
-                }
-            }
-            is MSACRobustKnownBiasEasyGyroscopeCalibrator -> {
-                if (robustThreshold != null) {
-                    result.threshold = robustThreshold
-                } else {
-                    checkNotNull(baseNoiseLevel)
-                    result.threshold = gyroscopeRobustThresholdFactor * baseNoiseLevel
-                }
-            }
-            is PROSACRobustKnownBiasEasyGyroscopeCalibrator -> {
-                if (robustThreshold != null) {
-                    result.threshold = robustThreshold
-                } else {
-                    checkNotNull(baseNoiseLevel)
-                    result.threshold = gyroscopeRobustThresholdFactor * baseNoiseLevel
-                }
-                result.qualityScores = buildGyroscopeQualityScores()
-            }
-            is LMedSRobustKnownBiasEasyGyroscopeCalibrator -> {
-                if (robustThreshold != null) {
-                    result.stopThreshold = robustThreshold
-                } else {
-                    checkNotNull(baseNoiseLevel)
-                    result.stopThreshold =
-                        gyroscopeRobustThresholdFactor * gyroscopeRobustStopThresholdFactor * baseNoiseLevel
-                }
-            }
-            is PROMedSRobustKnownBiasEasyGyroscopeCalibrator -> {
-                if (robustThreshold != null) {
-                    result.stopThreshold = robustThreshold
-                } else {
-                    checkNotNull(baseNoiseLevel)
-                    result.stopThreshold =
-                        gyroscopeRobustThresholdFactor * gyroscopeRobustStopThresholdFactor * baseNoiseLevel
-                }
-                result.qualityScores = buildGyroscopeQualityScores()
-            }
-        }
-        return result
-    }
-
-    /**
-     * Internally builds a robust gyroscope calibrator when bias is unknown.
-     *
-     * @return an internal gyroscope calibrator.
-     * @throws IllegalStateException if no suitable calibrator can be built.
-     */
-    @Throws(IllegalStateException::class)
-    private fun buildGyroscopeUnknownBiasRobustCalibrator(): GyroscopeNonLinearCalibrator {
-        val baseNoiseLevel = gyroscopeBaseNoiseLevel
-        val robustThreshold = gyroscopeRobustThreshold
-
-        val result = RobustEasyGyroscopeCalibrator.create(gyroscopeRobustMethod)
-        result.sequences = gyroscopeMeasurements
-        result.isCommonAxisUsed = isGyroscopeCommonAxisUsed
-        result.setInitialBias(
-            gyroscopeInitialBiasX ?: 0.0,
-            gyroscopeInitialBiasY ?: 0.0,
-            gyroscopeInitialBiasZ ?: 0.0
-        )
-        result.setInitialScalingFactorsAndCrossCouplingErrors(
-            gyroscopeInitialSx,
-            gyroscopeInitialSy,
-            gyroscopeInitialSz,
-            gyroscopeInitialMxy,
-            gyroscopeInitialMxz,
-            gyroscopeInitialMyx,
-            gyroscopeInitialMyz,
-            gyroscopeInitialMzx,
-            gyroscopeInitialMzy
-        )
-        result.isGDependentCrossBiasesEstimated = isGDependentCrossBiasesEstimated
-        result.initialGg = gyroscopeInitialGg
-        result.setAccelerometerBias(
-            estimatedAccelerometerBiasX ?: 0.0,
-            estimatedAccelerometerBiasY ?: 0.0,
-            estimatedAccelerometerBiasZ ?: 0.0
-        )
-        result.accelerometerMa = accelerometerMa
-        result.confidence = gyroscopeRobustConfidence
-        result.maxIterations = gyroscopeRobustMaxIterations
-        result.preliminarySubsetSize =
-            gyroscopeRobustPreliminarySubsetSize.coerceAtLeast(minimumRequiredGyroscopeMeasurements)
-
-        // set threshold and quality scores
-        when (result) {
-            is RANSACRobustEasyGyroscopeCalibrator -> {
-                if (robustThreshold != null) {
-                    result.threshold = robustThreshold
-                } else {
-                    checkNotNull(baseNoiseLevel)
-                    result.threshold = gyroscopeRobustThresholdFactor * baseNoiseLevel
-                }
-            }
-            is MSACRobustEasyGyroscopeCalibrator -> {
-                if (robustThreshold != null) {
-                    result.threshold = robustThreshold
-                } else {
-                    checkNotNull(baseNoiseLevel)
-                    result.threshold = gyroscopeRobustThresholdFactor * baseNoiseLevel
-                }
-            }
-            is PROSACRobustEasyGyroscopeCalibrator -> {
-                if (robustThreshold != null) {
-                    result.threshold = robustThreshold
-                } else {
-                    checkNotNull(baseNoiseLevel)
-                    result.threshold = gyroscopeRobustThresholdFactor * baseNoiseLevel
-                }
-                result.qualityScores = buildGyroscopeQualityScores()
-            }
-            is LMedSRobustEasyGyroscopeCalibrator -> {
-                if (robustThreshold != null) {
-                    result.stopThreshold = robustThreshold
-                } else {
-                    checkNotNull(baseNoiseLevel)
-                    result.stopThreshold =
-                        gyroscopeRobustThresholdFactor * gyroscopeRobustStopThresholdFactor * baseNoiseLevel
-                }
-            }
-            is PROMedSRobustEasyGyroscopeCalibrator -> {
-                if (robustThreshold != null) {
-                    result.stopThreshold = robustThreshold
-                } else {
-                    checkNotNull(baseNoiseLevel)
-                    result.stopThreshold =
-                        gyroscopeRobustThresholdFactor * gyroscopeRobustStopThresholdFactor * baseNoiseLevel
-                }
-                result.qualityScores = buildGyroscopeQualityScores()
-            }
-        }
-        return result
-    }
-
-    /**
-     * Builds required quality scores for PROSAC and PROMedS robust methods used for gyroscope
-     * calibration.
-     * Quality scores are build for each measurement. By default the standard deviation
-     * of each measurement is taken into account, so that the larger the standard deviation
-     * the poorer the measurement is considered (lower score).
-     *
-     * @return build quality score array.
-     */
-    private fun buildGyroscopeQualityScores(): DoubleArray {
-        val size = gyroscopeMeasurements.size
-        val qualityScores = DoubleArray(size)
-        gyroscopeMeasurements.forEachIndexed { index, measurement ->
-            qualityScores[index] = gyroscopeQualityScoreMapper.map(measurement)
-        }
-        return qualityScores
+            gyroscopeInitialMzy,
+            isGDependentCrossBiasesEstimated,
+            gyroscopeInitialGg,
+            estimatedAccelerometerBiasX,
+            estimatedAccelerometerBiasY,
+            estimatedAccelerometerBiasZ,
+            accelerometerSx,
+            accelerometerSy,
+            accelerometerSz,
+            accelerometerMxy,
+            accelerometerMxz,
+            accelerometerMyx,
+            accelerometerMyz,
+            accelerometerMzx,
+            accelerometerMzy,
+            gyroscopeBaseNoiseLevel,
+            gyroscopeQualityScoreMapper
+        ).build()
     }
 
     companion object {
