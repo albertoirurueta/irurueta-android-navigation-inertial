@@ -147,7 +147,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
      * collected and calibrator is ready to solve calibration.
      * @param calibrationSolvingStartedListener listener to notify when calibration solving starts.
      * @param calibrationCompletedListener listener to notify when calibration solving completes.
-     * @para stoppedListener listener to notify when calibrator is stopped.
+     * @param stoppedListener listener to notify when calibrator is stopped.
      * @param unreliableGravityNormEstimationListener listener to notify when gravity norm
      * estimation becomes unreliable. This is only used if no location is provided.
      * @param initialAccelerometerBiasAvailableListener listener to notify when a guess of bias

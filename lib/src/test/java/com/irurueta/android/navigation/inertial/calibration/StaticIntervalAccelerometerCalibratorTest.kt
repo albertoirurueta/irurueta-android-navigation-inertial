@@ -41,6 +41,7 @@ import com.irurueta.navigation.inertial.calibration.IMUErrors
 import com.irurueta.navigation.inertial.calibration.StandardDeviationBodyKinematics
 import com.irurueta.navigation.inertial.calibration.accelerometer.*
 import com.irurueta.navigation.inertial.calibration.intervals.TriadStaticIntervalDetector
+import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.DefaultAccelerometerQualityScoreMapper
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.QualityScoreMapper
 import com.irurueta.navigation.inertial.estimators.ECEFKinematicsEstimator
 import com.irurueta.numerical.robust.RobustEstimatorMethod
@@ -5079,7 +5080,7 @@ class StaticIntervalAccelerometerCalibratorTest {
     }
 
     @Test
-    fun unreliableGravityNormEstimatorListener_setsExpectedValue() {
+    fun unreliableGravityNormEstimationListener_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
@@ -5087,13 +5088,13 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNull(calibrator.unreliableGravityNormEstimationListener)
 
         // set new value
-        val unreliableGravityNormEstimatorListener =
+        val unreliableGravityNormEstimationListener =
             mockk<StaticIntervalAccelerometerCalibrator.OnUnreliableGravityEstimationListener>()
-        calibrator.unreliableGravityNormEstimationListener = unreliableGravityNormEstimatorListener
+        calibrator.unreliableGravityNormEstimationListener = unreliableGravityNormEstimationListener
 
         // check
         assertSame(
-            unreliableGravityNormEstimatorListener,
+            unreliableGravityNormEstimationListener,
             calibrator.unreliableGravityNormEstimationListener
         )
     }
@@ -16573,7 +16574,10 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertEquals(gravityNorm, calibrator.gravityNorm)
         assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.accelerometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.accelerometerRobustThreshold
         requireNotNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
@@ -16670,7 +16674,10 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertEquals(gravityNorm, calibrator.gravityNorm)
         assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.accelerometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.accelerometerRobustThreshold
         requireNotNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
@@ -16770,7 +16777,10 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertEquals(gravityNorm, calibrator.gravityNorm)
         assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.accelerometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.accelerometerRobustThreshold
         assertNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.accelerometerRobustThresholdFactor, 0.0)
@@ -16861,7 +16871,10 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNull(calibrator.accelerometerBaseNoiseLevel)
         assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.accelerometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.accelerometerRobustThreshold
         assertNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.accelerometerRobustThresholdFactor, 0.0)
@@ -16926,7 +16939,10 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNull(calibrator.accelerometerBaseNoiseLevel)
         assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.accelerometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.accelerometerRobustThreshold
         assertNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.accelerometerRobustThresholdFactor, 0.0)
@@ -16989,7 +17005,10 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertEquals(gravityNorm, calibrator.gravityNorm)
         assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.accelerometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.accelerometerRobustThreshold
         requireNotNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
@@ -17086,7 +17105,10 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertEquals(gravityNorm, calibrator.gravityNorm)
         assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.accelerometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.accelerometerRobustThreshold
         requireNotNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
@@ -17186,7 +17208,10 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertEquals(gravityNorm, calibrator.gravityNorm)
         assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.accelerometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.accelerometerRobustThreshold
         assertNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.accelerometerRobustThresholdFactor, 0.0)
@@ -17277,7 +17302,10 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNull(calibrator.accelerometerBaseNoiseLevel)
         assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.accelerometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.accelerometerRobustThreshold
         assertNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.accelerometerRobustThresholdFactor, 0.0)
@@ -17342,7 +17370,10 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNull(calibrator.accelerometerBaseNoiseLevel)
         assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.accelerometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.accelerometerRobustThreshold
         assertNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.accelerometerRobustThresholdFactor, 0.0)
@@ -17408,7 +17439,10 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertEquals(gravityNorm, calibrator.gravityNorm)
         assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.accelerometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.accelerometerRobustThreshold
         requireNotNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
@@ -17439,7 +17473,10 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
         assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
         assertEquals(ROBUST_THRESHOLD, internalCalibrator2.threshold, 0.0)
-        assertEquals(calibrator.accelerometerMeasurements.size, internalCalibrator2.qualityScores.size)
+        assertEquals(
+            calibrator.accelerometerMeasurements.size,
+            internalCalibrator2.qualityScores.size
+        )
 
         assertTrue(internalCalibrator2.isReady)
         assertEquals(13, internalCalibrator2.minimumRequiredMeasurements)
@@ -17509,7 +17546,10 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertEquals(gravityNorm, calibrator.gravityNorm)
         assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.accelerometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.accelerometerRobustThreshold
         requireNotNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
@@ -17540,7 +17580,10 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
         assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
         assertEquals(ROBUST_THRESHOLD, internalCalibrator2.threshold, 0.0)
-        assertEquals(calibrator.accelerometerMeasurements.size, internalCalibrator2.qualityScores.size)
+        assertEquals(
+            calibrator.accelerometerMeasurements.size,
+            internalCalibrator2.qualityScores.size
+        )
 
         assertTrue(internalCalibrator2.isReady)
         assertEquals(13, internalCalibrator2.minimumRequiredMeasurements)
@@ -17613,7 +17656,10 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertEquals(gravityNorm, calibrator.gravityNorm)
         assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.accelerometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.accelerometerRobustThreshold
         assertNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.accelerometerRobustThresholdFactor, 0.0)
@@ -17645,7 +17691,10 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
         assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
         assertEquals(ROBUST_THRESHOLD_FACTOR * baseNoiseLevel, internalCalibrator2.threshold, 0.0)
-        assertEquals(calibrator.accelerometerMeasurements.size, internalCalibrator2.qualityScores.size)
+        assertEquals(
+            calibrator.accelerometerMeasurements.size,
+            internalCalibrator2.qualityScores.size
+        )
 
         assertTrue(internalCalibrator2.isReady)
         assertEquals(13, internalCalibrator2.minimumRequiredMeasurements)
@@ -17708,7 +17757,10 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNull(calibrator.accelerometerBaseNoiseLevel)
         assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.accelerometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.accelerometerRobustThreshold
         assertNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.accelerometerRobustThresholdFactor, 0.0)
@@ -17776,7 +17828,10 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNull(calibrator.accelerometerBaseNoiseLevel)
         assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.accelerometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.accelerometerRobustThreshold
         assertNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.accelerometerRobustThresholdFactor, 0.0)
@@ -17839,7 +17894,10 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertEquals(gravityNorm, calibrator.gravityNorm)
         assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.accelerometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.accelerometerRobustThreshold
         requireNotNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
@@ -17936,7 +17994,10 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertEquals(gravityNorm, calibrator.gravityNorm)
         assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.accelerometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.accelerometerRobustThreshold
         requireNotNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
@@ -18037,7 +18098,10 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertEquals(gravityNorm, calibrator.gravityNorm)
         assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.accelerometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.accelerometerRobustThreshold
         assertNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.accelerometerRobustThresholdFactor, 0.0)
@@ -18132,7 +18196,10 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNull(calibrator.accelerometerBaseNoiseLevel)
         assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.accelerometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.accelerometerRobustThreshold
         assertNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.accelerometerRobustThresholdFactor, 0.0)
@@ -18197,7 +18264,10 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNull(calibrator.accelerometerBaseNoiseLevel)
         assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.accelerometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.accelerometerRobustThreshold
         assertNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.accelerometerRobustThresholdFactor, 0.0)
@@ -18217,7 +18287,8 @@ class StaticIntervalAccelerometerCalibratorTest {
             isAccelerometerGroundTruthInitialBias = false
         )
 
-        val gravityNorm = GravityHelper.getGravityNormForLocation(getLocation()
+        val gravityNorm = GravityHelper.getGravityNormForLocation(
+            getLocation()
         )
         calibrator.setPrivateProperty("gravityNorm", gravityNorm)
 
@@ -18264,7 +18335,10 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertEquals(gravityNorm, calibrator.gravityNorm)
         assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.accelerometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.accelerometerRobustThreshold
         requireNotNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
@@ -18295,7 +18369,10 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
         assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
         assertEquals(ROBUST_THRESHOLD, internalCalibrator2.stopThreshold, 0.0)
-        assertEquals(calibrator.accelerometerMeasurements.size, internalCalibrator2.qualityScores.size)
+        assertEquals(
+            calibrator.accelerometerMeasurements.size,
+            internalCalibrator2.qualityScores.size
+        )
 
         assertTrue(internalCalibrator2.isReady)
         assertEquals(13, internalCalibrator2.minimumRequiredMeasurements)
@@ -18365,7 +18442,10 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertEquals(gravityNorm, calibrator.gravityNorm)
         assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.accelerometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.accelerometerRobustThreshold
         requireNotNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
@@ -18396,7 +18476,10 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
         assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
         assertEquals(ROBUST_THRESHOLD, internalCalibrator2.stopThreshold, 0.0)
-        assertEquals(calibrator.accelerometerMeasurements.size, internalCalibrator2.qualityScores.size)
+        assertEquals(
+            calibrator.accelerometerMeasurements.size,
+            internalCalibrator2.qualityScores.size
+        )
 
         assertTrue(internalCalibrator2.isReady)
         assertEquals(13, internalCalibrator2.minimumRequiredMeasurements)
@@ -18470,7 +18553,10 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertEquals(gravityNorm, calibrator.gravityNorm)
         assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.accelerometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.accelerometerRobustThreshold
         assertNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.accelerometerRobustThresholdFactor, 0.0)
@@ -18506,7 +18592,10 @@ class StaticIntervalAccelerometerCalibratorTest {
             internalCalibrator2.stopThreshold,
             0.0
         )
-        assertEquals(calibrator.accelerometerMeasurements.size, internalCalibrator2.qualityScores.size)
+        assertEquals(
+            calibrator.accelerometerMeasurements.size,
+            internalCalibrator2.qualityScores.size
+        )
 
         assertTrue(internalCalibrator2.isReady)
         assertEquals(13, internalCalibrator2.minimumRequiredMeasurements)
@@ -18569,7 +18658,10 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNull(calibrator.accelerometerBaseNoiseLevel)
         assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.accelerometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.accelerometerRobustThreshold
         assertNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.accelerometerRobustThresholdFactor, 0.0)
@@ -18637,7 +18729,10 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNull(calibrator.accelerometerBaseNoiseLevel)
         assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
-        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, calibrator.accelerometerRobustPreliminarySubsetSize)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
         val robustThreshold = calibrator.accelerometerRobustThreshold
         assertNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.accelerometerRobustThresholdFactor, 0.0)

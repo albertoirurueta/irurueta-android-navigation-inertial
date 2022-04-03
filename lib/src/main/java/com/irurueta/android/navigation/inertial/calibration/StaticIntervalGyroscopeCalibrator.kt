@@ -35,7 +35,7 @@ import com.irurueta.numerical.robust.RobustEstimatorMethod
 import com.irurueta.units.*
 
 /**
- * Collects accelerometer and magnetometer measurements by detecting periods when device remains
+ * Collects accelerometer and gyroscope measurements by detecting periods when device remains
  * static or dynamic using the accelerometer, using such periods to determine orientation based
  * on gravity vector at the end of static intervals, and integrating values of gyroscope
  * measurements during dynamic ones.
@@ -2346,7 +2346,7 @@ class StaticIntervalGyroscopeCalibrator private constructor(
         mutableListOf<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>()
 
     /**
-     * Indicates whether enough measurements have been picked at static intervals so that the
+     * Indicates whether enough measurements have been picked at dynamic intervals so that the
      * calibration process can be solved.
      */
     override val isReadyToSolveCalibration
