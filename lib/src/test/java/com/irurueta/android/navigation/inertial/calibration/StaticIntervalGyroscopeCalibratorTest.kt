@@ -7527,7 +7527,7 @@ class StaticIntervalGyroscopeCalibratorTest {
     }
 
     @Test
-    fun minimumRequiredGyroscopeMeasurements_whenGroundTruthInitialBiasCommonAxisAndCrossBiases_returnsExpctedValue() {
+    fun minimumRequiredGyroscopeMeasurements_whenGroundTruthInitialBiasCommonAxisAndCrossBiases_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 

@@ -41,7 +41,6 @@ import com.irurueta.navigation.inertial.calibration.IMUErrors
 import com.irurueta.navigation.inertial.calibration.StandardDeviationBodyKinematics
 import com.irurueta.navigation.inertial.calibration.accelerometer.*
 import com.irurueta.navigation.inertial.calibration.intervals.TriadStaticIntervalDetector
-import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.DefaultAccelerometerQualityScoreMapper
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.QualityScoreMapper
 import com.irurueta.navigation.inertial.estimators.ECEFKinematicsEstimator
 import com.irurueta.numerical.robust.RobustEstimatorMethod
