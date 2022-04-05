@@ -351,7 +351,7 @@ class StaticIntervalAccelerometerAndGyroscopeCalibrator private constructor(
      * Listener  used by internal generator to handle events when a new gyroscope measurement is generated.
      */
     private val generatorGeneratedGyroscopeMeasurementListener =
-        AccelerometerAndGyroscopeMeasurementGenerator.OnGeneratedGyroscopeMeasurementListener { generator, measurement ->
+        AccelerometerAndGyroscopeMeasurementGenerator.OnGeneratedGyroscopeMeasurementListener { _, measurement ->
             gyroscopeMeasurements.add(measurement)
 
             val reqMeasurements = requiredMeasurements.coerceAtLeast(minimumRequiredMeasurements)

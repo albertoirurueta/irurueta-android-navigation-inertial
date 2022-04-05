@@ -3391,7 +3391,600 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         calibrator.accelerometerRobustStopThresholdFactor = ROBUST_STOP_THRESHOLD_FACTOR
     }
 
-    // TODO: gyroscopeRobustMethod_whenNotRunning_setsExpectedValue
+    @Test
+    fun gyroscopeRobustMethod_whenNotRunning_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        // check default value
+        assertNull(calibrator.gyroscopeRobustMethod)
+
+        // set new value
+        calibrator.gyroscopeRobustMethod = RobustEstimatorMethod.RANSAC
+
+        // check
+        assertEquals(RobustEstimatorMethod.RANSAC, calibrator.gyroscopeRobustMethod)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun gyroscopeRobustMethod_whenRunning_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        calibrator.gyroscopeRobustMethod = RobustEstimatorMethod.RANSAC
+    }
+
+    @Test
+    fun gyroscopeRobustConfidence_whenValid_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        // check default value
+        assertEquals(
+            StaticIntervalGyroscopeCalibrator.ROBUST_DEFAULT_CONFIDENCE,
+            calibrator.gyroscopeRobustConfidence,
+            0.0
+        )
+
+        // set new value
+        calibrator.gyroscopeRobustConfidence = ROBUST_CONFIDENCE
+
+        // check
+        assertEquals(ROBUST_CONFIDENCE, calibrator.gyroscopeRobustConfidence, 0.0)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun gyroscopeRobustConfidence_whenInvalidLowerBound_throwsIllegalArgumentException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        calibrator.gyroscopeRobustConfidence = -1.0
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun gyroscopeRobustConfidence_whenInvalidUpperBound_throwsIllegalArgumentException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        calibrator.gyroscopeRobustConfidence = 2.0
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun gyroscopeRobustConfidence_whenRunning_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        calibrator.gyroscopeRobustConfidence = ROBUST_CONFIDENCE
+    }
+
+    @Test
+    fun gyroscopeRobustMaxIterations_whenValid_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        // check default value
+        assertEquals(
+            StaticIntervalGyroscopeCalibrator.ROBUST_DEFAULT_MAX_ITERATIONS,
+            calibrator.gyroscopeRobustMaxIterations
+        )
+
+        // set new value
+        calibrator.gyroscopeRobustMaxIterations = ROBUST_MAX_ITERATIONS
+
+        // check
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.gyroscopeRobustMaxIterations)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun gyroscopeRobustMaxIterations_whenInvalid_throwsIllegalArgumentException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        calibrator.gyroscopeRobustMaxIterations = 0
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun gyroscopeRobustMaxIterations_whenRunning_throwsIllegalArgumentException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        calibrator.gyroscopeRobustMaxIterations = ROBUST_MAX_ITERATIONS
+    }
+
+    @Test
+    fun gyroscopeRobustPreliminarySubsetSize_whenValid_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        // check default value
+        assertEquals(
+            StaticIntervalGyroscopeCalibrator.GYROSCOPE_UNKNOWN_BIAS_MINIMUM_SEQUENCES_GENERAL,
+            calibrator.gyroscopeRobustPreliminarySubsetSize
+        )
+
+        // set new value
+        calibrator.gyroscopeRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+
+        // check
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.gyroscopeRobustPreliminarySubsetSize
+        )
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun gyroscopeRobustPreliminarySubsetSize_whenInvalid_throwsIllegalArgumentException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        calibrator.gyroscopeRobustPreliminarySubsetSize = 12
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun gyroscopeRobustPreliminarySubsetSize_whenRunning_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        calibrator.gyroscopeRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+    }
+
+    @Test
+    fun gyroscopeRobustThreshold_whenValid_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        // check default value
+        assertNull(calibrator.gyroscopeRobustThreshold)
+
+        // set new value
+        calibrator.gyroscopeRobustThreshold = ROBUST_THRESHOLD
+
+        // check
+        val robustThreshold = calibrator.gyroscopeRobustThreshold
+        requireNotNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
+
+        // set new value
+        calibrator.gyroscopeRobustThreshold = null
+
+        // check
+        assertNull(calibrator.gyroscopeRobustThreshold)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun gyroscopeRobustThreshold_whenInvalid_throwsIllegalArgumentException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        calibrator.gyroscopeRobustThreshold = 0.0
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun gyroscopeRobustThreshold_whenRunning_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        calibrator.gyroscopeRobustThreshold = ROBUST_THRESHOLD
+    }
+
+    @Test
+    fun gyroscopeRobustThresholdFactor_whenValid_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        // check default value
+        assertEquals(
+            StaticIntervalAccelerometerCalibrator.DEFAULT_ROBUST_THRESHOLD_FACTOR,
+            calibrator.gyroscopeRobustThresholdFactor,
+            0.0
+        )
+
+        // set new value
+        calibrator.gyroscopeRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
+
+        // check
+        assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.gyroscopeRobustThresholdFactor, 0.0)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun gyroscopeRobustThresholdFactor_whenInvalid_throwsIllegalArgumentException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        calibrator.gyroscopeRobustThresholdFactor = 0.0
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun gyroscopeRobustThresholdFactor_whenRunning_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        calibrator.gyroscopeRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
+    }
+
+    @Test
+    fun gyroscopeRobustStopThresholdFactor_whenValid_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        assertEquals(
+            StaticIntervalAccelerometerCalibrator.DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR,
+            calibrator.gyroscopeRobustStopThresholdFactor,
+            0.0
+        )
+
+        // set new value
+        calibrator.gyroscopeRobustStopThresholdFactor = ROBUST_STOP_THRESHOLD_FACTOR
+
+        // check
+        assertEquals(
+            ROBUST_STOP_THRESHOLD_FACTOR,
+            calibrator.gyroscopeRobustStopThresholdFactor,
+            0.0
+        )
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun gyroscopeRobustStopThresholdFactor_whenInvalid_throwsIllegalArgumentException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        calibrator.gyroscopeRobustStopThresholdFactor = 0.0
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun gyroscopeRobustStopThresholdFactor_whenRunning_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        calibrator.gyroscopeRobustStopThresholdFactor = ROBUST_STOP_THRESHOLD_FACTOR
+    }
+
+    @Test
+    fun windowSize_whenValid_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
+
+        // set new value
+        calibrator.windowSize = WINDOW_SIZE
+
+        // check
+        assertEquals(WINDOW_SIZE, calibrator.windowSize)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun windowSize_whenInvalid_throwsIllegalArgumentException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        calibrator.windowSize = 0
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun windowSize_whenRunning_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        calibrator.windowSize = WINDOW_SIZE
+    }
+
+    @Test
+    fun initialStaticSamples_whenValid_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        // check default value
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
+            calibrator.initialStaticSamples
+        )
+
+        // set new value
+        calibrator.initialStaticSamples = INITIAL_STATIC_SAMPLES
+
+        // check
+        assertEquals(INITIAL_STATIC_SAMPLES, calibrator.initialStaticSamples)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun initialStaticSamples_whenInvalid_throwsIllegalArgumentException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        calibrator.initialStaticSamples = 0
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun initialStaticSamples_whenRunning_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        calibrator.initialStaticSamples = INITIAL_STATIC_SAMPLES
+    }
+
+    @Test
+    fun thresholdFactor_whenValid_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        // check default value
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
+            calibrator.thresholdFactor,
+            0.0
+        )
+
+        // set new value
+        calibrator.thresholdFactor = THRESHOLD_FACTOR
+
+        // check
+        assertEquals(THRESHOLD_FACTOR, calibrator.thresholdFactor, 0.0)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun thresholdFactor_whenInvalid_throwsIllegalArgumentException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        calibrator.thresholdFactor = 0.0
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun thresholdFactor_whenRunning_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        calibrator.thresholdFactor = THRESHOLD_FACTOR
+    }
+
+    @Test
+    fun instantaneousNoiseLevelFactor_whenValid_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        // check default value
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
+            calibrator.instantaneousNoiseLevelFactor,
+            0.0
+        )
+
+        // set new value
+        calibrator.instantaneousNoiseLevelFactor = INSTANTANEOUS_NOISE_LEVEL_FACTOR
+
+        // check
+        assertEquals(
+            INSTANTANEOUS_NOISE_LEVEL_FACTOR,
+            calibrator.instantaneousNoiseLevelFactor,
+            0.0
+        )
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun instantaneousNoiseLevelFactor_whenInvalid_throwsIllegalArgumentException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        calibrator.instantaneousNoiseLevelFactor = 0.0
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun instantaneousNoiseLevelFactor_whenRunning_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        calibrator.instantaneousNoiseLevelFactor = INSTANTANEOUS_NOISE_LEVEL_FACTOR
+    }
+
+    @Test
+    fun baseNoiseLevelAbsoluteThreshold_whenValid_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        // check default value
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
+            calibrator.baseNoiseLevelAbsoluteThreshold,
+            0.0
+        )
+
+        // set new value
+        calibrator.baseNoiseLevelAbsoluteThreshold = BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD
+
+        // check
+        assertEquals(
+            BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
+            calibrator.baseNoiseLevelAbsoluteThreshold,
+            0.0
+        )
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun baseNoiseLevelAbsoluteThreshold_whenInvalid_throwsIllegalArgumentException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        calibrator.baseNoiseLevelAbsoluteThreshold = 0.0
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun baseNoiseLevelAbsoluteThreshold_whenRunning_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        calibrator.baseNoiseLevelAbsoluteThreshold = BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD
+    }
+
+    @Test
+    fun baseNoiseLevelAbsoluteThresholdAsMeasurement_whenValid_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        // check default value
+        val value1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
+            value1.value.toDouble(),
+            0.0
+        )
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, value1.unit)
+
+        // set new value
+        val value2 = Acceleration(
+            BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
+            AccelerationUnit.METERS_PER_SQUARED_SECOND
+        )
+        calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement = value2
+
+        // check
+        val value3 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
+        assertEquals(value2, value3)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun baseNoiseLevelAbsoluteThresholdAsMeasurement_whenInvalid_throwsIllegalArgumentException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        val value = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement = value
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun baseNoiseLevelAbsoluteThresholdAsMeasurement_whenRunning_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        val value = Acceleration(
+            BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
+            AccelerationUnit.METERS_PER_SQUARED_SECOND
+        )
+        calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement = value
+    }
+
+    @Test
+    fun getBaseNoiseLevelAbsoluteThresholdAsMeasurement_getsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        // check default value
+        val value1 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(value1)
+
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
+            value1.value.toDouble(),
+            0.0
+        )
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, value1.unit)
+
+        // set new value
+        val value2 = Acceleration(
+            BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
+            AccelerationUnit.METERS_PER_SQUARED_SECOND
+        )
+        calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement = value2
+
+        // check
+        val value3 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(value3)
+        assertEquals(value2, value3)
+    }
+
+    // TODO: requiredMeasurements_whenValid_setsExpectedValue
 
     private companion object {
         const val MA_SIZE = 3
@@ -3404,6 +3997,18 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
 
         const val MIN_HEIGHT = -100.0
         const val MAX_HEIGHT = 3000.0
+
+        const val INITIAL_STATIC_SAMPLES = 2500
+
+        const val THRESHOLD_FACTOR = 3.0
+
+        const val INSTANTANEOUS_NOISE_LEVEL_FACTOR = 3.0
+
+        const val BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD = 1e-5
+
+        const val WINDOW_SIZE = 51
+
+        const val REQUIRED_MEASUREMENTS = 30
 
         const val ROBUST_CONFIDENCE = 0.9
 
