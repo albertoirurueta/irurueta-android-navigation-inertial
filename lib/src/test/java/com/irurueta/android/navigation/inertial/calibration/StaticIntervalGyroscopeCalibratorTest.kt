@@ -8821,7 +8821,7 @@ class StaticIntervalGyroscopeCalibratorTest {
 
         // check default value
         assertEquals(
-            StaticIntervalMagnetometerCalibrator.MAGNETOMETER_UNKNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL,
+            StaticIntervalGyroscopeCalibrator.GYROSCOPE_UNKNOWN_BIAS_MINIMUM_SEQUENCES_GENERAL,
             calibrator.requiredMeasurements
         )
 
