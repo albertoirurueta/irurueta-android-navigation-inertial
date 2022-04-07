@@ -8497,7 +8497,464 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
 
         assertEquals(estimatedBiasZ, calibrator.estimatedAccelerometerBiasZ)
     }
-    
+
+    @Test
+    fun estimatedAccelerometerBiasXAsMeasurement_whenNoAccelerometerInternalCalibrator_returnsNull() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        assertNull(calibrator.getPrivateProperty("accelerometerInternalCalibrator"))
+        assertNull(calibrator.estimatedAccelerometerBiasXAsMeasurement)
+    }
+
+    @Test
+    fun estimatedAccelerometerBiasXAsMeasurement_whenUnknownBiasAccelerometerInternalCalibrator_callsInternalCalibrator() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasX = randomizer.nextDouble()
+        val acceleration = Acceleration(estimatedBiasX, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        every { internalCalibratorSpy.estimatedBiasFxAsAcceleration }.returns(acceleration)
+        calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
+
+        assertSame(acceleration, calibrator.estimatedAccelerometerBiasXAsMeasurement)
+    }
+
+    @Test
+    fun estimatedAccelerometerBiasXAsMeasurement_whenKnownBiasAccelerometerInternalCalibrator_callsInternalCalibrator() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasX = randomizer.nextDouble()
+        val acceleration = Acceleration(estimatedBiasX, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        every { internalCalibratorSpy.biasXAsAcceleration }.returns(acceleration)
+        calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
+
+        assertSame(acceleration, calibrator.estimatedAccelerometerBiasXAsMeasurement)
+    }
+
+    @Test
+    fun getEstimatedAccelerometerBiasXAsMeasurement_whenNoAccelerometerInternalCalibrator_returnsFalse() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        assertNull(calibrator.getPrivateProperty("accelerometerInternalCalibrator"))
+        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        assertFalse(calibrator.getEstimatedAccelerometerBiasXAsMeasurement(acceleration))
+    }
+
+    @Test
+    fun getEstimatedAccelerometerBiasXAsMeasurement_whenUnknownBiasAccelerometerInternalCalibrator_callsInternalCalibrator() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasX = randomizer.nextDouble()
+        every { internalCalibratorSpy.getEstimatedBiasFxAsAcceleration(any()) }.answers { answer ->
+            val result = answer.invocation.args[0] as Acceleration
+            result.value = estimatedBiasX
+            result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
+            return@answers true
+        }
+        calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
+
+        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        assertTrue(calibrator.getEstimatedAccelerometerBiasXAsMeasurement(acceleration))
+
+        assertEquals(estimatedBiasX, acceleration.value.toDouble(), 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, acceleration.unit)
+    }
+
+    @Test
+    fun getEstimatedAccelerometerBiasXAsMeasurement_whenKnownBiasAccelerometerInternalCalibrator_callsInternalCalibrator() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasX = randomizer.nextDouble()
+        every { internalCalibratorSpy.getBiasXAsAcceleration(any()) }.answers { answer ->
+            val result = answer.invocation.args[0] as Acceleration
+            result.value = estimatedBiasX
+            result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
+        }
+        calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
+
+        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        assertTrue(calibrator.getEstimatedAccelerometerBiasXAsMeasurement(acceleration))
+
+        assertEquals(estimatedBiasX, acceleration.value.toDouble(), 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, acceleration.unit)
+    }
+
+    @Test
+    fun estimatedAccelerometerBiasYAsMeasurement_whenNoAccelerometerInternalCalibrator_returnsNull() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        assertNull(calibrator.getPrivateProperty("accelerometerInternalCalibrator"))
+        assertNull(calibrator.estimatedAccelerometerBiasYAsMeasurement)
+    }
+
+    @Test
+    fun estimatedAccelerometerBiasYAsMeasurement_whenUnknownBiasAccelerometerInternalCalibrator_callsInternalCalibrator() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasY = randomizer.nextDouble()
+        val acceleration = Acceleration(estimatedBiasY, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        every { internalCalibratorSpy.estimatedBiasFyAsAcceleration }.returns(acceleration)
+        calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
+
+        assertSame(acceleration, calibrator.estimatedAccelerometerBiasYAsMeasurement)
+    }
+
+    @Test
+    fun estimatedAccelerometerBiasYAsMeasurement_whenKnownBiasAccelerometerInternalCalibrator_callsInternalCalibrator() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasY = randomizer.nextDouble()
+        val acceleration = Acceleration(estimatedBiasY, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        every { internalCalibratorSpy.biasYAsAcceleration }.returns(acceleration)
+        calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
+
+        assertSame(acceleration, calibrator.estimatedAccelerometerBiasYAsMeasurement)
+    }
+
+    @Test
+    fun getEstimatedAccelerometerBiasYAsMeasurement_whenNoAccelerometerInternalCalibrator_returnsFalse() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        assertNull(calibrator.getPrivateProperty("accelerometerInternalCalibrator"))
+        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        assertFalse(calibrator.getEstimatedAccelerometerBiasYAsMeasurement(acceleration))
+    }
+
+    @Test
+    fun getEstimatedAccelerometerBiasYAsMeasurement_whenUnknownBiasAccelerometerInternalCalibrator_callsInternalCalibrator() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasY = randomizer.nextDouble()
+        every { internalCalibratorSpy.getEstimatedBiasFyAsAcceleration(any()) }.answers { answer ->
+            val result = answer.invocation.args[0] as Acceleration
+            result.value = estimatedBiasY
+            result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
+            return@answers true
+        }
+        calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
+
+        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        assertTrue(calibrator.getEstimatedAccelerometerBiasYAsMeasurement(acceleration))
+
+        assertEquals(estimatedBiasY, acceleration.value.toDouble(), 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, acceleration.unit)
+    }
+
+    @Test
+    fun getEstimatedAccelerometerBiasYAsMeasurement_whenKnownBiasAccelerometerInternalCalibrator_callsInternalCalibrator() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasY = randomizer.nextDouble()
+        every { internalCalibratorSpy.getBiasYAsAcceleration(any()) }.answers { answer ->
+            val result = answer.invocation.args[0] as Acceleration
+            result.value = estimatedBiasY
+            result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
+        }
+        calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
+
+        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        assertTrue(calibrator.getEstimatedAccelerometerBiasYAsMeasurement(acceleration))
+
+        assertEquals(estimatedBiasY, acceleration.value.toDouble(), 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, acceleration.unit)
+    }
+
+    @Test
+    fun estimatedAccelerometerBiasZAsMeasurement_whenNoAccelerometerInternalCalibrator_returnsNull() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        assertNull(calibrator.getPrivateProperty("accelerometerInternalCalibrator"))
+        assertNull(calibrator.estimatedAccelerometerBiasZAsMeasurement)
+    }
+
+    @Test
+    fun estimatedAccelerometerBiasZAsMeasurement_whenUnknownBiasAccelerometerInternalCalibrator_callsInternalCalibrator() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasZ = randomizer.nextDouble()
+        val acceleration = Acceleration(estimatedBiasZ, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        every { internalCalibratorSpy.estimatedBiasFzAsAcceleration }.returns(acceleration)
+        calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
+
+        assertSame(acceleration, calibrator.estimatedAccelerometerBiasZAsMeasurement)
+    }
+
+    @Test
+    fun estimatedAccelerometerBiasZAsMeasurement_whenKnownBiasAccelerometerInternalCalibrator_callsInternalCalibrator() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasZ = randomizer.nextDouble()
+        val acceleration = Acceleration(estimatedBiasZ, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        every { internalCalibratorSpy.biasZAsAcceleration }.returns(acceleration)
+        calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
+
+        assertSame(acceleration, calibrator.estimatedAccelerometerBiasZAsMeasurement)
+    }
+
+    @Test
+    fun getEstimatedAccelerometerBiasZAsMeasurement_whenNoAccelerometerInternalCalibrator_returnsFalse() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        assertNull(calibrator.getPrivateProperty("accelerometerInternalCalibrator"))
+        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        assertFalse(calibrator.getEstimatedAccelerometerBiasZAsMeasurement(acceleration))
+    }
+
+    @Test
+    fun getEstimatedAccelerometerBiasZAsMeasurement_whenUnknownBiasAccelerometerInternalCalibrator_callsInternalCalibrator() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasZ = randomizer.nextDouble()
+        every { internalCalibratorSpy.getEstimatedBiasFzAsAcceleration(any()) }.answers { answer ->
+            val result = answer.invocation.args[0] as Acceleration
+            result.value = estimatedBiasZ
+            result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
+            return@answers true
+        }
+        calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
+
+        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        assertTrue(calibrator.getEstimatedAccelerometerBiasZAsMeasurement(acceleration))
+
+        assertEquals(estimatedBiasZ, acceleration.value.toDouble(), 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, acceleration.unit)
+    }
+
+    @Test
+    fun getEstimatedAccelerometerBiasZAsMeasurement_whenKnownBiasAccelerometerInternalCalibrator_callsInternalCalibrator() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasZ = randomizer.nextDouble()
+        every { internalCalibratorSpy.getBiasZAsAcceleration(any()) }.answers { answer ->
+            val result = answer.invocation.args[0] as Acceleration
+            result.value = estimatedBiasZ
+            result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
+        }
+        calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
+
+        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        assertTrue(calibrator.getEstimatedAccelerometerBiasZAsMeasurement(acceleration))
+
+        assertEquals(estimatedBiasZ, acceleration.value.toDouble(), 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, acceleration.unit)
+    }
+
+    @Test
+    fun estimatedAccelerometerBiasAsTriad_whenNoAccelerometerInternalCalibrator_returnsNull() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        assertNull(calibrator.getPrivateProperty("accelerometerInternalCalibrator"))
+        assertNull(calibrator.estimatedAccelerometerBiasAsTriad)
+    }
+
+    @Test
+    fun estimatedAccelerometerBiasAsTriad_whenUnknownBiasAccelerometerInternalCalibrator_callsInternalCalibrator() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasX = randomizer.nextDouble()
+        val estimatedBiasY = randomizer.nextDouble()
+        val estimatedBiasZ = randomizer.nextDouble()
+        val triad = AccelerationTriad(
+            AccelerationUnit.METERS_PER_SQUARED_SECOND,
+            estimatedBiasX,
+            estimatedBiasY,
+            estimatedBiasZ
+        )
+        every { internalCalibratorSpy.estimatedBiasAsTriad }.returns(triad)
+        calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
+
+        assertSame(triad, calibrator.estimatedAccelerometerBiasAsTriad)
+    }
+
+    @Test
+    fun estimatedAccelerometerBiasAsTriad_whenKnownBiasAccelerometerInternalCalibrator_callsInternalCalibrator() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasX = randomizer.nextDouble()
+        val estimatedBiasY = randomizer.nextDouble()
+        val estimatedBiasZ = randomizer.nextDouble()
+        val triad = AccelerationTriad(
+            AccelerationUnit.METERS_PER_SQUARED_SECOND,
+            estimatedBiasX,
+            estimatedBiasY,
+            estimatedBiasZ
+        )
+        every { internalCalibratorSpy.biasAsTriad }.returns(triad)
+        calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
+
+        assertSame(triad, calibrator.estimatedAccelerometerBiasAsTriad)
+    }
+
+    @Test
+    fun getEstimatedAccelerometerBiasAsTriad_whenNoAccelerometerInternalCalibrator_returnsFalse() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        assertNull(calibrator.getPrivateProperty("accelerometerInternalCalibrator"))
+
+        val triad = AccelerationTriad()
+        assertFalse(calibrator.getEstimatedAccelerometerBiasAsTriad(triad))
+    }
+
+    @Test
+    fun getEstimatedAccelerometerBiasAsTriad_whenUnknownBiasAccelerometerInternalCalibrator_callsInternalCalibrator() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasX = randomizer.nextDouble()
+        val estimatedBiasY = randomizer.nextDouble()
+        val estimatedBiasZ = randomizer.nextDouble()
+        every { internalCalibratorSpy.getEstimatedBiasAsTriad(any()) }.answers { answer ->
+            val result = answer.invocation.args[0] as AccelerationTriad
+            result.setValueCoordinatesAndUnit(
+                estimatedBiasX,
+                estimatedBiasY,
+                estimatedBiasZ,
+                AccelerationUnit.METERS_PER_SQUARED_SECOND
+            )
+            return@answers true
+        }
+        calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
+
+        val triad = AccelerationTriad()
+        assertTrue(calibrator.getEstimatedAccelerometerBiasAsTriad(triad))
+
+        assertEquals(estimatedBiasX, triad.valueX, 0.0)
+        assertEquals(estimatedBiasY, triad.valueY, 0.0)
+        assertEquals(estimatedBiasZ, triad.valueZ, 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, triad.unit)
+    }
+
+    @Test
+    fun getEstimatedAccelerometerBiasAsTriad_whenKnownBiasAccelerometerInternalCalibrator_callsInternalCalibrator() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasX = randomizer.nextDouble()
+        val estimatedBiasY = randomizer.nextDouble()
+        val estimatedBiasZ = randomizer.nextDouble()
+        every { internalCalibratorSpy.getBiasAsTriad(any()) }.answers { answer ->
+            val result = answer.invocation.args[0] as AccelerationTriad
+            result.setValueCoordinatesAndUnit(
+                estimatedBiasX,
+                estimatedBiasY,
+                estimatedBiasZ,
+                AccelerationUnit.METERS_PER_SQUARED_SECOND
+            )
+        }
+        calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
+
+        val triad = AccelerationTriad()
+        assertTrue(calibrator.getEstimatedAccelerometerBiasAsTriad(triad))
+
+        assertEquals(estimatedBiasX, triad.valueX, 0.0)
+        assertEquals(estimatedBiasY, triad.valueY, 0.0)
+        assertEquals(estimatedBiasZ, triad.valueZ, 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, triad.unit)
+    }
+
+    @Test
+    fun estimatedAccelerometerBiasStandardDeviationNorm_whenNoAccelerometerInternalCalibrator_returnsNull() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        assertNull(calibrator.getPrivateProperty("accelerometerInternalCalibrator"))
+
+        assertNull(calibrator.estimatedAccelerometerBiasStandardDeviationNorm)
+    }
+
+    @Test
+    fun estimatedAccelerometerBiasStandardDeviationNorm_whenBiasUncertaintySourceAccelerometerInternalCalibrator_returnsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasStandardDeviationNorm = randomizer.nextDouble()
+        every { internalCalibratorSpy.estimatedBiasStandardDeviationNorm }.returns(
+            estimatedBiasStandardDeviationNorm
+        )
+        calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
+
+        assertEquals(
+            estimatedBiasStandardDeviationNorm,
+            calibrator.estimatedAccelerometerBiasStandardDeviationNorm
+        )
+    }
+
+    @Test
+    fun estimatedAccelerometerBiasStandardDeviationNorm_whenOtherAccelerometerInternalCalibrator_returnsNull() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
+        calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
+
+        assertNull(calibrator.estimatedAccelerometerBiasStandardDeviationNorm)
+    }
+
+    @Test
+    fun estimatedGyroscopeBiasX_whenNoGyroscopeInternalCalibrator_returnsNull() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        assertNull(calibrator.getPrivateProperty("gyroscopeInternalCalibrator"))
+        assertNull(calibrator.estimatedGyroscopeBiasX)
+    }
+
+
     private companion object {
         const val MA_SIZE = 3
 

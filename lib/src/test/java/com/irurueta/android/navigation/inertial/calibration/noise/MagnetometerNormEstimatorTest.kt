@@ -1713,11 +1713,11 @@ class MagnetometerNormEstimatorTest {
 
         val psd = estimator.psd
         requireNotNull(psd)
-        assertTrue(psd > 0.0)
+        assertTrue(psd >= 0.0)
 
         val rootPsd = estimator.rootPsd
         requireNotNull(rootPsd)
-        assertTrue(rootPsd > 0.0)
+        assertTrue(rootPsd >= 0.0)
 
         val averageTimeInterval = estimator.averageTimeInterval
         requireNotNull(averageTimeInterval)
