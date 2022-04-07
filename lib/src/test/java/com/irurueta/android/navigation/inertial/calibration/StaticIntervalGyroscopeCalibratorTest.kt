@@ -11681,7 +11681,7 @@ class StaticIntervalGyroscopeCalibratorTest {
     }
 
     @Test
-    fun calibrate_whenReadyNotRunningAndInternalCalibratorandListeners_callsInternalCalibratorAndNotifies() {
+    fun calibrate_whenReadyNotRunningAndInternalCalibratorAndListeners_callsInternalCalibratorAndNotifies() {
         val calibrationSolvingStartedListener =
             mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalGyroscopeCalibrator>>(
                 relaxUnitFun = true

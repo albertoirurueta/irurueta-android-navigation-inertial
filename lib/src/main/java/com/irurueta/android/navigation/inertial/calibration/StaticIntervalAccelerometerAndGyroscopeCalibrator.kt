@@ -3198,10 +3198,10 @@ class StaticIntervalAccelerometerAndGyroscopeCalibrator private constructor(
         val accelerometerMxy = estimatedAccelerometerMxy
         checkNotNull(accelerometerMxy)
 
-        val accelerometerMxz = estimatedAccelerometerMxy
+        val accelerometerMxz = estimatedAccelerometerMxz
         checkNotNull(accelerometerMxz)
 
-        val accelerometerMyx = estimatedAccelerometerMxy
+        val accelerometerMyx = estimatedAccelerometerMyx
         checkNotNull(accelerometerMyx)
 
         val accelerometerMyz = estimatedAccelerometerMyz
