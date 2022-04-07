@@ -23,6 +23,7 @@ import com.irurueta.algebra.Matrix
 import com.irurueta.android.navigation.inertial.GravityHelper
 import com.irurueta.android.navigation.inertial.calibration.intervals.ErrorReason
 import com.irurueta.android.navigation.inertial.calibration.intervals.measurements.AccelerometerAndGyroscopeMeasurementGenerator
+import com.irurueta.android.navigation.inertial.calibration.intervals.measurements.AccelerometerMeasurementGenerator
 import com.irurueta.android.navigation.inertial.calibration.noise.AccumulatedMeasurementEstimator
 import com.irurueta.android.navigation.inertial.calibration.noise.GravityNormEstimator
 import com.irurueta.android.navigation.inertial.collectors.*
@@ -7777,7 +7778,273 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, triad.unit)
     }
 
-    // TODO: start_whenNotRunningAndGravityNormNotEstimated_resetsAndStartsGenerator
+    @Test
+    fun start_whenNotRunningAndGravityNormNotEstimated_resetsAndStartsGenerator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context, location = location)
+
+        assertFalse(calibrator.running)
+        assertFalse(calibrator.isGravityNormEstimated)
+
+        val gravityNorm = GravityHelper.getGravityNormForLocation(location)
+        calibrator.setPrivateProperty("gravityNorm", gravityNorm)
+
+        val accelerometerMeasurements = calibrator.accelerometerMeasurements
+        val accelerometerMeasurementsSpy = spyk(accelerometerMeasurements)
+        calibrator.setPrivateProperty("accelerometerMeasurements", accelerometerMeasurementsSpy)
+
+        val gyroscopeMeasurements = calibrator.gyroscopeMeasurements
+        val gyroscopeMeasurementsSpy = spyk(gyroscopeMeasurements)
+        calibrator.setPrivateProperty("gyroscopeMeasurements", gyroscopeMeasurementsSpy)
+
+        calibrator.setPrivateProperty("accelerometerResultUnreliable", true)
+        calibrator.setPrivateProperty("accelerometerInitialBiasX", 0.0)
+        calibrator.setPrivateProperty("accelerometerInitialBiasY", 0.0)
+        calibrator.setPrivateProperty("accelerometerInitialBiasZ", 0.0)
+
+        calibrator.setPrivateProperty("gyroscopeInitialBiasX", 0.0)
+        calibrator.setPrivateProperty("gyroscopeInitialBiasY", 0.0)
+        calibrator.setPrivateProperty("gyroscopeInitialBiasZ", 0.0)
+
+        val accelerometerInternalCalibrator = mockk<AccelerometerNonLinearCalibrator>()
+        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+
+        val gyroscopeInternalCalibrator = mockk<GyroscopeNonLinearCalibrator>()
+        calibrator.setPrivateProperty("gyroscopeInternalCalibrator", gyroscopeInternalCalibrator)
+
+        val gravityNormEstimator: GravityNormEstimator? =
+            calibrator.getPrivateProperty("gravityNormEstimator")
+        requireNotNull(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
+
+        val generator: AccelerometerAndGyroscopeMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        justRun { generatorSpy.start() }
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        calibrator.start()
+
+        // check
+        assertNull(calibrator.gravityNorm)
+        verify(exactly = 1) { accelerometerMeasurementsSpy.clear() }
+        assertFalse(calibrator.accelerometerResultUnreliable)
+        assertNull(calibrator.accelerometerInitialBiasX)
+        assertNull(calibrator.accelerometerInitialBiasY)
+        assertNull(calibrator.accelerometerInitialBiasZ)
+        assertNull(calibrator.getPrivateProperty("accelerometerInternalCalibrator"))
+        assertNull(calibrator.gyroscopeInitialBiasX)
+        assertNull(calibrator.gyroscopeInitialBiasY)
+        assertNull(calibrator.gyroscopeInitialBiasZ)
+        assertNull(calibrator.getPrivateProperty("gyroscopeInternalCalibrator"))
+
+        assertTrue(calibrator.running)
+
+        verify { gravityNormEstimatorSpy wasNot Called }
+        verify(exactly = 1) { generatorSpy.start() }
+    }
+
+    @Test
+    fun start_whenNotRunningAndGravityNormEstimated_resetsAndStartsGenerator() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        assertFalse(calibrator.running)
+        assertTrue(calibrator.isGravityNormEstimated)
+
+        val gravityNorm = GravityHelper.getGravityNormForLocation(getLocation())
+        calibrator.setPrivateProperty("gravityNorm", gravityNorm)
+
+        val accelerometerMeasurements = calibrator.accelerometerMeasurements
+        val accelerometerMeasurementsSpy = spyk(accelerometerMeasurements)
+        calibrator.setPrivateProperty("accelerometerMeasurements", accelerometerMeasurementsSpy)
+
+        val gyroscopeMeasurements = calibrator.gyroscopeMeasurements
+        val gyroscopeMeasurementsSpy = spyk(gyroscopeMeasurements)
+        calibrator.setPrivateProperty("gyroscopeMeasurements", gyroscopeMeasurementsSpy)
+
+        calibrator.setPrivateProperty("accelerometerResultUnreliable", true)
+        calibrator.setPrivateProperty("accelerometerInitialBiasX", 0.0)
+        calibrator.setPrivateProperty("accelerometerInitialBiasY", 0.0)
+        calibrator.setPrivateProperty("accelerometerInitialBiasZ", 0.0)
+
+        calibrator.setPrivateProperty("gyroscopeInitialBiasX", 0.0)
+        calibrator.setPrivateProperty("gyroscopeInitialBiasY", 0.0)
+        calibrator.setPrivateProperty("gyroscopeInitialBiasZ", 0.0)
+
+        val accelerometerInternalCalibrator = mockk<AccelerometerNonLinearCalibrator>()
+        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+
+        val gyroscopeInternalCalibrator = mockk<GyroscopeNonLinearCalibrator>()
+        calibrator.setPrivateProperty("gyroscopeInternalCalibrator", gyroscopeInternalCalibrator)
+
+        val gravityNormEstimator: GravityNormEstimator? =
+            calibrator.getPrivateProperty("gravityNormEstimator")
+        requireNotNull(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        justRun { gravityNormEstimatorSpy.start() }
+        calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
+
+        val generator: AccelerometerAndGyroscopeMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        justRun { generatorSpy.start() }
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        calibrator.start()
+
+        // check
+        assertNull(calibrator.gravityNorm)
+        verify(exactly = 1) { accelerometerMeasurementsSpy.clear() }
+        assertFalse(calibrator.accelerometerResultUnreliable)
+        assertNull(calibrator.accelerometerInitialBiasX)
+        assertNull(calibrator.accelerometerInitialBiasY)
+        assertNull(calibrator.accelerometerInitialBiasZ)
+        assertNull(calibrator.getPrivateProperty("accelerometerInternalCalibrator"))
+        assertNull(calibrator.gyroscopeInitialBiasX)
+        assertNull(calibrator.gyroscopeInitialBiasY)
+        assertNull(calibrator.gyroscopeInitialBiasZ)
+        assertNull(calibrator.getPrivateProperty("gyroscopeInternalCalibrator"))
+
+        assertTrue(calibrator.running)
+
+        verify(exactly = 1) { gravityNormEstimatorSpy.start() }
+        verify(exactly = 1) { generatorSpy.start() }
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun start_whenRunning_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        assertFalse(calibrator.running)
+
+        calibrator.start()
+
+        assertTrue(calibrator.running)
+
+        calibrator.start()
+    }
+
+    @Test
+    fun stop_whenGravityNormEstimatorNotRunning_stopsGenerator() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        val generator: AccelerometerAndGyroscopeMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        justRun { generatorSpy.stop() }
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        val gravityNormEstimator: GravityNormEstimator? =
+            calibrator.getPrivateProperty("gravityNormEstimator")
+        requireNotNull(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+        assertTrue(calibrator.running)
+
+        calibrator.stop()
+
+        assertFalse(calibrator.running)
+        verify(exactly = 1) { generatorSpy.stop() }
+        verify(exactly = 1) { gravityNormEstimatorSpy.running }
+        verify(exactly = 0) { gravityNormEstimatorSpy.stop() }
+        assertFalse(gravityNormEstimatorSpy.running)
+    }
+
+    @Test
+    fun stop_whenGravityNormEstimatorRunning_stopsGenerator() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        val generator: AccelerometerAndGyroscopeMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        justRun { generatorSpy.stop() }
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        val gravityNormEstimator: GravityNormEstimator? =
+            calibrator.getPrivateProperty("gravityNormEstimator")
+        requireNotNull(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        every { gravityNormEstimatorSpy.running }.returns(true)
+        calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+        assertTrue(calibrator.running)
+
+        calibrator.stop()
+
+        assertFalse(calibrator.running)
+        verify(exactly = 1) { generatorSpy.stop() }
+        verify(exactly = 1) { gravityNormEstimatorSpy.running }
+        verify(exactly = 1) { gravityNormEstimatorSpy.stop() }
+        assertTrue(gravityNormEstimatorSpy.running)
+    }
+
+    @Test
+    fun stop_whenListenerAvailable_notifies() {
+        val stoppedListener =
+            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalAccelerometerAndGyroscopeCalibrator>>(
+                relaxUnitFun = true
+            )
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(
+            context,
+            stoppedListener = stoppedListener
+        )
+
+        val generator: AccelerometerAndGyroscopeMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        justRun { generatorSpy.stop() }
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        val gravityNormEstimator: GravityNormEstimator? =
+            calibrator.getPrivateProperty("gravityNormEstimator")
+        requireNotNull(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+        assertTrue(calibrator.running)
+
+        calibrator.stop()
+
+        assertFalse(calibrator.running)
+        verify(exactly = 1) { generatorSpy.stop() }
+        verify(exactly = 1) { gravityNormEstimatorSpy.running }
+        verify(exactly = 0) { gravityNormEstimatorSpy.stop() }
+        verify(exactly = 1) { stoppedListener.onStopped(calibrator) }
+        assertFalse(gravityNormEstimatorSpy.running)
+    }
+
+    // TODO: calibrate_whenNotReadyToSolveCalibration_throwsIllegalStateException
 
     private companion object {
         const val MA_SIZE = 3
