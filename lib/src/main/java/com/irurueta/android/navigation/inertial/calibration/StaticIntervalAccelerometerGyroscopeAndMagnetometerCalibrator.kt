@@ -19,17 +19,11 @@ import android.content.Context
 import android.location.Location
 import android.util.Log
 import com.irurueta.algebra.Matrix
-import com.irurueta.android.navigation.inertial.GravityHelper
 import com.irurueta.android.navigation.inertial.calibration.builder.AccelerometerInternalCalibratorBuilder
 import com.irurueta.android.navigation.inertial.calibration.builder.GyroscopeInternalCalibratorBuilder
-import com.irurueta.android.navigation.inertial.calibration.intervals.measurements.AccelerometerAndGyroscopeMeasurementGenerator
-import com.irurueta.android.navigation.inertial.calibration.noise.AccumulatedMeasurementEstimator
-import com.irurueta.android.navigation.inertial.calibration.noise.GravityNormEstimator
-import com.irurueta.android.navigation.inertial.calibration.noise.StopMode
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.SensorCollector
-import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.navigation.inertial.calibration.builder.MagnetometerInternalCalibratorBuilder
+import com.irurueta.android.navigation.inertial.calibration.intervals.measurements.*
+import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.navigation.NavigationException
 import com.irurueta.navigation.inertial.BodyKinematics
 import com.irurueta.navigation.inertial.calibration.*
@@ -41,26 +35,31 @@ import com.irurueta.navigation.inertial.calibration.gyroscope.KnownBiasGyroscope
 import com.irurueta.navigation.inertial.calibration.gyroscope.UnknownBiasGyroscopeCalibrator
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.DefaultAccelerometerQualityScoreMapper
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.DefaultGyroscopeQualityScoreMapper
+import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.DefaultMagnetometerQualityScoreMapper
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.QualityScoreMapper
+import com.irurueta.navigation.inertial.calibration.magnetometer.KnownHardIronMagnetometerCalibrator
+import com.irurueta.navigation.inertial.calibration.magnetometer.MagnetometerNonLinearCalibrator
+import com.irurueta.navigation.inertial.calibration.magnetometer.UnknownHardIronMagnetometerCalibrator
+import com.irurueta.navigation.inertial.wmm.WorldMagneticModel
 import com.irurueta.numerical.robust.RobustEstimatorMethod
-import com.irurueta.units.Acceleration
-import com.irurueta.units.AccelerationUnit
-import com.irurueta.units.AngularSpeed
-import com.irurueta.units.AngularSpeedUnit
+import com.irurueta.units.*
+import java.util.*
 import kotlin.math.max
 
 /**
- * Collects accelerometer and gyroscope measurements by detecting periods when device remains
- * static or dynamic using the accelerometer, using such periods to determine orientation based
- * on gravity vector at the end of static intervals, and integrating values of gyroscope
- * measurements during dynamic ones, and using static periods to obtain averaged accelerometer
- * values.
+ * Collects accelerometer, gyroscope and magnetometer measurements by detecting periods when device
+ * remains static or dynamic using the accelerometer, using such periods to determine orientation
+ * based on gravity vector at the end of static intervals, and integrating values of gyroscope
+ * measurements during dynamic ones, and using static periods to obtain averaged accelerometer and
+ * magnetometer values.
  *
  * @property context Android context.
  * @property accelerometerSensorType One of the supported accelerometer sensor types.
  * @property gyroscopeSensorType One of the supported gyroscope sensor types.
+ * @property magnetometerSensorType One of the supported magnetometer sensor types.
  * @property accelerometerSensorDelay Delay of accelerometer sensor between samples.
  * @property gyroscopeSensorDelay Delay of gyroscope sensor between samples.
+ * @property magnetometerSensorDelay Delay of magnetometer sensor between samples.
  * @property solveCalibrationWhenEnoughMeasurements true to automatically solve calibration once
  * enough measurements are available, false otherwise.
  * @property initializationStartedListener listener to notify when initialization starts.
@@ -76,6 +75,8 @@ import kotlin.math.max
  * calibration measurement is generated.
  * @property generatedGyroscopeMeasurementListener listener to notify when a new gyroscope
  * calibration measurement is generated.
+ * @property generatedMagnetometerMeasurementListener listener to notify when a new magnetometer
+ * calibration measurement is generated.
  * @property readyToSolveCalibrationListener listener to notify when enough measurements have been
  * collected and calibrator is ready to solve calibration.
  * @property calibrationSolvingStartedListener listener to notify when calibration solving starts.
@@ -83,10 +84,12 @@ import kotlin.math.max
  * @property stoppedListener listener to notify when calibrator is stopped.
  * @property unreliableGravityNormEstimationListener listener to notify when gravity norm
  * estimation becomes unreliable. This is only used if no location is provided.
- * @property initialAccelerometerBiasAvailableListener listener to notify when a guess of bias values is
- * obtained.
+ * @property initialAccelerometerBiasAvailableListener listener to notify when a guess of bias
+ * values is obtained.
  * @property initialGyroscopeBiasAvailableListener listener to notify when a guess of bias values
  * is obtained.
+ * @property initialMagnetometerHardIronAvailableListener listener to notify when a guess of
+ * magnetometer hard iron is obtained.
  * @property accuracyChangedListener listener to notify when sensor accuracy changes.
  * @property accelerometerQualityScoreMapper mapper to convert collected accelerometer measurements
  * into quality scores, based on the amount of standard deviation (the larger the variability, the
@@ -94,34 +97,42 @@ import kotlin.math.max
  * @property gyroscopeQualityScoreMapper mapper to convert collected gyroscope measurements
  * into quality scores, based on the amount of standard deviation (the larger the variability, the
  * worse the score will be).
+ * @property magnetometerQualityScoreMapper mapper to convert collected magnetometer measurements
+ * into quality scores, based on the amount of standard deviation (the larger the variability, the
+ * worse the score will be).
  */
-class StaticIntervalAccelerometerAndGyroscopeCalibrator private constructor(
+class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private constructor(
     context: Context,
     accelerometerSensorType: AccelerometerSensorCollector.SensorType,
     val gyroscopeSensorType: GyroscopeSensorCollector.SensorType,
+    val magnetometerSensorType: MagnetometerSensorCollector.SensorType,
     accelerometerSensorDelay: SensorDelay,
     val gyroscopeSensorDelay: SensorDelay,
+    val magnetometerSensorDelay: SensorDelay,
     solveCalibrationWhenEnoughMeasurements: Boolean,
-    initializationStartedListener: OnInitializationStartedListener<StaticIntervalAccelerometerAndGyroscopeCalibrator>?,
-    initializationCompletedListener: OnInitializationCompletedListener<StaticIntervalAccelerometerAndGyroscopeCalibrator>?,
-    errorListener: OnErrorListener<StaticIntervalAccelerometerAndGyroscopeCalibrator>?,
-    staticIntervalDetectedListener: OnStaticIntervalDetectedListener<StaticIntervalAccelerometerAndGyroscopeCalibrator>?,
-    dynamicIntervalDetectedListener: OnDynamicIntervalDetectedListener<StaticIntervalAccelerometerAndGyroscopeCalibrator>?,
-    staticIntervalSkippedListener: OnStaticIntervalSkippedListener<StaticIntervalAccelerometerAndGyroscopeCalibrator>?,
-    dynamicIntervalSkippedListener: OnDynamicIntervalSkippedListener<StaticIntervalAccelerometerAndGyroscopeCalibrator>?,
+    initializationStartedListener: OnInitializationStartedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>?,
+    initializationCompletedListener: OnInitializationCompletedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>?,
+    errorListener: OnErrorListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>?,
+    staticIntervalDetectedListener: OnStaticIntervalDetectedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>?,
+    dynamicIntervalDetectedListener: OnDynamicIntervalDetectedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>?,
+    staticIntervalSkippedListener: OnStaticIntervalSkippedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>?,
+    dynamicIntervalSkippedListener: OnDynamicIntervalSkippedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>?,
     var generatedAccelerometerMeasurementListener: OnGeneratedAccelerometerMeasurementListener?,
     var generatedGyroscopeMeasurementListener: OnGeneratedGyroscopeMeasurementListener?,
-    readyToSolveCalibrationListener: OnReadyToSolveCalibrationListener<StaticIntervalAccelerometerAndGyroscopeCalibrator>?,
-    calibrationSolvingStartedListener: OnCalibrationSolvingStartedListener<StaticIntervalAccelerometerAndGyroscopeCalibrator>?,
-    calibrationCompletedListener: OnCalibrationCompletedListener<StaticIntervalAccelerometerAndGyroscopeCalibrator>?,
-    stoppedListener: OnStoppedListener<StaticIntervalAccelerometerAndGyroscopeCalibrator>?,
+    var generatedMagnetometerMeasurementListener: OnGeneratedMagnetometerMeasurementListener?,
+    readyToSolveCalibrationListener: OnReadyToSolveCalibrationListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>?,
+    calibrationSolvingStartedListener: OnCalibrationSolvingStartedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>?,
+    calibrationCompletedListener: OnCalibrationCompletedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>?,
+    stoppedListener: OnStoppedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>?,
     var unreliableGravityNormEstimationListener: OnUnreliableGravityEstimationListener?,
     var initialAccelerometerBiasAvailableListener: OnInitialAccelerometerBiasAvailableListener?,
     var initialGyroscopeBiasAvailableListener: OnInitialGyroscopeBiasAvailableListener?,
+    var initialMagnetometerHardIronAvailableListener: OnInitialMagnetometerHardIronAvailableListener?,
     accuracyChangedListener: SensorCollector.OnAccuracyChangedListener?,
     val accelerometerQualityScoreMapper: QualityScoreMapper<StandardDeviationBodyKinematics>,
-    val gyroscopeQualityScoreMapper: QualityScoreMapper<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>
-) : StaticIntervalWithMeasurementGeneratorCalibrator<StaticIntervalAccelerometerAndGyroscopeCalibrator, TimedBodyKinematics>(
+    val gyroscopeQualityScoreMapper: QualityScoreMapper<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>,
+    val magnetometerQualityScoreMapper: QualityScoreMapper<StandardDeviationBodyMagneticFluxDensity>
+) : StaticIntervalWithMeasurementGeneratorCalibrator<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator, TimedBodyKinematicsAndMagneticFluxDensity>(
     context,
     accelerometerSensorType,
     accelerometerSensorDelay,
@@ -145,8 +156,10 @@ class StaticIntervalAccelerometerAndGyroscopeCalibrator private constructor(
      * @param context Android context.
      * @param accelerometerSensorType One of the supported accelerometer sensor types.
      * @param gyroscopeSensorType One of the supported gyroscope sensor types.
+     * @param magnetometerSensorType One of the supported magnetometer sensor types.
      * @param accelerometerSensorDelay Delay of accelerometer sensor between samples.
      * @param gyroscopeSensorDelay Delay of gyroscope sensor between samples.
+     * @param magnetometerSensorDelay Delay of magnetometer sensor between samples.
      * @param solveCalibrationWhenEnoughMeasurements true to automatically solve calibration once
      * enough measurements are available, false otherwise.
      * @param isAccelerometerGroundTruthInitialBias true if estimated accelerometer bias is assumed
@@ -160,80 +173,102 @@ class StaticIntervalAccelerometerAndGyroscopeCalibrator private constructor(
      * [gyroscopeSensorType] is [GyroscopeSensorCollector.SensorType.GYROSCOPE], bias guess is zero,
      * otherwise when it is [GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED], bias guess
      * is the device calibrated values.
-     * @param location location where device is located at. When location is provided, gravity norm
-     * is assumed to be the theoretical value determined by WGS84 Earth model, otherwise, if no
-     * location is provided, gravity norm is estimated using a gravity sensor.
+     * @param isMagnetometerGroundTruthInitialHardIron true if estimated magnetometer hard iron is
+     * assumed to be the true value, false if estimated hard iron is assumed to be only an initial
+     * guess. When [magnetometerSensorType] is
+     * [MagnetometerSensorCollector.SensorType.MAGNETOMETER], hard iron guess is zero, otherwise
+     * when it is [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED], hard iron
+     * guess is the device calibrated values.
      * @param initializationStartedListener listener to notify when initialization starts.
-     * @param initializationCompletedListener listener to notify when initialization completes.
-     * @param errorListener listener to notify errors.
-     * @param staticIntervalDetectedListener listener to notify when a static interval is detected.
-     * @param dynamicIntervalDetectedListener listener to notify when a dynamic interval is detected.
-     * @param staticIntervalSkippedListener listener to notify when a static interval is skipped if
+     * @property initializationCompletedListener listener to notify when initialization completes.
+     * @property errorListener listener to notify errors.
+     * @property staticIntervalDetectedListener listener to notify when a static interval is detected.
+     * @property dynamicIntervalDetectedListener listener to notify when a dynamic interval is detected.
+     * @property staticIntervalSkippedListener listener to notify when a static interval is skipped if
      * its duration is too short.
-     * @param dynamicIntervalSkippedListener listener to notify when a dynamic interval is skipped if
+     * @property dynamicIntervalSkippedListener listener to notify when a dynamic interval is skipped if
      * its duration is too long.
-     * @param generatedAccelerometerMeasurementListener listener to notify when a new accelerometer
+     * @property generatedAccelerometerMeasurementListener listener to notify when a new accelerometer
      * calibration measurement is generated.
-     * @param generatedGyroscopeMeasurementListener listener to notify when a new gyroscope
+     * @property generatedGyroscopeMeasurementListener listener to notify when a new gyroscope
      * calibration measurement is generated.
-     * @param readyToSolveCalibrationListener listener to notify when enough measurements have been
+     * @property generatedMagnetometerMeasurementListener listener to notify when a new magnetometer
+     * calibration measurement is generated.
+     * @property readyToSolveCalibrationListener listener to notify when enough measurements have been
      * collected and calibrator is ready to solve calibration.
-     * @param calibrationSolvingStartedListener listener to notify when calibration solving starts.
-     * @param calibrationCompletedListener listener to notify when calibration solving completes.
-     * @param stoppedListener listener to notify when calibrator is stopped.
-     * @param unreliableGravityNormEstimationListener listener to notify when gravity norm
+     * @property calibrationSolvingStartedListener listener to notify when calibration solving starts.
+     * @property calibrationCompletedListener listener to notify when calibration solving completes.
+     * @property stoppedListener listener to notify when calibrator is stopped.
+     * @property unreliableGravityNormEstimationListener listener to notify when gravity norm
      * estimation becomes unreliable. This is only used if no location is provided.
-     * @param initialAccelerometerBiasAvailableListener listener to notify when a guess of bias
+     * @property initialAccelerometerBiasAvailableListener listener to notify when a guess of bias
      * values is obtained.
-     * @param initialGyroscopeBiasAvailableListener listener to notify when a guess of bias values
+     * @property initialGyroscopeBiasAvailableListener listener to notify when a guess of bias values
      * is obtained.
-     * @param accuracyChangedListener listener to notify when sensor accuracy changes.
-     * @param accelerometerQualityScoreMapper mapper to convert collected accelerometer measurements
-     * into quality scores, based on the amount of standard deviation (the larger the variability,
-     * the worse the score will be).
-     * @param gyroscopeQualityScoreMapper mapper to convert collected gyroscope measurements
+     * @property initialMagnetometerHardIronAvailableListener listener to notify when a guess of
+     * magnetometer hard iron is obtained.
+     * @property accuracyChangedListener listener to notify when sensor accuracy changes.
+     * @property accelerometerQualityScoreMapper mapper to convert collected accelerometer measurements
+     * into quality scores, based on the amount of standard deviation (the larger the variability, the
+     * worse the score will be).
+     * @property gyroscopeQualityScoreMapper mapper to convert collected gyroscope measurements
+     * into quality scores, based on the amount of standard deviation (the larger the variability, the
+     * worse the score will be).
+     * @property magnetometerQualityScoreMapper mapper to convert collected magnetometer measurements
      * into quality scores, based on the amount of standard deviation (the larger the variability, the
      * worse the score will be).
      */
     constructor(
         context: Context,
+        location: Location,
+        timestamp: Date = Date(),
+        worldMagneticModel: WorldMagneticModel? = null,
         accelerometerSensorType: AccelerometerSensorCollector.SensorType =
             AccelerometerSensorCollector.SensorType.ACCELEROMETER,
         gyroscopeSensorType: GyroscopeSensorCollector.SensorType =
             GyroscopeSensorCollector.SensorType.GYROSCOPE,
+        magnetometerSensorType: MagnetometerSensorCollector.SensorType =
+            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
         accelerometerSensorDelay: SensorDelay = SensorDelay.FASTEST,
         gyroscopeSensorDelay: SensorDelay = SensorDelay.FASTEST,
+        magnetometerSensorDelay: SensorDelay = SensorDelay.FASTEST,
         solveCalibrationWhenEnoughMeasurements: Boolean = true,
         isAccelerometerGroundTruthInitialBias: Boolean = false,
         isGyroscopeGroundTruthInitialBias: Boolean = false,
-        location: Location? = null,
-        initializationStartedListener: OnInitializationStartedListener<StaticIntervalAccelerometerAndGyroscopeCalibrator>? = null,
-        initializationCompletedListener: OnInitializationCompletedListener<StaticIntervalAccelerometerAndGyroscopeCalibrator>? = null,
-        errorListener: OnErrorListener<StaticIntervalAccelerometerAndGyroscopeCalibrator>? = null,
-        staticIntervalDetectedListener: OnStaticIntervalDetectedListener<StaticIntervalAccelerometerAndGyroscopeCalibrator>? = null,
-        dynamicIntervalDetectedListener: OnDynamicIntervalDetectedListener<StaticIntervalAccelerometerAndGyroscopeCalibrator>? = null,
-        staticIntervalSkippedListener: OnStaticIntervalSkippedListener<StaticIntervalAccelerometerAndGyroscopeCalibrator>? = null,
-        dynamicIntervalSkippedListener: OnDynamicIntervalSkippedListener<StaticIntervalAccelerometerAndGyroscopeCalibrator>? = null,
+        isMagnetometerGroundTruthInitialHardIron: Boolean = false,
+        initializationStartedListener: OnInitializationStartedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>? = null,
+        initializationCompletedListener: OnInitializationCompletedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>? = null,
+        errorListener: OnErrorListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>? = null,
+        staticIntervalDetectedListener: OnStaticIntervalDetectedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>? = null,
+        dynamicIntervalDetectedListener: OnDynamicIntervalDetectedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>? = null,
+        staticIntervalSkippedListener: OnStaticIntervalSkippedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>? = null,
+        dynamicIntervalSkippedListener: OnDynamicIntervalSkippedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>? = null,
         generatedAccelerometerMeasurementListener: OnGeneratedAccelerometerMeasurementListener? = null,
         generatedGyroscopeMeasurementListener: OnGeneratedGyroscopeMeasurementListener? = null,
-        readyToSolveCalibrationListener: OnReadyToSolveCalibrationListener<StaticIntervalAccelerometerAndGyroscopeCalibrator>? = null,
-        calibrationSolvingStartedListener: OnCalibrationSolvingStartedListener<StaticIntervalAccelerometerAndGyroscopeCalibrator>? = null,
-        calibrationCompletedListener: OnCalibrationCompletedListener<StaticIntervalAccelerometerAndGyroscopeCalibrator>? = null,
-        stoppedListener: OnStoppedListener<StaticIntervalAccelerometerAndGyroscopeCalibrator>? = null,
+        generatedMagnetometerMeasurementListener: OnGeneratedMagnetometerMeasurementListener? = null,
+        readyToSolveCalibrationListener: OnReadyToSolveCalibrationListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>? = null,
+        calibrationSolvingStartedListener: OnCalibrationSolvingStartedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>? = null,
+        calibrationCompletedListener: OnCalibrationCompletedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>? = null,
+        stoppedListener: OnStoppedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>? = null,
         unreliableGravityNormEstimationListener: OnUnreliableGravityEstimationListener? = null,
         initialAccelerometerBiasAvailableListener: OnInitialAccelerometerBiasAvailableListener? = null,
         initialGyroscopeBiasAvailableListener: OnInitialGyroscopeBiasAvailableListener? = null,
+        initialMagnetometerHardIronAvailableListener: OnInitialMagnetometerHardIronAvailableListener? = null,
         accuracyChangedListener: SensorCollector.OnAccuracyChangedListener? = null,
         accelerometerQualityScoreMapper: QualityScoreMapper<StandardDeviationBodyKinematics> =
             DefaultAccelerometerQualityScoreMapper(),
         gyroscopeQualityScoreMapper: QualityScoreMapper<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>> =
-            DefaultGyroscopeQualityScoreMapper()
+            DefaultGyroscopeQualityScoreMapper(),
+        magnetometerQualityScoreMapper: QualityScoreMapper<StandardDeviationBodyMagneticFluxDensity> =
+            DefaultMagnetometerQualityScoreMapper()
     ) : this(
         context,
         accelerometerSensorType,
         gyroscopeSensorType,
+        magnetometerSensorType,
         accelerometerSensorDelay,
         gyroscopeSensorDelay,
+        magnetometerSensorDelay,
         solveCalibrationWhenEnoughMeasurements,
         initializationStartedListener,
         initializationCompletedListener,
@@ -244,6 +279,7 @@ class StaticIntervalAccelerometerAndGyroscopeCalibrator private constructor(
         dynamicIntervalSkippedListener,
         generatedAccelerometerMeasurementListener,
         generatedGyroscopeMeasurementListener,
+        generatedMagnetometerMeasurementListener,
         readyToSolveCalibrationListener,
         calibrationSolvingStartedListener,
         calibrationCompletedListener,
@@ -251,16 +287,24 @@ class StaticIntervalAccelerometerAndGyroscopeCalibrator private constructor(
         unreliableGravityNormEstimationListener,
         initialAccelerometerBiasAvailableListener,
         initialGyroscopeBiasAvailableListener,
+        initialMagnetometerHardIronAvailableListener,
         accuracyChangedListener,
         accelerometerQualityScoreMapper,
-        gyroscopeQualityScoreMapper
+        gyroscopeQualityScoreMapper,
+        magnetometerQualityScoreMapper
     ) {
-        this.isAccelerometerGroundTruthInitialBias = isAccelerometerGroundTruthInitialBias
         this.location = location
+        this.timestamp = timestamp
+        this.worldMagneticModel = worldMagneticModel
+
+        this.isAccelerometerGroundTruthInitialBias = isAccelerometerGroundTruthInitialBias
         accelerometerRobustPreliminarySubsetSize = minimumRequiredAccelerometerMeasurements
 
         this.isGyroscopeGroundTruthInitialBias = isGyroscopeGroundTruthInitialBias
         gyroscopeRobustPreliminarySubsetSize = minimumRequiredGyroscopeMeasurements
+
+        this.isMagnetometerGroundTruthInitialHardIron = isMagnetometerGroundTruthInitialHardIron
+        magnetometerRobustPreliminarySubsetSize = minimumRequiredMeasurements
 
         requiredMeasurements = minimumRequiredMeasurements
     }
@@ -269,26 +313,26 @@ class StaticIntervalAccelerometerAndGyroscopeCalibrator private constructor(
      * Listener used by internal generator to handle events when initialization is started.
      */
     private val generatorInitializationStartedListener =
-        AccelerometerAndGyroscopeMeasurementGenerator.OnInitializationStartedListener {
-            initializationStartedListener?.onInitializationStarted(this@StaticIntervalAccelerometerAndGyroscopeCalibrator)
+        AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationStartedListener {
+            initializationStartedListener?.onInitializationStarted(this@StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator)
         }
 
     /**
      * Listener used by internal generator to handle events when initialization is completed.
      */
     private val generatorInitializationCompletedListener =
-        AccelerometerAndGyroscopeMeasurementGenerator.OnInitializationCompletedListener { _, _ ->
-            initializationCompletedListener?.onInitializationCompleted(this@StaticIntervalAccelerometerAndGyroscopeCalibrator)
+        AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationCompletedListener { _, _ ->
+            initializationCompletedListener?.onInitializationCompleted(this@StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator)
         }
 
     /**
      * Listener used by internal generator to handle events when an error occurs.
      */
     private val generatorErrorListener =
-        AccelerometerAndGyroscopeMeasurementGenerator.OnErrorListener { _, reason ->
+        AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnErrorListener { _, reason ->
             stop()
             errorListener?.onError(
-                this@StaticIntervalAccelerometerAndGyroscopeCalibrator,
+                this@StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator,
                 CalibratorErrorReason.mapErrorReason(reason)
             )
         }
@@ -297,9 +341,9 @@ class StaticIntervalAccelerometerAndGyroscopeCalibrator private constructor(
      * Listener used by internal generator to handle events when a static interval is detected.
      */
     private val generatorStaticIntervalDetectedListener =
-        AccelerometerAndGyroscopeMeasurementGenerator.OnStaticIntervalDetectedListener {
+        AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnStaticIntervalDetectedListener {
             staticIntervalDetectedListener?.onStaticIntervalDetected(
-                this@StaticIntervalAccelerometerAndGyroscopeCalibrator
+                this@StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator
             )
         }
 
@@ -307,38 +351,38 @@ class StaticIntervalAccelerometerAndGyroscopeCalibrator private constructor(
      * Listener used by internal generator to handle events when a dynamic interval is detected.
      */
     private val generatorDynamicIntervalDetectedListener =
-        AccelerometerAndGyroscopeMeasurementGenerator.OnDynamicIntervalDetectedListener {
-            dynamicIntervalDetectedListener?.onDynamicIntervalDetected(this@StaticIntervalAccelerometerAndGyroscopeCalibrator)
+        AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnDynamicIntervalDetectedListener {
+            dynamicIntervalDetectedListener?.onDynamicIntervalDetected(this@StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator)
         }
 
     /**
      * Listener used by internal generator to handle events when a static interval is skipped.
      */
     private val generatorStaticIntervalSkippedListener =
-        AccelerometerAndGyroscopeMeasurementGenerator.OnStaticIntervalSkippedListener {
-            staticIntervalSkippedListener?.onStaticIntervalSkipped(this@StaticIntervalAccelerometerAndGyroscopeCalibrator)
+        AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnStaticIntervalSkippedListener {
+            staticIntervalSkippedListener?.onStaticIntervalSkipped(this@StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator)
         }
 
     /**
      * Listener used by internal generator to handle events when a dynamic interval is skipped.
      */
     private val generatorDynamicIntervalSkippedListener =
-        AccelerometerAndGyroscopeMeasurementGenerator.OnDynamicIntervalSkippedListener {
-            dynamicIntervalSkippedListener?.onDynamicIntervalSkipped(this@StaticIntervalAccelerometerAndGyroscopeCalibrator)
+        AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnDynamicIntervalSkippedListener {
+            dynamicIntervalSkippedListener?.onDynamicIntervalSkipped(this@StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator)
         }
 
     /**
      * Listener used by internal generator to handle events when a new accelerometer measurement is generated.
      */
     private val generatorGeneratedAccelerometerMeasurementListener =
-        AccelerometerAndGyroscopeMeasurementGenerator.OnGeneratedAccelerometerMeasurementListener { _, measurement ->
+        AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedAccelerometerMeasurementListener { _, measurement ->
             accelerometerMeasurements.add(measurement)
 
             val reqMeasurements = requiredMeasurements.coerceAtLeast(minimumRequiredMeasurements)
             val measurementsSize = accelerometerMeasurements.size
 
             generatedAccelerometerMeasurementListener?.onGeneratedAccelerometerMeasurement(
-                this@StaticIntervalAccelerometerAndGyroscopeCalibrator,
+                this@StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator,
                 measurement,
                 measurementsSize,
                 reqMeasurements
@@ -351,14 +395,34 @@ class StaticIntervalAccelerometerAndGyroscopeCalibrator private constructor(
      * Listener  used by internal generator to handle events when a new gyroscope measurement is generated.
      */
     private val generatorGeneratedGyroscopeMeasurementListener =
-        AccelerometerAndGyroscopeMeasurementGenerator.OnGeneratedGyroscopeMeasurementListener { _, measurement ->
+        AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedGyroscopeMeasurementListener { _, measurement ->
             gyroscopeMeasurements.add(measurement)
 
             val reqMeasurements = requiredMeasurements.coerceAtLeast(minimumRequiredMeasurements)
             val measurementsSize = gyroscopeMeasurements.size
 
             generatedGyroscopeMeasurementListener?.onGeneratedGyroscopeMeasurement(
-                this@StaticIntervalAccelerometerAndGyroscopeCalibrator,
+                this@StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator,
+                measurement,
+                measurementsSize,
+                reqMeasurements
+            )
+
+            checkMeasurementsAndSolveCalibration()
+        }
+
+    /**
+     * Listener  used by internal generator to handle events when a new measurement is generated.
+     */
+    private val generatorGeneratedMagnetometerMeasurementListener =
+        AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedMagnetometerMeasurementListener { _, measurement ->
+            magnetometerMeasurements.add(measurement)
+
+            val reqMeasurements = requiredMeasurements.coerceAtLeast(minimumRequiredMeasurements)
+            val measurementsSize = magnetometerMeasurements.size
+
+            generatedMagnetometerMeasurementListener?.onGeneratedMagnetometerMeasurement(
+                this@StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator,
                 measurement,
                 measurementsSize,
                 reqMeasurements
@@ -396,35 +460,42 @@ class StaticIntervalAccelerometerAndGyroscopeCalibrator private constructor(
         }
 
     /**
-     * Listener for gravity norm estimator.
-     * This is used to approximately estimate gravity when no location is provided, by using the
-     * gravity sensor provided by the device.
+     * Listener for magnetometer sensor collector.
+     * This is used to determine device calibration and obtain initial guesses
+     * for magnetometer hard iron values (only available if
+     * [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED] is used, otherwise zero
+     * hard iron is assumed as an initial guess).
      */
-    private val gravityNormCompletedListener =
-        AccumulatedMeasurementEstimator.OnEstimationCompletedListener<GravityNormEstimator> { estimator ->
-            gravityNorm = estimator.averageNorm
-        }
-
-    /**
-     * Listener to handle events when gravity sensor becomes unreliable.
-     * When this happens, result of calibration is marked as unreliable and should probably be
-     * discarded.
-     */
-    private val gravityNormUnreliableListener =
-        AccumulatedMeasurementEstimator.OnUnreliableListener<GravityNormEstimator> {
-            accelerometerResultUnreliable = true
-            unreliableGravityNormEstimationListener?.onUnreliableGravityEstimation(this@StaticIntervalAccelerometerAndGyroscopeCalibrator)
+    private val generatorMagnetometerMeasurementListener =
+        MagnetometerSensorCollector.OnMeasurementListener { _, _, _, hardIronX, hardIronY, hardIronZ, _, _ ->
+            if (isFirstMagnetometerMeasurement) {
+                val hardIronXTesla = if (hardIronX != null)
+                    MagneticFluxDensityConverter.microTeslaToTesla(hardIronX.toDouble())
+                else
+                    null
+                val hardIronYTesla = if (hardIronY != null)
+                    MagneticFluxDensityConverter.microTeslaToTesla(hardIronY.toDouble())
+                else
+                    null
+                val hardIronZTesla = if (hardIronZ != null)
+                    MagneticFluxDensityConverter.microTeslaToTesla(hardIronZ.toDouble())
+                else
+                    null
+                updateMagnetometerInitialHardIrons(hardIronXTesla, hardIronYTesla, hardIronZTesla)
+            }
         }
 
     /**
      * Internal generator to generate measurements for calibration.
      */
-    override val generator = AccelerometerAndGyroscopeMeasurementGenerator(
+    override val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
         context,
         accelerometerSensorType,
         accelerometerSensorDelay,
         gyroscopeSensorType,
         gyroscopeSensorDelay,
+        magnetometerSensorType,
+        magnetometerSensorDelay,
         generatorInitializationStartedListener,
         generatorInitializationCompletedListener,
         generatorErrorListener,
@@ -434,23 +505,12 @@ class StaticIntervalAccelerometerAndGyroscopeCalibrator private constructor(
         generatorDynamicIntervalSkippedListener,
         generatorGeneratedAccelerometerMeasurementListener,
         generatorGeneratedGyroscopeMeasurementListener,
+        generatorGeneratedMagnetometerMeasurementListener,
         accelerometerMeasurementListener = generatorAccelerometerMeasurementListener,
         gyroscopeMeasurementListener = generatorGyroscopeMeasurementListener,
+        magnetometerMeasurementListener = generatorMagnetometerMeasurementListener,
         accuracyChangedListener = accuracyChangedListener
     )
-
-    /**
-     * Gravity norm estimator. It is used to estimate gravity norm when no location is provided.
-     */
-    private val gravityNormEstimator: GravityNormEstimator =
-        GravityNormEstimator(
-            context,
-            accelerometerSensorDelay,
-            initialStaticSamples,
-            stopMode = StopMode.MAX_SAMPLES_ONLY,
-            completedListener = gravityNormCompletedListener,
-            unreliableListener = gravityNormUnreliableListener
-        )
 
     /**
      * Internal accelerometer calibrator used to solve the calibration parameters once enough
@@ -463,6 +523,12 @@ class StaticIntervalAccelerometerAndGyroscopeCalibrator private constructor(
      * collected during dynamic intervals.
      */
     private var gyroscopeInternalCalibrator: GyroscopeNonLinearCalibrator? = null
+
+    /**
+     * Internal calibrator used to solve the calibration parameters once enough measurements are
+     * collected at static intervals.
+     */
+    private var magnetometerInternalCalibrator: MagnetometerNonLinearCalibrator? = null
 
     /**
      * Contains gravity norm (either obtained by the gravity sensor, or determined by current
@@ -478,6 +544,63 @@ class StaticIntervalAccelerometerAndGyroscopeCalibrator private constructor(
      */
     var accelerometerResultUnreliable = false
         private set
+
+    /**
+     * Private backing property containing actual location value.
+     * This is initialized in the constructor.
+     */
+    private lateinit var _location: Location
+
+    /**
+     * Location of device when running calibration.
+     * Both [location] and [timestamp] are used to determine Earth's magnetic field according to
+     * provided World Magnetic Model.
+     *
+     * @throws IllegalStateException if calibrator is already running.
+     * @see [WorldMagneticModel]
+     */
+    var location: Location
+        get() = _location
+        @Throws(IllegalStateException::class)
+        set(value) {
+            check(!running)
+            _location = value
+        }
+
+    /**
+     * Private backing property containing current timestamp value.
+     * This is initialized in the constructor.
+     */
+    private lateinit var _timestamp: Date
+
+    /**
+     * Sets current timestamp.
+     * Both [location] and [timestamp] are used to determine Earth's magnetic field according to
+     * provided World Magnetic Model.
+     *
+     * @throws IllegalStateException if calibrator is already running.
+     * @see [WorldMagneticModel]
+     */
+    var timestamp: Date
+        get() = _timestamp
+        @Throws(IllegalStateException::class)
+        set(value) {
+            check(!running)
+            _timestamp = value
+        }
+
+    /**
+     * Sets Earth's magnetic model.
+     * Null indicates that default model is being used.
+     *
+     * @throws IllegalStateException if calibrator is already running.
+     */
+    var worldMagneticModel: WorldMagneticModel? = null
+        @Throws(IllegalStateException::class)
+        set(value) {
+            check(!running)
+            field = value
+        }
 
     /**
      * Gets x-coordinate of accelerometer bias used as an initial guess and expressed in meters per
@@ -1003,6 +1126,266 @@ class StaticIntervalAccelerometerAndGyroscopeCalibrator private constructor(
     }
 
     /**
+     * Gets X-coordinate of hard iron used as an initial guess and expressed in Teslas (T).
+     * This value is determined once the calibration starts.
+     * If [magnetometerSensorType] is
+     * [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
+     * the value used internally by the device as part of the magnetometer hardware calibration.
+     * If [magnetometerSensorType] is [MagnetometerSensorCollector.SensorType.MAGNETOMETER], then
+     * magnetometer sensor measurements are assumed to be already hard iron compensated, and the
+     * initial hard iron is assumed to be zero.
+     * If [isMagnetometerGroundTruthInitialHardIron] is true, this is assumed to be the true hard
+     * iron, and [estimatedMagnetometerHardIronX] will be equal to this value, otherwise
+     * [estimatedMagnetometerHardIronX] will be the estimated hard iron after solving calibration,
+     * which will differ from [magnetometerInitialHardIronX].
+     */
+    var magnetometerInitialHardIronX: Double? = null
+        private set
+
+    /**
+     * Gets Y-coordinate of hard iron used as an initial guess and expressed in Teslas (T).
+     * This value is determined once the calibration starts.
+     * If [magnetometerSensorType] is
+     * [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
+     * the value used internally by the device as part of the magnetometer hardware calibration.
+     * If [magnetometerSensorType] is [MagnetometerSensorCollector.SensorType.MAGNETOMETER], then
+     * magnetometer sensor measurements are assumed to be already hard iron compensated, and the
+     * initial hard iron is assumed to be zero.
+     * If [isMagnetometerGroundTruthInitialHardIron] is true, this is assumed to be the true hard
+     * iron, and [estimatedMagnetometerHardIronY] will be equal to this value, otherwise
+     * [estimatedMagnetometerHardIronY] will be the estimated hard iron after solving calibration,
+     * which will differ from [magnetometerInitialHardIronY].
+     */
+    var magnetometerInitialHardIronY: Double? = null
+        private set
+
+    /**
+     * Gets Y-coordinate of hard iron used as an initial guess and expressed in Teslas (T).
+     * This value is determined once the calibration starts.
+     * If [magnetometerSensorType] is
+     * [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
+     * the value used internally by the device as part of the magnetometer hardware calibration.
+     * If [magnetometerSensorType] is [MagnetometerSensorCollector.SensorType.MAGNETOMETER], then
+     * magnetometer sensor measurements are assumed to be already hard iron compensated, and the
+     * initial hard iron is assumed to be zero.
+     * If [isMagnetometerGroundTruthInitialHardIron] is true, this is assumed to be the true hard
+     * iron, and [estimatedMagnetometerHardIronZ] will be equal to this value, otherwise
+     * [estimatedMagnetometerHardIronZ] will be the estimated hard iron after solving calibration,
+     * which will differ from [magnetometerInitialHardIronZ].
+     */
+    var magnetometerInitialHardIronZ: Double? = null
+        private set
+
+    /**
+     * Gets X-coordinate of hard iron used as an initial guess.
+     * This value is determined once the calibration starts.
+     * If [magnetometerSensorType] is
+     * [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
+     * the value used internally by the device as part of the magnetometer hardware calibration.
+     * If [magnetometerSensorType] is [MagnetometerSensorCollector.SensorType.MAGNETOMETER], then
+     * magnetometer sensor measurements are assumed to be already hard iron compensated, and the
+     * initial hard iron is assumed to be zero.
+     * If [isMagnetometerGroundTruthInitialHardIron] is true, this is assumed to be the true hard
+     * iron, and [estimatedMagnetometerHardIronX] will be equal to this value, otherwise
+     * [estimatedMagnetometerHardIronX] will be the estimated hard iron after solving calibration,
+     * which will differ from [magnetometerInitialHardIronX].
+     */
+    val magnetometerInitialHardIronXAsMeasurement: MagneticFluxDensity?
+        get() {
+            val initialHardIronX = magnetometerInitialHardIronX ?: return null
+            return MagneticFluxDensity(initialHardIronX, MagneticFluxDensityUnit.TESLA)
+        }
+
+    /**
+     * Gets X-coordinate of hard iron used as an initial guess.
+     * This value is determined once the calibration starts.
+     * If [magnetometerSensorType] is
+     * [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
+     * the value used internally by the device as part of the magnetometer hardware calibration.
+     * If [magnetometerSensorType] is [MagnetometerSensorCollector.SensorType.MAGNETOMETER], then
+     * magnetometer sensor measurements are assumed to be already hard iron compensated, and the
+     * initial hard iron is assumed to be zero.
+     * If [isMagnetometerGroundTruthInitialHardIron] is true, this is assumed to be the true hard
+     * iron, and [estimatedMagnetometerHardIronX] will be equal to this value, otherwise
+     * [estimatedMagnetometerHardIronX] will be the estimated hard iron after solving calibration,
+     * which will differ from [magnetometerInitialHardIronX].
+     *
+     * @param result instance where result will be stored.
+     * @return true if initial hard iron is available, false otherwise.
+     */
+    fun getMagnetometerInitialHardIronXAsMeasurement(result: MagneticFluxDensity): Boolean {
+        val initialHardIronX = magnetometerInitialHardIronX
+        return if (initialHardIronX != null) {
+            result.value = initialHardIronX
+            result.unit = MagneticFluxDensityUnit.TESLA
+            true
+        } else {
+            false
+        }
+    }
+
+    /**
+     * Gets Y-coordinate of hard iron used as an initial guess.
+     * This value is determined once the calibration starts.
+     * If [magnetometerSensorType] is
+     * [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
+     * the value used internally by the device as part of the magnetometer hardware calibration.
+     * If [magnetometerSensorType] is [MagnetometerSensorCollector.SensorType.MAGNETOMETER], then
+     * magnetometer sensor measurements are assumed to be already hard iron compensated, and the
+     * initial hard iron is assumed to be zero.
+     * If [isMagnetometerGroundTruthInitialHardIron] is true, this is assumed to be the true hard
+     * iron, and [estimatedMagnetometerHardIronY] will be equal to this value, otherwise
+     * [estimatedMagnetometerHardIronY] will be the estimated hard iron after solving calibration,
+     * which will differ from [magnetometerInitialHardIronY].
+     */
+    val magnetometerInitialHardIronYAsMeasurement: MagneticFluxDensity?
+        get() {
+            val initialHardIronY = magnetometerInitialHardIronY ?: return null
+            return MagneticFluxDensity(initialHardIronY, MagneticFluxDensityUnit.TESLA)
+        }
+
+    /**
+     * Gets Y-coordinate of hard iron used as an initial guess.
+     * This value is determined once the calibration starts.
+     * If [magnetometerSensorType] is
+     * [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
+     * the value used internally by the device as part of the magnetometer hardware calibration.
+     * If [magnetometerSensorType] is [MagnetometerSensorCollector.SensorType.MAGNETOMETER], then
+     * magnetometer sensor measurements are assumed to be already hard iron compensated, and the
+     * initial hard iron is assumed to be zero.
+     * If [isMagnetometerGroundTruthInitialHardIron] is true, this is assumed to be the true hard
+     * iron, and [estimatedMagnetometerHardIronY] will be equal to this value, otherwise
+     * [estimatedMagnetometerHardIronY] will be the estimated hard iron after solving calibration,
+     * which will differ from [magnetometerInitialHardIronY].
+     *
+     * @param result instance where result will be stored.
+     * @return true if initial hard iron is available, false otherwise.
+     */
+    fun getMagnetometerInitialHardIronYAsMeasurement(result: MagneticFluxDensity): Boolean {
+        val initialHardIronY = magnetometerInitialHardIronY
+        return if (initialHardIronY != null) {
+            result.value = initialHardIronY
+            result.unit = MagneticFluxDensityUnit.TESLA
+            true
+        } else {
+            false
+        }
+    }
+
+    /**
+     * Gets Z-coordinate of hard iron used as an initial guess.
+     * This value is determined once the calibration starts.
+     * If [magnetometerSensorType] is
+     * [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
+     * the value used internally by the device as part of the magnetometer hardware calibration.
+     * If [magnetometerSensorType] is [MagnetometerSensorCollector.SensorType.MAGNETOMETER], then
+     * magnetometer sensor measurements are assumed to be already hard iron compensated, and the
+     * initial hard iron is assumed to be zero.
+     * If [isMagnetometerGroundTruthInitialHardIron] is true, this is assumed to be the true hard
+     * iron, and [estimatedMagnetometerHardIronZ] will be equal to this value, otherwise
+     * [estimatedMagnetometerHardIronZ] will be the estimated hard iron after solving calibration,
+     * which will differ from [magnetometerInitialHardIronZ].
+     */
+    val magnetometerInitialHardIronZAsMeasurement: MagneticFluxDensity?
+        get() {
+            val initialHardIronZ = magnetometerInitialHardIronZ ?: return null
+            return MagneticFluxDensity(initialHardIronZ, MagneticFluxDensityUnit.TESLA)
+        }
+
+    /**
+     * Gets Z-coordinate of hard iron used as an initial guess.
+     * This value is determined once the calibration starts.
+     * If [magnetometerSensorType] is
+     * [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
+     * the value used internally by the device as part of the magnetometer hardware calibration.
+     * If [magnetometerSensorType] is [MagnetometerSensorCollector.SensorType.MAGNETOMETER], then
+     * magnetometer sensor measurements are assumed to be already hard iron compensated, and the
+     * initial hard iron is assumed to be zero.
+     * If [isMagnetometerGroundTruthInitialHardIron] is true, this is assumed to be the true hard
+     * iron, and [estimatedMagnetometerHardIronZ] will be equal to this value, otherwise
+     * [estimatedMagnetometerHardIronZ] will be the estimated hard iron after solving calibration,
+     * which will differ from [magnetometerInitialHardIronZ].
+     *
+     * @param result instance where result will be stored.
+     * @return true if initial hard iron is available, false otherwise.
+     */
+    fun getMagnetometerInitialHardIronZAsMeasurement(result: MagneticFluxDensity): Boolean {
+        val initialHardIronZ = magnetometerInitialHardIronZ
+        return if (initialHardIronZ != null) {
+            result.value = initialHardIronZ
+            result.unit = MagneticFluxDensityUnit.TESLA
+            true
+        } else {
+            false
+        }
+    }
+
+    /**
+     * Gets initial hard iron used as an initial guess.
+     * This value is determined once the calibration starts.
+     * If [magnetometerSensorType] is
+     * [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
+     * the value used internally by the device as part of the magnetometer hardware calibration.
+     * If [magnetometerSensorType] is [MagnetometerSensorCollector.SensorType.MAGNETOMETER], then
+     * magnetometer sensor measurements are assumed to be already hard iron compensated, and the
+     * initial hard iron is assumed to be zero.
+     * If [isMagnetometerGroundTruthInitialHardIron] is true, this is assumed to be the true hard
+     * iron, and [estimatedMagnetometerHardIronAsTriad] will be equal to this value, otherwise
+     * [estimatedMagnetometerHardIronAsTriad] will be the estimated hard iron after solving calibration,
+     * which will differ from [magnetometerInitialHardIronAsTriad].
+     */
+    val magnetometerInitialHardIronAsTriad: MagneticFluxDensityTriad?
+        get() {
+            val initialHardIronX = magnetometerInitialHardIronX
+            val initialHardIronY = magnetometerInitialHardIronY
+            val initialHardIronZ = magnetometerInitialHardIronZ
+            return if (initialHardIronX != null && initialHardIronY != null && initialHardIronZ != null) {
+                MagneticFluxDensityTriad(
+                    MagneticFluxDensityUnit.TESLA,
+                    initialHardIronX,
+                    initialHardIronY,
+                    initialHardIronZ
+                )
+            } else {
+                null
+            }
+        }
+
+    /**
+     * Gets initial hard iron used as an initial guess.
+     * This value is determined once the calibration starts.
+     * If [magnetometerSensorType] is
+     * [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
+     * the value used internally by the device as part of the magnetometer hardware calibration.
+     * If [magnetometerSensorType] is [MagnetometerSensorCollector.SensorType.MAGNETOMETER], then
+     * magnetometer sensor measurements are assumed to be already hard iron compensated, and the
+     * initial hard iron is assumed to be zero.
+     * If [isMagnetometerGroundTruthInitialHardIron] is true, this is assumed to be the true hard
+     * iron, and [estimatedMagnetometerHardIronAsTriad] will be equal to this value, otherwise
+     * [estimatedMagnetometerHardIronAsTriad] will be the estimated hard iron after solving calibration,
+     * which will differ from [magnetometerInitialHardIronAsTriad].
+     *
+     * @param result instance where result will be stored.
+     * @return true if result is available, false otherwise.
+     */
+    fun getMagnetometerInitialHardIronAsTriad(result: MagneticFluxDensityTriad): Boolean {
+        val initialHardIronX = magnetometerInitialHardIronX
+        val initialHardIronY = magnetometerInitialHardIronY
+        val initialHardIronZ = magnetometerInitialHardIronZ
+        return if (initialHardIronX != null && initialHardIronY != null && initialHardIronZ != null) {
+            result.setValueCoordinatesAndUnit(
+                initialHardIronX,
+                initialHardIronY,
+                initialHardIronZ,
+                MagneticFluxDensityUnit.TESLA
+            )
+            true
+        } else {
+            false
+        }
+    }
+
+    /**
      * Indicates whether accelerometer initial bias is considered a ground-truth known bias.
      * When true, estimated biases are exactly equal to initial biases, otherwise
      * initial biases are just an initial guess and estimated ones might differ after
@@ -1033,31 +1416,19 @@ class StaticIntervalAccelerometerAndGyroscopeCalibrator private constructor(
         }
 
     /**
-     * Location of device when running calibration.
-     * If location is provided, WGS84 Earth model is used to determine gravity norm
-     * at such location, otherwise gravity norm is estimated during initialization by using the
-     * gravity sensor of device.
+     * Indicates whether initial hard iron is considered a ground-truth known bias.
+     * When true, estimated hard irons are exactly equal to the initial ones, otherwise
+     * initial hard irons are just an initial guess and estimated ones might differ after
+     * solving calibration.
      *
      * @throws IllegalStateException if calibrator is already running.
      */
-    var location: Location? = null
+    var isMagnetometerGroundTruthInitialHardIron: Boolean = false
         @Throws(IllegalStateException::class)
         set(value) {
             check(!running)
             field = value
-            if (value != null) {
-                // set gravity norm based on provided location
-                gravityNorm = GravityHelper.getGravityNormForLocation(value)
-            }
         }
-
-    /**
-     * Indicates whether gravity norm is estimated during initialization.
-     * If location is provided, gravity is not estimated and instead theoretical
-     * gravity for provided location is used.
-     */
-    val isGravityNormEstimated
-        get() = location == null
 
     /**
      * Gets accelerometer sensor being used for interval detection.
@@ -1074,11 +1445,11 @@ class StaticIntervalAccelerometerAndGyroscopeCalibrator private constructor(
         get() = generator.gyroscopeSensor
 
     /**
-     * Gets gravity sensor being used for gravity estimation.
+     * Gets magnetometer sensor being used to obtain measurements, or null if not available.
      * This can be used to obtain additional information about the sensor.
      */
-    val gravitySensor
-        get() = gravityNormEstimator.sensor
+    val magnetometerSensor
+        get() = generator.magnetometerSensor
 
     /**
      * Gets or sets initial accelerometer scaling factors and cross coupling errors matrix.
@@ -1597,6 +1968,258 @@ class StaticIntervalAccelerometerAndGyroscopeCalibrator private constructor(
         }
 
     /**
+     * Gets or sets initial magnetometer scaling factors and cross coupling errors matrix.
+     *
+     * @throws IllegalStateException if calibrator is currently running.
+     * @throws IllegalArgumentException if provided matrix is not 3x3.
+     */
+    var magnetometerInitialMm: Matrix
+        get() {
+            val result =
+                Matrix(MagneticFluxDensityTriad.COMPONENTS, MagneticFluxDensityTriad.COMPONENTS)
+            getMagnetometerInitialMm(result)
+            return result
+        }
+        @Throws(IllegalStateException::class, IllegalArgumentException::class)
+        set(value) {
+            check(!running)
+            require(value.rows == MagneticFluxDensityTriad.COMPONENTS && value.columns == MagneticFluxDensityTriad.COMPONENTS)
+
+            magnetometerInitialSx = value.getElementAtIndex(0)
+            magnetometerInitialMyx = value.getElementAtIndex(1)
+            magnetometerInitialMzx = value.getElementAtIndex(2)
+
+            magnetometerInitialMxy = value.getElementAtIndex(3)
+            magnetometerInitialSy = value.getElementAtIndex(4)
+            magnetometerInitialMzy = value.getElementAtIndex(5)
+
+            magnetometerInitialMxz = value.getElementAtIndex(6)
+            magnetometerInitialMyz = value.getElementAtIndex(7)
+            magnetometerInitialSz = value.getElementAtIndex(8)
+        }
+
+    /**
+     * Gets initial magnetometer scale factors and cross coupling errors matrix.
+     *
+     * @param result instance where data will be stored.
+     * @throws IllegalArgumentException if provided result matrix is not 3x3.
+     */
+    @Throws(IllegalArgumentException::class)
+    fun getMagnetometerInitialMm(result: Matrix) {
+        require(result.rows == MagneticFluxDensityTriad.COMPONENTS && result.columns == MagneticFluxDensityTriad.COMPONENTS)
+
+        result.setElementAtIndex(0, magnetometerInitialSx)
+        result.setElementAtIndex(1, magnetometerInitialMyx)
+        result.setElementAtIndex(2, magnetometerInitialMzx)
+
+        result.setElementAtIndex(3, magnetometerInitialMxy)
+        result.setElementAtIndex(4, magnetometerInitialSy)
+        result.setElementAtIndex(5, magnetometerInitialMzy)
+
+        result.setElementAtIndex(6, magnetometerInitialMxz)
+        result.setElementAtIndex(7, magnetometerInitialMyz)
+        result.setElementAtIndex(8, magnetometerInitialSz)
+    }
+
+    /**
+     * Gets or sets initial x scaling factor for magnetometer calibration.
+     *
+     * @throws IllegalStateException if calibrator is currently running.
+     */
+    var magnetometerInitialSx: Double = 0.0
+        @Throws(IllegalStateException::class)
+        set(value) {
+            check(!running)
+            field = value
+        }
+
+    /**
+     * Gets or sets initial y scaling factor for magnetometer calibration.
+     *
+     * @throws IllegalStateException if calibrator is currently running.
+     */
+    var magnetometerInitialSy: Double = 0.0
+        @Throws(IllegalStateException::class)
+        set(value) {
+            check(!running)
+            field = value
+        }
+
+    /**
+     * Gets or sets initial z scaling factor for magnetometer calibration.
+     *
+     * @throws IllegalStateException if calibrator is currently running.
+     */
+    var magnetometerInitialSz: Double = 0.0
+        @Throws(IllegalStateException::class)
+        set(value) {
+            check(!running)
+            field = value
+        }
+
+    /**
+     * Gets or sets initial x-y cross coupling error for magnetometer calibration.
+     *
+     * @throws IllegalStateException if calibrator is currently running.
+     */
+    var magnetometerInitialMxy: Double = 0.0
+        @Throws(IllegalStateException::class)
+        set(value) {
+            check(!running)
+            field = value
+        }
+
+    /**
+     * Gets or sets initial x-z cross coupling error for magnetometer calibration.
+     *
+     * @throws IllegalStateException if calibrator is currently running.
+     */
+    var magnetometerInitialMxz: Double = 0.0
+        @Throws(IllegalStateException::class)
+        set(value) {
+            check(!running)
+            field = value
+        }
+
+    /**
+     * Gets or sets initial y-x cross coupling error for magnetometer calibration.
+     *
+     * @throws IllegalStateException if calibrator is currently running.
+     */
+    var magnetometerInitialMyx: Double = 0.0
+        @Throws(IllegalStateException::class)
+        set(value) {
+            check(!running)
+            field = value
+        }
+
+    /**
+     * Gets or sets initial y-z cross coupling error for magnetometer calibration.
+     *
+     * @throws IllegalStateException if calibrator is currently running.
+     */
+    var magnetometerInitialMyz: Double = 0.0
+        @Throws(IllegalStateException::class)
+        set(value) {
+            check(!running)
+            field = value
+        }
+
+    /**
+     * Gets or sets initial z-x cross coupling error for magnetometer calibration.
+     *
+     * @throws IllegalStateException if calibrator is currently running.
+     */
+    var magnetometerInitialMzx: Double = 0.0
+        @Throws(IllegalStateException::class)
+        set(value) {
+            check(!running)
+            field = value
+        }
+
+    /**
+     * Gets or sets initial z-y cross coupling error for magnetometer calibration.
+     *
+     * @throws IllegalStateException if calibrator is currently running.
+     */
+    var magnetometerInitialMzy: Double = 0.0
+        @Throws(IllegalStateException::class)
+        set(value) {
+            check(!running)
+            field = value
+        }
+
+    /**
+     * Sets initial scaling factors for magnetometer calibration.
+     *
+     * @param magnetometerInitialSx initial x scaling factor.
+     * @param magnetometerInitialSy initial y scaling factor.
+     * @param magnetometerInitialSz initial z scaling factor.
+     * @throws IllegalStateException if calibrator is currently running.
+     */
+    @Throws(IllegalStateException::class)
+    fun setMagnetometerInitialScalingFactors(
+        magnetometerInitialSx: Double,
+        magnetometerInitialSy: Double,
+        magnetometerInitialSz: Double
+    ) {
+        check(!running)
+        this.magnetometerInitialSx = magnetometerInitialSx
+        this.magnetometerInitialSy = magnetometerInitialSy
+        this.magnetometerInitialSz = magnetometerInitialSz
+    }
+
+    /**
+     * Sets initial cross coupling errors for magnetometer calibration.
+     *
+     * @param magnetometerInitialMxy initial x-y cross coupling error.
+     * @param magnetometerInitialMxz initial x-z cross coupling error.
+     * @param magnetometerInitialMyx initial y-x cross coupling error.
+     * @param magnetometerInitialMyz initial y-z cross coupling error.
+     * @param magnetometerInitialMzx initial z-x cross coupling error.
+     * @param magnetometerInitialMzy initial z-y cross coupling error.
+     * @throws IllegalStateException if calibrator is currently running.
+     */
+    @Throws(IllegalStateException::class)
+    fun setMagnetometerInitialCrossCouplingErrors(
+        magnetometerInitialMxy: Double,
+        magnetometerInitialMxz: Double,
+        magnetometerInitialMyx: Double,
+        magnetometerInitialMyz: Double,
+        magnetometerInitialMzx: Double,
+        magnetometerInitialMzy: Double
+    ) {
+        check(!running)
+        this.magnetometerInitialMxy = magnetometerInitialMxy
+        this.magnetometerInitialMxz = magnetometerInitialMxz
+        this.magnetometerInitialMyx = magnetometerInitialMyx
+        this.magnetometerInitialMyz = magnetometerInitialMyz
+        this.magnetometerInitialMzx = magnetometerInitialMzx
+        this.magnetometerInitialMzy = magnetometerInitialMzy
+    }
+
+    /**
+     * Sets initial scaling factors and cross couping errors for magnetometer calibration.
+     *
+     * @param magnetometerInitialSx initial x scaling factor.
+     * @param magnetometerInitialSy initial y scaling factor.
+     * @param magnetometerInitialSz initial z scaling factor.
+     * @param magnetometerInitialMxy initial x-y cross coupling error.
+     * @param magnetometerInitialMxz initial x-z cross coupling error.
+     * @param magnetometerInitialMyx initial y-x cross coupling error.
+     * @param magnetometerInitialMyz initial y-z cross coupling error.
+     * @param magnetometerInitialMzx initial z-x cross coupling error.
+     * @param magnetometerInitialMzy initial z-y cross coupling error.
+     * @throws IllegalStateException if calibrator is currently running.
+     */
+    @Throws(IllegalStateException::class)
+    fun setMagnetometerInitialScalingFactorsAndCrossCouplingErrors(
+        magnetometerInitialSx: Double,
+        magnetometerInitialSy: Double,
+        magnetometerInitialSz: Double,
+        magnetometerInitialMxy: Double,
+        magnetometerInitialMxz: Double,
+        magnetometerInitialMyx: Double,
+        magnetometerInitialMyz: Double,
+        magnetometerInitialMzx: Double,
+        magnetometerInitialMzy: Double
+    ) {
+        setMagnetometerInitialScalingFactors(
+            magnetometerInitialSx,
+            magnetometerInitialSy,
+            magnetometerInitialSz
+        )
+        setMagnetometerInitialCrossCouplingErrors(
+            magnetometerInitialMxy,
+            magnetometerInitialMxz,
+            magnetometerInitialMyx,
+            magnetometerInitialMyz,
+            magnetometerInitialMzx,
+            magnetometerInitialMzy
+        )
+    }
+
+    /**
      * Indicates or specifies whether z-axis is assumed to be common for magnetometer and
      * gyroscope. When enabled, this eliminates 3 variables from Ma matrix during accelerometer
      * calibration.
@@ -1619,6 +2242,20 @@ class StaticIntervalAccelerometerAndGyroscopeCalibrator private constructor(
      */
     var isGyroscopeCommonAxisUsed: Boolean =
         StaticIntervalGyroscopeCalibrator.DEFAULT_USE_COMMON_Z_AXIS
+        @Throws(IllegalStateException::class)
+        set(value) {
+            check(!running)
+            field = value
+        }
+
+    /**
+     * Indicates or specifies whether z-axis is assumed to be common for magnetometer and
+     * gyroscope. When enabled, this eliminates 3 variables from Ma matrix.
+     *
+     * @throws IllegalStateException if calibrator is currently running.
+     */
+    var isMagnetometerCommonAxisUsed: Boolean =
+        StaticIntervalMagnetometerCalibrator.DEFAULT_USE_COMMON_Z_AXIS
         @Throws(IllegalStateException::class)
         set(value) {
             check(!running)
@@ -1698,118 +2335,38 @@ class StaticIntervalAccelerometerAndGyroscopeCalibrator private constructor(
         }
 
     /**
+     * Gets minimum number of required measurements to start magnetometer calibration.
+     * Each time that the device is kept static, a new measurement is collected.
+     * When the required number of measurements for all sensors is collected, calibration can start.
+     */
+    val minimumRequiredMagnetometerMeasurements: Int
+        get() = if (isMagnetometerCommonAxisUsed) {
+            if (isMagnetometerGroundTruthInitialHardIron) {
+                StaticIntervalMagnetometerCalibrator.MAGNETOMETER_KNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_COMMON_Z_AXIS
+            } else {
+                StaticIntervalMagnetometerCalibrator.MAGNETOMETER_UNKNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_COMMON_Z_AXIS
+            }
+        } else {
+            if (isMagnetometerGroundTruthInitialHardIron) {
+                StaticIntervalMagnetometerCalibrator.MAGNETOMETER_KNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL
+            } else {
+                StaticIntervalMagnetometerCalibrator.MAGNETOMETER_UNKNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL
+            }
+        }
+
+    /**
      * Gets minimum number of required measurements to start calibration.
      * Each time that the device is kept static or moved, new accelerometer and gyroscope
      * measurements are collected.
      * When the required number of measurements is collected, calibration can start.
      */
     override val minimumRequiredMeasurements: Int
-        get() = max(minimumRequiredAccelerometerMeasurements, minimumRequiredGyroscopeMeasurements)
-
-    /**
-     * Gets estimated average of gravity norm expressed in meters per squared second (m/s^2).
-     * This is only available if no location is provided and initialization has completed.
-     */
-    val averageGravityNorm
-        get() = if (isGravityNormEstimated) {
-            gravityNormEstimator.averageNorm
-        } else {
-            null
-        }
-
-    /**
-     * Gets estimated average gravity norm as Acceleration.
-     * This is only available if no location is provided and initialization has completed.
-     */
-    val averageGravityNormAsMeasurement
-        get() = if (isGravityNormEstimated) {
-            gravityNormEstimator.averageNormAsMeasurement
-        } else {
-            null
-        }
-
-    /**
-     * Gets estimated average gravity norm as Acceleration.
-     * This is only available if no location is provided and initialization has completed.
-     */
-    fun getAverageGravityNormAsMeasurement(result: Acceleration): Boolean {
-        return if (isGravityNormEstimated) {
-            gravityNormEstimator.getAverageNormAsMeasurement(result)
-        } else {
-            false
-        }
-    }
-
-    /**
-     * Gets estimated variance of gravity norm expressed in (m^2/s^4).
-     * This is only available if no location is provided and initialization has completed.
-     */
-    val gravityNormVariance
-        get() = if (isGravityNormEstimated) {
-            gravityNormEstimator.normVariance
-        } else {
-            null
-        }
-
-    /**
-     * Gets estimated standard deviation of gravity norm expressed in meters per squared second
-     * (m/s^2).
-     * This is only available if no location is provided and initialization has completed.
-     */
-    val gravityNormStandardDeviation
-        get() = if (isGravityNormEstimated) {
-            gravityNormEstimator.normStandardDeviation
-        } else {
-            null
-        }
-
-    /**
-     * Gets estimated standard deviation of gravity norm as Acceleration.
-     * This is only available if no location is provided and initialization has completed.
-     */
-    val gravityNormStandardDeviationAsMeasurement
-        get() = if (isGravityNormEstimated) {
-            gravityNormEstimator.normStandardDeviationAsMeasurement
-        } else {
-            null
-        }
-
-    /**
-     * Gets estimated standard deviation of gravity norm as Acceleration.
-     * This is only available if no location is provided and initialization has completed.
-     *
-     * @param result instance where result will be stored.
-     * @return true i result is available, false otherwise.
-     */
-    fun getGravityNormStandardDeviationAsMeasurement(result: Acceleration): Boolean {
-        return if (isGravityNormEstimated) {
-            gravityNormEstimator.getNormStandardDeviationAsMeasurement(result)
-        } else {
-            false
-        }
-    }
-
-    /**
-     * Gets PSD (Power Spectral Density) of gravity norm expressed in (m^2 * s^-3).
-     * This is only available if no location is provided and initialization has completed.
-     */
-    val gravityPsd
-        get() = if (isGravityNormEstimated) {
-            gravityNormEstimator.psd
-        } else {
-            null
-        }
-
-    /**
-     * Gets root PSD (Power Spectral Density) of gravity norm expressed in (m * s^-1.5).
-     * This is only available if no location is provided and initialization has completed.
-     */
-    val gravityRootPsd
-        get() = if (isGravityNormEstimated) {
-            gravityNormEstimator.rootPsd
-        } else {
-            null
-        }
+        get() = max(
+            max(
+                minimumRequiredAccelerometerMeasurements,
+                minimumRequiredGyroscopeMeasurements
+            ), minimumRequiredMagnetometerMeasurements
+        )
 
     /**
      * Indicates robust method used to solve accelerometer calibration.
@@ -2072,6 +2629,140 @@ class StaticIntervalAccelerometerAndGyroscopeCalibrator private constructor(
      */
     var gyroscopeRobustStopThresholdFactor: Double =
         StaticIntervalGyroscopeCalibrator.DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR
+        @Throws(IllegalArgumentException::class, IllegalStateException::class)
+        set(value) {
+            require(value > 0.0)
+            check(!running)
+            field = value
+        }
+
+    /**
+     * Indicates robust method used to solve magnetometer calibration.
+     * If null, no robust method is used at all, and instead an LMSE solution is found.
+     *
+     * @throws IllegalStateException if calibrator is currently running.
+     */
+    var magnetometerRobustMethod: RobustEstimatorMethod? = null
+        @Throws(IllegalStateException::class)
+        set(value) {
+            check(!running)
+            field = value
+        }
+
+    /**
+     * Confidence of estimated magnetometer calibration result expressed as a value between 0.0
+     * and 1.0.
+     * By default 99% of confidence is used, which indicates that with a probability of 99%
+     * estimation will be accurate because chosen sub-samples will be inliers (in other terms,
+     * outliers will be correctly discarded).
+     * This property is only taken into account if a not-null [magnetometerRobustMethod] is
+     * specified.
+     *
+     * @throws IllegalArgumentException if provided value is not between 0.0 and 1.0 (both
+     * included).
+     * @throws IllegalStateException if calibrator is currently running.
+     */
+    var magnetometerRobustConfidence: Double =
+        StaticIntervalMagnetometerCalibrator.ROBUST_DEFAULT_CONFIDENCE
+        @Throws(IllegalArgumentException::class, IllegalStateException::class)
+        set(value) {
+            require(value in 0.0..1.0)
+            check(!running)
+
+            field = value
+        }
+
+    /**
+     * Maximum number of iterations to attempt to find a robust magnetometer calibration solution.
+     * By default this is 5000.
+     * This property is only taken into account if a not-null [magnetometerRobustMethod] is
+     * specified.
+     *
+     * @throws IllegalArgumentException if provided value is zero or negative.
+     * @throws IllegalStateException if calibrator is currently running.
+     */
+    var magnetometerRobustMaxIterations: Int =
+        StaticIntervalMagnetometerCalibrator.ROBUST_DEFAULT_MAX_ITERATIONS
+        @Throws(IllegalArgumentException::class, IllegalStateException::class)
+        set(value) {
+            require(value > 0)
+            check(!running)
+            field = value
+        }
+
+    /**
+     * Size of preliminary subsets picked while finding a robust magnetometer calibration solution.
+     * By default this is the [minimumRequiredMagnetometerMeasurements], which results in the
+     * smallest number of iterations to complete robust algorithms.
+     * Larger values can be used to ensure that error in each preliminary solution is minimized
+     * among more measurements (thus, softening the effect of outliers), but this comes at the
+     * expense of larger number of iterations.
+     * This properly is only taken into account if a not-null [magnetometerRobustMethod] is
+     * specified.
+     *
+     * @throws IllegalArgumentException if provided value is less than
+     * [minimumRequiredMagnetometerMeasurements] at the moment the setter is called.
+     * @throws IllegalStateException if calibrator is currently running.
+     */
+    var magnetometerRobustPreliminarySubsetSize: Int = 0
+        @Throws(IllegalArgumentException::class, IllegalStateException::class)
+        set(value) {
+            require(value >= minimumRequiredMagnetometerMeasurements)
+            check(!running)
+            field = value
+        }
+
+    /**
+     * Threshold to be used to determine whether a measurement is considered an outlier by robust
+     * magnetometer calibration algorithms or not.
+     * Threshold varies depending on chosen [magnetometerRobustMethod].
+     * By default, if null is provided, the estimated [magnetometerBaseNoiseLevel] will be used to
+     * determine a suitable threshold. Otherwise, if a value is provided, such value will be used
+     * instead.
+     * This properly is only taken into account if a not-null [magnetometerRobustMethod] is
+     * specified.
+     *
+     * @throws IllegalArgumentException if provided value is zero or negative.
+     * @throws IllegalStateException if calibrator is currently running.
+     */
+    var magnetometerRobustThreshold: Double? = null
+        @Throws(IllegalArgumentException::class, IllegalStateException::class)
+        set(value) {
+            require(value == null || value > 0.0)
+            check(!running)
+            field = value
+        }
+
+    /**
+     * Factor to be used respect estimated magnetometer base noise level to consider a measurement
+     * an outlier when using robust calibration methods.
+     * By default this is 3.0 times [magnetometerBaseNoiseLevel], which considering the noise level
+     * as the standard deviation of a Gaussian distribution, should account for 99% of the cases.
+     * Any measurement hqving an error greater than tat in the estimated solution, will be
+     * considered an outlier and be discarded.
+     *
+     * @throws IllegalArgumentException if provided value is zero or negative.
+     * @throws IllegalStateException if calibrator is currently running.
+     */
+    var magnetometerRobustThresholdFactor: Double =
+        StaticIntervalMagnetometerCalibrator.DEFAULT_ROBUST_THRESHOLD_FACTOR
+        @Throws(IllegalArgumentException::class, IllegalStateException::class)
+        set(value) {
+            require(value > 0.0)
+            check(!running)
+            field = value
+        }
+
+    /**
+     * Additional factor to be taken into account for robust methods based on LMedS or PROMedS,
+     * where factor is not directly related to LMSE, but to a smaller value.
+     * This only applies to magnetometer calibration.
+     *
+     * @throws IllegalArgumentException if provided value is zero or negative.
+     * @throws IllegalStateException if calibrator is currently running.
+     */
+    var magnetometerRobustStopThresholdFactor: Double =
+        StaticIntervalMagnetometerCalibrator.DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR
         @Throws(IllegalArgumentException::class, IllegalStateException::class)
         set(value) {
             require(value > 0.0)
@@ -2860,6 +3551,377 @@ class StaticIntervalAccelerometerAndGyroscopeCalibrator private constructor(
         }
 
     /**
+     * Gets estimated magnetometer soft-iron matrix containing scale factors and cross coupling
+     * errors., or null if not available.
+     * This is the product of matrix Tm containing cross coupling errors and Km
+     * containing scaling factors.
+     * So tat:
+     * <pre>
+     *     Mm = [sx    mxy  mxz] = Tm*Km
+     *          [myx   sy   myz]
+     *          [mzx   mzy  sz ]
+     * </pre>
+     * Where:
+     * <pre>
+     *     Km = [sx 0   0 ]
+     *          [0  sy  0 ]
+     *          [0  0   sz]
+     * </pre>
+     * and
+     * <pre>
+     *     Tm = [1          -alphaXy    alphaXz ]
+     *          [alphaYx    1           -alphaYz]
+     *          [-alphaZx   alphaZy     1       ]
+     * </pre>
+     * Hence:
+     * <pre>
+     *     Mm = [sx    mxy  mxz] = Tm*Km =  [sx             -sy * alphaXy   sz * alphaXz ]
+     *          [myx   sy   myz]            [sx * alphaYx   sy              -sz * alphaYz]
+     *          [mzx   mzy  sz ]            [-sx * alphaZx  sy * alphaZy    sz           ]
+     * </pre>
+     * This instance allows any 3x3 matrix however, typically alphaYx, alphaZx and alphaZy
+     * are considered to be zero if the magnetometer z-axis is assumed to be the same
+     * as the body z-axis. When this is assumed, myx = mzx = mzy = 0 and the Mm matrix
+     * becomes upper diagonal:
+     * <pre>
+     *     Mm = [sx    mxy  mxz]
+     *          [0     sy   myz]
+     *          [0     0    sz ]
+     * </pre>
+     * Values of this matrix are unit-less.
+     */
+    val estimatedMagnetometerMm
+        get() = magnetometerInternalCalibrator?.estimatedMm
+
+    /**
+     * Gets estimated magnetometer x-axis scale factor or null if not available.
+     */
+    val estimatedMagnetometerSx: Double?
+        get() = magnetometerInternalCalibrator?.estimatedSx
+
+    /**
+     * Gets estimated magnetometer y-axis scale factor or null if not available.
+     */
+    val estimatedMagnetometerSy: Double?
+        get() = magnetometerInternalCalibrator?.estimatedSy
+
+    /**
+     * Gets estimated magnetometer z-axis scale factor or null if not available.
+     */
+    val estimatedMagnetometerSz: Double?
+        get() = magnetometerInternalCalibrator?.estimatedSz
+
+    /**
+     * Gets estimated magnetometer x-y cross-coupling error or null if not available.
+     */
+    val estimatedMagnetometerMxy: Double?
+        get() = magnetometerInternalCalibrator?.estimatedMxy
+
+    /**
+     * Gets estimated magnetometer x-z cross-coupling error or null if not available.
+     */
+    val estimatedMagnetometerMxz: Double?
+        get() = magnetometerInternalCalibrator?.estimatedMxz
+
+    /**
+     * Gets estimated magnetometer y-x cross-coupling error or null if not available.
+     */
+    val estimatedMagnetometerMyx: Double?
+        get() = magnetometerInternalCalibrator?.estimatedMyx
+
+    /**
+     * Gets estimated magnetometer y-z cross-coupling error or null if not available.
+     */
+    val estimatedMagnetometerMyz: Double?
+        get() = magnetometerInternalCalibrator?.estimatedMyz
+
+    /**
+     * Gets estimated magnetometer z-x cross-coupling error or null if not available.
+     */
+    val estimatedMagnetometerMzx: Double?
+        get() = magnetometerInternalCalibrator?.estimatedMzx
+
+    /**
+     * Gets estimated magnetometer z-y cross-coupling error or null if not available.
+     */
+    val estimatedMagnetometerMzy: Double?
+        get() = magnetometerInternalCalibrator?.estimatedMzy
+
+    /**
+     * Gets estimated covariance matrix for estimated magnetometer parameters or null if not
+     * available.
+     * When hard iron is known, diagonal elements of the covariance matrix contains variance for the
+     * following parameters (following indicated order): sx, sy, sz, mxy, mxz, myz, mzx, mzy.
+     * When hard iron is not known, diagonal elements of the covariance matrix contains variance for
+     * the following parameters (following indicated order): bx, by, bz, sx, sy, sz, mxy, mxz,
+     * myx, myz, mzx, mzy.
+     */
+    val estimatedMagnetometerCovariance: Matrix?
+        get() = magnetometerInternalCalibrator?.estimatedCovariance
+
+    /**
+     * Gets estimated chi square value for magnetometer or null if not available.
+     */
+    val estimatedMagnetometerChiSq: Double?
+        get() = magnetometerInternalCalibrator?.estimatedChiSq
+
+    /**
+     * Gets estimated mean square error respect to provided magnetometer measurements or null if
+     * not available.
+     */
+    val estimatedMagnetometerMse: Double?
+        get() = magnetometerInternalCalibrator?.estimatedMse
+
+    /**
+     * Gets x coordinate of estimated magnetometer hard iron expressed in Teslas (T).
+     * If [isMagnetometerGroundTruthInitialHardIron] is true, this will be equal to
+     * [magnetometerInitialHardIronX], otherwise it will be the estimated value obtained after
+     * solving calibration, that might differ from [magnetometerInitialHardIronX].
+     */
+    val estimatedMagnetometerHardIronX: Double?
+        get() {
+            return when (val internalCalibrator = magnetometerInternalCalibrator) {
+                is UnknownHardIronMagnetometerCalibrator -> {
+                    internalCalibrator.estimatedHardIronX
+                }
+                is KnownHardIronMagnetometerCalibrator -> {
+                    internalCalibrator.hardIronX
+                }
+                else -> {
+                    null
+                }
+            }
+        }
+
+    /**
+     * Gets y coordinate of estimated magnetometer hard iron expressed in Teslas (T).
+     * If [isMagnetometerGroundTruthInitialHardIron] is true, this will be equal to
+     * [magnetometerInitialHardIronY], otherwise it will be the estimated value obtained after
+     * solving calibration, that might differ from [magnetometerInitialHardIronY].
+     */
+    val estimatedMagnetometerHardIronY: Double?
+        get() {
+            return when (val internalCalibrator = magnetometerInternalCalibrator) {
+                is UnknownHardIronMagnetometerCalibrator -> {
+                    internalCalibrator.estimatedHardIronY
+                }
+                is KnownHardIronMagnetometerCalibrator -> {
+                    internalCalibrator.hardIronY
+                }
+                else -> {
+                    null
+                }
+            }
+        }
+
+    /**
+     * Gets z coordinate of estimated magnetometer hard iron expressed in Teslas (T).
+     * If [isMagnetometerGroundTruthInitialHardIron] is true, this will be equal to
+     * [magnetometerInitialHardIronZ], otherwise it will be the estimated value obtained after
+     * solving calibration, that might differ from [magnetometerInitialHardIronZ].
+     */
+    val estimatedMagnetometerHardIronZ: Double?
+        get() {
+            return when (val internalCalibrator = magnetometerInternalCalibrator) {
+                is UnknownHardIronMagnetometerCalibrator -> {
+                    internalCalibrator.estimatedHardIronZ
+                }
+                is KnownHardIronMagnetometerCalibrator -> {
+                    internalCalibrator.hardIronZ
+                }
+                else -> {
+                    null
+                }
+            }
+        }
+
+    /**
+     * Gets x coordinate of estimated magnetometer hard iron.
+     * If [isMagnetometerGroundTruthInitialHardIron] is true, this will be equal to
+     * [magnetometerInitialHardIronXAsMeasurement], otherwise it will be the estimated value
+     * obtained after solving calibration, that might differ from
+     * [magnetometerInitialHardIronXAsMeasurement].
+     */
+    val estimatedMagnetometerHardIronXAsMeasurement: MagneticFluxDensity?
+        get() {
+            return when (val internalCalibrator = magnetometerInternalCalibrator) {
+                is UnknownHardIronMagnetometerCalibrator -> {
+                    internalCalibrator.estimatedHardIronXAsMagneticFluxDensity
+                }
+                is KnownHardIronMagnetometerCalibrator -> {
+                    internalCalibrator.hardIronXAsMagneticFluxDensity
+                }
+                else -> {
+                    null
+                }
+            }
+        }
+
+    /**
+     * Gets x coordinate of estimated magnetometer hard iron.
+     * If [isMagnetometerGroundTruthInitialHardIron] is true, this will be equal to
+     * [magnetometerInitialHardIronXAsMeasurement], otherwise it will be the estimated value
+     * obtained after solving calibration, that might differ from
+     * [magnetometerInitialHardIronXAsMeasurement].
+     *
+     * @param result instance where result will be stored.
+     * @return true if result is available, false otherwise.
+     */
+    fun getEstimatedMagnetometerHardIronXAsMeasurement(result: MagneticFluxDensity): Boolean {
+        return when (val internalCalibrator = magnetometerInternalCalibrator) {
+            is UnknownHardIronMagnetometerCalibrator -> {
+                internalCalibrator.getEstimatedHardIronXAsMagneticFluxDensity(result)
+            }
+            is KnownHardIronMagnetometerCalibrator -> {
+                internalCalibrator.getHardIronXAsMagneticFluxDensity(result)
+                true
+            }
+            else -> {
+                false
+            }
+        }
+    }
+
+    /**
+     * Gets y coordinate of estimated magnetometer hard iron.
+     * If [isMagnetometerGroundTruthInitialHardIron] is true, this will be equal to
+     * [magnetometerInitialHardIronYAsMeasurement], otherwise it will be the estimated value
+     * obtained after solving calibration, that might differ from
+     * [magnetometerInitialHardIronYAsMeasurement].
+     */
+    val estimatedMagnetometerHardIronYAsMeasurement: MagneticFluxDensity?
+        get() {
+            return when (val internalCalibrator = magnetometerInternalCalibrator) {
+                is UnknownHardIronMagnetometerCalibrator -> {
+                    internalCalibrator.estimatedHardIronYAsMagneticFluxDensity
+                }
+                is KnownHardIronMagnetometerCalibrator -> {
+                    internalCalibrator.hardIronYAsMagneticFluxDensity
+                }
+                else -> {
+                    null
+                }
+            }
+        }
+
+    /**
+     * Gets y coordinate of estimated magnetometer hard iron.
+     * If [isMagnetometerGroundTruthInitialHardIron] is true, this will be equal to
+     * [magnetometerInitialHardIronYAsMeasurement], otherwise it will be the estimated value
+     * obtained after solving calibration, that might differ from
+     * [magnetometerInitialHardIronYAsMeasurement].
+     *
+     * @param result instance where result will be stored.
+     * @return true if result is available, false otherwise.
+     */
+    fun getEstimatedMagnetometerHardIronYAsMeasurement(result: MagneticFluxDensity): Boolean {
+        return when (val internalCalibrator = magnetometerInternalCalibrator) {
+            is UnknownHardIronMagnetometerCalibrator -> {
+                internalCalibrator.getEstimatedHardIronYAsMagneticFluxDensity(result)
+            }
+            is KnownHardIronMagnetometerCalibrator -> {
+                internalCalibrator.getHardIronYAsMagneticFluxDensity(result)
+                true
+            }
+            else -> {
+                false
+            }
+        }
+    }
+
+    /**
+     * Gets z coordinate of estimated magnetometer hard iron.
+     * If [isMagnetometerGroundTruthInitialHardIron] is true, this will be equal to
+     * [magnetometerInitialHardIronZAsMeasurement], otherwise it will be the estimated value
+     * obtained after solving calibration, that might differ from
+     * [magnetometerInitialHardIronZAsMeasurement].
+     */
+    val estimatedMagnetometerHardIronZAsMeasurement: MagneticFluxDensity?
+        get() {
+            return when (val internalCalibrator = magnetometerInternalCalibrator) {
+                is UnknownHardIronMagnetometerCalibrator -> {
+                    internalCalibrator.estimatedHardIronZAsMagneticFluxDensity
+                }
+                is KnownHardIronMagnetometerCalibrator -> {
+                    internalCalibrator.hardIronZAsMagneticFluxDensity
+                }
+                else -> {
+                    null
+                }
+            }
+        }
+
+    /**
+     * Gets z coordinate of estimated magnetometer hard iron.
+     * If [isMagnetometerGroundTruthInitialHardIron] is true, this will be equal to
+     * [magnetometerInitialHardIronZAsMeasurement], otherwise it will be the estimated value
+     * obtained after solving calibration, that might differ from
+     * [magnetometerInitialHardIronZAsMeasurement].
+     *
+     * @param result instance where result will be stored.
+     * @return true if result is available, false otherwise.
+     */
+    fun getEstimatedMagnetometerHardIronZAsMeasurement(result: MagneticFluxDensity): Boolean {
+        return when (val internalCalibrator = magnetometerInternalCalibrator) {
+            is UnknownHardIronMagnetometerCalibrator -> {
+                internalCalibrator.getEstimatedHardIronZAsMagneticFluxDensity(result)
+            }
+            is KnownHardIronMagnetometerCalibrator -> {
+                internalCalibrator.getHardIronZAsMagneticFluxDensity(result)
+                true
+            }
+            else -> {
+                false
+            }
+        }
+    }
+
+    /**
+     * Gets estimated magnetometer hard iron.
+     * If [isMagnetometerGroundTruthInitialHardIron] is true, this will be equal to
+     * [magnetometerInitialHardIronAsTriad], otherwise it will be the estimated value obtained after
+     * solving calibration, that might differ from [magnetometerInitialHardIronAsTriad].
+     */
+    val estimatedMagnetometerHardIronAsTriad: MagneticFluxDensityTriad?
+        get() {
+            return when (val internalCalibrator = magnetometerInternalCalibrator) {
+                is UnknownHardIronMagnetometerCalibrator -> {
+                    internalCalibrator.estimatedHardIronAsTriad
+                }
+                is KnownHardIronMagnetometerCalibrator -> {
+                    internalCalibrator.hardIronAsTriad
+                }
+                else -> {
+                    null
+                }
+            }
+        }
+
+    /**
+     * Gets estimated magnetometer hard iron.
+     * If [isMagnetometerGroundTruthInitialHardIron] is true, this will be equal to
+     * [magnetometerInitialHardIronAsTriad], otherwise it will be the estimated value obtained after
+     * solving calibration, that might differ from [magnetometerInitialHardIronAsTriad].
+     *
+     * @param result instance where result will be stored.
+     * @return true if result is available, false otherwise.
+     */
+    fun getEstimatedMagnetometerHardIronAsTriad(result: MagneticFluxDensityTriad): Boolean {
+        return when (val internalCalibrator = magnetometerInternalCalibrator) {
+            is UnknownHardIronMagnetometerCalibrator -> {
+                internalCalibrator.getEstimatedHardIronAsTriad(result)
+            }
+            is KnownHardIronMagnetometerCalibrator -> {
+                internalCalibrator.getHardIronAsTriad(result)
+                true
+            }
+            else -> {
+                false
+            }
+        }
+    }
+
+    /**
      * Gets gyroscope measurement base noise level that has been detected during initialization
      * expressed in radians per second (rad/s).
      * This is only available once generator completes initialization.
@@ -2886,10 +3948,42 @@ class StaticIntervalAccelerometerAndGyroscopeCalibrator private constructor(
     }
 
     /**
+     * Gets magnetometer measurement base noise level that has been detected during initialization
+     * expressed in Teslas (T).
+     * This is only available once generator completes initialization.
+     */
+    val magnetometerBaseNoiseLevel
+        get() = generator.magnetometerBaseNoiseLevel
+
+    /**
+     * Gets magnetometer measurement base noise level that has been detected during initialization.
+     * This is only available once generator completes initialization.
+     */
+    val magnetometerBaseNoiseLevelAsMeasurement
+        get() = generator.magnetometerBaseNoiseLevelAsMeasurement
+
+    /**
+     * Gets magnetometer measurement base noise level that has been detected during initialization.
+     * This is only available once generator completes initialization.
+     *
+     * @param result instance where result will be stored.
+     * @return true if result is available, false otherwise.
+     */
+    fun getMagnetometerBaseNoiseLevelAsMeasurement(result: MagneticFluxDensity): Boolean {
+        return generator.getMagnetometerBaseNoiseLevelAsMeasurement(result)
+    }
+
+    /**
      * Number of gyroscope measurements that have been processed.
      */
     val numberOfProcessedGyroscopeMeasurements
         get() = generator.numberOfProcessedGyroscopeMeasurements
+
+    /**
+     * Number of magnetometer measurements that have been processed.
+     */
+    val numberOfProcessedMagnetometerMeasurements
+        get() = generator.numberOfProcessedMagnetometerMeasurements
 
     /**
      * List of accelerometer measurements that have been collected so far to be used for
@@ -2907,6 +4001,14 @@ class StaticIntervalAccelerometerAndGyroscopeCalibrator private constructor(
      */
     val gyroscopeMeasurements =
         mutableListOf<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>()
+
+    /**
+     * List of magnetometer measurements that have been collected so far to be used for
+     * magnetometer calibration.
+     * Items in return list can be modified if needed, but beware that this might
+     * have consequences on solved calibration result.
+     */
+    val magnetometerMeasurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
 
     /**
      * Indicates whether enough measurements have been picked at static intervals so that the
@@ -2927,49 +4029,20 @@ class StaticIntervalAccelerometerAndGyroscopeCalibrator private constructor(
         )
 
     /**
+     * Indicates whether enough measurements have been picked at static intervals so that the
+     * calibration process can be solved.
+     */
+    val isReadyToSolveMagnetometerCalibration: Boolean
+        get() = magnetometerMeasurements.size >= requiredMeasurements.coerceAtLeast(
+            minimumRequiredMeasurements
+        )
+
+    /**
      * Indicates whether enough measurements have been picked at static or dynamic intervals so that
      * the calibration process can be solved.
      */
     override val isReadyToSolveCalibration: Boolean
-        get() = isReadyToSolveAccelerometerCalibration && isReadyToSolveGyroscopeCalibration
-
-    /**
-     * Starts calibrator.
-     * This method starts collecting accelerometer and gyroscope measurements.
-     * When calibrator is started, it begins with an initialization stage where accelerometer noise
-     * is estimated while device remains static. If no location is provided, during initialization
-     * gravity norm is also estimated.
-     * Once initialization is completed, calibrator determines intervals where device remains static
-     * when device has different poses, so that measurements are collected to solve calibration.
-     * If [solveCalibrationWhenEnoughMeasurements] is true, calibration is automatically solved
-     * once enough measurements are collected, otherwise a call to [calibrate] must be done to solve
-     * calibration.
-     *
-     * @throws IllegalStateException if calibrator is already running or a sensor is missing
-     * (either accelerometer or gravity if it is being used when no location is provided).
-     */
-    @Throws(IllegalStateException::class)
-    override fun start() {
-        super.start()
-        if (isGravityNormEstimated) {
-            gravityNormEstimator.start()
-        }
-    }
-
-    /**
-     * Stops calibrator.
-     * When this is called, no more accelerometer, gyroscope or gravity measurements are collected.
-     *
-     * @param running specifies the running parameter to be set. This is true when stop occurs
-     * internally during measurement collection to start solving calibration, otherwise is false
-     * when calling public [stop] method.
-     */
-    override fun internalStop(running: Boolean) {
-        if (gravityNormEstimator.running) {
-            gravityNormEstimator.stop()
-        }
-        super.internalStop(running)
-    }
+        get() = isReadyToSolveAccelerometerCalibration && isReadyToSolveGyroscopeCalibration && isReadyToSolveMagnetometerCalibration
 
     /**
      * Internally solves calibration using collected measurements without checking pre-requisites
@@ -2988,12 +4061,14 @@ class StaticIntervalAccelerometerAndGyroscopeCalibrator private constructor(
             gyroscopeInternalCalibrator = buildGyroscopeInternalCalibrator()
             gyroscopeInternalCalibrator?.calibrate()
 
+            magnetometerInternalCalibrator?.calibrate()
+
             calibrationCompletedListener?.onCalibrationCompleted(this)
             running = false
             true
         } catch (e: NavigationException) {
             Log.e(
-                StaticIntervalAccelerometerAndGyroscopeCalibrator::class.qualifiedName,
+                StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator::class.qualifiedName,
                 "Calibration estimation failed",
                 e
             )
@@ -3012,6 +4087,7 @@ class StaticIntervalAccelerometerAndGyroscopeCalibrator private constructor(
     override fun reset() {
         accelerometerMeasurements.clear()
         gyroscopeMeasurements.clear()
+        magnetometerMeasurements.clear()
 
         gravityNorm = null
         accelerometerResultUnreliable = false
@@ -3023,8 +4099,13 @@ class StaticIntervalAccelerometerAndGyroscopeCalibrator private constructor(
         gyroscopeInitialBiasY = null
         gyroscopeInitialBiasZ = null
 
+        magnetometerInitialHardIronX = null
+        magnetometerInitialHardIronY = null
+        magnetometerInitialHardIronZ = null
+
         accelerometerInternalCalibrator = null
         gyroscopeInternalCalibrator = null
+        magnetometerInternalCalibrator = null
     }
 
     /**
@@ -3035,21 +4116,25 @@ class StaticIntervalAccelerometerAndGyroscopeCalibrator private constructor(
         val reqMeasurements = requiredMeasurements.coerceAtLeast(minimumRequiredMeasurements)
         val accelerometerMeasurementsSize = accelerometerMeasurements.size
         val gyroscopeMeasurementsSize = gyroscopeMeasurements.size
+        val magnetometerMeasurements = magnetometerMeasurements.size
 
         // check if enough measurements have been collected
         val isReadyToCalibrate =
-            accelerometerMeasurementsSize >= reqMeasurements && gyroscopeMeasurementsSize >= reqMeasurements
+            accelerometerMeasurementsSize >= reqMeasurements
+                    && gyroscopeMeasurementsSize >= reqMeasurements
+                    && magnetometerMeasurements >= reqMeasurements
 
         if (isReadyToCalibrate) {
             readyToSolveCalibrationListener?.onReadyToSolveCalibration(
-                this@StaticIntervalAccelerometerAndGyroscopeCalibrator
+                this@StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator
             )
 
             // stop internal generator since no more measurements need to be collected
             internalStop(true)
 
-            // build accelerometer calibrator
+            // build accelerometer and magnetometer calibrators
             accelerometerInternalCalibrator = buildAccelerometerInternalCalibrator()
+            magnetometerInternalCalibrator = buildMagnetometerInternalCalibrator()
 
             if (solveCalibrationWhenEnoughMeasurements) {
                 // execute calibration
@@ -3132,10 +4217,61 @@ class StaticIntervalAccelerometerAndGyroscopeCalibrator private constructor(
     }
 
     /**
+     * Updates initial hard iron values when first magnetometer measurement is received, so
+     * that hardware calibrated biases are retrieved if
+     * [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED] is used.
+     *
+     * @param hardIronX hard iron on device x-axis expressed in micro-Teslas (µT). Only
+     * available when using [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED].
+     * If available, this value remains constant with calibrated bias value.
+     * @param hardIronY hard iron on device y-axis expressed in micro-Teslas (µT). Only
+     * available when using [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED].
+     * If available, this value remains constant with calibrated bias value.
+     * @param hardIronZ hard iron on device y-axis expressed in micro-Teslas (µT). Only
+     * available when using [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED].
+     * If available, this value remains constant with calibrated bias value.
+     */
+    private fun updateMagnetometerInitialHardIrons(
+        hardIronX: Double?,
+        hardIronY: Double?,
+        hardIronZ: Double?
+    ) {
+        val initialHardIronX: Double
+        val initialHardIronY: Double
+        val initialHardIronZ: Double
+        if (hardIronX != null && hardIronY != null && hardIronZ != null) {
+            initialHardIronX = hardIronX.toDouble()
+            initialHardIronY = hardIronY.toDouble()
+            initialHardIronZ = hardIronZ.toDouble()
+        } else {
+            initialHardIronX = 0.0
+            initialHardIronY = 0.0
+            initialHardIronZ = 0.0
+        }
+
+        magnetometerInitialHardIronX = initialHardIronX
+        magnetometerInitialHardIronY = initialHardIronY
+        magnetometerInitialHardIronZ = initialHardIronZ
+
+        initialMagnetometerHardIronAvailableListener?.onInitialHardIronAvailable(
+            this,
+            initialHardIronX,
+            initialHardIronY,
+            initialHardIronZ
+        )
+    }
+
+    /**
      * Indicates whether the generator has picked the first gyroscope measurement.
      */
     private val isFirstGyroscopeMeasurement: Boolean
         get() = generator.numberOfProcessedGyroscopeMeasurements <= FIRST_MEASUREMENT
+
+    /**
+     * Indicates whether the generator has picked the first accelerometer measurement.
+     */
+    private val isFirstMagnetometerMeasurement: Boolean
+        get() = generator.numberOfProcessedMagnetometerMeasurements <= FIRST_MEASUREMENT
 
     /**
      * Builds an internal accelerometer calibrator based on all provided parameters.
@@ -3256,6 +4392,46 @@ class StaticIntervalAccelerometerAndGyroscopeCalibrator private constructor(
         ).build()
     }
 
+    /**
+     * Builds an internal magnetometer calibrator based on all provided parameters.
+     *
+     * @return an internal magnetometer calibrator.
+     * @throws IllegalStateException if no suitable calibrator can be built.
+     */
+    @Throws(IllegalStateException::class)
+    private fun buildMagnetometerInternalCalibrator(): MagnetometerNonLinearCalibrator {
+        return MagnetometerInternalCalibratorBuilder(
+            magnetometerMeasurements,
+            location,
+            magnetometerRobustPreliminarySubsetSize,
+            minimumRequiredMagnetometerMeasurements,
+            magnetometerRobustMethod,
+            timestamp,
+            magnetometerRobustConfidence,
+            magnetometerRobustMaxIterations,
+            magnetometerRobustThreshold,
+            magnetometerRobustThresholdFactor,
+            magnetometerRobustStopThresholdFactor,
+            isMagnetometerGroundTruthInitialHardIron,
+            isMagnetometerCommonAxisUsed,
+            magnetometerInitialHardIronX,
+            magnetometerInitialHardIronY,
+            magnetometerInitialHardIronZ,
+            magnetometerInitialSx,
+            magnetometerInitialSy,
+            magnetometerInitialSz,
+            magnetometerInitialMxy,
+            magnetometerInitialMxz,
+            magnetometerInitialMyx,
+            magnetometerInitialMyz,
+            magnetometerInitialMzx,
+            magnetometerInitialMzy,
+            magnetometerBaseNoiseLevel,
+            worldMagneticModel,
+            magnetometerQualityScoreMapper
+        ).build()
+    }
+
     private companion object {
         /**
          * Indicates when first sensor measurement is obtained.
@@ -3276,7 +4452,7 @@ class StaticIntervalAccelerometerAndGyroscopeCalibrator private constructor(
          * @param requiredMeasurements required number of measurements to solve calibration.
          */
         fun onGeneratedAccelerometerMeasurement(
-            calibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator,
+            calibrator: StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator,
             measurement: StandardDeviationBodyKinematics,
             measurementsFoundSoFar: Int,
             requiredMeasurements: Int
@@ -3296,8 +4472,29 @@ class StaticIntervalAccelerometerAndGyroscopeCalibrator private constructor(
          * @param requiredMeasurements required number of measurements to solve calibration.
          */
         fun onGeneratedGyroscopeMeasurement(
-            calibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator,
+            calibrator: StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator,
             measurement: BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>,
+            measurementsFoundSoFar: Int,
+            requiredMeasurements: Int
+        )
+    }
+
+    /**
+     * Interface to notify when a new magnetometer calibration measurement is generated.
+     */
+    fun interface OnGeneratedMagnetometerMeasurementListener {
+
+        /**
+         * Called when a new magnetometer calibration measurement is generated.
+         *
+         * @param calibrator calibrator that raised the event.
+         * @param measurement generated magnetometer calibration measurement.
+         * @param measurementsFoundSoFar number of measurements that have been found so far.
+         * @param requiredMeasurements required number of measurements to solve calibration.
+         */
+        fun onGeneratedMagnetometerMeasurement(
+            calibrator: StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator,
+            measurement: StandardDeviationBodyMagneticFluxDensity,
             measurementsFoundSoFar: Int,
             requiredMeasurements: Int
         )
@@ -3314,7 +4511,7 @@ class StaticIntervalAccelerometerAndGyroscopeCalibrator private constructor(
          *
          * @param calibrator calibrator that raised the event.
          */
-        fun onUnreliableGravityEstimation(calibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator)
+        fun onUnreliableGravityEstimation(calibrator: StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator)
     }
 
     /**
@@ -3335,7 +4532,7 @@ class StaticIntervalAccelerometerAndGyroscopeCalibrator private constructor(
          * @param biasZ z-coordinate of bias expressed in meters per squared second (m/s^2).
          */
         fun onInitialBiasAvailable(
-            calibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator,
+            calibrator: StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator,
             biasX: Double,
             biasY: Double,
             biasZ: Double
@@ -3360,10 +4557,37 @@ class StaticIntervalAccelerometerAndGyroscopeCalibrator private constructor(
          * @param biasZ z-coordinate of bias expressed in radians per second (rad/s).
          */
         fun onInitialBiasAvailable(
-            calibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator,
+            calibrator: StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator,
             biasX: Double,
             biasY: Double,
             biasZ: Double
+        )
+    }
+
+    /**
+     * Interface to notify when initial hard iron guess is available.
+     * If [isMagnetometerGroundTruthInitialHardIron] is true, then initial hard iron is considered
+     * the true value after solving calibration, otherwise, initial hard iron is considered only an
+     * initial guess.
+     */
+    fun interface OnInitialMagnetometerHardIronAvailableListener {
+
+        /**
+         * Called when initial hard iron is available.
+         * If [isMagnetometerGroundTruthInitialHardIron] is true, then initial hard iron is considered
+         * the true value after solving calibration, otherwise, initial hard iron is considered only an
+         * initial guess.
+         *
+         * @param calibrator calibrator that raised the event.
+         * @param hardIronX x-coordinate of hard iron expressed in micro-Teslas (µT).
+         * @param hardIronY y-coordinate of hard iron expressed in micro-Teslas (µT).
+         * @param hardIronZ z-coordinate of hard iron expressed in micro-Teslas (µT).
+         */
+        fun onInitialHardIronAvailable(
+            calibrator: StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator,
+            hardIronX: Double,
+            hardIronY: Double,
+            hardIronZ: Double
         )
     }
 }

@@ -252,10 +252,6 @@ class StaticIntervalAccelerometerCalibratorTest {
         )
         Log.i(
             "StaticIntervalAccelerometerCalibratorTest",
-            "Result unreliable: ${calibrator.accelerometerResultUnreliable}"
-        )
-        Log.i(
-            "StaticIntervalAccelerometerCalibratorTest",
             "is ground truth initial bias: ${calibrator.isAccelerometerGroundTruthInitialBias}"
         )
         Log.i("StaticIntervalAccelerometerCalibratorTest", "Location: ${calibrator.location}")
