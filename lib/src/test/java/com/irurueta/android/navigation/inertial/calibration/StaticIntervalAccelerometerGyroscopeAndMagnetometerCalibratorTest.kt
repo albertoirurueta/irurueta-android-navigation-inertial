@@ -3568,7 +3568,642 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         calibrator.magnetometerInitialMzy = magnetometerInitialMzy
     }
 
-    // TODO: gyroscopeInitialMg_whenNotRunning_setsExpectedValue
+    @Test
+    fun setMagnetometerInitialScalingFactors_whenNotRunning_setsExpectedValues() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        // check default values
+        assertEquals(0.0, calibrator.magnetometerInitialSx, 0.0)
+        assertEquals(0.0, calibrator.magnetometerInitialSy, 0.0)
+        assertEquals(0.0, calibrator.magnetometerInitialSz, 0.0)
+        assertFalse(calibrator.running)
+
+        // set new values
+        val randomizer = UniformRandomizer()
+        val magnetometerInitialSx = randomizer.nextDouble()
+        val magnetometerInitialSy = randomizer.nextDouble()
+        val magnetometerInitialSz = randomizer.nextDouble()
+        calibrator.setMagnetometerInitialScalingFactors(
+            magnetometerInitialSx,
+            magnetometerInitialSy,
+            magnetometerInitialSz
+        )
+
+        // check
+        assertEquals(magnetometerInitialSx, calibrator.magnetometerInitialSx, 0.0)
+        assertEquals(magnetometerInitialSy, calibrator.magnetometerInitialSy, 0.0)
+        assertEquals(magnetometerInitialSz, calibrator.magnetometerInitialSz, 0.0)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun setMagnetometerInitialScalingFactors_whenRunning_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        // set new values
+        val randomizer = UniformRandomizer()
+        val magnetometerInitialSx = randomizer.nextDouble()
+        val magnetometerInitialSy = randomizer.nextDouble()
+        val magnetometerInitialSz = randomizer.nextDouble()
+        calibrator.setMagnetometerInitialScalingFactors(
+            magnetometerInitialSx,
+            magnetometerInitialSy,
+            magnetometerInitialSz
+        )
+    }
+
+    @Test
+    fun setMagnetometerInitialCrossCouplingErrors_whenNotRunning_setsExpectedValues() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        // check default values
+        assertEquals(0.0, calibrator.magnetometerInitialMxy, 0.0)
+        assertEquals(0.0, calibrator.magnetometerInitialMxz, 0.0)
+        assertEquals(0.0, calibrator.magnetometerInitialMyx, 0.0)
+        assertEquals(0.0, calibrator.magnetometerInitialMyz, 0.0)
+        assertEquals(0.0, calibrator.magnetometerInitialMzx, 0.0)
+        assertEquals(0.0, calibrator.magnetometerInitialMzy, 0.0)
+        assertFalse(calibrator.running)
+
+        // set new values
+        val randomizer = UniformRandomizer()
+        val magnetometerInitialMxy = randomizer.nextDouble()
+        val magnetometerInitialMxz = randomizer.nextDouble()
+        val magnetometerInitialMyx = randomizer.nextDouble()
+        val magnetometerInitialMyz = randomizer.nextDouble()
+        val magnetometerInitialMzx = randomizer.nextDouble()
+        val magnetometerInitialMzy = randomizer.nextDouble()
+        calibrator.setMagnetometerInitialCrossCouplingErrors(
+            magnetometerInitialMxy,
+            magnetometerInitialMxz,
+            magnetometerInitialMyx,
+            magnetometerInitialMyz,
+            magnetometerInitialMzx,
+            magnetometerInitialMzy
+        )
+
+        // check
+        assertEquals(magnetometerInitialMxy, calibrator.magnetometerInitialMxy, 0.0)
+        assertEquals(magnetometerInitialMxz, calibrator.magnetometerInitialMxz, 0.0)
+        assertEquals(magnetometerInitialMyx, calibrator.magnetometerInitialMyx, 0.0)
+        assertEquals(magnetometerInitialMyz, calibrator.magnetometerInitialMyz, 0.0)
+        assertEquals(magnetometerInitialMzx, calibrator.magnetometerInitialMzx, 0.0)
+        assertEquals(magnetometerInitialMzy, calibrator.magnetometerInitialMzy, 0.0)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun setMagnetometerInitialCrossCouplingErrors_whenRunning_throwsIllegalArgumentException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        // set new values
+        val randomizer = UniformRandomizer()
+        val magnetometerInitialMxy = randomizer.nextDouble()
+        val magnetometerInitialMxz = randomizer.nextDouble()
+        val magnetometerInitialMyx = randomizer.nextDouble()
+        val magnetometerInitialMyz = randomizer.nextDouble()
+        val magnetometerInitialMzx = randomizer.nextDouble()
+        val magnetometerInitialMzy = randomizer.nextDouble()
+        calibrator.setMagnetometerInitialCrossCouplingErrors(
+            magnetometerInitialMxy,
+            magnetometerInitialMxz,
+            magnetometerInitialMyx,
+            magnetometerInitialMyz,
+            magnetometerInitialMzx,
+            magnetometerInitialMzy
+        )
+    }
+
+    @Test
+    fun setMagnetometerInitialScalingFactorsAndCrossCouplingErrors_whenNotRunning_setsExpectedValues() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        // check default values
+        assertEquals(0.0, calibrator.magnetometerInitialSx, 0.0)
+        assertEquals(0.0, calibrator.magnetometerInitialSy, 0.0)
+        assertEquals(0.0, calibrator.magnetometerInitialSz, 0.0)
+        assertEquals(0.0, calibrator.magnetometerInitialMxy, 0.0)
+        assertEquals(0.0, calibrator.magnetometerInitialMxz, 0.0)
+        assertEquals(0.0, calibrator.magnetometerInitialMyx, 0.0)
+        assertEquals(0.0, calibrator.magnetometerInitialMyz, 0.0)
+        assertEquals(0.0, calibrator.magnetometerInitialMzx, 0.0)
+        assertEquals(0.0, calibrator.magnetometerInitialMzy, 0.0)
+        assertFalse(calibrator.running)
+
+        // set new values
+        val randomizer = UniformRandomizer()
+        val magnetometerInitialSx = randomizer.nextDouble()
+        val magnetometerInitialSy = randomizer.nextDouble()
+        val magnetometerInitialSz = randomizer.nextDouble()
+        val magnetometerInitialMxy = randomizer.nextDouble()
+        val magnetometerInitialMxz = randomizer.nextDouble()
+        val magnetometerInitialMyx = randomizer.nextDouble()
+        val magnetometerInitialMyz = randomizer.nextDouble()
+        val magnetometerInitialMzx = randomizer.nextDouble()
+        val magnetometerInitialMzy = randomizer.nextDouble()
+        calibrator.setMagnetometerInitialScalingFactorsAndCrossCouplingErrors(
+            magnetometerInitialSx,
+            magnetometerInitialSy,
+            magnetometerInitialSz,
+            magnetometerInitialMxy,
+            magnetometerInitialMxz,
+            magnetometerInitialMyx,
+            magnetometerInitialMyz,
+            magnetometerInitialMzx,
+            magnetometerInitialMzy
+        )
+
+        // check
+        assertEquals(magnetometerInitialSx, calibrator.magnetometerInitialSx, 0.0)
+        assertEquals(magnetometerInitialSy, calibrator.magnetometerInitialSy, 0.0)
+        assertEquals(magnetometerInitialSz, calibrator.magnetometerInitialSz, 0.0)
+        assertEquals(magnetometerInitialMxy, calibrator.magnetometerInitialMxy, 0.0)
+        assertEquals(magnetometerInitialMxz, calibrator.magnetometerInitialMxz, 0.0)
+        assertEquals(magnetometerInitialMyx, calibrator.magnetometerInitialMyx, 0.0)
+        assertEquals(magnetometerInitialMyz, calibrator.magnetometerInitialMyz, 0.0)
+        assertEquals(magnetometerInitialMzx, calibrator.magnetometerInitialMzx, 0.0)
+        assertEquals(magnetometerInitialMzy, calibrator.magnetometerInitialMzy, 0.0)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun setMagnetometerInitialScalingFactorsAndCrossCouplingErrors_whenRunning_throwsIllegalArgumentException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        // set new values
+        val randomizer = UniformRandomizer()
+        val magnetometerInitialSx = randomizer.nextDouble()
+        val magnetometerInitialSy = randomizer.nextDouble()
+        val magnetometerInitialSz = randomizer.nextDouble()
+        val magnetometerInitialMxy = randomizer.nextDouble()
+        val magnetometerInitialMxz = randomizer.nextDouble()
+        val magnetometerInitialMyx = randomizer.nextDouble()
+        val magnetometerInitialMyz = randomizer.nextDouble()
+        val magnetometerInitialMzx = randomizer.nextDouble()
+        val magnetometerInitialMzy = randomizer.nextDouble()
+        calibrator.setMagnetometerInitialScalingFactorsAndCrossCouplingErrors(
+            magnetometerInitialSx,
+            magnetometerInitialSy,
+            magnetometerInitialSz,
+            magnetometerInitialMxy,
+            magnetometerInitialMxz,
+            magnetometerInitialMyx,
+            magnetometerInitialMyz,
+            magnetometerInitialMzx,
+            magnetometerInitialMzy
+        )
+    }
+
+    @Test
+    fun isAccelerometerCommonAxisUsed_whenNotRunning_setsExpectedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        assertFalse(calibrator.isAccelerometerCommonAxisUsed)
+
+        // set new value
+        calibrator.isAccelerometerCommonAxisUsed = true
+
+        // check
+        assertTrue(calibrator.isAccelerometerCommonAxisUsed)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun isAccelerometerCommonAxisUsed_whenRunning_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        calibrator.isAccelerometerCommonAxisUsed = true
+    }
+
+    @Test
+    fun isGyroscopeCommonAxisUsed_whenNotRunning_setsExpectedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        // check default values
+        assertFalse(calibrator.isGyroscopeCommonAxisUsed)
+        assertFalse(calibrator.running)
+
+        // set new value
+        calibrator.isGyroscopeCommonAxisUsed = true
+
+        // check
+        assertTrue(calibrator.isGyroscopeCommonAxisUsed)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun isGyroscopeCommonAxisUsed_whenRunning_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        // set new value
+        calibrator.isGyroscopeCommonAxisUsed = true
+    }
+
+    @Test
+    fun isMagnetometerCommonAxisUsed_whenNotRunning_setsExpectedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        // check default values
+        assertFalse(calibrator.isMagnetometerCommonAxisUsed)
+        assertFalse(calibrator.running)
+
+        // set new value
+        calibrator.isMagnetometerCommonAxisUsed = true
+
+        // check
+        assertTrue(calibrator.isMagnetometerCommonAxisUsed)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun isMagnetometerCommonAxisUsed_whenRunning_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        // set new value
+        calibrator.isMagnetometerCommonAxisUsed = true
+    }
+
+    @Test
+    fun isGDependentCrossBiasesEstimated_whenNotRunning_setsExpectedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        // check default values
+        assertFalse(calibrator.isGDependentCrossBiasesEstimated)
+        assertFalse(calibrator.running)
+
+        // set new value
+        calibrator.isGDependentCrossBiasesEstimated = true
+
+        // check
+        assertTrue(calibrator.isGDependentCrossBiasesEstimated)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun isGDependentCrossBiasesEstimated_whenRunning_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        // set new value
+        calibrator.isGDependentCrossBiasesEstimated = true
+    }
+
+    @Test
+    fun minimumRequiredAccelerometerMeasurements_whenCommonAxisAndKnownBias_returnsExpectedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        calibrator.isAccelerometerCommonAxisUsed = true
+        calibrator.isAccelerometerGroundTruthInitialBias = true
+
+        // check
+        assertTrue(calibrator.isAccelerometerCommonAxisUsed)
+        assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
+        assertEquals(7, calibrator.minimumRequiredAccelerometerMeasurements)
+    }
+
+    @Test
+    fun minimumRequiredAccelerometerMeasurements_whenCommonAxisAndUnknownBias_returnsExpectedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        calibrator.isAccelerometerCommonAxisUsed = true
+        calibrator.isAccelerometerGroundTruthInitialBias = false
+
+        // check
+        assertTrue(calibrator.isAccelerometerCommonAxisUsed)
+        assertFalse(calibrator.isAccelerometerGroundTruthInitialBias)
+        assertEquals(10, calibrator.minimumRequiredAccelerometerMeasurements)
+    }
+
+    @Test
+    fun minimumRequiredAccelerometerMeasurements_whenNotCommonAxisAndKnownBias_returnsExpectedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        calibrator.isAccelerometerCommonAxisUsed = false
+        calibrator.isAccelerometerGroundTruthInitialBias = true
+
+        // check
+        assertFalse(calibrator.isAccelerometerCommonAxisUsed)
+        assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
+        assertEquals(10, calibrator.minimumRequiredAccelerometerMeasurements)
+    }
+
+    @Test
+    fun minimumRequiredAccelerometerMeasurements_whenNotCommonAxisAndUnknownBias_returnsExpectedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        calibrator.isAccelerometerCommonAxisUsed = false
+        calibrator.isAccelerometerGroundTruthInitialBias = false
+
+        // check
+        assertFalse(calibrator.isAccelerometerCommonAxisUsed)
+        assertFalse(calibrator.isAccelerometerGroundTruthInitialBias)
+        assertEquals(13, calibrator.minimumRequiredAccelerometerMeasurements)
+    }
+
+    @Test
+    fun minimumRequiredGyroscopeMeasurements_whenGroundTruthInitialBiasCommonAxisAndCrossBiases_returnsExpectedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        calibrator.isGyroscopeGroundTruthInitialBias = true
+        calibrator.isGyroscopeCommonAxisUsed = true
+        calibrator.isGDependentCrossBiasesEstimated = true
+
+        // check
+        assertTrue(calibrator.isGyroscopeGroundTruthInitialBias)
+        assertTrue(calibrator.isGyroscopeCommonAxisUsed)
+        assertTrue(calibrator.isGDependentCrossBiasesEstimated)
+        assertEquals(16, calibrator.minimumRequiredGyroscopeMeasurements)
+    }
+
+    @Test
+    fun minimumRequiredGyroscopeMeasurements_whenGroundTruthInitialBiasCommonAxisAndNoCrossBiases_returnsExpctedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        calibrator.isGyroscopeGroundTruthInitialBias = true
+        calibrator.isGyroscopeCommonAxisUsed = true
+        calibrator.isGDependentCrossBiasesEstimated = false
+
+        // check
+        assertTrue(calibrator.isGyroscopeGroundTruthInitialBias)
+        assertTrue(calibrator.isGyroscopeCommonAxisUsed)
+        assertFalse(calibrator.isGDependentCrossBiasesEstimated)
+        assertEquals(7, calibrator.minimumRequiredGyroscopeMeasurements)
+    }
+
+    @Test
+    fun minimumRequiredGyroscopeMeasurements_whenGroundTruthInitialBiasNoCommonAxisAndCrossBiases_returnsExpctedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        calibrator.isGyroscopeGroundTruthInitialBias = true
+        calibrator.isGyroscopeCommonAxisUsed = false
+        calibrator.isGDependentCrossBiasesEstimated = true
+
+        // check
+        assertTrue(calibrator.isGyroscopeGroundTruthInitialBias)
+        assertFalse(calibrator.isGyroscopeCommonAxisUsed)
+        assertTrue(calibrator.isGDependentCrossBiasesEstimated)
+        assertEquals(19, calibrator.minimumRequiredGyroscopeMeasurements)
+    }
+
+    @Test
+    fun minimumRequiredGyroscopeMeasurements_whenGroundTruthInitialBiasNoCommonAxisAndNoCrossBiases_returnsExpctedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        calibrator.isGyroscopeGroundTruthInitialBias = true
+        calibrator.isGyroscopeCommonAxisUsed = false
+        calibrator.isGDependentCrossBiasesEstimated = false
+
+        // check
+        assertTrue(calibrator.isGyroscopeGroundTruthInitialBias)
+        assertFalse(calibrator.isGyroscopeCommonAxisUsed)
+        assertFalse(calibrator.isGDependentCrossBiasesEstimated)
+        assertEquals(10, calibrator.minimumRequiredGyroscopeMeasurements)
+    }
+
+    @Test
+    fun minimumRequiredGyroscopeMeasurements_whenNoGroundTruthInitialBiasCommonAxisAndCrossBiases_returnsExpctedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        calibrator.isGyroscopeGroundTruthInitialBias = false
+        calibrator.isGyroscopeCommonAxisUsed = true
+        calibrator.isGDependentCrossBiasesEstimated = true
+
+        // check
+        assertFalse(calibrator.isGyroscopeGroundTruthInitialBias)
+        assertTrue(calibrator.isGyroscopeCommonAxisUsed)
+        assertTrue(calibrator.isGDependentCrossBiasesEstimated)
+        assertEquals(19, calibrator.minimumRequiredGyroscopeMeasurements)
+    }
+
+    @Test
+    fun minimumRequiredGyroscopeMeasurements_whenNoGroundTruthInitialBiasCommonAxisAndNoCrossBiases_returnsExpctedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        calibrator.isGyroscopeGroundTruthInitialBias = false
+        calibrator.isGyroscopeCommonAxisUsed = true
+        calibrator.isGDependentCrossBiasesEstimated = false
+
+        // check
+        assertFalse(calibrator.isGyroscopeGroundTruthInitialBias)
+        assertTrue(calibrator.isGyroscopeCommonAxisUsed)
+        assertFalse(calibrator.isGDependentCrossBiasesEstimated)
+        assertEquals(10, calibrator.minimumRequiredGyroscopeMeasurements)
+    }
+
+    @Test
+    fun minimumRequiredGyroscopeMeasurements_whenNoGroundTruthInitialBiasNoCommonAxisAndCrossBiases_returnsExpctedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        calibrator.isGyroscopeGroundTruthInitialBias = false
+        calibrator.isGyroscopeCommonAxisUsed = false
+        calibrator.isGDependentCrossBiasesEstimated = true
+
+        // check
+        assertFalse(calibrator.isGyroscopeGroundTruthInitialBias)
+        assertFalse(calibrator.isGyroscopeCommonAxisUsed)
+        assertTrue(calibrator.isGDependentCrossBiasesEstimated)
+        assertEquals(22, calibrator.minimumRequiredGyroscopeMeasurements)
+    }
+
+    @Test
+    fun minimumRequiredGyroscopeMeasurements_whenNoGroundTruthInitialBiasNoCommonAxisAndNoCrossBiases_returnsExpctedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        calibrator.isGyroscopeGroundTruthInitialBias = false
+        calibrator.isGyroscopeCommonAxisUsed = false
+        calibrator.isGDependentCrossBiasesEstimated = false
+
+        // check
+        assertFalse(calibrator.isGyroscopeGroundTruthInitialBias)
+        assertFalse(calibrator.isGyroscopeCommonAxisUsed)
+        assertFalse(calibrator.isGDependentCrossBiasesEstimated)
+        assertEquals(13, calibrator.minimumRequiredGyroscopeMeasurements)
+    }
+
+    @Test
+    fun minimumRequiredMagnetometerMeasurements_whenCommonAxisAndKnownHardIron_returnsExpectedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        calibrator.isMagnetometerCommonAxisUsed = true
+        calibrator.isMagnetometerGroundTruthInitialHardIron = true
+
+        // check
+        assertTrue(calibrator.isMagnetometerCommonAxisUsed)
+        assertTrue(calibrator.isMagnetometerGroundTruthInitialHardIron)
+        assertEquals(7, calibrator.minimumRequiredMagnetometerMeasurements)
+    }
+
+    @Test
+    fun minimumRequiredMagnetometerMeasurements_whenCommonAxisAndUnknownHardIron_returnsExpectedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        calibrator.isMagnetometerCommonAxisUsed = true
+        calibrator.isMagnetometerGroundTruthInitialHardIron = false
+
+        // check
+        assertTrue(calibrator.isMagnetometerCommonAxisUsed)
+        assertFalse(calibrator.isMagnetometerGroundTruthInitialHardIron)
+        assertEquals(10, calibrator.minimumRequiredMagnetometerMeasurements)
+    }
+
+    @Test
+    fun minimumRequiredMagnetometerMeasurements_whenNotCommonAxisAndKnownHardIron_returnsExpectedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        calibrator.isMagnetometerCommonAxisUsed = false
+        calibrator.isMagnetometerGroundTruthInitialHardIron = true
+
+        // check
+        assertFalse(calibrator.isMagnetometerCommonAxisUsed)
+        assertTrue(calibrator.isMagnetometerGroundTruthInitialHardIron)
+        assertEquals(10, calibrator.minimumRequiredMagnetometerMeasurements)
+    }
+
+    @Test
+    fun minimumRequiredMagnetometerMeasurements_whenNotCommonAxisAndUnknownHardIron_returnsExpectedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        calibrator.isMagnetometerCommonAxisUsed = false
+        calibrator.isMagnetometerGroundTruthInitialHardIron = false
+
+        // check
+        assertFalse(calibrator.isMagnetometerCommonAxisUsed)
+        assertFalse(calibrator.isMagnetometerGroundTruthInitialHardIron)
+        assertEquals(13, calibrator.minimumRequiredMagnetometerMeasurements)
+    }
+
+    // TODO: minimumRequiredMeasurements
 
     private companion object {
         const val MA_SIZE = 3
