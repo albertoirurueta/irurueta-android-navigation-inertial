@@ -2262,6 +2262,1312 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         )
     }
 
+    @Test
+    fun gyroscopeInitialMg_whenNotRunning_setsExpectedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        // check default value
+        val mg1 = Matrix(BodyKinematics.COMPONENTS, BodyKinematics.COMPONENTS)
+        val mg2 = calibrator.gyroscopeInitialMg
+        assertEquals(mg1, mg2)
+
+        // set new value
+        val mg3 = Matrix(BodyKinematics.COMPONENTS, BodyKinematics.COMPONENTS)
+        Matrix.fillWithUniformRandomValues(0.0, 1.0, mg3)
+        calibrator.gyroscopeInitialMg = mg3
+
+        // check
+        val mg4 = calibrator.gyroscopeInitialMg
+        assertEquals(mg3, mg4)
+        assertEquals(mg3.getElementAt(0, 0), calibrator.gyroscopeInitialSx, 0.0)
+        assertEquals(mg3.getElementAt(1, 0), calibrator.gyroscopeInitialMyx, 0.0)
+        assertEquals(mg3.getElementAt(2, 0), calibrator.gyroscopeInitialMzx, 0.0)
+        assertEquals(mg3.getElementAt(0, 1), calibrator.gyroscopeInitialMxy, 0.0)
+        assertEquals(mg3.getElementAt(1, 1), calibrator.gyroscopeInitialSy, 0.0)
+        assertEquals(mg3.getElementAt(2, 1), calibrator.gyroscopeInitialMzy, 0.0)
+        assertEquals(mg3.getElementAt(0, 2), calibrator.gyroscopeInitialMxz, 0.0)
+        assertEquals(mg3.getElementAt(1, 2), calibrator.gyroscopeInitialMyz, 0.0)
+        assertEquals(mg3.getElementAt(2, 2), calibrator.gyroscopeInitialSz, 0.0)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun gyroscopeInitialMg_whenRunning_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        val mg1 = Matrix(BodyKinematics.COMPONENTS, BodyKinematics.COMPONENTS)
+        calibrator.gyroscopeInitialMg = mg1
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun gyroscopeInitialMg_whenInvalidRows_throwsIllegalArgumentException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val mg1 = Matrix(1, BodyKinematics.COMPONENTS)
+        calibrator.gyroscopeInitialMg = mg1
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun gyroscopeInitialMg_whenInvalidColumns_throwsIllegalArgumentException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val mg1 = Matrix(BodyKinematics.COMPONENTS, 1)
+        calibrator.gyroscopeInitialMg = mg1
+    }
+
+    @Test
+    fun getGyroscopeInitialMg_whenValid_returnsExpectedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        // check default value
+        val mg1 = Matrix(BodyKinematics.COMPONENTS, BodyKinematics.COMPONENTS)
+        val mg2 = calibrator.gyroscopeInitialMg
+        assertEquals(mg1, mg2)
+
+        // set new value
+        val mg3 = Matrix(BodyKinematics.COMPONENTS, BodyKinematics.COMPONENTS)
+        Matrix.fillWithUniformRandomValues(0.0, 1.0, mg3)
+        calibrator.gyroscopeInitialMg = mg3
+
+        // check
+        val mg4 = Matrix(BodyKinematics.COMPONENTS, BodyKinematics.COMPONENTS)
+        calibrator.getGyroscopeInitialMg(mg4)
+        assertEquals(mg3, mg4)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun getGyroscopeInitialMg_whenInvalidRows_throwsIllegalArgumentException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        // set new value
+        val mg1 = Matrix(BodyKinematics.COMPONENTS, BodyKinematics.COMPONENTS)
+        Matrix.fillWithUniformRandomValues(0.0, 1.0, mg1)
+        calibrator.gyroscopeInitialMg = mg1
+
+        // get
+        val mg2 = Matrix(1, BodyKinematics.COMPONENTS)
+        calibrator.getGyroscopeInitialMg(mg2)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun getGyroscopeInitialMg_whenInvalidColumns_throwsIllegalArgumentException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        // set new value
+        val mg1 = Matrix(BodyKinematics.COMPONENTS, BodyKinematics.COMPONENTS)
+        Matrix.fillWithUniformRandomValues(0.0, 1.0, mg1)
+        calibrator.gyroscopeInitialMg = mg1
+
+        // get
+        val mg2 = Matrix(BodyKinematics.COMPONENTS, 1)
+        calibrator.getGyroscopeInitialMg(mg2)
+    }
+
+    @Test
+    fun gyroscopeInitialSx_whenNotRunning_setsExpectedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        // check default value
+        assertEquals(0.0, calibrator.gyroscopeInitialSx, 0.0)
+        assertFalse(calibrator.running)
+
+        // set new value
+        val randomizer = UniformRandomizer()
+        val gyroscopeInitialSx = randomizer.nextDouble()
+        calibrator.gyroscopeInitialSx = gyroscopeInitialSx
+
+        // check
+        assertEquals(gyroscopeInitialSx, calibrator.gyroscopeInitialSx, 0.0)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun gyroscopeInitialSx_whenRunning_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        // set new value
+        val randomizer = UniformRandomizer()
+        val gyroscopeInitialSx = randomizer.nextDouble()
+        calibrator.gyroscopeInitialSx = gyroscopeInitialSx
+    }
+
+    @Test
+    fun gyroscopeInitialSy_whenNotRunning_setsExpectedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        // check default value
+        assertEquals(0.0, calibrator.gyroscopeInitialSx, 0.0)
+        assertFalse(calibrator.running)
+
+        // set new value
+        val randomizer = UniformRandomizer()
+        val gyroscopeInitialSy = randomizer.nextDouble()
+        calibrator.gyroscopeInitialSy = gyroscopeInitialSy
+
+        // check
+        assertEquals(gyroscopeInitialSy, calibrator.gyroscopeInitialSy, 0.0)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun gyroscopeInitialSy_whenRunning_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        // set new value
+        val randomizer = UniformRandomizer()
+        val gyroscopeInitialSy = randomizer.nextDouble()
+        calibrator.gyroscopeInitialSy = gyroscopeInitialSy
+    }
+
+    @Test
+    fun gyroscopeInitialSz_whenNotRunning_setsExpectedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        // check default value
+        assertEquals(0.0, calibrator.gyroscopeInitialSx, 0.0)
+        assertFalse(calibrator.running)
+
+        // set new value
+        val randomizer = UniformRandomizer()
+        val gyroscopeInitialSz = randomizer.nextDouble()
+        calibrator.gyroscopeInitialSz = gyroscopeInitialSz
+
+        // check
+        assertEquals(gyroscopeInitialSz, calibrator.gyroscopeInitialSz, 0.0)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun gyroscopeInitialSz_whenRunning_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        // set new value
+        val randomizer = UniformRandomizer()
+        val gyroscopeInitialSz = randomizer.nextDouble()
+        calibrator.gyroscopeInitialSz = gyroscopeInitialSz
+    }
+
+    @Test
+    fun gyroscopeInitialMxy_whenNotRunning_setsExpectedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        // check default value
+        assertEquals(0.0, calibrator.gyroscopeInitialMxy, 0.0)
+        assertFalse(calibrator.running)
+
+        // set new value
+        val randomizer = UniformRandomizer()
+        val gyroscopeInitialMxy = randomizer.nextDouble()
+        calibrator.gyroscopeInitialMxy = gyroscopeInitialMxy
+
+        // check
+        assertEquals(gyroscopeInitialMxy, calibrator.gyroscopeInitialMxy, 0.0)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun gyroscopeInitialMxy_whenRunning_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        // set new value
+        val randomizer = UniformRandomizer()
+        val gyroscopeInitialMxy = randomizer.nextDouble()
+        calibrator.gyroscopeInitialMxy = gyroscopeInitialMxy
+    }
+
+    @Test
+    fun gyroscopeInitialMxz_whenNotRunning_setsExpectedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        // check default value
+        assertEquals(0.0, calibrator.gyroscopeInitialMxz, 0.0)
+        assertFalse(calibrator.running)
+
+        // set new value
+        val randomizer = UniformRandomizer()
+        val gyroscopeInitialMxz = randomizer.nextDouble()
+        calibrator.gyroscopeInitialMxz = gyroscopeInitialMxz
+
+        // check
+        assertEquals(gyroscopeInitialMxz, calibrator.gyroscopeInitialMxz, 0.0)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun gyroscopeInitialMxz_whenRunning_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        // set new value
+        val randomizer = UniformRandomizer()
+        val gyroscopeInitialMxz = randomizer.nextDouble()
+        calibrator.gyroscopeInitialMxz = gyroscopeInitialMxz
+    }
+
+    @Test
+    fun gyroscopeInitialMyx_whenNotRunning_setsExpectedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        // check default value
+        assertEquals(0.0, calibrator.gyroscopeInitialMyx, 0.0)
+        assertFalse(calibrator.running)
+
+        // set new value
+        val randomizer = UniformRandomizer()
+        val gyroscopeInitialMyx = randomizer.nextDouble()
+        calibrator.gyroscopeInitialMyx = gyroscopeInitialMyx
+
+        // check
+        assertEquals(gyroscopeInitialMyx, calibrator.gyroscopeInitialMyx, 0.0)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun gyroscopeInitialMyx_whenRunning_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        // set new value
+        val randomizer = UniformRandomizer()
+        val gyroscopeInitialMyx = randomizer.nextDouble()
+        calibrator.gyroscopeInitialMyx = gyroscopeInitialMyx
+    }
+
+    @Test
+    fun gyroscopeInitialMyz_whenNotRunning_setsExpectedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        // check default value
+        assertEquals(0.0, calibrator.gyroscopeInitialMyz, 0.0)
+        assertFalse(calibrator.running)
+
+        // set new value
+        val randomizer = UniformRandomizer()
+        val gyroscopeInitialMyz = randomizer.nextDouble()
+        calibrator.gyroscopeInitialMyz = gyroscopeInitialMyz
+
+        // check
+        assertEquals(gyroscopeInitialMyz, calibrator.gyroscopeInitialMyz, 0.0)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun gyroscopeInitialMyz_whenRunning_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        // set new value
+        val randomizer = UniformRandomizer()
+        val gyroscopeInitialMyz = randomizer.nextDouble()
+        calibrator.gyroscopeInitialMyz = gyroscopeInitialMyz
+    }
+
+    @Test
+    fun gyroscopeInitialMzx_whenNotRunning_setsExpectedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        // check default value
+        assertEquals(0.0, calibrator.gyroscopeInitialMzx, 0.0)
+        assertFalse(calibrator.running)
+
+        // set new value
+        val randomizer = UniformRandomizer()
+        val gyroscopeInitialMzx = randomizer.nextDouble()
+        calibrator.gyroscopeInitialMzx = gyroscopeInitialMzx
+
+        // check
+        assertEquals(gyroscopeInitialMzx, calibrator.gyroscopeInitialMzx, 0.0)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun gyroscopeInitialMzx_whenRunning_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        // set new value
+        val randomizer = UniformRandomizer()
+        val gyroscopeInitialMzx = randomizer.nextDouble()
+        calibrator.gyroscopeInitialMzx = gyroscopeInitialMzx
+    }
+
+    @Test
+    fun gyroscopeInitialMzy_whenNotRunning_setsExpectedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        // check default value
+        assertEquals(0.0, calibrator.gyroscopeInitialMzy, 0.0)
+        assertFalse(calibrator.running)
+
+        // set new value
+        val randomizer = UniformRandomizer()
+        val gyroscopeInitialMzy = randomizer.nextDouble()
+        calibrator.gyroscopeInitialMzy = gyroscopeInitialMzy
+
+        // check
+        assertEquals(gyroscopeInitialMzy, calibrator.gyroscopeInitialMzy, 0.0)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun gyroscopeInitialMzy_whenRunning_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        // set new value
+        val randomizer = UniformRandomizer()
+        val gyroscopeInitialMzy = randomizer.nextDouble()
+        calibrator.gyroscopeInitialMzy = gyroscopeInitialMzy
+    }
+
+    @Test
+    fun setGyroscopeInitialScalingFactors_whenNotRunning_setsExpectedValues() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        // check default values
+        assertEquals(0.0, calibrator.gyroscopeInitialSx, 0.0)
+        assertEquals(0.0, calibrator.gyroscopeInitialSy, 0.0)
+        assertEquals(0.0, calibrator.gyroscopeInitialSz, 0.0)
+        assertFalse(calibrator.running)
+
+        // set new values
+        val randomizer = UniformRandomizer()
+        val gyroscopeInitialSx = randomizer.nextDouble()
+        val gyroscopeInitialSy = randomizer.nextDouble()
+        val gyroscopeInitialSz = randomizer.nextDouble()
+        calibrator.setGyroscopeInitialScalingFactors(
+            gyroscopeInitialSx,
+            gyroscopeInitialSy,
+            gyroscopeInitialSz
+        )
+
+        // check
+        assertEquals(gyroscopeInitialSx, calibrator.gyroscopeInitialSx, 0.0)
+        assertEquals(gyroscopeInitialSy, calibrator.gyroscopeInitialSy, 0.0)
+        assertEquals(gyroscopeInitialSz, calibrator.gyroscopeInitialSz, 0.0)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun setGyroscopeInitialScalingFactors_whenRunning_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        // set new values
+        val randomizer = UniformRandomizer()
+        val gyroscopeInitialSx = randomizer.nextDouble()
+        val gyroscopeInitialSy = randomizer.nextDouble()
+        val gyroscopeInitialSz = randomizer.nextDouble()
+        calibrator.setGyroscopeInitialScalingFactors(
+            gyroscopeInitialSx,
+            gyroscopeInitialSy,
+            gyroscopeInitialSz
+        )
+    }
+
+    @Test
+    fun setGyroscopeInitialCrossCouplingErrors_whenNotRunning_setsExpectedValues() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        // check default values
+        assertEquals(0.0, calibrator.gyroscopeInitialMxy, 0.0)
+        assertEquals(0.0, calibrator.gyroscopeInitialMxz, 0.0)
+        assertEquals(0.0, calibrator.gyroscopeInitialMyx, 0.0)
+        assertEquals(0.0, calibrator.gyroscopeInitialMyz, 0.0)
+        assertEquals(0.0, calibrator.gyroscopeInitialMzx, 0.0)
+        assertEquals(0.0, calibrator.gyroscopeInitialMzy, 0.0)
+        assertFalse(calibrator.running)
+
+        // set new values
+        val randomizer = UniformRandomizer()
+        val gyroscopeInitialMxy = randomizer.nextDouble()
+        val gyroscopeInitialMxz = randomizer.nextDouble()
+        val gyroscopeInitialMyx = randomizer.nextDouble()
+        val gyroscopeInitialMyz = randomizer.nextDouble()
+        val gyroscopeInitialMzx = randomizer.nextDouble()
+        val gyroscopeInitialMzy = randomizer.nextDouble()
+        calibrator.setGyroscopeInitialCrossCouplingErrors(
+            gyroscopeInitialMxy,
+            gyroscopeInitialMxz,
+            gyroscopeInitialMyx,
+            gyroscopeInitialMyz,
+            gyroscopeInitialMzx,
+            gyroscopeInitialMzy
+        )
+
+        // check
+        assertEquals(gyroscopeInitialMxy, calibrator.gyroscopeInitialMxy, 0.0)
+        assertEquals(gyroscopeInitialMxz, calibrator.gyroscopeInitialMxz, 0.0)
+        assertEquals(gyroscopeInitialMyx, calibrator.gyroscopeInitialMyx, 0.0)
+        assertEquals(gyroscopeInitialMyz, calibrator.gyroscopeInitialMyz, 0.0)
+        assertEquals(gyroscopeInitialMzx, calibrator.gyroscopeInitialMzx, 0.0)
+        assertEquals(gyroscopeInitialMzy, calibrator.gyroscopeInitialMzy, 0.0)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun setGyroscopeInitialCrossCouplingErrors_whenRunning_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        // set new values
+        val randomizer = UniformRandomizer()
+        val gyroscopeInitialMxy = randomizer.nextDouble()
+        val gyroscopeInitialMxz = randomizer.nextDouble()
+        val gyroscopeInitialMyx = randomizer.nextDouble()
+        val gyroscopeInitialMyz = randomizer.nextDouble()
+        val gyroscopeInitialMzx = randomizer.nextDouble()
+        val gyroscopeInitialMzy = randomizer.nextDouble()
+        calibrator.setGyroscopeInitialCrossCouplingErrors(
+            gyroscopeInitialMxy,
+            gyroscopeInitialMxz,
+            gyroscopeInitialMyx,
+            gyroscopeInitialMyz,
+            gyroscopeInitialMzx,
+            gyroscopeInitialMzy
+        )
+    }
+
+    @Test
+    fun setGyroscopeInitialScalingFactorsAndCrossCouplingErrors_whenNotRunning_setsExpectedValues() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        // check default values
+        assertEquals(0.0, calibrator.gyroscopeInitialSx, 0.0)
+        assertEquals(0.0, calibrator.gyroscopeInitialSy, 0.0)
+        assertEquals(0.0, calibrator.gyroscopeInitialSz, 0.0)
+        assertEquals(0.0, calibrator.gyroscopeInitialMxy, 0.0)
+        assertEquals(0.0, calibrator.gyroscopeInitialMxz, 0.0)
+        assertEquals(0.0, calibrator.gyroscopeInitialMyx, 0.0)
+        assertEquals(0.0, calibrator.gyroscopeInitialMyz, 0.0)
+        assertEquals(0.0, calibrator.gyroscopeInitialMzx, 0.0)
+        assertEquals(0.0, calibrator.gyroscopeInitialMzy, 0.0)
+        assertFalse(calibrator.running)
+
+        // set new values
+        val randomizer = UniformRandomizer()
+        val gyroscopeInitialSx = randomizer.nextDouble()
+        val gyroscopeInitialSy = randomizer.nextDouble()
+        val gyroscopeInitialSz = randomizer.nextDouble()
+        val gyroscopeInitialMxy = randomizer.nextDouble()
+        val gyroscopeInitialMxz = randomizer.nextDouble()
+        val gyroscopeInitialMyx = randomizer.nextDouble()
+        val gyroscopeInitialMyz = randomizer.nextDouble()
+        val gyroscopeInitialMzx = randomizer.nextDouble()
+        val gyroscopeInitialMzy = randomizer.nextDouble()
+        calibrator.setGyroscopeInitialScalingFactorsAndCrossCouplingErrors(
+            gyroscopeInitialSx,
+            gyroscopeInitialSy,
+            gyroscopeInitialSz,
+            gyroscopeInitialMxy,
+            gyroscopeInitialMxz,
+            gyroscopeInitialMyx,
+            gyroscopeInitialMyz,
+            gyroscopeInitialMzx,
+            gyroscopeInitialMzy
+        )
+
+        // check
+        assertEquals(gyroscopeInitialSx, calibrator.gyroscopeInitialSx, 0.0)
+        assertEquals(gyroscopeInitialSy, calibrator.gyroscopeInitialSy, 0.0)
+        assertEquals(gyroscopeInitialSz, calibrator.gyroscopeInitialSz, 0.0)
+        assertEquals(gyroscopeInitialMxy, calibrator.gyroscopeInitialMxy, 0.0)
+        assertEquals(gyroscopeInitialMxz, calibrator.gyroscopeInitialMxz, 0.0)
+        assertEquals(gyroscopeInitialMyx, calibrator.gyroscopeInitialMyx, 0.0)
+        assertEquals(gyroscopeInitialMyz, calibrator.gyroscopeInitialMyz, 0.0)
+        assertEquals(gyroscopeInitialMzx, calibrator.gyroscopeInitialMzx, 0.0)
+        assertEquals(gyroscopeInitialMzy, calibrator.gyroscopeInitialMzy, 0.0)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun setGyroscopeInitialScalingFactorsAndCrossCouplingErrors_whenRunning_setsExpectedValues() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        // set new values
+        val randomizer = UniformRandomizer()
+        val gyroscopeInitialSx = randomizer.nextDouble()
+        val gyroscopeInitialSy = randomizer.nextDouble()
+        val gyroscopeInitialSz = randomizer.nextDouble()
+        val gyroscopeInitialMxy = randomizer.nextDouble()
+        val gyroscopeInitialMxz = randomizer.nextDouble()
+        val gyroscopeInitialMyx = randomizer.nextDouble()
+        val gyroscopeInitialMyz = randomizer.nextDouble()
+        val gyroscopeInitialMzx = randomizer.nextDouble()
+        val gyroscopeInitialMzy = randomizer.nextDouble()
+        calibrator.setGyroscopeInitialScalingFactorsAndCrossCouplingErrors(
+            gyroscopeInitialSx,
+            gyroscopeInitialSy,
+            gyroscopeInitialSz,
+            gyroscopeInitialMxy,
+            gyroscopeInitialMxz,
+            gyroscopeInitialMyx,
+            gyroscopeInitialMyz,
+            gyroscopeInitialMzx,
+            gyroscopeInitialMzy
+        )
+    }
+
+    @Test
+    fun gyroscopeInitialGg_whenNotRunning_setsExpectedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        // check default value
+        val gg1 = Matrix(BodyKinematics.COMPONENTS, BodyKinematics.COMPONENTS)
+        val gg2 = calibrator.gyroscopeInitialGg
+        assertEquals(gg1, gg2)
+
+        // set new value
+        val gg3 = Matrix(BodyKinematics.COMPONENTS, BodyKinematics.COMPONENTS)
+        Matrix.fillWithUniformRandomValues(0.0, 1.0, gg3)
+        calibrator.gyroscopeInitialGg = gg3
+
+        // check
+        val gg4 = calibrator.gyroscopeInitialGg
+        assertEquals(gg3, gg4)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun gyroscopeInitialGg_whenRunning_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        // set new value
+        val gg = Matrix(BodyKinematics.COMPONENTS, BodyKinematics.COMPONENTS)
+        Matrix.fillWithUniformRandomValues(0.0, 1.0, gg)
+        calibrator.gyroscopeInitialGg = gg
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun gyroscopeInitialGg_whenInvalidRows_throwsIllegalArgumentException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        // set new value
+        val gg = Matrix(1, BodyKinematics.COMPONENTS)
+        Matrix.fillWithUniformRandomValues(0.0, 1.0, gg)
+        calibrator.gyroscopeInitialGg = gg
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun gyroscopeInitialGg_whenInvalidColumns_throwsIllegalArgumentException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        // set new value
+        val gg = Matrix(BodyKinematics.COMPONENTS, 1)
+        Matrix.fillWithUniformRandomValues(0.0, 1.0, gg)
+        calibrator.gyroscopeInitialGg = gg
+    }
+
+    @Test
+    fun magnetometerInitialMm_whenValid_setsExpectedValues() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        // check default value
+        assertEquals(Matrix(MM_SIZE, MM_SIZE), calibrator.magnetometerInitialMm)
+        assertEquals(0.0, calibrator.magnetometerInitialSx, 0.0)
+        assertEquals(0.0, calibrator.magnetometerInitialSy, 0.0)
+        assertEquals(0.0, calibrator.magnetometerInitialSz, 0.0)
+        assertEquals(0.0, calibrator.magnetometerInitialMxy, 0.0)
+        assertEquals(0.0, calibrator.magnetometerInitialMxz, 0.0)
+        assertEquals(0.0, calibrator.magnetometerInitialMyx, 0.0)
+        assertEquals(0.0, calibrator.magnetometerInitialMyz, 0.0)
+        assertEquals(0.0, calibrator.magnetometerInitialMzx, 0.0)
+        assertEquals(0.0, calibrator.magnetometerInitialMzy, 0.0)
+
+        // set new value
+        val randomizer = UniformRandomizer()
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+
+        val mm = Matrix(MM_SIZE, MM_SIZE)
+        mm.setElementAtIndex(0, initialSx)
+        mm.setElementAtIndex(1, initialMyx)
+        mm.setElementAtIndex(2, initialMzx)
+
+        mm.setElementAtIndex(3, initialMxy)
+        mm.setElementAtIndex(4, initialSy)
+        mm.setElementAtIndex(5, initialMzy)
+
+        mm.setElementAtIndex(6, initialMxz)
+        mm.setElementAtIndex(7, initialMyz)
+        mm.setElementAtIndex(8, initialSz)
+
+        calibrator.magnetometerInitialMm = mm
+
+        // check
+        assertEquals(mm, calibrator.magnetometerInitialMm)
+        assertEquals(initialSx, calibrator.magnetometerInitialSx, 0.0)
+        assertEquals(initialSy, calibrator.magnetometerInitialSy, 0.0)
+        assertEquals(initialSz, calibrator.magnetometerInitialSz, 0.0)
+        assertEquals(initialMxy, calibrator.magnetometerInitialMxy, 0.0)
+        assertEquals(initialMxz, calibrator.magnetometerInitialMxz, 0.0)
+        assertEquals(initialMyx, calibrator.magnetometerInitialMyx, 0.0)
+        assertEquals(initialMyz, calibrator.magnetometerInitialMyz, 0.0)
+        assertEquals(initialMzx, calibrator.magnetometerInitialMzx, 0.0)
+        assertEquals(initialMzy, calibrator.magnetometerInitialMzy, 0.0)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun magnetometerInitialMm_whenInvalidRowSize_throwsIllegalArgumentException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val mm = Matrix(1, MM_SIZE)
+        calibrator.magnetometerInitialMm = mm
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun magnetometerInitialMm_whenInvalidColumnsSize_throwsIllegalArgumentException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val mm = Matrix(MM_SIZE, 1)
+        calibrator.magnetometerInitialMm = mm
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun magnetometerInitialMm_whenRunning_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        calibrator.magnetometerInitialMm = Matrix(MM_SIZE, MM_SIZE)
+    }
+
+    @Test
+    fun getMagnetometerInitialMm_returnsExpectedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        // set new value
+        val randomizer = UniformRandomizer()
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setMagnetometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+
+        // check
+        val mm = Matrix(MM_SIZE, MM_SIZE)
+        calibrator.getMagnetometerInitialMm(mm)
+
+        // check
+        assertEquals(initialSx, mm.getElementAtIndex(0), 0.0)
+        assertEquals(initialMyx, mm.getElementAtIndex(1), 0.0)
+        assertEquals(initialMzx, mm.getElementAtIndex(2), 0.0)
+
+        assertEquals(initialMxy, mm.getElementAtIndex(3), 0.0)
+        assertEquals(initialSy, mm.getElementAtIndex(4), 0.0)
+        assertEquals(initialMzy, mm.getElementAtIndex(5), 0.0)
+
+        assertEquals(initialMxz, mm.getElementAtIndex(6), 0.0)
+        assertEquals(initialMyz, mm.getElementAtIndex(7), 0.0)
+        assertEquals(initialSz, mm.getElementAtIndex(8), 0.0)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun getMagnetometerInitialMm_whenInvalidRowSize_throwsIllegalArgumentException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val mm = Matrix(1, MM_SIZE)
+        calibrator.getMagnetometerInitialMm(mm)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun getMagnetometerInitialMm_whenInvalidColumnSize_throwsIllegalArgumentException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val mm = Matrix(MM_SIZE, 1)
+        calibrator.getMagnetometerInitialMm(mm)
+    }
+
+    @Test
+    fun magnetometerInitialSx_whenNotRunning_setsExpectedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        // check default value
+        assertEquals(0.0, calibrator.magnetometerInitialSx, 0.0)
+        assertFalse(calibrator.running)
+
+        // set new value
+        val randomizer = UniformRandomizer()
+        val magnetometerInitialSx = randomizer.nextDouble()
+        calibrator.magnetometerInitialSx = magnetometerInitialSx
+
+        // check
+        assertEquals(magnetometerInitialSx, calibrator.magnetometerInitialSx, 0.0)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun magnetometerInitialSx_whenRunning_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        // set new value
+        val randomizer = UniformRandomizer()
+        val magnetometerInitialSx = randomizer.nextDouble()
+        calibrator.magnetometerInitialSx = magnetometerInitialSx
+    }
+
+    @Test
+    fun magnetometerInitialSy_whenNotRunning_setsExpectedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        // check default value
+        assertEquals(0.0, calibrator.magnetometerInitialSy, 0.0)
+        assertFalse(calibrator.running)
+
+        // set new value
+        val randomizer = UniformRandomizer()
+        val magnetometerInitialSy = randomizer.nextDouble()
+        calibrator.magnetometerInitialSy = magnetometerInitialSy
+
+        // check
+        assertEquals(magnetometerInitialSy, calibrator.magnetometerInitialSy, 0.0)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun magnetometerInitialSy_whenRunning_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        // set new value
+        val randomizer = UniformRandomizer()
+        val magnetometerInitialSy = randomizer.nextDouble()
+        calibrator.magnetometerInitialSy = magnetometerInitialSy
+    }
+
+    @Test
+    fun magnetometerInitialSz_whenNotRunning_setsExpectedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        // check default value
+        assertEquals(0.0, calibrator.magnetometerInitialSz, 0.0)
+        assertFalse(calibrator.running)
+
+        // set new value
+        val randomizer = UniformRandomizer()
+        val magnetometerInitialSz = randomizer.nextDouble()
+        calibrator.magnetometerInitialSz = magnetometerInitialSz
+
+        // check
+        assertEquals(magnetometerInitialSz, calibrator.magnetometerInitialSz, 0.0)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun magnetometerInitialSz_whenRunning_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        // set new value
+        val randomizer = UniformRandomizer()
+        val magnetometerInitialSz = randomizer.nextDouble()
+        calibrator.magnetometerInitialSz = magnetometerInitialSz
+    }
+
+    @Test
+    fun magnetometerInitialMxy_whenNotRunning_setsExpectedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        // check default value
+        assertEquals(0.0, calibrator.magnetometerInitialMxy, 0.0)
+        assertFalse(calibrator.running)
+
+        // set new value
+        val randomizer = UniformRandomizer()
+        val magnetometerInitialMxy = randomizer.nextDouble()
+        calibrator.magnetometerInitialMxy = magnetometerInitialMxy
+
+        // check
+        assertEquals(magnetometerInitialMxy, calibrator.magnetometerInitialMxy, 0.0)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun magnetometerInitialMxy_whenRunning_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        // set new value
+        val randomizer = UniformRandomizer()
+        val magnetometerInitialMxy = randomizer.nextDouble()
+        calibrator.magnetometerInitialMxy = magnetometerInitialMxy
+    }
+
+    @Test
+    fun magnetometerInitialMxz_whenNotRunning_setsExpectedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        // check default value
+        assertEquals(0.0, calibrator.magnetometerInitialMxz, 0.0)
+        assertFalse(calibrator.running)
+
+        // set new value
+        val randomizer = UniformRandomizer()
+        val magnetometerInitialMxz = randomizer.nextDouble()
+        calibrator.magnetometerInitialMxz = magnetometerInitialMxz
+
+        // check
+        assertEquals(magnetometerInitialMxz, calibrator.magnetometerInitialMxz, 0.0)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun magnetometerInitialMxz_whenRunning_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        // set new value
+        val randomizer = UniformRandomizer()
+        val magnetometerInitialMxz = randomizer.nextDouble()
+        calibrator.magnetometerInitialMxz = magnetometerInitialMxz
+    }
+
+    @Test
+    fun magnetometerInitialMyx_whenNotRunning_setsExpectedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        // check default value
+        assertEquals(0.0, calibrator.magnetometerInitialMxz, 0.0)
+        assertFalse(calibrator.running)
+
+        // set new value
+        val randomizer = UniformRandomizer()
+        val magnetometerInitialMyx = randomizer.nextDouble()
+        calibrator.magnetometerInitialMyx = magnetometerInitialMyx
+
+        // check
+        assertEquals(magnetometerInitialMyx, calibrator.magnetometerInitialMyx, 0.0)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun magnetometerInitialMyx_whenRunning_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        // set new value
+        val randomizer = UniformRandomizer()
+        val magnetometerInitialMyx = randomizer.nextDouble()
+        calibrator.magnetometerInitialMyx = magnetometerInitialMyx
+    }
+
+    @Test
+    fun magnetometerInitialMyz_whenNotRunning_setsExpectedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        // check default value
+        assertEquals(0.0, calibrator.magnetometerInitialMyz, 0.0)
+        assertFalse(calibrator.running)
+
+        // set new value
+        val randomizer = UniformRandomizer()
+        val magnetometerInitialMyz = randomizer.nextDouble()
+        calibrator.magnetometerInitialMyz = magnetometerInitialMyz
+
+        // check
+        assertEquals(magnetometerInitialMyz, calibrator.magnetometerInitialMyz, 0.0)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun magnetometerInitialMyz_whenRunning_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        // set new value
+        val randomizer = UniformRandomizer()
+        val magnetometerInitialMyz = randomizer.nextDouble()
+        calibrator.magnetometerInitialMyz = magnetometerInitialMyz
+    }
+
+    @Test
+    fun magnetometerInitialMzx_whenNotRunning_setsExpectedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        // check default value
+        assertEquals(0.0, calibrator.magnetometerInitialMzx, 0.0)
+        assertFalse(calibrator.running)
+
+        // set new value
+        val randomizer = UniformRandomizer()
+        val magnetometerInitialMzx = randomizer.nextDouble()
+        calibrator.magnetometerInitialMzx = magnetometerInitialMzx
+
+        // check
+        assertEquals(magnetometerInitialMzx, calibrator.magnetometerInitialMzx, 0.0)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun magnetometerInitialMzx_whenRunning_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        // set new value
+        val randomizer = UniformRandomizer()
+        val magnetometerInitialMzx = randomizer.nextDouble()
+        calibrator.magnetometerInitialMzx = magnetometerInitialMzx
+    }
+
+    @Test
+    fun magnetometerInitialMzy_whenNotRunning_setsExpectedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        // check default value
+        assertEquals(0.0, calibrator.magnetometerInitialMzy, 0.0)
+        assertFalse(calibrator.running)
+
+        // set new value
+        val randomizer = UniformRandomizer()
+        val magnetometerInitialMzy = randomizer.nextDouble()
+        calibrator.magnetometerInitialMzy = magnetometerInitialMzy
+
+        // check
+        assertEquals(magnetometerInitialMzy, calibrator.magnetometerInitialMzy, 0.0)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun magnetometerInitialMzy_whenRunning_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        // set new value
+        val randomizer = UniformRandomizer()
+        val magnetometerInitialMzy = randomizer.nextDouble()
+        calibrator.magnetometerInitialMzy = magnetometerInitialMzy
+    }
+
     // TODO: gyroscopeInitialMg_whenNotRunning_setsExpectedValue
 
     private companion object {
