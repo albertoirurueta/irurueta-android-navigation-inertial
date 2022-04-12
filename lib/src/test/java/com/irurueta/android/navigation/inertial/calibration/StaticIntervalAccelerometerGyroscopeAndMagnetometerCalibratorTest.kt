@@ -30,6 +30,7 @@ import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.De
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.DefaultGyroscopeQualityScoreMapper
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.DefaultMagnetometerQualityScoreMapper
 import com.irurueta.navigation.inertial.wmm.WorldMagneticModel
+import com.irurueta.numerical.robust.RobustEstimatorMethod
 import com.irurueta.statistics.UniformRandomizer
 import com.irurueta.units.*
 import io.mockk.every
@@ -88,7 +89,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertNull(calibrator.calibrationSolvingStartedListener)
         assertNull(calibrator.calibrationCompletedListener)
         assertNull(calibrator.stoppedListener)
-        assertNull(calibrator.unreliableGravityNormEstimationListener)
         assertNull(calibrator.initialAccelerometerBiasAvailableListener)
         assertNull(calibrator.initialGyroscopeBiasAvailableListener)
         assertNull(calibrator.initialMagnetometerHardIronAvailableListener)
@@ -96,7 +96,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertNotNull(calibrator.accelerometerQualityScoreMapper)
         assertNotNull(calibrator.gyroscopeQualityScoreMapper)
         assertNotNull(calibrator.magnetometerQualityScoreMapper)
-        assertNull(calibrator.gravityNorm)
         assertFalse(calibrator.accelerometerResultUnreliable)
         assertNull(calibrator.accelerometerInitialBiasX)
         assertNull(calibrator.accelerometerInitialBiasY)
@@ -481,8 +480,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>>()
         val stoppedListener =
             mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>>()
-        val unreliableGravityNormEstimationListener =
-            mockk<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator.OnUnreliableGravityEstimationListener>()
         val initialAccelerometerBiasAvailableListener =
             mockk<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator.OnInitialAccelerometerBiasAvailableListener>()
         val initialGyroscopeBiasAvailableListener =
@@ -523,7 +520,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             calibrationSolvingStartedListener,
             calibrationCompletedListener,
             stoppedListener,
-            unreliableGravityNormEstimationListener,
             initialAccelerometerBiasAvailableListener,
             initialGyroscopeBiasAvailableListener,
             initialMagnetometerHardIronAvailableListener,
@@ -581,10 +577,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertSame(calibrationCompletedListener, calibrator.calibrationCompletedListener)
         assertSame(stoppedListener, calibrator.stoppedListener)
         assertSame(
-            unreliableGravityNormEstimationListener,
-            calibrator.unreliableGravityNormEstimationListener
-        )
-        assertSame(
             initialAccelerometerBiasAvailableListener,
             calibrator.initialAccelerometerBiasAvailableListener
         )
@@ -600,7 +592,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertSame(accelerometerQualityScoreMapper, calibrator.accelerometerQualityScoreMapper)
         assertSame(gyroscopeQualityScoreMapper, calibrator.gyroscopeQualityScoreMapper)
         assertSame(magnetometerQualityScoreMapper, calibrator.magnetometerQualityScoreMapper)
-        assertNull(calibrator.gravityNorm)
         assertFalse(calibrator.accelerometerResultUnreliable)
         assertNull(calibrator.accelerometerInitialBiasX)
         assertNull(calibrator.accelerometerInitialBiasY)
@@ -1344,28 +1335,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
         // check
         assertSame(stoppedListener, calibrator.stoppedListener)
-    }
-
-    @Test
-    fun unreliableGravityNormEstimationListener_setsExpectedValue() {
-        val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator =
-            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
-
-        // check default value
-        assertNull(calibrator.unreliableGravityNormEstimationListener)
-
-        // set new value
-        val unreliableGravityNormEstimationListener =
-            mockk<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator.OnUnreliableGravityEstimationListener>()
-        calibrator.unreliableGravityNormEstimationListener = unreliableGravityNormEstimationListener
-
-        // check
-        assertSame(
-            unreliableGravityNormEstimationListener,
-            calibrator.unreliableGravityNormEstimationListener
-        )
     }
 
     @Test
@@ -4202,6 +4171,687 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertFalse(calibrator.isMagnetometerGroundTruthInitialHardIron)
         assertEquals(13, calibrator.minimumRequiredMagnetometerMeasurements)
     }
+
+    @Test
+    fun accelerometerRobustMethod_whenNotRunning_setsExpectedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        // check default value
+        assertNull(calibrator.accelerometerRobustMethod)
+
+        // set new value
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.RANSAC
+
+        // check
+        assertEquals(RobustEstimatorMethod.RANSAC, calibrator.accelerometerRobustMethod)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun accelerometerRobustMethod_whenRunning_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.RANSAC
+    }
+
+    @Test
+    fun accelerometerRobustConfidence_whenValid_setsExpectedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        // check default value
+        assertEquals(
+            StaticIntervalAccelerometerCalibrator.ROBUST_DEFAULT_CONFIDENCE,
+            calibrator.accelerometerRobustConfidence,
+            0.0
+        )
+
+        // set new value
+        calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
+
+        // check
+        assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun accelerometerRobustConfidence_whenInvalidLowerBound_throwsIllegalArgumentException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        calibrator.accelerometerRobustConfidence = -1.0
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun accelerometerRobustConfidence_whenInvalidUpperBound_throwsIllegalArgumentException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        calibrator.accelerometerRobustConfidence = 2.0
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun accelerometerRobustConfidence_whenRunning_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
+    }
+
+    @Test
+    fun accelerometerRobustMaxIterations_whenValid_setsExpectedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        // check default value
+        assertEquals(
+            StaticIntervalAccelerometerCalibrator.ROBUST_DEFAULT_MAX_ITERATIONS,
+            calibrator.accelerometerRobustMaxIterations
+        )
+
+        // set new value
+        calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+
+        // check
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun accelerometerRobustMaxIterations_whenInvalid_throwsIllegalArgumentException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        calibrator.accelerometerRobustMaxIterations = 0
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun accelerometerRobustMaxIterations_whenRunning_throwsIllegalArgumentException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+    }
+
+    @Test
+    fun accelerometerRobustPreliminarySubsetSize_whenValid_setsExpectedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        // check default value
+        assertEquals(
+            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
+
+        // set new value
+        calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+
+        // check
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun accelerometerRobustPreliminarySubsetSize_whenInvalid_throwsIllegalArgumentException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        calibrator.accelerometerRobustPreliminarySubsetSize = 12
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun accelerometerRobustPreliminarySubsetSize_whenRunning_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+    }
+
+    @Test
+    fun accelerometerRobustThreshold_whenValid_setsExpectedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        // check default value
+        assertNull(calibrator.accelerometerRobustThreshold)
+
+        // set new value
+        calibrator.accelerometerRobustThreshold = ROBUST_THRESHOLD
+
+        // check
+        val robustThreshold = calibrator.accelerometerRobustThreshold
+        requireNotNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
+
+        // set new value
+        calibrator.accelerometerRobustThreshold = null
+
+        // check
+        assertNull(calibrator.accelerometerRobustThreshold)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun accelerometerRobustThreshold_whenInvalid_throwsIllegalArgumentException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        calibrator.accelerometerRobustThreshold = 0.0
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun accelerometerRobustThreshold_whenRunning_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        calibrator.accelerometerRobustThreshold = ROBUST_THRESHOLD
+    }
+
+    @Test
+    fun accelerometerRobustThresholdFactor_whenValid_setsExpectedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        // check default value
+        assertEquals(
+            StaticIntervalAccelerometerCalibrator.DEFAULT_ROBUST_THRESHOLD_FACTOR,
+            calibrator.accelerometerRobustThresholdFactor,
+            0.0
+        )
+
+        // set new value
+        calibrator.accelerometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
+
+        // check
+        assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.accelerometerRobustThresholdFactor, 0.0)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun accelerometerRobustThresholdFactor_whenInvalid_throwsIllegalArgumentException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        calibrator.accelerometerRobustThresholdFactor = 0.0
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun accelerometerRobustThresholdFactor_whenRunning_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        calibrator.accelerometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
+    }
+
+    @Test
+    fun accelerometerRobustStopThresholdFactor_whenValid_setsExpectedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        assertEquals(
+            StaticIntervalAccelerometerCalibrator.DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR,
+            calibrator.accelerometerRobustStopThresholdFactor,
+            0.0
+        )
+
+        // set new value
+        calibrator.accelerometerRobustStopThresholdFactor = ROBUST_STOP_THRESHOLD_FACTOR
+
+        // check
+        assertEquals(
+            ROBUST_STOP_THRESHOLD_FACTOR,
+            calibrator.accelerometerRobustStopThresholdFactor,
+            0.0
+        )
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun accelerometerRobustStopThresholdFactor_whenInvalid_throwsIllegalArgumentException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        calibrator.accelerometerRobustStopThresholdFactor = 0.0
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun accelerometerRobustStopThresholdFactor_whenRunning_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        calibrator.accelerometerRobustStopThresholdFactor = ROBUST_STOP_THRESHOLD_FACTOR
+    }
+
+    @Test
+    fun gyroscopeRobustMethod_whenNotRunning_setsExpectedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        // check default value
+        assertNull(calibrator.gyroscopeRobustMethod)
+
+        // set new value
+        calibrator.gyroscopeRobustMethod = RobustEstimatorMethod.RANSAC
+
+        // check
+        assertEquals(RobustEstimatorMethod.RANSAC, calibrator.gyroscopeRobustMethod)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun gyroscopeRobustMethod_whenRunning_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        calibrator.gyroscopeRobustMethod = RobustEstimatorMethod.RANSAC
+    }
+
+    @Test
+    fun gyroscopeRobustConfidence_whenValid_setsExpectedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        // check default value
+        assertEquals(
+            StaticIntervalGyroscopeCalibrator.ROBUST_DEFAULT_CONFIDENCE,
+            calibrator.gyroscopeRobustConfidence,
+            0.0
+        )
+
+        // set new value
+        calibrator.gyroscopeRobustConfidence = ROBUST_CONFIDENCE
+
+        // check
+        assertEquals(ROBUST_CONFIDENCE, calibrator.gyroscopeRobustConfidence, 0.0)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun gyroscopeRobustConfidence_whenInvalidLowerBound_throwsIllegalArgumentException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        calibrator.gyroscopeRobustConfidence = -1.0
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun gyroscopeRobustConfidence_whenInvalidUpperBound_throwsIllegalArgumentException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        calibrator.gyroscopeRobustConfidence = 2.0
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun gyroscopeRobustConfidence_whenRunning_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        calibrator.gyroscopeRobustConfidence = ROBUST_CONFIDENCE
+    }
+
+    @Test
+    fun gyroscopeRobustMaxIterations_whenValid_setsExpectedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        // check default value
+        assertEquals(
+            StaticIntervalGyroscopeCalibrator.ROBUST_DEFAULT_MAX_ITERATIONS,
+            calibrator.gyroscopeRobustMaxIterations
+        )
+
+        // set new value
+        calibrator.gyroscopeRobustMaxIterations = ROBUST_MAX_ITERATIONS
+
+        // check
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.gyroscopeRobustMaxIterations)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun gyroscopeRobustMaxIterations_whenInvalid_throwsIllegalArgumentException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        calibrator.gyroscopeRobustMaxIterations = 0
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun gyroscopeRobustMaxIterations_whenRunning_throwsIllegalArgumentException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        calibrator.gyroscopeRobustMaxIterations = ROBUST_MAX_ITERATIONS
+    }
+
+    @Test
+    fun gyroscopeRobustPreliminarySubsetSize_whenValid_setsExpectedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        // check default value
+        assertEquals(
+            StaticIntervalGyroscopeCalibrator.GYROSCOPE_UNKNOWN_BIAS_MINIMUM_SEQUENCES_GENERAL,
+            calibrator.gyroscopeRobustPreliminarySubsetSize
+        )
+
+        // set new value
+        calibrator.gyroscopeRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+
+        // check
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.gyroscopeRobustPreliminarySubsetSize
+        )
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun gyroscopeRobustPreliminarySubsetSize_whenInvalid_throwsIllegalArgumentException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        calibrator.gyroscopeRobustPreliminarySubsetSize = 12
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun gyroscopeRobustPreliminarySubsetSize_whenRunning_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        calibrator.gyroscopeRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+    }
+
+    @Test
+    fun gyroscopeRobustThreshold_whenValid_setsExpectedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        // check default value
+        assertNull(calibrator.gyroscopeRobustThreshold)
+
+        // set new value
+        calibrator.gyroscopeRobustThreshold = ROBUST_THRESHOLD
+
+        // check
+        val robustThreshold = calibrator.gyroscopeRobustThreshold
+        requireNotNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
+
+        // set new value
+        calibrator.gyroscopeRobustThreshold = null
+
+        // check
+        assertNull(calibrator.gyroscopeRobustThreshold)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun gyroscopeRobustThreshold_whenInvalid_throwsIllegalArgumentException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        calibrator.gyroscopeRobustThreshold = 0.0
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun gyroscopeRobustThreshold_whenRunning_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        calibrator.gyroscopeRobustThreshold = ROBUST_THRESHOLD
+    }
+
+    @Test
+    fun gyroscopeRobustThresholdFactor_whenValid_setsExpectedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        // check default value
+        assertEquals(
+            StaticIntervalAccelerometerCalibrator.DEFAULT_ROBUST_THRESHOLD_FACTOR,
+            calibrator.gyroscopeRobustThresholdFactor,
+            0.0
+        )
+
+        // set new value
+        calibrator.gyroscopeRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
+
+        // check
+        assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.gyroscopeRobustThresholdFactor, 0.0)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun gyroscopeRobustThresholdFactor_whenInvalid_throwsIllegalArgumentException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        calibrator.gyroscopeRobustThresholdFactor = 0.0
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun gyroscopeRobustThresholdFactor_whenRunning_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        calibrator.gyroscopeRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
+    }
+
+    @Test
+    fun gyroscopeRobustStopThresholdFactor_whenValid_setsExpectedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        assertEquals(
+            StaticIntervalAccelerometerCalibrator.DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR,
+            calibrator.gyroscopeRobustStopThresholdFactor,
+            0.0
+        )
+
+        // set new value
+        calibrator.gyroscopeRobustStopThresholdFactor = ROBUST_STOP_THRESHOLD_FACTOR
+
+        // check
+        assertEquals(
+            ROBUST_STOP_THRESHOLD_FACTOR,
+            calibrator.gyroscopeRobustStopThresholdFactor,
+            0.0
+        )
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun gyroscopeRobustStopThresholdFactor_whenInvalid_throwsIllegalArgumentException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        calibrator.gyroscopeRobustStopThresholdFactor = 0.0
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun gyroscopeRobustStopThresholdFactor_whenRunning_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+
+        calibrator.gyroscopeRobustStopThresholdFactor = ROBUST_STOP_THRESHOLD_FACTOR
+    }
+
 
     // TODO: minimumRequiredMeasurements
 

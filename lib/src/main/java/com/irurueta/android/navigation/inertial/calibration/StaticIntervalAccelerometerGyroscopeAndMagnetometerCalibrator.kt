@@ -82,8 +82,6 @@ import kotlin.math.max
  * @property calibrationSolvingStartedListener listener to notify when calibration solving starts.
  * @property calibrationCompletedListener listener to notify when calibration solving completes.
  * @property stoppedListener listener to notify when calibrator is stopped.
- * @property unreliableGravityNormEstimationListener listener to notify when gravity norm
- * estimation becomes unreliable. This is only used if no location is provided.
  * @property initialAccelerometerBiasAvailableListener listener to notify when a guess of bias
  * values is obtained.
  * @property initialGyroscopeBiasAvailableListener listener to notify when a guess of bias values
@@ -124,7 +122,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
     calibrationSolvingStartedListener: OnCalibrationSolvingStartedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>?,
     calibrationCompletedListener: OnCalibrationCompletedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>?,
     stoppedListener: OnStoppedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>?,
-    var unreliableGravityNormEstimationListener: OnUnreliableGravityEstimationListener?,
     var initialAccelerometerBiasAvailableListener: OnInitialAccelerometerBiasAvailableListener?,
     var initialGyroscopeBiasAvailableListener: OnInitialGyroscopeBiasAvailableListener?,
     var initialMagnetometerHardIronAvailableListener: OnInitialMagnetometerHardIronAvailableListener?,
@@ -199,8 +196,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * @property calibrationSolvingStartedListener listener to notify when calibration solving starts.
      * @property calibrationCompletedListener listener to notify when calibration solving completes.
      * @property stoppedListener listener to notify when calibrator is stopped.
-     * @property unreliableGravityNormEstimationListener listener to notify when gravity norm
-     * estimation becomes unreliable. This is only used if no location is provided.
      * @property initialAccelerometerBiasAvailableListener listener to notify when a guess of bias
      * values is obtained.
      * @property initialGyroscopeBiasAvailableListener listener to notify when a guess of bias values
@@ -250,7 +245,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
         calibrationSolvingStartedListener: OnCalibrationSolvingStartedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>? = null,
         calibrationCompletedListener: OnCalibrationCompletedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>? = null,
         stoppedListener: OnStoppedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>? = null,
-        unreliableGravityNormEstimationListener: OnUnreliableGravityEstimationListener? = null,
         initialAccelerometerBiasAvailableListener: OnInitialAccelerometerBiasAvailableListener? = null,
         initialGyroscopeBiasAvailableListener: OnInitialGyroscopeBiasAvailableListener? = null,
         initialMagnetometerHardIronAvailableListener: OnInitialMagnetometerHardIronAvailableListener? = null,
@@ -284,7 +278,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
         calibrationSolvingStartedListener,
         calibrationCompletedListener,
         stoppedListener,
-        unreliableGravityNormEstimationListener,
         initialAccelerometerBiasAvailableListener,
         initialGyroscopeBiasAvailableListener,
         initialMagnetometerHardIronAvailableListener,
@@ -529,13 +522,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * collected at static intervals.
      */
     private var magnetometerInternalCalibrator: MagnetometerNonLinearCalibrator? = null
-
-    /**
-     * Contains gravity norm (either obtained by the gravity sensor, or determined by current
-     * location using WGS84 Earth model). Expressed in meters per squared second (m/s^2).
-     */
-    var gravityNorm: Double? = null
-        private set
 
     /**
      * Indicates if accelerometer result is unreliable. This can happen if no location is provided
@@ -4089,7 +4075,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
         gyroscopeMeasurements.clear()
         magnetometerMeasurements.clear()
 
-        gravityNorm = null
         accelerometerResultUnreliable = false
         accelerometerInitialBiasX = null
         accelerometerInitialBiasY = null
@@ -4292,7 +4277,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
             accelerometerRobustThresholdFactor,
             accelerometerRobustStopThresholdFactor,
             location,
-            gravityNorm,
+            null,
             isAccelerometerGroundTruthInitialBias,
             isAccelerometerCommonAxisUsed,
             accelerometerInitialBiasX,
@@ -4498,20 +4483,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
             measurementsFoundSoFar: Int,
             requiredMeasurements: Int
         )
-    }
-
-    /**
-     * Interface to notify when gravity norm estimation is unreliable.
-     * This only happens if no location is provided and gravity sensor becomes unreliable.
-     */
-    fun interface OnUnreliableGravityEstimationListener {
-        /**
-         * Called when gravity norm estimation becomes unreliable.
-         * This only happens if no location is provided and gravity sensor becomes unreliable.
-         *
-         * @param calibrator calibrator that raised the event.
-         */
-        fun onUnreliableGravityEstimation(calibrator: StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator)
     }
 
     /**
