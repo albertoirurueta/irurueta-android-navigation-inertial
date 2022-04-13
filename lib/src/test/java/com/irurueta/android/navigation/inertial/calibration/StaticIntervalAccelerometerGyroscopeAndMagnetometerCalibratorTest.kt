@@ -19,28 +19,45 @@ import android.content.Context
 import android.location.Location
 import androidx.test.core.app.ApplicationProvider
 import com.irurueta.algebra.Matrix
+import com.irurueta.algebra.WrongSizeException
+import com.irurueta.android.navigation.inertial.calibration.intervals.ErrorReason
+import com.irurueta.android.navigation.inertial.calibration.intervals.measurements.AccelerometerGyroscopeAndMagnetometerMeasurementGenerator
 import com.irurueta.android.navigation.inertial.collectors.*
+import com.irurueta.android.navigation.inertial.getPrivateProperty
 import com.irurueta.android.navigation.inertial.setPrivateProperty
+import com.irurueta.android.navigation.inertial.toNEDPosition
+import com.irurueta.geometry.Quaternion
+import com.irurueta.navigation.frames.CoordinateTransformation
+import com.irurueta.navigation.frames.ECEFFrame
+import com.irurueta.navigation.frames.FrameType
+import com.irurueta.navigation.frames.NEDFrame
+import com.irurueta.navigation.frames.converters.NEDtoECEFFrameConverter
 import com.irurueta.navigation.inertial.BodyKinematics
-import com.irurueta.navigation.inertial.calibration.AccelerationTriad
-import com.irurueta.navigation.inertial.calibration.AngularSpeedTriad
-import com.irurueta.navigation.inertial.calibration.MagneticFluxDensityTriad
+import com.irurueta.navigation.inertial.BodyMagneticFluxDensity
+import com.irurueta.navigation.inertial.calibration.*
+import com.irurueta.navigation.inertial.calibration.accelerometer.AccelerometerNonLinearCalibrator
+import com.irurueta.navigation.inertial.calibration.gyroscope.GyroscopeNonLinearCalibrator
+import com.irurueta.navigation.inertial.calibration.gyroscope.QuaternionIntegrator
 import com.irurueta.navigation.inertial.calibration.intervals.TriadStaticIntervalDetector
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.DefaultAccelerometerQualityScoreMapper
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.DefaultGyroscopeQualityScoreMapper
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.DefaultMagnetometerQualityScoreMapper
+import com.irurueta.navigation.inertial.calibration.magnetometer.MagnetometerNonLinearCalibrator
+import com.irurueta.navigation.inertial.estimators.BodyMagneticFluxDensityEstimator
+import com.irurueta.navigation.inertial.estimators.ECEFKinematicsEstimator
+import com.irurueta.navigation.inertial.wmm.WMMEarthMagneticFluxDensityEstimator
 import com.irurueta.navigation.inertial.wmm.WorldMagneticModel
 import com.irurueta.numerical.robust.RobustEstimatorMethod
 import com.irurueta.statistics.UniformRandomizer
 import com.irurueta.units.*
-import io.mockk.every
-import io.mockk.mockk
+import io.mockk.*
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.util.*
 import kotlin.math.max
+import kotlin.math.sqrt
 
 @RunWith(RobolectricTestRunner::class)
 class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
@@ -5572,7 +5589,1298 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         calibrator.requiredMeasurements = REQUIRED_MEASUREMENTS
     }
 
-    // TODO: onInitializationStarted_whenNoListenerAvailable_makesNoAction
+    @Test
+    fun onInitializationStarted_whenNoListenerAvailable_makesNoAction() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val generatorInitializationStartedListener: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationStartedListener? =
+            calibrator.getPrivateProperty("generatorInitializationStartedListener")
+        requireNotNull(generatorInitializationStartedListener)
+
+        val generator = mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator>()
+        generatorInitializationStartedListener.onInitializationStarted(generator)
+    }
+
+    @Test
+    fun onInitializationStarted_whenListenerAvailable_makesNoAction() {
+        val initializationStartedListener =
+            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>>(
+                relaxUnitFun = true
+            )
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+                context,
+                location,
+                initializationStartedListener = initializationStartedListener
+            )
+
+        val generatorInitializationStartedListener: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationStartedListener? =
+            calibrator.getPrivateProperty("generatorInitializationStartedListener")
+        requireNotNull(generatorInitializationStartedListener)
+
+        val generator = mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator>()
+        generatorInitializationStartedListener.onInitializationStarted(generator)
+
+        verify(exactly = 1) { initializationStartedListener.onInitializationStarted(calibrator) }
+    }
+
+    @Test
+    fun onInitializationCompleted_whenNoListenerAvailable_makesNoAction() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val generatorInitializationCompletedListener: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationCompletedListener? =
+            calibrator.getPrivateProperty("generatorInitializationCompletedListener")
+        requireNotNull(generatorInitializationCompletedListener)
+
+        val randomizer = UniformRandomizer()
+        val baseNoiseLevel = randomizer.nextDouble()
+        val generator = mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator>()
+        generatorInitializationCompletedListener.onInitializationCompleted(
+            generator,
+            baseNoiseLevel
+        )
+    }
+
+    @Test
+    fun onInitializationCompleted_whenListenerAvailable_notifies() {
+        val initializationCompletedListener =
+            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>>(
+                relaxUnitFun = true
+            )
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+                context,
+                location,
+                initializationCompletedListener = initializationCompletedListener
+            )
+
+        val generatorInitializationCompletedListener: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationCompletedListener? =
+            calibrator.getPrivateProperty("generatorInitializationCompletedListener")
+        requireNotNull(generatorInitializationCompletedListener)
+
+        val randomizer = UniformRandomizer()
+        val baseNoiseLevel = randomizer.nextDouble()
+        val generator = mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator>()
+        generatorInitializationCompletedListener.onInitializationCompleted(
+            generator,
+            baseNoiseLevel
+        )
+
+        verify(exactly = 1) { initializationCompletedListener.onInitializationCompleted(calibrator) }
+    }
+
+    @Test
+    fun onError_whenNoListeners_stopsGenerator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+        assertTrue(calibrator.running)
+
+        val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        val generatorErrorListener: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnErrorListener? =
+            calibrator.getPrivateProperty("generatorErrorListener")
+        requireNotNull(generatorErrorListener)
+
+        generatorErrorListener.onError(generatorSpy, ErrorReason.UNRELIABLE_SENSOR)
+
+        // check
+        assertFalse(calibrator.running)
+        verify(exactly = 1) { generatorSpy.stop() }
+    }
+
+    @Test
+    fun onError_whenListenersAvailable_stopsGeneratoAndNotifies() {
+        val errorListener =
+            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>>(
+                relaxUnitFun = true
+            )
+        val stoppedListener =
+            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>>(
+                relaxUnitFun = true
+            )
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+                context,
+                location,
+                errorListener = errorListener,
+                stoppedListener = stoppedListener
+            )
+
+        setPrivateProperty(
+            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            calibrator,
+            "running",
+            true
+        )
+        assertTrue(calibrator.running)
+
+        val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        val generatorErrorListener: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnErrorListener? =
+            calibrator.getPrivateProperty("generatorErrorListener")
+        requireNotNull(generatorErrorListener)
+
+        generatorErrorListener.onError(generatorSpy, ErrorReason.UNRELIABLE_SENSOR)
+
+        // check
+        assertFalse(calibrator.running)
+        verify(exactly = 1) { generatorSpy.stop() }
+        verify(exactly = 1) {
+            errorListener.onError(
+                calibrator,
+                CalibratorErrorReason.UNRELIABLE_SENSOR
+            )
+        }
+        verify(exactly = 1) { stoppedListener.onStopped(calibrator) }
+    }
+
+    @Test
+    fun onStaticIntervalDetected_whenNoListenerAvailable_makesNoAction() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val generatorStaticIntervalDetectedListener: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnStaticIntervalDetectedListener? =
+            calibrator.getPrivateProperty("generatorStaticIntervalDetectedListener")
+        requireNotNull(generatorStaticIntervalDetectedListener)
+
+        val generator = mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator>()
+        generatorStaticIntervalDetectedListener.onStaticIntervalDetected(generator)
+    }
+
+    @Test
+    fun onStaticIntervalDetected_whenListenerAvailable_notifies() {
+        val staticIntervalDetectedListener =
+            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>>(
+                relaxUnitFun = true
+            )
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+                context,
+                location,
+                staticIntervalDetectedListener = staticIntervalDetectedListener
+            )
+
+        val generatorStaticIntervalDetectedListener: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnStaticIntervalDetectedListener? =
+            calibrator.getPrivateProperty("generatorStaticIntervalDetectedListener")
+        requireNotNull(generatorStaticIntervalDetectedListener)
+
+        val generator = mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator>()
+        generatorStaticIntervalDetectedListener.onStaticIntervalDetected(generator)
+
+        verify(exactly = 1) { staticIntervalDetectedListener.onStaticIntervalDetected(calibrator) }
+    }
+
+    @Test
+    fun onDynamicIntervalDetected_whenNoListenerAvailable_makesNoAction() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val generatorDynamicIntervalDetectedListener: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnDynamicIntervalDetectedListener? =
+            calibrator.getPrivateProperty("generatorDynamicIntervalDetectedListener")
+        requireNotNull(generatorDynamicIntervalDetectedListener)
+
+        val generator = mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator>()
+        generatorDynamicIntervalDetectedListener.onDynamicIntervalDetected(generator)
+    }
+
+    @Test
+    fun onDynamicIntervalDetected_whenListenerAvailable_notifies() {
+        val dynamicIntervalDetectedListener =
+            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>>(
+                relaxUnitFun = true
+            )
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+                context,
+                location,
+                dynamicIntervalDetectedListener = dynamicIntervalDetectedListener
+            )
+
+        val generatorDynamicIntervalDetectedListener: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnDynamicIntervalDetectedListener? =
+            calibrator.getPrivateProperty("generatorDynamicIntervalDetectedListener")
+        requireNotNull(generatorDynamicIntervalDetectedListener)
+
+        val generator = mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator>()
+        generatorDynamicIntervalDetectedListener.onDynamicIntervalDetected(generator)
+
+        verify(exactly = 1) { dynamicIntervalDetectedListener.onDynamicIntervalDetected(calibrator) }
+    }
+
+    @Test
+    fun onStaticIntervalSkipped_whenNoListenerAvailable_makesNoAction() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val generatorStaticIntervalSkippedListener: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnStaticIntervalSkippedListener? =
+            calibrator.getPrivateProperty("generatorStaticIntervalSkippedListener")
+        requireNotNull(generatorStaticIntervalSkippedListener)
+
+        val generator = mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator>()
+        generatorStaticIntervalSkippedListener.onStaticIntervalSkipped(generator)
+    }
+
+    @Test
+    fun onStaticIntervalSkipped_whenListenerAvailable_notifies() {
+        val staticIntervalSkippedListener =
+            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalSkippedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>>(
+                relaxUnitFun = true
+            )
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+                context, location,
+                staticIntervalSkippedListener = staticIntervalSkippedListener
+            )
+
+        val generatorStaticIntervalSkippedListener: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnStaticIntervalSkippedListener? =
+            calibrator.getPrivateProperty("generatorStaticIntervalSkippedListener")
+        requireNotNull(generatorStaticIntervalSkippedListener)
+
+        val generator = mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator>()
+        generatorStaticIntervalSkippedListener.onStaticIntervalSkipped(generator)
+
+        verify(exactly = 1) { staticIntervalSkippedListener.onStaticIntervalSkipped(calibrator) }
+    }
+
+    @Test
+    fun onDynamicIntervalSkipped_whenNoListenerAvailable_makesNoAction() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val generatorDynamicIntervalSkippedListener: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnDynamicIntervalSkippedListener? =
+            calibrator.getPrivateProperty("generatorDynamicIntervalSkippedListener")
+        requireNotNull(generatorDynamicIntervalSkippedListener)
+
+        val generator = mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator>()
+        generatorDynamicIntervalSkippedListener.onDynamicIntervalSkipped(generator)
+    }
+
+    @Test
+    fun onDynamicIntervalSkipped_whenListenerAvailable_notifies() {
+        val dynamicIntervalSkippedListener =
+            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalSkippedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>>(
+                relaxUnitFun = true
+            )
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+                context,
+                location,
+                dynamicIntervalSkippedListener = dynamicIntervalSkippedListener
+            )
+
+        val generatorDynamicIntervalSkippedListener: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnDynamicIntervalSkippedListener? =
+            calibrator.getPrivateProperty("generatorDynamicIntervalSkippedListener")
+        requireNotNull(generatorDynamicIntervalSkippedListener)
+
+        val generator = mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator>()
+        generatorDynamicIntervalSkippedListener.onDynamicIntervalSkipped(generator)
+
+        verify(exactly = 1) { dynamicIntervalSkippedListener.onDynamicIntervalSkipped(calibrator) }
+    }
+
+    @Test
+    fun onGeneratedAccelerometerMeasurement_addsMeasurement() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        assertTrue(calibrator.accelerometerMeasurements.isEmpty())
+
+        val generatorGeneratedMeasurementListener: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedAccelerometerMeasurementListener? =
+            calibrator.getPrivateProperty("generatorGeneratedAccelerometerMeasurementListener")
+        requireNotNull(generatorGeneratedMeasurementListener)
+
+        val generator = mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator>()
+        val measurement = StandardDeviationBodyKinematics()
+        generatorGeneratedMeasurementListener.onGeneratedAccelerometerMeasurement(
+            generator,
+            measurement
+        )
+
+        assertEquals(1, calibrator.accelerometerMeasurements.size)
+        assertSame(measurement, calibrator.accelerometerMeasurements[0])
+    }
+
+    @Test
+    fun onGeneratedAccelerometerMeasurement_whenListenerAvailable_notifies() {
+        val generatedAccelerometerMeasurementListener =
+            mockk<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator.OnGeneratedAccelerometerMeasurementListener>(
+                relaxUnitFun = true
+            )
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+                context,
+                location,
+                generatedAccelerometerMeasurementListener = generatedAccelerometerMeasurementListener
+            )
+
+        assertTrue(calibrator.accelerometerMeasurements.isEmpty())
+
+        val generatorGeneratedMeasurementListener: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedAccelerometerMeasurementListener? =
+            calibrator.getPrivateProperty("generatorGeneratedAccelerometerMeasurementListener")
+        requireNotNull(generatorGeneratedMeasurementListener)
+
+        val generator = mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator>()
+        val measurement = StandardDeviationBodyKinematics()
+        generatorGeneratedMeasurementListener.onGeneratedAccelerometerMeasurement(
+            generator,
+            measurement
+        )
+
+        assertEquals(1, calibrator.accelerometerMeasurements.size)
+        assertSame(measurement, calibrator.accelerometerMeasurements[0])
+    }
+
+    @Test
+    fun onGeneratedAccelerometerMeasurement_whenReadyToCalibrate_stopsAndBuildsCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+            context,
+            location,
+            solveCalibrationWhenEnoughMeasurements = false
+        )
+
+        assertEquals(
+            StaticIntervalGyroscopeCalibrator.GYROSCOPE_UNKNOWN_BIAS_MINIMUM_SEQUENCES_GENERAL,
+            calibrator.requiredMeasurements
+        )
+        assertFalse(calibrator.isReadyToSolveCalibration)
+
+        // add enough measurements
+        val accelerometerMeasurement = StandardDeviationBodyKinematics()
+        val gyroscopeMeasurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
+        val magnetometerMeasurement = StandardDeviationBodyMagneticFluxDensity()
+        for (i in 1..calibrator.requiredMeasurements) {
+            calibrator.accelerometerMeasurements.add(accelerometerMeasurement)
+            calibrator.gyroscopeMeasurements.add(gyroscopeMeasurement)
+            calibrator.magnetometerMeasurements.add(magnetometerMeasurement)
+        }
+        assertTrue(calibrator.isReadyToSolveCalibration)
+
+        val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        var accelerometerInternalCalibrator: AccelerometerNonLinearCalibrator? =
+            calibrator.getPrivateProperty("accelerometerInternalCalibrator")
+        assertNull(accelerometerInternalCalibrator)
+        var gyroscopeInternalCalibrator: GyroscopeNonLinearCalibrator? =
+            calibrator.getPrivateProperty("gyroscopeInternalCalibrator")
+        assertNull(gyroscopeInternalCalibrator)
+        var magnetometerInternalCalibrator: MagnetometerNonLinearCalibrator? =
+            calibrator.getPrivateProperty("magnetometerInternalCalibrator")
+        assertNull(magnetometerInternalCalibrator)
+
+        val generatorGeneratedMeasurementListener: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedAccelerometerMeasurementListener? =
+            calibrator.getPrivateProperty("generatorGeneratedAccelerometerMeasurementListener")
+        requireNotNull(generatorGeneratedMeasurementListener)
+
+        generatorGeneratedMeasurementListener.onGeneratedAccelerometerMeasurement(
+            generatorSpy,
+            accelerometerMeasurement
+        )
+
+        verify(exactly = 1) { generatorSpy.stop() }
+
+        accelerometerInternalCalibrator =
+            calibrator.getPrivateProperty("accelerometerInternalCalibrator")
+        assertNotNull(accelerometerInternalCalibrator)
+        magnetometerInternalCalibrator =
+            calibrator.getPrivateProperty("magnetometerInternalCalibrator")
+        assertNotNull(magnetometerInternalCalibrator)
+
+        // gyroscope internal calibrator is only built once accelerometer calibration is solved
+        gyroscopeInternalCalibrator =
+            calibrator.getPrivateProperty("gyroscopeInternalCalibrator")
+        assertNull(gyroscopeInternalCalibrator)
+    }
+
+    @Test
+    fun onGeneratedAccelerometerMeasurement_whenReadyToSolveCalibrationListenerAvailable_notifies() {
+        val location = getLocation()
+        val readyToSolveCalibrationListener =
+            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>>(
+                relaxUnitFun = true
+            )
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+            context,
+            readyToSolveCalibrationListener = readyToSolveCalibrationListener,
+            solveCalibrationWhenEnoughMeasurements = false,
+            location = location
+        )
+
+        assertEquals(
+            StaticIntervalGyroscopeCalibrator.GYROSCOPE_UNKNOWN_BIAS_MINIMUM_SEQUENCES_GENERAL,
+            calibrator.requiredMeasurements
+        )
+        assertFalse(calibrator.isReadyToSolveCalibration)
+
+        // add enough measurements
+        val accelerometerMeasurement = StandardDeviationBodyKinematics()
+        val gyroscopeMeasurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
+        val magnetometerMeasurement = StandardDeviationBodyMagneticFluxDensity()
+        for (i in 1..calibrator.requiredMeasurements) {
+            calibrator.accelerometerMeasurements.add(accelerometerMeasurement)
+            calibrator.gyroscopeMeasurements.add(gyroscopeMeasurement)
+            calibrator.magnetometerMeasurements.add(magnetometerMeasurement)
+        }
+        assertTrue(calibrator.isReadyToSolveCalibration)
+
+        val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        var accelerometerInternalCalibrator: AccelerometerNonLinearCalibrator? =
+            calibrator.getPrivateProperty("accelerometerInternalCalibrator")
+        assertNull(accelerometerInternalCalibrator)
+        var gyroscopeInternalCalibrator: GyroscopeNonLinearCalibrator? =
+            calibrator.getPrivateProperty("gyroscopeInternalCalibrator")
+        assertNull(gyroscopeInternalCalibrator)
+        var magnetometerInternalCalibrator: MagnetometerNonLinearCalibrator? =
+            calibrator.getPrivateProperty("magnetometerInternalCalibrator")
+        assertNull(magnetometerInternalCalibrator)
+
+        val generatorGeneratedMeasurementListener: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedAccelerometerMeasurementListener? =
+            calibrator.getPrivateProperty("generatorGeneratedAccelerometerMeasurementListener")
+        requireNotNull(generatorGeneratedMeasurementListener)
+
+        generatorGeneratedMeasurementListener.onGeneratedAccelerometerMeasurement(
+            generatorSpy,
+            accelerometerMeasurement
+        )
+
+        verify(exactly = 1) { readyToSolveCalibrationListener.onReadyToSolveCalibration(calibrator) }
+        verify(exactly = 1) { generatorSpy.stop() }
+
+        accelerometerInternalCalibrator =
+            calibrator.getPrivateProperty("accelerometerInternalCalibrator")
+        assertNotNull(accelerometerInternalCalibrator)
+        magnetometerInternalCalibrator =
+            calibrator.getPrivateProperty("magnetometerInternalCalibrator")
+        assertNotNull(magnetometerInternalCalibrator)
+
+        // gyroscope internal calibrator is only built once accelerometer calibration is solved
+        gyroscopeInternalCalibrator =
+            calibrator.getPrivateProperty("gyroscopeInternalCalibrator")
+        assertNull(gyroscopeInternalCalibrator)
+    }
+
+    @Test
+    fun onGeneratedAccelerometerMeasurement_whenSolveCalibrationEnabled_solvesCalibration() {
+        val wmmEstimator = WMMEarthMagneticFluxDensityEstimator()
+
+        val location = getLocation()
+        val timestamp = Date()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+            context,
+            location,
+            timestamp,
+            solveCalibrationWhenEnoughMeasurements = true
+        )
+
+        assertEquals(
+            StaticIntervalGyroscopeCalibrator.GYROSCOPE_UNKNOWN_BIAS_MINIMUM_SEQUENCES_GENERAL,
+            calibrator.requiredMeasurements
+        )
+        assertFalse(calibrator.isReadyToSolveCalibration)
+
+        // add enough measurements
+        val requiredMeasurements = calibrator.requiredMeasurements
+        assertEquals(13, requiredMeasurements)
+        val minimumRequiredMeasurements = calibrator.minimumRequiredMeasurements
+        assertEquals(13, minimumRequiredMeasurements)
+        val reqMeasurements = requiredMeasurements.coerceAtLeast(minimumRequiredMeasurements)
+
+        val nedPosition = location.toNEDPosition()
+
+        val ba = generateBa()
+        val bg = generateBg()
+        val ma = generateMa()
+        val mg = generateGeneralMg()
+        val gg = Matrix(BodyKinematics.COMPONENTS, BodyKinematics.COMPONENTS)
+        val accelNoiseRootPSD = 0.0
+        val gyroNoiseRootPSD = 0.0
+        val accelQuantLevel = 0.0
+        val gyroQuantLevel = 0.0
+        val errors = IMUErrors(
+            ba,
+            bg,
+            ma,
+            mg,
+            gg,
+            accelNoiseRootPSD,
+            gyroNoiseRootPSD,
+            accelQuantLevel,
+            gyroQuantLevel
+        )
+
+        val hardIron = generateHardIron()
+        val mm = generateSoftIron()
+
+        val random = Random()
+        val randomizer = UniformRandomizer(random)
+
+        val sqrtTimeInterval = sqrt(TIME_INTERVAL_SECONDS)
+        val specificForceStandardDeviation = getAccelNoiseRootPSD() / sqrtTimeInterval
+        val angularRateStandardDeviation = getGyroNoiseRootPSD() / sqrtTimeInterval
+
+        val sequences =
+            mutableListOf<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>()
+        for (i in 0 until reqMeasurements) {
+            // initial attitude of sequence
+            val roll = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
+            val pitch = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
+            val yaw = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
+            val nedC = CoordinateTransformation(
+                roll,
+                pitch,
+                yaw,
+                FrameType.BODY_FRAME,
+                FrameType.LOCAL_NAVIGATION_FRAME
+            )
+
+            val beforeQ = Quaternion()
+            nedC.asRotation(beforeQ)
+
+            val nedFrame = NEDFrame(nedPosition, nedC)
+            val ecefFrame = NEDtoECEFFrameConverter.convertNEDtoECEFAndReturnNew(nedFrame)
+
+            val trueBeforeGravityKinematics =
+                ECEFKinematicsEstimator.estimateKinematicsAndReturnNew(
+                    TIME_INTERVAL_SECONDS,
+                    ecefFrame,
+                    ecefFrame
+                )
+            val measuredBeforeGravityKinematics = BodyKinematicsGenerator.generate(
+                TIME_INTERVAL_SECONDS,
+                trueBeforeGravityKinematics,
+                errors,
+                random
+            )
+            val beforeMeanFx = measuredBeforeGravityKinematics.fx
+            val beforeMeanFy = measuredBeforeGravityKinematics.fy
+            val beforeMeanFz = measuredBeforeGravityKinematics.fz
+
+            val deltaRoll = Math.toRadians(
+                randomizer.nextDouble(MIN_ANGLE_VARIATION_DEGREES, MAX_ANGLE_VARIATION_DEGREES)
+            )
+            val deltaPitch = Math.toRadians(
+                randomizer.nextDouble(MIN_ANGLE_VARIATION_DEGREES, MAX_ANGLE_VARIATION_DEGREES)
+            )
+            val deltaYaw = Math.toRadians(
+                randomizer.nextDouble(MIN_ANGLE_VARIATION_DEGREES, MAX_ANGLE_VARIATION_DEGREES)
+            )
+
+            val oldNedFrame = NEDFrame(nedFrame)
+            val newNedFrame = NEDFrame()
+            val oldEcefFrame = ECEFFrame()
+            val newEcefFrame = ECEFFrame()
+            var oldRoll = roll - deltaRoll
+            var oldPitch = pitch - deltaPitch
+            var oldYaw = yaw - deltaYaw
+
+            val trueSequence = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
+            val sequence = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
+            sequence.setBeforeMeanSpecificForceCoordinates(beforeMeanFx, beforeMeanFy, beforeMeanFz)
+
+            val trueTimedKinematicsList = mutableListOf<StandardDeviationTimedBodyKinematics>()
+            val measuredTimedKinematicsList = mutableListOf<StandardDeviationTimedBodyKinematics>()
+
+            val earthB = wmmEstimator.estimate(nedPosition, timestamp)
+            val truthMagnetic = BodyMagneticFluxDensityEstimator.estimate(earthB, roll, pitch, yaw)
+            val measuredMagnetic =
+                BodyMagneticFluxDensityGenerator.generate(truthMagnetic, hardIron, mm)
+
+            val magnetometerMeasurement =
+                StandardDeviationBodyMagneticFluxDensity(measuredMagnetic, MAGNETOMETER_NOISE_STD)
+            calibrator.magnetometerMeasurements.add(magnetometerMeasurement)
+
+            for (j in 0 until reqMeasurements) {
+                val newRoll = oldRoll + deltaRoll
+                val newPitch = oldPitch + deltaPitch
+                val newYaw = oldYaw + deltaYaw
+                val newNedC = CoordinateTransformation(
+                    newRoll,
+                    newPitch,
+                    newYaw,
+                    FrameType.BODY_FRAME,
+                    FrameType.LOCAL_NAVIGATION_FRAME
+                )
+                val newNedPosition = oldNedFrame.position
+
+                newNedFrame.position = newNedPosition
+                newNedFrame.coordinateTransformation = newNedC
+
+                NEDtoECEFFrameConverter.convertNEDtoECEF(newNedFrame, newEcefFrame)
+                NEDtoECEFFrameConverter.convertNEDtoECEF(oldNedFrame, oldEcefFrame)
+
+                val timestampSeconds = j * TIME_INTERVAL_SECONDS
+
+                // compute ground-truth kinematics that should be generated at provided
+                // position, velocity and orientation
+                val trueKinematics = ECEFKinematicsEstimator.estimateKinematicsAndReturnNew(
+                    TIME_INTERVAL_SECONDS,
+                    newEcefFrame,
+                    oldEcefFrame
+                )
+
+                // apply known calibration parameters to distort ground-truth and generate a
+                // measured kinematics sample
+                val measuredKinematics = BodyKinematicsGenerator.generate(
+                    TIME_INTERVAL_SECONDS,
+                    trueKinematics,
+                    errors,
+                    random
+                )
+
+                val trueTimedKinematics = StandardDeviationTimedBodyKinematics(
+                    trueKinematics,
+                    timestampSeconds,
+                    specificForceStandardDeviation,
+                    angularRateStandardDeviation
+                )
+
+                val measuredTimedKinematics = StandardDeviationTimedBodyKinematics(
+                    measuredKinematics,
+                    timestampSeconds,
+                    specificForceStandardDeviation,
+                    angularRateStandardDeviation
+                )
+
+                trueTimedKinematicsList.add(trueTimedKinematics)
+                measuredTimedKinematicsList.add(measuredTimedKinematics)
+
+                oldNedFrame.copyFrom(newNedFrame)
+                oldRoll = newRoll
+                oldPitch = newPitch
+                oldYaw = newYaw
+            }
+            trueSequence.setItems(trueTimedKinematicsList)
+            sequence.setItems(measuredTimedKinematicsList)
+
+            val afterQ = Quaternion()
+            QuaternionIntegrator.integrateGyroSequence(trueSequence, beforeQ, afterQ)
+
+            val newNedC = CoordinateTransformation(
+                afterQ.asInhomogeneousMatrix(),
+                FrameType.BODY_FRAME,
+                FrameType.LOCAL_NAVIGATION_FRAME
+            )
+            newNedFrame.position = nedPosition
+            newNedFrame.coordinateTransformation = newNedC
+
+            NEDtoECEFFrameConverter.convertNEDtoECEF(newNedFrame, newEcefFrame)
+
+            val trueAfterGravityKinematics = ECEFKinematicsEstimator.estimateKinematicsAndReturnNew(
+                TIME_INTERVAL_SECONDS,
+                newEcefFrame,
+                newEcefFrame
+            )
+            val measuredAfterGravityKinematics = BodyKinematicsGenerator.generate(
+                TIME_INTERVAL_SECONDS,
+                trueAfterGravityKinematics,
+                errors,
+                random
+            )
+            val afterMeanFx = measuredAfterGravityKinematics.fx
+            val afterMeanFy = measuredAfterGravityKinematics.fy
+            val afterMeanFz = measuredAfterGravityKinematics.fz
+
+            sequence.setAfterMeanSpecificForceCoordinates(afterMeanFx, afterMeanFy, afterMeanFz)
+
+            sequences.add(sequence)
+
+            val accelerometerMeasurement = StandardDeviationBodyKinematics(
+                measuredBeforeGravityKinematics,
+                ACCUMULATED_STD,
+                0.0
+            )
+            calibrator.accelerometerMeasurements.add(accelerometerMeasurement)
+        }
+        calibrator.gyroscopeMeasurements.addAll(sequences)
+
+        assertTrue(calibrator.isReadyToSolveCalibration)
+
+        val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        var accelerometerInternalCalibrator: AccelerometerNonLinearCalibrator? =
+            calibrator.getPrivateProperty("accelerometerInternalCalibrator")
+        assertNull(accelerometerInternalCalibrator)
+
+        var gyroscopeInternalCalibrator: GyroscopeNonLinearCalibrator? =
+            calibrator.getPrivateProperty("gyroscopeInternalCalibrator")
+        assertNull(gyroscopeInternalCalibrator)
+
+        var magnetometerInternalCalibrator: MagnetometerNonLinearCalibrator? =
+            calibrator.getPrivateProperty("magnetometerInternalCalibrator")
+        assertNull(magnetometerInternalCalibrator)
+
+        val generatorGeneratedMeasurementListener: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedAccelerometerMeasurementListener? =
+            calibrator.getPrivateProperty("generatorGeneratedAccelerometerMeasurementListener")
+        requireNotNull(generatorGeneratedMeasurementListener)
+
+        generatorGeneratedMeasurementListener.onGeneratedAccelerometerMeasurement(
+            generatorSpy,
+            calibrator.accelerometerMeasurements.last()
+        )
+
+        verify(exactly = 1) { generatorSpy.stop() }
+
+        accelerometerInternalCalibrator =
+            calibrator.getPrivateProperty("accelerometerInternalCalibrator")
+        assertNotNull(accelerometerInternalCalibrator)
+
+        gyroscopeInternalCalibrator =
+            calibrator.getPrivateProperty("gyroscopeInternalCalibrator")
+        assertNotNull(gyroscopeInternalCalibrator)
+
+        magnetometerInternalCalibrator =
+            calibrator.getPrivateProperty("magnetometerInternalCalibrator")
+        assertNotNull(magnetometerInternalCalibrator)
+
+        assertNotNull(calibrator.estimatedAccelerometerMa)
+        assertNotNull(calibrator.estimatedAccelerometerSx)
+        assertNotNull(calibrator.estimatedAccelerometerSy)
+        assertNotNull(calibrator.estimatedAccelerometerSz)
+        assertNotNull(calibrator.estimatedAccelerometerMxy)
+        assertNotNull(calibrator.estimatedAccelerometerMxz)
+        assertNotNull(calibrator.estimatedAccelerometerMyx)
+        assertNotNull(calibrator.estimatedAccelerometerMyz)
+        assertNotNull(calibrator.estimatedAccelerometerMzx)
+        assertNotNull(calibrator.estimatedAccelerometerMzy)
+        assertNotNull(calibrator.estimatedAccelerometerCovariance)
+        assertNotNull(calibrator.estimatedAccelerometerChiSq)
+        assertNotNull(calibrator.estimatedAccelerometerMse)
+        assertNotNull(calibrator.estimatedAccelerometerBiasX)
+        assertNotNull(calibrator.estimatedAccelerometerBiasY)
+        assertNotNull(calibrator.estimatedAccelerometerBiasZ)
+        assertNotNull(calibrator.estimatedAccelerometerBiasXAsMeasurement)
+        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        assertTrue(calibrator.getEstimatedAccelerometerBiasXAsMeasurement(acceleration))
+        assertNotNull(calibrator.estimatedAccelerometerBiasYAsMeasurement)
+        assertTrue(calibrator.getEstimatedAccelerometerBiasYAsMeasurement(acceleration))
+        assertNotNull(calibrator.estimatedAccelerometerBiasZAsMeasurement)
+        assertTrue(calibrator.getEstimatedAccelerometerBiasZAsMeasurement(acceleration))
+        assertNotNull(calibrator.estimatedAccelerometerBiasAsTriad)
+        val accelerometerTriad = AccelerationTriad()
+        assertTrue(calibrator.getEstimatedAccelerometerBiasAsTriad(accelerometerTriad))
+        assertNotNull(calibrator.estimatedAccelerometerBiasStandardDeviationNorm)
+
+        assertNotNull(calibrator.estimatedGyroscopeMg)
+        assertNotNull(calibrator.estimatedGyroscopeSx)
+        assertNotNull(calibrator.estimatedGyroscopeSy)
+        assertNotNull(calibrator.estimatedGyroscopeSz)
+        assertNotNull(calibrator.estimatedGyroscopeMxy)
+        assertNotNull(calibrator.estimatedGyroscopeMxz)
+        assertNotNull(calibrator.estimatedGyroscopeMyx)
+        assertNotNull(calibrator.estimatedGyroscopeMyz)
+        assertNotNull(calibrator.estimatedGyroscopeMzx)
+        assertNotNull(calibrator.estimatedGyroscopeMzy)
+        assertNotNull(calibrator.estimatedGyroscopeGg)
+        assertNotNull(calibrator.estimatedGyroscopeCovariance)
+        assertNotNull(calibrator.estimatedGyroscopeChiSq)
+        assertNotNull(calibrator.estimatedGyroscopeMse)
+        assertNotNull(calibrator.estimatedGyroscopeBiasX)
+        assertNotNull(calibrator.estimatedGyroscopeBiasY)
+        assertNotNull(calibrator.estimatedGyroscopeBiasZ)
+        assertNotNull(calibrator.estimatedGyroscopeBiasXAsMeasurement)
+        val bias = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertTrue(calibrator.getEstimatedGyroscopeBiasXAsMeasurement(bias))
+        assertNotNull(calibrator.estimatedGyroscopeBiasYAsMeasurement)
+        assertTrue(calibrator.getEstimatedGyroscopeBiasYAsMeasurement(bias))
+        assertNotNull(calibrator.estimatedGyroscopeBiasZAsMeasurement)
+        assertTrue(calibrator.getEstimatedGyroscopeBiasZAsMeasurement(bias))
+        assertNotNull(calibrator.estimatedGyroscopeBiasAsTriad)
+        val angularSpeedTriad = AngularSpeedTriad()
+        assertTrue(calibrator.getEstimatedGyroscopeBiasAsTriad(angularSpeedTriad))
+        assertNotNull(calibrator.estimatedGyroscopeBiasStandardDeviationNorm)
+
+        assertNotNull(calibrator.estimatedMagnetometerMm)
+        assertNotNull(calibrator.estimatedMagnetometerSx)
+        assertNotNull(calibrator.estimatedMagnetometerSy)
+        assertNotNull(calibrator.estimatedMagnetometerSz)
+        assertNotNull(calibrator.estimatedMagnetometerMxy)
+        assertNotNull(calibrator.estimatedMagnetometerMxz)
+        assertNotNull(calibrator.estimatedMagnetometerMyx)
+        assertNotNull(calibrator.estimatedMagnetometerMyz)
+        assertNotNull(calibrator.estimatedMagnetometerMzx)
+        assertNotNull(calibrator.estimatedMagnetometerMzy)
+        assertNotNull(calibrator.estimatedMagnetometerCovariance)
+        assertNotNull(calibrator.estimatedMagnetometerChiSq)
+        assertNotNull(calibrator.estimatedMagnetometerMse)
+        assertNotNull(calibrator.estimatedMagnetometerHardIronX)
+        assertNotNull(calibrator.estimatedMagnetometerHardIronY)
+        assertNotNull(calibrator.estimatedMagnetometerHardIronZ)
+        assertNotNull(calibrator.estimatedMagnetometerHardIronXAsMeasurement)
+        val b = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        assertTrue(calibrator.getEstimatedMagnetometerHardIronXAsMeasurement(b))
+        assertNotNull(calibrator.estimatedMagnetometerHardIronYAsMeasurement)
+        assertTrue(calibrator.getEstimatedMagnetometerHardIronYAsMeasurement(b))
+        assertNotNull(calibrator.estimatedMagnetometerHardIronZAsMeasurement)
+        assertTrue(calibrator.getEstimatedMagnetometerHardIronZAsMeasurement(b))
+        assertNotNull(calibrator.estimatedMagnetometerHardIronAsTriad)
+        val triad = MagneticFluxDensityTriad()
+        assertTrue(calibrator.getEstimatedMagnetometerHardIronAsTriad(triad))
+    }
+
+    @Test
+    fun onGeneratedAccelerometerMeasurement_whenSolveCalibrationEnabledAndListenersAvailable_solvesCalibrationAndNotifies() {
+        val readyToSolveCalibrationListener =
+            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>>(
+                relaxUnitFun = true
+            )
+        val stoppedListener =
+            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>>(
+                relaxUnitFun = true
+            )
+        val calibrationSolvingStartedListener =
+            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>>(
+                relaxUnitFun = true
+            )
+        val calibrationCompletedListener =
+            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>>(
+                relaxUnitFun = true
+            )
+        val errorListener =
+            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>>(
+                relaxUnitFun = true
+            )
+
+        val wmmEstimator = WMMEarthMagneticFluxDensityEstimator()
+
+        val location = getLocation()
+        val timestamp = Date()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+            context,
+            location,
+            timestamp,
+            solveCalibrationWhenEnoughMeasurements = true,
+            readyToSolveCalibrationListener = readyToSolveCalibrationListener,
+            stoppedListener = stoppedListener,
+            calibrationSolvingStartedListener = calibrationSolvingStartedListener,
+            calibrationCompletedListener = calibrationCompletedListener,
+            errorListener = errorListener
+        )
+
+        assertEquals(
+            StaticIntervalGyroscopeCalibrator.GYROSCOPE_UNKNOWN_BIAS_MINIMUM_SEQUENCES_GENERAL,
+            calibrator.requiredMeasurements
+        )
+        assertFalse(calibrator.isReadyToSolveCalibration)
+
+        // add enough measurements
+        val requiredMeasurements = calibrator.requiredMeasurements
+        assertEquals(13, requiredMeasurements)
+        val minimumRequiredMeasurements = calibrator.minimumRequiredMeasurements
+        assertEquals(13, minimumRequiredMeasurements)
+        val reqMeasurements = requiredMeasurements.coerceAtLeast(minimumRequiredMeasurements)
+
+        val nedPosition = location.toNEDPosition()
+
+        val ba = generateBa()
+        val bg = generateBg()
+        val ma = generateMa()
+        val mg = generateGeneralMg()
+        val gg = Matrix(BodyKinematics.COMPONENTS, BodyKinematics.COMPONENTS)
+        val accelNoiseRootPSD = 0.0
+        val gyroNoiseRootPSD = 0.0
+        val accelQuantLevel = 0.0
+        val gyroQuantLevel = 0.0
+        val errors = IMUErrors(
+            ba,
+            bg,
+            ma,
+            mg,
+            gg,
+            accelNoiseRootPSD,
+            gyroNoiseRootPSD,
+            accelQuantLevel,
+            gyroQuantLevel
+        )
+
+        val hardIron = generateHardIron()
+        val mm = generateSoftIron()
+
+        val random = Random()
+        val randomizer = UniformRandomizer(random)
+
+        val sqrtTimeInterval = sqrt(TIME_INTERVAL_SECONDS)
+        val specificForceStandardDeviation = getAccelNoiseRootPSD() / sqrtTimeInterval
+        val angularRateStandardDeviation = getGyroNoiseRootPSD() / sqrtTimeInterval
+
+        val sequences =
+            mutableListOf<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>()
+        for (i in 0 until reqMeasurements) {
+            // initial attitude of sequence
+            val roll = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
+            val pitch = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
+            val yaw = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
+            val nedC = CoordinateTransformation(
+                roll,
+                pitch,
+                yaw,
+                FrameType.BODY_FRAME,
+                FrameType.LOCAL_NAVIGATION_FRAME
+            )
+
+            val beforeQ = Quaternion()
+            nedC.asRotation(beforeQ)
+
+            val nedFrame = NEDFrame(nedPosition, nedC)
+            val ecefFrame = NEDtoECEFFrameConverter.convertNEDtoECEFAndReturnNew(nedFrame)
+
+            val trueBeforeGravityKinematics =
+                ECEFKinematicsEstimator.estimateKinematicsAndReturnNew(
+                    TIME_INTERVAL_SECONDS,
+                    ecefFrame,
+                    ecefFrame
+                )
+            val measuredBeforeGravityKinematics = BodyKinematicsGenerator.generate(
+                TIME_INTERVAL_SECONDS,
+                trueBeforeGravityKinematics,
+                errors,
+                random
+            )
+            val beforeMeanFx = measuredBeforeGravityKinematics.fx
+            val beforeMeanFy = measuredBeforeGravityKinematics.fy
+            val beforeMeanFz = measuredBeforeGravityKinematics.fz
+
+            val deltaRoll = Math.toRadians(
+                randomizer.nextDouble(MIN_ANGLE_VARIATION_DEGREES, MAX_ANGLE_VARIATION_DEGREES)
+            )
+            val deltaPitch = Math.toRadians(
+                randomizer.nextDouble(MIN_ANGLE_VARIATION_DEGREES, MAX_ANGLE_VARIATION_DEGREES)
+            )
+            val deltaYaw = Math.toRadians(
+                randomizer.nextDouble(MIN_ANGLE_VARIATION_DEGREES, MAX_ANGLE_VARIATION_DEGREES)
+            )
+
+            val oldNedFrame = NEDFrame(nedFrame)
+            val newNedFrame = NEDFrame()
+            val oldEcefFrame = ECEFFrame()
+            val newEcefFrame = ECEFFrame()
+            var oldRoll = roll - deltaRoll
+            var oldPitch = pitch - deltaPitch
+            var oldYaw = yaw - deltaYaw
+
+            val trueSequence = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
+            val sequence = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
+            sequence.setBeforeMeanSpecificForceCoordinates(beforeMeanFx, beforeMeanFy, beforeMeanFz)
+
+            val trueTimedKinematicsList = mutableListOf<StandardDeviationTimedBodyKinematics>()
+            val measuredTimedKinematicsList = mutableListOf<StandardDeviationTimedBodyKinematics>()
+
+            val earthB = wmmEstimator.estimate(nedPosition, timestamp)
+            val truthMagnetic = BodyMagneticFluxDensityEstimator.estimate(earthB, roll, pitch, yaw)
+            val measuredMagnetic =
+                BodyMagneticFluxDensityGenerator.generate(truthMagnetic, hardIron, mm)
+
+            val magnetometerMeasurement =
+                StandardDeviationBodyMagneticFluxDensity(measuredMagnetic, MAGNETOMETER_NOISE_STD)
+            calibrator.magnetometerMeasurements.add(magnetometerMeasurement)
+
+            for (j in 0 until reqMeasurements) {
+                val newRoll = oldRoll + deltaRoll
+                val newPitch = oldPitch + deltaPitch
+                val newYaw = oldYaw + deltaYaw
+                val newNedC = CoordinateTransformation(
+                    newRoll,
+                    newPitch,
+                    newYaw,
+                    FrameType.BODY_FRAME,
+                    FrameType.LOCAL_NAVIGATION_FRAME
+                )
+                val newNedPosition = oldNedFrame.position
+
+                newNedFrame.position = newNedPosition
+                newNedFrame.coordinateTransformation = newNedC
+
+                NEDtoECEFFrameConverter.convertNEDtoECEF(newNedFrame, newEcefFrame)
+                NEDtoECEFFrameConverter.convertNEDtoECEF(oldNedFrame, oldEcefFrame)
+
+                val timestampSeconds = j * TIME_INTERVAL_SECONDS
+
+                // compute ground-truth kinematics that should be generated at provided
+                // position, velocity and orientation
+                val trueKinematics = ECEFKinematicsEstimator.estimateKinematicsAndReturnNew(
+                    TIME_INTERVAL_SECONDS,
+                    newEcefFrame,
+                    oldEcefFrame
+                )
+
+                // apply known calibration parameters to distort ground-truth and generate a
+                // measured kinematics sample
+                val measuredKinematics = BodyKinematicsGenerator.generate(
+                    TIME_INTERVAL_SECONDS,
+                    trueKinematics,
+                    errors,
+                    random
+                )
+
+                val trueTimedKinematics = StandardDeviationTimedBodyKinematics(
+                    trueKinematics,
+                    timestampSeconds,
+                    specificForceStandardDeviation,
+                    angularRateStandardDeviation
+                )
+
+                val measuredTimedKinematics = StandardDeviationTimedBodyKinematics(
+                    measuredKinematics,
+                    timestampSeconds,
+                    specificForceStandardDeviation,
+                    angularRateStandardDeviation
+                )
+
+                trueTimedKinematicsList.add(trueTimedKinematics)
+                measuredTimedKinematicsList.add(measuredTimedKinematics)
+
+                oldNedFrame.copyFrom(newNedFrame)
+                oldRoll = newRoll
+                oldPitch = newPitch
+                oldYaw = newYaw
+            }
+            trueSequence.setItems(trueTimedKinematicsList)
+            sequence.setItems(measuredTimedKinematicsList)
+
+            val afterQ = Quaternion()
+            QuaternionIntegrator.integrateGyroSequence(trueSequence, beforeQ, afterQ)
+
+            val newNedC = CoordinateTransformation(
+                afterQ.asInhomogeneousMatrix(),
+                FrameType.BODY_FRAME,
+                FrameType.LOCAL_NAVIGATION_FRAME
+            )
+            newNedFrame.position = nedPosition
+            newNedFrame.coordinateTransformation = newNedC
+
+            NEDtoECEFFrameConverter.convertNEDtoECEF(newNedFrame, newEcefFrame)
+
+            val trueAfterGravityKinematics = ECEFKinematicsEstimator.estimateKinematicsAndReturnNew(
+                TIME_INTERVAL_SECONDS,
+                newEcefFrame,
+                newEcefFrame
+            )
+            val measuredAfterGravityKinematics = BodyKinematicsGenerator.generate(
+                TIME_INTERVAL_SECONDS,
+                trueAfterGravityKinematics,
+                errors,
+                random
+            )
+            val afterMeanFx = measuredAfterGravityKinematics.fx
+            val afterMeanFy = measuredAfterGravityKinematics.fy
+            val afterMeanFz = measuredAfterGravityKinematics.fz
+
+            sequence.setAfterMeanSpecificForceCoordinates(afterMeanFx, afterMeanFy, afterMeanFz)
+
+            sequences.add(sequence)
+
+            val accelerometerMeasurement = StandardDeviationBodyKinematics(
+                measuredBeforeGravityKinematics,
+                ACCUMULATED_STD,
+                0.0
+            )
+            calibrator.accelerometerMeasurements.add(accelerometerMeasurement)
+        }
+        calibrator.gyroscopeMeasurements.addAll(sequences)
+
+        assertTrue(calibrator.isReadyToSolveCalibration)
+
+        val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        var accelerometerInternalCalibrator: AccelerometerNonLinearCalibrator? =
+            calibrator.getPrivateProperty("accelerometerInternalCalibrator")
+        assertNull(accelerometerInternalCalibrator)
+
+        var gyroscopeInternalCalibrator: GyroscopeNonLinearCalibrator? =
+            calibrator.getPrivateProperty("gyroscopeInternalCalibrator")
+        assertNull(gyroscopeInternalCalibrator)
+
+        var magnetometerInternalCalibrator: MagnetometerNonLinearCalibrator? =
+            calibrator.getPrivateProperty("magnetometerInternalCalibrator")
+        assertNull(magnetometerInternalCalibrator)
+
+        val generatorGeneratedMeasurementListener: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedAccelerometerMeasurementListener? =
+            calibrator.getPrivateProperty("generatorGeneratedAccelerometerMeasurementListener")
+        requireNotNull(generatorGeneratedMeasurementListener)
+
+        generatorGeneratedMeasurementListener.onGeneratedAccelerometerMeasurement(
+            generatorSpy,
+            calibrator.accelerometerMeasurements.last()
+        )
+
+        verify(exactly = 1) { generatorSpy.stop() }
+
+        accelerometerInternalCalibrator =
+            calibrator.getPrivateProperty("accelerometerInternalCalibrator")
+        assertNotNull(accelerometerInternalCalibrator)
+
+        gyroscopeInternalCalibrator =
+            calibrator.getPrivateProperty("gyroscopeInternalCalibrator")
+        assertNotNull(gyroscopeInternalCalibrator)
+
+        magnetometerInternalCalibrator =
+            calibrator.getPrivateProperty("magnetometerInternalCalibrator")
+        assertNotNull(magnetometerInternalCalibrator)
+
+        assertNotNull(calibrator.estimatedAccelerometerMa)
+        assertNotNull(calibrator.estimatedAccelerometerSx)
+        assertNotNull(calibrator.estimatedAccelerometerSy)
+        assertNotNull(calibrator.estimatedAccelerometerSz)
+        assertNotNull(calibrator.estimatedAccelerometerMxy)
+        assertNotNull(calibrator.estimatedAccelerometerMxz)
+        assertNotNull(calibrator.estimatedAccelerometerMyx)
+        assertNotNull(calibrator.estimatedAccelerometerMyz)
+        assertNotNull(calibrator.estimatedAccelerometerMzx)
+        assertNotNull(calibrator.estimatedAccelerometerMzy)
+        assertNotNull(calibrator.estimatedAccelerometerCovariance)
+        assertNotNull(calibrator.estimatedAccelerometerChiSq)
+        assertNotNull(calibrator.estimatedAccelerometerMse)
+        assertNotNull(calibrator.estimatedAccelerometerBiasX)
+        assertNotNull(calibrator.estimatedAccelerometerBiasY)
+        assertNotNull(calibrator.estimatedAccelerometerBiasZ)
+        assertNotNull(calibrator.estimatedAccelerometerBiasXAsMeasurement)
+        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        assertTrue(calibrator.getEstimatedAccelerometerBiasXAsMeasurement(acceleration))
+        assertNotNull(calibrator.estimatedAccelerometerBiasYAsMeasurement)
+        assertTrue(calibrator.getEstimatedAccelerometerBiasYAsMeasurement(acceleration))
+        assertNotNull(calibrator.estimatedAccelerometerBiasZAsMeasurement)
+        assertTrue(calibrator.getEstimatedAccelerometerBiasZAsMeasurement(acceleration))
+        assertNotNull(calibrator.estimatedAccelerometerBiasAsTriad)
+        val accelerometerTriad = AccelerationTriad()
+        assertTrue(calibrator.getEstimatedAccelerometerBiasAsTriad(accelerometerTriad))
+        assertNotNull(calibrator.estimatedAccelerometerBiasStandardDeviationNorm)
+
+        assertNotNull(calibrator.estimatedGyroscopeMg)
+        assertNotNull(calibrator.estimatedGyroscopeSx)
+        assertNotNull(calibrator.estimatedGyroscopeSy)
+        assertNotNull(calibrator.estimatedGyroscopeSz)
+        assertNotNull(calibrator.estimatedGyroscopeMxy)
+        assertNotNull(calibrator.estimatedGyroscopeMxz)
+        assertNotNull(calibrator.estimatedGyroscopeMyx)
+        assertNotNull(calibrator.estimatedGyroscopeMyz)
+        assertNotNull(calibrator.estimatedGyroscopeMzx)
+        assertNotNull(calibrator.estimatedGyroscopeMzy)
+        assertNotNull(calibrator.estimatedGyroscopeGg)
+        assertNotNull(calibrator.estimatedGyroscopeCovariance)
+        assertNotNull(calibrator.estimatedGyroscopeChiSq)
+        assertNotNull(calibrator.estimatedGyroscopeMse)
+        assertNotNull(calibrator.estimatedGyroscopeBiasX)
+        assertNotNull(calibrator.estimatedGyroscopeBiasY)
+        assertNotNull(calibrator.estimatedGyroscopeBiasZ)
+        assertNotNull(calibrator.estimatedGyroscopeBiasXAsMeasurement)
+        val bias = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertTrue(calibrator.getEstimatedGyroscopeBiasXAsMeasurement(bias))
+        assertNotNull(calibrator.estimatedGyroscopeBiasYAsMeasurement)
+        assertTrue(calibrator.getEstimatedGyroscopeBiasYAsMeasurement(bias))
+        assertNotNull(calibrator.estimatedGyroscopeBiasZAsMeasurement)
+        assertTrue(calibrator.getEstimatedGyroscopeBiasZAsMeasurement(bias))
+        assertNotNull(calibrator.estimatedGyroscopeBiasAsTriad)
+        val angularSpeedTriad = AngularSpeedTriad()
+        assertTrue(calibrator.getEstimatedGyroscopeBiasAsTriad(angularSpeedTriad))
+        assertNotNull(calibrator.estimatedGyroscopeBiasStandardDeviationNorm)
+
+        assertNotNull(calibrator.estimatedMagnetometerMm)
+        assertNotNull(calibrator.estimatedMagnetometerSx)
+        assertNotNull(calibrator.estimatedMagnetometerSy)
+        assertNotNull(calibrator.estimatedMagnetometerSz)
+        assertNotNull(calibrator.estimatedMagnetometerMxy)
+        assertNotNull(calibrator.estimatedMagnetometerMxz)
+        assertNotNull(calibrator.estimatedMagnetometerMyx)
+        assertNotNull(calibrator.estimatedMagnetometerMyz)
+        assertNotNull(calibrator.estimatedMagnetometerMzx)
+        assertNotNull(calibrator.estimatedMagnetometerMzy)
+        assertNotNull(calibrator.estimatedMagnetometerCovariance)
+        assertNotNull(calibrator.estimatedMagnetometerChiSq)
+        assertNotNull(calibrator.estimatedMagnetometerMse)
+        assertNotNull(calibrator.estimatedMagnetometerHardIronX)
+        assertNotNull(calibrator.estimatedMagnetometerHardIronY)
+        assertNotNull(calibrator.estimatedMagnetometerHardIronZ)
+        assertNotNull(calibrator.estimatedMagnetometerHardIronXAsMeasurement)
+        val b = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        assertTrue(calibrator.getEstimatedMagnetometerHardIronXAsMeasurement(b))
+        assertNotNull(calibrator.estimatedMagnetometerHardIronYAsMeasurement)
+        assertTrue(calibrator.getEstimatedMagnetometerHardIronYAsMeasurement(b))
+        assertNotNull(calibrator.estimatedMagnetometerHardIronZAsMeasurement)
+        assertTrue(calibrator.getEstimatedMagnetometerHardIronZAsMeasurement(b))
+        assertNotNull(calibrator.estimatedMagnetometerHardIronAsTriad)
+        val triad = MagneticFluxDensityTriad()
+        assertTrue(calibrator.getEstimatedMagnetometerHardIronAsTriad(triad))
+
+        verify(exactly = 1) { readyToSolveCalibrationListener.onReadyToSolveCalibration(calibrator) }
+        verify(exactly = 1) { stoppedListener.onStopped(calibrator) }
+        verify(exactly = 1) {
+            calibrationSolvingStartedListener.onCalibrationSolvingStarted(
+                calibrator
+            )
+        }
+        verify(exactly = 1) { calibrationCompletedListener.onCalibrationCompleted(calibrator) }
+        verify { errorListener wasNot Called }
+    }
+
+    // TODO: onGeneratedGyroscopeMeasurement_addsMeasurement
 
     private companion object {
         const val MA_SIZE = 3
@@ -5625,6 +6933,14 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         const val DEG_TO_RAD = 0.01745329252
 
         const val ABSOLUTE_ERROR = 1e-6
+
+        const val MIN_HARD_IRON = -1e-5
+        const val MAX_HARD_IRON = 1e-5
+
+        const val MIN_SOFT_IRON = -1e-6
+        const val MAX_SOFT_IRON = 1e-6
+
+        const val MAGNETOMETER_NOISE_STD = 200e-9
 
         fun getLocation(): Location {
             val randomizer = UniformRandomizer()
@@ -5691,6 +7007,27 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
         fun getGyroNoiseRootPSD(): Double {
             return 0.01 * DEG_TO_RAD / 60.0
+        }
+
+        fun generateHardIron(): DoubleArray {
+            val result = DoubleArray(BodyMagneticFluxDensity.COMPONENTS)
+            val randomizer = UniformRandomizer()
+            randomizer.fill(result, MIN_HARD_IRON, MAX_HARD_IRON)
+            return result
+        }
+
+        fun generateSoftIron(): Matrix? {
+            return try {
+                Matrix.createWithUniformRandomValues(
+                    BodyMagneticFluxDensity.COMPONENTS,
+                    BodyMagneticFluxDensity.COMPONENTS,
+                    MIN_SOFT_IRON,
+                    MAX_SOFT_IRON
+                )
+            } catch (ignore: WrongSizeException) {
+                // never happens
+                null
+            }
         }
     }
 
