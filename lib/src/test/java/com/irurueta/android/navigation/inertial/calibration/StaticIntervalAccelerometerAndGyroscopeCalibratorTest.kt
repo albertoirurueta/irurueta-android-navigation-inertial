@@ -4397,6 +4397,15 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
 
         assertEquals(1, calibrator.accelerometerMeasurements.size)
         assertSame(measurement, calibrator.accelerometerMeasurements[0])
+
+        verify(exactly = 1) {
+            generatedAccelerometerMeasurementListener.onGeneratedAccelerometerMeasurement(
+                calibrator,
+                measurement,
+                1,
+                StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
+            )
+        }
     }
 
     @Test
