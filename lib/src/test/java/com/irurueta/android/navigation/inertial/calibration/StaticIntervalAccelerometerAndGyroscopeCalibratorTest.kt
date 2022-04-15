@@ -9474,6 +9474,46 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
     }
 
     @Test
+    fun estimatedGyroscopeBiasStandardDeviationNorm_whenNoAccelerometerInternalCalibrator_returnsNull() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        assertNull(calibrator.getPrivateProperty("gyroscopeInternalCalibrator"))
+
+        assertNull(calibrator.estimatedGyroscopeBiasStandardDeviationNorm)
+    }
+
+    @Test
+    fun estimatedGyroscopeBiasStandardDeviationNorm_whenBiasUncertaintySourceAccelerometerInternalCalibrator_returnsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasStandardDeviationNorm = randomizer.nextDouble()
+        every { internalCalibratorSpy.estimatedBiasStandardDeviationNorm }.returns(
+            estimatedBiasStandardDeviationNorm
+        )
+        calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
+
+        assertEquals(
+            estimatedBiasStandardDeviationNorm,
+            calibrator.estimatedGyroscopeBiasStandardDeviationNorm
+        )
+    }
+
+    @Test
+    fun estimatedGyroscopeBiasStandardDeviationNorm_whenOtherAccelerometerInternalCalibrator_returnsNull() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context)
+
+        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
+        calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
+
+        assertNull(calibrator.estimatedGyroscopeBiasStandardDeviationNorm)
+    }
+
+    @Test
     fun buildAccelerometerInternalCalibrator_whenNonRobustGroundTruthBiasAndPositionBiasNotSetAndCommonAxisNotUsed_buildsExpectedCalibrator() {
         val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()

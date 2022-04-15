@@ -40,12 +40,16 @@ import com.irurueta.navigation.inertial.calibration.*
 import com.irurueta.navigation.inertial.calibration.accelerometer.AccelerometerNonLinearCalibrator
 import com.irurueta.navigation.inertial.calibration.accelerometer.KnownBiasAndPositionAccelerometerCalibrator
 import com.irurueta.navigation.inertial.calibration.accelerometer.KnownPositionAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.gyroscope.EasyGyroscopeCalibrator
 import com.irurueta.navigation.inertial.calibration.gyroscope.GyroscopeNonLinearCalibrator
+import com.irurueta.navigation.inertial.calibration.gyroscope.KnownBiasEasyGyroscopeCalibrator
 import com.irurueta.navigation.inertial.calibration.gyroscope.QuaternionIntegrator
 import com.irurueta.navigation.inertial.calibration.intervals.TriadStaticIntervalDetector
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.DefaultAccelerometerQualityScoreMapper
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.DefaultGyroscopeQualityScoreMapper
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.DefaultMagnetometerQualityScoreMapper
+import com.irurueta.navigation.inertial.calibration.magnetometer.KnownHardIronPositionAndInstantMagnetometerCalibrator
+import com.irurueta.navigation.inertial.calibration.magnetometer.KnownPositionAndInstantMagnetometerCalibrator
 import com.irurueta.navigation.inertial.calibration.magnetometer.MagnetometerNonLinearCalibrator
 import com.irurueta.navigation.inertial.estimators.BodyMagneticFluxDensityEstimator
 import com.irurueta.navigation.inertial.estimators.ECEFKinematicsEstimator
@@ -12435,7 +12439,1225 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertNull(calibrator.estimatedAccelerometerBiasStandardDeviationNorm)
     }
 
-    // TODO: estimatedAccelerometerBiasX_whenNoAccelerometerInternalCalibrator_returnsNull
+    @Test
+    fun estimatedGyroscopeBiasX_whenNoGyroscopeInternalCalibrator_returnsNull() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        assertNull(calibrator.getPrivateProperty("gyroscopeInternalCalibrator"))
+        assertNull(calibrator.estimatedGyroscopeBiasX)
+    }
+
+    @Test
+    fun estimatedGyroscopeBiasX_whenUnknownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasX = randomizer.nextDouble()
+        every { internalCalibratorSpy.estimatedBiasX }.returns(estimatedBiasX)
+        calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
+
+        assertEquals(estimatedBiasX, calibrator.estimatedGyroscopeBiasX)
+    }
+
+    @Test
+    fun estimatedGyroscopeBiasX_whenKnownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasX = randomizer.nextDouble()
+        every { internalCalibratorSpy.biasX }.returns(estimatedBiasX)
+        calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
+
+        assertEquals(estimatedBiasX, calibrator.estimatedGyroscopeBiasX)
+    }
+
+    @Test
+    fun estimatedGyroscopeBiasY_whenNoGyroscopeInternalCalibrator_returnsNull() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        assertNull(calibrator.getPrivateProperty("gyroscopeInternalCalibrator"))
+        assertNull(calibrator.estimatedGyroscopeBiasY)
+    }
+
+    @Test
+    fun estimatedGyroscopeBiasY_whenUnknownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasY = randomizer.nextDouble()
+        every { internalCalibratorSpy.estimatedBiasY }.returns(estimatedBiasY)
+        calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
+
+        assertEquals(estimatedBiasY, calibrator.estimatedGyroscopeBiasY)
+    }
+
+    @Test
+    fun estimatedGyroscopeBiasY_whenKnownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasY = randomizer.nextDouble()
+        every { internalCalibratorSpy.biasY }.returns(estimatedBiasY)
+        calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
+
+        assertEquals(estimatedBiasY, calibrator.estimatedGyroscopeBiasY)
+    }
+
+    @Test
+    fun estimatedGyroscopeBiasZ_whenNoGyroscopeInternalCalibrator_returnsNull() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        assertNull(calibrator.getPrivateProperty("gyroscopeInternalCalibrator"))
+        assertNull(calibrator.estimatedGyroscopeBiasZ)
+    }
+
+    @Test
+    fun estimatedGyroscopeBiasZ_whenUnknownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasZ = randomizer.nextDouble()
+        every { internalCalibratorSpy.estimatedBiasZ }.returns(estimatedBiasZ)
+        calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
+
+        assertEquals(estimatedBiasZ, calibrator.estimatedGyroscopeBiasZ)
+    }
+
+    @Test
+    fun estimatedGyroscopeBiasZ_whenKnownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasZ = randomizer.nextDouble()
+        every { internalCalibratorSpy.biasZ }.returns(estimatedBiasZ)
+        calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
+
+        assertEquals(estimatedBiasZ, calibrator.estimatedGyroscopeBiasZ)
+    }
+
+    @Test
+    fun estimatedGyroscopeBiasXAsMeasurement_whenNoGyroscopeInternalCalibrator_returnsNull() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        assertNull(calibrator.getPrivateProperty("gyroscopeInternalCalibrator"))
+        assertNull(calibrator.estimatedGyroscopeBiasXAsMeasurement)
+    }
+
+    @Test
+    fun estimatedGyroscopeBiasXAsMeasurement_whenUnknownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasX = randomizer.nextDouble()
+        val w = AngularSpeed(estimatedBiasX, AngularSpeedUnit.RADIANS_PER_SECOND)
+        every { internalCalibratorSpy.estimatedBiasAngularSpeedX }.returns(w)
+        calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
+
+        assertEquals(w, calibrator.estimatedGyroscopeBiasXAsMeasurement)
+    }
+
+    @Test
+    fun estimatedGyroscopeBiasXAsMeasurement_whenKnownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasX = randomizer.nextDouble()
+        val w = AngularSpeed(estimatedBiasX, AngularSpeedUnit.RADIANS_PER_SECOND)
+        every { internalCalibratorSpy.biasAngularSpeedX }.returns(w)
+        calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
+
+        assertEquals(w, calibrator.estimatedGyroscopeBiasXAsMeasurement)
+    }
+
+    @Test
+    fun getEstimatedGyroscopeBiasXAsMeasurement_whenNoInternalCalibrator_returnsNull() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        assertNull(calibrator.getPrivateProperty("gyroscopeInternalCalibrator"))
+        val w = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertFalse(calibrator.getEstimatedGyroscopeBiasXAsMeasurement(w))
+    }
+
+    @Test
+    fun getEstimatedGyroscopeBiasXAsMeasurement_whenUnknownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasX = randomizer.nextDouble()
+        every { internalCalibratorSpy.getEstimatedBiasAngularSpeedX(any()) }.answers { answer ->
+            val result = answer.invocation.args[0] as AngularSpeed
+            result.value = estimatedBiasX
+            result.unit = AngularSpeedUnit.RADIANS_PER_SECOND
+            return@answers true
+        }
+        calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
+
+        val w = AngularSpeed(estimatedBiasX, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertTrue(calibrator.getEstimatedGyroscopeBiasXAsMeasurement(w))
+
+        assertEquals(estimatedBiasX, w.value.toDouble(), 0.0)
+        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, w.unit)
+    }
+
+    @Test
+    fun getEstimatedGyroscopeBiasXAsMeasurement_whenKnownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasX = randomizer.nextDouble()
+        every { internalCalibratorSpy.getBiasAngularSpeedX(any()) }.answers { answer ->
+            val result = answer.invocation.args[0] as AngularSpeed
+            result.value = estimatedBiasX
+            result.unit = AngularSpeedUnit.RADIANS_PER_SECOND
+        }
+        calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
+
+        val w = AngularSpeed(estimatedBiasX, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertTrue(calibrator.getEstimatedGyroscopeBiasXAsMeasurement(w))
+
+        assertEquals(estimatedBiasX, w.value.toDouble(), 0.0)
+        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, w.unit)
+    }
+
+    @Test
+    fun estimatedGyroscopeBiasYAsMeasurement_whenNoInternalCalibrator_returnsNull() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        assertNull(calibrator.getPrivateProperty("gyroscopeInternalCalibrator"))
+        assertNull(calibrator.estimatedGyroscopeBiasYAsMeasurement)
+    }
+
+    @Test
+    fun estimatedGyroscopeBiasYAsMeasurement_whenUnknownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasY = randomizer.nextDouble()
+        val w = AngularSpeed(estimatedBiasY, AngularSpeedUnit.RADIANS_PER_SECOND)
+        every { internalCalibratorSpy.estimatedBiasAngularSpeedY }.returns(w)
+        calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
+
+        assertEquals(w, calibrator.estimatedGyroscopeBiasYAsMeasurement)
+    }
+
+    @Test
+    fun estimatedGyroscopeBiasYAsMeasurement_whenKnownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasY = randomizer.nextDouble()
+        val w = AngularSpeed(estimatedBiasY, AngularSpeedUnit.RADIANS_PER_SECOND)
+        every { internalCalibratorSpy.biasAngularSpeedY }.returns(w)
+        calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
+
+        assertEquals(w, calibrator.estimatedGyroscopeBiasYAsMeasurement)
+    }
+
+    @Test
+    fun getEstimatedGyroscopeBiasYAsMeasurement_whenNoInternalCalibrator_returnsNull() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        assertNull(calibrator.getPrivateProperty("gyroscopeInternalCalibrator"))
+        val w = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertFalse(calibrator.getEstimatedGyroscopeBiasYAsMeasurement(w))
+    }
+
+    @Test
+    fun getEstimatedGyroscopeBiasYAsMeasurement_whenUnknownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasY = randomizer.nextDouble()
+        every { internalCalibratorSpy.getEstimatedBiasAngularSpeedY(any()) }.answers { answer ->
+            val result = answer.invocation.args[0] as AngularSpeed
+            result.value = estimatedBiasY
+            result.unit = AngularSpeedUnit.RADIANS_PER_SECOND
+            return@answers true
+        }
+        calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
+
+        val w = AngularSpeed(estimatedBiasY, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertTrue(calibrator.getEstimatedGyroscopeBiasYAsMeasurement(w))
+
+        assertEquals(estimatedBiasY, w.value.toDouble(), 0.0)
+        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, w.unit)
+    }
+
+    @Test
+    fun getEstimatedGyroscopeBiasYAsMeasurement_whenKnownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasY = randomizer.nextDouble()
+        every { internalCalibratorSpy.getBiasAngularSpeedY(any()) }.answers { answer ->
+            val result = answer.invocation.args[0] as AngularSpeed
+            result.value = estimatedBiasY
+            result.unit = AngularSpeedUnit.RADIANS_PER_SECOND
+        }
+        calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
+
+        val w = AngularSpeed(estimatedBiasY, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertTrue(calibrator.getEstimatedGyroscopeBiasYAsMeasurement(w))
+
+        assertEquals(estimatedBiasY, w.value.toDouble(), 0.0)
+        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, w.unit)
+    }
+
+    @Test
+    fun estimatedGyroscopeBiasZAsMeasurement_whenNoInternalCalibrator_returnsNull() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        assertNull(calibrator.getPrivateProperty("gyroscopeInternalCalibrator"))
+        assertNull(calibrator.estimatedGyroscopeBiasZAsMeasurement)
+    }
+
+    @Test
+    fun estimatedGyroscopeBiasZAsMeasurement_whenUnknownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasZ = randomizer.nextDouble()
+        val w = AngularSpeed(estimatedBiasZ, AngularSpeedUnit.RADIANS_PER_SECOND)
+        every { internalCalibratorSpy.estimatedBiasAngularSpeedZ }.returns(w)
+        calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
+
+        assertEquals(w, calibrator.estimatedGyroscopeBiasZAsMeasurement)
+    }
+
+    @Test
+    fun estimatedGyroscopeBiasZAsMeasurement_whenKnownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasZ = randomizer.nextDouble()
+        val w = AngularSpeed(estimatedBiasZ, AngularSpeedUnit.RADIANS_PER_SECOND)
+        every { internalCalibratorSpy.biasAngularSpeedZ }.returns(w)
+        calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
+
+        assertEquals(w, calibrator.estimatedGyroscopeBiasZAsMeasurement)
+    }
+
+    @Test
+    fun getEstimatedGyroscopeBiasZAsMeasurement_whenNoInternalCalibrator_returnsNull() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        assertNull(calibrator.getPrivateProperty("gyroscopeInternalCalibrator"))
+        val w = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertFalse(calibrator.getEstimatedGyroscopeBiasZAsMeasurement(w))
+    }
+
+    @Test
+    fun getEstimatedGyroscopeBiasZAsMeasurement_whenUnknownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasZ = randomizer.nextDouble()
+        every { internalCalibratorSpy.getEstimatedBiasAngularSpeedZ(any()) }.answers { answer ->
+            val result = answer.invocation.args[0] as AngularSpeed
+            result.value = estimatedBiasZ
+            result.unit = AngularSpeedUnit.RADIANS_PER_SECOND
+            return@answers true
+        }
+        calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
+
+        val w = AngularSpeed(estimatedBiasZ, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertTrue(calibrator.getEstimatedGyroscopeBiasZAsMeasurement(w))
+
+        assertEquals(estimatedBiasZ, w.value.toDouble(), 0.0)
+        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, w.unit)
+    }
+
+    @Test
+    fun getEstimatedGyroscopeBiasZAsMeasurement_whenKnownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasZ = randomizer.nextDouble()
+        every { internalCalibratorSpy.getBiasAngularSpeedZ(any()) }.answers { answer ->
+            val result = answer.invocation.args[0] as AngularSpeed
+            result.value = estimatedBiasZ
+            result.unit = AngularSpeedUnit.RADIANS_PER_SECOND
+        }
+        calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
+
+        val w = AngularSpeed(estimatedBiasZ, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertTrue(calibrator.getEstimatedGyroscopeBiasZAsMeasurement(w))
+
+        assertEquals(estimatedBiasZ, w.value.toDouble(), 0.0)
+        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, w.unit)
+    }
+
+    @Test
+    fun estimatedGyroscopeBiasAsTriad_whenNoInternalCalibrator_returnsNull() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        assertNull(calibrator.getPrivateProperty("gyroscopeInternalCalibrator"))
+        assertNull(calibrator.estimatedGyroscopeBiasAsTriad)
+    }
+
+    @Test
+    fun estimatedGyroscopeBiasAsTriad_whenUnknownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasX = randomizer.nextDouble()
+        val estimatedBiasY = randomizer.nextDouble()
+        val estimatedBiasZ = randomizer.nextDouble()
+        val triad = AngularSpeedTriad(
+            AngularSpeedUnit.RADIANS_PER_SECOND,
+            estimatedBiasX,
+            estimatedBiasY,
+            estimatedBiasZ
+        )
+        every { internalCalibratorSpy.estimatedBiasAsTriad }.returns(triad)
+        calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
+
+        assertSame(triad, calibrator.estimatedGyroscopeBiasAsTriad)
+    }
+
+    @Test
+    fun estimatedGyroscopeBiasAsTriad_whenKnownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasX = randomizer.nextDouble()
+        val estimatedBiasY = randomizer.nextDouble()
+        val estimatedBiasZ = randomizer.nextDouble()
+        val triad = AngularSpeedTriad(
+            AngularSpeedUnit.RADIANS_PER_SECOND,
+            estimatedBiasX,
+            estimatedBiasY,
+            estimatedBiasZ
+        )
+        every { internalCalibratorSpy.biasX }.returns(estimatedBiasX)
+        every { internalCalibratorSpy.biasY }.returns(estimatedBiasY)
+        every { internalCalibratorSpy.biasZ }.returns(estimatedBiasZ)
+        calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
+
+        assertEquals(triad, calibrator.estimatedGyroscopeBiasAsTriad)
+    }
+
+    @Test
+    fun getEstimatedGyroscopeBiasAsTriad_whenNoInternalCalibrator_returnsNull() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        assertNull(calibrator.getPrivateProperty("gyroscopeInternalCalibrator"))
+        val triad = AngularSpeedTriad()
+        assertFalse(calibrator.getEstimatedGyroscopeBiasAsTriad(triad))
+    }
+
+    @Test
+    fun getEstimatedGyroscopeBiasAsTriad_whenUnknownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasX = randomizer.nextDouble()
+        val estimatedBiasY = randomizer.nextDouble()
+        val estimatedBiasZ = randomizer.nextDouble()
+        every { internalCalibratorSpy.getEstimatedBiasAsTriad(any()) }.answers { answer ->
+            val result = answer.invocation.args[0] as AngularSpeedTriad
+            result.setValueCoordinatesAndUnit(
+                estimatedBiasX,
+                estimatedBiasY,
+                estimatedBiasZ,
+                AngularSpeedUnit.RADIANS_PER_SECOND
+            )
+            return@answers true
+        }
+        calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
+
+        val triad = AngularSpeedTriad(
+            AngularSpeedUnit.RADIANS_PER_SECOND,
+            estimatedBiasX,
+            estimatedBiasY,
+            estimatedBiasZ
+        )
+        assertTrue(calibrator.getEstimatedGyroscopeBiasAsTriad(triad))
+
+        assertEquals(estimatedBiasX, triad.valueX, 0.0)
+        assertEquals(estimatedBiasY, triad.valueY, 0.0)
+        assertEquals(estimatedBiasZ, triad.valueZ, 0.0)
+        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, triad.unit)
+    }
+
+    @Test
+    fun getEstimatedGyroscopeBiasAsTriad_whenKnownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasX = randomizer.nextDouble()
+        val estimatedBiasY = randomizer.nextDouble()
+        val estimatedBiasZ = randomizer.nextDouble()
+        every { internalCalibratorSpy.biasX }.returns(estimatedBiasX)
+        every { internalCalibratorSpy.biasY }.returns(estimatedBiasY)
+        every { internalCalibratorSpy.biasZ }.returns(estimatedBiasZ)
+        calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
+
+        val triad = AngularSpeedTriad(
+            AngularSpeedUnit.RADIANS_PER_SECOND,
+            estimatedBiasX,
+            estimatedBiasY,
+            estimatedBiasZ
+        )
+        assertTrue(calibrator.getEstimatedGyroscopeBiasAsTriad(triad))
+
+        assertEquals(estimatedBiasX, triad.valueX, 0.0)
+        assertEquals(estimatedBiasY, triad.valueY, 0.0)
+        assertEquals(estimatedBiasZ, triad.valueZ, 0.0)
+        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, triad.unit)
+    }
+
+    @Test
+    fun estimatedGyroscopeBiasStandardDeviationNorm_whenNoAccelerometerInternalCalibrator_returnsNull() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        assertNull(calibrator.getPrivateProperty("gyroscopeInternalCalibrator"))
+
+        assertNull(calibrator.estimatedGyroscopeBiasStandardDeviationNorm)
+    }
+
+    @Test
+    fun estimatedGyroscopeBiasStandardDeviationNorm_whenBiasUncertaintySourceAccelerometerInternalCalibrator_returnsExpectedValue() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedBiasStandardDeviationNorm = randomizer.nextDouble()
+        every { internalCalibratorSpy.estimatedBiasStandardDeviationNorm }.returns(
+            estimatedBiasStandardDeviationNorm
+        )
+        calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
+
+        assertEquals(
+            estimatedBiasStandardDeviationNorm,
+            calibrator.estimatedGyroscopeBiasStandardDeviationNorm
+        )
+    }
+
+    @Test
+    fun estimatedGyroscopeBiasStandardDeviationNorm_whenOtherAccelerometerInternalCalibrator_returnsNull() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
+        calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
+
+        assertNull(calibrator.estimatedGyroscopeBiasStandardDeviationNorm)
+    }
+
+    @Test
+    fun estimatedMagnetometerHardIronX_whenNoMagnetometerInternalCalibrator_returnsNull() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        assertNull(calibrator.getPrivateProperty("magnetometerInternalCalibrator"))
+        assertNull(calibrator.estimatedMagnetometerHardIronX)
+    }
+
+    @Test
+    fun estimatedMagnetometerHardIronX_whenUnknownHardIronMagnetometerInternalCalibrator_callsInternalCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val internalCalibratorSpy = spyk(KnownPositionAndInstantMagnetometerCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedHardIronX = randomizer.nextDouble()
+        every { internalCalibratorSpy.estimatedHardIronX }.returns(estimatedHardIronX)
+        calibrator.setPrivateProperty("magnetometerInternalCalibrator", internalCalibratorSpy)
+
+        assertEquals(estimatedHardIronX, calibrator.estimatedMagnetometerHardIronX)
+    }
+
+    @Test
+    fun estimatedMagnetometerHardIronX_whenKnownHardIronMagnetometerInternalCalibrator_callsInternalCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val internalCalibratorSpy = spyk(KnownHardIronPositionAndInstantMagnetometerCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedHardIronX = randomizer.nextDouble()
+        every { internalCalibratorSpy.hardIronX }.returns(estimatedHardIronX)
+        calibrator.setPrivateProperty("magnetometerInternalCalibrator", internalCalibratorSpy)
+
+        assertEquals(estimatedHardIronX, calibrator.estimatedMagnetometerHardIronX)
+    }
+
+    @Test
+    fun estimatedMagnetometerHardIronY_whenNoMagnetometerInternalCalibrator_returnsNull() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        assertNull(calibrator.getPrivateProperty("magnetometerInternalCalibrator"))
+        assertNull(calibrator.estimatedMagnetometerHardIronY)
+    }
+
+    @Test
+    fun estimatedMagnetometerHardIronY_whenUnknownHardIronMagnetometerInternalCalibrator_callsInternalCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val internalCalibratorSpy = spyk(KnownPositionAndInstantMagnetometerCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedHardIronY = randomizer.nextDouble()
+        every { internalCalibratorSpy.estimatedHardIronY }.returns(estimatedHardIronY)
+        calibrator.setPrivateProperty("magnetometerInternalCalibrator", internalCalibratorSpy)
+
+        assertEquals(estimatedHardIronY, calibrator.estimatedMagnetometerHardIronY)
+    }
+
+    @Test
+    fun estimatedMagnetometerHardIronY_whenKnownHardIronMagnetometerInternalCalibrator_callsInternalCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val internalCalibratorSpy = spyk(KnownHardIronPositionAndInstantMagnetometerCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedHardIronY = randomizer.nextDouble()
+        every { internalCalibratorSpy.hardIronY }.returns(estimatedHardIronY)
+        calibrator.setPrivateProperty("magnetometerInternalCalibrator", internalCalibratorSpy)
+
+        assertEquals(estimatedHardIronY, calibrator.estimatedMagnetometerHardIronY)
+    }
+
+    @Test
+    fun estimatedMagnetometerHardIronZ_whenNoMagnetometerInternalCalibrator_returnsNull() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        assertNull(calibrator.getPrivateProperty("magnetometerInternalCalibrator"))
+        assertNull(calibrator.estimatedMagnetometerHardIronZ)
+    }
+
+    @Test
+    fun estimatedMagnetometerHardIronZ_whenUnknownHardIronMagnetometerInternalCalibrator_callsInternalCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val internalCalibratorSpy = spyk(KnownPositionAndInstantMagnetometerCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedHardIronZ = randomizer.nextDouble()
+        every { internalCalibratorSpy.estimatedHardIronZ }.returns(estimatedHardIronZ)
+        calibrator.setPrivateProperty("magnetometerInternalCalibrator", internalCalibratorSpy)
+
+        assertEquals(estimatedHardIronZ, calibrator.estimatedMagnetometerHardIronZ)
+    }
+
+    @Test
+    fun estimatedMagnetometerHardIronZ_whenKnownHardIronMagnetometerInternalCalibrator_callsInternalCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val internalCalibratorSpy = spyk(KnownHardIronPositionAndInstantMagnetometerCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedHardIronZ = randomizer.nextDouble()
+        every { internalCalibratorSpy.hardIronZ }.returns(estimatedHardIronZ)
+        calibrator.setPrivateProperty("magnetometerInternalCalibrator", internalCalibratorSpy)
+
+        assertEquals(estimatedHardIronZ, calibrator.estimatedMagnetometerHardIronZ)
+    }
+
+    @Test
+    fun estimatedMagnetometerHardIronXAsMeasurement_whenNoMagnetometerInternalCalibrator_returnsNull() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        assertNull(calibrator.getPrivateProperty("magnetometerInternalCalibrator"))
+        assertNull(calibrator.estimatedMagnetometerHardIronXAsMeasurement)
+    }
+
+    @Test
+    fun estimatedMagnetometerHardIronXAsMeasurement_whenUnknownHardIronMagnetometerInternalCalibrator_callsInternalCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val internalCalibratorSpy = spyk(KnownPositionAndInstantMagnetometerCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedHardIronX = randomizer.nextDouble()
+        val b = MagneticFluxDensity(estimatedHardIronX, MagneticFluxDensityUnit.TESLA)
+        every { internalCalibratorSpy.estimatedHardIronXAsMagneticFluxDensity }.returns(b)
+        calibrator.setPrivateProperty("magnetometerInternalCalibrator", internalCalibratorSpy)
+
+        assertSame(b, calibrator.estimatedMagnetometerHardIronXAsMeasurement)
+    }
+
+    @Test
+    fun estimatedMagnetometerHardIronXAsMeasurement_whenKnownHardIronMagnetometerInternalCalibrator_callsInternalCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val internalCalibratorSpy = spyk(KnownHardIronPositionAndInstantMagnetometerCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedHardIronX = randomizer.nextDouble()
+        val b = MagneticFluxDensity(estimatedHardIronX, MagneticFluxDensityUnit.TESLA)
+        every { internalCalibratorSpy.hardIronXAsMagneticFluxDensity }.returns(b)
+        calibrator.setPrivateProperty("magnetometerInternalCalibrator", internalCalibratorSpy)
+
+        assertSame(b, calibrator.estimatedMagnetometerHardIronXAsMeasurement)
+    }
+
+    @Test
+    fun getEstimatedMagnetometerHardIronXAsMeasurement_whenNoMagnetometerInternalCalibrator_returnsNull() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        assertNull(calibrator.getPrivateProperty("magnetometerInternalCalibrator"))
+        val b = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        assertFalse(calibrator.getEstimatedMagnetometerHardIronXAsMeasurement(b))
+    }
+
+    @Test
+    fun getEstimatedMagnetometerHardIronXAsMeasurement_whenUnknownHardIronMagnetometerInternalCalibrator_callsInternalCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val internalCalibratorSpy = spyk(KnownPositionAndInstantMagnetometerCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedHardIronX = randomizer.nextDouble()
+        every { internalCalibratorSpy.getEstimatedHardIronXAsMagneticFluxDensity(any()) }.answers { answer ->
+            val result = answer.invocation.args[0] as MagneticFluxDensity
+            result.value = estimatedHardIronX
+            result.unit = MagneticFluxDensityUnit.TESLA
+            return@answers true
+        }
+        calibrator.setPrivateProperty("magnetometerInternalCalibrator", internalCalibratorSpy)
+
+        val b = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        assertTrue(calibrator.getEstimatedMagnetometerHardIronXAsMeasurement(b))
+
+        assertEquals(estimatedHardIronX, b.value.toDouble(), 0.0)
+        assertEquals(MagneticFluxDensityUnit.TESLA, b.unit)
+    }
+
+    @Test
+    fun getEstimatedMagnetometerHardIronXAsMeasurement_whenKnownHardIronMagnetometerInternalCalibrator_callsInternalCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val internalCalibratorSpy = spyk(KnownHardIronPositionAndInstantMagnetometerCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedHardIronX = randomizer.nextDouble()
+        every { internalCalibratorSpy.getHardIronXAsMagneticFluxDensity(any()) }.answers { answer ->
+            val result = answer.invocation.args[0] as MagneticFluxDensity
+            result.value = estimatedHardIronX
+            result.unit = MagneticFluxDensityUnit.TESLA
+        }
+        calibrator.setPrivateProperty("magnetometerInternalCalibrator", internalCalibratorSpy)
+
+        val b = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        assertTrue(calibrator.getEstimatedMagnetometerHardIronXAsMeasurement(b))
+
+        assertEquals(estimatedHardIronX, b.value.toDouble(), 0.0)
+        assertEquals(MagneticFluxDensityUnit.TESLA, b.unit)
+    }
+
+    @Test
+    fun estimatedMagnetometerHardIronYAsMeasurement_whenNoMagnetometerInternalCalibrator_returnsNull() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        assertNull(calibrator.getPrivateProperty("magnetometerInternalCalibrator"))
+        assertNull(calibrator.estimatedMagnetometerHardIronYAsMeasurement)
+    }
+
+    @Test
+    fun estimatedMagnetometerHardIronYAsMeasurement_whenUnknownHardIronMagnetometerInternalCalibrator_callsInternalCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val internalCalibratorSpy = spyk(KnownPositionAndInstantMagnetometerCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedHardIronY = randomizer.nextDouble()
+        val b = MagneticFluxDensity(estimatedHardIronY, MagneticFluxDensityUnit.TESLA)
+        every { internalCalibratorSpy.estimatedHardIronYAsMagneticFluxDensity }.returns(b)
+        calibrator.setPrivateProperty("magnetometerInternalCalibrator", internalCalibratorSpy)
+
+        assertSame(b, calibrator.estimatedMagnetometerHardIronYAsMeasurement)
+    }
+
+    @Test
+    fun estimatedMagnetometerHardIronYAsMeasurement_whenKnownHardIronMagnetometerInternalCalibrator_callsInternalCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val internalCalibratorSpy = spyk(KnownHardIronPositionAndInstantMagnetometerCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedHardIronY = randomizer.nextDouble()
+        val b = MagneticFluxDensity(estimatedHardIronY, MagneticFluxDensityUnit.TESLA)
+        every { internalCalibratorSpy.hardIronYAsMagneticFluxDensity }.returns(b)
+        calibrator.setPrivateProperty("magnetometerInternalCalibrator", internalCalibratorSpy)
+
+        assertSame(b, calibrator.estimatedMagnetometerHardIronYAsMeasurement)
+    }
+
+    @Test
+    fun getEstimatedMagnetometerHardIronYAsMeasurement_whenNoMagnetometerInternalCalibrator_returnsNull() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        assertNull(calibrator.getPrivateProperty("magnetometerInternalCalibrator"))
+        val b = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        assertFalse(calibrator.getEstimatedMagnetometerHardIronYAsMeasurement(b))
+    }
+
+    @Test
+    fun getEstimatedMagnetometerHardIronYAsMeasurement_whenUnknownHardIronMagnetometerInternalCalibrator_callsInternalCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val internalCalibratorSpy = spyk(KnownPositionAndInstantMagnetometerCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedHardIronY = randomizer.nextDouble()
+        every { internalCalibratorSpy.getEstimatedHardIronYAsMagneticFluxDensity(any()) }.answers { answer ->
+            val result = answer.invocation.args[0] as MagneticFluxDensity
+            result.value = estimatedHardIronY
+            result.unit = MagneticFluxDensityUnit.TESLA
+            return@answers true
+        }
+        calibrator.setPrivateProperty("magnetometerInternalCalibrator", internalCalibratorSpy)
+
+        val b = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        assertTrue(calibrator.getEstimatedMagnetometerHardIronYAsMeasurement(b))
+
+        assertEquals(estimatedHardIronY, b.value.toDouble(), 0.0)
+        assertEquals(MagneticFluxDensityUnit.TESLA, b.unit)
+    }
+
+    @Test
+    fun getEstimatedMagnetometerHardIronYAsMeasurement_whenKnownHardIronMagnetometerInternalCalibrator_callsInternalCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val internalCalibratorSpy = spyk(KnownHardIronPositionAndInstantMagnetometerCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedHardIronY = randomizer.nextDouble()
+        every { internalCalibratorSpy.getHardIronYAsMagneticFluxDensity(any()) }.answers { answer ->
+            val result = answer.invocation.args[0] as MagneticFluxDensity
+            result.value = estimatedHardIronY
+            result.unit = MagneticFluxDensityUnit.TESLA
+        }
+        calibrator.setPrivateProperty("magnetometerInternalCalibrator", internalCalibratorSpy)
+
+        val b = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        assertTrue(calibrator.getEstimatedMagnetometerHardIronYAsMeasurement(b))
+
+        assertEquals(estimatedHardIronY, b.value.toDouble(), 0.0)
+        assertEquals(MagneticFluxDensityUnit.TESLA, b.unit)
+    }
+
+    @Test
+    fun estimatedMagnetometerHardIronZAsMeasurement_whenNoMagnetometerInternalCalibrator_returnsNull() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        assertNull(calibrator.getPrivateProperty("magnetometerInternalCalibrator"))
+        assertNull(calibrator.estimatedMagnetometerHardIronZAsMeasurement)
+    }
+
+    @Test
+    fun estimatedMagnetometerHardIronZAsMeasurement_whenUnknownHardIronMagnetometerInternalCalibrator_callsInternalCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val internalCalibratorSpy = spyk(KnownPositionAndInstantMagnetometerCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedHardIronZ = randomizer.nextDouble()
+        val b = MagneticFluxDensity(estimatedHardIronZ, MagneticFluxDensityUnit.TESLA)
+        every { internalCalibratorSpy.estimatedHardIronZAsMagneticFluxDensity }.returns(b)
+        calibrator.setPrivateProperty("magnetometerInternalCalibrator", internalCalibratorSpy)
+
+        assertSame(b, calibrator.estimatedMagnetometerHardIronZAsMeasurement)
+    }
+
+    @Test
+    fun estimatedMagnetometerHardIronZAsMeasurement_whenKnownHardIronMagnetometerInternalCalibrator_callsInternalCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val internalCalibratorSpy = spyk(KnownHardIronPositionAndInstantMagnetometerCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedHardIronZ = randomizer.nextDouble()
+        val b = MagneticFluxDensity(estimatedHardIronZ, MagneticFluxDensityUnit.TESLA)
+        every { internalCalibratorSpy.hardIronZAsMagneticFluxDensity }.returns(b)
+        calibrator.setPrivateProperty("magnetometerInternalCalibrator", internalCalibratorSpy)
+
+        assertSame(b, calibrator.estimatedMagnetometerHardIronZAsMeasurement)
+    }
+
+    @Test
+    fun getEstimatedMagnetometerHardIronZAsMeasurement_whenNoMagnetometerInternalCalibrator_returnsNull() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        assertNull(calibrator.getPrivateProperty("magnetometerInternalCalibrator"))
+        val b = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        assertFalse(calibrator.getEstimatedMagnetometerHardIronZAsMeasurement(b))
+    }
+
+    @Test
+    fun getEstimatedMagnetometerHardIronZAsMeasurement_whenUnknownHardIronMagnetometerInternalCalibrator_callsInternalCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val internalCalibratorSpy = spyk(KnownPositionAndInstantMagnetometerCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedHardIronZ = randomizer.nextDouble()
+        every { internalCalibratorSpy.getEstimatedHardIronZAsMagneticFluxDensity(any()) }.answers { answer ->
+            val result = answer.invocation.args[0] as MagneticFluxDensity
+            result.value = estimatedHardIronZ
+            result.unit = MagneticFluxDensityUnit.TESLA
+            return@answers true
+        }
+        calibrator.setPrivateProperty("magnetometerInternalCalibrator", internalCalibratorSpy)
+
+        val b = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        assertTrue(calibrator.getEstimatedMagnetometerHardIronZAsMeasurement(b))
+
+        assertEquals(estimatedHardIronZ, b.value.toDouble(), 0.0)
+        assertEquals(MagneticFluxDensityUnit.TESLA, b.unit)
+    }
+
+    @Test
+    fun getEstimatedMagnetometerHardIronZAsMeasurement_whenKnownHardIronMagnetometerInternalCalibrator_callsInternalCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val internalCalibratorSpy = spyk(KnownHardIronPositionAndInstantMagnetometerCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedHardIronZ = randomizer.nextDouble()
+        every { internalCalibratorSpy.getHardIronZAsMagneticFluxDensity(any()) }.answers { answer ->
+            val result = answer.invocation.args[0] as MagneticFluxDensity
+            result.value = estimatedHardIronZ
+            result.unit = MagneticFluxDensityUnit.TESLA
+        }
+        calibrator.setPrivateProperty("magnetometerInternalCalibrator", internalCalibratorSpy)
+
+        val b = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+        assertTrue(calibrator.getEstimatedMagnetometerHardIronZAsMeasurement(b))
+
+        assertEquals(estimatedHardIronZ, b.value.toDouble(), 0.0)
+        assertEquals(MagneticFluxDensityUnit.TESLA, b.unit)
+    }
+
+    @Test
+    fun estimatedMagnetometerHardIronAsTriad_whenNoMagnetometerInternalCalibrator_returnsNull() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        assertNull(calibrator.getPrivateProperty("magnetometerInternalCalibrator"))
+        assertNull(calibrator.estimatedMagnetometerHardIronAsTriad)
+    }
+
+    @Test
+    fun estimatedMagnetometerHardIronAsTriad_whenUnknownHardIronMagnetometerInternalCalibrator_callsInternalCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val internalCalibratorSpy = spyk(KnownPositionAndInstantMagnetometerCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedHardIronX = randomizer.nextDouble()
+        val estimatedHardIronY = randomizer.nextDouble()
+        val estimatedHardIronZ = randomizer.nextDouble()
+        val triad = MagneticFluxDensityTriad(
+            MagneticFluxDensityUnit.TESLA,
+            estimatedHardIronX,
+            estimatedHardIronY,
+            estimatedHardIronZ
+        )
+        every { internalCalibratorSpy.estimatedHardIronAsTriad }.returns(triad)
+        calibrator.setPrivateProperty("magnetometerInternalCalibrator", internalCalibratorSpy)
+
+        assertSame(triad, calibrator.estimatedMagnetometerHardIronAsTriad)
+    }
+
+    @Test
+    fun estimatedMagnetometerHardIronAsTriad_whenKnownHardIronMagnetometerInternalCalibrator_callsInternalCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val internalCalibratorSpy = spyk(KnownHardIronPositionAndInstantMagnetometerCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedHardIronX = randomizer.nextDouble()
+        val estimatedHardIronY = randomizer.nextDouble()
+        val estimatedHardIronZ = randomizer.nextDouble()
+        val triad = MagneticFluxDensityTriad(
+            MagneticFluxDensityUnit.TESLA,
+            estimatedHardIronX,
+            estimatedHardIronY,
+            estimatedHardIronZ
+        )
+        every { internalCalibratorSpy.hardIronAsTriad }.returns(triad)
+        calibrator.setPrivateProperty("magnetometerInternalCalibrator", internalCalibratorSpy)
+
+        assertSame(triad, calibrator.estimatedMagnetometerHardIronAsTriad)
+    }
+
+    @Test
+    fun getEstimatedMagnetometerHardIronAsTriad_whenNoMagnetometerInternalCalibrator_returnsNull() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        assertNull(calibrator.getPrivateProperty("magnetometerInternalCalibrator"))
+        val triad = MagneticFluxDensityTriad()
+        assertFalse(calibrator.getEstimatedMagnetometerHardIronAsTriad(triad))
+    }
+
+    @Test
+    fun getEstimatedMagnetometerHardIronAsTriad_whenUnknownHardIronMagnetometerInternalCalibrator_callsInternalCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val internalCalibratorSpy = spyk(KnownPositionAndInstantMagnetometerCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedHardIronX = randomizer.nextDouble()
+        val estimatedHardIronY = randomizer.nextDouble()
+        val estimatedHardIronZ = randomizer.nextDouble()
+        every { internalCalibratorSpy.getEstimatedHardIronAsTriad(any()) }.answers { answer ->
+            val result = answer.invocation.args[0] as MagneticFluxDensityTriad
+            result.setValueCoordinatesAndUnit(
+                estimatedHardIronX,
+                estimatedHardIronY,
+                estimatedHardIronZ,
+                MagneticFluxDensityUnit.TESLA
+            )
+            return@answers true
+        }
+        calibrator.setPrivateProperty("magnetometerInternalCalibrator", internalCalibratorSpy)
+
+        val triad = MagneticFluxDensityTriad()
+        assertTrue(calibrator.getEstimatedMagnetometerHardIronAsTriad(triad))
+
+        assertEquals(estimatedHardIronX, triad.valueX, 0.0)
+        assertEquals(estimatedHardIronY, triad.valueY, 0.0)
+        assertEquals(estimatedHardIronZ, triad.valueZ, 0.0)
+        assertEquals(MagneticFluxDensityUnit.TESLA, triad.unit)
+    }
+
+    @Test
+    fun getEstimatedMagnetometerHardIronAsTriad_whenKnownHardIronMagnetometerInternalCalibrator_callsInternalCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        val internalCalibratorSpy = spyk(KnownHardIronPositionAndInstantMagnetometerCalibrator())
+        val randomizer = UniformRandomizer()
+        val estimatedHardIronX = randomizer.nextDouble()
+        val estimatedHardIronY = randomizer.nextDouble()
+        val estimatedHardIronZ = randomizer.nextDouble()
+        every { internalCalibratorSpy.getHardIronAsTriad(any()) }.answers { answer ->
+            val result = answer.invocation.args[0] as MagneticFluxDensityTriad
+            result.setValueCoordinatesAndUnit(
+                estimatedHardIronX,
+                estimatedHardIronY,
+                estimatedHardIronZ,
+                MagneticFluxDensityUnit.TESLA
+            )
+        }
+        calibrator.setPrivateProperty("magnetometerInternalCalibrator", internalCalibratorSpy)
+
+        val triad = MagneticFluxDensityTriad()
+        assertTrue(calibrator.getEstimatedMagnetometerHardIronAsTriad(triad))
+
+        assertEquals(estimatedHardIronX, triad.valueX, 0.0)
+        assertEquals(estimatedHardIronY, triad.valueY, 0.0)
+        assertEquals(estimatedHardIronZ, triad.valueZ, 0.0)
+        assertEquals(MagneticFluxDensityUnit.TESLA, triad.unit)
+    }
+
+    // TODO: buildAccelerometerInternalCalibrator_whenNonRobustGroundTruthBiasAndPositionBiasNotSetAndCommonAxisNotUsed_buildsExpectedCalibrator
 
     private companion object {
         const val MA_SIZE = 3
