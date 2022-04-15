@@ -114,7 +114,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertNotNull(calibrator.accelerometerQualityScoreMapper)
         assertNotNull(calibrator.gyroscopeQualityScoreMapper)
         assertNotNull(calibrator.magnetometerQualityScoreMapper)
-        assertFalse(calibrator.accelerometerResultUnreliable)
         assertNull(calibrator.accelerometerInitialBiasX)
         assertNull(calibrator.accelerometerInitialBiasY)
         assertNull(calibrator.accelerometerInitialBiasZ)
@@ -610,7 +609,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertSame(accelerometerQualityScoreMapper, calibrator.accelerometerQualityScoreMapper)
         assertSame(gyroscopeQualityScoreMapper, calibrator.gyroscopeQualityScoreMapper)
         assertSame(magnetometerQualityScoreMapper, calibrator.magnetometerQualityScoreMapper)
-        assertFalse(calibrator.accelerometerResultUnreliable)
         assertNull(calibrator.accelerometerInitialBiasX)
         assertNull(calibrator.accelerometerInitialBiasY)
         assertNull(calibrator.accelerometerInitialBiasZ)
@@ -9494,7 +9492,367 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         verify { initialGyroscopeBiasAvailableListener wasNot Called }
     }
 
-    // TODO: onMagnetometerMeasurement_whenFirstMeasurement_updatesInitialHardIrons
+    @Test
+    fun onMagnetometerMeasurement_whenFirstMeasurement_updatesInitialHardIrons() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        assertNull(calibrator.magnetometerInitialHardIronX)
+        assertNull(calibrator.magnetometerInitialHardIronY)
+        assertNull(calibrator.magnetometerInitialHardIronZ)
+
+        val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        every { generatorSpy.numberOfProcessedMagnetometerMeasurements }.returns(0)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        val generatorMagnetometerMeasurementListener: MagnetometerSensorCollector.OnMeasurementListener? =
+            calibrator.getPrivateProperty("generatorMagnetometerMeasurementListener")
+        requireNotNull(generatorMagnetometerMeasurementListener)
+
+        val randomizer = UniformRandomizer()
+        val bx = randomizer.nextFloat()
+        val by = randomizer.nextFloat()
+        val bz = randomizer.nextFloat()
+        val hardIronX = randomizer.nextFloat()
+        val hardIronY = randomizer.nextFloat()
+        val hardIronZ = randomizer.nextFloat()
+        val timestamp = SystemClock.elapsedRealtimeNanos()
+        val accuracy = SensorAccuracy.HIGH
+        generatorMagnetometerMeasurementListener.onMeasurement(
+            bx,
+            by,
+            bz,
+            hardIronX,
+            hardIronY,
+            hardIronZ,
+            timestamp,
+            accuracy
+        )
+
+        val initialHardIronX = calibrator.magnetometerInitialHardIronX
+        requireNotNull(initialHardIronX)
+        val initialHardIronY = calibrator.magnetometerInitialHardIronY
+        requireNotNull(initialHardIronY)
+        val initialHardIronZ = calibrator.magnetometerInitialHardIronZ
+        requireNotNull(initialHardIronZ)
+        assertEquals(
+            MagneticFluxDensityConverter.microTeslaToTesla(hardIronX.toDouble()),
+            initialHardIronX,
+            0.0
+        )
+        assertEquals(
+            MagneticFluxDensityConverter.microTeslaToTesla(hardIronY.toDouble()),
+            initialHardIronY,
+            0.0
+        )
+        assertEquals(
+            MagneticFluxDensityConverter.microTeslaToTesla(hardIronZ.toDouble()),
+            initialHardIronZ,
+            0.0
+        )
+    }
+
+    @Test
+    fun onMagnetometerMeasurement_whenFirstMeasurementAndNoHardIronX_updatesInitialHardIrons() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        assertNull(calibrator.magnetometerInitialHardIronX)
+        assertNull(calibrator.magnetometerInitialHardIronY)
+        assertNull(calibrator.magnetometerInitialHardIronZ)
+
+        val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        every { generatorSpy.numberOfProcessedMagnetometerMeasurements }.returns(0)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        val generatorMagnetometerMeasurementListener: MagnetometerSensorCollector.OnMeasurementListener? =
+            calibrator.getPrivateProperty("generatorMagnetometerMeasurementListener")
+        requireNotNull(generatorMagnetometerMeasurementListener)
+
+        val randomizer = UniformRandomizer()
+        val bx = randomizer.nextFloat()
+        val by = randomizer.nextFloat()
+        val bz = randomizer.nextFloat()
+        val hardIronY = randomizer.nextFloat()
+        val hardIronZ = randomizer.nextFloat()
+        val timestamp = SystemClock.elapsedRealtimeNanos()
+        val accuracy = SensorAccuracy.HIGH
+        generatorMagnetometerMeasurementListener.onMeasurement(
+            bx,
+            by,
+            bz,
+            null,
+            hardIronY,
+            hardIronZ,
+            timestamp,
+            accuracy
+        )
+
+        val initialHardIronX = calibrator.magnetometerInitialHardIronX
+        requireNotNull(initialHardIronX)
+        val initialHardIronY = calibrator.magnetometerInitialHardIronY
+        requireNotNull(initialHardIronY)
+        val initialHardIronZ = calibrator.magnetometerInitialHardIronZ
+        requireNotNull(initialHardIronZ)
+        assertEquals(0.0, initialHardIronX, 0.0)
+        assertEquals(0.0, initialHardIronY, 0.0)
+        assertEquals(0.0, initialHardIronZ, 0.0)
+    }
+
+    @Test
+    fun onMagnetometerMeasurement_whenFirstMeasurementAndNoHardIronY_updatesInitialHardIrons() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        assertNull(calibrator.magnetometerInitialHardIronX)
+        assertNull(calibrator.magnetometerInitialHardIronY)
+        assertNull(calibrator.magnetometerInitialHardIronZ)
+
+        val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        every { generatorSpy.numberOfProcessedMagnetometerMeasurements }.returns(0)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        val generatorMagnetometerMeasurementListener: MagnetometerSensorCollector.OnMeasurementListener? =
+            calibrator.getPrivateProperty("generatorMagnetometerMeasurementListener")
+        requireNotNull(generatorMagnetometerMeasurementListener)
+
+        val randomizer = UniformRandomizer()
+        val bx = randomizer.nextFloat()
+        val by = randomizer.nextFloat()
+        val bz = randomizer.nextFloat()
+        val hardIronX = randomizer.nextFloat()
+        val hardIronZ = randomizer.nextFloat()
+        val timestamp = SystemClock.elapsedRealtimeNanos()
+        val accuracy = SensorAccuracy.HIGH
+        generatorMagnetometerMeasurementListener.onMeasurement(
+            bx,
+            by,
+            bz,
+            hardIronX,
+            null,
+            hardIronZ,
+            timestamp,
+            accuracy
+        )
+
+        val initialHardIronX = calibrator.magnetometerInitialHardIronX
+        requireNotNull(initialHardIronX)
+        val initialHardIronY = calibrator.magnetometerInitialHardIronY
+        requireNotNull(initialHardIronY)
+        val initialHardIronZ = calibrator.magnetometerInitialHardIronZ
+        requireNotNull(initialHardIronZ)
+        assertEquals(0.0, initialHardIronX, 0.0)
+        assertEquals(0.0, initialHardIronY, 0.0)
+        assertEquals(0.0, initialHardIronZ, 0.0)
+    }
+
+    @Test
+    fun onMagnetometerMeasurement_whenFirstMeasurementAndNoHardIronZ_updatesInitialHardIrons() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context, location)
+
+        assertNull(calibrator.magnetometerInitialHardIronX)
+        assertNull(calibrator.magnetometerInitialHardIronY)
+        assertNull(calibrator.magnetometerInitialHardIronZ)
+
+        val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        every { generatorSpy.numberOfProcessedMagnetometerMeasurements }.returns(0)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        val generatorMagnetometerMeasurementListener: MagnetometerSensorCollector.OnMeasurementListener? =
+            calibrator.getPrivateProperty("generatorMagnetometerMeasurementListener")
+        requireNotNull(generatorMagnetometerMeasurementListener)
+
+        val randomizer = UniformRandomizer()
+        val bx = randomizer.nextFloat()
+        val by = randomizer.nextFloat()
+        val bz = randomizer.nextFloat()
+        val hardIronX = randomizer.nextFloat()
+        val hardIronY = randomizer.nextFloat()
+        val timestamp = SystemClock.elapsedRealtimeNanos()
+        val accuracy = SensorAccuracy.HIGH
+        generatorMagnetometerMeasurementListener.onMeasurement(
+            bx,
+            by,
+            bz,
+            hardIronX,
+            hardIronY,
+            null,
+            timestamp,
+            accuracy
+        )
+
+        val initialHardIronX = calibrator.magnetometerInitialHardIronX
+        requireNotNull(initialHardIronX)
+        val initialHardIronY = calibrator.magnetometerInitialHardIronY
+        requireNotNull(initialHardIronY)
+        val initialHardIronZ = calibrator.magnetometerInitialHardIronZ
+        requireNotNull(initialHardIronZ)
+        assertEquals(0.0, initialHardIronX, 0.0)
+        assertEquals(0.0, initialHardIronY, 0.0)
+        assertEquals(0.0, initialHardIronZ, 0.0)
+    }
+
+    @Test
+    fun onMagnetometerMeasurement_whenFirstMeasurementAndListener_updatesInitialHardIrons() {
+        val initialMagnetometerHardIronAvailableListener =
+            mockk<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator.OnInitialMagnetometerHardIronAvailableListener>(
+                relaxUnitFun = true
+            )
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+                context,
+                location,
+                initialMagnetometerHardIronAvailableListener = initialMagnetometerHardIronAvailableListener
+            )
+
+        assertNull(calibrator.magnetometerInitialHardIronX)
+        assertNull(calibrator.magnetometerInitialHardIronY)
+        assertNull(calibrator.magnetometerInitialHardIronZ)
+
+        val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        every { generatorSpy.numberOfProcessedMagnetometerMeasurements }.returns(0)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        val generatorMagnetometerMeasurementListener: MagnetometerSensorCollector.OnMeasurementListener? =
+            calibrator.getPrivateProperty("generatorMagnetometerMeasurementListener")
+        requireNotNull(generatorMagnetometerMeasurementListener)
+
+        val randomizer = UniformRandomizer()
+        val bx = randomizer.nextFloat()
+        val by = randomizer.nextFloat()
+        val bz = randomizer.nextFloat()
+        val hardIronX = randomizer.nextFloat()
+        val hardIronY = randomizer.nextFloat()
+        val hardIronZ = randomizer.nextFloat()
+        val timestamp = SystemClock.elapsedRealtimeNanos()
+        val accuracy = SensorAccuracy.HIGH
+        generatorMagnetometerMeasurementListener.onMeasurement(
+            bx,
+            by,
+            bz,
+            hardIronX,
+            hardIronY,
+            hardIronZ,
+            timestamp,
+            accuracy
+        )
+
+        val initialHardIronX = calibrator.magnetometerInitialHardIronX
+        requireNotNull(initialHardIronX)
+        val initialHardIronY = calibrator.magnetometerInitialHardIronY
+        requireNotNull(initialHardIronY)
+        val initialHardIronZ = calibrator.magnetometerInitialHardIronZ
+        requireNotNull(initialHardIronZ)
+        assertEquals(
+            MagneticFluxDensityConverter.microTeslaToTesla(hardIronX.toDouble()),
+            initialHardIronX,
+            0.0
+        )
+        assertEquals(
+            MagneticFluxDensityConverter.microTeslaToTesla(hardIronY.toDouble()),
+            initialHardIronY,
+            0.0
+        )
+        assertEquals(
+            MagneticFluxDensityConverter.microTeslaToTesla(hardIronZ.toDouble()),
+            initialHardIronZ,
+            0.0
+        )
+
+        verify(exactly = 1) {
+            initialMagnetometerHardIronAvailableListener.onInitialHardIronAvailable(
+                calibrator,
+                initialHardIronX,
+                initialHardIronY,
+                initialHardIronZ
+            )
+        }
+    }
+
+    @Test
+    fun onMagnetometerMeasurement_whenNoFirstMeasurement_makesNoAction() {
+        val initialMagnetometerHardIronAvailableListener =
+            mockk<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator.OnInitialMagnetometerHardIronAvailableListener>(
+                relaxUnitFun = true
+            )
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+                context,
+                location,
+                initialMagnetometerHardIronAvailableListener = initialMagnetometerHardIronAvailableListener
+            )
+
+        assertNull(calibrator.magnetometerInitialHardIronX)
+        assertNull(calibrator.magnetometerInitialHardIronY)
+        assertNull(calibrator.magnetometerInitialHardIronZ)
+
+        val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        every { generatorSpy.numberOfProcessedMagnetometerMeasurements }.returns(2)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        val generatorMagnetometerMeasurementListener: MagnetometerSensorCollector.OnMeasurementListener? =
+            calibrator.getPrivateProperty("generatorMagnetometerMeasurementListener")
+        requireNotNull(generatorMagnetometerMeasurementListener)
+
+        val randomizer = UniformRandomizer()
+        val bx = randomizer.nextFloat()
+        val by = randomizer.nextFloat()
+        val bz = randomizer.nextFloat()
+        val hardIronX = randomizer.nextFloat()
+        val hardIronY = randomizer.nextFloat()
+        val hardIronZ = randomizer.nextFloat()
+        val timestamp = SystemClock.elapsedRealtimeNanos()
+        val accuracy = SensorAccuracy.HIGH
+        generatorMagnetometerMeasurementListener.onMeasurement(
+            bx,
+            by,
+            bz,
+            hardIronX,
+            hardIronY,
+            hardIronZ,
+            timestamp,
+            accuracy
+        )
+
+        assertNull(calibrator.magnetometerInitialHardIronX)
+        assertNull(calibrator.magnetometerInitialHardIronY)
+        assertNull(calibrator.magnetometerInitialHardIronZ)
+
+        verify { initialMagnetometerHardIronAvailableListener wasNot Called }
+    }
+
+    // TODO: gyroscopeBaseNoiseLevel_getsGeneratorBaseNoiseLevel
 
     private companion object {
         const val MA_SIZE = 3

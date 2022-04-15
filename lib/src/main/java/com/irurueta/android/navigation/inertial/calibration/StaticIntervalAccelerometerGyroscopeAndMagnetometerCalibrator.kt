@@ -524,14 +524,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
     private var magnetometerInternalCalibrator: MagnetometerNonLinearCalibrator? = null
 
     /**
-     * Indicates if accelerometer result is unreliable. This can happen if no location is provided
-     * and gravity estimation becomes unreliable. When this happens result of calibration should
-     * probably be discarded.
-     */
-    var accelerometerResultUnreliable = false
-        private set
-
-    /**
      * Private backing property containing actual location value.
      * This is initialized in the constructor.
      */
@@ -4075,7 +4067,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
         gyroscopeMeasurements.clear()
         magnetometerMeasurements.clear()
 
-        accelerometerResultUnreliable = false
         accelerometerInitialBiasX = null
         accelerometerInitialBiasY = null
         accelerometerInitialBiasZ = null
