@@ -23,6 +23,7 @@ import com.irurueta.algebra.Matrix
 import com.irurueta.algebra.WrongSizeException
 import com.irurueta.android.navigation.inertial.calibration.intervals.ErrorReason
 import com.irurueta.android.navigation.inertial.calibration.intervals.measurements.AccelerometerGyroscopeAndMagnetometerMeasurementGenerator
+import com.irurueta.android.navigation.inertial.callPrivateFuncWithResult
 import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.getPrivateProperty
 import com.irurueta.android.navigation.inertial.setPrivateProperty
@@ -37,9 +38,7 @@ import com.irurueta.navigation.frames.converters.NEDtoECEFFrameConverter
 import com.irurueta.navigation.inertial.BodyKinematics
 import com.irurueta.navigation.inertial.BodyMagneticFluxDensity
 import com.irurueta.navigation.inertial.calibration.*
-import com.irurueta.navigation.inertial.calibration.accelerometer.AccelerometerNonLinearCalibrator
-import com.irurueta.navigation.inertial.calibration.accelerometer.KnownBiasAndPositionAccelerometerCalibrator
-import com.irurueta.navigation.inertial.calibration.accelerometer.KnownPositionAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.*
 import com.irurueta.navigation.inertial.calibration.gyroscope.EasyGyroscopeCalibrator
 import com.irurueta.navigation.inertial.calibration.gyroscope.GyroscopeNonLinearCalibrator
 import com.irurueta.navigation.inertial.calibration.gyroscope.KnownBiasEasyGyroscopeCalibrator
@@ -63,6 +62,7 @@ import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import java.lang.reflect.InvocationTargetException
 import java.util.*
 import kotlin.math.max
 import kotlin.math.sqrt
@@ -13657,7 +13657,4152 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(MagneticFluxDensityUnit.TESLA, triad.unit)
     }
 
-    // TODO: buildAccelerometerInternalCalibrator_whenNonRobustGroundTruthBiasAndPositionBiasNotSetAndCommonAxisNotUsed_buildsExpectedCalibrator
+    @Test
+    fun buildAccelerometerInternalCalibrator_whenNonRobustGroundTruthBiasBiasNotSetAndCommonAxisNotUsed_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+            context,
+            location,
+            isAccelerometerGroundTruthInitialBias = true
+        )
+
+        val measurement = mockk<StandardDeviationBodyKinematics>()
+        for (i in 1..13) {
+            calibrator.accelerometerMeasurements.add(measurement)
+        }
+
+        calibrator.isAccelerometerCommonAxisUsed = false
+
+        val randomizer = UniformRandomizer()
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setAccelerometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+
+        assertNull(calibrator.accelerometerRobustMethod)
+        assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
+        assertNotNull(calibrator.location)
+
+        val internalCalibrator: AccelerometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildAccelerometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 = internalCalibrator as KnownBiasAndPositionAccelerometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
+        assertFalse(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(0.0, internalCalibrator2.biasX, 0.0)
+        assertEquals(0.0, internalCalibrator2.biasY, 0.0)
+        assertEquals(0.0, internalCalibrator2.biasZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+    }
+
+    @Test
+    fun buildAccelerometerInternalCalibrator_whenNonRobustGroundTruthBiasBiasSetAndCommonAxisNotUsed_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+            context,
+            location,
+            isAccelerometerGroundTruthInitialBias = true
+        )
+
+        val measurement = mockk<StandardDeviationBodyKinematics>()
+        for (i in 1..13) {
+            calibrator.accelerometerMeasurements.add(measurement)
+        }
+
+        calibrator.isAccelerometerCommonAxisUsed = false
+
+        val randomizer = UniformRandomizer()
+        val initialBiasX = randomizer.nextDouble()
+        val initialBiasY = randomizer.nextDouble()
+        val initialBiasZ = randomizer.nextDouble()
+        calibrator.setPrivateProperty("accelerometerInitialBiasX", initialBiasX)
+        calibrator.setPrivateProperty("accelerometerInitialBiasY", initialBiasY)
+        calibrator.setPrivateProperty("accelerometerInitialBiasZ", initialBiasZ)
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setAccelerometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+
+        assertNull(calibrator.accelerometerRobustMethod)
+        assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
+        assertNotNull(calibrator.location)
+
+        val internalCalibrator: AccelerometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildAccelerometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 = internalCalibrator as KnownBiasAndPositionAccelerometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
+        assertFalse(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(initialBiasX, internalCalibrator2.biasX, 0.0)
+        assertEquals(initialBiasY, internalCalibrator2.biasY, 0.0)
+        assertEquals(initialBiasZ, internalCalibrator2.biasZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredAccelerometerMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildAccelerometerInternalCalibrator_whenNonRobustGroundTruthBiasBiasNotSetAndCommonAxisUsed_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+            context,
+            location,
+            isAccelerometerGroundTruthInitialBias = true
+        )
+
+        val measurement = mockk<StandardDeviationBodyKinematics>()
+        for (i in 1..13) {
+            calibrator.accelerometerMeasurements.add(measurement)
+        }
+
+        calibrator.isAccelerometerCommonAxisUsed = true
+
+        val randomizer = UniformRandomizer()
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setAccelerometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+
+        assertNull(calibrator.accelerometerRobustMethod)
+        assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
+        assertNotNull(calibrator.location)
+
+        val internalCalibrator: AccelerometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildAccelerometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 = internalCalibrator as KnownBiasAndPositionAccelerometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
+        assertTrue(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(0.0, internalCalibrator2.biasX, 0.0)
+        assertEquals(0.0, internalCalibrator2.biasY, 0.0)
+        assertEquals(0.0, internalCalibrator2.biasZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(7, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredAccelerometerMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildAccelerometerInternalCalibrator_whenNonRobustNoGroundTruthBiasBiasNotSetAndCommonAxisNotUsed_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+            context,
+            location,
+            isAccelerometerGroundTruthInitialBias = false
+        )
+
+        val measurement = mockk<StandardDeviationBodyKinematics>()
+        for (i in 1..13) {
+            calibrator.accelerometerMeasurements.add(measurement)
+        }
+
+        calibrator.isAccelerometerCommonAxisUsed = false
+
+        val randomizer = UniformRandomizer()
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setAccelerometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+
+        assertNull(calibrator.accelerometerRobustMethod)
+        assertFalse(calibrator.isAccelerometerGroundTruthInitialBias)
+        assertNotNull(calibrator.location)
+
+        val internalCalibrator: AccelerometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildAccelerometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 = internalCalibrator as KnownPositionAccelerometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
+        assertFalse(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(0.0, internalCalibrator2.initialBiasX, 0.0)
+        assertEquals(0.0, internalCalibrator2.initialBiasY, 0.0)
+        assertEquals(0.0, internalCalibrator2.initialBiasZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(13, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildAccelerometerInternalCalibrator_whenNonRobustNoGroundTruthBiasBiasNotAndCommonAxisNotUsed_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+            context,
+            location,
+            isAccelerometerGroundTruthInitialBias = false
+        )
+
+        val measurement = mockk<StandardDeviationBodyKinematics>()
+        for (i in 1..13) {
+            calibrator.accelerometerMeasurements.add(measurement)
+        }
+
+        calibrator.isAccelerometerCommonAxisUsed = false
+
+        val randomizer = UniformRandomizer()
+        val initialBiasX = randomizer.nextDouble()
+        val initialBiasY = randomizer.nextDouble()
+        val initialBiasZ = randomizer.nextDouble()
+        calibrator.setPrivateProperty("accelerometerInitialBiasX", initialBiasX)
+        calibrator.setPrivateProperty("accelerometerInitialBiasY", initialBiasY)
+        calibrator.setPrivateProperty("accelerometerInitialBiasZ", initialBiasZ)
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setAccelerometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+
+        assertNull(calibrator.accelerometerRobustMethod)
+        assertFalse(calibrator.isAccelerometerGroundTruthInitialBias)
+        assertNotNull(calibrator.location)
+
+        val internalCalibrator: AccelerometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildAccelerometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 = internalCalibrator as KnownPositionAccelerometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
+        assertFalse(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(initialBiasX, internalCalibrator2.initialBiasX, 0.0)
+        assertEquals(initialBiasY, internalCalibrator2.initialBiasY, 0.0)
+        assertEquals(initialBiasZ, internalCalibrator2.initialBiasZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(13, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildAccelerometerInternalCalibrator_whenNonRobustNoGroundTruthBiasAndPositionBiasNotSetAndCommonAxisUsed_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+            context,
+            location,
+            isAccelerometerGroundTruthInitialBias = false
+        )
+
+        val measurement = mockk<StandardDeviationBodyKinematics>()
+        for (i in 1..13) {
+            calibrator.accelerometerMeasurements.add(measurement)
+        }
+
+        calibrator.isAccelerometerCommonAxisUsed = true
+
+        val randomizer = UniformRandomizer()
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setAccelerometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+
+        assertNull(calibrator.accelerometerRobustMethod)
+        assertFalse(calibrator.isAccelerometerGroundTruthInitialBias)
+        assertNotNull(calibrator.location)
+
+        val internalCalibrator: AccelerometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildAccelerometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 = internalCalibrator as KnownPositionAccelerometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
+        assertTrue(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(0.0, internalCalibrator2.initialBiasX, 0.0)
+        assertEquals(0.0, internalCalibrator2.initialBiasY, 0.0)
+        assertEquals(0.0, internalCalibrator2.initialBiasZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredAccelerometerMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildAccelerometerInternalCalibrator_whenRANSACGroundTruthBiasBiasNotSetAndRobustThreshold_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+            context,
+            location,
+            isAccelerometerGroundTruthInitialBias = true
+        )
+
+        val measurement = mockk<StandardDeviationBodyKinematics>()
+        for (i in 1..13) {
+            calibrator.accelerometerMeasurements.add(measurement)
+        }
+
+        calibrator.isAccelerometerCommonAxisUsed = false
+
+        val randomizer = UniformRandomizer()
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setAccelerometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.RANSAC
+        calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.accelerometerRobustThreshold = ROBUST_THRESHOLD
+
+        assertEquals(RobustEstimatorMethod.RANSAC, calibrator.accelerometerRobustMethod)
+        assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
+        assertNotNull(calibrator.location)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
+        val robustThreshold = calibrator.accelerometerRobustThreshold
+        requireNotNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
+
+        val internalCalibrator: AccelerometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildAccelerometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as RANSACRobustKnownBiasAndPositionAccelerometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
+        assertFalse(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(0.0, internalCalibrator2.biasX, 0.0)
+        assertEquals(0.0, internalCalibrator2.biasY, 0.0)
+        assertEquals(0.0, internalCalibrator2.biasZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ROBUST_CONFIDENCE, internalCalibrator2.confidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
+        assertEquals(ROBUST_THRESHOLD, internalCalibrator2.threshold, 0.0)
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredAccelerometerMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildAccelerometerInternalCalibrator_whenRANSACGroundTruthBiasBiasSetAndRobustThreshold_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+            context,
+            location,
+            isAccelerometerGroundTruthInitialBias = true
+        )
+
+        val measurement = mockk<StandardDeviationBodyKinematics>()
+        for (i in 1..13) {
+            calibrator.accelerometerMeasurements.add(measurement)
+        }
+
+        calibrator.isAccelerometerCommonAxisUsed = false
+
+        val randomizer = UniformRandomizer()
+        val initialBiasX = randomizer.nextDouble()
+        val initialBiasY = randomizer.nextDouble()
+        val initialBiasZ = randomizer.nextDouble()
+        calibrator.setPrivateProperty("accelerometerInitialBiasX", initialBiasX)
+        calibrator.setPrivateProperty("accelerometerInitialBiasY", initialBiasY)
+        calibrator.setPrivateProperty("accelerometerInitialBiasZ", initialBiasZ)
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setAccelerometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.RANSAC
+        calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.accelerometerRobustThreshold = ROBUST_THRESHOLD
+
+        assertEquals(RobustEstimatorMethod.RANSAC, calibrator.accelerometerRobustMethod)
+        assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
+        assertNotNull(calibrator.location)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
+        val robustThreshold = calibrator.accelerometerRobustThreshold
+        requireNotNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
+
+        val internalCalibrator: AccelerometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildAccelerometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as RANSACRobustKnownBiasAndPositionAccelerometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
+        assertFalse(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(initialBiasX, internalCalibrator2.biasX, 0.0)
+        assertEquals(initialBiasY, internalCalibrator2.biasY, 0.0)
+        assertEquals(initialBiasZ, internalCalibrator2.biasZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ROBUST_CONFIDENCE, internalCalibrator2.confidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
+        assertEquals(ROBUST_THRESHOLD, internalCalibrator2.threshold, 0.0)
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredAccelerometerMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildAccelerometerInternalCalibrator_whenRANSACGroundTruthBiasBiasNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+            context,
+            location,
+            isAccelerometerGroundTruthInitialBias = true
+        )
+
+        val measurement = mockk<StandardDeviationBodyKinematics>()
+        for (i in 1..13) {
+            calibrator.accelerometerMeasurements.add(measurement)
+        }
+
+        calibrator.isAccelerometerCommonAxisUsed = false
+
+        val randomizer = UniformRandomizer()
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setAccelerometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.RANSAC
+        calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.accelerometerRobustThreshold = null
+        calibrator.accelerometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
+
+        val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+
+        val baseNoiseLevel = randomizer.nextDouble()
+        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        assertEquals(RobustEstimatorMethod.RANSAC, calibrator.accelerometerRobustMethod)
+        assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
+        assertNotNull(calibrator.location)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
+        val robustThreshold = calibrator.accelerometerRobustThreshold
+        assertNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.accelerometerRobustThresholdFactor, 0.0)
+        assertEquals(baseNoiseLevel, calibrator.accelerometerBaseNoiseLevel)
+
+        val internalCalibrator: AccelerometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildAccelerometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as RANSACRobustKnownBiasAndPositionAccelerometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
+        assertFalse(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(0.0, internalCalibrator2.biasX, 0.0)
+        assertEquals(0.0, internalCalibrator2.biasY, 0.0)
+        assertEquals(0.0, internalCalibrator2.biasZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ROBUST_CONFIDENCE, internalCalibrator2.confidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
+        assertEquals(ROBUST_THRESHOLD_FACTOR * baseNoiseLevel, internalCalibrator2.threshold, 0.0)
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredAccelerometerMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildAccelerometerInternalCalibrator_whenRANSACGroundTruthBiasMissingBaseNoiseLevel_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+            context,
+            location,
+            isAccelerometerGroundTruthInitialBias = true
+        )
+
+        val measurement = mockk<StandardDeviationBodyKinematics>()
+        for (i in 1..13) {
+            calibrator.accelerometerMeasurements.add(measurement)
+        }
+
+        calibrator.isAccelerometerCommonAxisUsed = false
+
+        val randomizer = UniformRandomizer()
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setAccelerometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.RANSAC
+        calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.accelerometerRobustThreshold = null
+        calibrator.accelerometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
+
+        assertEquals(RobustEstimatorMethod.RANSAC, calibrator.accelerometerRobustMethod)
+        assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
+        assertNotNull(calibrator.location)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
+        val robustThreshold = calibrator.accelerometerRobustThreshold
+        assertNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.accelerometerRobustThresholdFactor, 0.0)
+        assertNull(calibrator.accelerometerBaseNoiseLevel)
+
+        val ex = assertThrows(InvocationTargetException::class.java) {
+            assertNull(calibrator.callPrivateFuncWithResult("buildAccelerometerInternalCalibrator"))
+        }
+        assertTrue(ex.cause is IllegalStateException)
+    }
+
+    @Test
+    fun buildAccelerometerInternalCalibrator_whenMSACGroundTruthBiasBiasNotSetAndRobustThreshold() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+            context,
+            location,
+            isAccelerometerGroundTruthInitialBias = true
+        )
+
+        val measurement = mockk<StandardDeviationBodyKinematics>()
+        for (i in 1..13) {
+            calibrator.accelerometerMeasurements.add(measurement)
+        }
+
+        calibrator.isAccelerometerCommonAxisUsed = false
+
+        val randomizer = UniformRandomizer()
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setAccelerometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.MSAC
+        calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.accelerometerRobustThreshold = ROBUST_THRESHOLD
+
+        assertEquals(RobustEstimatorMethod.MSAC, calibrator.accelerometerRobustMethod)
+        assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
+        assertNotNull(calibrator.location)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
+        val robustThreshold = calibrator.accelerometerRobustThreshold
+        requireNotNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
+
+        val internalCalibrator: AccelerometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildAccelerometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as MSACRobustKnownBiasAndPositionAccelerometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
+        assertFalse(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(0.0, internalCalibrator2.biasX, 0.0)
+        assertEquals(0.0, internalCalibrator2.biasY, 0.0)
+        assertEquals(0.0, internalCalibrator2.biasZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ROBUST_CONFIDENCE, internalCalibrator2.confidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
+        assertEquals(ROBUST_THRESHOLD, internalCalibrator2.threshold, 0.0)
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredAccelerometerMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildAccelerometerInternalCalibrator_whenMSACGroundTruthBiasBiasSetAndRobustThreshold_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+            context,
+            location,
+            isAccelerometerGroundTruthInitialBias = true
+        )
+
+        val measurement = mockk<StandardDeviationBodyKinematics>()
+        for (i in 1..13) {
+            calibrator.accelerometerMeasurements.add(measurement)
+        }
+
+        calibrator.isAccelerometerCommonAxisUsed = false
+
+        val randomizer = UniformRandomizer()
+        val initialBiasX = randomizer.nextDouble()
+        val initialBiasY = randomizer.nextDouble()
+        val initialBiasZ = randomizer.nextDouble()
+        calibrator.setPrivateProperty("accelerometerInitialBiasX", initialBiasX)
+        calibrator.setPrivateProperty("accelerometerInitialBiasY", initialBiasY)
+        calibrator.setPrivateProperty("accelerometerInitialBiasZ", initialBiasZ)
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setAccelerometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.MSAC
+        calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.accelerometerRobustThreshold = ROBUST_THRESHOLD
+
+        assertEquals(RobustEstimatorMethod.MSAC, calibrator.accelerometerRobustMethod)
+        assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
+        assertNotNull(calibrator.location)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
+        val robustThreshold = calibrator.accelerometerRobustThreshold
+        requireNotNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
+
+        val internalCalibrator: AccelerometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildAccelerometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as MSACRobustKnownBiasAndPositionAccelerometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
+        assertFalse(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(initialBiasX, internalCalibrator2.biasX, 0.0)
+        assertEquals(initialBiasY, internalCalibrator2.biasY, 0.0)
+        assertEquals(initialBiasZ, internalCalibrator2.biasZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ROBUST_CONFIDENCE, internalCalibrator2.confidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
+        assertEquals(ROBUST_THRESHOLD, internalCalibrator2.threshold, 0.0)
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredAccelerometerMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildAccelerometerInternalCalibrator_whenMSACGroundTruthBiasBiasNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+            context,
+            location,
+            isAccelerometerGroundTruthInitialBias = true
+        )
+
+        val measurement = mockk<StandardDeviationBodyKinematics>()
+        for (i in 1..13) {
+            calibrator.accelerometerMeasurements.add(measurement)
+        }
+
+        calibrator.isAccelerometerCommonAxisUsed = false
+
+        val randomizer = UniformRandomizer()
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setAccelerometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.MSAC
+        calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.accelerometerRobustThreshold = null
+        calibrator.accelerometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
+
+        val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        val baseNoiseLevel = randomizer.nextDouble()
+        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        assertEquals(RobustEstimatorMethod.MSAC, calibrator.accelerometerRobustMethod)
+        assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
+        assertNotNull(calibrator.location)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
+        val robustThreshold = calibrator.accelerometerRobustThreshold
+        assertNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.accelerometerRobustThresholdFactor, 0.0)
+        assertEquals(baseNoiseLevel, calibrator.accelerometerBaseNoiseLevel)
+
+        val internalCalibrator: AccelerometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildAccelerometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as MSACRobustKnownBiasAndPositionAccelerometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
+        assertFalse(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(0.0, internalCalibrator2.biasX, 0.0)
+        assertEquals(0.0, internalCalibrator2.biasY, 0.0)
+        assertEquals(0.0, internalCalibrator2.biasZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ROBUST_CONFIDENCE, internalCalibrator2.confidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
+        assertEquals(ROBUST_THRESHOLD_FACTOR * baseNoiseLevel, internalCalibrator2.threshold, 0.0)
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredAccelerometerMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildAccelerometerInternalCalibrator_whenMSACGroundTruthBiasMissingBaseNoiseLevel_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+            context,
+            location,
+            isAccelerometerGroundTruthInitialBias = true
+        )
+
+        val measurement = mockk<StandardDeviationBodyKinematics>()
+        for (i in 1..13) {
+            calibrator.accelerometerMeasurements.add(measurement)
+        }
+
+        calibrator.isAccelerometerCommonAxisUsed = false
+
+        val randomizer = UniformRandomizer()
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setAccelerometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.MSAC
+        calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.accelerometerRobustThreshold = null
+        calibrator.accelerometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
+
+        assertEquals(RobustEstimatorMethod.MSAC, calibrator.accelerometerRobustMethod)
+        assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
+        assertNotNull(calibrator.location)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
+        val robustThreshold = calibrator.accelerometerRobustThreshold
+        assertNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.accelerometerRobustThresholdFactor, 0.0)
+        assertNull(calibrator.accelerometerBaseNoiseLevel)
+
+        val ex = assertThrows(InvocationTargetException::class.java) {
+            assertNull(calibrator.callPrivateFuncWithResult("buildAccelerometerInternalCalibrator"))
+        }
+        assertTrue(ex.cause is IllegalStateException)
+    }
+
+    @Test
+    fun buildAccelerometerInternalCalibrator_whenPROSACGroundTruthBiasBiasNotSetAndRobustThreshold_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+            context,
+            location,
+            isAccelerometerGroundTruthInitialBias = true
+        )
+
+        val randomizer = UniformRandomizer()
+        val specificForceStandardDeviation = randomizer.nextDouble()
+        val measurement = mockk<StandardDeviationBodyKinematics>()
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        for (i in 1..13) {
+            calibrator.accelerometerMeasurements.add(measurement)
+        }
+
+        calibrator.isAccelerometerCommonAxisUsed = false
+
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setAccelerometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROSAC
+        calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.accelerometerRobustThreshold = ROBUST_THRESHOLD
+
+        assertEquals(RobustEstimatorMethod.PROSAC, calibrator.accelerometerRobustMethod)
+        assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
+        assertNotNull(calibrator.location)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
+        val robustThreshold = calibrator.accelerometerRobustThreshold
+        requireNotNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
+
+        val internalCalibrator: AccelerometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildAccelerometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as PROSACRobustKnownBiasAndPositionAccelerometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
+        assertFalse(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(0.0, internalCalibrator2.biasX, 0.0)
+        assertEquals(0.0, internalCalibrator2.biasY, 0.0)
+        assertEquals(0.0, internalCalibrator2.biasZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ROBUST_CONFIDENCE, internalCalibrator2.confidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
+        assertEquals(ROBUST_THRESHOLD, internalCalibrator2.threshold, 0.0)
+        assertEquals(
+            calibrator.accelerometerMeasurements.size,
+            internalCalibrator2.qualityScores.size
+        )
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredAccelerometerMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildAccelerometerInternalCalibrator_whenPROSACGroundTruthBiasBiasSetAndRobustThreshold_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+            context,
+            location,
+            isAccelerometerGroundTruthInitialBias = true
+        )
+
+        val randomizer = UniformRandomizer()
+        val specificForceStandardDeviation = randomizer.nextDouble()
+        val measurement = mockk<StandardDeviationBodyKinematics>()
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        for (i in 1..13) {
+            calibrator.accelerometerMeasurements.add(measurement)
+        }
+
+        calibrator.isAccelerometerCommonAxisUsed = false
+
+        val initialBiasX = randomizer.nextDouble()
+        val initialBiasY = randomizer.nextDouble()
+        val initialBiasZ = randomizer.nextDouble()
+        calibrator.setPrivateProperty("accelerometerInitialBiasX", initialBiasX)
+        calibrator.setPrivateProperty("accelerometerInitialBiasY", initialBiasY)
+        calibrator.setPrivateProperty("accelerometerInitialBiasZ", initialBiasZ)
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setAccelerometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROSAC
+        calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.accelerometerRobustThreshold = ROBUST_THRESHOLD
+
+        assertEquals(RobustEstimatorMethod.PROSAC, calibrator.accelerometerRobustMethod)
+        assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
+        assertNotNull(calibrator.location)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
+        val robustThreshold = calibrator.accelerometerRobustThreshold
+        requireNotNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
+
+        val internalCalibrator: AccelerometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildAccelerometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as PROSACRobustKnownBiasAndPositionAccelerometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition,
+            ABSOLUTE_ERROR
+        ))
+        assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
+        assertFalse(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(initialBiasX, internalCalibrator2.biasX, 0.0)
+        assertEquals(initialBiasY, internalCalibrator2.biasY, 0.0)
+        assertEquals(initialBiasZ, internalCalibrator2.biasZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ROBUST_CONFIDENCE, internalCalibrator2.confidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
+        assertEquals(ROBUST_THRESHOLD, internalCalibrator2.threshold, 0.0)
+        assertEquals(
+            calibrator.accelerometerMeasurements.size,
+            internalCalibrator2.qualityScores.size
+        )
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredAccelerometerMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildAccelerometerInternalCalibrator_whenPROSACGroundTruthBiasBiasNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+            context,
+            location,
+            isAccelerometerGroundTruthInitialBias = true
+        )
+
+        val randomizer = UniformRandomizer()
+        val specificForceStandardDeviation = randomizer.nextDouble()
+        val measurement = mockk<StandardDeviationBodyKinematics>()
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        for (i in 1..13) {
+            calibrator.accelerometerMeasurements.add(measurement)
+        }
+
+        calibrator.isAccelerometerCommonAxisUsed = false
+
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setAccelerometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROSAC
+        calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.accelerometerRobustThreshold = null
+        calibrator.accelerometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
+
+        val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        val baseNoiseLevel = randomizer.nextDouble()
+        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        assertEquals(RobustEstimatorMethod.PROSAC, calibrator.accelerometerRobustMethod)
+        assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
+        assertNotNull(calibrator.location)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
+        val robustThreshold = calibrator.accelerometerRobustThreshold
+        assertNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.accelerometerRobustThresholdFactor, 0.0)
+        assertEquals(baseNoiseLevel, calibrator.accelerometerBaseNoiseLevel)
+
+        val internalCalibrator: AccelerometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildAccelerometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as PROSACRobustKnownBiasAndPositionAccelerometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
+        assertFalse(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(0.0, internalCalibrator2.biasX, 0.0)
+        assertEquals(0.0, internalCalibrator2.biasY, 0.0)
+        assertEquals(0.0, internalCalibrator2.biasZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ROBUST_CONFIDENCE, internalCalibrator2.confidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
+        assertEquals(ROBUST_THRESHOLD_FACTOR * baseNoiseLevel, internalCalibrator2.threshold, 0.0)
+        assertEquals(
+            calibrator.accelerometerMeasurements.size,
+            internalCalibrator2.qualityScores.size
+        )
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredAccelerometerMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildAccelerometerInternalCalibrator_whenPROSACGroundTruthBiasMissingBaseNoiseLevel_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+            context,
+            location,
+            isAccelerometerGroundTruthInitialBias = true
+        )
+
+        val randomizer = UniformRandomizer()
+        val specificForceStandardDeviation = randomizer.nextDouble()
+        val measurement = mockk<StandardDeviationBodyKinematics>()
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        for (i in 1..13) {
+            calibrator.accelerometerMeasurements.add(measurement)
+        }
+
+        calibrator.isAccelerometerCommonAxisUsed = false
+
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setAccelerometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROSAC
+        calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.accelerometerRobustThreshold = null
+        calibrator.accelerometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
+
+        assertEquals(RobustEstimatorMethod.PROSAC, calibrator.accelerometerRobustMethod)
+        assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
+        assertNotNull(calibrator.location)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
+        val robustThreshold = calibrator.accelerometerRobustThreshold
+        assertNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.accelerometerRobustThresholdFactor, 0.0)
+        assertNull(calibrator.accelerometerBaseNoiseLevel)
+
+        val ex = assertThrows(InvocationTargetException::class.java) {
+            assertNull(calibrator.callPrivateFuncWithResult("buildAccelerometerInternalCalibrator"))
+        }
+        assertTrue(ex.cause is IllegalStateException)
+    }
+
+    @Test
+    fun buildAccelerometerInternalCalibrator_whenLMedSGroundTruthBiasBiasNotSetAndRobustThreshold_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+            context,
+            location,
+            isAccelerometerGroundTruthInitialBias = true
+        )
+
+        val measurement = mockk<StandardDeviationBodyKinematics>()
+        for (i in 1..13) {
+            calibrator.accelerometerMeasurements.add(measurement)
+        }
+
+        calibrator.isAccelerometerCommonAxisUsed = false
+
+        val randomizer = UniformRandomizer()
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setAccelerometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.LMedS
+        calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.accelerometerRobustThreshold = ROBUST_THRESHOLD
+
+        assertEquals(RobustEstimatorMethod.LMedS, calibrator.accelerometerRobustMethod)
+        assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
+        assertNotNull(calibrator.location)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
+        val robustThreshold = calibrator.accelerometerRobustThreshold
+        requireNotNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
+
+        val internalCalibrator: AccelerometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildAccelerometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as LMedSRobustKnownBiasAndPositionAccelerometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
+        assertFalse(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(0.0, internalCalibrator2.biasX, 0.0)
+        assertEquals(0.0, internalCalibrator2.biasY, 0.0)
+        assertEquals(0.0, internalCalibrator2.biasZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ROBUST_CONFIDENCE, internalCalibrator2.confidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
+        assertEquals(ROBUST_THRESHOLD, internalCalibrator2.stopThreshold, 0.0)
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredAccelerometerMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildAccelerometerInternalCalibrator_whenLMedSGroundTruthBiasBiasSetAndRobustThreshold_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+            context,
+            location,
+            isAccelerometerGroundTruthInitialBias = true
+        )
+
+        val measurement = mockk<StandardDeviationBodyKinematics>()
+        for (i in 1..13) {
+            calibrator.accelerometerMeasurements.add(measurement)
+        }
+
+        calibrator.isAccelerometerCommonAxisUsed = false
+
+        val randomizer = UniformRandomizer()
+        val initialBiasX = randomizer.nextDouble()
+        val initialBiasY = randomizer.nextDouble()
+        val initialBiasZ = randomizer.nextDouble()
+        calibrator.setPrivateProperty("accelerometerInitialBiasX", initialBiasX)
+        calibrator.setPrivateProperty("accelerometerInitialBiasY", initialBiasY)
+        calibrator.setPrivateProperty("accelerometerInitialBiasZ", initialBiasZ)
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setAccelerometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.LMedS
+        calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.accelerometerRobustThreshold = ROBUST_THRESHOLD
+
+        assertEquals(RobustEstimatorMethod.LMedS, calibrator.accelerometerRobustMethod)
+        assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
+        assertNotNull(calibrator.location)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
+        val robustThreshold = calibrator.accelerometerRobustThreshold
+        requireNotNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
+
+        val internalCalibrator: AccelerometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildAccelerometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as LMedSRobustKnownBiasAndPositionAccelerometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
+        assertFalse(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(initialBiasX, internalCalibrator2.biasX, 0.0)
+        assertEquals(initialBiasY, internalCalibrator2.biasY, 0.0)
+        assertEquals(initialBiasZ, internalCalibrator2.biasZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ROBUST_CONFIDENCE, internalCalibrator2.confidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
+        assertEquals(ROBUST_THRESHOLD, internalCalibrator2.stopThreshold, 0.0)
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredAccelerometerMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildAccelerometerInternalCalibrator_whenLMedSGroundTruthBiasBiasNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+            context,
+            location,
+            isAccelerometerGroundTruthInitialBias = true
+        )
+
+        val measurement = mockk<StandardDeviationBodyKinematics>()
+        for (i in 1..13) {
+            calibrator.accelerometerMeasurements.add(measurement)
+        }
+
+        calibrator.isAccelerometerCommonAxisUsed = false
+
+        val randomizer = UniformRandomizer()
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setAccelerometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.LMedS
+        calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.accelerometerRobustThreshold = null
+        calibrator.accelerometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
+        calibrator.accelerometerRobustStopThresholdFactor = ROBUST_STOP_THRESHOLD_FACTOR
+
+        val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        val baseNoiseLevel = randomizer.nextDouble()
+        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        assertEquals(RobustEstimatorMethod.LMedS, calibrator.accelerometerRobustMethod)
+        assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
+        assertNotNull(calibrator.location)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
+        val robustThreshold = calibrator.accelerometerRobustThreshold
+        assertNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.accelerometerRobustThresholdFactor, 0.0)
+        assertEquals(
+            ROBUST_STOP_THRESHOLD_FACTOR,
+            calibrator.accelerometerRobustStopThresholdFactor,
+            0.0
+        )
+        assertEquals(baseNoiseLevel, calibrator.accelerometerBaseNoiseLevel)
+
+        val internalCalibrator: AccelerometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildAccelerometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as LMedSRobustKnownBiasAndPositionAccelerometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
+        assertFalse(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(0.0, internalCalibrator2.biasX, 0.0)
+        assertEquals(0.0, internalCalibrator2.biasY, 0.0)
+        assertEquals(0.0, internalCalibrator2.biasZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ROBUST_CONFIDENCE, internalCalibrator2.confidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
+        assertEquals(
+            ROBUST_THRESHOLD_FACTOR * ROBUST_STOP_THRESHOLD_FACTOR * baseNoiseLevel,
+            internalCalibrator2.stopThreshold,
+            0.0
+        )
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredAccelerometerMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildAccelerometerInternalCalibrator_whenLMedSGroundTruthBiasMissingBaseNoiseLevel_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+            context,
+            location,
+            isAccelerometerGroundTruthInitialBias = true
+        )
+
+        val measurement = mockk<StandardDeviationBodyKinematics>()
+        for (i in 1..13) {
+            calibrator.accelerometerMeasurements.add(measurement)
+        }
+
+        calibrator.isAccelerometerCommonAxisUsed = false
+
+        val randomizer = UniformRandomizer()
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setAccelerometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.LMedS
+        calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.accelerometerRobustThreshold = null
+        calibrator.accelerometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
+
+        assertEquals(RobustEstimatorMethod.LMedS, calibrator.accelerometerRobustMethod)
+        assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
+        assertNotNull(calibrator.location)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
+        val robustThreshold = calibrator.accelerometerRobustThreshold
+        assertNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.accelerometerRobustThresholdFactor, 0.0)
+        assertNull(calibrator.accelerometerBaseNoiseLevel)
+
+        val ex = assertThrows(InvocationTargetException::class.java) {
+            assertNull(calibrator.callPrivateFuncWithResult("buildAccelerometerInternalCalibrator"))
+        }
+        assertTrue(ex.cause is IllegalStateException)
+    }
+
+    @Test
+    fun buildAccelerometerInternalCalibrator_whenPROMedSGroundTruthBiasBiasNotSetAndRobustThreshold_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+            context,
+            location,
+            isAccelerometerGroundTruthInitialBias = true
+        )
+
+        val randomizer = UniformRandomizer()
+        val specificForceStandardDeviation = randomizer.nextDouble()
+        val measurement = mockk<StandardDeviationBodyKinematics>()
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        for (i in 1..13) {
+            calibrator.accelerometerMeasurements.add(measurement)
+        }
+
+        calibrator.isAccelerometerCommonAxisUsed = false
+
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setAccelerometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROMedS
+        calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.accelerometerRobustThreshold = ROBUST_THRESHOLD
+
+        assertEquals(RobustEstimatorMethod.PROMedS, calibrator.accelerometerRobustMethod)
+        assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
+        assertNotNull(calibrator.location)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
+        val robustThreshold = calibrator.accelerometerRobustThreshold
+        requireNotNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
+
+        val internalCalibrator: AccelerometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildAccelerometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as PROMedSRobustKnownBiasAndPositionAccelerometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
+        assertFalse(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(0.0, internalCalibrator2.biasX, 0.0)
+        assertEquals(0.0, internalCalibrator2.biasY, 0.0)
+        assertEquals(0.0, internalCalibrator2.biasZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ROBUST_CONFIDENCE, internalCalibrator2.confidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
+        assertEquals(ROBUST_THRESHOLD, internalCalibrator2.stopThreshold, 0.0)
+        assertEquals(
+            calibrator.accelerometerMeasurements.size,
+            internalCalibrator2.qualityScores.size
+        )
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredAccelerometerMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildAccelerometerInternalCalibrator_whenPROMedSGroundTruthBiasBiasSetAndRobustThreshold_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+            context,
+            location,
+            isAccelerometerGroundTruthInitialBias = true
+        )
+
+        val randomizer = UniformRandomizer()
+        val specificForceStandardDeviation = randomizer.nextDouble()
+        val measurement = mockk<StandardDeviationBodyKinematics>()
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        for (i in 1..13) {
+            calibrator.accelerometerMeasurements.add(measurement)
+        }
+
+        calibrator.isAccelerometerCommonAxisUsed = false
+
+        val initialBiasX = randomizer.nextDouble()
+        val initialBiasY = randomizer.nextDouble()
+        val initialBiasZ = randomizer.nextDouble()
+        calibrator.setPrivateProperty("accelerometerInitialBiasX", initialBiasX)
+        calibrator.setPrivateProperty("accelerometerInitialBiasY", initialBiasY)
+        calibrator.setPrivateProperty("accelerometerInitialBiasZ", initialBiasZ)
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setAccelerometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROMedS
+        calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.accelerometerRobustThreshold = ROBUST_THRESHOLD
+
+        assertEquals(RobustEstimatorMethod.PROMedS, calibrator.accelerometerRobustMethod)
+        assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
+        assertNotNull(calibrator.location)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
+        val robustThreshold = calibrator.accelerometerRobustThreshold
+        requireNotNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
+
+        val internalCalibrator: AccelerometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildAccelerometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as PROMedSRobustKnownBiasAndPositionAccelerometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
+        assertFalse(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(initialBiasX, internalCalibrator2.biasX, 0.0)
+        assertEquals(initialBiasY, internalCalibrator2.biasY, 0.0)
+        assertEquals(initialBiasZ, internalCalibrator2.biasZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ROBUST_CONFIDENCE, internalCalibrator2.confidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
+        assertEquals(ROBUST_THRESHOLD, internalCalibrator2.stopThreshold, 0.0)
+        assertEquals(
+            calibrator.accelerometerMeasurements.size,
+            internalCalibrator2.qualityScores.size
+        )
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredAccelerometerMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildAccelerometerInternalCalibrator_whenPROMedSGroundTruthBiasBiasNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+            context,
+            location,
+            isAccelerometerGroundTruthInitialBias = true
+        )
+
+        val randomizer = UniformRandomizer()
+        val specificForceStandardDeviation = randomizer.nextDouble()
+        val measurement = mockk<StandardDeviationBodyKinematics>()
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        for (i in 1..13) {
+            calibrator.accelerometerMeasurements.add(measurement)
+        }
+
+        calibrator.isAccelerometerCommonAxisUsed = false
+
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setAccelerometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROMedS
+        calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.accelerometerRobustThreshold = null
+        calibrator.accelerometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
+        calibrator.accelerometerRobustStopThresholdFactor = ROBUST_STOP_THRESHOLD_FACTOR
+
+        val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        val baseNoiseLevel = randomizer.nextDouble()
+        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        assertEquals(RobustEstimatorMethod.PROMedS, calibrator.accelerometerRobustMethod)
+        assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
+        assertNotNull(calibrator.location)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
+        val robustThreshold = calibrator.accelerometerRobustThreshold
+        assertNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.accelerometerRobustThresholdFactor, 0.0)
+        assertEquals(
+            ROBUST_STOP_THRESHOLD_FACTOR,
+            calibrator.accelerometerRobustStopThresholdFactor,
+            0.0
+        )
+        assertEquals(baseNoiseLevel, calibrator.accelerometerBaseNoiseLevel)
+
+        val internalCalibrator: AccelerometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildAccelerometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as PROMedSRobustKnownBiasAndPositionAccelerometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
+        assertFalse(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(0.0, internalCalibrator2.biasX, 0.0)
+        assertEquals(0.0, internalCalibrator2.biasY, 0.0)
+        assertEquals(0.0, internalCalibrator2.biasZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ROBUST_CONFIDENCE, internalCalibrator2.confidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
+        assertEquals(
+            ROBUST_THRESHOLD_FACTOR * ROBUST_STOP_THRESHOLD_FACTOR * baseNoiseLevel,
+            internalCalibrator2.stopThreshold,
+            0.0
+        )
+        assertEquals(
+            calibrator.accelerometerMeasurements.size,
+            internalCalibrator2.qualityScores.size
+        )
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredAccelerometerMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildAccelerometerInternalCalibrator_whenPROMedSGroundTruthBiasMissingBaseNoiseLevel_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+            context,
+            location,
+            isAccelerometerGroundTruthInitialBias = true
+        )
+
+        val randomizer = UniformRandomizer()
+        val specificForceStandardDeviation = randomizer.nextDouble()
+        val measurement = mockk<StandardDeviationBodyKinematics>()
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        for (i in 1..13) {
+            calibrator.accelerometerMeasurements.add(measurement)
+        }
+
+        calibrator.isAccelerometerCommonAxisUsed = false
+
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setAccelerometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROMedS
+        calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.accelerometerRobustThreshold = null
+        calibrator.accelerometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
+
+        assertEquals(RobustEstimatorMethod.PROMedS, calibrator.accelerometerRobustMethod)
+        assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
+        assertNotNull(calibrator.location)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
+        val robustThreshold = calibrator.accelerometerRobustThreshold
+        assertNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.accelerometerRobustThresholdFactor, 0.0)
+        assertNull(calibrator.accelerometerBaseNoiseLevel)
+
+        val ex = assertThrows(InvocationTargetException::class.java) {
+            assertNull(calibrator.callPrivateFuncWithResult("buildAccelerometerInternalCalibrator"))
+        }
+        assertTrue(ex.cause is IllegalStateException)
+    }
+
+    @Test
+    fun buildAccelerometerInternalCalibrator_whenRANSACBiasNotSetAndRobustThreshold_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+            context,
+            location,
+            isAccelerometerGroundTruthInitialBias = false
+        )
+
+        val measurement = mockk<StandardDeviationBodyKinematics>()
+        for (i in 1..13) {
+            calibrator.accelerometerMeasurements.add(measurement)
+        }
+
+        calibrator.isAccelerometerCommonAxisUsed = false
+
+        val randomizer = UniformRandomizer()
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setAccelerometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.RANSAC
+        calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.accelerometerRobustThreshold = ROBUST_THRESHOLD
+
+        assertEquals(RobustEstimatorMethod.RANSAC, calibrator.accelerometerRobustMethod)
+        assertFalse(calibrator.isAccelerometerGroundTruthInitialBias)
+        assertNotNull(calibrator.location)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
+        val robustThreshold = calibrator.accelerometerRobustThreshold
+        requireNotNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
+
+        val internalCalibrator: AccelerometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildAccelerometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as RANSACRobustKnownPositionAccelerometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
+        assertFalse(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(0.0, internalCalibrator2.initialBiasX, 0.0)
+        assertEquals(0.0, internalCalibrator2.initialBiasY, 0.0)
+        assertEquals(0.0, internalCalibrator2.initialBiasZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ROBUST_CONFIDENCE, internalCalibrator2.confidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
+        assertEquals(ROBUST_THRESHOLD, internalCalibrator2.threshold, 0.0)
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(13, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildAccelerometerInternalCalibrator_whenRANSACBiasSetAndRobustThreshold_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+            context,
+            location,
+            isAccelerometerGroundTruthInitialBias = false
+        )
+
+        val measurement = mockk<StandardDeviationBodyKinematics>()
+        for (i in 1..13) {
+            calibrator.accelerometerMeasurements.add(measurement)
+        }
+
+        calibrator.isAccelerometerCommonAxisUsed = false
+
+        val randomizer = UniformRandomizer()
+        val initialBiasX = randomizer.nextDouble()
+        val initialBiasY = randomizer.nextDouble()
+        val initialBiasZ = randomizer.nextDouble()
+        calibrator.setPrivateProperty("accelerometerInitialBiasX", initialBiasX)
+        calibrator.setPrivateProperty("accelerometerInitialBiasY", initialBiasY)
+        calibrator.setPrivateProperty("accelerometerInitialBiasZ", initialBiasZ)
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setAccelerometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.RANSAC
+        calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.accelerometerRobustThreshold = ROBUST_THRESHOLD
+
+        assertEquals(RobustEstimatorMethod.RANSAC, calibrator.accelerometerRobustMethod)
+        assertFalse(calibrator.isAccelerometerGroundTruthInitialBias)
+        assertNotNull(calibrator.location)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
+        val robustThreshold = calibrator.accelerometerRobustThreshold
+        requireNotNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
+
+        val internalCalibrator: AccelerometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildAccelerometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as RANSACRobustKnownPositionAccelerometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
+        assertFalse(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(initialBiasX, internalCalibrator2.initialBiasX, 0.0)
+        assertEquals(initialBiasY, internalCalibrator2.initialBiasY, 0.0)
+        assertEquals(initialBiasZ, internalCalibrator2.initialBiasZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ROBUST_CONFIDENCE, internalCalibrator2.confidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
+        assertEquals(ROBUST_THRESHOLD, internalCalibrator2.threshold, 0.0)
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(13, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildAccelerometerInternalCalibrator_whenRANSACBiasNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+            context,
+            location,
+            isAccelerometerGroundTruthInitialBias = false
+        )
+
+        val measurement = mockk<StandardDeviationBodyKinematics>()
+        for (i in 1..13) {
+            calibrator.accelerometerMeasurements.add(measurement)
+        }
+
+        calibrator.isAccelerometerCommonAxisUsed = false
+
+        val randomizer = UniformRandomizer()
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setAccelerometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.RANSAC
+        calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.accelerometerRobustThreshold = null
+        calibrator.accelerometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
+
+        val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        val baseNoiseLevel = randomizer.nextDouble()
+        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        assertEquals(RobustEstimatorMethod.RANSAC, calibrator.accelerometerRobustMethod)
+        assertFalse(calibrator.isAccelerometerGroundTruthInitialBias)
+        assertNotNull(calibrator.location)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
+        val robustThreshold = calibrator.accelerometerRobustThreshold
+        assertNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.accelerometerRobustThresholdFactor, 0.0)
+        assertEquals(baseNoiseLevel, calibrator.accelerometerBaseNoiseLevel)
+
+        val internalCalibrator: AccelerometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildAccelerometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as RANSACRobustKnownPositionAccelerometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
+        assertFalse(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(0.0, internalCalibrator2.initialBiasX, 0.0)
+        assertEquals(0.0, internalCalibrator2.initialBiasY, 0.0)
+        assertEquals(0.0, internalCalibrator2.initialBiasZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ROBUST_CONFIDENCE, internalCalibrator2.confidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
+        assertEquals(ROBUST_THRESHOLD_FACTOR * baseNoiseLevel, internalCalibrator2.threshold, 0.0)
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(13, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildAccelerometerInternalCalibrator_whenRANSACMissingBaseNoiseLevel_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+            context,
+            location = location,
+            isAccelerometerGroundTruthInitialBias = false
+        )
+
+        val measurement = mockk<StandardDeviationBodyKinematics>()
+        for (i in 1..13) {
+            calibrator.accelerometerMeasurements.add(measurement)
+        }
+
+        calibrator.isAccelerometerCommonAxisUsed = false
+
+        val randomizer = UniformRandomizer()
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setAccelerometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.RANSAC
+        calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.accelerometerRobustThreshold = null
+        calibrator.accelerometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
+
+        assertEquals(RobustEstimatorMethod.RANSAC, calibrator.accelerometerRobustMethod)
+        assertFalse(calibrator.isAccelerometerGroundTruthInitialBias)
+        assertNotNull(calibrator.location)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
+        val robustThreshold = calibrator.accelerometerRobustThreshold
+        assertNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.accelerometerRobustThresholdFactor, 0.0)
+        assertNull(calibrator.accelerometerBaseNoiseLevel)
+
+        val ex = assertThrows(InvocationTargetException::class.java) {
+            assertNull(calibrator.callPrivateFuncWithResult("buildAccelerometerInternalCalibrator"))
+        }
+        assertTrue(ex.cause is IllegalStateException)
+    }
+
+    @Test
+    fun buildAccelerometerInternalCalibrator_whenMSACBiasNotSetAndRobustThreshold_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+            context,
+            location = location,
+            isAccelerometerGroundTruthInitialBias = false
+        )
+
+        val measurement = mockk<StandardDeviationBodyKinematics>()
+        for (i in 1..13) {
+            calibrator.accelerometerMeasurements.add(measurement)
+        }
+
+        calibrator.isAccelerometerCommonAxisUsed = false
+
+        val randomizer = UniformRandomizer()
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setAccelerometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.MSAC
+        calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.accelerometerRobustThreshold = ROBUST_THRESHOLD
+
+        assertEquals(RobustEstimatorMethod.MSAC, calibrator.accelerometerRobustMethod)
+        assertFalse(calibrator.isAccelerometerGroundTruthInitialBias)
+        assertNotNull(calibrator.location)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
+        val robustThreshold = calibrator.accelerometerRobustThreshold
+        requireNotNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
+
+        val internalCalibrator: AccelerometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildAccelerometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as MSACRobustKnownPositionAccelerometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
+        assertFalse(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(0.0, internalCalibrator2.initialBiasX, 0.0)
+        assertEquals(0.0, internalCalibrator2.initialBiasY, 0.0)
+        assertEquals(0.0, internalCalibrator2.initialBiasZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ROBUST_CONFIDENCE, internalCalibrator2.confidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
+        assertEquals(ROBUST_THRESHOLD, internalCalibrator2.threshold, 0.0)
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(13, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildAccelerometerInternalCalibrator_whenMSACBiasSetAndRobustThreshold_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+            context,
+            location,
+            isAccelerometerGroundTruthInitialBias = false
+        )
+
+        val measurement = mockk<StandardDeviationBodyKinematics>()
+        for (i in 1..13) {
+            calibrator.accelerometerMeasurements.add(measurement)
+        }
+
+        calibrator.isAccelerometerCommonAxisUsed = false
+
+        val randomizer = UniformRandomizer()
+        val initialBiasX = randomizer.nextDouble()
+        val initialBiasY = randomizer.nextDouble()
+        val initialBiasZ = randomizer.nextDouble()
+        calibrator.setPrivateProperty("accelerometerInitialBiasX", initialBiasX)
+        calibrator.setPrivateProperty("accelerometerInitialBiasY", initialBiasY)
+        calibrator.setPrivateProperty("accelerometerInitialBiasZ", initialBiasZ)
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setAccelerometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.MSAC
+        calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.accelerometerRobustThreshold = ROBUST_THRESHOLD
+
+        assertEquals(RobustEstimatorMethod.MSAC, calibrator.accelerometerRobustMethod)
+        assertFalse(calibrator.isAccelerometerGroundTruthInitialBias)
+        assertNotNull(calibrator.location)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
+        val robustThreshold = calibrator.accelerometerRobustThreshold
+        requireNotNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
+
+        val internalCalibrator: AccelerometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildAccelerometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as MSACRobustKnownPositionAccelerometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
+        assertFalse(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(initialBiasX, internalCalibrator2.initialBiasX, 0.0)
+        assertEquals(initialBiasY, internalCalibrator2.initialBiasY, 0.0)
+        assertEquals(initialBiasZ, internalCalibrator2.initialBiasZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ROBUST_CONFIDENCE, internalCalibrator2.confidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
+        assertEquals(ROBUST_THRESHOLD, internalCalibrator2.threshold, 0.0)
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(13, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildAccelerometerInternalCalibrator_whenMSACBiasNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+            context,
+            location,
+            isAccelerometerGroundTruthInitialBias = false
+        )
+
+        val measurement = mockk<StandardDeviationBodyKinematics>()
+        for (i in 1..13) {
+            calibrator.accelerometerMeasurements.add(measurement)
+        }
+
+        calibrator.isAccelerometerCommonAxisUsed = false
+
+        val randomizer = UniformRandomizer()
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setAccelerometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.MSAC
+        calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.accelerometerRobustThreshold = null
+        calibrator.accelerometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
+
+        val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        val baseNoiseLevel = randomizer.nextDouble()
+        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        assertEquals(RobustEstimatorMethod.MSAC, calibrator.accelerometerRobustMethod)
+        assertFalse(calibrator.isAccelerometerGroundTruthInitialBias)
+        assertNotNull(calibrator.location)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
+        val robustThreshold = calibrator.accelerometerRobustThreshold
+        assertNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.accelerometerRobustThresholdFactor, 0.0)
+        assertEquals(baseNoiseLevel, calibrator.accelerometerBaseNoiseLevel)
+
+        val internalCalibrator: AccelerometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildAccelerometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as MSACRobustKnownPositionAccelerometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
+        assertFalse(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(0.0, internalCalibrator2.initialBiasX, 0.0)
+        assertEquals(0.0, internalCalibrator2.initialBiasY, 0.0)
+        assertEquals(0.0, internalCalibrator2.initialBiasZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ROBUST_CONFIDENCE, internalCalibrator2.confidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
+        assertEquals(ROBUST_THRESHOLD_FACTOR * baseNoiseLevel, internalCalibrator2.threshold, 0.0)
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(13, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildAccelerometerInternalCalibrator_whenMSACMissingBaseNoiseLevel_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+            context,
+            location,
+            isAccelerometerGroundTruthInitialBias = false
+        )
+
+        val measurement = mockk<StandardDeviationBodyKinematics>()
+        for (i in 1..13) {
+            calibrator.accelerometerMeasurements.add(measurement)
+        }
+
+        calibrator.isAccelerometerCommonAxisUsed = false
+
+        val randomizer = UniformRandomizer()
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setAccelerometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.MSAC
+        calibrator.accelerometerRobustConfidence =
+            ROBUST_CONFIDENCE
+        calibrator.accelerometerRobustMaxIterations =
+            ROBUST_MAX_ITERATIONS
+        calibrator.accelerometerRobustPreliminarySubsetSize =
+            ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.accelerometerRobustThreshold = null
+        calibrator.accelerometerRobustThresholdFactor =
+            ROBUST_THRESHOLD_FACTOR
+
+        assertEquals(RobustEstimatorMethod.MSAC, calibrator.accelerometerRobustMethod)
+        assertFalse(calibrator.isAccelerometerGroundTruthInitialBias)
+        assertNotNull(calibrator.location)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
+        val robustThreshold = calibrator.accelerometerRobustThreshold
+        assertNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.accelerometerRobustThresholdFactor, 0.0)
+        assertNull(calibrator.accelerometerBaseNoiseLevel)
+
+        val ex = assertThrows(InvocationTargetException::class.java) {
+            assertNull(calibrator.callPrivateFuncWithResult("buildAccelerometerInternalCalibrator"))
+        }
+        assertTrue(ex.cause is IllegalStateException)
+    }
+
+    @Test
+    fun buildAccelerometerInternalCalibrator_whenPROSACBiasNotSetAndRobustThreshold_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+            context,
+            location,
+            isAccelerometerGroundTruthInitialBias = false
+        )
+
+        val randomizer = UniformRandomizer()
+        val specificForceStandardDeviation = randomizer.nextDouble()
+        val measurement = mockk<StandardDeviationBodyKinematics>()
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        for (i in 1..13) {
+            calibrator.accelerometerMeasurements.add(measurement)
+        }
+
+        calibrator.isAccelerometerCommonAxisUsed = false
+
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setAccelerometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROSAC
+        calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.accelerometerRobustThreshold = ROBUST_THRESHOLD
+
+        assertEquals(RobustEstimatorMethod.PROSAC, calibrator.accelerometerRobustMethod)
+        assertFalse(calibrator.isAccelerometerGroundTruthInitialBias)
+        assertNotNull(calibrator.location)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
+        val robustThreshold = calibrator.accelerometerRobustThreshold
+        requireNotNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
+
+        val internalCalibrator: AccelerometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildAccelerometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as PROSACRobustKnownPositionAccelerometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
+        assertFalse(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(0.0, internalCalibrator2.initialBiasX, 0.0)
+        assertEquals(0.0, internalCalibrator2.initialBiasY, 0.0)
+        assertEquals(0.0, internalCalibrator2.initialBiasZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ROBUST_CONFIDENCE, internalCalibrator2.confidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
+        assertEquals(ROBUST_THRESHOLD, internalCalibrator2.threshold, 0.0)
+        assertEquals(
+            calibrator.accelerometerMeasurements.size,
+            internalCalibrator2.qualityScores.size
+        )
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(13, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildAccelerometerInternalCalibrator_whenPROSACBiasSetAndRobustThreshold_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+            context,
+            location,
+            isAccelerometerGroundTruthInitialBias = false
+        )
+
+        val randomizer = UniformRandomizer()
+        val specificForceStandardDeviation = randomizer.nextDouble()
+        val measurement = mockk<StandardDeviationBodyKinematics>()
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        for (i in 1..13) {
+            calibrator.accelerometerMeasurements.add(measurement)
+        }
+
+        calibrator.isAccelerometerCommonAxisUsed = false
+
+        val initialBiasX = randomizer.nextDouble()
+        val initialBiasY = randomizer.nextDouble()
+        val initialBiasZ = randomizer.nextDouble()
+        calibrator.setPrivateProperty("accelerometerInitialBiasX", initialBiasX)
+        calibrator.setPrivateProperty("accelerometerInitialBiasY", initialBiasY)
+        calibrator.setPrivateProperty("accelerometerInitialBiasZ", initialBiasZ)
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setAccelerometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROSAC
+        calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.accelerometerRobustThreshold = ROBUST_THRESHOLD
+
+        assertEquals(RobustEstimatorMethod.PROSAC, calibrator.accelerometerRobustMethod)
+        assertFalse(calibrator.isAccelerometerGroundTruthInitialBias)
+        assertNotNull(calibrator.location)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
+        val robustThreshold = calibrator.accelerometerRobustThreshold
+        requireNotNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
+
+        val internalCalibrator: AccelerometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildAccelerometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as PROSACRobustKnownPositionAccelerometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
+        assertFalse(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(initialBiasX, internalCalibrator2.initialBiasX, 0.0)
+        assertEquals(initialBiasY, internalCalibrator2.initialBiasY, 0.0)
+        assertEquals(initialBiasZ, internalCalibrator2.initialBiasZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ROBUST_CONFIDENCE, internalCalibrator2.confidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
+        assertEquals(ROBUST_THRESHOLD, internalCalibrator2.threshold, 0.0)
+        assertEquals(
+            calibrator.accelerometerMeasurements.size,
+            internalCalibrator2.qualityScores.size
+        )
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(13, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildAccelerometerInternalCalibrator_whenPROSACBiasNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+            context,
+            location,
+            isAccelerometerGroundTruthInitialBias = false
+        )
+
+        val randomizer = UniformRandomizer()
+        val specificForceStandardDeviation = randomizer.nextDouble()
+        val measurement = mockk<StandardDeviationBodyKinematics>()
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        for (i in 1..13) {
+            calibrator.accelerometerMeasurements.add(measurement)
+        }
+
+        calibrator.isAccelerometerCommonAxisUsed = false
+
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setAccelerometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROSAC
+        calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.accelerometerRobustThreshold = null
+        calibrator.accelerometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
+
+        val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        val baseNoiseLevel = randomizer.nextDouble()
+        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        assertEquals(RobustEstimatorMethod.PROSAC, calibrator.accelerometerRobustMethod)
+        assertFalse(calibrator.isAccelerometerGroundTruthInitialBias)
+        assertNotNull(calibrator.location)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
+        val robustThreshold = calibrator.accelerometerRobustThreshold
+        assertNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.accelerometerRobustThresholdFactor, 0.0)
+        assertEquals(baseNoiseLevel, calibrator.accelerometerBaseNoiseLevel)
+
+        val internalCalibrator: AccelerometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildAccelerometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as PROSACRobustKnownPositionAccelerometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
+        assertFalse(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(0.0, internalCalibrator2.initialBiasX, 0.0)
+        assertEquals(0.0, internalCalibrator2.initialBiasY, 0.0)
+        assertEquals(0.0, internalCalibrator2.initialBiasZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ROBUST_CONFIDENCE, internalCalibrator2.confidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
+        assertEquals(ROBUST_THRESHOLD_FACTOR * baseNoiseLevel, internalCalibrator2.threshold, 0.0)
+        assertEquals(
+            calibrator.accelerometerMeasurements.size,
+            internalCalibrator2.qualityScores.size
+        )
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(13, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildAccelerometerInternalCalibrator_whenPROSACMissingBaseNoiseLevel_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+            context,
+            location,
+            isAccelerometerGroundTruthInitialBias = false
+        )
+
+        val randomizer = UniformRandomizer()
+        val specificForceStandardDeviation = randomizer.nextDouble()
+        val measurement = mockk<StandardDeviationBodyKinematics>()
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        for (i in 1..13) {
+            calibrator.accelerometerMeasurements.add(measurement)
+        }
+
+        calibrator.isAccelerometerCommonAxisUsed = false
+
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setAccelerometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROSAC
+        calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.accelerometerRobustThreshold = null
+        calibrator.accelerometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
+
+        assertEquals(RobustEstimatorMethod.PROSAC, calibrator.accelerometerRobustMethod)
+        assertFalse(calibrator.isAccelerometerGroundTruthInitialBias)
+        assertNotNull(calibrator.location)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
+        val robustThreshold = calibrator.accelerometerRobustThreshold
+        assertNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.accelerometerRobustThresholdFactor, 0.0)
+        assertNull(calibrator.accelerometerBaseNoiseLevel)
+
+        val ex = assertThrows(InvocationTargetException::class.java) {
+            assertNull(calibrator.callPrivateFuncWithResult("buildAccelerometerInternalCalibrator"))
+        }
+        assertTrue(ex.cause is IllegalStateException)
+    }
+
+    @Test
+    fun buildAccelerometerInternalCalibrator_whenLMedSBiasNotSetAndRobustThreshold_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+            context,
+            location = location,
+            isAccelerometerGroundTruthInitialBias = false
+        )
+
+        val measurement = mockk<StandardDeviationBodyKinematics>()
+        for (i in 1..13) {
+            calibrator.accelerometerMeasurements.add(measurement)
+        }
+
+        calibrator.isAccelerometerCommonAxisUsed = false
+
+        val randomizer = UniformRandomizer()
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setAccelerometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.LMedS
+        calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.accelerometerRobustThreshold = ROBUST_THRESHOLD
+
+        assertEquals(RobustEstimatorMethod.LMedS, calibrator.accelerometerRobustMethod)
+        assertFalse(calibrator.isAccelerometerGroundTruthInitialBias)
+        assertNotNull(calibrator.location)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
+        val robustThreshold = calibrator.accelerometerRobustThreshold
+        requireNotNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
+
+        val internalCalibrator: AccelerometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildAccelerometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as LMedSRobustKnownPositionAccelerometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
+        assertFalse(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(0.0, internalCalibrator2.initialBiasX, 0.0)
+        assertEquals(0.0, internalCalibrator2.initialBiasY, 0.0)
+        assertEquals(0.0, internalCalibrator2.initialBiasZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ROBUST_CONFIDENCE, internalCalibrator2.confidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
+        assertEquals(ROBUST_THRESHOLD, internalCalibrator2.stopThreshold, 0.0)
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(13, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildAccelerometerInternalCalibrator_whenLMedSBiasSetAndRobustThreshold_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+            context,
+            location,
+            isAccelerometerGroundTruthInitialBias = false
+        )
+
+        val measurement = mockk<StandardDeviationBodyKinematics>()
+        for (i in 1..13) {
+            calibrator.accelerometerMeasurements.add(measurement)
+        }
+
+        calibrator.isAccelerometerCommonAxisUsed = false
+
+        val randomizer = UniformRandomizer()
+        val initialBiasX = randomizer.nextDouble()
+        val initialBiasY = randomizer.nextDouble()
+        val initialBiasZ = randomizer.nextDouble()
+        calibrator.setPrivateProperty("accelerometerInitialBiasX", initialBiasX)
+        calibrator.setPrivateProperty("accelerometerInitialBiasY", initialBiasY)
+        calibrator.setPrivateProperty("accelerometerInitialBiasZ", initialBiasZ)
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setAccelerometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.LMedS
+        calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.accelerometerRobustThreshold = ROBUST_THRESHOLD
+
+        assertEquals(RobustEstimatorMethod.LMedS, calibrator.accelerometerRobustMethod)
+        assertFalse(calibrator.isAccelerometerGroundTruthInitialBias)
+        assertNotNull(calibrator.location)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
+        val robustThreshold = calibrator.accelerometerRobustThreshold
+        requireNotNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
+
+        val internalCalibrator: AccelerometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildAccelerometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as LMedSRobustKnownPositionAccelerometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
+        assertFalse(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(initialBiasX, internalCalibrator2.initialBiasX, 0.0)
+        assertEquals(initialBiasY, internalCalibrator2.initialBiasY, 0.0)
+        assertEquals(initialBiasZ, internalCalibrator2.initialBiasZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ROBUST_CONFIDENCE, internalCalibrator2.confidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
+        assertEquals(ROBUST_THRESHOLD, internalCalibrator2.stopThreshold, 0.0)
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(13, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildAccelerometerInternalCalibrator_whenLMedSBiasNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+            context,
+            location = location
+        )
+
+        val measurement = mockk<StandardDeviationBodyKinematics>()
+        for (i in 1..13) {
+            calibrator.accelerometerMeasurements.add(measurement)
+        }
+
+        calibrator.isAccelerometerCommonAxisUsed = false
+
+        val randomizer = UniformRandomizer()
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setAccelerometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.LMedS
+        calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.accelerometerRobustThreshold = null
+        calibrator.accelerometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
+        calibrator.accelerometerRobustStopThresholdFactor = ROBUST_STOP_THRESHOLD_FACTOR
+
+        val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        val baseNoiseLevel = randomizer.nextDouble()
+        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        assertEquals(RobustEstimatorMethod.LMedS, calibrator.accelerometerRobustMethod)
+        assertFalse(calibrator.isAccelerometerGroundTruthInitialBias)
+        assertNotNull(calibrator.location)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
+        val robustThreshold = calibrator.accelerometerRobustThreshold
+        assertNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.accelerometerRobustThresholdFactor, 0.0)
+        assertEquals(baseNoiseLevel, calibrator.accelerometerBaseNoiseLevel)
+
+        val internalCalibrator: AccelerometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildAccelerometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as LMedSRobustKnownPositionAccelerometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
+        assertFalse(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(0.0, internalCalibrator2.initialBiasX, 0.0)
+        assertEquals(0.0, internalCalibrator2.initialBiasY, 0.0)
+        assertEquals(0.0, internalCalibrator2.initialBiasZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ROBUST_CONFIDENCE, internalCalibrator2.confidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
+        assertEquals(
+            ROBUST_THRESHOLD_FACTOR * ROBUST_STOP_THRESHOLD_FACTOR * baseNoiseLevel,
+            internalCalibrator2.stopThreshold,
+            0.0
+        )
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(13, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildAccelerometerInternalCalibrator_whenLMedSMissingBaseNoiseLevel_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+            context,
+            location = location,
+            isAccelerometerGroundTruthInitialBias = false
+        )
+
+        val measurement = mockk<StandardDeviationBodyKinematics>()
+        for (i in 1..13) {
+            calibrator.accelerometerMeasurements.add(measurement)
+        }
+
+        calibrator.isAccelerometerCommonAxisUsed = false
+
+        val randomizer = UniformRandomizer()
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setAccelerometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.LMedS
+        calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.accelerometerRobustThreshold = null
+        calibrator.accelerometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
+
+        assertEquals(RobustEstimatorMethod.LMedS, calibrator.accelerometerRobustMethod)
+        assertFalse(calibrator.isAccelerometerGroundTruthInitialBias)
+        assertNotNull(calibrator.location)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
+        val robustThreshold = calibrator.accelerometerRobustThreshold
+        assertNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.accelerometerRobustThresholdFactor, 0.0)
+        assertNull(calibrator.accelerometerBaseNoiseLevel)
+
+        val ex = assertThrows(InvocationTargetException::class.java) {
+            assertNull(calibrator.callPrivateFuncWithResult("buildAccelerometerInternalCalibrator"))
+        }
+        assertTrue(ex.cause is IllegalStateException)
+    }
+
+    @Test
+    fun buildAccelerometerInternalCalibrator_whenPROMedSBiasNotSetAndRobustThreshold_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+            context,
+            location,
+            isAccelerometerGroundTruthInitialBias = false
+        )
+
+        val randomizer = UniformRandomizer()
+        val specificForceStandardDeviation = randomizer.nextDouble()
+        val measurement = mockk<StandardDeviationBodyKinematics>()
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        for (i in 1..13) {
+            calibrator.accelerometerMeasurements.add(measurement)
+        }
+
+        calibrator.isAccelerometerCommonAxisUsed = false
+
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setAccelerometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROMedS
+        calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.accelerometerRobustThreshold = ROBUST_THRESHOLD
+
+        assertEquals(RobustEstimatorMethod.PROMedS, calibrator.accelerometerRobustMethod)
+        assertFalse(calibrator.isAccelerometerGroundTruthInitialBias)
+        assertNotNull(calibrator.location)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
+        val robustThreshold = calibrator.accelerometerRobustThreshold
+        requireNotNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
+
+        val internalCalibrator: AccelerometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildAccelerometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as PROMedSRobustKnownPositionAccelerometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
+        assertFalse(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(0.0, internalCalibrator2.initialBiasX, 0.0)
+        assertEquals(0.0, internalCalibrator2.initialBiasY, 0.0)
+        assertEquals(0.0, internalCalibrator2.initialBiasZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ROBUST_CONFIDENCE, internalCalibrator2.confidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
+        assertEquals(ROBUST_THRESHOLD, internalCalibrator2.stopThreshold, 0.0)
+        assertEquals(
+            calibrator.accelerometerMeasurements.size,
+            internalCalibrator2.qualityScores.size
+        )
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(13, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildAccelerometerInternalCalibrator_whenPROMedSBiasSetAndRobustThreshold_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+            context,
+            location,
+            isAccelerometerGroundTruthInitialBias = false
+        )
+
+        val randomizer = UniformRandomizer()
+        val specificForceStandardDeviation = randomizer.nextDouble()
+        val measurement = mockk<StandardDeviationBodyKinematics>()
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        for (i in 1..13) {
+            calibrator.accelerometerMeasurements.add(measurement)
+        }
+
+        calibrator.isAccelerometerCommonAxisUsed = false
+
+        val initialBiasX = randomizer.nextDouble()
+        val initialBiasY = randomizer.nextDouble()
+        val initialBiasZ = randomizer.nextDouble()
+        calibrator.setPrivateProperty("accelerometerInitialBiasX", initialBiasX)
+        calibrator.setPrivateProperty("accelerometerInitialBiasY", initialBiasY)
+        calibrator.setPrivateProperty("accelerometerInitialBiasZ", initialBiasZ)
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setAccelerometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROMedS
+        calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.accelerometerRobustThreshold = ROBUST_THRESHOLD
+
+        assertEquals(RobustEstimatorMethod.PROMedS, calibrator.accelerometerRobustMethod)
+        assertFalse(calibrator.isAccelerometerGroundTruthInitialBias)
+        assertNotNull(calibrator.location)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
+        val robustThreshold = calibrator.accelerometerRobustThreshold
+        requireNotNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
+
+        val internalCalibrator: AccelerometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildAccelerometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as PROMedSRobustKnownPositionAccelerometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
+        assertFalse(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(initialBiasX, internalCalibrator2.initialBiasX, 0.0)
+        assertEquals(initialBiasY, internalCalibrator2.initialBiasY, 0.0)
+        assertEquals(initialBiasZ, internalCalibrator2.initialBiasZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ROBUST_CONFIDENCE, internalCalibrator2.confidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
+        assertEquals(ROBUST_THRESHOLD, internalCalibrator2.stopThreshold, 0.0)
+        assertEquals(
+            calibrator.accelerometerMeasurements.size,
+            internalCalibrator2.qualityScores.size
+        )
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(13, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildAccelerometerInternalCalibrator_whenPROMedSBiasNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+            context,
+            location = location,
+            isAccelerometerGroundTruthInitialBias = false
+        )
+
+        val randomizer = UniformRandomizer()
+        val specificForceStandardDeviation = randomizer.nextDouble()
+        val measurement = mockk<StandardDeviationBodyKinematics>()
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        for (i in 1..13) {
+            calibrator.accelerometerMeasurements.add(measurement)
+        }
+
+        calibrator.isAccelerometerCommonAxisUsed = false
+
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setAccelerometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROMedS
+        calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.accelerometerRobustThreshold = null
+        calibrator.accelerometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
+        calibrator.accelerometerRobustStopThresholdFactor = ROBUST_STOP_THRESHOLD_FACTOR
+
+        val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
+            calibrator.getPrivateProperty("generator")
+        requireNotNull(generator)
+        val generatorSpy = spyk(generator)
+        val baseNoiseLevel = randomizer.nextDouble()
+        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        calibrator.setPrivateProperty("generator", generatorSpy)
+
+        assertEquals(RobustEstimatorMethod.PROMedS, calibrator.accelerometerRobustMethod)
+        assertFalse(calibrator.isAccelerometerGroundTruthInitialBias)
+        assertNotNull(calibrator.location)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
+        val robustThreshold = calibrator.accelerometerRobustThreshold
+        assertNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.accelerometerRobustThresholdFactor, 0.0)
+        assertEquals(baseNoiseLevel, calibrator.accelerometerBaseNoiseLevel)
+
+        val internalCalibrator: AccelerometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildAccelerometerInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as PROMedSRobustKnownPositionAccelerometerCalibrator
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
+        assertFalse(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(0.0, internalCalibrator2.initialBiasX, 0.0)
+        assertEquals(0.0, internalCalibrator2.initialBiasY, 0.0)
+        assertEquals(0.0, internalCalibrator2.initialBiasZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ROBUST_CONFIDENCE, internalCalibrator2.confidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, internalCalibrator2.maxIterations)
+        assertEquals(ROBUST_PRELIMINARY_SUBSET_SIZE, internalCalibrator2.preliminarySubsetSize)
+        assertEquals(
+            ROBUST_THRESHOLD_FACTOR * ROBUST_STOP_THRESHOLD_FACTOR * baseNoiseLevel,
+            internalCalibrator2.stopThreshold,
+            0.0
+        )
+        assertEquals(
+            calibrator.accelerometerMeasurements.size,
+            internalCalibrator2.qualityScores.size
+        )
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(13, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
+    }
+
+    @Test
+    fun buildAccelerometerInternalCalibrator_whenPROMedSMissingBaseNoiseLevel_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+            context,
+            location = location,
+            isAccelerometerGroundTruthInitialBias = false
+        )
+
+        val randomizer = UniformRandomizer()
+        val specificForceStandardDeviation = randomizer.nextDouble()
+        val measurement = mockk<StandardDeviationBodyKinematics>()
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        for (i in 1..13) {
+            calibrator.accelerometerMeasurements.add(measurement)
+        }
+
+        calibrator.isAccelerometerCommonAxisUsed = false
+
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setAccelerometerInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROMedS
+        calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.accelerometerRobustThreshold = null
+        calibrator.accelerometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
+
+        assertEquals(RobustEstimatorMethod.PROMedS, calibrator.accelerometerRobustMethod)
+        assertFalse(calibrator.isAccelerometerGroundTruthInitialBias)
+        assertNotNull(calibrator.location)
+        assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
+        assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
+        assertEquals(
+            ROBUST_PRELIMINARY_SUBSET_SIZE,
+            calibrator.accelerometerRobustPreliminarySubsetSize
+        )
+        val robustThreshold = calibrator.accelerometerRobustThreshold
+        assertNull(robustThreshold)
+        assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.accelerometerRobustThresholdFactor, 0.0)
+        assertNull(calibrator.accelerometerBaseNoiseLevel)
+
+        val ex = assertThrows(InvocationTargetException::class.java) {
+            assertNull(calibrator.callPrivateFuncWithResult("buildAccelerometerInternalCalibrator"))
+        }
+        assertTrue(ex.cause is IllegalStateException)
+    }
+
+    // TODO: buildGyroscopeInternalCalibrator_whenNonRobustGroundTruthBiasAndNoInitialBias_buildsExpectedCalibrator
 
     private companion object {
         const val MA_SIZE = 3
