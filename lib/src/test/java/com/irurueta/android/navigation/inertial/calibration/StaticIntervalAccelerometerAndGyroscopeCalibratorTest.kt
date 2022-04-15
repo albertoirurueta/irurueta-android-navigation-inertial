@@ -7837,6 +7837,7 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         // check
         assertNull(calibrator.gravityNorm)
         verify(exactly = 1) { accelerometerMeasurementsSpy.clear() }
+        verify(exactly = 1) { gyroscopeMeasurementsSpy.clear() }
         assertFalse(calibrator.accelerometerResultUnreliable)
         assertNull(calibrator.accelerometerInitialBiasX)
         assertNull(calibrator.accelerometerInitialBiasY)
