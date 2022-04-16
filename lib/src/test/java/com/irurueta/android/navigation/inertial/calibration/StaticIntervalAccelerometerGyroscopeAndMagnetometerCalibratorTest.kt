@@ -14987,9 +14987,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         // check
         val internalCalibrator2 =
             internalCalibrator as PROSACRobustKnownBiasAndPositionAccelerometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition,
-            ABSOLUTE_ERROR
-        ))
+        assertTrue(
+            location.toNEDPosition().equals(
+                internalCalibrator2.nedPosition,
+                ABSOLUTE_ERROR
+            )
+        )
         assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(initialBiasX, internalCalibrator2.biasX, 0.0)
@@ -17802,7 +17805,1096 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertTrue(ex.cause is IllegalStateException)
     }
 
-    // TODO: buildGyroscopeInternalCalibrator_whenNonRobustGroundTruthBiasAndNoInitialBias_buildsExpectedCalibrator
+    @Test
+    fun buildGyroscopeInternalCalibrator_whenNonRobustGroundTruthBiasAndNoInitialBias_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+                context,
+                location,
+                isGyroscopeGroundTruthInitialBias = true
+            )
+
+        val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
+        for (i in 1..16) {
+            calibrator.gyroscopeMeasurements.add(measurement)
+        }
+
+        calibrator.isGyroscopeCommonAxisUsed = true
+        calibrator.isGDependentCrossBiasesEstimated = true
+        val gg = Matrix(BodyKinematics.COMPONENTS, BodyKinematics.COMPONENTS)
+        Matrix.fillWithUniformRandomValues(0.0, 1.0, gg)
+        calibrator.gyroscopeInitialGg = gg
+
+        assertNull(calibrator.gyroscopeInitialBiasX)
+        assertNull(calibrator.gyroscopeInitialBiasY)
+        assertNull(calibrator.gyroscopeInitialBiasZ)
+        assertNull(calibrator.estimatedAccelerometerBiasX)
+        assertNull(calibrator.estimatedAccelerometerBiasY)
+        assertNull(calibrator.estimatedAccelerometerBiasZ)
+
+        val randomizer = UniformRandomizer()
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setGyroscopeInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+
+        assertNull(calibrator.gyroscopeRobustMethod)
+        assertTrue(calibrator.isGyroscopeGroundTruthInitialBias)
+
+        val ma = generateMa()
+        val accelerometerInternalCalibrator = mockk<AccelerometerNonLinearCalibrator>()
+        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
+        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
+        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
+        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
+        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
+        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
+        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
+        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
+        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
+        calibrator.setPrivateProperty(
+            "accelerometerInternalCalibrator",
+            accelerometerInternalCalibrator
+        )
+
+        val internalCalibrator: GyroscopeNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as KnownBiasEasyGyroscopeCalibrator
+        assertSame(calibrator.gyroscopeMeasurements, internalCalibrator2.sequences)
+        assertTrue(internalCalibrator2.isCommonAxisUsed)
+        assertTrue(internalCalibrator2.isGDependentCrossBiasesEstimated)
+        assertEquals(gg, internalCalibrator2.initialGg)
+        assertEquals(0.0, internalCalibrator2.biasX, 0.0)
+        assertEquals(0.0, internalCalibrator2.biasY, 0.0)
+        assertEquals(0.0, internalCalibrator2.biasZ, 0.0)
+        assertEquals(0.0, internalCalibrator2.accelerometerBiasX, 0.0)
+        assertEquals(0.0, internalCalibrator2.accelerometerBiasY, 0.0)
+        assertEquals(0.0, internalCalibrator2.accelerometerBiasZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+        assertEquals(ma, internalCalibrator2.accelerometerMa)
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(16, internalCalibrator2.minimumRequiredMeasurementsOrSequences)
+        assertEquals(
+            calibrator.minimumRequiredGyroscopeMeasurements,
+            internalCalibrator2.minimumRequiredMeasurementsOrSequences
+        )
+    }
+
+    @Test
+    fun buildGyroscopeInternalCalibrator_whenMissingAccelerometerSx_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+                context,
+                location,
+                isGyroscopeGroundTruthInitialBias = true
+            )
+
+        val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
+        for (i in 1..16) {
+            calibrator.gyroscopeMeasurements.add(measurement)
+        }
+
+        calibrator.isGyroscopeCommonAxisUsed = true
+        calibrator.isGDependentCrossBiasesEstimated = true
+        val gg = Matrix(BodyKinematics.COMPONENTS, BodyKinematics.COMPONENTS)
+        Matrix.fillWithUniformRandomValues(0.0, 1.0, gg)
+        calibrator.gyroscopeInitialGg = gg
+
+        assertNull(calibrator.gyroscopeInitialBiasX)
+        assertNull(calibrator.gyroscopeInitialBiasY)
+        assertNull(calibrator.gyroscopeInitialBiasZ)
+        assertNull(calibrator.estimatedAccelerometerBiasX)
+        assertNull(calibrator.estimatedAccelerometerBiasY)
+        assertNull(calibrator.estimatedAccelerometerBiasZ)
+
+        val randomizer = UniformRandomizer()
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setGyroscopeInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+
+        assertNull(calibrator.gyroscopeRobustMethod)
+        assertTrue(calibrator.isGyroscopeGroundTruthInitialBias)
+
+        val ma = generateMa()
+        val accelerometerInternalCalibrator = mockk<AccelerometerNonLinearCalibrator>()
+        every { accelerometerInternalCalibrator.estimatedSx }.returns(null)
+        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
+        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
+        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
+        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
+        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
+        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
+        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
+        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
+        calibrator.setPrivateProperty(
+            "accelerometerInternalCalibrator",
+            accelerometerInternalCalibrator
+        )
+
+        val ex = assertThrows(InvocationTargetException::class.java) {
+            assertNull(calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator"))
+        }
+        assertTrue(ex.cause is IllegalStateException)
+    }
+
+    @Test
+    fun buildGyroscopeInternalCalibrator_whenMissingAccelerometerSy_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+                context,
+                location,
+                isGyroscopeGroundTruthInitialBias = true
+            )
+
+        val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
+        for (i in 1..16) {
+            calibrator.gyroscopeMeasurements.add(measurement)
+        }
+
+        calibrator.isGyroscopeCommonAxisUsed = true
+        calibrator.isGDependentCrossBiasesEstimated = true
+        val gg = Matrix(BodyKinematics.COMPONENTS, BodyKinematics.COMPONENTS)
+        Matrix.fillWithUniformRandomValues(0.0, 1.0, gg)
+        calibrator.gyroscopeInitialGg = gg
+
+        assertNull(calibrator.gyroscopeInitialBiasX)
+        assertNull(calibrator.gyroscopeInitialBiasY)
+        assertNull(calibrator.gyroscopeInitialBiasZ)
+        assertNull(calibrator.estimatedAccelerometerBiasX)
+        assertNull(calibrator.estimatedAccelerometerBiasY)
+        assertNull(calibrator.estimatedAccelerometerBiasZ)
+
+        val randomizer = UniformRandomizer()
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setGyroscopeInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+
+        assertNull(calibrator.gyroscopeRobustMethod)
+        assertTrue(calibrator.isGyroscopeGroundTruthInitialBias)
+
+        val ma = generateMa()
+        val accelerometerInternalCalibrator = mockk<AccelerometerNonLinearCalibrator>()
+        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
+        every { accelerometerInternalCalibrator.estimatedSy }.returns(null)
+        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
+        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
+        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
+        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
+        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
+        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
+        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
+        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+
+        val ex = assertThrows(InvocationTargetException::class.java) {
+            assertNull(calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator"))
+        }
+        assertTrue(ex.cause is IllegalStateException)
+    }
+
+    @Test
+    fun buildGyroscopeInternalCalibrator_whenMissingAccelerometerSz_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+                context,
+                location,
+                isGyroscopeGroundTruthInitialBias = true
+            )
+
+        val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
+        for (i in 1..16) {
+            calibrator.gyroscopeMeasurements.add(measurement)
+        }
+
+        calibrator.isGyroscopeCommonAxisUsed = true
+        calibrator.isGDependentCrossBiasesEstimated = true
+        val gg = Matrix(BodyKinematics.COMPONENTS, BodyKinematics.COMPONENTS)
+        Matrix.fillWithUniformRandomValues(0.0, 1.0, gg)
+        calibrator.gyroscopeInitialGg = gg
+
+        assertNull(calibrator.gyroscopeInitialBiasX)
+        assertNull(calibrator.gyroscopeInitialBiasY)
+        assertNull(calibrator.gyroscopeInitialBiasZ)
+        assertNull(calibrator.estimatedAccelerometerBiasX)
+        assertNull(calibrator.estimatedAccelerometerBiasY)
+        assertNull(calibrator.estimatedAccelerometerBiasZ)
+
+        val randomizer = UniformRandomizer()
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setGyroscopeInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+
+        assertNull(calibrator.gyroscopeRobustMethod)
+        assertTrue(calibrator.isGyroscopeGroundTruthInitialBias)
+
+        val ma = generateMa()
+        val accelerometerInternalCalibrator = mockk<AccelerometerNonLinearCalibrator>()
+        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
+        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
+        every { accelerometerInternalCalibrator.estimatedSz }.returns(null)
+        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
+        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
+        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
+        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
+        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
+        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
+        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+
+        val ex = assertThrows(InvocationTargetException::class.java) {
+            assertNull(calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator"))
+        }
+        assertTrue(ex.cause is IllegalStateException)
+    }
+
+    @Test
+    fun buildGyroscopeInternalCalibrator_whenMissingAccelerometerMxy_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+                context,
+                location,
+                isGyroscopeGroundTruthInitialBias = true
+            )
+
+        val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
+        for (i in 1..16) {
+            calibrator.gyroscopeMeasurements.add(measurement)
+        }
+
+        calibrator.isGyroscopeCommonAxisUsed = true
+        calibrator.isGDependentCrossBiasesEstimated = true
+        val gg = Matrix(BodyKinematics.COMPONENTS, BodyKinematics.COMPONENTS)
+        Matrix.fillWithUniformRandomValues(0.0, 1.0, gg)
+        calibrator.gyroscopeInitialGg = gg
+
+        assertNull(calibrator.gyroscopeInitialBiasX)
+        assertNull(calibrator.gyroscopeInitialBiasY)
+        assertNull(calibrator.gyroscopeInitialBiasZ)
+        assertNull(calibrator.estimatedAccelerometerBiasX)
+        assertNull(calibrator.estimatedAccelerometerBiasY)
+        assertNull(calibrator.estimatedAccelerometerBiasZ)
+
+        val randomizer = UniformRandomizer()
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setGyroscopeInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+
+        assertNull(calibrator.gyroscopeRobustMethod)
+        assertTrue(calibrator.isGyroscopeGroundTruthInitialBias)
+
+        val ma = generateMa()
+        val accelerometerInternalCalibrator = mockk<AccelerometerNonLinearCalibrator>()
+        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
+        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
+        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
+        every { accelerometerInternalCalibrator.estimatedMxy }.returns(null)
+        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
+        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
+        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
+        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
+        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
+        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+
+        val ex = assertThrows(InvocationTargetException::class.java) {
+            assertNull(calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator"))
+        }
+        assertTrue(ex.cause is IllegalStateException)
+    }
+
+    @Test
+    fun buildGyroscopeInternalCalibrator_whenMissingAccelerometerMxz_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+                context,
+                location,
+                isGyroscopeGroundTruthInitialBias = true
+            )
+
+        val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
+        for (i in 1..16) {
+            calibrator.gyroscopeMeasurements.add(measurement)
+        }
+
+        calibrator.isGyroscopeCommonAxisUsed = true
+        calibrator.isGDependentCrossBiasesEstimated = true
+        val gg = Matrix(BodyKinematics.COMPONENTS, BodyKinematics.COMPONENTS)
+        Matrix.fillWithUniformRandomValues(0.0, 1.0, gg)
+        calibrator.gyroscopeInitialGg = gg
+
+        assertNull(calibrator.gyroscopeInitialBiasX)
+        assertNull(calibrator.gyroscopeInitialBiasY)
+        assertNull(calibrator.gyroscopeInitialBiasZ)
+        assertNull(calibrator.estimatedAccelerometerBiasX)
+        assertNull(calibrator.estimatedAccelerometerBiasY)
+        assertNull(calibrator.estimatedAccelerometerBiasZ)
+
+        val randomizer = UniformRandomizer()
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setGyroscopeInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+
+        assertNull(calibrator.gyroscopeRobustMethod)
+        assertTrue(calibrator.isGyroscopeGroundTruthInitialBias)
+
+        val ma = generateMa()
+        val accelerometerInternalCalibrator = mockk<AccelerometerNonLinearCalibrator>()
+        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
+        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
+        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
+        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
+        every { accelerometerInternalCalibrator.estimatedMxz }.returns(null)
+        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
+        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
+        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
+        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
+        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+
+        val ex = assertThrows(InvocationTargetException::class.java) {
+            assertNull(calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator"))
+        }
+        assertTrue(ex.cause is IllegalStateException)
+    }
+
+    @Test
+    fun buildGyroscopeInternalCalibrator_whenMissingAccelerometerMyx_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+                context,
+                location,
+                isGyroscopeGroundTruthInitialBias = true
+            )
+
+        val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
+        for (i in 1..16) {
+            calibrator.gyroscopeMeasurements.add(measurement)
+        }
+
+        calibrator.isGyroscopeCommonAxisUsed = true
+        calibrator.isGDependentCrossBiasesEstimated = true
+        val gg = Matrix(BodyKinematics.COMPONENTS, BodyKinematics.COMPONENTS)
+        Matrix.fillWithUniformRandomValues(0.0, 1.0, gg)
+        calibrator.gyroscopeInitialGg = gg
+
+        assertNull(calibrator.gyroscopeInitialBiasX)
+        assertNull(calibrator.gyroscopeInitialBiasY)
+        assertNull(calibrator.gyroscopeInitialBiasZ)
+        assertNull(calibrator.estimatedAccelerometerBiasX)
+        assertNull(calibrator.estimatedAccelerometerBiasY)
+        assertNull(calibrator.estimatedAccelerometerBiasZ)
+
+        val randomizer = UniformRandomizer()
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setGyroscopeInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+
+        assertNull(calibrator.gyroscopeRobustMethod)
+        assertTrue(calibrator.isGyroscopeGroundTruthInitialBias)
+
+        val ma = generateMa()
+        val accelerometerInternalCalibrator = mockk<AccelerometerNonLinearCalibrator>()
+        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
+        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
+        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
+        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
+        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
+        every { accelerometerInternalCalibrator.estimatedMyx }.returns(null)
+        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
+        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
+        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
+        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+
+        val ex = assertThrows(InvocationTargetException::class.java) {
+            assertNull(calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator"))
+        }
+        assertTrue(ex.cause is IllegalStateException)
+    }
+
+    @Test
+    fun buildGyroscopeInternalCalibrator_whenMissingAccelerometerMyz_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+                context,
+                location,
+                isGyroscopeGroundTruthInitialBias = true
+            )
+
+        val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
+        for (i in 1..16) {
+            calibrator.gyroscopeMeasurements.add(measurement)
+        }
+
+        calibrator.isGyroscopeCommonAxisUsed = true
+        calibrator.isGDependentCrossBiasesEstimated = true
+        val gg = Matrix(BodyKinematics.COMPONENTS, BodyKinematics.COMPONENTS)
+        Matrix.fillWithUniformRandomValues(0.0, 1.0, gg)
+        calibrator.gyroscopeInitialGg = gg
+
+        assertNull(calibrator.gyroscopeInitialBiasX)
+        assertNull(calibrator.gyroscopeInitialBiasY)
+        assertNull(calibrator.gyroscopeInitialBiasZ)
+        assertNull(calibrator.estimatedAccelerometerBiasX)
+        assertNull(calibrator.estimatedAccelerometerBiasY)
+        assertNull(calibrator.estimatedAccelerometerBiasZ)
+
+        val randomizer = UniformRandomizer()
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setGyroscopeInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+
+        assertNull(calibrator.gyroscopeRobustMethod)
+        assertTrue(calibrator.isGyroscopeGroundTruthInitialBias)
+
+        val ma = generateMa()
+        val accelerometerInternalCalibrator = mockk<AccelerometerNonLinearCalibrator>()
+        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
+        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
+        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
+        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
+        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
+        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
+        every { accelerometerInternalCalibrator.estimatedMyz }.returns(null)
+        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
+        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
+        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+
+        val ex = assertThrows(InvocationTargetException::class.java) {
+            assertNull(calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator"))
+        }
+        assertTrue(ex.cause is IllegalStateException)
+    }
+
+    @Test
+    fun buildGyroscopeInternalCalibrator_whenMissingAccelerometerMzx_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+                context,
+                location,
+                isGyroscopeGroundTruthInitialBias = true
+            )
+
+        val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
+        for (i in 1..16) {
+            calibrator.gyroscopeMeasurements.add(measurement)
+        }
+
+        calibrator.isGyroscopeCommonAxisUsed = true
+        calibrator.isGDependentCrossBiasesEstimated = true
+        val gg = Matrix(BodyKinematics.COMPONENTS, BodyKinematics.COMPONENTS)
+        Matrix.fillWithUniformRandomValues(0.0, 1.0, gg)
+        calibrator.gyroscopeInitialGg = gg
+
+        assertNull(calibrator.gyroscopeInitialBiasX)
+        assertNull(calibrator.gyroscopeInitialBiasY)
+        assertNull(calibrator.gyroscopeInitialBiasZ)
+        assertNull(calibrator.estimatedAccelerometerBiasX)
+        assertNull(calibrator.estimatedAccelerometerBiasY)
+        assertNull(calibrator.estimatedAccelerometerBiasZ)
+
+        val randomizer = UniformRandomizer()
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setGyroscopeInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+
+        assertNull(calibrator.gyroscopeRobustMethod)
+        assertTrue(calibrator.isGyroscopeGroundTruthInitialBias)
+
+        val ma = generateMa()
+        val accelerometerInternalCalibrator = mockk<AccelerometerNonLinearCalibrator>()
+        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
+        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
+        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
+        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
+        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
+        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
+        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
+        every { accelerometerInternalCalibrator.estimatedMzx }.returns(null)
+        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
+        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+
+        val ex = assertThrows(InvocationTargetException::class.java) {
+            assertNull(calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator"))
+        }
+        assertTrue(ex.cause is IllegalStateException)
+    }
+
+    @Test
+    fun buildGyroscopeInternalCalibrator_whenMissingAccelerometerMzy_throwsIllegalStateException() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+                context,
+                location,
+                isGyroscopeGroundTruthInitialBias = true
+            )
+
+        val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
+        for (i in 1..16) {
+            calibrator.gyroscopeMeasurements.add(measurement)
+        }
+
+        calibrator.isGyroscopeCommonAxisUsed = true
+        calibrator.isGDependentCrossBiasesEstimated = true
+        val gg = Matrix(BodyKinematics.COMPONENTS, BodyKinematics.COMPONENTS)
+        Matrix.fillWithUniformRandomValues(0.0, 1.0, gg)
+        calibrator.gyroscopeInitialGg = gg
+
+        assertNull(calibrator.gyroscopeInitialBiasX)
+        assertNull(calibrator.gyroscopeInitialBiasY)
+        assertNull(calibrator.gyroscopeInitialBiasZ)
+        assertNull(calibrator.estimatedAccelerometerBiasX)
+        assertNull(calibrator.estimatedAccelerometerBiasY)
+        assertNull(calibrator.estimatedAccelerometerBiasZ)
+
+        val randomizer = UniformRandomizer()
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setGyroscopeInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+
+        assertNull(calibrator.gyroscopeRobustMethod)
+        assertTrue(calibrator.isGyroscopeGroundTruthInitialBias)
+
+        val ma = generateMa()
+        val accelerometerInternalCalibrator = mockk<AccelerometerNonLinearCalibrator>()
+        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
+        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
+        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
+        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
+        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
+        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
+        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
+        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
+        every { accelerometerInternalCalibrator.estimatedMzy }.returns(null)
+        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+
+        val ex = assertThrows(InvocationTargetException::class.java) {
+            assertNull(calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator"))
+        }
+        assertTrue(ex.cause is IllegalStateException)
+    }
+
+    @Test
+    fun buildGyroscopeInternalCalibrator_whenNonRobustGroundTruthBiasAndInitialBias_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+                context,
+                location,
+                isGyroscopeGroundTruthInitialBias = true
+            )
+
+        val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
+        for (i in 1..16) {
+            calibrator.gyroscopeMeasurements.add(measurement)
+        }
+
+        calibrator.isGyroscopeCommonAxisUsed = true
+        calibrator.isGDependentCrossBiasesEstimated = true
+        val gg = Matrix(BodyKinematics.COMPONENTS, BodyKinematics.COMPONENTS)
+        Matrix.fillWithUniformRandomValues(0.0, 1.0, gg)
+        calibrator.gyroscopeInitialGg = gg
+
+        val randomizer = UniformRandomizer()
+        val initialBiasX = randomizer.nextDouble()
+        calibrator.setPrivateProperty("gyroscopeInitialBiasX", initialBiasX)
+        val initialBiasY = randomizer.nextDouble()
+        calibrator.setPrivateProperty("gyroscopeInitialBiasY", initialBiasY)
+        val initialBiasZ = randomizer.nextDouble()
+        calibrator.setPrivateProperty("gyroscopeInitialBiasZ", initialBiasZ)
+
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setGyroscopeInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+
+        assertNull(calibrator.gyroscopeRobustMethod)
+        assertTrue(calibrator.isGyroscopeGroundTruthInitialBias)
+
+        val accelerometerBiasX = randomizer.nextDouble()
+        val accelerometerBiasY = randomizer.nextDouble()
+        val accelerometerBiasZ = randomizer.nextDouble()
+        val ma = generateMa()
+        val accelerometerInternalCalibrator = mockk<KnownBiasAndPositionAccelerometerCalibrator>()
+        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
+        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
+        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
+        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
+        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
+        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
+        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
+        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
+        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
+        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
+        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
+        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
+        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+
+        val internalCalibrator: GyroscopeNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as KnownBiasEasyGyroscopeCalibrator
+        assertSame(calibrator.gyroscopeMeasurements, internalCalibrator2.sequences)
+        assertTrue(internalCalibrator2.isCommonAxisUsed)
+        assertTrue(internalCalibrator2.isGDependentCrossBiasesEstimated)
+        assertEquals(gg, internalCalibrator2.initialGg)
+        assertEquals(initialBiasX, internalCalibrator2.biasX, 0.0)
+        assertEquals(initialBiasY, internalCalibrator2.biasY, 0.0)
+        assertEquals(initialBiasZ, internalCalibrator2.biasZ, 0.0)
+        assertEquals(accelerometerBiasX, internalCalibrator2.accelerometerBiasX, 0.0)
+        assertEquals(accelerometerBiasY, internalCalibrator2.accelerometerBiasY, 0.0)
+        assertEquals(accelerometerBiasZ, internalCalibrator2.accelerometerBiasZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(16, internalCalibrator2.minimumRequiredMeasurementsOrSequences)
+        assertEquals(
+            calibrator.minimumRequiredGyroscopeMeasurements,
+            internalCalibrator2.minimumRequiredMeasurementsOrSequences
+        )
+    }
+
+    @Test
+    fun buildGyroscopeInternalCalibrator_whenNonRobustNoGroundTruthBiasAndNoInitialBias_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+                context,
+                location,
+                isGyroscopeGroundTruthInitialBias = false
+            )
+
+        val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
+        for (i in 1..19) {
+            calibrator.gyroscopeMeasurements.add(measurement)
+        }
+
+        calibrator.isGyroscopeCommonAxisUsed = true
+        calibrator.isGDependentCrossBiasesEstimated = true
+        val gg = Matrix(BodyKinematics.COMPONENTS, BodyKinematics.COMPONENTS)
+        Matrix.fillWithUniformRandomValues(0.0, 1.0, gg)
+        calibrator.gyroscopeInitialGg = gg
+
+        assertNull(calibrator.gyroscopeInitialBiasX)
+        assertNull(calibrator.gyroscopeInitialBiasY)
+        assertNull(calibrator.gyroscopeInitialBiasZ)
+        assertNull(calibrator.estimatedAccelerometerBiasX)
+        assertNull(calibrator.estimatedAccelerometerBiasY)
+        assertNull(calibrator.estimatedAccelerometerBiasZ)
+
+        val randomizer = UniformRandomizer()
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setGyroscopeInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+
+        assertNull(calibrator.gyroscopeRobustMethod)
+        assertFalse(calibrator.isGyroscopeGroundTruthInitialBias)
+
+        val accelerometerBiasX = randomizer.nextDouble()
+        val accelerometerBiasY = randomizer.nextDouble()
+        val accelerometerBiasZ = randomizer.nextDouble()
+        val ma = generateMa()
+        val accelerometerInternalCalibrator = mockk<KnownBiasAndPositionAccelerometerCalibrator>()
+        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
+        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
+        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
+        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
+        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
+        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
+        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
+        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
+        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
+        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
+        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
+        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
+        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+
+        val internalCalibrator: GyroscopeNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as EasyGyroscopeCalibrator
+        assertSame(calibrator.gyroscopeMeasurements, internalCalibrator2.sequences)
+        assertTrue(internalCalibrator2.isCommonAxisUsed)
+        assertTrue(internalCalibrator2.isGDependentCrossBiasesEstimated)
+        assertEquals(gg, internalCalibrator2.initialGg)
+        assertEquals(0.0, internalCalibrator2.initialBiasX, 0.0)
+        assertEquals(0.0, internalCalibrator2.initialBiasY, 0.0)
+        assertEquals(0.0, internalCalibrator2.initialBiasZ, 0.0)
+        assertEquals(accelerometerBiasX, internalCalibrator2.accelerometerBiasX, 0.0)
+        assertEquals(accelerometerBiasY, internalCalibrator2.accelerometerBiasY, 0.0)
+        assertEquals(accelerometerBiasZ, internalCalibrator2.accelerometerBiasZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(19, internalCalibrator2.minimumRequiredMeasurementsOrSequences)
+        assertEquals(
+            calibrator.minimumRequiredGyroscopeMeasurements,
+            internalCalibrator2.minimumRequiredMeasurementsOrSequences
+        )
+    }
+
+    @Test
+    fun buildGyroscopeInternalCalibrator_whenNonRobustNoGroundTruthBiasAndInitialBias_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator =
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+                context,
+                location,
+                isGyroscopeGroundTruthInitialBias = false
+            )
+
+        val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
+        for (i in 1..19) {
+            calibrator.gyroscopeMeasurements.add(measurement)
+        }
+
+        calibrator.isGyroscopeCommonAxisUsed = true
+        calibrator.isGDependentCrossBiasesEstimated = true
+        val gg = Matrix(BodyKinematics.COMPONENTS, BodyKinematics.COMPONENTS)
+        Matrix.fillWithUniformRandomValues(0.0, 1.0, gg)
+        calibrator.gyroscopeInitialGg = gg
+
+        val randomizer = UniformRandomizer()
+        val initialBiasX = randomizer.nextDouble()
+        calibrator.setPrivateProperty("gyroscopeInitialBiasX", initialBiasX)
+        val initialBiasY = randomizer.nextDouble()
+        calibrator.setPrivateProperty("gyroscopeInitialBiasY", initialBiasY)
+        val initialBiasZ = randomizer.nextDouble()
+        calibrator.setPrivateProperty("gyroscopeInitialBiasZ", initialBiasZ)
+
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setGyroscopeInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+
+        assertNull(calibrator.gyroscopeRobustMethod)
+        assertFalse(calibrator.isGyroscopeGroundTruthInitialBias)
+
+        val accelerometerBiasX = randomizer.nextDouble()
+        val accelerometerBiasY = randomizer.nextDouble()
+        val accelerometerBiasZ = randomizer.nextDouble()
+        val ma = generateMa()
+        val accelerometerInternalCalibrator = mockk<KnownBiasAndPositionAccelerometerCalibrator>()
+        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
+        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
+        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
+        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
+        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
+        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
+        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
+        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
+        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
+        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
+        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
+        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
+        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+
+        val internalCalibrator: GyroscopeNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 = internalCalibrator as EasyGyroscopeCalibrator
+        assertSame(calibrator.gyroscopeMeasurements, internalCalibrator2.sequences)
+        assertTrue(internalCalibrator2.isCommonAxisUsed)
+        assertTrue(internalCalibrator2.isGDependentCrossBiasesEstimated)
+        assertEquals(gg, internalCalibrator2.initialGg)
+        assertEquals(initialBiasX, internalCalibrator2.initialBiasX, 0.0)
+        assertEquals(initialBiasY, internalCalibrator2.initialBiasY, 0.0)
+        assertEquals(initialBiasZ, internalCalibrator2.initialBiasZ, 0.0)
+        assertEquals(accelerometerBiasX, internalCalibrator2.accelerometerBiasX, 0.0)
+        assertEquals(accelerometerBiasY, internalCalibrator2.accelerometerBiasY, 0.0)
+        assertEquals(accelerometerBiasZ, internalCalibrator2.accelerometerBiasZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(19, internalCalibrator2.minimumRequiredMeasurementsOrSequences)
+        assertEquals(
+            calibrator.minimumRequiredGyroscopeMeasurements,
+            internalCalibrator2.minimumRequiredMeasurementsOrSequences
+        )
+    }
+
+    // TODO: buildGyroscopeInternalCalibrator_whenRANSACGroundTruthBiasAndNoInitialBias_buildsExpectedCalibrator
 
     private companion object {
         const val MA_SIZE = 3
