@@ -301,31 +301,37 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             initialMagnetometerHardIronAvailableListener = { _, hardIronX, hardIronY, hardIronZ ->
                 Log.i(
                     "StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest",
-                    "Initial bias available. x: $hardIronX, y: $hardIronY, z: $hardIronZ µT"
+                    "Initial magnetometer hard iron available. x: $hardIronX, y: $hardIronY, z: $hardIronZ µT"
                 )
             },
             initialGyroscopeBiasAvailableListener = { _, biasX, biasY, biasZ ->
                 Log.i(
                     "StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest",
-                    "Initial bias available. x: $biasX, y: $biasY, z: $biasZ rad/s"
+                    "Initial gyroscope bias available. x: $biasX, y: $biasY, z: $biasZ rad/s"
                 )
             },
             initialAccelerometerBiasAvailableListener = { _, biasX, biasY, biasZ ->
                 Log.i(
                     "StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest",
-                    "Initial bias available. x: $biasX, y: $biasY, z: $biasZ m/s^2"
+                    "Initial accelerometer bias available. x: $biasX, y: $biasY, z: $biasZ m/s^2"
                 )
             },
             generatedAccelerometerMeasurementListener = { _, _, measurementsFoundSoFar, requiredMeasurements ->
                 Log.i(
                     "StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest",
-                    "New measurement available. $measurementsFoundSoFar / $requiredMeasurements"
+                    "New accelerometer measurement available. $measurementsFoundSoFar / $requiredMeasurements"
                 )
             },
             generatedGyroscopeMeasurementListener = { _, _, measurementsFoundSoFar, requiredMeasurements ->
                 Log.i(
                     "StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest",
-                    "New measurement available. $measurementsFoundSoFar / $requiredMeasurements"
+                    "New gyroscope measurement available. $measurementsFoundSoFar / $requiredMeasurements"
+                )
+            },
+            generatedMagnetometerMeasurementListener = { _, _, measurementsFoundSoFar, requiredMeasurements ->
+                Log.i(
+                    "StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest",
+                    "New magnetometer measurement available. $measurementsFoundSoFar / $requiredMeasurements"
                 )
             },
             readyToSolveCalibrationListener = {
@@ -355,7 +361,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
                 )
             }
         )
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROSAC
         calibrator.gyroscopeRobustMethod = RobustEstimatorMethod.PROSAC
+        calibrator.magnetometerRobustMethod = RobustEstimatorMethod.PROSAC
         calibrator.requiredMeasurements = 3 * calibrator.minimumRequiredMeasurements
         return calibrator
     }
