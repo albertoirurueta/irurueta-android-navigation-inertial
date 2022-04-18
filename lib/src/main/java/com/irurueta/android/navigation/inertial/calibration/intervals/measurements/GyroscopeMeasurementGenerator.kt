@@ -236,7 +236,7 @@ class GyroscopeMeasurementGenerator(
 
             numberOfProcessedGyroscopeMeasurements++
 
-            if (status == Status.INITIALIZATION_COMPLETED) {
+            if (gyroscopeBaseNoiseLevel == null && (status == Status.INITIALIZATION_COMPLETED || status == Status.STATIC_INTERVAL || status == Status.DYNAMIC_INTERVAL)) {
                 gyroscopeBaseNoiseLevel =
                     gyroscopeAccumulatedNoiseEstimator.standardDeviationNorm
             }

@@ -5161,7 +5161,11 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
             magneticFluxDensity,
             timedBodyKinematicsAndMagneticFluxDensity.magneticFluxDensity
         )
-        assertEquals(0.0, timedBodyKinematicsAndMagneticFluxDensity.timestampSeconds, 0.0)
+        assertEquals(
+            TimeConverter.nanosecondToSecond(timestamp.toDouble()),
+            timedBodyKinematicsAndMagneticFluxDensity.timestampSeconds,
+            0.0
+        )
 
         verify(exactly = 1) { accelerometerTimeIntervalEstimatorSpy.averageTimeInterval }
         verify(exactly = 1) { measurementsGeneratorSpy.timeInterval = timeInterval }

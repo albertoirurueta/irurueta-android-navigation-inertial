@@ -4054,7 +4054,11 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         assertEquals(wy, timedBodyKinematics.kinematics.angularRateY, 0.0)
         assertEquals(wz, timedBodyKinematics.kinematics.angularRateZ, 0.0)
         assertSame(kinematics, timedBodyKinematics.kinematics)
-        assertEquals(0.0, timedBodyKinematics.timestampSeconds, 0.0)
+        assertEquals(
+            TimeConverter.nanosecondToSecond(timestamp.toDouble()),
+            timedBodyKinematics.timestampSeconds,
+            0.0
+        )
 
         verify(exactly = 1) { accelerometerTimeIntervalEstimatorSpy.averageTimeInterval }
         verify(exactly = 1) { measurementsGeneratorSpy.timeInterval = timeInterval }

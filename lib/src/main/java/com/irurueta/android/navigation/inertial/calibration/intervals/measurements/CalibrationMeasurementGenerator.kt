@@ -406,14 +406,15 @@ abstract class CalibrationMeasurementGenerator<I>(
     private val accelerometerCollectorMeasurementListener =
         AccelerometerSensorCollector.OnMeasurementListener { ax, ay, az, bx, by, bz, timestamp, accuracy ->
             val status = status
-            var diffSeconds = 0.0
+            val diff = timestamp - initialAccelerometerTimestamp
+            var diffSeconds = TimeConverter.nanosecondToSecond(diff.toDouble())
+
             if (status == Status.INITIALIZING) {
                 // during initialization phase, also estimate time interval duration.
                 if (numberOfProcessedAccelerometerMeasurements > 0) {
-                    val diff = timestamp - initialAccelerometerTimestamp
-                    diffSeconds = TimeConverter.nanosecondToSecond(diff.toDouble())
                     accelerometerTimeIntervalEstimator.addTimestamp(diffSeconds)
                 } else {
+                    diffSeconds = 0.0
                     initialAccelerometerTimestamp = timestamp
                 }
             }
@@ -422,7 +423,7 @@ abstract class CalibrationMeasurementGenerator<I>(
             processSampleInInternalGenerator()
             numberOfProcessedAccelerometerMeasurements++
 
-            if (status == Status.INITIALIZATION_COMPLETED) {
+            if (!initialized && (status == Status.INITIALIZATION_COMPLETED || status == Status.STATIC_INTERVAL || status == Status.DYNAMIC_INTERVAL)) {
                 // once initialized, set time interval into internal detector
                 updateTimeIntervalOfInternalGenerator()
                 initialized = true

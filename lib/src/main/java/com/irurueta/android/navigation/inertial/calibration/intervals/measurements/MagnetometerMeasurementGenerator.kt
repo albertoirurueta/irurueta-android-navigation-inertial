@@ -248,7 +248,7 @@ class MagnetometerMeasurementGenerator(
 
             numberOfProcessedMagnetometerMeasurements++
 
-            if (status == Status.INITIALIZATION_COMPLETED) {
+            if (magnetometerBaseNoiseLevel == null && (status == Status.INITIALIZATION_COMPLETED || status == Status.STATIC_INTERVAL || status == Status.DYNAMIC_INTERVAL)) {
                 magnetometerBaseNoiseLevel =
                     magnetometerAccumulatedNoiseEstimator.standardDeviationNorm
             }

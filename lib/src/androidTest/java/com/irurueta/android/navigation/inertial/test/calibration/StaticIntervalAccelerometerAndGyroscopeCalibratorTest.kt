@@ -283,25 +283,25 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
             initialGyroscopeBiasAvailableListener = { _, biasX, biasY, biasZ ->
                 Log.i(
                     "StaticIntervalAccelerometerAndGyroscopeCalibratorTest",
-                    "Initial bias available. x: $biasX, y: $biasY, z: $biasZ rad/s"
+                    "Initial gyroscope bias available. x: $biasX, y: $biasY, z: $biasZ rad/s"
                 )
             },
             initialAccelerometerBiasAvailableListener = { _, biasX, biasY, biasZ ->
                 Log.i(
                     "StaticIntervalAccelerometerAndGyroscopeCalibratorTest",
-                    "Initial bias available. x: $biasX, y: $biasY, z: $biasZ m/s^2"
+                    "Initial accelerometer bias available. x: $biasX, y: $biasY, z: $biasZ m/s^2"
                 )
             },
             generatedAccelerometerMeasurementListener = { _, _, measurementsFoundSoFar, requiredMeasurements ->
                 Log.i(
                     "StaticIntervalAccelerometerAndGyroscopeCalibratorTest",
-                    "New measurement available. $measurementsFoundSoFar / $requiredMeasurements"
+                    "New accelerometer measurement available. $measurementsFoundSoFar / $requiredMeasurements"
                 )
             },
             generatedGyroscopeMeasurementListener = { _, _, measurementsFoundSoFar, requiredMeasurements ->
                 Log.i(
                     "StaticIntervalAccelerometerAndGyroscopeCalibratorTest",
-                    "New measurement available. $measurementsFoundSoFar / $requiredMeasurements"
+                    "New gyroscope measurement available. $measurementsFoundSoFar / $requiredMeasurements"
                 )
             },
             readyToSolveCalibrationListener = {
@@ -331,6 +331,7 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
                 )
             }
         )
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROSAC
         calibrator.gyroscopeRobustMethod = RobustEstimatorMethod.PROSAC
         calibrator.requiredMeasurements = 3 * calibrator.minimumRequiredMeasurements
         return calibrator
@@ -696,10 +697,6 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         Log.i(
             "StaticIntervalAccelerometerAndGyroscopeCalibratorTest",
             "Estimated gyroscope mse: ${calibrator.estimatedGyroscopeMse}"
-        )
-        Log.i(
-            "StaticIntervalAccelerometerAndGyroscopeCalibratorTest",
-            "Estimated accelerometer bias. x: ${calibrator.estimatedAccelerometerBiasX}, y: ${calibrator.estimatedAccelerometerBiasY}, z: ${calibrator.estimatedAccelerometerBiasZ} m/s^2"
         )
         Log.i(
             "StaticIntervalAccelerometerAndGyroscopeCalibratorTest",

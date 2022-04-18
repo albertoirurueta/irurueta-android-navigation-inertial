@@ -34,7 +34,7 @@ class MagnetometerIntervalDetectorTest {
             initializationCompletedListener = { _, baseNoiseLevel ->
                 Log.i(
                     "MagnetometerIntervalDetectorTest",
-                    "Initialization completed. Base noise level: $baseNoiseLevel m/s^2"
+                    "Initialization completed. Base noise level: $baseNoiseLevel T"
                 )
             },
             errorListener = { _, reason ->

@@ -19,7 +19,6 @@ import android.content.Context
 import com.irurueta.android.navigation.inertial.calibration.intervals.ErrorReason
 import com.irurueta.android.navigation.inertial.calibration.intervals.Status
 import com.irurueta.android.navigation.inertial.collectors.*
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
 import com.irurueta.navigation.inertial.BodyKinematics
 import com.irurueta.navigation.inertial.calibration.BodyKinematicsSequence
 import com.irurueta.navigation.inertial.calibration.StandardDeviationBodyKinematics
@@ -262,7 +261,7 @@ class AccelerometerAndGyroscopeMeasurementGenerator(
 
             numberOfProcessedGyroscopeMeasurements++
 
-            if (status == Status.INITIALIZATION_COMPLETED) {
+            if (gyroscopeBaseNoiseLevel == null && (status == Status.INITIALIZATION_COMPLETED || status == Status.STATIC_INTERVAL || status == Status.DYNAMIC_INTERVAL)) {
                 gyroscopeBaseNoiseLevel =
                     gyroscopeAccumulatedNoiseEstimator.standardDeviationNorm
             }

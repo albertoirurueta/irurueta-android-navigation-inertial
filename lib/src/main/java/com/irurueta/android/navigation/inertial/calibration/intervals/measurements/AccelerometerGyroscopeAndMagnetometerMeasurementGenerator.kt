@@ -279,7 +279,7 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
 
             numberOfProcessedGyroscopeMeasurements++
 
-            if (status == Status.INITIALIZATION_COMPLETED) {
+            if (gyroscopeBaseNoiseLevel == null && (status == Status.INITIALIZATION_COMPLETED || status == Status.STATIC_INTERVAL || status == Status.DYNAMIC_INTERVAL)) {
                 gyroscopeBaseNoiseLevel =
                     gyroscopeAccumulatedNoiseEstimator.standardDeviationNorm
             }
@@ -308,7 +308,7 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
 
             numberOfProcessedMagnetometerMeasurements++
 
-            if (status == Status.INITIALIZATION_COMPLETED) {
+            if (magnetometerBaseNoiseLevel == null && (status == Status.INITIALIZATION_COMPLETED || status == Status.STATIC_INTERVAL || status == Status.DYNAMIC_INTERVAL)) {
                 magnetometerBaseNoiseLevel =
                     magnetometerAccumulatedNoiseEstimator.standardDeviationNorm
             }
