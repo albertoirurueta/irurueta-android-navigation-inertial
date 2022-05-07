@@ -79,11 +79,7 @@ class MagnetometerNormEstimator(
         MagnetometerSensorCollector.OnMeasurementListener { bx, by, bz, hardIronX, hardIronY, hardIronZ, timestamp, accuracy ->
             val norm =
                 sqrt(bx.toDouble().pow(2.0) + by.toDouble().pow(2.0) + bz.toDouble().pow(2.0))
-            val normT = MagneticFluxDensityConverter.convert(
-                norm,
-                MagneticFluxDensityUnit.MICROTESLA,
-                MagneticFluxDensityUnit.TESLA
-            )
+            val normT = MagneticFluxDensityConverter.microTeslaToTesla(norm)
             handleMeasurement(normT, timestamp, accuracy)
             measurementListener?.onMeasurement(
                 bx,

@@ -15,24 +15,20 @@
  */
 package com.irurueta.android.navigation.inertial.calibration.builder
 
-import android.location.Location
 import com.irurueta.android.navigation.inertial.calibration.StaticIntervalMagnetometerCalibrator
-import com.irurueta.android.navigation.inertial.toNEDPosition
 import com.irurueta.navigation.inertial.calibration.StandardDeviationBodyMagneticFluxDensity
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.DefaultMagnetometerQualityScoreMapper
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.QualityScoreMapper
 import com.irurueta.navigation.inertial.calibration.magnetometer.*
-import com.irurueta.navigation.inertial.wmm.WorldMagneticModel
 import com.irurueta.numerical.robust.RobustEstimatorMethod
-import java.util.*
 
 /**
  * Builds a magnetometer calibrator to be used internally by other calibrators.
  *
  * @property measurements List of magnetometer measurements.
- * @property location Location of device when running calibration.
+ * @property groundTruthMagneticFluxDensityNorm Norm of ground truth magnetic flux density norm to
+ * be expected at location where measurements have been made, expressed in Teslas (T).
  * @property robustMethod Indicates robust method used to solve magnetometer calibration.
- * @property timestamp Current timestamp.
  * @property isGroundTruthInitialHardIron Indicates whether magnetometer initial hard iron is
  * considered a ground-truth known hard iron.
  * @property isCommonAxisUsed Indicates or specifies whether z-axis is assumed to be common for
@@ -54,17 +50,13 @@ import java.util.*
  * @property initialMzy initial z-y cross coupling error for magnetometer calibration.
  * @property baseNoiseLevel magnetometer measurement base noise level that has been detected during
  * initialization expressed in Teslas (T).
- * @property worldMagneticModel Earth's magnetic model. Null indicates that default model is being
- * used.
  * @property qualityScoreMapper mapper to convert collected magnetometer measurements
  * into quality scores, based on the amount of standard deviation (the larger the variability, the
  * worse the score will be).
  */
 class MagnetometerInternalCalibratorBuilder private constructor(
     var measurements: List<StandardDeviationBodyMagneticFluxDensity>,
-    var location: Location,
     var robustMethod: RobustEstimatorMethod?,
-    var timestamp: Date,
     var isGroundTruthInitialHardIron: Boolean,
     var isCommonAxisUsed: Boolean,
     var initialHardIronX: Double?,
@@ -80,20 +72,19 @@ class MagnetometerInternalCalibratorBuilder private constructor(
     var initialMzx: Double,
     var initialMzy: Double,
     var baseNoiseLevel: Double?,
-    var worldMagneticModel: WorldMagneticModel?,
     var qualityScoreMapper: QualityScoreMapper<StandardDeviationBodyMagneticFluxDensity>
 ) {
     /**
      * Constructor.
      *
      * @param measurements List of magnetometer measurements.
-     * @param location Location of device when running calibration.
+     * @param groundTruthMagneticFluxDensityNorm Norm of ground truth magnetic flux density norm to
+     * be expected at location where measurements have been made, expressed in Teslas (T).
      * @param robustPreliminarySubsetSize Size of preliminary subsets picked while
      * finding a robust magnetometer calibration solution.
      * @param minimumRequiredMeasurements Minimum number of required measurements to
      * start magnetometer calibration.
      * @param robustMethod Indicates robust method used to solve magnetometer calibration.
-     * @param timestamp Current timestamp.
      * @param robustConfidence Confidence of estimated accelerometer calibration result
      * expressed as a value between 0.0 and 1.0.
      * @param robustMaxIterations Maximum number of iterations to attempt to find a
@@ -126,7 +117,6 @@ class MagnetometerInternalCalibratorBuilder private constructor(
      * @param initialMzy initial z-y cross coupling error for magnetometer calibration.
      * @param baseNoiseLevel magnetometer measurement base noise level that has been detected during
      * initialization expressed in Teslas (T).
-     * @param worldMagneticModel Earth's magnetic model.
      * @param qualityScoreMapper mapper to convert collected magnetometer measurements
      * into quality scores, based on the amount of standard deviation (the larger the variability, the
      * worse the score will be).
@@ -134,11 +124,10 @@ class MagnetometerInternalCalibratorBuilder private constructor(
     @Throws(IllegalArgumentException::class)
     constructor(
         measurements: List<StandardDeviationBodyMagneticFluxDensity>,
-        location: Location,
+        groundTruthMagneticFluxDensityNorm: Double,
         robustPreliminarySubsetSize: Int,
         minimumRequiredMeasurements: Int,
         robustMethod: RobustEstimatorMethod? = null,
-        timestamp: Date = Date(),
         robustConfidence: Double = StaticIntervalMagnetometerCalibrator.ROBUST_DEFAULT_CONFIDENCE,
         robustMaxIterations: Int =
             StaticIntervalMagnetometerCalibrator.ROBUST_DEFAULT_MAX_ITERATIONS,
@@ -163,14 +152,11 @@ class MagnetometerInternalCalibratorBuilder private constructor(
         initialMzx: Double = 0.0,
         initialMzy: Double = 0.0,
         baseNoiseLevel: Double? = null,
-        worldMagneticModel: WorldMagneticModel? = null,
         qualityScoreMapper: QualityScoreMapper<StandardDeviationBodyMagneticFluxDensity> =
             DefaultMagnetometerQualityScoreMapper()
     ) : this(
         measurements,
-        location,
         robustMethod,
-        timestamp,
         isGroundTruthInitialHardIron,
         isCommonAxisUsed,
         initialHardIronX,
@@ -186,9 +172,9 @@ class MagnetometerInternalCalibratorBuilder private constructor(
         initialMzx,
         initialMzy,
         baseNoiseLevel,
-        worldMagneticModel,
         qualityScoreMapper
     ) {
+        this.groundTruthMagneticFluxDensityNorm = groundTruthMagneticFluxDensityNorm
         this.robustPreliminarySubsetSize = robustPreliminarySubsetSize
         this.minimumRequiredMeasurements = minimumRequiredMeasurements
         this.robustConfidence = robustConfidence
@@ -196,14 +182,26 @@ class MagnetometerInternalCalibratorBuilder private constructor(
         this.robustThreshold = robustThreshold
         this.robustThresholdFactor = robustThresholdFactor
         this.robustStopThresholdFactor = robustStopThresholdFactor
-        this.worldMagneticModel = worldMagneticModel
     }
+
+    /**
+     * Norm of ground truth magnetic flux density norm to be expected at location where
+     * measurements have been made, expressed in Teslas (T).
+     *
+     * @throws IllegalArgumentException if provided value is less than 0.
+     */
+    var groundTruthMagneticFluxDensityNorm: Double = 0.0
+        @Throws(IllegalArgumentException::class)
+        set(value) {
+            require(value >= 0.0)
+            field = value
+        }
 
     /**
      * Size of preliminary subsets picked while finding a robust magnetometer calibration solution.
      * This properly is only taken into account if a not-null [robustMethod] is specified.
      *
-     * @throws IllegalArgumentException if provided value is less than 0
+     * @throws IllegalArgumentException if provided value is less than 0.
      */
     var robustPreliminarySubsetSize: Int = 0
         @Throws(IllegalArgumentException::class)
@@ -336,12 +334,11 @@ class MagnetometerInternalCalibratorBuilder private constructor(
     @Throws(IllegalStateException::class)
     private fun buildNonRobustCalibrator(): MagnetometerNonLinearCalibrator {
         return if (isGroundTruthInitialHardIron) {
-            val result = KnownHardIronPositionAndInstantMagnetometerCalibrator(
-                location.toNEDPosition(),
+            val result = KnownHardIronMagneticFluxDensityNormMagnetometerCalibrator(
+                groundTruthMagneticFluxDensityNorm,
                 measurements,
                 isCommonAxisUsed
             )
-            result.setTime(timestamp)
             result.setHardIronCoordinates(
                 initialHardIronX ?: 0.0,
                 initialHardIronY ?: 0.0,
@@ -358,15 +355,13 @@ class MagnetometerInternalCalibratorBuilder private constructor(
                 initialMzx,
                 initialMzy
             )
-            result.magneticModel = worldMagneticModel
             result
         } else {
-            val result = KnownPositionAndInstantMagnetometerCalibrator(
-                location.toNEDPosition(),
+            val result = KnownMagneticFluxDensityNormMagnetometerCalibrator(
+                groundTruthMagneticFluxDensityNorm,
                 measurements,
                 isCommonAxisUsed
             )
-            result.setTime(timestamp)
             result.setInitialHardIron(
                 initialHardIronX ?: 0.0,
                 initialHardIronY ?: 0.0,
@@ -383,7 +378,6 @@ class MagnetometerInternalCalibratorBuilder private constructor(
                 initialMzx,
                 initialMzy
             )
-            result.magneticModel = worldMagneticModel
             result
         }
     }
@@ -414,13 +408,12 @@ class MagnetometerInternalCalibratorBuilder private constructor(
         val baseNoiseLevel = this.baseNoiseLevel
         val robustThreshold = this.robustThreshold
 
-        val result = RobustKnownHardIronPositionAndInstantMagnetometerCalibrator.create(
-            location.toNEDPosition(),
+        val result = RobustKnownHardIronMagneticFluxDensityNormMagnetometerCalibrator.create(
+            groundTruthMagneticFluxDensityNorm,
             measurements,
             isCommonAxisUsed,
             robustMethod
         )
-        result.setTime(timestamp)
         result.setHardIronCoordinates(
             initialHardIronX ?: 0.0,
             initialHardIronY ?: 0.0,
@@ -437,7 +430,6 @@ class MagnetometerInternalCalibratorBuilder private constructor(
             initialMzx,
             initialMzy
         )
-        result.magneticModel = worldMagneticModel
         result.confidence = robustConfidence
         result.maxIterations = robustMaxIterations
         result.preliminarySubsetSize =
@@ -445,7 +437,7 @@ class MagnetometerInternalCalibratorBuilder private constructor(
 
         // set threshold and quality scores
         when (result) {
-            is RANSACRobustKnownHardIronPositionAndInstantMagnetometerCalibrator -> {
+            is RANSACRobustKnownHardIronMagneticFluxDensityNormMagnetometerCalibrator -> {
                 if (robustThreshold != null) {
                     result.threshold = robustThreshold
                 } else {
@@ -453,7 +445,7 @@ class MagnetometerInternalCalibratorBuilder private constructor(
                     result.threshold = robustThresholdFactor * baseNoiseLevel
                 }
             }
-            is MSACRobustKnownHardIronPositionAndInstantMagnetometerCalibrator -> {
+            is MSACRobustKnownHardIronMagneticFluxDensityNormMagnetometerCalibrator -> {
                 if (robustThreshold != null) {
                     result.threshold = robustThreshold
                 } else {
@@ -461,7 +453,7 @@ class MagnetometerInternalCalibratorBuilder private constructor(
                     result.threshold = robustThresholdFactor * baseNoiseLevel
                 }
             }
-            is PROSACRobustKnownHardIronPositionAndInstantMagnetometerCalibrator -> {
+            is PROSACRobustKnownHardIronMagneticFluxDensityNormMagnetometerCalibrator -> {
                 if (robustThreshold != null) {
                     result.threshold = robustThreshold
                 } else {
@@ -470,7 +462,7 @@ class MagnetometerInternalCalibratorBuilder private constructor(
                 }
                 result.qualityScores = buildQualityScores()
             }
-            is LMedSRobustKnownHardIronPositionAndInstantMagnetometerCalibrator -> {
+            is LMedSRobustKnownHardIronMagneticFluxDensityNormMagnetometerCalibrator -> {
                 if (robustThreshold != null) {
                     result.stopThreshold = robustThreshold
                 } else {
@@ -479,7 +471,7 @@ class MagnetometerInternalCalibratorBuilder private constructor(
                         robustThresholdFactor * robustStopThresholdFactor * baseNoiseLevel
                 }
             }
-            is PROMedSRobustKnownHardIronPositionAndInstantMagnetometerCalibrator -> {
+            is PROMedSRobustKnownHardIronMagneticFluxDensityNormMagnetometerCalibrator -> {
                 if (robustThreshold != null) {
                     result.stopThreshold = robustThreshold
                 } else {
@@ -504,13 +496,12 @@ class MagnetometerInternalCalibratorBuilder private constructor(
         val baseNoiseLevel = this.baseNoiseLevel
         val robustThreshold = this.robustThreshold
 
-        val result = RobustKnownPositionAndInstantMagnetometerCalibrator.create(
-            location.toNEDPosition(),
+        val result = RobustKnownMagneticFluxDensityNormMagnetometerCalibrator.create(
+            groundTruthMagneticFluxDensityNorm,
             measurements,
             isCommonAxisUsed,
             robustMethod
         )
-        result.setTime(timestamp)
         result.setInitialHardIron(
             initialHardIronX ?: 0.0,
             initialHardIronY ?: 0.0,
@@ -527,7 +518,6 @@ class MagnetometerInternalCalibratorBuilder private constructor(
             initialMzx,
             initialMzy
         )
-        result.magneticModel = worldMagneticModel
         result.confidence = robustConfidence
         result.maxIterations = robustMaxIterations
         result.preliminarySubsetSize =
@@ -535,7 +525,7 @@ class MagnetometerInternalCalibratorBuilder private constructor(
 
         // set threshold and quality scores
         when (result) {
-            is RANSACRobustKnownPositionAndInstantMagnetometerCalibrator -> {
+            is RANSACRobustKnownMagneticFluxDensityNormMagnetometerCalibrator -> {
                 if (robustThreshold != null) {
                     result.threshold = robustThreshold
                 } else {
@@ -543,7 +533,7 @@ class MagnetometerInternalCalibratorBuilder private constructor(
                     result.threshold = robustThresholdFactor * baseNoiseLevel
                 }
             }
-            is MSACRobustKnownPositionAndInstantMagnetometerCalibrator -> {
+            is MSACRobustKnownMagneticFluxDensityNormMagnetometerCalibrator -> {
                 if (robustThreshold != null) {
                     result.threshold = robustThreshold
                 } else {
@@ -551,7 +541,7 @@ class MagnetometerInternalCalibratorBuilder private constructor(
                     result.threshold = robustThresholdFactor * baseNoiseLevel
                 }
             }
-            is PROSACRobustKnownPositionAndInstantMagnetometerCalibrator -> {
+            is PROSACRobustKnownMagneticFluxDensityNormMagnetometerCalibrator -> {
                 if (robustThreshold != null) {
                     result.threshold = robustThreshold
                 } else {
@@ -560,7 +550,7 @@ class MagnetometerInternalCalibratorBuilder private constructor(
                 }
                 result.qualityScores = buildQualityScores()
             }
-            is LMedSRobustKnownPositionAndInstantMagnetometerCalibrator -> {
+            is LMedSRobustKnownMagneticFluxDensityNormMagnetometerCalibrator -> {
                 if (robustThreshold != null) {
                     result.stopThreshold = robustThreshold
                 } else {
@@ -569,7 +559,7 @@ class MagnetometerInternalCalibratorBuilder private constructor(
                         robustThresholdFactor * robustStopThresholdFactor * baseNoiseLevel
                 }
             }
-            is PROMedSRobustKnownPositionAndInstantMagnetometerCalibrator -> {
+            is PROMedSRobustKnownMagneticFluxDensityNormMagnetometerCalibrator -> {
                 if (robustThreshold != null) {
                     result.stopThreshold = robustThreshold
                 } else {

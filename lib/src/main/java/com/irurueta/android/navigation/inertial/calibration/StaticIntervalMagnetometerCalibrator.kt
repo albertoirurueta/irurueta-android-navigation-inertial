@@ -16,7 +16,6 @@
 package com.irurueta.android.navigation.inertial.calibration
 
 import android.content.Context
-import android.location.Location
 import android.util.Log
 import com.irurueta.algebra.Matrix
 import com.irurueta.android.navigation.inertial.calibration.builder.MagnetometerInternalCalibratorBuilder
@@ -33,12 +32,10 @@ import com.irurueta.navigation.inertial.calibration.StandardDeviationBodyMagneti
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.DefaultMagnetometerQualityScoreMapper
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.QualityScoreMapper
 import com.irurueta.navigation.inertial.calibration.magnetometer.*
-import com.irurueta.navigation.inertial.wmm.WorldMagneticModel
 import com.irurueta.numerical.robust.RobustEstimatorMethod
 import com.irurueta.units.MagneticFluxDensity
 import com.irurueta.units.MagneticFluxDensityConverter
 import com.irurueta.units.MagneticFluxDensityUnit
-import java.util.*
 
 /**
  * Collects accelerometer and magnetometer measurements by detecting periods when device remains
@@ -156,9 +153,6 @@ class StaticIntervalMagnetometerCalibrator private constructor(
      */
     constructor(
         context: Context,
-        location: Location,
-        timestamp: Date = Date(),
-        worldMagneticModel: WorldMagneticModel? = null,
         accelerometerSensorType: AccelerometerSensorCollector.SensorType =
             AccelerometerSensorCollector.SensorType.ACCELEROMETER,
         magnetometerSensorType: MagnetometerSensorCollector.SensorType =
@@ -205,9 +199,6 @@ class StaticIntervalMagnetometerCalibrator private constructor(
         accuracyChangedListener,
         magnetometerQualityScoreMapper
     ) {
-        this.location = location
-        this.timestamp = timestamp
-        this.worldMagneticModel = worldMagneticModel
         this.isMagnetometerGroundTruthInitialHardIron = isMagnetometerGroundTruthInitialHardIron
         requiredMeasurements = minimumRequiredMeasurements
         magnetometerRobustPreliminarySubsetSize = minimumRequiredMeasurements
@@ -279,6 +270,11 @@ class StaticIntervalMagnetometerCalibrator private constructor(
      */
     private val generatorGeneratedMeasurementListener =
         SingleSensorCalibrationMeasurementGenerator.OnGeneratedMeasurementListener<MagnetometerMeasurementGenerator, StandardDeviationBodyMagneticFluxDensity> { _, measurement ->
+            if (initialMagneticFluxDensityNorm == null) {
+                // set initial average magnetic flux density norm measured during initialization
+                initialMagneticFluxDensityNorm = measurement.magneticFluxDensity.norm
+            }
+
             magnetometerMeasurements.add(measurement)
 
             val reqMeasurements = requiredMeasurements.coerceAtLeast(minimumRequiredMeasurements)
@@ -365,61 +361,10 @@ class StaticIntervalMagnetometerCalibrator private constructor(
     private var magnetometerInternalCalibrator: MagnetometerNonLinearCalibrator? = null
 
     /**
-     * Private backing property containing actual location value.
-     * This is initialized in the constructor.
+     * Norm of average magnetic flux density obtained during initialization and expressed in Teslas.
      */
-    private lateinit var _location: Location
-
-    /**
-     * Location of device when running calibration.
-     * Both [location] and [timestamp] are used to determine Earth's magnetic field according to
-     * provided World Magnetic Model.
-     *
-     * @throws IllegalStateException if calibrator is already running.
-     * @see [WorldMagneticModel]
-     */
-    var location: Location
-        get() = _location
-        @Throws(IllegalStateException::class)
-        set(value) {
-            check(!running)
-            _location = value
-        }
-
-    /**
-     * Private backing property containing current timestamp value.
-     * This is initialized in the constructor.
-     */
-    private lateinit var _timestamp: Date
-
-    /**
-     * Sets current timestamp.
-     * Both [location] and [timestamp] are used to determine Earth's magnetic field according to
-     * provided World Magnetic Model.
-     *
-     * @throws IllegalStateException if calibrator is already running.
-     * @see [WorldMagneticModel]
-     */
-    var timestamp: Date
-        get() = _timestamp
-        @Throws(IllegalStateException::class)
-        set(value) {
-            check(!running)
-            _timestamp = value
-        }
-
-    /**
-     * Sets Earth's magnetic model.
-     * Null indicates that default model is being used.
-     *
-     * @throws IllegalStateException if calibrator is already running.
-     */
-    var worldMagneticModel: WorldMagneticModel? = null
-        @Throws(IllegalStateException::class)
-        set(value) {
-            check(!running)
-            field = value
-        }
+    var initialMagneticFluxDensityNorm: Double? = null
+        private set
 
     /**
      * Gets X-coordinate of hard iron used as an initial guess and expressed in Teslas (T).
@@ -1593,6 +1538,8 @@ class StaticIntervalMagnetometerCalibrator private constructor(
         magnetometerInitialHardIronZ = null
 
         magnetometerInternalCalibrator = null
+
+        initialMagneticFluxDensityNorm = null
     }
 
     /**
@@ -1654,13 +1601,15 @@ class StaticIntervalMagnetometerCalibrator private constructor(
      */
     @Throws(IllegalStateException::class)
     private fun buildMagnetometerInternalCalibrator(): MagnetometerNonLinearCalibrator {
+        val groundTruthMagneticFluxDensityNorm = initialMagneticFluxDensityNorm
+        checkNotNull(groundTruthMagneticFluxDensityNorm)
+
         return MagnetometerInternalCalibratorBuilder(
             magnetometerMeasurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             magnetometerRobustPreliminarySubsetSize,
             minimumRequiredMagnetometerMeasurements,
             magnetometerRobustMethod,
-            timestamp,
             magnetometerRobustConfidence,
             magnetometerRobustMaxIterations,
             magnetometerRobustThreshold,
@@ -1681,7 +1630,6 @@ class StaticIntervalMagnetometerCalibrator private constructor(
             magnetometerInitialMzx,
             magnetometerInitialMzy,
             magnetometerBaseNoiseLevel,
-            worldMagneticModel,
             magnetometerQualityScoreMapper
         ).build()
     }

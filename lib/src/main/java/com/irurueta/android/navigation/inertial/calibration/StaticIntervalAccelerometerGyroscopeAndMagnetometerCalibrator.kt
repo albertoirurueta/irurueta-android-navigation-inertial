@@ -19,10 +19,14 @@ import android.content.Context
 import android.location.Location
 import android.util.Log
 import com.irurueta.algebra.Matrix
+import com.irurueta.android.navigation.inertial.GravityHelper
 import com.irurueta.android.navigation.inertial.calibration.builder.AccelerometerInternalCalibratorBuilder
 import com.irurueta.android.navigation.inertial.calibration.builder.GyroscopeInternalCalibratorBuilder
 import com.irurueta.android.navigation.inertial.calibration.builder.MagnetometerInternalCalibratorBuilder
 import com.irurueta.android.navigation.inertial.calibration.intervals.measurements.*
+import com.irurueta.android.navigation.inertial.calibration.noise.AccumulatedMeasurementEstimator
+import com.irurueta.android.navigation.inertial.calibration.noise.GravityNormEstimator
+import com.irurueta.android.navigation.inertial.calibration.noise.StopMode
 import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.navigation.NavigationException
 import com.irurueta.navigation.inertial.BodyKinematics
@@ -40,10 +44,8 @@ import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.Qu
 import com.irurueta.navigation.inertial.calibration.magnetometer.KnownHardIronMagnetometerCalibrator
 import com.irurueta.navigation.inertial.calibration.magnetometer.MagnetometerNonLinearCalibrator
 import com.irurueta.navigation.inertial.calibration.magnetometer.UnknownHardIronMagnetometerCalibrator
-import com.irurueta.navigation.inertial.wmm.WorldMagneticModel
 import com.irurueta.numerical.robust.RobustEstimatorMethod
 import com.irurueta.units.*
-import java.util.*
 import kotlin.math.max
 
 /**
@@ -122,6 +124,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
     calibrationSolvingStartedListener: OnCalibrationSolvingStartedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>?,
     calibrationCompletedListener: OnCalibrationCompletedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>?,
     stoppedListener: OnStoppedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>?,
+    var unreliableGravityNormEstimationListener: OnUnreliableGravityEstimationListener?,
     var initialAccelerometerBiasAvailableListener: OnInitialAccelerometerBiasAvailableListener?,
     var initialGyroscopeBiasAvailableListener: OnInitialGyroscopeBiasAvailableListener?,
     var initialMagnetometerHardIronAvailableListener: OnInitialMagnetometerHardIronAvailableListener?,
@@ -176,6 +179,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * [MagnetometerSensorCollector.SensorType.MAGNETOMETER], hard iron guess is zero, otherwise
      * when it is [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED], hard iron
      * guess is the device calibrated values.
+     * @param location location where device is located at. When location is provided, gravity norm
+     * is assumed to be the theoretical value determined by WGS84 Earth model, otherwise, if no
+     * location is provided, gravity norm is estimated using a gravity sensor.
      * @param initializationStartedListener listener to notify when initialization starts.
      * @property initializationCompletedListener listener to notify when initialization completes.
      * @property errorListener listener to notify errors.
@@ -196,6 +202,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * @property calibrationSolvingStartedListener listener to notify when calibration solving starts.
      * @property calibrationCompletedListener listener to notify when calibration solving completes.
      * @property stoppedListener listener to notify when calibrator is stopped.
+     * @param unreliableGravityNormEstimationListener listener to notify when gravity norm
+     * estimation becomes unreliable. This is only used if no location is provided.
      * @property initialAccelerometerBiasAvailableListener listener to notify when a guess of bias
      * values is obtained.
      * @property initialGyroscopeBiasAvailableListener listener to notify when a guess of bias values
@@ -215,9 +223,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      */
     constructor(
         context: Context,
-        location: Location,
-        timestamp: Date = Date(),
-        worldMagneticModel: WorldMagneticModel? = null,
         accelerometerSensorType: AccelerometerSensorCollector.SensorType =
             AccelerometerSensorCollector.SensorType.ACCELEROMETER,
         gyroscopeSensorType: GyroscopeSensorCollector.SensorType =
@@ -231,6 +236,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
         isAccelerometerGroundTruthInitialBias: Boolean = false,
         isGyroscopeGroundTruthInitialBias: Boolean = false,
         isMagnetometerGroundTruthInitialHardIron: Boolean = false,
+        location: Location? = null,
         initializationStartedListener: OnInitializationStartedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>? = null,
         initializationCompletedListener: OnInitializationCompletedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>? = null,
         errorListener: OnErrorListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>? = null,
@@ -245,6 +251,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
         calibrationSolvingStartedListener: OnCalibrationSolvingStartedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>? = null,
         calibrationCompletedListener: OnCalibrationCompletedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>? = null,
         stoppedListener: OnStoppedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>? = null,
+        unreliableGravityNormEstimationListener: OnUnreliableGravityEstimationListener? = null,
         initialAccelerometerBiasAvailableListener: OnInitialAccelerometerBiasAvailableListener? = null,
         initialGyroscopeBiasAvailableListener: OnInitialGyroscopeBiasAvailableListener? = null,
         initialMagnetometerHardIronAvailableListener: OnInitialMagnetometerHardIronAvailableListener? = null,
@@ -278,6 +285,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
         calibrationSolvingStartedListener,
         calibrationCompletedListener,
         stoppedListener,
+        unreliableGravityNormEstimationListener,
         initialAccelerometerBiasAvailableListener,
         initialGyroscopeBiasAvailableListener,
         initialMagnetometerHardIronAvailableListener,
@@ -287,8 +295,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
         magnetometerQualityScoreMapper
     ) {
         this.location = location
-        this.timestamp = timestamp
-        this.worldMagneticModel = worldMagneticModel
 
         this.isAccelerometerGroundTruthInitialBias = isAccelerometerGroundTruthInitialBias
         accelerometerRobustPreliminarySubsetSize = minimumRequiredAccelerometerMeasurements
@@ -409,6 +415,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      */
     private val generatorGeneratedMagnetometerMeasurementListener =
         AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedMagnetometerMeasurementListener { _, measurement ->
+            if (initialMagneticFluxDensityNorm == null) {
+                // set initial average magnetic flux density norm measured during initialization
+                initialMagneticFluxDensityNorm = measurement.magneticFluxDensity.norm
+            }
+
             magnetometerMeasurements.add(measurement)
 
             val reqMeasurements = requiredMeasurements.coerceAtLeast(minimumRequiredMeasurements)
@@ -479,6 +490,27 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
         }
 
     /**
+     * Listener for gravity norm estimator.
+     * This is used to approximately estimate gravity when no location is provided, by using the
+     * gravity sensor provided by the device.
+     */
+    private val gravityNormCompletedListener =
+        AccumulatedMeasurementEstimator.OnEstimationCompletedListener<GravityNormEstimator> { estimator ->
+            gravityNorm = estimator.averageNorm
+        }
+
+    /**
+     * Listener to handle events when gravity sensor becomes unreliable.
+     * When this happens, result of calibration is marked as unreliable and should probably be
+     * discarded.
+     */
+    private val gravityNormUnreliableListener =
+        AccumulatedMeasurementEstimator.OnUnreliableListener<GravityNormEstimator> {
+            accelerometerResultUnreliable = true
+            unreliableGravityNormEstimationListener?.onUnreliableGravityEstimation(this@StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator)
+        }
+
+    /**
      * Internal generator to generate measurements for calibration.
      */
     override val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
@@ -506,6 +538,19 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
     )
 
     /**
+     * Gravity norm estimator. It is used to estimate gravity norm when no location is provided.
+     */
+    private val gravityNormEstimator: GravityNormEstimator =
+        GravityNormEstimator(
+            context,
+            accelerometerSensorDelay,
+            initialStaticSamples,
+            stopMode = StopMode.MAX_SAMPLES_ONLY,
+            completedListener = gravityNormCompletedListener,
+            unreliableListener = gravityNormUnreliableListener
+        )
+
+    /**
      * Internal accelerometer calibrator used to solve the calibration parameters once enough
      * measurements are collected at static intervals.
      */
@@ -524,61 +569,25 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
     private var magnetometerInternalCalibrator: MagnetometerNonLinearCalibrator? = null
 
     /**
-     * Private backing property containing actual location value.
-     * This is initialized in the constructor.
+     * Norm of average magnetic flux density obtained during initialization and expressed in Teslas.
      */
-    private lateinit var _location: Location
+    var initialMagneticFluxDensityNorm: Double? = null
+        private set
 
     /**
-     * Location of device when running calibration.
-     * Both [location] and [timestamp] are used to determine Earth's magnetic field according to
-     * provided World Magnetic Model.
-     *
-     * @throws IllegalStateException if calibrator is already running.
-     * @see [WorldMagneticModel]
+     * Contains gravity norm (either obtained by the gravity sensor, or determined by current
+     * location using WGS84 Earth model). Expressed in meters per squared second (m/s^2).
      */
-    var location: Location
-        get() = _location
-        @Throws(IllegalStateException::class)
-        set(value) {
-            check(!running)
-            _location = value
-        }
+    var gravityNorm: Double? = null
+        private set
 
     /**
-     * Private backing property containing current timestamp value.
-     * This is initialized in the constructor.
+     * Indicates if accelerometer result is unreliable. This can happen if no location is provided
+     * and gravity estimation becomes unreliable. When this happens result of calibration should
+     * probably be discarded.
      */
-    private lateinit var _timestamp: Date
-
-    /**
-     * Sets current timestamp.
-     * Both [location] and [timestamp] are used to determine Earth's magnetic field according to
-     * provided World Magnetic Model.
-     *
-     * @throws IllegalStateException if calibrator is already running.
-     * @see [WorldMagneticModel]
-     */
-    var timestamp: Date
-        get() = _timestamp
-        @Throws(IllegalStateException::class)
-        set(value) {
-            check(!running)
-            _timestamp = value
-        }
-
-    /**
-     * Sets Earth's magnetic model.
-     * Null indicates that default model is being used.
-     *
-     * @throws IllegalStateException if calibrator is already running.
-     */
-    var worldMagneticModel: WorldMagneticModel? = null
-        @Throws(IllegalStateException::class)
-        set(value) {
-            check(!running)
-            field = value
-        }
+    var accelerometerResultUnreliable = false
+        private set
 
     /**
      * Gets x-coordinate of accelerometer bias used as an initial guess and expressed in meters per
@@ -1409,6 +1418,33 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
         }
 
     /**
+     * Location of device when running calibration.
+     * If location is provided, WGS84 Earth model is used to determine gravity norm
+     * at such location, otherwise gravity norm is estimated during initialization by using the
+     * gravity sensor of device.
+     *
+     * @throws IllegalStateException if calibrator is already running.
+     */
+    var location: Location? = null
+        @Throws(IllegalStateException::class)
+        set(value) {
+            check(!running)
+            field = value
+            if (value != null) {
+                // set gravity norm based on provided location
+                gravityNorm = GravityHelper.getGravityNormForLocation(value)
+            }
+        }
+
+    /**
+     * Indicates whether gravity norm is estimated during initialization.
+     * If location is provided, gravity is not estimated and instead theoretical
+     * gravity for provided location is used.
+     */
+    val isGravityNormEstimated
+        get() = location == null
+
+    /**
      * Gets accelerometer sensor being used for interval detection.
      * This can be used to obtain additional information about the sensor.
      */
@@ -1428,6 +1464,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      */
     val magnetometerSensor
         get() = generator.magnetometerSensor
+
+    /**
+     * Gets gravity sensor being used for gravity estimation.
+     * This can be used to obtain additional information about the sensor.
+     */
+    val gravitySensor
+        get() = gravityNormEstimator.sensor
 
     /**
      * Gets or sets initial accelerometer scaling factors and cross coupling errors matrix.
@@ -2345,6 +2388,111 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
                 minimumRequiredGyroscopeMeasurements
             ), minimumRequiredMagnetometerMeasurements
         )
+
+    /**
+     * Gets estimated average of gravity norm expressed in meters per squared second (m/s^2).
+     * This is only available if no location is provided and initialization has completed.
+     */
+    val averageGravityNorm
+        get() = if (isGravityNormEstimated) {
+            gravityNormEstimator.averageNorm
+        } else {
+            null
+        }
+
+    /**
+     * Gets estimated average gravity norm as Acceleration.
+     * This is only available if no location is provided and initialization has completed.
+     */
+    val averageGravityNormAsMeasurement
+        get() = if (isGravityNormEstimated) {
+            gravityNormEstimator.averageNormAsMeasurement
+        } else {
+            null
+        }
+
+    /**
+     * Gets estimated average gravity norm as Acceleration.
+     * This is only available if no location is provided and initialization has completed.
+     */
+    fun getAverageGravityNormAsMeasurement(result: Acceleration): Boolean {
+        return if (isGravityNormEstimated) {
+            gravityNormEstimator.getAverageNormAsMeasurement(result)
+        } else {
+            false
+        }
+    }
+
+    /**
+     * Gets estimated variance of gravity norm expressed in (m^2/s^4).
+     * This is only available if no location is provided and initialization has completed.
+     */
+    val gravityNormVariance
+        get() = if (isGravityNormEstimated) {
+            gravityNormEstimator.normVariance
+        } else {
+            null
+        }
+
+    /**
+     * Gets estimated standard deviation of gravity norm expressed in meters per squared second
+     * (m/s^2).
+     * This is only available if no location is provided and initialization has completed.
+     */
+    val gravityNormStandardDeviation
+        get() = if (isGravityNormEstimated) {
+            gravityNormEstimator.normStandardDeviation
+        } else {
+            null
+        }
+
+    /**
+     * Gets estimated standard deviation of gravity norm as Acceleration.
+     * This is only available if no location is provided and initialization has completed.
+     */
+    val gravityNormStandardDeviationAsMeasurement
+        get() = if (isGravityNormEstimated) {
+            gravityNormEstimator.normStandardDeviationAsMeasurement
+        } else {
+            null
+        }
+
+    /**
+     * Gets estimated standard deviation of gravity norm as Acceleration.
+     * This is only available if no location is provided and initialization has completed.
+     *
+     * @param result instance where result will be stored.
+     * @return true i result is available, false otherwise.
+     */
+    fun getGravityNormStandardDeviationAsMeasurement(result: Acceleration): Boolean {
+        return if (isGravityNormEstimated) {
+            gravityNormEstimator.getNormStandardDeviationAsMeasurement(result)
+        } else {
+            false
+        }
+    }
+
+    /**
+     * Gets PSD (Power Spectral Density) of gravity norm expressed in (m^2 * s^-3).
+     * This is only available if no location is provided and initialization has completed.
+     */
+    val gravityPsd
+        get() = if (isGravityNormEstimated) {
+            gravityNormEstimator.psd
+        } else {
+            null
+        }
+
+    /**
+     * Gets root PSD (Power Spectral Density) of gravity norm expressed in (m * s^-1.5).
+     * This is only available if no location is provided and initialization has completed.
+     */
+    val gravityRootPsd
+        get() = if (isGravityNormEstimated) {
+            gravityNormEstimator.rootPsd
+        } else {
+            null
+        }
 
     /**
      * Indicates robust method used to solve accelerometer calibration.
@@ -4023,6 +4171,44 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
         get() = isReadyToSolveAccelerometerCalibration && isReadyToSolveGyroscopeCalibration && isReadyToSolveMagnetometerCalibration
 
     /**
+     * Starts calibrator.
+     * This method starts collecting accelerometer and gyroscope measurements.
+     * When calibrator is started, it begins with an initialization stage where accelerometer noise
+     * is estimated while device remains static. If no location is provided, during initialization
+     * gravity norm is also estimated.
+     * Once initialization is completed, calibrator determines intervals where device remains static
+     * when device has different poses, so that measurements are collected to solve calibration.
+     * If [solveCalibrationWhenEnoughMeasurements] is true, calibration is automatically solved
+     * once enough measurements are collected, otherwise a call to [calibrate] must be done to solve
+     * calibration.
+     *
+     * @throws IllegalStateException if calibrator is already running or a sensor is missing
+     * (either accelerometer or gravity if it is being used when no location is provided).
+     */
+    @Throws(IllegalStateException::class)
+    override fun start() {
+        super.start()
+        if (isGravityNormEstimated) {
+            gravityNormEstimator.start()
+        }
+    }
+
+    /**
+     * Stops calibrator.
+     * When this is called, no more accelerometer, gyroscope or gravity measurements are collected.
+     *
+     * @param running specifies the running parameter to be set. This is true when stop occurs
+     * internally during measurement collection to start solving calibration, otherwise is false
+     * when calling public [stop] method.
+     */
+    override fun internalStop(running: Boolean) {
+        if (gravityNormEstimator.running) {
+            gravityNormEstimator.stop()
+        }
+        super.internalStop(running)
+    }
+
+    /**
      * Internally solves calibration using collected measurements without checking pre-requisites
      * (if either calibrator is already running or enough measurements are available).
      * This is called when calibration occurs automatically when enough measurements are collected.
@@ -4067,6 +4253,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
         gyroscopeMeasurements.clear()
         magnetometerMeasurements.clear()
 
+        gravityNorm = null
+        accelerometerResultUnreliable = false
         accelerometerInitialBiasX = null
         accelerometerInitialBiasY = null
         accelerometerInitialBiasZ = null
@@ -4082,6 +4270,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
         accelerometerInternalCalibrator = null
         gyroscopeInternalCalibrator = null
         magnetometerInternalCalibrator = null
+
+        initialMagneticFluxDensityNorm = null
     }
 
     /**
@@ -4268,7 +4458,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
             accelerometerRobustThresholdFactor,
             accelerometerRobustStopThresholdFactor,
             location,
-            null,
+            gravityNorm,
             isAccelerometerGroundTruthInitialBias,
             isAccelerometerCommonAxisUsed,
             accelerometerInitialBiasX,
@@ -4376,13 +4566,15 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      */
     @Throws(IllegalStateException::class)
     private fun buildMagnetometerInternalCalibrator(): MagnetometerNonLinearCalibrator {
+        val groundTruthMagneticFluxDensityNorm = initialMagneticFluxDensityNorm
+        checkNotNull(groundTruthMagneticFluxDensityNorm)
+
         return MagnetometerInternalCalibratorBuilder(
             magnetometerMeasurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             magnetometerRobustPreliminarySubsetSize,
             minimumRequiredMagnetometerMeasurements,
             magnetometerRobustMethod,
-            timestamp,
             magnetometerRobustConfidence,
             magnetometerRobustMaxIterations,
             magnetometerRobustThreshold,
@@ -4403,7 +4595,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
             magnetometerInitialMzx,
             magnetometerInitialMzy,
             magnetometerBaseNoiseLevel,
-            worldMagneticModel,
             magnetometerQualityScoreMapper
         ).build()
     }
@@ -4473,6 +4664,22 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
             measurement: StandardDeviationBodyMagneticFluxDensity,
             measurementsFoundSoFar: Int,
             requiredMeasurements: Int
+        )
+    }
+
+    /**
+     * Interface to notify when gravity norm estimation is unreliable.
+     * This only happens if no location is provided and gravity sensor becomes unreliable.
+     */
+    fun interface OnUnreliableGravityEstimationListener {
+        /**
+         * Called when gravity norm estimation becomes unreliable.
+         * This only happens if no location is provided and gravity sensor becomes unreliable.
+         *
+         * @param calibrator calibrator that raised the event.
+         */
+        fun onUnreliableGravityEstimation(
+            calibrator: StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator
         )
     }
 

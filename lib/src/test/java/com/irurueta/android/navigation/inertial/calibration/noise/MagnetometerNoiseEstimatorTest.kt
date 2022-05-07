@@ -1177,21 +1177,9 @@ class MagnetometerNoiseEstimatorTest {
 
         val earthB = getEarthMagneticFluxDensity()
         val b = getBodyMagneticFluxDensity(earthB)
-        val bx = MagneticFluxDensityConverter.convert(
-            b.bx,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
-        val by = MagneticFluxDensityConverter.convert(
-            b.by,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
-        val bz = MagneticFluxDensityConverter.convert(
-            b.bz,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
+        val bx = MagneticFluxDensityConverter.teslaToMicroTesla(b.bx).toFloat()
+        val by = MagneticFluxDensityConverter.teslaToMicroTesla(b.by).toFloat()
+        val bz = MagneticFluxDensityConverter.teslaToMicroTesla(b.bz).toFloat()
         val hardIronX = 1.0f
         val hardIronY = 2.0f
         val hardIronZ = 3.0f
@@ -1236,21 +1224,9 @@ class MagnetometerNoiseEstimatorTest {
 
         val earthB = getEarthMagneticFluxDensity()
         val b = getBodyMagneticFluxDensity(earthB)
-        val bx = MagneticFluxDensityConverter.convert(
-            b.bx,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
-        val by = MagneticFluxDensityConverter.convert(
-            b.by,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
-        val bz = MagneticFluxDensityConverter.convert(
-            b.bz,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
+        val bx = MagneticFluxDensityConverter.teslaToMicroTesla(b.bx).toFloat()
+        val by = MagneticFluxDensityConverter.teslaToMicroTesla(b.by).toFloat()
+        val bz = MagneticFluxDensityConverter.teslaToMicroTesla(b.bz).toFloat()
         val timestamp = SystemClock.elapsedRealtimeNanos()
         val accuracy = SensorAccuracy.UNRELIABLE
 
@@ -1276,21 +1252,9 @@ class MagnetometerNoiseEstimatorTest {
 
         val earthB = getEarthMagneticFluxDensity()
         val b = getBodyMagneticFluxDensity(earthB)
-        val bx = MagneticFluxDensityConverter.convert(
-            b.bx,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
-        val by = MagneticFluxDensityConverter.convert(
-            b.by,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
-        val bz = MagneticFluxDensityConverter.convert(
-            b.bz,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
+        val bx = MagneticFluxDensityConverter.teslaToMicroTesla(b.bx).toFloat()
+        val by = MagneticFluxDensityConverter.teslaToMicroTesla(b.by).toFloat()
+        val bz = MagneticFluxDensityConverter.teslaToMicroTesla(b.bz).toFloat()
         val timestamp1 = SystemClock.elapsedRealtimeNanos()
         val timestamp2 = timestamp1 + TIME_INTERVAL_MILLIS * MILLIS_TO_NANOS
         val accuracy = SensorAccuracy.HIGH
@@ -1340,42 +1304,18 @@ class MagnetometerNoiseEstimatorTest {
 
         val earthB = getEarthMagneticFluxDensity()
         val b = getBodyMagneticFluxDensity(earthB)
-        val bx = MagneticFluxDensityConverter.convert(
-            b.bx,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
-        val by = MagneticFluxDensityConverter.convert(
-            b.by,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
-        val bz = MagneticFluxDensityConverter.convert(
-            b.bz,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
+        val bx = MagneticFluxDensityConverter.teslaToMicroTesla(b.bx).toFloat()
+        val by = MagneticFluxDensityConverter.teslaToMicroTesla(b.by).toFloat()
+        val bz = MagneticFluxDensityConverter.teslaToMicroTesla(b.bz).toFloat()
         val timestamp1 = SystemClock.elapsedRealtimeNanos()
         val accuracy = SensorAccuracy.HIGH
 
         // set measurement
         measurementListener.onMeasurement(bx, by, bz, null, null, null, timestamp1, accuracy)
 
-        val bxT = MagneticFluxDensityConverter.convert(
-            bx.toDouble(),
-            MagneticFluxDensityUnit.MICROTESLA,
-            MagneticFluxDensityUnit.TESLA
-        )
-        val byT = MagneticFluxDensityConverter.convert(
-            by.toDouble(),
-            MagneticFluxDensityUnit.MICROTESLA,
-            MagneticFluxDensityUnit.TESLA
-        )
-        val bzT = MagneticFluxDensityConverter.convert(
-            bz.toDouble(),
-            MagneticFluxDensityUnit.MICROTESLA,
-            MagneticFluxDensityUnit.TESLA
-        )
+        val bxT = MagneticFluxDensityConverter.microTeslaToTesla(bx.toDouble())
+        val byT = MagneticFluxDensityConverter.microTeslaToTesla(by.toDouble())
+        val bzT = MagneticFluxDensityConverter.microTeslaToTesla(bz.toDouble())
         verify(exactly = 1) { noiseEstimatorSpy.addTriad(bxT, byT, bzT) }
         verify(exactly = 0) { timeIntervalEstimatorSpy.addTimestamp(any<Double>()) }
 
@@ -1405,21 +1345,9 @@ class MagnetometerNoiseEstimatorTest {
 
         val earthB = getEarthMagneticFluxDensity()
         val b = getBodyMagneticFluxDensity(earthB)
-        val bx = MagneticFluxDensityConverter.convert(
-            b.bx,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
-        val by = MagneticFluxDensityConverter.convert(
-            b.by,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
-        val bz = MagneticFluxDensityConverter.convert(
-            b.bz,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
+        val bx = MagneticFluxDensityConverter.teslaToMicroTesla(b.bx).toFloat()
+        val by = MagneticFluxDensityConverter.teslaToMicroTesla(b.by).toFloat()
+        val bz = MagneticFluxDensityConverter.teslaToMicroTesla(b.bz).toFloat()
         val timestamp = SystemClock.elapsedRealtimeNanos()
         val accuracy = SensorAccuracy.HIGH
 
@@ -1446,21 +1374,9 @@ class MagnetometerNoiseEstimatorTest {
 
         val earthB = getEarthMagneticFluxDensity()
         val b = getBodyMagneticFluxDensity(earthB)
-        val bx = MagneticFluxDensityConverter.convert(
-            b.bx,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
-        val by = MagneticFluxDensityConverter.convert(
-            b.by,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
-        val bz = MagneticFluxDensityConverter.convert(
-            b.bz,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
+        val bx = MagneticFluxDensityConverter.teslaToMicroTesla(b.bx).toFloat()
+        val by = MagneticFluxDensityConverter.teslaToMicroTesla(b.by).toFloat()
+        val bz = MagneticFluxDensityConverter.teslaToMicroTesla(b.bz).toFloat()
         val timestamp = SystemClock.elapsedRealtimeNanos()
         val accuracy = SensorAccuracy.HIGH
 
@@ -1493,21 +1409,9 @@ class MagnetometerNoiseEstimatorTest {
 
         val earthB = getEarthMagneticFluxDensity()
         val b = getBodyMagneticFluxDensity(earthB)
-        val bx = MagneticFluxDensityConverter.convert(
-            b.bx,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
-        val by = MagneticFluxDensityConverter.convert(
-            b.by,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
-        val bz = MagneticFluxDensityConverter.convert(
-            b.bz,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
+        val bx = MagneticFluxDensityConverter.teslaToMicroTesla(b.bx).toFloat()
+        val by = MagneticFluxDensityConverter.teslaToMicroTesla(b.by).toFloat()
+        val bz = MagneticFluxDensityConverter.teslaToMicroTesla(b.bz).toFloat()
         val timestamp = SystemClock.elapsedRealtimeNanos()
         val accuracy = SensorAccuracy.HIGH
 
@@ -1563,21 +1467,9 @@ class MagnetometerNoiseEstimatorTest {
 
         val earthB = getEarthMagneticFluxDensity()
         val b = getBodyMagneticFluxDensity(earthB)
-        val bx = MagneticFluxDensityConverter.convert(
-            b.bx,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
-        val by = MagneticFluxDensityConverter.convert(
-            b.by,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
-        val bz = MagneticFluxDensityConverter.convert(
-            b.bz,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
+        val bx = MagneticFluxDensityConverter.teslaToMicroTesla(b.bx).toFloat()
+        val by = MagneticFluxDensityConverter.teslaToMicroTesla(b.by).toFloat()
+        val bz = MagneticFluxDensityConverter.teslaToMicroTesla(b.bz).toFloat()
         val timestamp = SystemClock.elapsedRealtimeNanos()
         val accuracy = SensorAccuracy.HIGH
 
@@ -1629,21 +1521,9 @@ class MagnetometerNoiseEstimatorTest {
 
         val earthB = getEarthMagneticFluxDensity()
         val b = getBodyMagneticFluxDensity(earthB)
-        val bx = MagneticFluxDensityConverter.convert(
-            b.bx,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
-        val by = MagneticFluxDensityConverter.convert(
-            b.by,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
-        val bz = MagneticFluxDensityConverter.convert(
-            b.bz,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
+        val bx = MagneticFluxDensityConverter.teslaToMicroTesla(b.bx).toFloat()
+        val by = MagneticFluxDensityConverter.teslaToMicroTesla(b.by).toFloat()
+        val bz = MagneticFluxDensityConverter.teslaToMicroTesla(b.bz).toFloat()
         val timestamp1 = SystemClock.elapsedRealtimeNanos()
         val accuracy = SensorAccuracy.HIGH
 
@@ -1701,21 +1581,9 @@ class MagnetometerNoiseEstimatorTest {
 
         val earthB = getEarthMagneticFluxDensity()
         val b = getBodyMagneticFluxDensity(earthB)
-        val bx = MagneticFluxDensityConverter.convert(
-            b.bx,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
-        val by = MagneticFluxDensityConverter.convert(
-            b.by,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
-        val bz = MagneticFluxDensityConverter.convert(
-            b.bz,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
+        val bx = MagneticFluxDensityConverter.teslaToMicroTesla(b.bx).toFloat()
+        val by = MagneticFluxDensityConverter.teslaToMicroTesla(b.by).toFloat()
+        val bz = MagneticFluxDensityConverter.teslaToMicroTesla(b.bz).toFloat()
         val timestamp1 = SystemClock.elapsedRealtimeNanos()
         val accuracy = SensorAccuracy.HIGH
 
@@ -1771,21 +1639,9 @@ class MagnetometerNoiseEstimatorTest {
 
         val earthB = getEarthMagneticFluxDensity()
         val b = getBodyMagneticFluxDensity(earthB)
-        val bx = MagneticFluxDensityConverter.convert(
-            b.bx,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
-        val by = MagneticFluxDensityConverter.convert(
-            b.by,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
-        val bz = MagneticFluxDensityConverter.convert(
-            b.bz,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
+        val bx = MagneticFluxDensityConverter.teslaToMicroTesla(b.bx).toFloat()
+        val by = MagneticFluxDensityConverter.teslaToMicroTesla(b.by).toFloat()
+        val bz = MagneticFluxDensityConverter.teslaToMicroTesla(b.bz).toFloat()
         val timestamp1 = SystemClock.elapsedRealtimeNanos()
         val accuracy = SensorAccuracy.HIGH
 
@@ -1844,21 +1700,9 @@ class MagnetometerNoiseEstimatorTest {
 
         val earthB = getEarthMagneticFluxDensity()
         val b = getBodyMagneticFluxDensity(earthB)
-        val bx = MagneticFluxDensityConverter.convert(
-            b.bx,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
-        val by = MagneticFluxDensityConverter.convert(
-            b.by,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
-        val bz = MagneticFluxDensityConverter.convert(
-            b.bz,
-            MagneticFluxDensityUnit.TESLA,
-            MagneticFluxDensityUnit.MICROTESLA
-        ).toFloat()
+        val bx = MagneticFluxDensityConverter.teslaToMicroTesla(b.bx).toFloat()
+        val by = MagneticFluxDensityConverter.teslaToMicroTesla(b.by).toFloat()
+        val bz = MagneticFluxDensityConverter.teslaToMicroTesla(b.bz).toFloat()
         val timestamp1 = SystemClock.elapsedRealtimeNanos()
         val accuracy = SensorAccuracy.HIGH
 

@@ -41,7 +41,6 @@ import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.Qu
 import com.irurueta.navigation.inertial.calibration.magnetometer.*
 import com.irurueta.navigation.inertial.estimators.BodyMagneticFluxDensityEstimator
 import com.irurueta.navigation.inertial.wmm.WMMEarthMagneticFluxDensityEstimator
-import com.irurueta.navigation.inertial.wmm.WorldMagneticModel
 import com.irurueta.numerical.robust.RobustEstimatorMethod
 import com.irurueta.statistics.UniformRandomizer
 import com.irurueta.units.*
@@ -52,21 +51,19 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.lang.reflect.InvocationTargetException
 import java.util.*
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 @RunWith(RobolectricTestRunner::class)
 class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
-    fun constructor_whenContextAndLocation_returnsDefaultValues() {
+    fun constructor_whenContext_returnsDefaultValues() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val location = getLocation()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default values
         assertSame(context, calibrator.context)
-        assertSame(location, calibrator.location)
-        assertNotNull(calibrator.timestamp)
-        assertNull(calibrator.worldMagneticModel)
         assertEquals(
             AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             calibrator.accelerometerSensorType
@@ -94,390 +91,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertNull(calibrator.initialMagnetometerHardIronAvailableListener)
         assertNull(calibrator.accuracyChangedListener)
         assertNotNull(calibrator.magnetometerQualityScoreMapper)
-        assertNull(calibrator.magnetometerInitialHardIronX)
-        assertNull(calibrator.magnetometerInitialHardIronY)
-        assertNull(calibrator.magnetometerInitialHardIronZ)
-        assertNull(calibrator.magnetometerInitialHardIronXAsMeasurement)
-        val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        assertFalse(calibrator.getMagnetometerInitialHardIronXAsMeasurement(magneticFluxDensity))
-        assertNull(calibrator.magnetometerInitialHardIronYAsMeasurement)
-        assertFalse(calibrator.getMagnetometerInitialHardIronYAsMeasurement(magneticFluxDensity))
-        assertNull(calibrator.magnetometerInitialHardIronZAsMeasurement)
-        assertFalse(calibrator.getMagnetometerInitialHardIronZAsMeasurement(magneticFluxDensity))
-        assertNull(calibrator.magnetometerInitialHardIronAsTriad)
-        val triad = MagneticFluxDensityTriad()
-        assertFalse(calibrator.getMagnetometerInitialHardIronAsTriad(triad))
-        assertNull(calibrator.accelerometerSensor)
-        assertNull(calibrator.magnetometerSensor)
-        val mg1 = Matrix(MM_SIZE, MM_SIZE)
-        assertEquals(mg1, calibrator.magnetometerInitialMm)
-        val mg2 = Matrix.identity(MM_SIZE, MM_SIZE)
-        calibrator.getMagnetometerInitialMm(mg2)
-        assertEquals(mg1, mg2)
-        assertEquals(0.0, calibrator.magnetometerInitialSy, 0.0)
-        assertEquals(0.0, calibrator.magnetometerInitialSz, 0.0)
-        assertEquals(0.0, calibrator.magnetometerInitialSz, 0.0)
-        assertEquals(0.0, calibrator.magnetometerInitialMxy, 0.0)
-        assertEquals(0.0, calibrator.magnetometerInitialMxz, 0.0)
-        assertEquals(0.0, calibrator.magnetometerInitialMyx, 0.0)
-        assertEquals(0.0, calibrator.magnetometerInitialMyz, 0.0)
-        assertEquals(0.0, calibrator.magnetometerInitialMzx, 0.0)
-        assertEquals(0.0, calibrator.magnetometerInitialMzy, 0.0)
-        assertFalse(calibrator.isMagnetometerCommonAxisUsed)
-        assertEquals(
-            StaticIntervalMagnetometerCalibrator.MAGNETOMETER_UNKNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.minimumRequiredMagnetometerMeasurements
-        )
-        assertEquals(
-            calibrator.minimumRequiredMagnetometerMeasurements,
-            calibrator.minimumRequiredMeasurements
-        )
-        assertNull(calibrator.magnetometerRobustMethod)
-        assertEquals(
-            StaticIntervalMagnetometerCalibrator.ROBUST_DEFAULT_CONFIDENCE,
-            calibrator.magnetometerRobustConfidence,
-            0.0
-        )
-        assertEquals(
-            StaticIntervalMagnetometerCalibrator.ROBUST_DEFAULT_MAX_ITERATIONS,
-            calibrator.magnetometerRobustMaxIterations
-        )
-        assertEquals(
-            StaticIntervalMagnetometerCalibrator.MAGNETOMETER_UNKNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.magnetometerRobustPreliminarySubsetSize
-        )
-        assertNull(calibrator.magnetometerRobustThreshold)
-        assertEquals(
-            StaticIntervalMagnetometerCalibrator.DEFAULT_ROBUST_THRESHOLD_FACTOR,
-            calibrator.magnetometerRobustThresholdFactor,
-            0.0
-        )
-        assertEquals(
-            StaticIntervalMagnetometerCalibrator.DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR,
-            calibrator.magnetometerRobustStopThresholdFactor,
-            0.0
-        )
-        assertNull(calibrator.estimatedMagnetometerMm)
-        assertNull(calibrator.estimatedMagnetometerSx)
-        assertNull(calibrator.estimatedMagnetometerSy)
-        assertNull(calibrator.estimatedMagnetometerSz)
-        assertNull(calibrator.estimatedMagnetometerMxy)
-        assertNull(calibrator.estimatedMagnetometerMxz)
-        assertNull(calibrator.estimatedMagnetometerMyx)
-        assertNull(calibrator.estimatedMagnetometerMyz)
-        assertNull(calibrator.estimatedMagnetometerMzx)
-        assertNull(calibrator.estimatedMagnetometerMzy)
-        assertNull(calibrator.estimatedMagnetometerCovariance)
-        assertNull(calibrator.estimatedMagnetometerChiSq)
-        assertNull(calibrator.estimatedMagnetometerMse)
-        assertNull(calibrator.estimatedMagnetometerHardIronX)
-        assertNull(calibrator.estimatedMagnetometerHardIronY)
-        assertNull(calibrator.estimatedMagnetometerHardIronZ)
-        assertNull(calibrator.estimatedMagnetometerHardIronXAsMeasurement)
-        assertFalse(calibrator.getEstimatedMagnetometerHardIronXAsMeasurement(magneticFluxDensity))
-        assertNull(calibrator.estimatedMagnetometerHardIronYAsMeasurement)
-        assertFalse(calibrator.getEstimatedMagnetometerHardIronYAsMeasurement(magneticFluxDensity))
-        assertNull(calibrator.estimatedMagnetometerHardIronZAsMeasurement)
-        assertFalse(calibrator.getEstimatedMagnetometerHardIronZAsMeasurement(magneticFluxDensity))
-        assertNull(calibrator.estimatedMagnetometerHardIronAsTriad)
-        assertFalse(calibrator.getEstimatedMagnetometerHardIronAsTriad(triad))
-        assertNull(calibrator.magnetometerBaseNoiseLevel)
-        assertNull(calibrator.magnetometerBaseNoiseLevelAsMeasurement)
-        assertFalse(calibrator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
-        assertEquals(0, calibrator.numberOfProcessedMagnetometerMeasurements)
-        assertTrue(calibrator.magnetometerMeasurements.isEmpty())
-        assertFalse(calibrator.isReadyToSolveCalibration)
-        assertFalse(calibrator.running)
-        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
-            calibrator.initialStaticSamples
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
-            calibrator.thresholdFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
-            calibrator.instantaneousNoiseLevelFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            0.0
-        )
-        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
-        assertEquals(
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            baseNoiseLevel1.value.toDouble(),
-            0.0
-        )
-        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, baseNoiseLevel1.unit)
-        val baseNoiseLevel2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
-        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
-        assertNull(calibrator.accelerometerBaseNoiseLevel)
-        assertNull(calibrator.accelerometerBaseNoiseLevelAsMeasurement)
-        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        assertFalse(calibrator.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerBaseNoiseLevelPsd)
-        assertNull(calibrator.accelerometerBaseNoiseLevelRootPsd)
-        assertNull(calibrator.threshold)
-        assertNull(calibrator.thresholdAsMeasurement)
-        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
-        assertEquals(0, calibrator.processedStaticSamples)
-        assertEquals(0, calibrator.processedDynamicSamples)
-        assertFalse(calibrator.isStaticIntervalSkipped)
-        assertFalse(calibrator.isDynamicIntervalSkipped)
-        assertNull(calibrator.accelerometerAverageTimeInterval)
-        assertNull(calibrator.accelerometerAverageTimeIntervalAsTime)
-        val time = Time(0.0, TimeUnit.SECOND)
-        assertFalse(calibrator.getAccelerometerAverageTimeIntervalAsTime(time))
-        assertNull(calibrator.accelerometerTimeIntervalVariance)
-        assertNull(calibrator.accelerometerTimeIntervalStandardDeviation)
-        assertNull(calibrator.accelerometerTimeIntervalStandardDeviationAsTime)
-        assertFalse(calibrator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
-        assertEquals(
-            StaticIntervalMagnetometerCalibrator.MAGNETOMETER_UNKNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.requiredMeasurements
-        )
-        assertEquals(0, calibrator.numberOfProcessedAccelerometerMeasurements)
-    }
-
-    @Test
-    fun constructor_whenContextLocationAndTimestamp_returnsExpectedValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val location = getLocation()
-        val timestamp = Date()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location, timestamp)
-
-        // check default values
-        assertSame(context, calibrator.context)
-        assertSame(location, calibrator.location)
-        assertSame(timestamp, calibrator.timestamp)
-        assertNull(calibrator.worldMagneticModel)
-        assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
-            calibrator.accelerometerSensorType
-        )
-        assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
-            calibrator.magnetometerSensorType
-        )
-        assertEquals(SensorDelay.FASTEST, calibrator.accelerometerSensorDelay)
-        assertEquals(SensorDelay.FASTEST, calibrator.magnetometerSensorDelay)
-        assertTrue(calibrator.solveCalibrationWhenEnoughMeasurements)
-        assertFalse(calibrator.isMagnetometerGroundTruthInitialHardIron)
-        assertNull(calibrator.initializationStartedListener)
-        assertNull(calibrator.initializationCompletedListener)
-        assertNull(calibrator.errorListener)
-        assertNull(calibrator.staticIntervalDetectedListener)
-        assertNull(calibrator.dynamicIntervalDetectedListener)
-        assertNull(calibrator.staticIntervalSkippedListener)
-        assertNull(calibrator.dynamicIntervalSkippedListener)
-        assertNull(calibrator.generatedMagnetometerMeasurementListener)
-        assertNull(calibrator.readyToSolveCalibrationListener)
-        assertNull(calibrator.calibrationSolvingStartedListener)
-        assertNull(calibrator.calibrationCompletedListener)
-        assertNull(calibrator.stoppedListener)
-        assertNull(calibrator.initialMagnetometerHardIronAvailableListener)
-        assertNull(calibrator.accuracyChangedListener)
-        assertNotNull(calibrator.magnetometerQualityScoreMapper)
-        assertNull(calibrator.magnetometerInitialHardIronX)
-        assertNull(calibrator.magnetometerInitialHardIronY)
-        assertNull(calibrator.magnetometerInitialHardIronZ)
-        assertNull(calibrator.magnetometerInitialHardIronXAsMeasurement)
-        val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        assertFalse(calibrator.getMagnetometerInitialHardIronXAsMeasurement(magneticFluxDensity))
-        assertNull(calibrator.magnetometerInitialHardIronYAsMeasurement)
-        assertFalse(calibrator.getMagnetometerInitialHardIronYAsMeasurement(magneticFluxDensity))
-        assertNull(calibrator.magnetometerInitialHardIronZAsMeasurement)
-        assertFalse(calibrator.getMagnetometerInitialHardIronZAsMeasurement(magneticFluxDensity))
-        assertNull(calibrator.magnetometerInitialHardIronAsTriad)
-        val triad = MagneticFluxDensityTriad()
-        assertFalse(calibrator.getMagnetometerInitialHardIronAsTriad(triad))
-        assertNull(calibrator.accelerometerSensor)
-        assertNull(calibrator.magnetometerSensor)
-        val mg1 = Matrix(MM_SIZE, MM_SIZE)
-        assertEquals(mg1, calibrator.magnetometerInitialMm)
-        val mg2 = Matrix.identity(MM_SIZE, MM_SIZE)
-        calibrator.getMagnetometerInitialMm(mg2)
-        assertEquals(mg1, mg2)
-        assertEquals(0.0, calibrator.magnetometerInitialSy, 0.0)
-        assertEquals(0.0, calibrator.magnetometerInitialSz, 0.0)
-        assertEquals(0.0, calibrator.magnetometerInitialSz, 0.0)
-        assertEquals(0.0, calibrator.magnetometerInitialMxy, 0.0)
-        assertEquals(0.0, calibrator.magnetometerInitialMxz, 0.0)
-        assertEquals(0.0, calibrator.magnetometerInitialMyx, 0.0)
-        assertEquals(0.0, calibrator.magnetometerInitialMyz, 0.0)
-        assertEquals(0.0, calibrator.magnetometerInitialMzx, 0.0)
-        assertEquals(0.0, calibrator.magnetometerInitialMzy, 0.0)
-        assertFalse(calibrator.isMagnetometerCommonAxisUsed)
-        assertEquals(
-            StaticIntervalMagnetometerCalibrator.MAGNETOMETER_UNKNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.minimumRequiredMagnetometerMeasurements
-        )
-        assertEquals(
-            calibrator.minimumRequiredMagnetometerMeasurements,
-            calibrator.minimumRequiredMeasurements
-        )
-        assertNull(calibrator.magnetometerRobustMethod)
-        assertEquals(
-            StaticIntervalMagnetometerCalibrator.ROBUST_DEFAULT_CONFIDENCE,
-            calibrator.magnetometerRobustConfidence,
-            0.0
-        )
-        assertEquals(
-            StaticIntervalMagnetometerCalibrator.ROBUST_DEFAULT_MAX_ITERATIONS,
-            calibrator.magnetometerRobustMaxIterations
-        )
-        assertEquals(
-            StaticIntervalMagnetometerCalibrator.MAGNETOMETER_UNKNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.magnetometerRobustPreliminarySubsetSize
-        )
-        assertNull(calibrator.magnetometerRobustThreshold)
-        assertEquals(
-            StaticIntervalMagnetometerCalibrator.DEFAULT_ROBUST_THRESHOLD_FACTOR,
-            calibrator.magnetometerRobustThresholdFactor,
-            0.0
-        )
-        assertEquals(
-            StaticIntervalMagnetometerCalibrator.DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR,
-            calibrator.magnetometerRobustStopThresholdFactor,
-            0.0
-        )
-        assertNull(calibrator.estimatedMagnetometerMm)
-        assertNull(calibrator.estimatedMagnetometerSx)
-        assertNull(calibrator.estimatedMagnetometerSy)
-        assertNull(calibrator.estimatedMagnetometerSz)
-        assertNull(calibrator.estimatedMagnetometerMxy)
-        assertNull(calibrator.estimatedMagnetometerMxz)
-        assertNull(calibrator.estimatedMagnetometerMyx)
-        assertNull(calibrator.estimatedMagnetometerMyz)
-        assertNull(calibrator.estimatedMagnetometerMzx)
-        assertNull(calibrator.estimatedMagnetometerMzy)
-        assertNull(calibrator.estimatedMagnetometerCovariance)
-        assertNull(calibrator.estimatedMagnetometerChiSq)
-        assertNull(calibrator.estimatedMagnetometerMse)
-        assertNull(calibrator.estimatedMagnetometerHardIronX)
-        assertNull(calibrator.estimatedMagnetometerHardIronY)
-        assertNull(calibrator.estimatedMagnetometerHardIronZ)
-        assertNull(calibrator.estimatedMagnetometerHardIronXAsMeasurement)
-        assertFalse(calibrator.getEstimatedMagnetometerHardIronXAsMeasurement(magneticFluxDensity))
-        assertNull(calibrator.estimatedMagnetometerHardIronYAsMeasurement)
-        assertFalse(calibrator.getEstimatedMagnetometerHardIronYAsMeasurement(magneticFluxDensity))
-        assertNull(calibrator.estimatedMagnetometerHardIronZAsMeasurement)
-        assertFalse(calibrator.getEstimatedMagnetometerHardIronZAsMeasurement(magneticFluxDensity))
-        assertNull(calibrator.estimatedMagnetometerHardIronAsTriad)
-        assertFalse(calibrator.getEstimatedMagnetometerHardIronAsTriad(triad))
-        assertNull(calibrator.magnetometerBaseNoiseLevel)
-        assertNull(calibrator.magnetometerBaseNoiseLevelAsMeasurement)
-        assertFalse(calibrator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
-        assertEquals(0, calibrator.numberOfProcessedMagnetometerMeasurements)
-        assertTrue(calibrator.magnetometerMeasurements.isEmpty())
-        assertFalse(calibrator.isReadyToSolveCalibration)
-        assertFalse(calibrator.running)
-        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
-            calibrator.initialStaticSamples
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
-            calibrator.thresholdFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
-            calibrator.instantaneousNoiseLevelFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            0.0
-        )
-        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
-        assertEquals(
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            baseNoiseLevel1.value.toDouble(),
-            0.0
-        )
-        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, baseNoiseLevel1.unit)
-        val baseNoiseLevel2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
-        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
-        assertNull(calibrator.accelerometerBaseNoiseLevel)
-        assertNull(calibrator.accelerometerBaseNoiseLevelAsMeasurement)
-        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        assertFalse(calibrator.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerBaseNoiseLevelPsd)
-        assertNull(calibrator.accelerometerBaseNoiseLevelRootPsd)
-        assertNull(calibrator.threshold)
-        assertNull(calibrator.thresholdAsMeasurement)
-        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
-        assertEquals(0, calibrator.processedStaticSamples)
-        assertEquals(0, calibrator.processedDynamicSamples)
-        assertFalse(calibrator.isStaticIntervalSkipped)
-        assertFalse(calibrator.isDynamicIntervalSkipped)
-        assertNull(calibrator.accelerometerAverageTimeInterval)
-        assertNull(calibrator.accelerometerAverageTimeIntervalAsTime)
-        val time = Time(0.0, TimeUnit.SECOND)
-        assertFalse(calibrator.getAccelerometerAverageTimeIntervalAsTime(time))
-        assertNull(calibrator.accelerometerTimeIntervalVariance)
-        assertNull(calibrator.accelerometerTimeIntervalStandardDeviation)
-        assertNull(calibrator.accelerometerTimeIntervalStandardDeviationAsTime)
-        assertFalse(calibrator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
-        assertEquals(
-            StaticIntervalMagnetometerCalibrator.MAGNETOMETER_UNKNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.requiredMeasurements
-        )
-        assertEquals(0, calibrator.numberOfProcessedAccelerometerMeasurements)
-    }
-
-    @Test
-    fun constructor_whenWorldMagneticModel_returnsExpectedValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val location = getLocation()
-        val timestamp = Date()
-        val worldMagneticModel = WorldMagneticModel()
-        val calibrator =
-            StaticIntervalMagnetometerCalibrator(context, location, timestamp, worldMagneticModel)
-
-        // check default values
-        assertSame(context, calibrator.context)
-        assertSame(location, calibrator.location)
-        assertSame(timestamp, calibrator.timestamp)
-        assertSame(worldMagneticModel, calibrator.worldMagneticModel)
-        assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
-            calibrator.accelerometerSensorType
-        )
-        assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
-            calibrator.magnetometerSensorType
-        )
-        assertEquals(SensorDelay.FASTEST, calibrator.accelerometerSensorDelay)
-        assertEquals(SensorDelay.FASTEST, calibrator.magnetometerSensorDelay)
-        assertTrue(calibrator.solveCalibrationWhenEnoughMeasurements)
-        assertFalse(calibrator.isMagnetometerGroundTruthInitialHardIron)
-        assertNull(calibrator.initializationStartedListener)
-        assertNull(calibrator.initializationCompletedListener)
-        assertNull(calibrator.errorListener)
-        assertNull(calibrator.staticIntervalDetectedListener)
-        assertNull(calibrator.dynamicIntervalDetectedListener)
-        assertNull(calibrator.staticIntervalSkippedListener)
-        assertNull(calibrator.dynamicIntervalSkippedListener)
-        assertNull(calibrator.generatedMagnetometerMeasurementListener)
-        assertNull(calibrator.readyToSolveCalibrationListener)
-        assertNull(calibrator.calibrationSolvingStartedListener)
-        assertNull(calibrator.calibrationCompletedListener)
-        assertNull(calibrator.stoppedListener)
-        assertNull(calibrator.initialMagnetometerHardIronAvailableListener)
-        assertNull(calibrator.accuracyChangedListener)
-        assertNotNull(calibrator.magnetometerQualityScoreMapper)
+        assertNull(calibrator.initialMagneticFluxDensityNorm)
         assertNull(calibrator.magnetometerInitialHardIronX)
         assertNull(calibrator.magnetometerInitialHardIronY)
         assertNull(calibrator.magnetometerInitialHardIronZ)
@@ -633,23 +247,14 @@ class StaticIntervalMagnetometerCalibratorTest {
     @Test
     fun constructor_whenAccelerometerSensorType_returnsExpectedValues() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val location = getLocation()
-        val timestamp = Date()
-        val worldMagneticModel = WorldMagneticModel()
         val calibrator =
             StaticIntervalMagnetometerCalibrator(
                 context,
-                location,
-                timestamp,
-                worldMagneticModel,
                 AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
             )
 
         // check default values
         assertSame(context, calibrator.context)
-        assertSame(location, calibrator.location)
-        assertSame(timestamp, calibrator.timestamp)
-        assertSame(worldMagneticModel, calibrator.worldMagneticModel)
         assertEquals(
             AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             calibrator.accelerometerSensorType
@@ -677,6 +282,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertNull(calibrator.initialMagnetometerHardIronAvailableListener)
         assertNull(calibrator.accuracyChangedListener)
         assertNotNull(calibrator.magnetometerQualityScoreMapper)
+        assertNull(calibrator.initialMagneticFluxDensityNorm)
         assertNull(calibrator.magnetometerInitialHardIronX)
         assertNull(calibrator.magnetometerInitialHardIronY)
         assertNull(calibrator.magnetometerInitialHardIronZ)
@@ -832,24 +438,15 @@ class StaticIntervalMagnetometerCalibratorTest {
     @Test
     fun constructor_whenMagnetometerSensorType_returnsExpectedValues() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val location = getLocation()
-        val timestamp = Date()
-        val worldMagneticModel = WorldMagneticModel()
         val calibrator =
             StaticIntervalMagnetometerCalibrator(
                 context,
-                location,
-                timestamp,
-                worldMagneticModel,
                 AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
                 MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED
             )
 
         // check default values
         assertSame(context, calibrator.context)
-        assertSame(location, calibrator.location)
-        assertSame(timestamp, calibrator.timestamp)
-        assertSame(worldMagneticModel, calibrator.worldMagneticModel)
         assertEquals(
             AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             calibrator.accelerometerSensorType
@@ -877,6 +474,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertNull(calibrator.initialMagnetometerHardIronAvailableListener)
         assertNull(calibrator.accuracyChangedListener)
         assertNotNull(calibrator.magnetometerQualityScoreMapper)
+        assertNull(calibrator.initialMagneticFluxDensityNorm)
         assertNull(calibrator.magnetometerInitialHardIronX)
         assertNull(calibrator.magnetometerInitialHardIronY)
         assertNull(calibrator.magnetometerInitialHardIronZ)
@@ -1032,15 +630,9 @@ class StaticIntervalMagnetometerCalibratorTest {
     @Test
     fun constructor_whenAccelerometerSensorDelay_returnsExpectedValues() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val location = getLocation()
-        val timestamp = Date()
-        val worldMagneticModel = WorldMagneticModel()
         val calibrator =
             StaticIntervalMagnetometerCalibrator(
                 context,
-                location,
-                timestamp,
-                worldMagneticModel,
                 AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
                 MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
                 SensorDelay.NORMAL
@@ -1048,9 +640,6 @@ class StaticIntervalMagnetometerCalibratorTest {
 
         // check default values
         assertSame(context, calibrator.context)
-        assertSame(location, calibrator.location)
-        assertSame(timestamp, calibrator.timestamp)
-        assertSame(worldMagneticModel, calibrator.worldMagneticModel)
         assertEquals(
             AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             calibrator.accelerometerSensorType
@@ -1078,6 +667,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertNull(calibrator.initialMagnetometerHardIronAvailableListener)
         assertNull(calibrator.accuracyChangedListener)
         assertNotNull(calibrator.magnetometerQualityScoreMapper)
+        assertNull(calibrator.initialMagneticFluxDensityNorm)
         assertNull(calibrator.magnetometerInitialHardIronX)
         assertNull(calibrator.magnetometerInitialHardIronY)
         assertNull(calibrator.magnetometerInitialHardIronZ)
@@ -1233,15 +823,9 @@ class StaticIntervalMagnetometerCalibratorTest {
     @Test
     fun constructor_whenMagnetometerSensorDelay_returnsExpectedValues() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val location = getLocation()
-        val timestamp = Date()
-        val worldMagneticModel = WorldMagneticModel()
         val calibrator =
             StaticIntervalMagnetometerCalibrator(
                 context,
-                location,
-                timestamp,
-                worldMagneticModel,
                 AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
                 MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
                 SensorDelay.NORMAL,
@@ -1250,9 +834,6 @@ class StaticIntervalMagnetometerCalibratorTest {
 
         // check default values
         assertSame(context, calibrator.context)
-        assertSame(location, calibrator.location)
-        assertSame(timestamp, calibrator.timestamp)
-        assertSame(worldMagneticModel, calibrator.worldMagneticModel)
         assertEquals(
             AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             calibrator.accelerometerSensorType
@@ -1280,6 +861,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertNull(calibrator.initialMagnetometerHardIronAvailableListener)
         assertNull(calibrator.accuracyChangedListener)
         assertNotNull(calibrator.magnetometerQualityScoreMapper)
+        assertNull(calibrator.initialMagneticFluxDensityNorm)
         assertNull(calibrator.magnetometerInitialHardIronX)
         assertNull(calibrator.magnetometerInitialHardIronY)
         assertNull(calibrator.magnetometerInitialHardIronZ)
@@ -1435,15 +1017,9 @@ class StaticIntervalMagnetometerCalibratorTest {
     @Test
     fun constructor_whenSolveCalibrationWhenEnoughMeasurements_returnsExpectedValues() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val location = getLocation()
-        val timestamp = Date()
-        val worldMagneticModel = WorldMagneticModel()
         val calibrator =
             StaticIntervalMagnetometerCalibrator(
                 context,
-                location,
-                timestamp,
-                worldMagneticModel,
                 AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
                 MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
                 SensorDelay.NORMAL,
@@ -1453,9 +1029,6 @@ class StaticIntervalMagnetometerCalibratorTest {
 
         // check default values
         assertSame(context, calibrator.context)
-        assertSame(location, calibrator.location)
-        assertSame(timestamp, calibrator.timestamp)
-        assertSame(worldMagneticModel, calibrator.worldMagneticModel)
         assertEquals(
             AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             calibrator.accelerometerSensorType
@@ -1483,6 +1056,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertNull(calibrator.initialMagnetometerHardIronAvailableListener)
         assertNull(calibrator.accuracyChangedListener)
         assertNotNull(calibrator.magnetometerQualityScoreMapper)
+        assertNull(calibrator.initialMagneticFluxDensityNorm)
         assertNull(calibrator.magnetometerInitialHardIronX)
         assertNull(calibrator.magnetometerInitialHardIronY)
         assertNull(calibrator.magnetometerInitialHardIronZ)
@@ -1638,15 +1212,9 @@ class StaticIntervalMagnetometerCalibratorTest {
     @Test
     fun constructor_whenIsMagnetometerGroundTruthInitialHardIron_returnsExpectedValues() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val location = getLocation()
-        val timestamp = Date()
-        val worldMagneticModel = WorldMagneticModel()
         val calibrator =
             StaticIntervalMagnetometerCalibrator(
                 context,
-                location,
-                timestamp,
-                worldMagneticModel,
                 AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
                 MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
                 SensorDelay.NORMAL,
@@ -1657,9 +1225,6 @@ class StaticIntervalMagnetometerCalibratorTest {
 
         // check default values
         assertSame(context, calibrator.context)
-        assertSame(location, calibrator.location)
-        assertSame(timestamp, calibrator.timestamp)
-        assertSame(worldMagneticModel, calibrator.worldMagneticModel)
         assertEquals(
             AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             calibrator.accelerometerSensorType
@@ -1687,6 +1252,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertNull(calibrator.initialMagnetometerHardIronAvailableListener)
         assertNull(calibrator.accuracyChangedListener)
         assertNotNull(calibrator.magnetometerQualityScoreMapper)
+        assertNull(calibrator.initialMagneticFluxDensityNorm)
         assertNull(calibrator.magnetometerInitialHardIronX)
         assertNull(calibrator.magnetometerInitialHardIronY)
         assertNull(calibrator.magnetometerInitialHardIronZ)
@@ -1844,15 +1410,9 @@ class StaticIntervalMagnetometerCalibratorTest {
         val initializationStartedListener =
             mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalMagnetometerCalibrator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val location = getLocation()
-        val timestamp = Date()
-        val worldMagneticModel = WorldMagneticModel()
         val calibrator =
             StaticIntervalMagnetometerCalibrator(
                 context,
-                location,
-                timestamp,
-                worldMagneticModel,
                 AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
                 MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
                 SensorDelay.NORMAL,
@@ -1864,9 +1424,6 @@ class StaticIntervalMagnetometerCalibratorTest {
 
         // check default values
         assertSame(context, calibrator.context)
-        assertSame(location, calibrator.location)
-        assertSame(timestamp, calibrator.timestamp)
-        assertSame(worldMagneticModel, calibrator.worldMagneticModel)
         assertEquals(
             AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             calibrator.accelerometerSensorType
@@ -1894,6 +1451,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertNull(calibrator.initialMagnetometerHardIronAvailableListener)
         assertNull(calibrator.accuracyChangedListener)
         assertNotNull(calibrator.magnetometerQualityScoreMapper)
+        assertNull(calibrator.initialMagneticFluxDensityNorm)
         assertNull(calibrator.magnetometerInitialHardIronX)
         assertNull(calibrator.magnetometerInitialHardIronY)
         assertNull(calibrator.magnetometerInitialHardIronZ)
@@ -2053,15 +1611,9 @@ class StaticIntervalMagnetometerCalibratorTest {
         val initializationCompletedListener =
             mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalMagnetometerCalibrator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val location = getLocation()
-        val timestamp = Date()
-        val worldMagneticModel = WorldMagneticModel()
         val calibrator =
             StaticIntervalMagnetometerCalibrator(
                 context,
-                location,
-                timestamp,
-                worldMagneticModel,
                 AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
                 MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
                 SensorDelay.NORMAL,
@@ -2074,9 +1626,6 @@ class StaticIntervalMagnetometerCalibratorTest {
 
         // check default values
         assertSame(context, calibrator.context)
-        assertSame(location, calibrator.location)
-        assertSame(timestamp, calibrator.timestamp)
-        assertSame(worldMagneticModel, calibrator.worldMagneticModel)
         assertEquals(
             AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             calibrator.accelerometerSensorType
@@ -2104,6 +1653,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertNull(calibrator.initialMagnetometerHardIronAvailableListener)
         assertNull(calibrator.accuracyChangedListener)
         assertNotNull(calibrator.magnetometerQualityScoreMapper)
+        assertNull(calibrator.initialMagneticFluxDensityNorm)
         assertNull(calibrator.magnetometerInitialHardIronX)
         assertNull(calibrator.magnetometerInitialHardIronY)
         assertNull(calibrator.magnetometerInitialHardIronZ)
@@ -2265,15 +1815,9 @@ class StaticIntervalMagnetometerCalibratorTest {
         val errorListener =
             mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalMagnetometerCalibrator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val location = getLocation()
-        val timestamp = Date()
-        val worldMagneticModel = WorldMagneticModel()
         val calibrator =
             StaticIntervalMagnetometerCalibrator(
                 context,
-                location,
-                timestamp,
-                worldMagneticModel,
                 AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
                 MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
                 SensorDelay.NORMAL,
@@ -2287,9 +1831,6 @@ class StaticIntervalMagnetometerCalibratorTest {
 
         // check default values
         assertSame(context, calibrator.context)
-        assertSame(location, calibrator.location)
-        assertSame(timestamp, calibrator.timestamp)
-        assertSame(worldMagneticModel, calibrator.worldMagneticModel)
         assertEquals(
             AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             calibrator.accelerometerSensorType
@@ -2317,6 +1858,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertNull(calibrator.initialMagnetometerHardIronAvailableListener)
         assertNull(calibrator.accuracyChangedListener)
         assertNotNull(calibrator.magnetometerQualityScoreMapper)
+        assertNull(calibrator.initialMagneticFluxDensityNorm)
         assertNull(calibrator.magnetometerInitialHardIronX)
         assertNull(calibrator.magnetometerInitialHardIronY)
         assertNull(calibrator.magnetometerInitialHardIronZ)
@@ -2480,15 +2022,9 @@ class StaticIntervalMagnetometerCalibratorTest {
         val staticIntervalDetectedListener =
             mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<StaticIntervalMagnetometerCalibrator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val location = getLocation()
-        val timestamp = Date()
-        val worldMagneticModel = WorldMagneticModel()
         val calibrator =
             StaticIntervalMagnetometerCalibrator(
                 context,
-                location,
-                timestamp,
-                worldMagneticModel,
                 AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
                 MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
                 SensorDelay.NORMAL,
@@ -2503,9 +2039,6 @@ class StaticIntervalMagnetometerCalibratorTest {
 
         // check default values
         assertSame(context, calibrator.context)
-        assertSame(location, calibrator.location)
-        assertSame(timestamp, calibrator.timestamp)
-        assertSame(worldMagneticModel, calibrator.worldMagneticModel)
         assertEquals(
             AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             calibrator.accelerometerSensorType
@@ -2533,6 +2066,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertNull(calibrator.initialMagnetometerHardIronAvailableListener)
         assertNull(calibrator.accuracyChangedListener)
         assertNotNull(calibrator.magnetometerQualityScoreMapper)
+        assertNull(calibrator.initialMagneticFluxDensityNorm)
         assertNull(calibrator.magnetometerInitialHardIronX)
         assertNull(calibrator.magnetometerInitialHardIronY)
         assertNull(calibrator.magnetometerInitialHardIronZ)
@@ -2698,15 +2232,9 @@ class StaticIntervalMagnetometerCalibratorTest {
         val dynamicIntervalDetectedListener =
             mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener<StaticIntervalMagnetometerCalibrator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val location = getLocation()
-        val timestamp = Date()
-        val worldMagneticModel = WorldMagneticModel()
         val calibrator =
             StaticIntervalMagnetometerCalibrator(
                 context,
-                location,
-                timestamp,
-                worldMagneticModel,
                 AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
                 MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
                 SensorDelay.NORMAL,
@@ -2722,9 +2250,6 @@ class StaticIntervalMagnetometerCalibratorTest {
 
         // check default values
         assertSame(context, calibrator.context)
-        assertSame(location, calibrator.location)
-        assertSame(timestamp, calibrator.timestamp)
-        assertSame(worldMagneticModel, calibrator.worldMagneticModel)
         assertEquals(
             AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             calibrator.accelerometerSensorType
@@ -2752,6 +2277,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertNull(calibrator.initialMagnetometerHardIronAvailableListener)
         assertNull(calibrator.accuracyChangedListener)
         assertNotNull(calibrator.magnetometerQualityScoreMapper)
+        assertNull(calibrator.initialMagneticFluxDensityNorm)
         assertNull(calibrator.magnetometerInitialHardIronX)
         assertNull(calibrator.magnetometerInitialHardIronY)
         assertNull(calibrator.magnetometerInitialHardIronZ)
@@ -2919,15 +2445,9 @@ class StaticIntervalMagnetometerCalibratorTest {
         val staticIntervalSkippedListener =
             mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalSkippedListener<StaticIntervalMagnetometerCalibrator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val location = getLocation()
-        val timestamp = Date()
-        val worldMagneticModel = WorldMagneticModel()
         val calibrator =
             StaticIntervalMagnetometerCalibrator(
                 context,
-                location,
-                timestamp,
-                worldMagneticModel,
                 AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
                 MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
                 SensorDelay.NORMAL,
@@ -2944,9 +2464,6 @@ class StaticIntervalMagnetometerCalibratorTest {
 
         // check default values
         assertSame(context, calibrator.context)
-        assertSame(location, calibrator.location)
-        assertSame(timestamp, calibrator.timestamp)
-        assertSame(worldMagneticModel, calibrator.worldMagneticModel)
         assertEquals(
             AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             calibrator.accelerometerSensorType
@@ -2974,6 +2491,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertNull(calibrator.initialMagnetometerHardIronAvailableListener)
         assertNull(calibrator.accuracyChangedListener)
         assertNotNull(calibrator.magnetometerQualityScoreMapper)
+        assertNull(calibrator.initialMagneticFluxDensityNorm)
         assertNull(calibrator.magnetometerInitialHardIronX)
         assertNull(calibrator.magnetometerInitialHardIronY)
         assertNull(calibrator.magnetometerInitialHardIronZ)
@@ -3143,15 +2661,9 @@ class StaticIntervalMagnetometerCalibratorTest {
         val dynamicIntervalSkippedListener =
             mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalSkippedListener<StaticIntervalMagnetometerCalibrator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val location = getLocation()
-        val timestamp = Date()
-        val worldMagneticModel = WorldMagneticModel()
         val calibrator =
             StaticIntervalMagnetometerCalibrator(
                 context,
-                location,
-                timestamp,
-                worldMagneticModel,
                 AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
                 MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
                 SensorDelay.NORMAL,
@@ -3169,9 +2681,6 @@ class StaticIntervalMagnetometerCalibratorTest {
 
         // check default values
         assertSame(context, calibrator.context)
-        assertSame(location, calibrator.location)
-        assertSame(timestamp, calibrator.timestamp)
-        assertSame(worldMagneticModel, calibrator.worldMagneticModel)
         assertEquals(
             AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             calibrator.accelerometerSensorType
@@ -3199,6 +2708,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertNull(calibrator.initialMagnetometerHardIronAvailableListener)
         assertNull(calibrator.accuracyChangedListener)
         assertNotNull(calibrator.magnetometerQualityScoreMapper)
+        assertNull(calibrator.initialMagneticFluxDensityNorm)
         assertNull(calibrator.magnetometerInitialHardIronX)
         assertNull(calibrator.magnetometerInitialHardIronY)
         assertNull(calibrator.magnetometerInitialHardIronZ)
@@ -3370,15 +2880,9 @@ class StaticIntervalMagnetometerCalibratorTest {
         val generatedMagnetometerMeasurementListener =
             mockk<StaticIntervalMagnetometerCalibrator.OnGeneratedMagnetometerMeasurementListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val location = getLocation()
-        val timestamp = Date()
-        val worldMagneticModel = WorldMagneticModel()
         val calibrator =
             StaticIntervalMagnetometerCalibrator(
                 context,
-                location,
-                timestamp,
-                worldMagneticModel,
                 AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
                 MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
                 SensorDelay.NORMAL,
@@ -3397,9 +2901,6 @@ class StaticIntervalMagnetometerCalibratorTest {
 
         // check default values
         assertSame(context, calibrator.context)
-        assertSame(location, calibrator.location)
-        assertSame(timestamp, calibrator.timestamp)
-        assertSame(worldMagneticModel, calibrator.worldMagneticModel)
         assertEquals(
             AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             calibrator.accelerometerSensorType
@@ -3430,6 +2931,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertNull(calibrator.initialMagnetometerHardIronAvailableListener)
         assertNull(calibrator.accuracyChangedListener)
         assertNotNull(calibrator.magnetometerQualityScoreMapper)
+        assertNull(calibrator.initialMagneticFluxDensityNorm)
         assertNull(calibrator.magnetometerInitialHardIronX)
         assertNull(calibrator.magnetometerInitialHardIronY)
         assertNull(calibrator.magnetometerInitialHardIronZ)
@@ -3603,15 +3105,9 @@ class StaticIntervalMagnetometerCalibratorTest {
         val readyToSolveCalibrationListener =
             mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener<StaticIntervalMagnetometerCalibrator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val location = getLocation()
-        val timestamp = Date()
-        val worldMagneticModel = WorldMagneticModel()
         val calibrator =
             StaticIntervalMagnetometerCalibrator(
                 context,
-                location,
-                timestamp,
-                worldMagneticModel,
                 AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
                 MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
                 SensorDelay.NORMAL,
@@ -3631,9 +3127,6 @@ class StaticIntervalMagnetometerCalibratorTest {
 
         // check default values
         assertSame(context, calibrator.context)
-        assertSame(location, calibrator.location)
-        assertSame(timestamp, calibrator.timestamp)
-        assertSame(worldMagneticModel, calibrator.worldMagneticModel)
         assertEquals(
             AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             calibrator.accelerometerSensorType
@@ -3664,6 +3157,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertNull(calibrator.initialMagnetometerHardIronAvailableListener)
         assertNull(calibrator.accuracyChangedListener)
         assertNotNull(calibrator.magnetometerQualityScoreMapper)
+        assertNull(calibrator.initialMagneticFluxDensityNorm)
         assertNull(calibrator.magnetometerInitialHardIronX)
         assertNull(calibrator.magnetometerInitialHardIronY)
         assertNull(calibrator.magnetometerInitialHardIronZ)
@@ -3839,15 +3333,9 @@ class StaticIntervalMagnetometerCalibratorTest {
         val calibrationSolvingStartedListener =
             mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalMagnetometerCalibrator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val location = getLocation()
-        val timestamp = Date()
-        val worldMagneticModel = WorldMagneticModel()
         val calibrator =
             StaticIntervalMagnetometerCalibrator(
                 context,
-                location,
-                timestamp,
-                worldMagneticModel,
                 AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
                 MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
                 SensorDelay.NORMAL,
@@ -3868,9 +3356,6 @@ class StaticIntervalMagnetometerCalibratorTest {
 
         // check default values
         assertSame(context, calibrator.context)
-        assertSame(location, calibrator.location)
-        assertSame(timestamp, calibrator.timestamp)
-        assertSame(worldMagneticModel, calibrator.worldMagneticModel)
         assertEquals(
             AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             calibrator.accelerometerSensorType
@@ -3901,6 +3386,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertNull(calibrator.initialMagnetometerHardIronAvailableListener)
         assertNull(calibrator.accuracyChangedListener)
         assertNotNull(calibrator.magnetometerQualityScoreMapper)
+        assertNull(calibrator.initialMagneticFluxDensityNorm)
         assertNull(calibrator.magnetometerInitialHardIronX)
         assertNull(calibrator.magnetometerInitialHardIronY)
         assertNull(calibrator.magnetometerInitialHardIronZ)
@@ -4078,15 +3564,9 @@ class StaticIntervalMagnetometerCalibratorTest {
         val calibrationCompletedListener =
             mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<StaticIntervalMagnetometerCalibrator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val location = getLocation()
-        val timestamp = Date()
-        val worldMagneticModel = WorldMagneticModel()
         val calibrator =
             StaticIntervalMagnetometerCalibrator(
                 context,
-                location,
-                timestamp,
-                worldMagneticModel,
                 AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
                 MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
                 SensorDelay.NORMAL,
@@ -4108,9 +3588,6 @@ class StaticIntervalMagnetometerCalibratorTest {
 
         // check default values
         assertSame(context, calibrator.context)
-        assertSame(location, calibrator.location)
-        assertSame(timestamp, calibrator.timestamp)
-        assertSame(worldMagneticModel, calibrator.worldMagneticModel)
         assertEquals(
             AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             calibrator.accelerometerSensorType
@@ -4141,6 +3618,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertNull(calibrator.initialMagnetometerHardIronAvailableListener)
         assertNull(calibrator.accuracyChangedListener)
         assertNotNull(calibrator.magnetometerQualityScoreMapper)
+        assertNull(calibrator.initialMagneticFluxDensityNorm)
         assertNull(calibrator.magnetometerInitialHardIronX)
         assertNull(calibrator.magnetometerInitialHardIronY)
         assertNull(calibrator.magnetometerInitialHardIronZ)
@@ -4320,15 +3798,9 @@ class StaticIntervalMagnetometerCalibratorTest {
         val stoppedListener =
             mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalMagnetometerCalibrator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val location = getLocation()
-        val timestamp = Date()
-        val worldMagneticModel = WorldMagneticModel()
         val calibrator =
             StaticIntervalMagnetometerCalibrator(
                 context,
-                location,
-                timestamp,
-                worldMagneticModel,
                 AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
                 MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
                 SensorDelay.NORMAL,
@@ -4351,9 +3823,6 @@ class StaticIntervalMagnetometerCalibratorTest {
 
         // check default values
         assertSame(context, calibrator.context)
-        assertSame(location, calibrator.location)
-        assertSame(timestamp, calibrator.timestamp)
-        assertSame(worldMagneticModel, calibrator.worldMagneticModel)
         assertEquals(
             AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             calibrator.accelerometerSensorType
@@ -4384,6 +3853,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertNull(calibrator.initialMagnetometerHardIronAvailableListener)
         assertNull(calibrator.accuracyChangedListener)
         assertNotNull(calibrator.magnetometerQualityScoreMapper)
+        assertNull(calibrator.initialMagneticFluxDensityNorm)
         assertNull(calibrator.magnetometerInitialHardIronX)
         assertNull(calibrator.magnetometerInitialHardIronY)
         assertNull(calibrator.magnetometerInitialHardIronZ)
@@ -4565,15 +4035,9 @@ class StaticIntervalMagnetometerCalibratorTest {
         val initialMagnetometerHardIronAvailableListener =
             mockk<StaticIntervalMagnetometerCalibrator.OnInitialMagnetometerHardIronAvailableListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val location = getLocation()
-        val timestamp = Date()
-        val worldMagneticModel = WorldMagneticModel()
         val calibrator =
             StaticIntervalMagnetometerCalibrator(
                 context,
-                location,
-                timestamp,
-                worldMagneticModel,
                 AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
                 MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
                 SensorDelay.NORMAL,
@@ -4597,9 +4061,6 @@ class StaticIntervalMagnetometerCalibratorTest {
 
         // check default values
         assertSame(context, calibrator.context)
-        assertSame(location, calibrator.location)
-        assertSame(timestamp, calibrator.timestamp)
-        assertSame(worldMagneticModel, calibrator.worldMagneticModel)
         assertEquals(
             AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             calibrator.accelerometerSensorType
@@ -4633,6 +4094,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         )
         assertNull(calibrator.accuracyChangedListener)
         assertNotNull(calibrator.magnetometerQualityScoreMapper)
+        assertNull(calibrator.initialMagneticFluxDensityNorm)
         assertNull(calibrator.magnetometerInitialHardIronX)
         assertNull(calibrator.magnetometerInitialHardIronY)
         assertNull(calibrator.magnetometerInitialHardIronZ)
@@ -4815,15 +4277,9 @@ class StaticIntervalMagnetometerCalibratorTest {
             mockk<StaticIntervalMagnetometerCalibrator.OnInitialMagnetometerHardIronAvailableListener>()
         val accuracyChanged = mockk<SensorCollector.OnAccuracyChangedListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val location = getLocation()
-        val timestamp = Date()
-        val worldMagneticModel = WorldMagneticModel()
         val calibrator =
             StaticIntervalMagnetometerCalibrator(
                 context,
-                location,
-                timestamp,
-                worldMagneticModel,
                 AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
                 MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
                 SensorDelay.NORMAL,
@@ -4848,9 +4304,6 @@ class StaticIntervalMagnetometerCalibratorTest {
 
         // check default values
         assertSame(context, calibrator.context)
-        assertSame(location, calibrator.location)
-        assertSame(timestamp, calibrator.timestamp)
-        assertSame(worldMagneticModel, calibrator.worldMagneticModel)
         assertEquals(
             AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             calibrator.accelerometerSensorType
@@ -4884,6 +4337,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         )
         assertSame(accuracyChanged, calibrator.accuracyChangedListener)
         assertNotNull(calibrator.magnetometerQualityScoreMapper)
+        assertNull(calibrator.initialMagneticFluxDensityNorm)
         assertNull(calibrator.magnetometerInitialHardIronX)
         assertNull(calibrator.magnetometerInitialHardIronY)
         assertNull(calibrator.magnetometerInitialHardIronZ)
@@ -5068,15 +4522,9 @@ class StaticIntervalMagnetometerCalibratorTest {
         val magnetometerQualityScoreMapper =
             mockk<QualityScoreMapper<StandardDeviationBodyMagneticFluxDensity>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val location = getLocation()
-        val timestamp = Date()
-        val worldMagneticModel = WorldMagneticModel()
         val calibrator =
             StaticIntervalMagnetometerCalibrator(
                 context,
-                location,
-                timestamp,
-                worldMagneticModel,
                 AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
                 MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
                 SensorDelay.NORMAL,
@@ -5102,9 +4550,6 @@ class StaticIntervalMagnetometerCalibratorTest {
 
         // check default values
         assertSame(context, calibrator.context)
-        assertSame(location, calibrator.location)
-        assertSame(timestamp, calibrator.timestamp)
-        assertSame(worldMagneticModel, calibrator.worldMagneticModel)
         assertEquals(
             AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             calibrator.accelerometerSensorType
@@ -5138,6 +4583,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         )
         assertSame(accuracyChanged, calibrator.accuracyChangedListener)
         assertSame(magnetometerQualityScoreMapper, calibrator.magnetometerQualityScoreMapper)
+        assertNull(calibrator.initialMagneticFluxDensityNorm)
         assertNull(calibrator.magnetometerInitialHardIronX)
         assertNull(calibrator.magnetometerInitialHardIronY)
         assertNull(calibrator.magnetometerInitialHardIronZ)
@@ -5292,9 +4738,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun initializationStartedListener_setsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         assertNull(calibrator.initializationStartedListener)
@@ -5310,9 +4755,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun initializationCompletedListener_setsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         assertNull(calibrator.initializationCompletedListener)
@@ -5328,9 +4772,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun errorListener_setsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         assertNull(calibrator.errorListener)
@@ -5346,9 +4789,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun staticIntervalDetectedListener_setsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         assertNull(calibrator.staticIntervalDetectedListener)
@@ -5364,9 +4806,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun dynamicIntervalDetectedListener_setsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         assertNull(calibrator.dynamicIntervalDetectedListener)
@@ -5382,9 +4823,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun staticIntervalSkippedListener_setsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         assertNull(calibrator.staticIntervalSkippedListener)
@@ -5400,9 +4840,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun dynamicIntervalSkippedListener_setsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         assertNull(calibrator.dynamicIntervalSkippedListener)
@@ -5418,9 +4857,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun generatedMagnetometerMeasurementListener_setsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         assertNull(calibrator.generatedMagnetometerMeasurementListener)
@@ -5440,9 +4878,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun readyToSolveCalibrationListener_setsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         assertNull(calibrator.readyToSolveCalibrationListener)
@@ -5458,9 +4895,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun calibrationSolvingStartedListener_setsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         assertNull(calibrator.calibrationSolvingStartedListener)
@@ -5476,9 +4912,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun calibrationCompletedListener_setsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         assertNull(calibrator.calibrationCompletedListener)
@@ -5494,9 +4929,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun stoppedListener_setsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         assertNull(calibrator.stoppedListener)
@@ -5512,9 +4946,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun initialMagnetometerHardIronAvailableListener_setsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         assertNull(calibrator.initialMagnetometerHardIronAvailableListener)
@@ -5534,9 +4967,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun accuracyChangedListener_setsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         assertNull(calibrator.accuracyChangedListener)
@@ -5551,9 +4983,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun isMagnetometerGroundTruthInitialHardIron_whenValid_setsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         assertFalse(calibrator.isMagnetometerGroundTruthInitialHardIron)
@@ -5567,9 +4998,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test(expected = IllegalStateException::class)
     fun isMagnetometerGroundTruthInitialHardIron_whenRunning_throwsIllegalStateException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
             StaticIntervalWithMeasurementGeneratorCalibrator::class,
@@ -5582,132 +5012,9 @@ class StaticIntervalMagnetometerCalibratorTest {
     }
 
     @Test
-    fun location_whenNotRunning_setsExpectedValue() {
-        val location1 = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location1)
-
-        // check default value
-        assertSame(location1, calibrator.location)
-        assertFalse(calibrator.running)
-
-        val location2 = mockk<Location>()
-        calibrator.location = location2
-
-        // check
-        assertSame(location2, calibrator.location)
-    }
-
-    @Test(expected = IllegalStateException::class)
-    fun location_whenRunning_throwsIllegalStateException() {
-        val location1 = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location1)
-
-        setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
-            calibrator,
-            "running",
-            true
-        )
-
-        // check
-        assertSame(location1, calibrator.location)
-        assertTrue(calibrator.running)
-
-        // set new value
-        val location2 = mockk<Location>()
-        calibrator.location = location2
-    }
-
-    @Test
-    fun timestamp_whenNotRunning_setsExpectedValue() {
-        val location = getLocation()
-        val timestamp1 = Date()
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location, timestamp1)
-
-        // check default value
-        assertEquals(timestamp1, calibrator.timestamp)
-        assertFalse(calibrator.running)
-
-        val timestamp2 = Date(0)
-        calibrator.timestamp = timestamp2
-
-        // check
-        assertEquals(timestamp2, calibrator.timestamp)
-    }
-
-    @Test(expected = IllegalStateException::class)
-    fun timestamp_whenRunning_throwsIllegalStateException() {
-        val location = getLocation()
-        val timestamp1 = Date()
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location, timestamp1)
-
-        setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
-            calibrator,
-            "running",
-            true
-        )
-
-        // check
-        assertEquals(timestamp1, calibrator.timestamp)
-        assertTrue(calibrator.running)
-
-        // set new value
-        val timestamp2 = Date()
-        calibrator.timestamp = timestamp2
-    }
-
-    @Test
-    fun worldMagneticModel_whenNotRunning_setsExpectedValue() {
-        val location = getLocation()
-        val timestamp = Date()
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location, timestamp)
-
-        // check default value
-        assertNull(calibrator.worldMagneticModel)
-        assertFalse(calibrator.running)
-
-        // set new value
-        val worldMagneticModel = WorldMagneticModel()
-        calibrator.worldMagneticModel = worldMagneticModel
-
-        // check
-        assertSame(worldMagneticModel, calibrator.worldMagneticModel)
-    }
-
-    @Test(expected = IllegalStateException::class)
-    fun worldMagneticModel_whenRunning_throwsIllegalStateException() {
-        val location = getLocation()
-        val timestamp = Date()
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location, timestamp)
-
-        setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
-            calibrator,
-            "running",
-            true
-        )
-
-        // check default value
-        assertNull(calibrator.worldMagneticModel)
-        assertTrue(calibrator.running)
-
-        // set new value
-        val worldMagneticModel = WorldMagneticModel()
-        calibrator.worldMagneticModel = worldMagneticModel
-    }
-
-    @Test
     fun magnetometerInitialMm_whenValid_setsExpectedValues() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         assertEquals(Matrix(MM_SIZE, MM_SIZE), calibrator.magnetometerInitialMm)
@@ -5763,9 +5070,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test(expected = IllegalArgumentException::class)
     fun magnetometerInitialMm_whenInvalidRowSize_throwsIllegalArgumentException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         val mm = Matrix(1, MM_SIZE)
         calibrator.magnetometerInitialMm = mm
@@ -5773,9 +5079,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test(expected = IllegalArgumentException::class)
     fun magnetometerInitialMm_whenInvalidColumnsSize_throwsIllegalArgumentException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         val mm = Matrix(MM_SIZE, 1)
         calibrator.magnetometerInitialMm = mm
@@ -5783,9 +5088,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test(expected = IllegalStateException::class)
     fun magnetometerInitialMm_whenRunning_throwsIllegalStateException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
             StaticIntervalWithMeasurementGeneratorCalibrator::class,
@@ -5799,9 +5103,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun getMagnetometerInitialMm_returnsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // set new value
         val randomizer = UniformRandomizer()
@@ -5846,9 +5149,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test(expected = IllegalArgumentException::class)
     fun getMagnetometerInitialMm_whenInvalidRowSize_throwsIllegalArgumentException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         val mm = Matrix(1, MM_SIZE)
         calibrator.getMagnetometerInitialMm(mm)
@@ -5856,9 +5158,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test(expected = IllegalArgumentException::class)
     fun getMagnetometerInitialMm_whenInvalidColumnSize_throwsIllegalArgumentException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         val mm = Matrix(MM_SIZE, 1)
         calibrator.getMagnetometerInitialMm(mm)
@@ -5866,9 +5167,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun magnetometerInitialSx_whenNotRunning_setsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         assertEquals(0.0, calibrator.magnetometerInitialSx, 0.0)
@@ -5884,9 +5184,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test(expected = IllegalStateException::class)
     fun magnetometerInitialSx_whenRunning_throwsIllegalStateException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
             StaticIntervalWithMeasurementGeneratorCalibrator::class,
@@ -5900,9 +5199,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun magnetometerInitialSy_whenNotRunning_setsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         assertEquals(0.0, calibrator.magnetometerInitialSy, 0.0)
@@ -5918,9 +5216,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test(expected = IllegalStateException::class)
     fun magnetometerInitialSy_whenRunning_throwsIllegalStateException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
             StaticIntervalWithMeasurementGeneratorCalibrator::class,
@@ -5934,9 +5231,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun magnetometerInitialSz_whenNotRunning_setsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         assertEquals(0.0, calibrator.magnetometerInitialSz, 0.0)
@@ -5952,9 +5248,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test(expected = IllegalStateException::class)
     fun magnetometerInitialSz_whenRunning_throwsIllegalStateException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
             StaticIntervalWithMeasurementGeneratorCalibrator::class,
@@ -5968,9 +5263,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun magnetometerInitialMxy_whenNotRunning_setsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         assertEquals(0.0, calibrator.magnetometerInitialMxy, 0.0)
@@ -5986,9 +5280,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test(expected = IllegalStateException::class)
     fun magnetometerInitialMxy_whenRunning_throwsIllegalStateException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
             StaticIntervalWithMeasurementGeneratorCalibrator::class,
@@ -6002,9 +5295,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun magnetometerInitialMxz_whenNotRunning_setsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         assertEquals(0.0, calibrator.magnetometerInitialMxz, 0.0)
@@ -6020,9 +5312,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test(expected = IllegalStateException::class)
     fun magnetometerInitialMxz_whenRunning_throwsIllegalArgumentException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
             StaticIntervalWithMeasurementGeneratorCalibrator::class,
@@ -6036,9 +5327,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun magnetometerInitialMyx_whenNotRunning_setsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         assertEquals(0.0, calibrator.magnetometerInitialMyx, 0.0)
@@ -6054,9 +5344,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test(expected = IllegalStateException::class)
     fun magnetometerInitialMyx_whenRunning_throwsIllegalStateException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
             StaticIntervalWithMeasurementGeneratorCalibrator::class,
@@ -6070,9 +5359,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun magnetometerInitialMyz_whenNotRunning_setsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         assertEquals(0.0, calibrator.magnetometerInitialMyz, 0.0)
@@ -6088,9 +5376,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test(expected = IllegalStateException::class)
     fun magnetometerInitialMyz_whenRunning_throwsIllegalStateException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
             StaticIntervalWithMeasurementGeneratorCalibrator::class,
@@ -6104,9 +5391,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun magnetometerInitialMzx_whenNotRunning_setsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         assertEquals(0.0, calibrator.magnetometerInitialMzx, 0.0)
@@ -6122,9 +5408,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test(expected = IllegalStateException::class)
     fun magnetometerInitialMzx_whenRunning_throwsIllegalStateException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
             StaticIntervalWithMeasurementGeneratorCalibrator::class,
@@ -6138,9 +5423,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun magnetometerInitialMzy_whenNotRunning_setsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         assertEquals(0.0, calibrator.magnetometerInitialMzy, 0.0)
@@ -6156,9 +5440,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test(expected = IllegalStateException::class)
     fun magnetometerInitialMzy_whenRunning_throwsIllegalStateException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
             StaticIntervalWithMeasurementGeneratorCalibrator::class,
@@ -6172,9 +5455,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun setMagnetometerInitialScalingFactors_whenNotRunning_setsExpectedValues() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default values
         assertEquals(0.0, calibrator.magnetometerInitialSx, 0.0)
@@ -6196,9 +5478,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test(expected = IllegalStateException::class)
     fun setMagnetometerInitialScalingFactors_whenRunning_throwsIllegalStateException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
             StaticIntervalWithMeasurementGeneratorCalibrator::class,
@@ -6216,9 +5497,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun setMagnetometerInitialCrossCouplingErrors_whenNotRunning_setsExpectedValues() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default values
         assertEquals(0.0, calibrator.magnetometerInitialMxy, 0.0)
@@ -6260,9 +5540,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test(expected = IllegalStateException::class)
     fun setMagnetometerInitialCrossCouplingErrors_whenRunning_throwsIllegalStateException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
             StaticIntervalWithMeasurementGeneratorCalibrator::class,
@@ -6290,9 +5569,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun setMagnetometerInitialScalingFactorsAndCrossCouplingErrors_whenNotRunning_setsExpectedValues() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default values
         assertEquals(0.0, calibrator.magnetometerInitialSx, 0.0)
@@ -6342,9 +5620,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test(expected = IllegalStateException::class)
     fun setMagnetometerInitialScalingFactorsAndCrossCouplingErrors_whenRunning_throwsIllegalStateException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
             StaticIntervalWithMeasurementGeneratorCalibrator::class,
@@ -6378,9 +5655,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun isMagnetometerCommonAxisUsed_whenNotRunning_setsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         assertFalse(calibrator.isMagnetometerCommonAxisUsed)
 
@@ -6393,9 +5669,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test(expected = IllegalStateException::class)
     fun isMagnetometerCommonAxisUsed_whenRunning_throwsIllegalStateException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
             StaticIntervalWithMeasurementGeneratorCalibrator::class,
@@ -6409,9 +5684,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun magnetometerRobustMethod_whenNotRunning_setsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         assertNull(calibrator.magnetometerRobustMethod)
@@ -6425,9 +5699,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test(expected = IllegalStateException::class)
     fun magnetometerRobustMethod_whenRunning_throwsIllegalStateException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
             StaticIntervalWithMeasurementGeneratorCalibrator::class,
@@ -6441,9 +5714,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun magnetometerRobustConfidence_whenValid_setsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         assertEquals(
@@ -6461,27 +5733,24 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test(expected = IllegalArgumentException::class)
     fun magnetometerRobustConfidence_whenInvalidLowerBound_throwsIllegalArgumentException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         calibrator.magnetometerRobustConfidence = -1.0
     }
 
     @Test(expected = IllegalArgumentException::class)
     fun magnetometerRobustConfidence_whenInvalidUpperBound_throwsIllegalArgumentException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         calibrator.magnetometerRobustConfidence = 2.0
     }
 
     @Test(expected = IllegalStateException::class)
     fun magnetometerRobustConfidence_whenRunning_throwsIllegalStateException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
             StaticIntervalWithMeasurementGeneratorCalibrator::class,
@@ -6495,9 +5764,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun magnetometerRobustMaxIterations_whenValid_setsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         assertEquals(
@@ -6514,18 +5782,16 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test(expected = IllegalArgumentException::class)
     fun magnetometerRobustMaxIterations_whenInvalid_throwsIllegalArgumentException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         calibrator.magnetometerRobustMaxIterations = 0
     }
 
     @Test(expected = IllegalStateException::class)
     fun magnetometerRobustMaxIterations_whenRunning_throwsIllegalArgumentException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
             StaticIntervalWithMeasurementGeneratorCalibrator::class,
@@ -6539,9 +5805,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun magnetometerRobustPreliminarySubsetSize_whenValid_setsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         assertEquals(
@@ -6561,18 +5826,16 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test(expected = IllegalArgumentException::class)
     fun magnetometerRobustPreliminarySubsetSize_whenInvalid_throwsIllegalArgumentException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         calibrator.magnetometerRobustPreliminarySubsetSize = 12
     }
 
     @Test(expected = IllegalStateException::class)
     fun magnetometerRobustPreliminarySubsetSize_whenRunning_throwsIllegalStateException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
             StaticIntervalWithMeasurementGeneratorCalibrator::class,
@@ -6586,9 +5849,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun magnetometerRobustThreshold_whenValid_setsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         assertNull(calibrator.magnetometerRobustThreshold)
@@ -6610,18 +5872,16 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test(expected = IllegalArgumentException::class)
     fun magnetometerRobustThreshold_whenInvalid_throwsIllegalArgumentException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         calibrator.magnetometerRobustThreshold = 0.0
     }
 
     @Test(expected = IllegalStateException::class)
     fun magnetometerRobustThreshold_whenRunning_throwsIllegalStateException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
             StaticIntervalWithMeasurementGeneratorCalibrator::class,
@@ -6635,9 +5895,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun magnetometerRobustThresholdFactor_whenValid_setsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         assertEquals(
@@ -6655,18 +5914,16 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test(expected = IllegalArgumentException::class)
     fun magnetometerRobustThresholdFactor_whenInvalid_throwsIllegalArgumentException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         calibrator.magnetometerRobustThresholdFactor = 0.0
     }
 
     @Test(expected = IllegalStateException::class)
     fun magnetometerRobustThresholdFactor_whenRunning_throwsIllegalStateException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
             StaticIntervalWithMeasurementGeneratorCalibrator::class,
@@ -6680,9 +5937,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun magnetometerRobustStopThresholdFactor_whenValid_setsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         assertEquals(
             StaticIntervalMagnetometerCalibrator.DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR,
@@ -6703,18 +5959,16 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test(expected = IllegalArgumentException::class)
     fun magnetometerRobustStopThresholdFactor_whenInvalid_throwsIllegalArgumentException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         calibrator.magnetometerRobustStopThresholdFactor = 0.0
     }
 
     @Test(expected = IllegalStateException::class)
     fun magnetometerRobustStopThresholdFactor_whenRunning_throwsIllegalStateException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
             StaticIntervalWithMeasurementGeneratorCalibrator::class,
@@ -6728,9 +5982,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun windowSize_whenValid_setsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
 
@@ -6743,18 +5996,16 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test(expected = IllegalArgumentException::class)
     fun windowSize_whenInvalid_throwsIllegalArgumentException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         calibrator.windowSize = 0
     }
 
     @Test(expected = IllegalStateException::class)
     fun windowSize_whenRunning_throwsIllegalStateException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
             StaticIntervalWithMeasurementGeneratorCalibrator::class,
@@ -6768,9 +6019,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun initialStaticSamples_whenValid_setsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         assertEquals(
@@ -6787,18 +6037,16 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test(expected = IllegalArgumentException::class)
     fun initialStaticSamples_whenInvalid_throwsIllegalArgumentException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         calibrator.initialStaticSamples = 0
     }
 
     @Test(expected = IllegalStateException::class)
     fun initialStaticSamples_whenRunning_throwsIllegalStateException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
             StaticIntervalWithMeasurementGeneratorCalibrator::class,
@@ -6812,9 +6060,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun thresholdFactor_whenValid_setsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         assertEquals(
@@ -6832,18 +6079,16 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test(expected = IllegalArgumentException::class)
     fun thresholdFactor_whenInvalid_throwsIllegalArgumentException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         calibrator.thresholdFactor = 0.0
     }
 
     @Test(expected = IllegalStateException::class)
     fun thresholdFactor_whenRunning_throwsIllegalStateException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
             StaticIntervalWithMeasurementGeneratorCalibrator::class,
@@ -6857,9 +6102,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun instantaneousNoiseLevelFactor_whenValid_setsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         assertEquals(
@@ -6881,18 +6125,16 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test(expected = IllegalArgumentException::class)
     fun instantaneousNoiseLevelFactor_whenInvalid_throwsIllegalArgumentException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         calibrator.instantaneousNoiseLevelFactor = 0.0
     }
 
     @Test(expected = IllegalStateException::class)
     fun instantaneousNoiseLevelFactor_whenRunning_throwsIllegalStateException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
             StaticIntervalWithMeasurementGeneratorCalibrator::class,
@@ -6906,9 +6148,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun baseNoiseLevelAbsoluteThreshold_whenValid_setsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         assertEquals(
@@ -6930,18 +6171,16 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test(expected = IllegalArgumentException::class)
     fun baseNoiseLevelAbsoluteThreshold_whenInvalid_throwsIllegalArgumentException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         calibrator.baseNoiseLevelAbsoluteThreshold = 0.0
     }
 
     @Test(expected = IllegalStateException::class)
     fun baseNoiseLevelAbsoluteThreshold_whenRunning_throwsIllegalStateException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
             StaticIntervalWithMeasurementGeneratorCalibrator::class,
@@ -6955,9 +6194,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun baseNoiseLevelAbsoluteThresholdAsMeasurement_whenValid_setsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         val value1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
@@ -6982,9 +6220,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test(expected = IllegalArgumentException::class)
     fun baseNoiseLevelAbsoluteThresholdAsMeasurement_whenInvalid_throwsIllegalArgumentException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         val value = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
         calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement = value
@@ -6992,9 +6229,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test(expected = IllegalStateException::class)
     fun baseNoiseLevelAbsoluteThresholdMeasurement_whenRunning_throwsIllegalStateException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
             StaticIntervalWithMeasurementGeneratorCalibrator::class,
@@ -7012,9 +6248,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun getBaseNoiseLevelAbsoluteThresholdAsMeasurement_getsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         val value1 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
@@ -7042,9 +6277,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun requiredMeasurements_whenValid_setsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         assertEquals(
@@ -7061,18 +6295,16 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test(expected = IllegalArgumentException::class)
     fun requiredMeasurements_whenInvalid_throwsIllegalArgumentException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         calibrator.requiredMeasurements = 0
     }
 
     @Test(expected = IllegalStateException::class)
     fun requiredMeasurements_whenRunning_throwsIllegalStateException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
             StaticIntervalWithMeasurementGeneratorCalibrator::class,
@@ -7086,9 +6318,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun onInitializationStarted_whenNoListenerAvailable_makesNoAction() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         val generatorInitializationStartedListener: SingleSensorCalibrationMeasurementGenerator.OnInitializationStartedListener<MagnetometerMeasurementGenerator>? =
             calibrator.getPrivateProperty("generatorInitializationStartedListener")
@@ -7104,11 +6335,9 @@ class StaticIntervalMagnetometerCalibratorTest {
             mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalMagnetometerCalibrator>>(
                 relaxUnitFun = true
             )
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             initializationStartedListener = initializationStartedListener
         )
 
@@ -7124,9 +6353,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun onInitializationCompleted_whenNoListenerAvailable_makesNoAction() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         val generatorInitializationCompletedListener: SingleSensorCalibrationMeasurementGenerator.OnInitializationCompletedListener<MagnetometerMeasurementGenerator>? =
             calibrator.getPrivateProperty("generatorInitializationCompletedListener")
@@ -7147,11 +6375,9 @@ class StaticIntervalMagnetometerCalibratorTest {
             mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalMagnetometerCalibrator>>(
                 relaxUnitFun = true
             )
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             initializationCompletedListener = initializationCompletedListener
         )
 
@@ -7172,9 +6398,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun onError_whenNoListeners_stopsGenerator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
             StaticIntervalWithMeasurementGeneratorCalibrator::class,
@@ -7211,11 +6436,9 @@ class StaticIntervalMagnetometerCalibratorTest {
             mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalMagnetometerCalibrator>>(
                 relaxUnitFun = true
             )
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             errorListener = errorListener,
             stoppedListener = stoppedListener
         )
@@ -7254,9 +6477,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun onStaticIntervalDetected_whenNoListenerAvailable_makesNoAction() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         val generatorStaticIntervalDetectedListener: SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalDetectedListener<MagnetometerMeasurementGenerator>? =
             calibrator.getPrivateProperty("generatorStaticIntervalDetectedListener")
@@ -7272,11 +6494,9 @@ class StaticIntervalMagnetometerCalibratorTest {
             mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<StaticIntervalMagnetometerCalibrator>>(
                 relaxUnitFun = true
             )
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             staticIntervalDetectedListener = staticIntervalDetectedListener
         )
 
@@ -7292,9 +6512,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun onDynamicIntervalDetected_whenNoListenerAvailable_makesNoAction() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         val generatorDynamicIntervalDetectedListener: SingleSensorCalibrationMeasurementGenerator.OnDynamicIntervalDetectedListener<MagnetometerMeasurementGenerator>? =
             calibrator.getPrivateProperty("generatorDynamicIntervalDetectedListener")
@@ -7310,11 +6529,9 @@ class StaticIntervalMagnetometerCalibratorTest {
             mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener<StaticIntervalMagnetometerCalibrator>>(
                 relaxUnitFun = true
             )
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             dynamicIntervalDetectedListener = dynamicIntervalDetectedListener
         )
 
@@ -7330,9 +6547,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun onStaticIntervalSkipped_whenNoListenerAvailable_makesNoAction() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         val generatorStaticIntervalSkippedListener: SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalSkippedListener<MagnetometerMeasurementGenerator>? =
             calibrator.getPrivateProperty("generatorStaticIntervalSkippedListener")
@@ -7348,11 +6564,9 @@ class StaticIntervalMagnetometerCalibratorTest {
             mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalSkippedListener<StaticIntervalMagnetometerCalibrator>>(
                 relaxUnitFun = true
             )
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             staticIntervalSkippedListener = staticIntervalSkippedListener
         )
 
@@ -7368,9 +6582,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun onDynamicIntervalSkipped_whenNoListenerAvailable_makesNoAction() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         val generatorDynamicIntervalSkippedListener: SingleSensorCalibrationMeasurementGenerator.OnDynamicIntervalSkippedListener<MagnetometerMeasurementGenerator>? =
             calibrator.getPrivateProperty("generatorDynamicIntervalSkippedListener")
@@ -7386,11 +6599,9 @@ class StaticIntervalMagnetometerCalibratorTest {
             mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalSkippedListener<StaticIntervalMagnetometerCalibrator>>(
                 relaxUnitFun = true
             )
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             dynamicIntervalSkippedListener = dynamicIntervalSkippedListener
         )
 
@@ -7406,9 +6617,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun onGeneratedMeasurement_addsMeasurement() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         assertTrue(calibrator.magnetometerMeasurements.isEmpty())
 
@@ -7418,10 +6628,61 @@ class StaticIntervalMagnetometerCalibratorTest {
 
         val generator = mockk<MagnetometerMeasurementGenerator>()
         val measurement = StandardDeviationBodyMagneticFluxDensity()
+        val randomizer = UniformRandomizer()
+        val bx = randomizer.nextDouble()
+        val by = randomizer.nextDouble()
+        val bz = randomizer.nextDouble()
+        val norm1 = sqrt(bx.pow(2.0) + by.pow(2.0) + bz.pow(2.0))
+        measurement.magneticFluxDensity = BodyMagneticFluxDensity(bx, by, bz)
         generatorGeneratedMeasurementListener.onGeneratedMeasurement(generator, measurement)
 
         assertEquals(1, calibrator.magnetometerMeasurements.size)
         assertSame(measurement, calibrator.magnetometerMeasurements[0])
+
+        val norm2 = calibrator.initialMagneticFluxDensityNorm
+        requireNotNull(norm2)
+        assertEquals(norm1, norm2, 0.0)
+    }
+
+    @Test
+    fun onGeneratedMeasurement_whenInitialMagneticFluxDensityNorm_keepsInitialMagneticFluxDensityNorm() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
+
+        assertTrue(calibrator.magnetometerMeasurements.isEmpty())
+
+        val generatorGeneratedMeasurementListener: SingleSensorCalibrationMeasurementGenerator.OnGeneratedMeasurementListener<MagnetometerMeasurementGenerator, StandardDeviationBodyMagneticFluxDensity>? =
+            calibrator.getPrivateProperty("generatorGeneratedMeasurementListener")
+        requireNotNull(generatorGeneratedMeasurementListener)
+
+        val generator = mockk<MagnetometerMeasurementGenerator>()
+        val measurement = StandardDeviationBodyMagneticFluxDensity()
+        val randomizer = UniformRandomizer()
+        val bx = randomizer.nextDouble()
+        val by = randomizer.nextDouble()
+        val bz = randomizer.nextDouble()
+        val norm1 = sqrt(bx.pow(2.0) + by.pow(2.0) + bz.pow(2.0))
+        measurement.magneticFluxDensity = BodyMagneticFluxDensity(bx, by, bz)
+        generatorGeneratedMeasurementListener.onGeneratedMeasurement(generator, measurement)
+
+        assertEquals(1, calibrator.magnetometerMeasurements.size)
+        assertSame(measurement, calibrator.magnetometerMeasurements[0])
+
+        val norm2 = calibrator.initialMagneticFluxDensityNorm
+        requireNotNull(norm2)
+        assertEquals(norm1, norm2, 0.0)
+
+        // call again with a different value
+        measurement.magneticFluxDensity.bx = 0.0
+        measurement.magneticFluxDensity.by = 0.0
+        measurement.magneticFluxDensity.bz = 0.0
+
+        generatorGeneratedMeasurementListener.onGeneratedMeasurement(generator, measurement)
+
+        // check that norm is preserved
+        val norm3 = calibrator.initialMagneticFluxDensityNorm
+        requireNotNull(norm3)
+        assertEquals(norm1, norm3, 0.0)
     }
 
     @Test
@@ -7430,11 +6691,9 @@ class StaticIntervalMagnetometerCalibratorTest {
             mockk<StaticIntervalMagnetometerCalibrator.OnGeneratedMagnetometerMeasurementListener>(
                 relaxUnitFun = true
             )
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             generatedMagnetometerMeasurementListener = generatedMagnetometerMeasurementListener
         )
 
@@ -7446,10 +6705,19 @@ class StaticIntervalMagnetometerCalibratorTest {
 
         val generator = mockk<MagnetometerMeasurementGenerator>()
         val measurement = StandardDeviationBodyMagneticFluxDensity()
+        val randomizer = UniformRandomizer()
+        val bx = randomizer.nextDouble()
+        val by = randomizer.nextDouble()
+        val bz = randomizer.nextDouble()
+        val norm1 = sqrt(bx.pow(2.0) + by.pow(2.0) + bz.pow(2.0))
+        measurement.magneticFluxDensity = BodyMagneticFluxDensity(bx, by, bz)
         generatorGeneratedMeasurementListener.onGeneratedMeasurement(generator, measurement)
 
         assertEquals(1, calibrator.magnetometerMeasurements.size)
         assertSame(measurement, calibrator.magnetometerMeasurements[0])
+        val norm2 = calibrator.initialMagneticFluxDensityNorm
+        requireNotNull(norm2)
+        assertEquals(norm1, norm2, 0.0)
 
         verify(exactly = 1) {
             generatedMagnetometerMeasurementListener.onGeneratedMagnetometerMeasurement(
@@ -7463,11 +6731,9 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun onGeneratedMeasurement_whenReadyToCalibrate_stopsAndBuildsCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             solveCalibrationWhenEnoughMeasurements = false
         )
 
@@ -7479,6 +6745,12 @@ class StaticIntervalMagnetometerCalibratorTest {
 
         // add enough measurements
         val measurement = StandardDeviationBodyMagneticFluxDensity()
+        val randomizer = UniformRandomizer()
+        val bx = randomizer.nextDouble()
+        val by = randomizer.nextDouble()
+        val bz = randomizer.nextDouble()
+        val norm1 = sqrt(bx.pow(2.0) + by.pow(2.0) + bz.pow(2.0))
+        measurement.magneticFluxDensity = BodyMagneticFluxDensity(bx, by, bz)
         for (i in 1..calibrator.requiredMeasurements) {
             calibrator.magnetometerMeasurements.add(measurement)
         }
@@ -7505,6 +6777,10 @@ class StaticIntervalMagnetometerCalibratorTest {
         magnetometerInternalCalibrator =
             calibrator.getPrivateProperty("magnetometerInternalCalibrator")
         assertNotNull(magnetometerInternalCalibrator)
+
+        val norm2 = calibrator.initialMagneticFluxDensityNorm
+        requireNotNull(norm2)
+        assertEquals(norm1, norm2, 0.0)
     }
 
     @Test
@@ -7513,11 +6789,9 @@ class StaticIntervalMagnetometerCalibratorTest {
             mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener<StaticIntervalMagnetometerCalibrator>>(
                 relaxUnitFun = true
             )
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             solveCalibrationWhenEnoughMeasurements = false,
             readyToSolveCalibrationListener = readyToSolveCalibrationListener
         )
@@ -7530,6 +6804,12 @@ class StaticIntervalMagnetometerCalibratorTest {
 
         // add enough measurements
         val measurement = StandardDeviationBodyMagneticFluxDensity()
+        val randomizer = UniformRandomizer()
+        val bx = randomizer.nextDouble()
+        val by = randomizer.nextDouble()
+        val bz = randomizer.nextDouble()
+        val norm1 = sqrt(bx.pow(2.0) + by.pow(2.0) + bz.pow(2.0))
+        measurement.magneticFluxDensity = BodyMagneticFluxDensity(bx, by, bz)
         for (i in 1..calibrator.requiredMeasurements) {
             calibrator.magnetometerMeasurements.add(measurement)
         }
@@ -7550,6 +6830,10 @@ class StaticIntervalMagnetometerCalibratorTest {
         requireNotNull(generatorGeneratedMeasurementListener)
 
         generatorGeneratedMeasurementListener.onGeneratedMeasurement(generatorSpy, measurement)
+
+        val norm2 = calibrator.initialMagneticFluxDensityNorm
+        requireNotNull(norm2)
+        assertEquals(norm1, norm2, 0.0)
 
         verify(exactly = 1) { readyToSolveCalibrationListener.onReadyToSolveCalibration(calibrator) }
         verify(exactly = 1) { generatorSpy.stop() }
@@ -7568,8 +6852,6 @@ class StaticIntervalMagnetometerCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
-            timestamp,
             solveCalibrationWhenEnoughMeasurements = true
         )
 
@@ -7698,8 +6980,6 @@ class StaticIntervalMagnetometerCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
-            timestamp,
             solveCalibrationWhenEnoughMeasurements = true,
             readyToSolveCalibrationListener = readyToSolveCalibrationListener,
             stoppedListener = stoppedListener,
@@ -7815,12 +7095,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun onMagnetometerMeasurement_whenFirstMeasurement_updatesInitialHardIron() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(
-            context,
-            location
-        )
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         assertNull(calibrator.magnetometerInitialHardIronX)
         assertNull(calibrator.magnetometerInitialHardIronY)
@@ -7888,11 +7164,9 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun onMagnetometerMeasurement_whenFirstMeasurementAndNoHardIronX_updatesInitialHardIron() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
-            context,
-            location
+            context
         )
 
         assertNull(calibrator.magnetometerInitialHardIronX)
@@ -7942,12 +7216,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun onMagnetometerMeasurement_whenFirstMeasurementAndNoHardIronY_updatesInitialHardIron() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(
-            context,
-            location
-        )
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         assertNull(calibrator.magnetometerInitialHardIronX)
         assertNull(calibrator.magnetometerInitialHardIronY)
@@ -7996,12 +7266,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun onMagnetometerMeasurement_whenFirstMeasurementAndNoHardIronZ_updatesInitialHardIron() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(
-            context,
-            location
-        )
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         assertNull(calibrator.magnetometerInitialHardIronX)
         assertNull(calibrator.magnetometerInitialHardIronY)
@@ -8055,11 +7321,9 @@ class StaticIntervalMagnetometerCalibratorTest {
                 relaxUnitFun = true
             )
 
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             initialMagnetometerHardIronAvailableListener = initialMagnetometerHardIronAvailableListener
         )
 
@@ -8155,11 +7419,9 @@ class StaticIntervalMagnetometerCalibratorTest {
                 relaxUnitFun = true
             )
 
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             initialMagnetometerHardIronAvailableListener = initialMagnetometerHardIronAvailableListener
         )
 
@@ -8207,12 +7469,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun magnetometerBaseNoiseLevel_getsGeneratorBaseNoiseLevel() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(
-            context,
-            location
-        )
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         val generator: MagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
@@ -8230,12 +7488,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun magnetometerBaseNoiseLevelAsMeasurement_getsGeneratorBaseNoiseLevel() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(
-            context,
-            location
-        )
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         val generator: MagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
@@ -8255,12 +7509,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun getMagnetometerBaseNoiseLevelAsMeasurement_getsGeneratorBaseNoiseLevel() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(
-            context,
-            location
-        )
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         val b = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
@@ -8290,9 +7540,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun accelerometerBaseNoiseLevel_getsGeneratorBaseNoiseLevel() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         val generator: MagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
@@ -8310,9 +7559,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun accelerometerBaseNoiseLevelAsMeasurement_getsGeneratorBaseNoiseLevel() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         val generator: MagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
@@ -8332,9 +7580,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun getAccelerometerBaseNoiseLevelAsMeasurement_getsGeneratorBaseNoiseLevel() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
@@ -8364,9 +7611,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun accelerometerBaseNoiseLevelPsd_getsGeneratorBaseNoiseLevelPsd() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         val generator: MagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
@@ -8383,9 +7629,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun accelerometerBaseNoiseLevelRootPsd_getsGeneratorBaseNoiseLevelRootPsd() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         val generator: MagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
@@ -8402,9 +7647,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun threshold_getsGeneratorThreshold() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         assertNull(calibrator.threshold)
@@ -8424,9 +7668,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun thresholdAsMeasurement_getsGeneratorThresholdAsMeasurement() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         assertNull(calibrator.thresholdAsMeasurement)
@@ -8447,9 +7690,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun getThresholdAsMeasurement_getsGeneratorThresholdAsMeasurement() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
@@ -8477,9 +7719,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun processedStaticSamples_getsGeneratorProcessedStaticSamples() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         val generator: MagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
@@ -8496,9 +7737,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun processedDynamicSamples_getsGeneratorProcessedDynamicSamples() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         val generator: MagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
@@ -8515,9 +7755,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun isStaticIntervalSkipped_getsGeneratorStaticIntervalSkipped() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         val generator: MagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
@@ -8532,9 +7771,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun isDynamicIntervalSkipped_getsGeneratorStaticIntervalSkipped() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         val generator: MagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
@@ -8549,9 +7787,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun accelerometerAverageTimeInterval_getsGeneratorAccelerometerAverageTimeInterval() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         val generator: MagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
@@ -8568,9 +7805,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun accelerometerAverageTimeIntervalAsTime_getsGeneratorAccelerometerAverageTimeInterval() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         val generator: MagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
@@ -8588,9 +7824,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun getAccelerometerAverageTimeIntervalAsTime_getsGeneratorAccelerometerAverageTimeInterval() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         val time = Time(0.0, TimeUnit.SECOND)
@@ -8618,9 +7853,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun accelerometerTimeIntervalVariance_getsGeneratorAccelerometerTimeIntervalVariance() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         assertNull(calibrator.accelerometerTimeIntervalVariance)
@@ -8640,9 +7874,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun accelerometerTimeIntervalStandardDeviation_getsGeneratorAccelerometerTimeIntervalStandardDeviation() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         assertNull(calibrator.accelerometerTimeIntervalStandardDeviation)
@@ -8667,9 +7900,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun accelerometerTimeIntervalStandardDeviationAsTime_getsGeneratorAccelerometerTimeIntervalStandardDeviationAsTime() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         val generator: MagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
@@ -8687,9 +7919,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun getAccelerometerTimeIntervalStandardDeviationAsTime_getsGeneratorAccelerometerTimeIntervalStandardDeviationAsTime() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         val time = Time(0.0, TimeUnit.SECOND)
@@ -8717,9 +7948,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun numberOfProcessedMagnetometerMeasurements_getsGeneratorNumberOfProcessedMagnetometerMeasurements() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         val generator: MagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
@@ -8742,9 +7972,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun numberOfProcessedAccelerometerMeasurements_getsGeneratorNumberOfProcessedAccelerometerMeasurements() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         val generator: MagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
@@ -8767,9 +7996,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun magnetometerInitialHardIronX_getsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         assertNull(calibrator.magnetometerInitialHardIronX)
@@ -8784,9 +8012,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun magnetometerInitialHardIronY_getsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         assertNull(calibrator.magnetometerInitialHardIronY)
@@ -8801,9 +8028,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun magnetometerInitialHardIronZ_getsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         assertNull(calibrator.magnetometerInitialHardIronZ)
@@ -8818,9 +8044,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun magnetometerInitialHardIronXAsMeasurement_getsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         assertNull(calibrator.magnetometerInitialHardIronXAsMeasurement)
@@ -8838,9 +8063,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun getMagnetometerInitialHardIronXAsMeasurement_getsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         val hardIron = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
@@ -8858,9 +8082,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun magnetometerInitialHardIronYAsMeasurement_getsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         assertNull(calibrator.magnetometerInitialHardIronYAsMeasurement)
@@ -8878,9 +8101,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun getMagnetometerInitialHardIronYAsMeasurement_getsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         val hardIron = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
@@ -8898,9 +8120,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun magnetometerInitialHardIronZAsMeasurement_getsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         assertNull(calibrator.magnetometerInitialHardIronZAsMeasurement)
@@ -8918,9 +8139,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun getMagnetometerInitialHardIronZAsMeasurement_getsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         val hardIron = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
@@ -8938,9 +8158,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun magnetometerInitialHardIronAsTriad_getsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         assertNull(calibrator.magnetometerInitialHardIronAsTriad)
@@ -8971,9 +8190,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun getMagnetometerInitialHardIronAsTriad_getsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         // check default value
         val triad = MagneticFluxDensityTriad()
@@ -9004,9 +8222,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun minimumRequiredMagnetometerMeasurements_whenCommonAxisAndKnownHardIron_returnsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         calibrator.isMagnetometerCommonAxisUsed = true
         calibrator.isMagnetometerGroundTruthInitialHardIron = true
@@ -9019,9 +8236,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun minimumRequiredMagnetometerMeasurements_whenCommonAxisAndUnknownHardIron_returnsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         calibrator.isMagnetometerCommonAxisUsed = true
         calibrator.isMagnetometerGroundTruthInitialHardIron = false
@@ -9034,9 +8250,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun minimumRequiredMagnetometerMeasurements_whenNotCommonAxisAndKnownHardIron_returnsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         calibrator.isMagnetometerCommonAxisUsed = false
         calibrator.isMagnetometerGroundTruthInitialHardIron = true
@@ -9049,9 +8264,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun minimumRequiredMagnetometerMeasurements_whenNotCommonAxisAndUnknownHardIron_returnsExpectedValue() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         calibrator.isMagnetometerCommonAxisUsed = false
         calibrator.isMagnetometerGroundTruthInitialHardIron = false
@@ -9064,9 +8278,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun start_whenNotRunning_resetsAndStartsGenerator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         assertFalse(calibrator.running)
 
@@ -9077,6 +8290,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         calibrator.setPrivateProperty("magnetometerInitialHardIronX", 0.0)
         calibrator.setPrivateProperty("magnetometerInitialHardIronY", 0.0)
         calibrator.setPrivateProperty("magnetometerInitialHardIronZ", 0.0)
+        calibrator.setPrivateProperty("initialMagneticFluxDensityNorm", 0.0)
 
         val internalCalibrator = mockk<MagnetometerNonLinearCalibrator>()
         calibrator.setPrivateProperty("magnetometerInternalCalibrator", internalCalibrator)
@@ -9095,6 +8309,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertNull(calibrator.magnetometerInitialHardIronX)
         assertNull(calibrator.magnetometerInitialHardIronY)
         assertNull(calibrator.magnetometerInitialHardIronZ)
+        assertNull(calibrator.initialMagneticFluxDensityNorm)
         assertNull(calibrator.getPrivateProperty("magnetometerInternalCalibrator"))
 
         assertTrue(calibrator.running)
@@ -9104,9 +8319,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test(expected = IllegalStateException::class)
     fun start_whenRunning_throwsIllegalStateException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         assertFalse(calibrator.running)
 
@@ -9119,9 +8333,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun stop_whenNoListenerAvailable_stopsGenerator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         val generator: MagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
@@ -9150,11 +8363,9 @@ class StaticIntervalMagnetometerCalibratorTest {
             mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalMagnetometerCalibrator>>(
                 relaxUnitFun = true
             )
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             stoppedListener = stoppedListener
         )
 
@@ -9182,18 +8393,16 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test(expected = IllegalStateException::class)
     fun calibrate_whenNotReadyToSolveCalibration_throwsIllegalStateException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         calibrator.calibrate()
     }
 
     @Test(expected = IllegalStateException::class)
     fun calibrate_whenRunning_throwsIllegalStateException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
             StaticIntervalWithMeasurementGeneratorCalibrator::class,
@@ -9207,9 +8416,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun calibrate_whenReadyNotRunningAndNoInternalCalibrator_makesNoAction() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         for (i in 1..13) {
@@ -9234,11 +8442,9 @@ class StaticIntervalMagnetometerCalibratorTest {
             mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<StaticIntervalMagnetometerCalibrator>>(
                 relaxUnitFun = true
             )
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             calibrationSolvingStartedListener = calibrationSolvingStartedListener,
             calibrationCompletedListener = calibrationCompletedListener
         )
@@ -9268,9 +8474,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun calibrate_whenFailure_setsAsNotRunning() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         for (i in 1..13) {
@@ -9295,11 +8500,9 @@ class StaticIntervalMagnetometerCalibratorTest {
             mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalMagnetometerCalibrator>>(
                 relaxUnitFun = true
             )
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             errorListener = errorListener
         )
 
@@ -9328,9 +8531,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun estimatedMagnetometerHardIronX_whenNoInternalCalibrator_returnsNull() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         assertNull(calibrator.getPrivateProperty("magnetometerInternalCalibrator"))
         assertNull(calibrator.estimatedMagnetometerHardIronX)
@@ -9338,9 +8540,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun estimatedMagnetometerHardIronX_whenUnknownHardIronInternalCalibrator_callsInternalCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         val internalCalibratorSpy = spyk(KnownPositionAndInstantMagnetometerCalibrator())
         val randomizer = UniformRandomizer()
@@ -9353,9 +8554,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun estimatedMagnetometerHardIronX_whenKnownHardIronInternalCalibrator_callsInternalCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         val internalCalibratorSpy = spyk(KnownHardIronPositionAndInstantMagnetometerCalibrator())
         val randomizer = UniformRandomizer()
@@ -9368,9 +8568,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun estimatedMagnetometerHardIronY_whenNoInternalCalibrator_returnsNull() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         assertNull(calibrator.getPrivateProperty("magnetometerInternalCalibrator"))
         assertNull(calibrator.estimatedMagnetometerHardIronY)
@@ -9378,9 +8577,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun estimatedMagnetometerHardIronY_whenUnknownHardIronInternalCalibrator_callsInternalCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         val internalCalibratorSpy = spyk(KnownPositionAndInstantMagnetometerCalibrator())
         val randomizer = UniformRandomizer()
@@ -9393,9 +8591,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun estimatedMagnetometerHardIronY_whenKnownHardIronInternalCalibrator_callsInternalCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         val internalCalibratorSpy = spyk(KnownHardIronPositionAndInstantMagnetometerCalibrator())
         val randomizer = UniformRandomizer()
@@ -9408,9 +8605,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun estimatedMagnetometerHardIronZ_whenNoInternalCalibrator_returnsNull() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         assertNull(calibrator.getPrivateProperty("magnetometerInternalCalibrator"))
         assertNull(calibrator.estimatedMagnetometerHardIronZ)
@@ -9418,9 +8614,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun estimatedMagnetometerHardIronZ_whenUnknownHardIronInternalCalibrator_callsInternalCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         val internalCalibratorSpy = spyk(KnownPositionAndInstantMagnetometerCalibrator())
         val randomizer = UniformRandomizer()
@@ -9433,9 +8628,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun estimatedMagnetometerHardIronZ_whenKnownHardIronInternalCalibrator_callsInternalCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         val internalCalibratorSpy = spyk(KnownHardIronPositionAndInstantMagnetometerCalibrator())
         val randomizer = UniformRandomizer()
@@ -9448,9 +8642,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun estimatedMagnetometerHardIronXAsMeasurement_whenNoInternalCalibrator_returnsNull() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         assertNull(calibrator.getPrivateProperty("magnetometerInternalCalibrator"))
         assertNull(calibrator.estimatedMagnetometerHardIronXAsMeasurement)
@@ -9458,9 +8651,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun estimatedMagnetometerHardIronXAsMeasurement_whenUnknownHardIronInternalCalibrator_callsInternalCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         val internalCalibratorSpy = spyk(KnownPositionAndInstantMagnetometerCalibrator())
         val randomizer = UniformRandomizer()
@@ -9474,9 +8666,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun estimatedMagnetometerHardIronXAsMeasurement_whenKnownHardIronInternalCalibrator_callsInternalCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         val internalCalibratorSpy = spyk(KnownHardIronPositionAndInstantMagnetometerCalibrator())
         val randomizer = UniformRandomizer()
@@ -9490,9 +8681,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun getEstimatedMagnetometerHardIronXAsMeasurement_whenNoInternalCalibrator_returnsNull() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         assertNull(calibrator.getPrivateProperty("magnetometerInternalCalibrator"))
         val b = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
@@ -9501,9 +8691,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun getEstimatedMagnetometerHardIronXAsMeasurement_whenUnknownHardIronInternalCalibrator_callsInternalCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         val internalCalibratorSpy = spyk(KnownPositionAndInstantMagnetometerCalibrator())
         val randomizer = UniformRandomizer()
@@ -9525,9 +8714,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun getEstimatedMagnetometerHardIronXAsMeasurement_whenKnownHardIronInternalCalibrator_callsInternalCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         val internalCalibratorSpy = spyk(KnownHardIronPositionAndInstantMagnetometerCalibrator())
         val randomizer = UniformRandomizer()
@@ -9548,9 +8736,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun estimatedMagnetometerHardIronYAsMeasurement_whenNoInternalCalibrator_returnsNull() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         assertNull(calibrator.getPrivateProperty("magnetometerInternalCalibrator"))
         assertNull(calibrator.estimatedMagnetometerHardIronYAsMeasurement)
@@ -9558,9 +8745,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun estimatedMagnetometerHardIronYAsMeasurement_whenUnknownHardIronInternalCalibrator_callsInternalCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         val internalCalibratorSpy = spyk(KnownPositionAndInstantMagnetometerCalibrator())
         val randomizer = UniformRandomizer()
@@ -9574,9 +8760,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun estimatedMagnetometerHardIronYAsMeasurement_whenKnownHardIronInternalCalibrator_callsInternalCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         val internalCalibratorSpy = spyk(KnownHardIronPositionAndInstantMagnetometerCalibrator())
         val randomizer = UniformRandomizer()
@@ -9590,9 +8775,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun getEstimatedMagnetometerHardIronYAsMeasurement_whenNoInternalCalibrator_returnsNull() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         assertNull(calibrator.getPrivateProperty("magnetometerInternalCalibrator"))
         val b = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
@@ -9601,9 +8785,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun getEstimatedMagnetometerHardIronYAsMeasurement_whenUnknownHardIronInternalCalibrator_callsInternalCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         val internalCalibratorSpy = spyk(KnownPositionAndInstantMagnetometerCalibrator())
         val randomizer = UniformRandomizer()
@@ -9625,9 +8808,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun getEstimatedMagnetometerHardIronYAsMeasurement_whenKnownHardIronInternalCalibrator_callsInternalCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         val internalCalibratorSpy = spyk(KnownHardIronPositionAndInstantMagnetometerCalibrator())
         val randomizer = UniformRandomizer()
@@ -9648,9 +8830,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun estimatedMagnetometerHardIronZAsMeasurement_whenNoInternalCalibrator_returnsNull() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         assertNull(calibrator.getPrivateProperty("magnetometerInternalCalibrator"))
         assertNull(calibrator.estimatedMagnetometerHardIronZAsMeasurement)
@@ -9658,9 +8839,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun estimatedMagnetometerHardIronZAsMeasurement_whenUnknownHardIronInternalCalibrator_callsInternalCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         val internalCalibratorSpy = spyk(KnownPositionAndInstantMagnetometerCalibrator())
         val randomizer = UniformRandomizer()
@@ -9674,9 +8854,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun estimatedMagnetometerHardIronZAsMeasurement_whenKnownHardIronInternalCalibrator_callsInternalCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         val internalCalibratorSpy = spyk(KnownHardIronPositionAndInstantMagnetometerCalibrator())
         val randomizer = UniformRandomizer()
@@ -9690,9 +8869,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun getEstimatedMagnetometerHardIronZAsMeasurement_whenNoInternalCalibrator_returnsNull() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         assertNull(calibrator.getPrivateProperty("magnetometerInternalCalibrator"))
         val b = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
@@ -9701,9 +8879,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun getEstimatedMagnetometerHardIronZAsMeasurement_whenUnknownHardIronInternalCalibrator_callsInternalCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         val internalCalibratorSpy = spyk(KnownPositionAndInstantMagnetometerCalibrator())
         val randomizer = UniformRandomizer()
@@ -9725,9 +8902,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun getEstimatedMagnetometerHardIronZAsMeasurement_whenKnownHardIronInternalCalibrator_callsInternalCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         val internalCalibratorSpy = spyk(KnownHardIronPositionAndInstantMagnetometerCalibrator())
         val randomizer = UniformRandomizer()
@@ -9748,9 +8924,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun estimatedMagnetometerHardIronAsTriad_whenNoInternalCalibrator_returnsNull() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         assertNull(calibrator.getPrivateProperty("magnetometerInternalCalibrator"))
         assertNull(calibrator.estimatedMagnetometerHardIronAsTriad)
@@ -9758,9 +8933,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun estimatedMagnetometerHardIronAsTriad_whenUnknownHardIronInternalCalibrator_callsInternalCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         val internalCalibratorSpy = spyk(KnownPositionAndInstantMagnetometerCalibrator())
         val randomizer = UniformRandomizer()
@@ -9781,9 +8955,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun estimatedMagnetometerHardIronAsTriad_whenKnownHardIronInternalCalibrator_callsInternalCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         val internalCalibratorSpy = spyk(KnownHardIronPositionAndInstantMagnetometerCalibrator())
         val randomizer = UniformRandomizer()
@@ -9804,9 +8977,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun getEstimatedMagnetometerHardIronAsTriad_whenNoInternalCalibrator_returnsNull() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         assertNull(calibrator.getPrivateProperty("magnetometerInternalCalibrator"))
         val triad = MagneticFluxDensityTriad()
@@ -9815,9 +8987,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun getEstimatedMagnetometerHardIronAsTriad_whenUnknownHardIronInternalCalibrator_callsInternalCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         val internalCalibratorSpy = spyk(KnownPositionAndInstantMagnetometerCalibrator())
         val randomizer = UniformRandomizer()
@@ -9847,9 +9018,8 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun getEstimatedMagnetometerHardIronAsTriad_whenKnownHardIronInternalCalibrator_callsInternalCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalMagnetometerCalibrator(context, location)
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         val internalCalibratorSpy = spyk(KnownHardIronPositionAndInstantMagnetometerCalibrator())
         val randomizer = UniformRandomizer()
@@ -9877,12 +9047,23 @@ class StaticIntervalMagnetometerCalibratorTest {
     }
 
     @Test
+    fun buildMagnetometerInternalCalibrator_whenNoInitialMagneticFluxDensityNorm_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = StaticIntervalMagnetometerCalibrator(context)
+
+        assertNull(calibrator.initialMagneticFluxDensityNorm)
+
+        val ex = assertThrows(InvocationTargetException::class.java) {
+            assertNull(calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator"))
+        }
+        assertTrue(ex.cause is java.lang.IllegalStateException)
+    }
+
+    @Test
     fun buildMagnetometerInternalCalibrator_whenNonRobustGroundTruthHardIronSetAndNoCommonAxis_buildsExpectedCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             isMagnetometerGroundTruthInitialHardIron = true
         )
 
@@ -9918,14 +9099,26 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertNull(calibrator.magnetometerRobustMethod)
         assertTrue(calibrator.isMagnetometerGroundTruthInitialHardIron)
 
+        val initialMagneticFluxDensityNorm = randomizer.nextDouble()
+        calibrator.setPrivateProperty(
+            "initialMagneticFluxDensityNorm",
+            initialMagneticFluxDensityNorm
+        )
+
+        assertEquals(initialMagneticFluxDensityNorm, calibrator.initialMagneticFluxDensityNorm)
+
         val internalCalibrator: MagnetometerNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
         requireNotNull(internalCalibrator)
 
         // check
         val internalCalibrator2 =
-            internalCalibrator as KnownHardIronPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as KnownHardIronMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            initialMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            0.0
+        )
         assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.hardIronX, 0.0)
@@ -9947,20 +9140,13 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMagnetometerMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
-
-        val calendar = GregorianCalendar()
-        calendar.time = calibrator.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenNonRobustGroundTruthHardIronSetAndCommonAxisUsed_buildsExpectedCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             isMagnetometerGroundTruthInitialHardIron = true
         )
 
@@ -9996,14 +9182,26 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertNull(calibrator.magnetometerRobustMethod)
         assertTrue(calibrator.isMagnetometerGroundTruthInitialHardIron)
 
+        val initialMagneticFluxDensityNorm = randomizer.nextDouble()
+        calibrator.setPrivateProperty(
+            "initialMagneticFluxDensityNorm",
+            initialMagneticFluxDensityNorm
+        )
+
+        assertEquals(initialMagneticFluxDensityNorm, calibrator.initialMagneticFluxDensityNorm)
+
         val internalCalibrator: MagnetometerNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
         requireNotNull(internalCalibrator)
 
         // check
         val internalCalibrator2 =
-            internalCalibrator as KnownHardIronPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as KnownHardIronMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            initialMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            0.0
+        )
         assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
         assertTrue(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.hardIronX, 0.0)
@@ -10025,20 +9223,13 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMagnetometerMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
-
-        val calendar = GregorianCalendar()
-        calendar.time = calibrator.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenNonRobustGroundTruthHardIronNotSetAndNoCommonAxis_buildsExpectedCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             isMagnetometerGroundTruthInitialHardIron = false
         )
 
@@ -10080,14 +9271,26 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertNull(calibrator.magnetometerRobustMethod)
         assertFalse(calibrator.isMagnetometerGroundTruthInitialHardIron)
 
+        val initialMagneticFluxDensityNorm = randomizer.nextDouble()
+        calibrator.setPrivateProperty(
+            "initialMagneticFluxDensityNorm",
+            initialMagneticFluxDensityNorm
+        )
+
+        assertEquals(initialMagneticFluxDensityNorm, calibrator.initialMagneticFluxDensityNorm)
+
         val internalCalibrator: MagnetometerNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
         requireNotNull(internalCalibrator)
 
         // check
         val internalCalibrator2 =
-            internalCalibrator as KnownPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as KnownMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            initialMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            0.0
+        )
         assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(initialHardIronX, internalCalibrator2.initialHardIronX, 0.0)
@@ -10109,20 +9312,13 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMagnetometerMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
-
-        val calendar = GregorianCalendar()
-        calendar.time = calibrator.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenNonRobustAndGroundTruthHardIronNotSetAndCommonAxis_buildsExpectedCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             isMagnetometerGroundTruthInitialHardIron = false
         )
 
@@ -10164,14 +9360,26 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertNull(calibrator.magnetometerRobustMethod)
         assertFalse(calibrator.isMagnetometerGroundTruthInitialHardIron)
 
+        val initialMagneticFluxDensityNorm = randomizer.nextDouble()
+        calibrator.setPrivateProperty(
+            "initialMagneticFluxDensityNorm",
+            initialMagneticFluxDensityNorm
+        )
+
+        assertEquals(initialMagneticFluxDensityNorm, calibrator.initialMagneticFluxDensityNorm)
+
         val internalCalibrator: MagnetometerNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
         requireNotNull(internalCalibrator)
 
         // check
         val internalCalibrator2 =
-            internalCalibrator as KnownPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as KnownMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            initialMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            0.0
+        )
         assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
         assertTrue(internalCalibrator2.isCommonAxisUsed)
         assertEquals(initialHardIronX, internalCalibrator2.initialHardIronX, 0.0)
@@ -10193,20 +9401,13 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMagnetometerMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
-
-        val calendar = GregorianCalendar()
-        calendar.time = calibrator.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenRANSACGroundTruthHardIronNotSetAndNoCommonAxis_buildsExpectedCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             isMagnetometerGroundTruthInitialHardIron = false
         )
 
@@ -10256,14 +9457,26 @@ class StaticIntervalMagnetometerCalibratorTest {
         requireNotNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
 
+        val initialMagneticFluxDensityNorm = randomizer.nextDouble()
+        calibrator.setPrivateProperty(
+            "initialMagneticFluxDensityNorm",
+            initialMagneticFluxDensityNorm
+        )
+
+        assertEquals(initialMagneticFluxDensityNorm, calibrator.initialMagneticFluxDensityNorm)
+
         val internalCalibrator: MagnetometerNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
         requireNotNull(internalCalibrator)
 
         // check
         val internalCalibrator2 =
-            internalCalibrator as RANSACRobustKnownPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as RANSACRobustKnownMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            initialMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            0.0
+        )
         assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.initialHardIronX, 0.0)
@@ -10289,20 +9502,13 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
-
-        val calendar = GregorianCalendar()
-        calendar.time = calibrator.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenRANSACGroundTruthHardIronNotSetAndCommonAxis_buildsExpectedCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             isMagnetometerGroundTruthInitialHardIron = false
         )
 
@@ -10352,14 +9558,26 @@ class StaticIntervalMagnetometerCalibratorTest {
         requireNotNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
 
+        val initialMagneticFluxDensityNorm = randomizer.nextDouble()
+        calibrator.setPrivateProperty(
+            "initialMagneticFluxDensityNorm",
+            initialMagneticFluxDensityNorm
+        )
+
+        assertEquals(initialMagneticFluxDensityNorm, calibrator.initialMagneticFluxDensityNorm)
+
         val internalCalibrator: MagnetometerNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
         requireNotNull(internalCalibrator)
 
         // check
         val internalCalibrator2 =
-            internalCalibrator as RANSACRobustKnownPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as RANSACRobustKnownMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            initialMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            0.0
+        )
         assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
         assertTrue(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.initialHardIronX, 0.0)
@@ -10385,20 +9603,13 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
-
-        val calendar = GregorianCalendar()
-        calendar.time = calibrator.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenRANSACGroundTruthHardIronSetAndNoCommonAxis_buildsExpectedCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             isMagnetometerGroundTruthInitialHardIron = true
         )
 
@@ -10454,14 +9665,26 @@ class StaticIntervalMagnetometerCalibratorTest {
         requireNotNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
 
+        val initialMagneticFluxDensityNorm = randomizer.nextDouble()
+        calibrator.setPrivateProperty(
+            "initialMagneticFluxDensityNorm",
+            initialMagneticFluxDensityNorm
+        )
+
+        assertEquals(initialMagneticFluxDensityNorm, calibrator.initialMagneticFluxDensityNorm)
+
         val internalCalibrator: MagnetometerNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
         requireNotNull(internalCalibrator)
 
         // check
         val internalCalibrator2 =
-            internalCalibrator as RANSACRobustKnownHardIronPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as RANSACRobustKnownHardIronMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            initialMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            0.0
+        )
         assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(initialHardIronX, internalCalibrator2.hardIronX, 0.0)
@@ -10487,20 +9710,13 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
-
-        val calendar = GregorianCalendar()
-        calendar.time = calibrator.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenRANSACGroundTruthHardIronSetAndCommonAxis_buildsExpectedCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             isMagnetometerGroundTruthInitialHardIron = true
         )
 
@@ -10556,14 +9772,26 @@ class StaticIntervalMagnetometerCalibratorTest {
         requireNotNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
 
+        val initialMagneticFluxDensityNorm = randomizer.nextDouble()
+        calibrator.setPrivateProperty(
+            "initialMagneticFluxDensityNorm",
+            initialMagneticFluxDensityNorm
+        )
+
+        assertEquals(initialMagneticFluxDensityNorm, calibrator.initialMagneticFluxDensityNorm)
+
         val internalCalibrator: MagnetometerNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
         requireNotNull(internalCalibrator)
 
         // check
         val internalCalibrator2 =
-            internalCalibrator as RANSACRobustKnownHardIronPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as RANSACRobustKnownHardIronMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            initialMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            0.0
+        )
         assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
         assertTrue(internalCalibrator2.isCommonAxisUsed)
         assertEquals(initialHardIronX, internalCalibrator2.hardIronX, 0.0)
@@ -10589,20 +9817,13 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
-
-        val calendar = GregorianCalendar()
-        calendar.time = calibrator.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenRANSACGroundTruthHardIronNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             isMagnetometerGroundTruthInitialHardIron = false
         )
 
@@ -10662,14 +9883,26 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
         assertEquals(baseNoiseLevel, calibrator.magnetometerBaseNoiseLevel)
 
+        val initialMagneticFluxDensityNorm = randomizer.nextDouble()
+        calibrator.setPrivateProperty(
+            "initialMagneticFluxDensityNorm",
+            initialMagneticFluxDensityNorm
+        )
+
+        assertEquals(initialMagneticFluxDensityNorm, calibrator.initialMagneticFluxDensityNorm)
+
         val internalCalibrator: MagnetometerNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
         requireNotNull(internalCalibrator)
 
         // check
         val internalCalibrator2 =
-            internalCalibrator as RANSACRobustKnownPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as RANSACRobustKnownMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            initialMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            0.0
+        )
         assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.initialHardIronX, 0.0)
@@ -10695,20 +9928,13 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
-
-        val calendar = GregorianCalendar()
-        calendar.time = calibrator.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenRANSACGroundTruthHardIronSetAndNoRobustThreshold_buildsExpectedCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             isMagnetometerGroundTruthInitialHardIron = true
         )
 
@@ -10768,14 +9994,26 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
         assertEquals(baseNoiseLevel, calibrator.magnetometerBaseNoiseLevel)
 
+        val initialMagneticFluxDensityNorm = randomizer.nextDouble()
+        calibrator.setPrivateProperty(
+            "initialMagneticFluxDensityNorm",
+            initialMagneticFluxDensityNorm
+        )
+
+        assertEquals(initialMagneticFluxDensityNorm, calibrator.initialMagneticFluxDensityNorm)
+
         val internalCalibrator: MagnetometerNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
         requireNotNull(internalCalibrator)
 
         // check
         val internalCalibrator2 =
-            internalCalibrator as RANSACRobustKnownHardIronPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as RANSACRobustKnownHardIronMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            initialMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            0.0
+        )
         assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.hardIronX, 0.0)
@@ -10801,20 +10039,13 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
-
-        val calendar = GregorianCalendar()
-        calendar.time = calibrator.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenRANSACGroundTruthHardIronNotSetNoRobustThresholdAndMissingBaseNoiseLevel_throwsIllegalStateException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             isMagnetometerGroundTruthInitialHardIron = false
         )
 
@@ -10865,6 +10096,14 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
         assertNull(calibrator.magnetometerBaseNoiseLevel)
+
+        val initialMagneticFluxDensityNorm = randomizer.nextDouble()
+        calibrator.setPrivateProperty(
+            "initialMagneticFluxDensityNorm",
+            initialMagneticFluxDensityNorm
+        )
+
+        assertEquals(initialMagneticFluxDensityNorm, calibrator.initialMagneticFluxDensityNorm)
 
         val ex = assertThrows(InvocationTargetException::class.java) {
             assertNull(calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator"))
@@ -10874,11 +10113,9 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenRANSACGroundTruthHardIronSetNoRobustThresholdAndMissingBaseNoiseLevel_throwsIllegalStateException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             isMagnetometerGroundTruthInitialHardIron = true
         )
 
@@ -10930,6 +10167,14 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
         assertNull(calibrator.magnetometerBaseNoiseLevel)
 
+        val initialMagneticFluxDensityNorm = randomizer.nextDouble()
+        calibrator.setPrivateProperty(
+            "initialMagneticFluxDensityNorm",
+            initialMagneticFluxDensityNorm
+        )
+
+        assertEquals(initialMagneticFluxDensityNorm, calibrator.initialMagneticFluxDensityNorm)
+
         val ex = assertThrows(InvocationTargetException::class.java) {
             assertNull(calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator"))
         }
@@ -10938,11 +10183,9 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenMSACGroundTruthHardIronNotSetAndNoCommonAxis_buildsExpectedCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             isMagnetometerGroundTruthInitialHardIron = false
         )
 
@@ -10992,14 +10235,26 @@ class StaticIntervalMagnetometerCalibratorTest {
         requireNotNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
 
+        val initialMagneticFluxDensityNorm = randomizer.nextDouble()
+        calibrator.setPrivateProperty(
+            "initialMagneticFluxDensityNorm",
+            initialMagneticFluxDensityNorm
+        )
+
+        assertEquals(initialMagneticFluxDensityNorm, calibrator.initialMagneticFluxDensityNorm)
+
         val internalCalibrator: MagnetometerNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
         requireNotNull(internalCalibrator)
 
         // check
         val internalCalibrator2 =
-            internalCalibrator as MSACRobustKnownPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as MSACRobustKnownMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            initialMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            0.0
+        )
         assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.initialHardIronX, 0.0)
@@ -11025,20 +10280,13 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
-
-        val calendar = GregorianCalendar()
-        calendar.time = calibrator.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenMSACGroundTruthHardIronNotSetAndCommonAxis_buildsExpectedCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             isMagnetometerGroundTruthInitialHardIron = false
         )
 
@@ -11088,14 +10336,26 @@ class StaticIntervalMagnetometerCalibratorTest {
         requireNotNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
 
+        val initialMagneticFluxDensityNorm = randomizer.nextDouble()
+        calibrator.setPrivateProperty(
+            "initialMagneticFluxDensityNorm",
+            initialMagneticFluxDensityNorm
+        )
+
+        assertEquals(initialMagneticFluxDensityNorm, calibrator.initialMagneticFluxDensityNorm)
+
         val internalCalibrator: MagnetometerNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
         requireNotNull(internalCalibrator)
 
         // check
         val internalCalibrator2 =
-            internalCalibrator as MSACRobustKnownPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as MSACRobustKnownMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            initialMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            0.0
+        )
         assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
         assertTrue(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.initialHardIronX, 0.0)
@@ -11121,20 +10381,13 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
-
-        val calendar = GregorianCalendar()
-        calendar.time = calibrator.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenMSACGroundTruthHardIronSetAndNoCommonAxis_buildsExpectedCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             isMagnetometerGroundTruthInitialHardIron = true
         )
 
@@ -11190,14 +10443,26 @@ class StaticIntervalMagnetometerCalibratorTest {
         requireNotNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
 
+        val initialMagneticFluxDensityNorm = randomizer.nextDouble()
+        calibrator.setPrivateProperty(
+            "initialMagneticFluxDensityNorm",
+            initialMagneticFluxDensityNorm
+        )
+
+        assertEquals(initialMagneticFluxDensityNorm, calibrator.initialMagneticFluxDensityNorm)
+
         val internalCalibrator: MagnetometerNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
         requireNotNull(internalCalibrator)
 
         // check
         val internalCalibrator2 =
-            internalCalibrator as MSACRobustKnownHardIronPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as MSACRobustKnownHardIronMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            initialMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            0.0
+        )
         assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(initialHardIronX, internalCalibrator2.hardIronX, 0.0)
@@ -11223,20 +10488,13 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
-
-        val calendar = GregorianCalendar()
-        calendar.time = calibrator.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenMSACGroundTruthHardIronSetAndCommonAxis_buildsExpectedCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             isMagnetometerGroundTruthInitialHardIron = true
         )
 
@@ -11292,14 +10550,26 @@ class StaticIntervalMagnetometerCalibratorTest {
         requireNotNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
 
+        val initialMagneticFluxDensityNorm = randomizer.nextDouble()
+        calibrator.setPrivateProperty(
+            "initialMagneticFluxDensityNorm",
+            initialMagneticFluxDensityNorm
+        )
+
+        assertEquals(initialMagneticFluxDensityNorm, calibrator.initialMagneticFluxDensityNorm)
+
         val internalCalibrator: MagnetometerNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
         requireNotNull(internalCalibrator)
 
         // check
         val internalCalibrator2 =
-            internalCalibrator as MSACRobustKnownHardIronPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as MSACRobustKnownHardIronMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            initialMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            0.0
+        )
         assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
         assertTrue(internalCalibrator2.isCommonAxisUsed)
         assertEquals(initialHardIronX, internalCalibrator2.hardIronX, 0.0)
@@ -11325,20 +10595,13 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
-
-        val calendar = GregorianCalendar()
-        calendar.time = calibrator.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenMSACGroundTruthHardIronNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             isMagnetometerGroundTruthInitialHardIron = false
         )
 
@@ -11398,14 +10661,26 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
         assertEquals(baseNoiseLevel, calibrator.magnetometerBaseNoiseLevel)
 
+        val initialMagneticFluxDensityNorm = randomizer.nextDouble()
+        calibrator.setPrivateProperty(
+            "initialMagneticFluxDensityNorm",
+            initialMagneticFluxDensityNorm
+        )
+
+        assertEquals(initialMagneticFluxDensityNorm, calibrator.initialMagneticFluxDensityNorm)
+
         val internalCalibrator: MagnetometerNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
         requireNotNull(internalCalibrator)
 
         // check
         val internalCalibrator2 =
-            internalCalibrator as MSACRobustKnownPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as MSACRobustKnownMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            initialMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            0.0
+        )
         assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.initialHardIronX, 0.0)
@@ -11431,20 +10706,13 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
-
-        val calendar = GregorianCalendar()
-        calendar.time = calibrator.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenMSACGroundTruthHardIronSetAndNoRobustThreshold_buildsExpectedCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             isMagnetometerGroundTruthInitialHardIron = true
         )
 
@@ -11504,14 +10772,26 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
         assertEquals(baseNoiseLevel, calibrator.magnetometerBaseNoiseLevel)
 
+        val initialMagneticFluxDensityNorm = randomizer.nextDouble()
+        calibrator.setPrivateProperty(
+            "initialMagneticFluxDensityNorm",
+            initialMagneticFluxDensityNorm
+        )
+
+        assertEquals(initialMagneticFluxDensityNorm, calibrator.initialMagneticFluxDensityNorm)
+
         val internalCalibrator: MagnetometerNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
         requireNotNull(internalCalibrator)
 
         // check
         val internalCalibrator2 =
-            internalCalibrator as MSACRobustKnownHardIronPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as MSACRobustKnownHardIronMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            initialMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            0.0
+        )
         assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.hardIronX, 0.0)
@@ -11537,20 +10817,13 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
-
-        val calendar = GregorianCalendar()
-        calendar.time = calibrator.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenMSACGroundTruthHardIronNotSetNoRobustThresholdAndMissingBaseNoiseLevel_throwsIllegalStateException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             isMagnetometerGroundTruthInitialHardIron = false
         )
 
@@ -11601,6 +10874,14 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
         assertNull(calibrator.magnetometerBaseNoiseLevel)
+
+        val initialMagneticFluxDensityNorm = randomizer.nextDouble()
+        calibrator.setPrivateProperty(
+            "initialMagneticFluxDensityNorm",
+            initialMagneticFluxDensityNorm
+        )
+
+        assertEquals(initialMagneticFluxDensityNorm, calibrator.initialMagneticFluxDensityNorm)
 
         val ex = assertThrows(InvocationTargetException::class.java) {
             assertNull(calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator"))
@@ -11610,11 +10891,9 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenMSACGroundTruthHardIronSetNoRobustThresholdAndMissingBaseNoiseLevel_throwsIllegalStateException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             isMagnetometerGroundTruthInitialHardIron = true
         )
 
@@ -11666,6 +10945,14 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
         assertNull(calibrator.magnetometerBaseNoiseLevel)
 
+        val initialMagneticFluxDensityNorm = randomizer.nextDouble()
+        calibrator.setPrivateProperty(
+            "initialMagneticFluxDensityNorm",
+            initialMagneticFluxDensityNorm
+        )
+
+        assertEquals(initialMagneticFluxDensityNorm, calibrator.initialMagneticFluxDensityNorm)
+
         val ex = assertThrows(InvocationTargetException::class.java) {
             assertNull(calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator"))
         }
@@ -11674,11 +10961,9 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenPROSACGroundTruthHardIronNotSetAndNoCommonAxis_buildsExpectedCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             isMagnetometerGroundTruthInitialHardIron = false
         )
 
@@ -11732,14 +11017,26 @@ class StaticIntervalMagnetometerCalibratorTest {
         requireNotNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
 
+        val initialMagneticFluxDensityNorm = randomizer.nextDouble()
+        calibrator.setPrivateProperty(
+            "initialMagneticFluxDensityNorm",
+            initialMagneticFluxDensityNorm
+        )
+
+        assertEquals(initialMagneticFluxDensityNorm, calibrator.initialMagneticFluxDensityNorm)
+
         val internalCalibrator: MagnetometerNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
         requireNotNull(internalCalibrator)
 
         // check
         val internalCalibrator2 =
-            internalCalibrator as PROSACRobustKnownPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as PROSACRobustKnownMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            initialMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            0.0
+        )
         assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.initialHardIronX, 0.0)
@@ -11769,20 +11066,13 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
-
-        val calendar = GregorianCalendar()
-        calendar.time = calibrator.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenPROSACGroundTruthHardIronNotSetAndCommonAxis_buildsExpectedCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             isMagnetometerGroundTruthInitialHardIron = false
         )
 
@@ -11836,14 +11126,26 @@ class StaticIntervalMagnetometerCalibratorTest {
         requireNotNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
 
+        val initialMagneticFluxDensityNorm = randomizer.nextDouble()
+        calibrator.setPrivateProperty(
+            "initialMagneticFluxDensityNorm",
+            initialMagneticFluxDensityNorm
+        )
+
+        assertEquals(initialMagneticFluxDensityNorm, calibrator.initialMagneticFluxDensityNorm)
+
         val internalCalibrator: MagnetometerNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
         requireNotNull(internalCalibrator)
 
         // check
         val internalCalibrator2 =
-            internalCalibrator as PROSACRobustKnownPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as PROSACRobustKnownMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            initialMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            0.0
+        )
         assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
         assertTrue(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.initialHardIronX, 0.0)
@@ -11873,20 +11175,13 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
-
-        val calendar = GregorianCalendar()
-        calendar.time = calibrator.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenPROSACGroundTruthHardIronSetAndNoCommonAxis_buildsExpectedCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             isMagnetometerGroundTruthInitialHardIron = true
         )
 
@@ -11946,14 +11241,26 @@ class StaticIntervalMagnetometerCalibratorTest {
         requireNotNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
 
+        val initialMagneticFluxDensityNorm = randomizer.nextDouble()
+        calibrator.setPrivateProperty(
+            "initialMagneticFluxDensityNorm",
+            initialMagneticFluxDensityNorm
+        )
+
+        assertEquals(initialMagneticFluxDensityNorm, calibrator.initialMagneticFluxDensityNorm)
+
         val internalCalibrator: MagnetometerNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
         requireNotNull(internalCalibrator)
 
         // check
         val internalCalibrator2 =
-            internalCalibrator as PROSACRobustKnownHardIronPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as PROSACRobustKnownHardIronMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            initialMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            0.0
+        )
         assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(initialHardIronX, internalCalibrator2.hardIronX, 0.0)
@@ -11983,20 +11290,13 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
-
-        val calendar = GregorianCalendar()
-        calendar.time = calibrator.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenPROSACGroundTruthHardIronSetAndCommonAxis_buildsExpectedCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             isMagnetometerGroundTruthInitialHardIron = true
         )
 
@@ -12056,14 +11356,26 @@ class StaticIntervalMagnetometerCalibratorTest {
         requireNotNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
 
+        val initialMagneticFluxDensityNorm = randomizer.nextDouble()
+        calibrator.setPrivateProperty(
+            "initialMagneticFluxDensityNorm",
+            initialMagneticFluxDensityNorm
+        )
+
+        assertEquals(initialMagneticFluxDensityNorm, calibrator.initialMagneticFluxDensityNorm)
+
         val internalCalibrator: MagnetometerNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
         requireNotNull(internalCalibrator)
 
         // check
         val internalCalibrator2 =
-            internalCalibrator as PROSACRobustKnownHardIronPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as PROSACRobustKnownHardIronMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            initialMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            0.0
+        )
         assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
         assertTrue(internalCalibrator2.isCommonAxisUsed)
         assertEquals(initialHardIronX, internalCalibrator2.hardIronX, 0.0)
@@ -12093,20 +11405,13 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
-
-        val calendar = GregorianCalendar()
-        calendar.time = calibrator.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenPROSACGroundTruthHardIronNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             isMagnetometerGroundTruthInitialHardIron = false
         )
 
@@ -12170,14 +11475,26 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
         assertEquals(baseNoiseLevel, calibrator.magnetometerBaseNoiseLevel)
 
+        val initialMagneticFluxDensityNorm = randomizer.nextDouble()
+        calibrator.setPrivateProperty(
+            "initialMagneticFluxDensityNorm",
+            initialMagneticFluxDensityNorm
+        )
+
+        assertEquals(initialMagneticFluxDensityNorm, calibrator.initialMagneticFluxDensityNorm)
+
         val internalCalibrator: MagnetometerNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
         requireNotNull(internalCalibrator)
 
         // check
         val internalCalibrator2 =
-            internalCalibrator as PROSACRobustKnownPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as PROSACRobustKnownMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            initialMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            0.0
+        )
         assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.initialHardIronX, 0.0)
@@ -12207,20 +11524,13 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
-
-        val calendar = GregorianCalendar()
-        calendar.time = calibrator.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenPROSACGroundTruthHardIronSetAndNoRobustThreshold_buildsExpectedCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             isMagnetometerGroundTruthInitialHardIron = true
         )
 
@@ -12284,14 +11594,26 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
         assertEquals(baseNoiseLevel, calibrator.magnetometerBaseNoiseLevel)
 
+        val initialMagneticFluxDensityNorm = randomizer.nextDouble()
+        calibrator.setPrivateProperty(
+            "initialMagneticFluxDensityNorm",
+            initialMagneticFluxDensityNorm
+        )
+
+        assertEquals(initialMagneticFluxDensityNorm, calibrator.initialMagneticFluxDensityNorm)
+
         val internalCalibrator: MagnetometerNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
         requireNotNull(internalCalibrator)
 
         // check
         val internalCalibrator2 =
-            internalCalibrator as PROSACRobustKnownHardIronPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as PROSACRobustKnownHardIronMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            initialMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            0.0
+        )
         assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.hardIronX, 0.0)
@@ -12321,20 +11643,13 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
-
-        val calendar = GregorianCalendar()
-        calendar.time = calibrator.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenPROSACGroundTruthHardIronNotSetNoRobustThresholdAndMissingBaseNoiseLevel_throwsIllegalStateException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             isMagnetometerGroundTruthInitialHardIron = false
         )
 
@@ -12389,6 +11704,14 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
         assertNull(calibrator.magnetometerBaseNoiseLevel)
+
+        val initialMagneticFluxDensityNorm = randomizer.nextDouble()
+        calibrator.setPrivateProperty(
+            "initialMagneticFluxDensityNorm",
+            initialMagneticFluxDensityNorm
+        )
+
+        assertEquals(initialMagneticFluxDensityNorm, calibrator.initialMagneticFluxDensityNorm)
 
         val ex = assertThrows(InvocationTargetException::class.java) {
             assertNull(calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator"))
@@ -12398,11 +11721,9 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenPROSACGroundTruthHardIronSetNoRobustThresholdAndMissingBaseNoiseLevel_throwsIllegalStateException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             isMagnetometerGroundTruthInitialHardIron = true
         )
 
@@ -12458,6 +11779,14 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
         assertNull(calibrator.magnetometerBaseNoiseLevel)
 
+        val initialMagneticFluxDensityNorm = randomizer.nextDouble()
+        calibrator.setPrivateProperty(
+            "initialMagneticFluxDensityNorm",
+            initialMagneticFluxDensityNorm
+        )
+
+        assertEquals(initialMagneticFluxDensityNorm, calibrator.initialMagneticFluxDensityNorm)
+
         val ex = assertThrows(InvocationTargetException::class.java) {
             assertNull(calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator"))
         }
@@ -12466,11 +11795,9 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenLMedSGroundTruthHardIronNotSetAndNoCommonAxis_buildsExpectedCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             isMagnetometerGroundTruthInitialHardIron = false
         )
 
@@ -12520,14 +11847,26 @@ class StaticIntervalMagnetometerCalibratorTest {
         requireNotNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
 
+        val initialMagneticFluxDensityNorm = randomizer.nextDouble()
+        calibrator.setPrivateProperty(
+            "initialMagneticFluxDensityNorm",
+            initialMagneticFluxDensityNorm
+        )
+
+        assertEquals(initialMagneticFluxDensityNorm, calibrator.initialMagneticFluxDensityNorm)
+
         val internalCalibrator: MagnetometerNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
         requireNotNull(internalCalibrator)
 
         // check
         val internalCalibrator2 =
-            internalCalibrator as LMedSRobustKnownPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as LMedSRobustKnownMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            initialMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            0.0
+        )
         assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.initialHardIronX, 0.0)
@@ -12553,20 +11892,13 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
-
-        val calendar = GregorianCalendar()
-        calendar.time = calibrator.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenLMedSGroundTruthHardIronNotSetAndCommonAxis_buildsExpectedCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             isMagnetometerGroundTruthInitialHardIron = false
         )
 
@@ -12616,14 +11948,26 @@ class StaticIntervalMagnetometerCalibratorTest {
         requireNotNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
 
+        val initialMagneticFluxDensityNorm = randomizer.nextDouble()
+        calibrator.setPrivateProperty(
+            "initialMagneticFluxDensityNorm",
+            initialMagneticFluxDensityNorm
+        )
+
+        assertEquals(initialMagneticFluxDensityNorm, calibrator.initialMagneticFluxDensityNorm)
+
         val internalCalibrator: MagnetometerNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
         requireNotNull(internalCalibrator)
 
         // check
         val internalCalibrator2 =
-            internalCalibrator as LMedSRobustKnownPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as LMedSRobustKnownMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            initialMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            0.0
+        )
         assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
         assertTrue(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.initialHardIronX, 0.0)
@@ -12649,20 +11993,13 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
-
-        val calendar = GregorianCalendar()
-        calendar.time = calibrator.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenLMedSGroundTruthHardIronSetAndNoCommonAxis_buildsExpectedCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             isMagnetometerGroundTruthInitialHardIron = true
         )
 
@@ -12718,14 +12055,26 @@ class StaticIntervalMagnetometerCalibratorTest {
         requireNotNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
 
+        val initialMagneticFluxDensityNorm = randomizer.nextDouble()
+        calibrator.setPrivateProperty(
+            "initialMagneticFluxDensityNorm",
+            initialMagneticFluxDensityNorm
+        )
+
+        assertEquals(initialMagneticFluxDensityNorm, calibrator.initialMagneticFluxDensityNorm)
+
         val internalCalibrator: MagnetometerNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
         requireNotNull(internalCalibrator)
 
         // check
         val internalCalibrator2 =
-            internalCalibrator as LMedSRobustKnownHardIronPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as LMedSRobustKnownHardIronMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            initialMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            0.0
+        )
         assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(initialHardIronX, internalCalibrator2.hardIronX, 0.0)
@@ -12751,20 +12100,13 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
-
-        val calendar = GregorianCalendar()
-        calendar.time = calibrator.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenLMedSGroundTruthHardIronSetAndCommonAxis_buildsExpectedCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             isMagnetometerGroundTruthInitialHardIron = true
         )
 
@@ -12820,14 +12162,26 @@ class StaticIntervalMagnetometerCalibratorTest {
         requireNotNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
 
+        val initialMagneticFluxDensityNorm = randomizer.nextDouble()
+        calibrator.setPrivateProperty(
+            "initialMagneticFluxDensityNorm",
+            initialMagneticFluxDensityNorm
+        )
+
+        assertEquals(initialMagneticFluxDensityNorm, calibrator.initialMagneticFluxDensityNorm)
+
         val internalCalibrator: MagnetometerNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
         requireNotNull(internalCalibrator)
 
         // check
         val internalCalibrator2 =
-            internalCalibrator as LMedSRobustKnownHardIronPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as LMedSRobustKnownHardIronMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            initialMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            0.0
+        )
         assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
         assertTrue(internalCalibrator2.isCommonAxisUsed)
         assertEquals(initialHardIronX, internalCalibrator2.hardIronX, 0.0)
@@ -12853,20 +12207,13 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
-
-        val calendar = GregorianCalendar()
-        calendar.time = calibrator.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenLMedSGroundTruthHardIronNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             isMagnetometerGroundTruthInitialHardIron = false
         )
 
@@ -12927,14 +12274,26 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
         assertEquals(baseNoiseLevel, calibrator.magnetometerBaseNoiseLevel)
 
+        val initialMagneticFluxDensityNorm = randomizer.nextDouble()
+        calibrator.setPrivateProperty(
+            "initialMagneticFluxDensityNorm",
+            initialMagneticFluxDensityNorm
+        )
+
+        assertEquals(initialMagneticFluxDensityNorm, calibrator.initialMagneticFluxDensityNorm)
+
         val internalCalibrator: MagnetometerNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
         requireNotNull(internalCalibrator)
 
         // check
         val internalCalibrator2 =
-            internalCalibrator as LMedSRobustKnownPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as LMedSRobustKnownMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            initialMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            0.0
+        )
         assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.initialHardIronX, 0.0)
@@ -12964,20 +12323,13 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
-
-        val calendar = GregorianCalendar()
-        calendar.time = calibrator.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenLMedSGroundTruthHardIronSetAndNoRobustThreshold_buildsExpectedCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             isMagnetometerGroundTruthInitialHardIron = true
         )
 
@@ -13038,14 +12390,26 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
         assertEquals(baseNoiseLevel, calibrator.magnetometerBaseNoiseLevel)
 
+        val initialMagneticFluxDensityNorm = randomizer.nextDouble()
+        calibrator.setPrivateProperty(
+            "initialMagneticFluxDensityNorm",
+            initialMagneticFluxDensityNorm
+        )
+
+        assertEquals(initialMagneticFluxDensityNorm, calibrator.initialMagneticFluxDensityNorm)
+
         val internalCalibrator: MagnetometerNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
         requireNotNull(internalCalibrator)
 
         // check
         val internalCalibrator2 =
-            internalCalibrator as LMedSRobustKnownHardIronPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as LMedSRobustKnownHardIronMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            initialMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            0.0
+        )
         assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.hardIronX, 0.0)
@@ -13075,20 +12439,13 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
-
-        val calendar = GregorianCalendar()
-        calendar.time = calibrator.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenLMedSGroundTruthHardIronNotSetNoRobustThresholdAndMissingBaseNoiseLevel_throwsIllegalStateException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             isMagnetometerGroundTruthInitialHardIron = false
         )
 
@@ -13140,6 +12497,14 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
         assertNull(calibrator.magnetometerBaseNoiseLevel)
 
+        val initialMagneticFluxDensityNorm = randomizer.nextDouble()
+        calibrator.setPrivateProperty(
+            "initialMagneticFluxDensityNorm",
+            initialMagneticFluxDensityNorm
+        )
+
+        assertEquals(initialMagneticFluxDensityNorm, calibrator.initialMagneticFluxDensityNorm)
+
         val ex = assertThrows(InvocationTargetException::class.java) {
             assertNull(calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator"))
         }
@@ -13148,11 +12513,9 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenLMedSGroundTruthHardIronSetNoRobustThresholdAndMissingBaseNoiseLevel_throwsIllegalStateException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             isMagnetometerGroundTruthInitialHardIron = true
         )
 
@@ -13204,6 +12567,14 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
         assertNull(calibrator.magnetometerBaseNoiseLevel)
 
+        val initialMagneticFluxDensityNorm = randomizer.nextDouble()
+        calibrator.setPrivateProperty(
+            "initialMagneticFluxDensityNorm",
+            initialMagneticFluxDensityNorm
+        )
+
+        assertEquals(initialMagneticFluxDensityNorm, calibrator.initialMagneticFluxDensityNorm)
+
         val ex = assertThrows(InvocationTargetException::class.java) {
             assertNull(calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator"))
         }
@@ -13212,11 +12583,9 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenPROMedSGroundTruthHardIronNotSetAndNoCommonAxis_buildsExpectedCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             isMagnetometerGroundTruthInitialHardIron = false
         )
 
@@ -13270,14 +12639,26 @@ class StaticIntervalMagnetometerCalibratorTest {
         requireNotNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
 
+        val initialMagneticFluxDensityNorm = randomizer.nextDouble()
+        calibrator.setPrivateProperty(
+            "initialMagneticFluxDensityNorm",
+            initialMagneticFluxDensityNorm
+        )
+
+        assertEquals(initialMagneticFluxDensityNorm, calibrator.initialMagneticFluxDensityNorm)
+
         val internalCalibrator: MagnetometerNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
         requireNotNull(internalCalibrator)
 
         // check
         val internalCalibrator2 =
-            internalCalibrator as PROMedSRobustKnownPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as PROMedSRobustKnownMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            initialMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            0.0
+        )
         assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.initialHardIronX, 0.0)
@@ -13307,20 +12688,13 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
-
-        val calendar = GregorianCalendar()
-        calendar.time = calibrator.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenPROMedSGroundTruthHardIronNotSetAndCommonAxis_buildsExpectedCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             isMagnetometerGroundTruthInitialHardIron = false
         )
 
@@ -13374,14 +12748,26 @@ class StaticIntervalMagnetometerCalibratorTest {
         requireNotNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
 
+        val initialMagneticFluxDensityNorm = randomizer.nextDouble()
+        calibrator.setPrivateProperty(
+            "initialMagneticFluxDensityNorm",
+            initialMagneticFluxDensityNorm
+        )
+
+        assertEquals(initialMagneticFluxDensityNorm, calibrator.initialMagneticFluxDensityNorm)
+
         val internalCalibrator: MagnetometerNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
         requireNotNull(internalCalibrator)
 
         // check
         val internalCalibrator2 =
-            internalCalibrator as PROMedSRobustKnownPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as PROMedSRobustKnownMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            initialMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            0.0
+        )
         assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
         assertTrue(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.initialHardIronX, 0.0)
@@ -13411,20 +12797,13 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
-
-        val calendar = GregorianCalendar()
-        calendar.time = calibrator.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenPROMedSGroundTruthHardIronSetAndNoCommonAxis_buildsExpectedCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             isMagnetometerGroundTruthInitialHardIron = true
         )
 
@@ -13484,14 +12863,26 @@ class StaticIntervalMagnetometerCalibratorTest {
         requireNotNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
 
+        val initialMagneticFluxDensityNorm = randomizer.nextDouble()
+        calibrator.setPrivateProperty(
+            "initialMagneticFluxDensityNorm",
+            initialMagneticFluxDensityNorm
+        )
+
+        assertEquals(initialMagneticFluxDensityNorm, calibrator.initialMagneticFluxDensityNorm)
+
         val internalCalibrator: MagnetometerNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
         requireNotNull(internalCalibrator)
 
         // check
         val internalCalibrator2 =
-            internalCalibrator as PROMedSRobustKnownHardIronPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as PROMedSRobustKnownHardIronMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            initialMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            0.0
+        )
         assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(initialHardIronX, internalCalibrator2.hardIronX, 0.0)
@@ -13517,20 +12908,13 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
-
-        val calendar = GregorianCalendar()
-        calendar.time = calibrator.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenPROMedSGroundTruthHardIronSetAndCommonAxis_buildsExpectedCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             isMagnetometerGroundTruthInitialHardIron = true
         )
 
@@ -13590,14 +12974,26 @@ class StaticIntervalMagnetometerCalibratorTest {
         requireNotNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD, robustThreshold, 0.0)
 
+        val initialMagneticFluxDensityNorm = randomizer.nextDouble()
+        calibrator.setPrivateProperty(
+            "initialMagneticFluxDensityNorm",
+            initialMagneticFluxDensityNorm
+        )
+
+        assertEquals(initialMagneticFluxDensityNorm, calibrator.initialMagneticFluxDensityNorm)
+
         val internalCalibrator: MagnetometerNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
         requireNotNull(internalCalibrator)
 
         // check
         val internalCalibrator2 =
-            internalCalibrator as PROMedSRobustKnownHardIronPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as PROMedSRobustKnownHardIronMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            initialMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            0.0
+        )
         assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
         assertTrue(internalCalibrator2.isCommonAxisUsed)
         assertEquals(initialHardIronX, internalCalibrator2.hardIronX, 0.0)
@@ -13627,20 +13023,13 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
-
-        val calendar = GregorianCalendar()
-        calendar.time = calibrator.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenPROMedSGroundTruthHardIronNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             isMagnetometerGroundTruthInitialHardIron = false
         )
 
@@ -13705,14 +13094,26 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
         assertEquals(baseNoiseLevel, calibrator.magnetometerBaseNoiseLevel)
 
+        val initialMagneticFluxDensityNorm = randomizer.nextDouble()
+        calibrator.setPrivateProperty(
+            "initialMagneticFluxDensityNorm",
+            initialMagneticFluxDensityNorm
+        )
+
+        assertEquals(initialMagneticFluxDensityNorm, calibrator.initialMagneticFluxDensityNorm)
+
         val internalCalibrator: MagnetometerNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
         requireNotNull(internalCalibrator)
 
         // check
         val internalCalibrator2 =
-            internalCalibrator as PROMedSRobustKnownPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as PROMedSRobustKnownMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            initialMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            0.0
+        )
         assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.initialHardIronX, 0.0)
@@ -13746,20 +13147,13 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
-
-        val calendar = GregorianCalendar()
-        calendar.time = calibrator.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenPROMedSGroundTruthHardIronSetAndNoRobustThreshold_buildsExpectedCalibrator() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             isMagnetometerGroundTruthInitialHardIron = true
         )
 
@@ -13829,14 +13223,26 @@ class StaticIntervalMagnetometerCalibratorTest {
         )
         assertEquals(baseNoiseLevel, calibrator.magnetometerBaseNoiseLevel)
 
+        val initialMagneticFluxDensityNorm = randomizer.nextDouble()
+        calibrator.setPrivateProperty(
+            "initialMagneticFluxDensityNorm",
+            initialMagneticFluxDensityNorm
+        )
+
+        assertEquals(initialMagneticFluxDensityNorm, calibrator.initialMagneticFluxDensityNorm)
+
         val internalCalibrator: MagnetometerNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator")
         requireNotNull(internalCalibrator)
 
         // check
         val internalCalibrator2 =
-            internalCalibrator as PROMedSRobustKnownHardIronPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as PROMedSRobustKnownHardIronMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            initialMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            0.0
+        )
         assertSame(calibrator.magnetometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.hardIronX, 0.0)
@@ -13870,20 +13276,13 @@ class StaticIntervalMagnetometerCalibratorTest {
             calibrator.minimumRequiredMeasurements,
             internalCalibrator2.minimumRequiredMeasurements
         )
-
-        val calendar = GregorianCalendar()
-        calendar.time = calibrator.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenPROMedSGroundTruthHardIronNotSetNoRobustThresholdAndMissingBaseNoiseLevel_throwsIllegalStateException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             isMagnetometerGroundTruthInitialHardIron = false
         )
 
@@ -13939,6 +13338,14 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
         assertNull(calibrator.magnetometerBaseNoiseLevel)
 
+        val initialMagneticFluxDensityNorm = randomizer.nextDouble()
+        calibrator.setPrivateProperty(
+            "initialMagneticFluxDensityNorm",
+            initialMagneticFluxDensityNorm
+        )
+
+        assertEquals(initialMagneticFluxDensityNorm, calibrator.initialMagneticFluxDensityNorm)
+
         val ex = assertThrows(InvocationTargetException::class.java) {
             assertNull(calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator"))
         }
@@ -13947,11 +13354,9 @@ class StaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenPROMedSGroundTruthHardIronSetNoRobustThresholdAndMissingBaseNoiseLevel_throwsIllegalStateException() {
-        val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(
             context,
-            location,
             isMagnetometerGroundTruthInitialHardIron = true
         )
 
@@ -14006,6 +13411,14 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertNull(robustThreshold)
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
         assertNull(calibrator.magnetometerBaseNoiseLevel)
+
+        val initialMagneticFluxDensityNorm = randomizer.nextDouble()
+        calibrator.setPrivateProperty(
+            "initialMagneticFluxDensityNorm",
+            initialMagneticFluxDensityNorm
+        )
+
+        assertEquals(initialMagneticFluxDensityNorm, calibrator.initialMagneticFluxDensityNorm)
 
         val ex = assertThrows(InvocationTargetException::class.java) {
             assertNull(calibrator.callPrivateFuncWithResult("buildMagnetometerInternalCalibrator"))

@@ -15,15 +15,11 @@
  */
 package com.irurueta.android.navigation.inertial.calibration.builder
 
-import android.location.Location
 import com.irurueta.android.navigation.inertial.calibration.StaticIntervalAccelerometerCalibrator
 import com.irurueta.android.navigation.inertial.calibration.StaticIntervalMagnetometerCalibrator
-import com.irurueta.android.navigation.inertial.toNEDPosition
 import com.irurueta.navigation.inertial.calibration.StandardDeviationBodyMagneticFluxDensity
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.DefaultMagnetometerQualityScoreMapper
 import com.irurueta.navigation.inertial.calibration.magnetometer.*
-import com.irurueta.navigation.inertial.wmm.WMMEarthMagneticFluxDensityEstimator
-import com.irurueta.navigation.inertial.wmm.WorldMagneticModel
 import com.irurueta.numerical.robust.RobustEstimatorMethod
 import com.irurueta.statistics.UniformRandomizer
 import io.mockk.every
@@ -32,7 +28,6 @@ import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import java.util.*
 
 @RunWith(RobolectricTestRunner::class)
 class MagnetometerInternalCalibratorBuilderTest {
@@ -42,24 +37,27 @@ class MagnetometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
 
         val measurements = emptyList<StandardDeviationBodyMagneticFluxDensity>()
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         val minimumRequiredMeasurements =
             randomizer.nextInt(robustPreliminarySubsetSize, 2 * robustPreliminarySubsetSize)
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements
         )
 
         // check
         assertSame(measurements, builder.measurements)
-        assertSame(location, builder.location)
+        assertEquals(
+            groundTruthMagneticFluxDensityNorm,
+            builder.groundTruthMagneticFluxDensityNorm,
+            0.0
+        )
         assertEquals(robustPreliminarySubsetSize, builder.robustPreliminarySubsetSize)
         assertEquals(minimumRequiredMeasurements, builder.minimumRequiredMeasurements)
         assertNull(builder.robustMethod)
-        assertNotNull(builder.timestamp)
         assertEquals(
             StaticIntervalMagnetometerCalibrator.ROBUST_DEFAULT_CONFIDENCE,
             builder.robustConfidence,
@@ -93,7 +91,6 @@ class MagnetometerInternalCalibratorBuilderTest {
         assertEquals(0.0, builder.initialMzx, 0.0)
         assertEquals(0.0, builder.initialMzy, 0.0)
         assertNull(builder.baseNoiseLevel)
-        assertNull(builder.worldMagneticModel)
         assertNotNull(builder.qualityScoreMapper)
     }
 
@@ -102,12 +99,11 @@ class MagnetometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
 
         val measurements = emptyList<StandardDeviationBodyMagneticFluxDensity>()
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         val minimumRequiredMeasurements =
             randomizer.nextInt(robustPreliminarySubsetSize, 2 * robustPreliminarySubsetSize)
         val robustMethod = RobustEstimatorMethod.RANSAC
-        val timestamp = Date()
         val robustConfidence = ROBUST_CONFIDENCE
         val robustMaxIterations = ROBUST_MAX_ITERATIONS
         val robustThreshold = ROBUST_THRESHOLD
@@ -128,16 +124,14 @@ class MagnetometerInternalCalibratorBuilderTest {
         val initialMzx = randomizer.nextDouble()
         val initialMzy = randomizer.nextDouble()
         val baseNoiseLevel = randomizer.nextDouble()
-        val worldMagneticModel = WorldMagneticModel()
         val qualityScoreMapper = DefaultMagnetometerQualityScoreMapper()
 
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements,
             robustMethod,
-            timestamp,
             robustConfidence,
             robustMaxIterations,
             robustThreshold,
@@ -158,17 +152,19 @@ class MagnetometerInternalCalibratorBuilderTest {
             initialMzx,
             initialMzy,
             baseNoiseLevel,
-            worldMagneticModel,
             qualityScoreMapper
         )
 
         // check
         assertSame(measurements, builder.measurements)
-        assertSame(location, builder.location)
+        assertEquals(
+            groundTruthMagneticFluxDensityNorm,
+            builder.groundTruthMagneticFluxDensityNorm,
+            0.0
+        )
         assertEquals(robustPreliminarySubsetSize, builder.robustPreliminarySubsetSize)
         assertEquals(minimumRequiredMeasurements, builder.minimumRequiredMeasurements)
         assertEquals(robustMethod, builder.robustMethod)
-        assertSame(timestamp, builder.timestamp)
         assertEquals(robustConfidence, builder.robustConfidence, 0.0)
         assertEquals(robustMaxIterations, builder.robustMaxIterations)
         assertEquals(robustThreshold, builder.robustThreshold)
@@ -189,7 +185,6 @@ class MagnetometerInternalCalibratorBuilderTest {
         assertEquals(initialMzx, builder.initialMzx, 0.0)
         assertEquals(initialMzy, builder.initialMzy, 0.0)
         assertEquals(baseNoiseLevel, builder.baseNoiseLevel)
-        assertSame(worldMagneticModel, builder.worldMagneticModel)
         assertSame(qualityScoreMapper, builder.qualityScoreMapper)
     }
 
@@ -198,13 +193,13 @@ class MagnetometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
 
         val measurements1 = emptyList<StandardDeviationBodyMagneticFluxDensity>()
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         val minimumRequiredMeasurements =
             randomizer.nextInt(robustPreliminarySubsetSize, 2 * robustPreliminarySubsetSize)
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements1,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements
         )
@@ -220,30 +215,55 @@ class MagnetometerInternalCalibratorBuilderTest {
     }
 
     @Test
-    fun location_setsExpectedValue() {
+    fun groundTruthMagneticFluxDensityNorm_whenValid_setsExpectedValue() {
         val randomizer = UniformRandomizer()
 
         val measurements = emptyList<StandardDeviationBodyMagneticFluxDensity>()
-        val location1 = getLocation()
+        val groundTruthMagneticFluxDensityNorm1 = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         val minimumRequiredMeasurements =
             randomizer.nextInt(robustPreliminarySubsetSize, 2 * robustPreliminarySubsetSize)
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location1,
+            groundTruthMagneticFluxDensityNorm1,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements
         )
 
         // check default value
-        assertSame(location1, builder.location)
+        assertEquals(
+            groundTruthMagneticFluxDensityNorm1,
+            builder.groundTruthMagneticFluxDensityNorm,
+            0.0)
 
         // set new value
-        val location2 = getLocation()
-        builder.location = location2
+        val groundTruthMagneticFluxDensityNorm2 = randomizer.nextDouble()
+        builder.groundTruthMagneticFluxDensityNorm = groundTruthMagneticFluxDensityNorm2
 
         // check
-        assertSame(location2, builder.location)
+        assertEquals(
+            groundTruthMagneticFluxDensityNorm2,
+            builder.groundTruthMagneticFluxDensityNorm,
+            0.0
+        )
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun groundTruthMagneticFluxDensityNorm_whenInvalid_throwsIllegalArgumentException() {
+        val randomizer = UniformRandomizer()
+
+        val measurements = emptyList<StandardDeviationBodyMagneticFluxDensity>()
+        val groundTruthMagneticFluxDensityNorm = -randomizer.nextDouble()
+        val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        val minimumRequiredMeasurements =
+            randomizer.nextInt(robustPreliminarySubsetSize, 2 * robustPreliminarySubsetSize)
+
+        MagnetometerInternalCalibratorBuilder(
+            measurements,
+            groundTruthMagneticFluxDensityNorm,
+            robustPreliminarySubsetSize,
+            minimumRequiredMeasurements
+        )
     }
 
     @Test
@@ -251,13 +271,13 @@ class MagnetometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
 
         val measurements = emptyList<StandardDeviationBodyMagneticFluxDensity>()
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize1 = ROBUST_PRELIMINARY_SUBSET_SIZE
         val minimumRequiredMeasurements =
             randomizer.nextInt(robustPreliminarySubsetSize1, 2 * robustPreliminarySubsetSize1)
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize1,
             minimumRequiredMeasurements
         )
@@ -278,14 +298,14 @@ class MagnetometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
 
         val measurements = emptyList<StandardDeviationBodyMagneticFluxDensity>()
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = 0
         val minimumRequiredMeasurements =
             randomizer.nextInt(robustPreliminarySubsetSize, 2 * robustPreliminarySubsetSize)
 
         MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements
         )
@@ -296,13 +316,13 @@ class MagnetometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
 
         val measurements = emptyList<StandardDeviationBodyMagneticFluxDensity>()
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         val minimumRequiredMeasurements1 =
             randomizer.nextInt(robustPreliminarySubsetSize, 2 * robustPreliminarySubsetSize)
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements1
         )
@@ -320,14 +340,16 @@ class MagnetometerInternalCalibratorBuilderTest {
 
     @Test(expected = IllegalArgumentException::class)
     fun minimumRequiredMeasurements_whenInvalid_throwsIllegalArgumentException() {
+        val randomizer = UniformRandomizer()
+
         val measurements = emptyList<StandardDeviationBodyMagneticFluxDensity>()
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         val minimumRequiredMeasurements = -1
 
         MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements
         )
@@ -338,13 +360,13 @@ class MagnetometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
 
         val measurements = emptyList<StandardDeviationBodyMagneticFluxDensity>()
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         val minimumRequiredMeasurements =
             randomizer.nextInt(robustPreliminarySubsetSize, 2 * robustPreliminarySubsetSize)
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements
         )
@@ -366,44 +388,17 @@ class MagnetometerInternalCalibratorBuilderTest {
     }
 
     @Test
-    fun timestamp_setsExpectedValue() {
-        val randomizer = UniformRandomizer()
-
-        val measurements = emptyList<StandardDeviationBodyMagneticFluxDensity>()
-        val location = getLocation()
-        val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
-        val minimumRequiredMeasurements =
-            randomizer.nextInt(robustPreliminarySubsetSize, 2 * robustPreliminarySubsetSize)
-        val builder = MagnetometerInternalCalibratorBuilder(
-            measurements,
-            location,
-            robustPreliminarySubsetSize,
-            minimumRequiredMeasurements
-        )
-
-        // check default value
-        assertNotNull(builder.timestamp)
-
-        // set new value
-        val timestamp = Date()
-        builder.timestamp = timestamp
-
-        // check
-        assertSame(timestamp, builder.timestamp)
-    }
-
-    @Test
     fun robustConfidence_whenValid_setsExpectedValue() {
         val randomizer = UniformRandomizer()
 
         val measurements = emptyList<StandardDeviationBodyMagneticFluxDensity>()
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         val minimumRequiredMeasurements =
             randomizer.nextInt(robustPreliminarySubsetSize, 2 * robustPreliminarySubsetSize)
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements
         )
@@ -428,13 +423,13 @@ class MagnetometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
 
         val measurements = emptyList<StandardDeviationBodyMagneticFluxDensity>()
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         val minimumRequiredMeasurements =
             randomizer.nextInt(robustPreliminarySubsetSize, 2 * robustPreliminarySubsetSize)
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements
         )
@@ -455,13 +450,13 @@ class MagnetometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
 
         val measurements = emptyList<StandardDeviationBodyMagneticFluxDensity>()
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         val minimumRequiredMeasurements =
             randomizer.nextInt(robustPreliminarySubsetSize, 2 * robustPreliminarySubsetSize)
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements
         )
@@ -482,13 +477,13 @@ class MagnetometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
 
         val measurements = emptyList<StandardDeviationBodyMagneticFluxDensity>()
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         val minimumRequiredMeasurements =
             randomizer.nextInt(robustPreliminarySubsetSize, 2 * robustPreliminarySubsetSize)
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements
         )
@@ -512,13 +507,13 @@ class MagnetometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
 
         val measurements = emptyList<StandardDeviationBodyMagneticFluxDensity>()
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         val minimumRequiredMeasurements =
             randomizer.nextInt(robustPreliminarySubsetSize, 2 * robustPreliminarySubsetSize)
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements
         )
@@ -538,13 +533,13 @@ class MagnetometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
 
         val measurements = emptyList<StandardDeviationBodyMagneticFluxDensity>()
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         val minimumRequiredMeasurements =
             randomizer.nextInt(robustPreliminarySubsetSize, 2 * robustPreliminarySubsetSize)
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements
         )
@@ -571,13 +566,13 @@ class MagnetometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
 
         val measurements = emptyList<StandardDeviationBodyMagneticFluxDensity>()
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         val minimumRequiredMeasurements =
             randomizer.nextInt(robustPreliminarySubsetSize, 2 * robustPreliminarySubsetSize)
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements
         )
@@ -595,13 +590,13 @@ class MagnetometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
 
         val measurements = emptyList<StandardDeviationBodyMagneticFluxDensity>()
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         val minimumRequiredMeasurements =
             randomizer.nextInt(robustPreliminarySubsetSize, 2 * robustPreliminarySubsetSize)
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements
         )
@@ -626,13 +621,13 @@ class MagnetometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
 
         val measurements = emptyList<StandardDeviationBodyMagneticFluxDensity>()
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         val minimumRequiredMeasurements =
             randomizer.nextInt(robustPreliminarySubsetSize, 2 * robustPreliminarySubsetSize)
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements
         )
@@ -653,13 +648,13 @@ class MagnetometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
 
         val measurements = emptyList<StandardDeviationBodyMagneticFluxDensity>()
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         val minimumRequiredMeasurements =
             randomizer.nextInt(robustPreliminarySubsetSize, 2 * robustPreliminarySubsetSize)
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements
         )
@@ -684,13 +679,13 @@ class MagnetometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
 
         val measurements = emptyList<StandardDeviationBodyMagneticFluxDensity>()
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         val minimumRequiredMeasurements =
             randomizer.nextInt(robustPreliminarySubsetSize, 2 * robustPreliminarySubsetSize)
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements
         )
@@ -711,13 +706,13 @@ class MagnetometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
 
         val measurements = emptyList<StandardDeviationBodyMagneticFluxDensity>()
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         val minimumRequiredMeasurements =
             randomizer.nextInt(robustPreliminarySubsetSize, 2 * robustPreliminarySubsetSize)
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements
         )
@@ -737,13 +732,13 @@ class MagnetometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
 
         val measurements = emptyList<StandardDeviationBodyMagneticFluxDensity>()
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         val minimumRequiredMeasurements =
             randomizer.nextInt(robustPreliminarySubsetSize, 2 * robustPreliminarySubsetSize)
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements
         )
@@ -769,13 +764,13 @@ class MagnetometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
 
         val measurements = emptyList<StandardDeviationBodyMagneticFluxDensity>()
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         val minimumRequiredMeasurements =
             randomizer.nextInt(robustPreliminarySubsetSize, 2 * robustPreliminarySubsetSize)
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements
         )
@@ -802,13 +797,13 @@ class MagnetometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
 
         val measurements = emptyList<StandardDeviationBodyMagneticFluxDensity>()
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         val minimumRequiredMeasurements =
             randomizer.nextInt(robustPreliminarySubsetSize, 2 * robustPreliminarySubsetSize)
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements
         )
@@ -835,13 +830,13 @@ class MagnetometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
 
         val measurements = emptyList<StandardDeviationBodyMagneticFluxDensity>()
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         val minimumRequiredMeasurements =
             randomizer.nextInt(robustPreliminarySubsetSize, 2 * robustPreliminarySubsetSize)
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements
         )
@@ -868,13 +863,13 @@ class MagnetometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
 
         val measurements = emptyList<StandardDeviationBodyMagneticFluxDensity>()
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         val minimumRequiredMeasurements =
             randomizer.nextInt(robustPreliminarySubsetSize, 2 * robustPreliminarySubsetSize)
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements
         )
@@ -895,13 +890,13 @@ class MagnetometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
 
         val measurements = emptyList<StandardDeviationBodyMagneticFluxDensity>()
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         val minimumRequiredMeasurements =
             randomizer.nextInt(robustPreliminarySubsetSize, 2 * robustPreliminarySubsetSize)
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements
         )
@@ -922,13 +917,13 @@ class MagnetometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
 
         val measurements = emptyList<StandardDeviationBodyMagneticFluxDensity>()
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         val minimumRequiredMeasurements =
             randomizer.nextInt(robustPreliminarySubsetSize, 2 * robustPreliminarySubsetSize)
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements
         )
@@ -949,13 +944,13 @@ class MagnetometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
 
         val measurements = emptyList<StandardDeviationBodyMagneticFluxDensity>()
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         val minimumRequiredMeasurements =
             randomizer.nextInt(robustPreliminarySubsetSize, 2 * robustPreliminarySubsetSize)
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements
         )
@@ -976,13 +971,13 @@ class MagnetometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
 
         val measurements = emptyList<StandardDeviationBodyMagneticFluxDensity>()
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         val minimumRequiredMeasurements =
             randomizer.nextInt(robustPreliminarySubsetSize, 2 * robustPreliminarySubsetSize)
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements
         )
@@ -1003,13 +998,13 @@ class MagnetometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
 
         val measurements = emptyList<StandardDeviationBodyMagneticFluxDensity>()
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         val minimumRequiredMeasurements =
             randomizer.nextInt(robustPreliminarySubsetSize, 2 * robustPreliminarySubsetSize)
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements
         )
@@ -1030,13 +1025,13 @@ class MagnetometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
 
         val measurements = emptyList<StandardDeviationBodyMagneticFluxDensity>()
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         val minimumRequiredMeasurements =
             randomizer.nextInt(robustPreliminarySubsetSize, 2 * robustPreliminarySubsetSize)
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements
         )
@@ -1057,13 +1052,13 @@ class MagnetometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
 
         val measurements = emptyList<StandardDeviationBodyMagneticFluxDensity>()
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         val minimumRequiredMeasurements =
             randomizer.nextInt(robustPreliminarySubsetSize, 2 * robustPreliminarySubsetSize)
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements
         )
@@ -1084,13 +1079,13 @@ class MagnetometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
 
         val measurements = emptyList<StandardDeviationBodyMagneticFluxDensity>()
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         val minimumRequiredMeasurements =
             randomizer.nextInt(robustPreliminarySubsetSize, 2 * robustPreliminarySubsetSize)
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements
         )
@@ -1111,13 +1106,13 @@ class MagnetometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
 
         val measurements = emptyList<StandardDeviationBodyMagneticFluxDensity>()
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         val minimumRequiredMeasurements =
             randomizer.nextInt(robustPreliminarySubsetSize, 2 * robustPreliminarySubsetSize)
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements
         )
@@ -1140,50 +1135,17 @@ class MagnetometerInternalCalibratorBuilderTest {
     }
 
     @Test
-    fun worldMagneticModel_setsExpectedValue() {
-        val randomizer = UniformRandomizer()
-
-        val measurements = emptyList<StandardDeviationBodyMagneticFluxDensity>()
-        val location = getLocation()
-        val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
-        val minimumRequiredMeasurements =
-            randomizer.nextInt(robustPreliminarySubsetSize, 2 * robustPreliminarySubsetSize)
-        val builder = MagnetometerInternalCalibratorBuilder(
-            measurements,
-            location,
-            robustPreliminarySubsetSize,
-            minimumRequiredMeasurements
-        )
-
-        // check default value
-        assertNull(builder.worldMagneticModel)
-
-        // set new value
-        val worldMagneticModel = WorldMagneticModel()
-        builder.worldMagneticModel = worldMagneticModel
-
-        // check
-        assertSame(worldMagneticModel, builder.worldMagneticModel)
-
-        // set new value
-        builder.worldMagneticModel = null
-
-        // check
-        assertNull(builder.worldMagneticModel)
-    }
-
-    @Test
     fun qualityScoreMapper_setsExpectedValue() {
         val randomizer = UniformRandomizer()
 
         val measurements = emptyList<StandardDeviationBodyMagneticFluxDensity>()
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         val minimumRequiredMeasurements =
             randomizer.nextInt(robustPreliminarySubsetSize, 2 * robustPreliminarySubsetSize)
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements
         )
@@ -1209,7 +1171,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             measurements.add(measurement)
         }
 
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
 
         val initialSx = randomizer.nextDouble()
@@ -1224,7 +1186,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             isGroundTruthInitialHardIron = true,
@@ -1243,8 +1205,12 @@ class MagnetometerInternalCalibratorBuilderTest {
         val internalCalibrator = builder.build()
 
         val internalCalibrator2 =
-            internalCalibrator as KnownHardIronPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as KnownHardIronMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            groundTruthMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            ABSOLUTE_ERROR
+        )
         assertSame(measurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.hardIronX, 0.0)
@@ -1262,11 +1228,6 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         assertTrue(internalCalibrator2.isReady)
         assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
-
-        val calendar = GregorianCalendar()
-        calendar.time = builder.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -1279,7 +1240,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             measurements.add(measurement)
         }
 
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
 
         val initialSx = randomizer.nextDouble()
@@ -1294,7 +1255,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             isGroundTruthInitialHardIron = true,
@@ -1313,8 +1274,12 @@ class MagnetometerInternalCalibratorBuilderTest {
         val internalCalibrator = builder.build()
 
         val internalCalibrator2 =
-            internalCalibrator as KnownHardIronPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as KnownHardIronMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            groundTruthMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            ABSOLUTE_ERROR
+        )
         assertSame(measurements, internalCalibrator2.measurements)
         assertTrue(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.hardIronX, 0.0)
@@ -1332,11 +1297,6 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         assertTrue(internalCalibrator2.isReady)
         assertEquals(7, internalCalibrator2.minimumRequiredMeasurements)
-
-        val calendar = GregorianCalendar()
-        calendar.time = builder.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -1349,7 +1309,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             measurements.add(measurement)
         }
 
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
 
         val initialHardIronX = randomizer.nextDouble()
@@ -1367,7 +1327,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             isGroundTruthInitialHardIron = false,
@@ -1389,8 +1349,12 @@ class MagnetometerInternalCalibratorBuilderTest {
         val internalCalibrator = builder.build()
 
         val internalCalibrator2 =
-            internalCalibrator as KnownPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as KnownMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            groundTruthMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            ABSOLUTE_ERROR
+        )
         assertSame(measurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(initialHardIronX, internalCalibrator2.initialHardIronX, 0.0)
@@ -1408,11 +1372,6 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         assertTrue(internalCalibrator2.isReady)
         assertEquals(13, internalCalibrator2.minimumRequiredMeasurements)
-
-        val calendar = GregorianCalendar()
-        calendar.time = builder.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -1425,7 +1384,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             measurements.add(measurement)
         }
 
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
 
         val initialHardIronX = randomizer.nextDouble()
@@ -1443,7 +1402,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             isGroundTruthInitialHardIron = false,
@@ -1465,8 +1424,12 @@ class MagnetometerInternalCalibratorBuilderTest {
         val internalCalibrator = builder.build()
 
         val internalCalibrator2 =
-            internalCalibrator as KnownPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as KnownMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            groundTruthMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            ABSOLUTE_ERROR
+        )
         assertSame(measurements, internalCalibrator2.measurements)
         assertTrue(internalCalibrator2.isCommonAxisUsed)
         assertEquals(initialHardIronX, internalCalibrator2.initialHardIronX, 0.0)
@@ -1484,11 +1447,6 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         assertTrue(internalCalibrator2.isReady)
         assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
-
-        val calendar = GregorianCalendar()
-        calendar.time = builder.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -1501,7 +1459,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             measurements.add(measurement)
         }
 
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
 
         val initialSx = randomizer.nextDouble()
@@ -1516,7 +1474,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             robustMethod = RobustEstimatorMethod.RANSAC,
@@ -1540,8 +1498,12 @@ class MagnetometerInternalCalibratorBuilderTest {
         val internalCalibrator = builder.build()
 
         val internalCalibrator2 =
-            internalCalibrator as RANSACRobustKnownPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as RANSACRobustKnownMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            groundTruthMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            ABSOLUTE_ERROR
+        )
         assertSame(measurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.initialHardIronX, 0.0)
@@ -1563,11 +1525,6 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         assertTrue(internalCalibrator2.isReady)
         assertEquals(13, internalCalibrator2.minimumRequiredMeasurements)
-
-        val calendar = GregorianCalendar()
-        calendar.time = builder.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -1580,7 +1537,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             measurements.add(measurement)
         }
 
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
 
         val initialSx = randomizer.nextDouble()
@@ -1595,7 +1552,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             robustMethod = RobustEstimatorMethod.RANSAC,
@@ -1619,8 +1576,12 @@ class MagnetometerInternalCalibratorBuilderTest {
         val internalCalibrator = builder.build()
 
         val internalCalibrator2 =
-            internalCalibrator as RANSACRobustKnownPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as RANSACRobustKnownMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            groundTruthMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            ABSOLUTE_ERROR
+        )
         assertSame(measurements, internalCalibrator2.measurements)
         assertTrue(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.initialHardIronX, 0.0)
@@ -1642,11 +1603,6 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         assertTrue(internalCalibrator2.isReady)
         assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
-
-        val calendar = GregorianCalendar()
-        calendar.time = builder.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -1659,7 +1615,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             measurements.add(measurement)
         }
 
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
 
         val initialHardIronX = randomizer.nextDouble()
@@ -1677,7 +1633,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             robustMethod = RobustEstimatorMethod.RANSAC,
@@ -1704,8 +1660,12 @@ class MagnetometerInternalCalibratorBuilderTest {
         val internalCalibrator = builder.build()
 
         val internalCalibrator2 =
-            internalCalibrator as RANSACRobustKnownHardIronPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as RANSACRobustKnownHardIronMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            groundTruthMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            ABSOLUTE_ERROR
+        )
         assertSame(measurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(initialHardIronX, internalCalibrator2.hardIronX, 0.0)
@@ -1727,11 +1687,6 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         assertTrue(internalCalibrator2.isReady)
         assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
-
-        val calendar = GregorianCalendar()
-        calendar.time = builder.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -1744,7 +1699,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             measurements.add(measurement)
         }
 
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
 
         val initialHardIronX = randomizer.nextDouble()
@@ -1762,7 +1717,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             robustMethod = RobustEstimatorMethod.RANSAC,
@@ -1789,8 +1744,12 @@ class MagnetometerInternalCalibratorBuilderTest {
         val internalCalibrator = builder.build()
 
         val internalCalibrator2 =
-            internalCalibrator as RANSACRobustKnownHardIronPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as RANSACRobustKnownHardIronMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            groundTruthMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            ABSOLUTE_ERROR
+        )
         assertSame(measurements, internalCalibrator2.measurements)
         assertTrue(internalCalibrator2.isCommonAxisUsed)
         assertEquals(initialHardIronX, internalCalibrator2.hardIronX, 0.0)
@@ -1812,11 +1771,6 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         assertTrue(internalCalibrator2.isReady)
         assertEquals(7, internalCalibrator2.minimumRequiredMeasurements)
-
-        val calendar = GregorianCalendar()
-        calendar.time = builder.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -1829,7 +1783,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             measurements.add(measurement)
         }
 
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
 
         val initialSx = randomizer.nextDouble()
@@ -1845,7 +1799,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             robustMethod = RobustEstimatorMethod.RANSAC,
@@ -1870,8 +1824,12 @@ class MagnetometerInternalCalibratorBuilderTest {
         val internalCalibrator = builder.build()
 
         val internalCalibrator2 =
-            internalCalibrator as RANSACRobustKnownPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as RANSACRobustKnownMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            groundTruthMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            ABSOLUTE_ERROR
+        )
         assertSame(measurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.initialHardIronX, 0.0)
@@ -1893,11 +1851,6 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         assertTrue(internalCalibrator2.isReady)
         assertEquals(13, internalCalibrator2.minimumRequiredMeasurements)
-
-        val calendar = GregorianCalendar()
-        calendar.time = builder.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -1910,7 +1863,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             measurements.add(measurement)
         }
 
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
 
         val initialSx = randomizer.nextDouble()
@@ -1926,7 +1879,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             robustMethod = RobustEstimatorMethod.RANSAC,
@@ -1951,8 +1904,12 @@ class MagnetometerInternalCalibratorBuilderTest {
         val internalCalibrator = builder.build()
 
         val internalCalibrator2 =
-            internalCalibrator as RANSACRobustKnownHardIronPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as RANSACRobustKnownHardIronMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            groundTruthMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            ABSOLUTE_ERROR
+        )
         assertSame(measurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.hardIronX, 0.0)
@@ -1974,11 +1931,6 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         assertTrue(internalCalibrator2.isReady)
         assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
-
-        val calendar = GregorianCalendar()
-        calendar.time = builder.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test(expected = IllegalStateException::class)
@@ -1991,7 +1943,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             measurements.add(measurement)
         }
 
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
 
         val initialSx = randomizer.nextDouble()
@@ -2006,7 +1958,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             robustMethod = RobustEstimatorMethod.RANSAC,
@@ -2040,7 +1992,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             measurements.add(measurement)
         }
 
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
 
         val initialSx = randomizer.nextDouble()
@@ -2055,7 +2007,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             robustMethod = RobustEstimatorMethod.RANSAC,
@@ -2089,7 +2041,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             measurements.add(measurement)
         }
 
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
 
         val initialSx = randomizer.nextDouble()
@@ -2104,7 +2056,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             robustMethod = RobustEstimatorMethod.MSAC,
@@ -2128,8 +2080,12 @@ class MagnetometerInternalCalibratorBuilderTest {
         val internalCalibrator = builder.build()
 
         val internalCalibrator2 =
-            internalCalibrator as MSACRobustKnownPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as MSACRobustKnownMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            groundTruthMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            ABSOLUTE_ERROR
+        )
         assertSame(measurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.initialHardIronX, 0.0)
@@ -2151,11 +2107,6 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         assertTrue(internalCalibrator2.isReady)
         assertEquals(13, internalCalibrator2.minimumRequiredMeasurements)
-
-        val calendar = GregorianCalendar()
-        calendar.time = builder.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -2168,7 +2119,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             measurements.add(measurement)
         }
 
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
 
         val initialSx = randomizer.nextDouble()
@@ -2183,7 +2134,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             robustMethod = RobustEstimatorMethod.MSAC,
@@ -2207,8 +2158,12 @@ class MagnetometerInternalCalibratorBuilderTest {
         val internalCalibrator = builder.build()
 
         val internalCalibrator2 =
-            internalCalibrator as MSACRobustKnownPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as MSACRobustKnownMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            groundTruthMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            ABSOLUTE_ERROR
+        )
         assertSame(measurements, internalCalibrator2.measurements)
         assertTrue(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.initialHardIronX, 0.0)
@@ -2230,11 +2185,6 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         assertTrue(internalCalibrator2.isReady)
         assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
-
-        val calendar = GregorianCalendar()
-        calendar.time = builder.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -2247,7 +2197,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             measurements.add(measurement)
         }
 
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
 
         val initialHardIronX = randomizer.nextDouble()
@@ -2265,7 +2215,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             robustMethod = RobustEstimatorMethod.MSAC,
@@ -2292,8 +2242,12 @@ class MagnetometerInternalCalibratorBuilderTest {
         val internalCalibrator = builder.build()
 
         val internalCalibrator2 =
-            internalCalibrator as MSACRobustKnownHardIronPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as MSACRobustKnownHardIronMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            groundTruthMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            ABSOLUTE_ERROR
+        )
         assertSame(measurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(initialHardIronX, internalCalibrator2.hardIronX, 0.0)
@@ -2315,11 +2269,6 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         assertTrue(internalCalibrator2.isReady)
         assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
-
-        val calendar = GregorianCalendar()
-        calendar.time = builder.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -2332,7 +2281,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             measurements.add(measurement)
         }
 
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
 
         val initialHardIronX = randomizer.nextDouble()
@@ -2350,7 +2299,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             robustMethod = RobustEstimatorMethod.MSAC,
@@ -2377,8 +2326,12 @@ class MagnetometerInternalCalibratorBuilderTest {
         val internalCalibrator = builder.build()
 
         val internalCalibrator2 =
-            internalCalibrator as MSACRobustKnownHardIronPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as MSACRobustKnownHardIronMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            groundTruthMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            ABSOLUTE_ERROR
+        )
         assertSame(measurements, internalCalibrator2.measurements)
         assertTrue(internalCalibrator2.isCommonAxisUsed)
         assertEquals(initialHardIronX, internalCalibrator2.hardIronX, 0.0)
@@ -2400,11 +2353,6 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         assertTrue(internalCalibrator2.isReady)
         assertEquals(7, internalCalibrator2.minimumRequiredMeasurements)
-
-        val calendar = GregorianCalendar()
-        calendar.time = builder.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -2417,7 +2365,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             measurements.add(measurement)
         }
 
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
 
         val initialSx = randomizer.nextDouble()
@@ -2433,7 +2381,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             robustMethod = RobustEstimatorMethod.MSAC,
@@ -2458,8 +2406,12 @@ class MagnetometerInternalCalibratorBuilderTest {
         val internalCalibrator = builder.build()
 
         val internalCalibrator2 =
-            internalCalibrator as MSACRobustKnownPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as MSACRobustKnownMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            groundTruthMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            ABSOLUTE_ERROR
+        )
         assertSame(measurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.initialHardIronX, 0.0)
@@ -2481,11 +2433,6 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         assertTrue(internalCalibrator2.isReady)
         assertEquals(13, internalCalibrator2.minimumRequiredMeasurements)
-
-        val calendar = GregorianCalendar()
-        calendar.time = builder.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -2498,7 +2445,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             measurements.add(measurement)
         }
 
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
 
         val initialSx = randomizer.nextDouble()
@@ -2514,7 +2461,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             robustMethod = RobustEstimatorMethod.MSAC,
@@ -2539,8 +2486,12 @@ class MagnetometerInternalCalibratorBuilderTest {
         val internalCalibrator = builder.build()
 
         val internalCalibrator2 =
-            internalCalibrator as MSACRobustKnownHardIronPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as MSACRobustKnownHardIronMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            groundTruthMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            ABSOLUTE_ERROR
+        )
         assertSame(measurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.hardIronX, 0.0)
@@ -2562,11 +2513,6 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         assertTrue(internalCalibrator2.isReady)
         assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
-
-        val calendar = GregorianCalendar()
-        calendar.time = builder.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test(expected = IllegalStateException::class)
@@ -2579,7 +2525,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             measurements.add(measurement)
         }
 
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
 
         val initialSx = randomizer.nextDouble()
@@ -2594,7 +2540,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             robustMethod = RobustEstimatorMethod.MSAC,
@@ -2628,7 +2574,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             measurements.add(measurement)
         }
 
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
 
         val initialSx = randomizer.nextDouble()
@@ -2643,7 +2589,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             robustMethod = RobustEstimatorMethod.MSAC,
@@ -2680,7 +2626,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             measurements.add(measurement)
         }
 
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
 
         val initialSx = randomizer.nextDouble()
@@ -2695,7 +2641,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             robustMethod = RobustEstimatorMethod.PROSAC,
@@ -2719,8 +2665,12 @@ class MagnetometerInternalCalibratorBuilderTest {
         val internalCalibrator = builder.build()
 
         val internalCalibrator2 =
-            internalCalibrator as PROSACRobustKnownPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as PROSACRobustKnownMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            groundTruthMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            ABSOLUTE_ERROR
+        )
         assertSame(measurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.initialHardIronX, 0.0)
@@ -2743,11 +2693,6 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         assertTrue(internalCalibrator2.isReady)
         assertEquals(13, internalCalibrator2.minimumRequiredMeasurements)
-
-        val calendar = GregorianCalendar()
-        calendar.time = builder.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -2763,7 +2708,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             measurements.add(measurement)
         }
 
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
 
         val initialSx = randomizer.nextDouble()
@@ -2778,7 +2723,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             robustMethod = RobustEstimatorMethod.PROSAC,
@@ -2802,8 +2747,12 @@ class MagnetometerInternalCalibratorBuilderTest {
         val internalCalibrator = builder.build()
 
         val internalCalibrator2 =
-            internalCalibrator as PROSACRobustKnownPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as PROSACRobustKnownMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            groundTruthMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            ABSOLUTE_ERROR
+        )
         assertSame(measurements, internalCalibrator2.measurements)
         assertTrue(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.initialHardIronX, 0.0)
@@ -2826,11 +2775,6 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         assertTrue(internalCalibrator2.isReady)
         assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
-
-        val calendar = GregorianCalendar()
-        calendar.time = builder.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -2846,7 +2790,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             measurements.add(measurement)
         }
 
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
 
         val initialHardIronX = randomizer.nextDouble()
@@ -2864,7 +2808,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             robustMethod = RobustEstimatorMethod.PROSAC,
@@ -2891,8 +2835,12 @@ class MagnetometerInternalCalibratorBuilderTest {
         val internalCalibrator = builder.build()
 
         val internalCalibrator2 =
-            internalCalibrator as PROSACRobustKnownHardIronPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as PROSACRobustKnownHardIronMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            groundTruthMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            ABSOLUTE_ERROR
+        )
         assertSame(measurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(initialHardIronX, internalCalibrator2.hardIronX, 0.0)
@@ -2915,11 +2863,6 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         assertTrue(internalCalibrator2.isReady)
         assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
-
-        val calendar = GregorianCalendar()
-        calendar.time = builder.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -2935,7 +2878,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             measurements.add(measurement)
         }
 
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
 
         val initialHardIronX = randomizer.nextDouble()
@@ -2953,7 +2896,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             robustMethod = RobustEstimatorMethod.PROSAC,
@@ -2980,8 +2923,12 @@ class MagnetometerInternalCalibratorBuilderTest {
         val internalCalibrator = builder.build()
 
         val internalCalibrator2 =
-            internalCalibrator as PROSACRobustKnownHardIronPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as PROSACRobustKnownHardIronMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            groundTruthMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            ABSOLUTE_ERROR
+        )
         assertSame(measurements, internalCalibrator2.measurements)
         assertTrue(internalCalibrator2.isCommonAxisUsed)
         assertEquals(initialHardIronX, internalCalibrator2.hardIronX, 0.0)
@@ -3004,11 +2951,6 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         assertTrue(internalCalibrator2.isReady)
         assertEquals(7, internalCalibrator2.minimumRequiredMeasurements)
-
-        val calendar = GregorianCalendar()
-        calendar.time = builder.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -3024,7 +2966,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             measurements.add(measurement)
         }
 
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
 
         val initialSx = randomizer.nextDouble()
@@ -3040,7 +2982,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             robustMethod = RobustEstimatorMethod.PROSAC,
@@ -3065,8 +3007,12 @@ class MagnetometerInternalCalibratorBuilderTest {
         val internalCalibrator = builder.build()
 
         val internalCalibrator2 =
-            internalCalibrator as PROSACRobustKnownPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as PROSACRobustKnownMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            groundTruthMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            ABSOLUTE_ERROR
+        )
         assertSame(measurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.initialHardIronX, 0.0)
@@ -3089,11 +3035,6 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         assertTrue(internalCalibrator2.isReady)
         assertEquals(13, internalCalibrator2.minimumRequiredMeasurements)
-
-        val calendar = GregorianCalendar()
-        calendar.time = builder.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -3109,7 +3050,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             measurements.add(measurement)
         }
 
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
 
         val initialSx = randomizer.nextDouble()
@@ -3125,7 +3066,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             robustMethod = RobustEstimatorMethod.PROSAC,
@@ -3150,8 +3091,12 @@ class MagnetometerInternalCalibratorBuilderTest {
         val internalCalibrator = builder.build()
 
         val internalCalibrator2 =
-            internalCalibrator as PROSACRobustKnownHardIronPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as PROSACRobustKnownHardIronMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            groundTruthMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            ABSOLUTE_ERROR
+        )
         assertSame(measurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.hardIronX, 0.0)
@@ -3174,11 +3119,6 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         assertTrue(internalCalibrator2.isReady)
         assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
-
-        val calendar = GregorianCalendar()
-        calendar.time = builder.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test(expected = IllegalStateException::class)
@@ -3194,7 +3134,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             measurements.add(measurement)
         }
 
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
 
         val initialSx = randomizer.nextDouble()
@@ -3209,7 +3149,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             robustMethod = RobustEstimatorMethod.PROSAC,
@@ -3246,7 +3186,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             measurements.add(measurement)
         }
 
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
 
         val initialSx = randomizer.nextDouble()
@@ -3261,7 +3201,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             robustMethod = RobustEstimatorMethod.PROSAC,
@@ -3295,7 +3235,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             measurements.add(measurement)
         }
 
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
 
         val initialSx = randomizer.nextDouble()
@@ -3310,7 +3250,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             robustMethod = RobustEstimatorMethod.LMedS,
@@ -3334,8 +3274,12 @@ class MagnetometerInternalCalibratorBuilderTest {
         val internalCalibrator = builder.build()
 
         val internalCalibrator2 =
-            internalCalibrator as LMedSRobustKnownPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as LMedSRobustKnownMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            groundTruthMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            ABSOLUTE_ERROR
+        )
         assertSame(measurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.initialHardIronX, 0.0)
@@ -3357,11 +3301,6 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         assertTrue(internalCalibrator2.isReady)
         assertEquals(13, internalCalibrator2.minimumRequiredMeasurements)
-
-        val calendar = GregorianCalendar()
-        calendar.time = builder.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -3374,7 +3313,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             measurements.add(measurement)
         }
 
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
 
         val initialSx = randomizer.nextDouble()
@@ -3389,7 +3328,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             robustMethod = RobustEstimatorMethod.LMedS,
@@ -3413,8 +3352,12 @@ class MagnetometerInternalCalibratorBuilderTest {
         val internalCalibrator = builder.build()
 
         val internalCalibrator2 =
-            internalCalibrator as LMedSRobustKnownPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as LMedSRobustKnownMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            groundTruthMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            ABSOLUTE_ERROR
+        )
         assertSame(measurements, internalCalibrator2.measurements)
         assertTrue(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.initialHardIronX, 0.0)
@@ -3436,11 +3379,6 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         assertTrue(internalCalibrator2.isReady)
         assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
-
-        val calendar = GregorianCalendar()
-        calendar.time = builder.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -3453,7 +3391,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             measurements.add(measurement)
         }
 
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
 
         val initialHardIronX = randomizer.nextDouble()
@@ -3471,7 +3409,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             robustMethod = RobustEstimatorMethod.LMedS,
@@ -3498,8 +3436,12 @@ class MagnetometerInternalCalibratorBuilderTest {
         val internalCalibrator = builder.build()
 
         val internalCalibrator2 =
-            internalCalibrator as LMedSRobustKnownHardIronPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as LMedSRobustKnownHardIronMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            groundTruthMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            ABSOLUTE_ERROR
+        )
         assertSame(measurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(initialHardIronX, internalCalibrator2.hardIronX, 0.0)
@@ -3521,11 +3463,6 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         assertTrue(internalCalibrator2.isReady)
         assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
-
-        val calendar = GregorianCalendar()
-        calendar.time = builder.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -3538,7 +3475,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             measurements.add(measurement)
         }
 
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
 
         val initialHardIronX = randomizer.nextDouble()
@@ -3556,7 +3493,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             robustMethod = RobustEstimatorMethod.LMedS,
@@ -3583,8 +3520,12 @@ class MagnetometerInternalCalibratorBuilderTest {
         val internalCalibrator = builder.build()
 
         val internalCalibrator2 =
-            internalCalibrator as LMedSRobustKnownHardIronPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as LMedSRobustKnownHardIronMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            groundTruthMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            ABSOLUTE_ERROR
+        )
         assertSame(measurements, internalCalibrator2.measurements)
         assertTrue(internalCalibrator2.isCommonAxisUsed)
         assertEquals(initialHardIronX, internalCalibrator2.hardIronX, 0.0)
@@ -3606,11 +3547,6 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         assertTrue(internalCalibrator2.isReady)
         assertEquals(7, internalCalibrator2.minimumRequiredMeasurements)
-
-        val calendar = GregorianCalendar()
-        calendar.time = builder.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -3623,7 +3559,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             measurements.add(measurement)
         }
 
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
 
         val initialSx = randomizer.nextDouble()
@@ -3639,7 +3575,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             robustMethod = RobustEstimatorMethod.LMedS,
@@ -3665,8 +3601,12 @@ class MagnetometerInternalCalibratorBuilderTest {
         val internalCalibrator = builder.build()
 
         val internalCalibrator2 =
-            internalCalibrator as LMedSRobustKnownPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as LMedSRobustKnownMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            groundTruthMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            ABSOLUTE_ERROR
+        )
         assertSame(measurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.initialHardIronX, 0.0)
@@ -3692,11 +3632,6 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         assertTrue(internalCalibrator2.isReady)
         assertEquals(13, internalCalibrator2.minimumRequiredMeasurements)
-
-        val calendar = GregorianCalendar()
-        calendar.time = builder.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -3709,7 +3644,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             measurements.add(measurement)
         }
 
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
 
         val initialSx = randomizer.nextDouble()
@@ -3725,7 +3660,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             robustMethod = RobustEstimatorMethod.LMedS,
@@ -3751,8 +3686,12 @@ class MagnetometerInternalCalibratorBuilderTest {
         val internalCalibrator = builder.build()
 
         val internalCalibrator2 =
-            internalCalibrator as LMedSRobustKnownHardIronPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as LMedSRobustKnownHardIronMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            groundTruthMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            ABSOLUTE_ERROR
+        )
         assertSame(measurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.hardIronX, 0.0)
@@ -3778,11 +3717,6 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         assertTrue(internalCalibrator2.isReady)
         assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
-
-        val calendar = GregorianCalendar()
-        calendar.time = builder.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test(expected = IllegalStateException::class)
@@ -3795,7 +3729,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             measurements.add(measurement)
         }
 
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
 
         val initialSx = randomizer.nextDouble()
@@ -3810,7 +3744,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             robustMethod = RobustEstimatorMethod.LMedS,
@@ -3844,7 +3778,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             measurements.add(measurement)
         }
 
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
 
         val initialSx = randomizer.nextDouble()
@@ -3859,7 +3793,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             robustMethod = RobustEstimatorMethod.LMedS,
@@ -3896,7 +3830,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             measurements.add(measurement)
         }
 
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
 
         val initialSx = randomizer.nextDouble()
@@ -3911,7 +3845,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             robustMethod = RobustEstimatorMethod.PROMedS,
@@ -3935,8 +3869,12 @@ class MagnetometerInternalCalibratorBuilderTest {
         val internalCalibrator = builder.build()
 
         val internalCalibrator2 =
-            internalCalibrator as PROMedSRobustKnownPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as PROMedSRobustKnownMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            groundTruthMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            ABSOLUTE_ERROR
+        )
         assertSame(measurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.initialHardIronX, 0.0)
@@ -3959,11 +3897,6 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         assertTrue(internalCalibrator2.isReady)
         assertEquals(13, internalCalibrator2.minimumRequiredMeasurements)
-
-        val calendar = GregorianCalendar()
-        calendar.time = builder.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -3979,7 +3912,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             measurements.add(measurement)
         }
 
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
 
         val initialSx = randomizer.nextDouble()
@@ -3994,7 +3927,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             robustMethod = RobustEstimatorMethod.PROMedS,
@@ -4018,8 +3951,12 @@ class MagnetometerInternalCalibratorBuilderTest {
         val internalCalibrator = builder.build()
 
         val internalCalibrator2 =
-            internalCalibrator as PROMedSRobustKnownPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as PROMedSRobustKnownMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            groundTruthMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            ABSOLUTE_ERROR
+        )
         assertSame(measurements, internalCalibrator2.measurements)
         assertTrue(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.initialHardIronX, 0.0)
@@ -4042,11 +3979,6 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         assertTrue(internalCalibrator2.isReady)
         assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
-
-        val calendar = GregorianCalendar()
-        calendar.time = builder.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -4062,7 +3994,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             measurements.add(measurement)
         }
 
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
 
         val initialHardIronX = randomizer.nextDouble()
@@ -4080,7 +4012,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             robustMethod = RobustEstimatorMethod.PROMedS,
@@ -4107,8 +4039,12 @@ class MagnetometerInternalCalibratorBuilderTest {
         val internalCalibrator = builder.build()
 
         val internalCalibrator2 =
-            internalCalibrator as PROMedSRobustKnownHardIronPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as PROMedSRobustKnownHardIronMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            groundTruthMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            ABSOLUTE_ERROR
+        )
         assertSame(measurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(initialHardIronX, internalCalibrator2.hardIronX, 0.0)
@@ -4131,11 +4067,6 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         assertTrue(internalCalibrator2.isReady)
         assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
-
-        val calendar = GregorianCalendar()
-        calendar.time = builder.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -4151,7 +4082,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             measurements.add(measurement)
         }
 
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
 
         val initialHardIronX = randomizer.nextDouble()
@@ -4169,7 +4100,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             robustMethod = RobustEstimatorMethod.PROMedS,
@@ -4196,8 +4127,12 @@ class MagnetometerInternalCalibratorBuilderTest {
         val internalCalibrator = builder.build()
 
         val internalCalibrator2 =
-            internalCalibrator as PROMedSRobustKnownHardIronPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as PROMedSRobustKnownHardIronMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            groundTruthMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            ABSOLUTE_ERROR
+        )
         assertSame(measurements, internalCalibrator2.measurements)
         assertTrue(internalCalibrator2.isCommonAxisUsed)
         assertEquals(initialHardIronX, internalCalibrator2.hardIronX, 0.0)
@@ -4220,11 +4155,6 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         assertTrue(internalCalibrator2.isReady)
         assertEquals(7, internalCalibrator2.minimumRequiredMeasurements)
-
-        val calendar = GregorianCalendar()
-        calendar.time = builder.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -4240,7 +4170,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             measurements.add(measurement)
         }
 
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
 
         val initialSx = randomizer.nextDouble()
@@ -4256,7 +4186,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             robustMethod = RobustEstimatorMethod.PROMedS,
@@ -4282,8 +4212,12 @@ class MagnetometerInternalCalibratorBuilderTest {
         val internalCalibrator = builder.build()
 
         val internalCalibrator2 =
-            internalCalibrator as PROMedSRobustKnownPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as PROMedSRobustKnownMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            groundTruthMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            ABSOLUTE_ERROR
+        )
         assertSame(measurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.initialHardIronX, 0.0)
@@ -4310,11 +4244,6 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         assertTrue(internalCalibrator2.isReady)
         assertEquals(13, internalCalibrator2.minimumRequiredMeasurements)
-
-        val calendar = GregorianCalendar()
-        calendar.time = builder.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test
@@ -4330,7 +4259,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             measurements.add(measurement)
         }
 
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
 
         val initialSx = randomizer.nextDouble()
@@ -4346,7 +4275,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             robustMethod = RobustEstimatorMethod.PROMedS,
@@ -4372,8 +4301,12 @@ class MagnetometerInternalCalibratorBuilderTest {
         val internalCalibrator = builder.build()
 
         val internalCalibrator2 =
-            internalCalibrator as PROMedSRobustKnownHardIronPositionAndInstantMagnetometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+            internalCalibrator as PROMedSRobustKnownHardIronMagneticFluxDensityNormMagnetometerCalibrator
+        assertEquals(
+            groundTruthMagneticFluxDensityNorm,
+            internalCalibrator2.groundTruthMagneticFluxDensityNorm,
+            ABSOLUTE_ERROR
+        )
         assertSame(measurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.hardIronX, 0.0)
@@ -4400,11 +4333,6 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         assertTrue(internalCalibrator2.isReady)
         assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
-
-        val calendar = GregorianCalendar()
-        calendar.time = builder.timestamp
-        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
-        assertEquals(year, internalCalibrator2.year, 0.0)
     }
 
     @Test(expected = IllegalStateException::class)
@@ -4420,7 +4348,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             measurements.add(measurement)
         }
 
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
 
         val initialSx = randomizer.nextDouble()
@@ -4435,7 +4363,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             robustMethod = RobustEstimatorMethod.PROMedS,
@@ -4472,7 +4400,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             measurements.add(measurement)
         }
 
-        val location = getLocation()
+        val groundTruthMagneticFluxDensityNorm = randomizer.nextDouble()
         val robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
 
         val initialSx = randomizer.nextDouble()
@@ -4487,7 +4415,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val builder = MagnetometerInternalCalibratorBuilder(
             measurements,
-            location,
+            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             robustMethod = RobustEstimatorMethod.PROMedS,
@@ -4512,15 +4440,6 @@ class MagnetometerInternalCalibratorBuilderTest {
     }
 
     private companion object {
-        const val MIN_LATITUDE_DEGREES = -90.0
-        const val MAX_LATITUDE_DEGREES = 90.0
-
-        const val MIN_LONGITUDE_DEGREES = -180.0
-        const val MAX_LONGITUDE_DEGREES = 180.0
-
-        const val MIN_HEIGHT = -100.0
-        const val MAX_HEIGHT = 3000.0
-
         const val ROBUST_CONFIDENCE = 0.9
 
         const val ROBUST_MAX_ITERATIONS = 1000
@@ -4534,20 +4453,5 @@ class MagnetometerInternalCalibratorBuilderTest {
         const val ROBUST_STOP_THRESHOLD_FACTOR = 1e-3
 
         const val ABSOLUTE_ERROR = 1e-6
-
-        fun getLocation(): Location {
-            val randomizer = UniformRandomizer()
-            val latitudeDegrees = randomizer.nextDouble(MIN_LATITUDE_DEGREES, MAX_LATITUDE_DEGREES)
-            val longitudeDegrees =
-                randomizer.nextDouble(MIN_LONGITUDE_DEGREES, MAX_LONGITUDE_DEGREES)
-            val height = randomizer.nextDouble(MIN_HEIGHT, MAX_HEIGHT)
-
-            val location = mockk<Location>()
-            every { location.latitude }.returns(latitudeDegrees)
-            every { location.longitude }.returns(longitudeDegrees)
-            every { location.altitude }.returns(height)
-
-            return location
-        }
     }
 }
