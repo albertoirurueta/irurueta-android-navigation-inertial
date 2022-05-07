@@ -18,18 +18,13 @@ package com.irurueta.android.navigation.inertial.test.calibration
 import android.content.Context
 import android.location.Location
 import android.util.Log
-import androidx.test.core.app.ActivityScenario
 import androidx.test.filters.RequiresDevice
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
-import com.irurueta.android.navigation.inertial.LocationService
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
 import com.irurueta.android.navigation.inertial.calibration.SingleSensorStaticIntervalMagnetometerCalibrator
 import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
-import com.irurueta.android.navigation.inertial.test.LocationActivity
 import com.irurueta.numerical.robust.RobustEstimatorMethod
-import io.mockk.spyk
-import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -58,11 +53,9 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
     @RequiresDevice
     @Test
     fun startAndStop_whenMagnetometerSensor_completesCalibration() {
-        val location = getCurrentLocation()
-
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val calibrator =
-            buildCalibrator(context, location, MagnetometerSensorCollector.SensorType.MAGNETOMETER)
+            buildCalibrator(context, MagnetometerSensorCollector.SensorType.MAGNETOMETER)
 
         calibrator.start()
 
@@ -76,12 +69,9 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
     @RequiresDevice
     @Test
     fun startAndStop_whenMagnetometerUncalibratedSensor_completesCalibration() {
-        val location = getCurrentLocation()
-
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val calibrator = buildCalibrator(
             context,
-            location,
             MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED
         )
 
@@ -94,46 +84,12 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
         logCalibrationResult(calibrator)
     }
 
-    private fun getCurrentLocation(): Location {
-        val scenario = ActivityScenario.launch(LocationActivity::class.java).use {
-            it.onActivity { activity ->
-                val service = LocationService(activity)
-
-                val enabled = service.locationEnabled
-                requireNotNull(enabled)
-                assertTrue(enabled)
-
-                val currentLocationListener =
-                    spyk(object : LocationService.OnCurrentLocationListener {
-                        override fun onCurrentLocation(location: Location) {
-                            currentLocation = location
-
-                            syncHelper.notifyAll { completed++ }
-                        }
-                    })
-
-                service.getCurrentLocation(currentLocationListener)
-            }
-        }
-        assertNotNull(scenario)
-
-        syncHelper.waitOnCondition({ completed < 1 })
-        assertEquals(1, completed)
-        completed = 0
-
-        val currentLocation = this.currentLocation
-        requireNotNull(currentLocation)
-        return currentLocation
-    }
-
     private fun buildCalibrator(
         context: Context,
-        location: Location,
         sensorType: MagnetometerSensorCollector.SensorType
     ): SingleSensorStaticIntervalMagnetometerCalibrator {
         val calibrator = SingleSensorStaticIntervalMagnetometerCalibrator(
             context,
-            location,
             sensorType = sensorType,
             initializationStartedListener = {
                 Log.i(
@@ -203,15 +159,15 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
     private fun logCalibrationResult(calibrator: SingleSensorStaticIntervalMagnetometerCalibrator) {
         Log.i(
             "SingleSensorStaticIntervalMagnetometerCalibratorTest",
+            "Initial magnetic flux density norm: ${calibrator.initialMagneticFluxDensityNorm} T"
+        )
+        Log.i(
+            "SingleSensorStaticIntervalMagnetometerCalibratorTest",
             "Initial bias. x: ${calibrator.initialHardIronX}, y: ${calibrator.initialHardIronY}, z: ${calibrator.initialHardIronZ} T"
         )
         Log.i(
             "SingleSensorStaticIntervalMagnetometerCalibratorTest",
             "is ground truth initial bias: ${calibrator.isGroundTruthInitialHardIron}"
-        )
-        Log.i(
-            "SingleSensorStaticIntervalMagnetometerCalibratorTest",
-            "Location: ${calibrator.location}"
         )
         Log.i(
             "SingleSensorStaticIntervalMagnetometerCalibratorTest",

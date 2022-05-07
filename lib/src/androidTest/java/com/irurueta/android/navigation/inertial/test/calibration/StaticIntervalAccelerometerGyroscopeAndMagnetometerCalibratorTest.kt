@@ -274,7 +274,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     ): StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator {
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
-            location,
+            location = location,
             magnetometerSensorType = magnetometerSensorType,
             gyroscopeSensorType = gyroscopeSensorType,
             accelerometerSensorType = accelerometerSensorType,
