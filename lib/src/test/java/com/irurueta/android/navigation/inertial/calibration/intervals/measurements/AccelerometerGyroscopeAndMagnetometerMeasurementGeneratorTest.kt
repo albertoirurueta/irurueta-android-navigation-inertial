@@ -164,6 +164,9 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
         val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
         assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
+        assertNull(generator.initialMagneticFluxDensityNorm)
+        assertNull(generator.initialMagneticFluxDensityNormAsMeasurement)
+        assertFalse(generator.getInitialMagneticFluxDensityNormAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -287,6 +290,9 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
         val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
         assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
+        assertNull(generator.initialMagneticFluxDensityNorm)
+        assertNull(generator.initialMagneticFluxDensityNormAsMeasurement)
+        assertFalse(generator.getInitialMagneticFluxDensityNormAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -411,6 +417,9 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
         val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
         assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
+        assertNull(generator.initialMagneticFluxDensityNorm)
+        assertNull(generator.initialMagneticFluxDensityNormAsMeasurement)
+        assertFalse(generator.getInitialMagneticFluxDensityNormAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -536,6 +545,9 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
         val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
         assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
+        assertNull(generator.initialMagneticFluxDensityNorm)
+        assertNull(generator.initialMagneticFluxDensityNormAsMeasurement)
+        assertFalse(generator.getInitialMagneticFluxDensityNormAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -662,6 +674,9 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
         val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
         assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
+        assertNull(generator.initialMagneticFluxDensityNorm)
+        assertNull(generator.initialMagneticFluxDensityNormAsMeasurement)
+        assertFalse(generator.getInitialMagneticFluxDensityNormAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -789,6 +804,9 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
         val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
         assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
+        assertNull(generator.initialMagneticFluxDensityNorm)
+        assertNull(generator.initialMagneticFluxDensityNormAsMeasurement)
+        assertFalse(generator.getInitialMagneticFluxDensityNormAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -917,6 +935,9 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
         val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
         assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
+        assertNull(generator.initialMagneticFluxDensityNorm)
+        assertNull(generator.initialMagneticFluxDensityNormAsMeasurement)
+        assertFalse(generator.getInitialMagneticFluxDensityNormAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -1048,6 +1069,9 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
         val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
         assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
+        assertNull(generator.initialMagneticFluxDensityNorm)
+        assertNull(generator.initialMagneticFluxDensityNormAsMeasurement)
+        assertFalse(generator.getInitialMagneticFluxDensityNormAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -1182,6 +1206,9 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
         val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
         assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
+        assertNull(generator.initialMagneticFluxDensityNorm)
+        assertNull(generator.initialMagneticFluxDensityNormAsMeasurement)
+        assertFalse(generator.getInitialMagneticFluxDensityNormAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -1319,6 +1346,9 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
         val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
         assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
+        assertNull(generator.initialMagneticFluxDensityNorm)
+        assertNull(generator.initialMagneticFluxDensityNormAsMeasurement)
+        assertFalse(generator.getInitialMagneticFluxDensityNormAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -1459,6 +1489,9 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
         val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
         assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
+        assertNull(generator.initialMagneticFluxDensityNorm)
+        assertNull(generator.initialMagneticFluxDensityNormAsMeasurement)
+        assertFalse(generator.getInitialMagneticFluxDensityNormAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -1602,6 +1635,9 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
         val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
         assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
+        assertNull(generator.initialMagneticFluxDensityNorm)
+        assertNull(generator.initialMagneticFluxDensityNormAsMeasurement)
+        assertFalse(generator.getInitialMagneticFluxDensityNormAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -1748,6 +1784,9 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
         val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
         assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
+        assertNull(generator.initialMagneticFluxDensityNorm)
+        assertNull(generator.initialMagneticFluxDensityNormAsMeasurement)
+        assertFalse(generator.getInitialMagneticFluxDensityNormAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -1897,6 +1936,9 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
         val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
         assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
+        assertNull(generator.initialMagneticFluxDensityNorm)
+        assertNull(generator.initialMagneticFluxDensityNormAsMeasurement)
+        assertFalse(generator.getInitialMagneticFluxDensityNormAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -2052,6 +2094,9 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
         val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
         assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
+        assertNull(generator.initialMagneticFluxDensityNorm)
+        assertNull(generator.initialMagneticFluxDensityNormAsMeasurement)
+        assertFalse(generator.getInitialMagneticFluxDensityNormAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -2213,6 +2258,9 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
         val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
         assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
+        assertNull(generator.initialMagneticFluxDensityNorm)
+        assertNull(generator.initialMagneticFluxDensityNormAsMeasurement)
+        assertFalse(generator.getInitialMagneticFluxDensityNormAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -2380,6 +2428,9 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
         val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
         assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
+        assertNull(generator.initialMagneticFluxDensityNorm)
+        assertNull(generator.initialMagneticFluxDensityNormAsMeasurement)
+        assertFalse(generator.getInitialMagneticFluxDensityNormAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -2550,6 +2601,9 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
         val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
         assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
+        assertNull(generator.initialMagneticFluxDensityNorm)
+        assertNull(generator.initialMagneticFluxDensityNormAsMeasurement)
+        assertFalse(generator.getInitialMagneticFluxDensityNormAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -2723,6 +2777,9 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
         val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
         assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
+        assertNull(generator.initialMagneticFluxDensityNorm)
+        assertNull(generator.initialMagneticFluxDensityNormAsMeasurement)
+        assertFalse(generator.getInitialMagneticFluxDensityNormAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -2898,6 +2955,9 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
         val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
         assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
+        assertNull(generator.initialMagneticFluxDensityNorm)
+        assertNull(generator.initialMagneticFluxDensityNormAsMeasurement)
+        assertFalse(generator.getInitialMagneticFluxDensityNormAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -3076,6 +3136,9 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
         val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
         assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
+        assertNull(generator.initialMagneticFluxDensityNorm)
+        assertNull(generator.initialMagneticFluxDensityNormAsMeasurement)
+        assertFalse(generator.getInitialMagneticFluxDensityNormAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -3256,6 +3319,9 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
         val magneticFluxDensity = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
         assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity))
+        assertNull(generator.initialMagneticFluxDensityNorm)
+        assertNull(generator.initialMagneticFluxDensityNormAsMeasurement)
+        assertFalse(generator.getInitialMagneticFluxDensityNormAsMeasurement(magneticFluxDensity))
     }
 
     @Test
@@ -5886,6 +5952,13 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         generator.setPrivateProperty("magnetometerBaseNoiseLevel", magnetometerBaseNoiseLevel)
         assertEquals(magnetometerBaseNoiseLevel, generator.magnetometerBaseNoiseLevel)
 
+        val initialMagneticFluxDensityNorm = randomizer.nextDouble()
+        generator.setPrivateProperty(
+            "initialMagneticFluxDensityNorm",
+            initialMagneticFluxDensityNorm
+        )
+        assertEquals(initialMagneticFluxDensityNorm, generator.initialMagneticFluxDensityNorm)
+
         assertEquals(
             TimeIntervalEstimator.DEFAULT_TOTAL_SAMPLES,
             accelerometerTimeIntervalEstimatorSpy.totalSamples
@@ -5935,6 +6008,16 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
                 )
             )
         )
+        assertNull(generator.initialMagneticFluxDensityNorm)
+        assertNull(generator.initialMagneticFluxDensityNormAsMeasurement)
+        assertFalse(
+            generator.getInitialMagneticFluxDensityNormAsMeasurement(
+                MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
+            )
+        )
+        verify(exactly = 1) { magnetometerAccumulatedNoiseEstimatorSpy.reset() }
+        verify(exactly = 1) { gyroscopeAccumulatedNoiseEstimatorSpy.reset() }
+
         val initialized: Boolean? =
             getPrivateProperty(CalibrationMeasurementGenerator::class, generator, "initialized")
         requireNotNull(initialized)
@@ -6873,7 +6956,7 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
     }
 
     @Test
-    fun onMagnetometerMeasurementListener_whenInitializationCompleted_setsMagnetometerBaseNoiseLevel() {
+    fun onMagnetometerMeasurementListener_whenInitializationCompleted_setsMagnetometerBaseNoiseLevelAndInitialMagneticFlluxDensityNorm() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(context)
 
@@ -6882,6 +6965,9 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.magnetometerBaseNoiseLevelAsMeasurement)
         val magneticFluxDensity1 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
         assertFalse(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity1))
+        assertNull(generator.initialMagneticFluxDensityNorm)
+        assertNull(generator.initialMagneticFluxDensityNormAsMeasurement)
+        assertFalse(generator.getInitialMagneticFluxDensityNormAsMeasurement(magneticFluxDensity1))
 
         val measurementsGenerator: AccelerometerGyroscopeAndMagnetometerMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
@@ -6896,9 +6982,12 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         val magnetometerAccumulatedNoiseEstimatorSpy = spyk(magnetometerAccumulatedNoiseEstimator)
         val randomizer = UniformRandomizer()
         val baseNoiseLevel = randomizer.nextDouble()
+        val initialMagneticFluxDensityNorm = randomizer.nextDouble()
         every { magnetometerAccumulatedNoiseEstimatorSpy.standardDeviationNorm }.returns(
             baseNoiseLevel
         )
+        every { magnetometerAccumulatedNoiseEstimatorSpy.avgNorm }
+            .returns(initialMagneticFluxDensityNorm)
         generator.setPrivateProperty(
             "magnetometerAccumulatedNoiseEstimator",
             magnetometerAccumulatedNoiseEstimatorSpy
@@ -6955,6 +7044,13 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         val magneticFluxDensity3 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
         assertTrue(generator.getMagnetometerBaseNoiseLevelAsMeasurement(magneticFluxDensity3))
         assertEquals(magneticFluxDensity2, magneticFluxDensity3)
+        assertEquals(initialMagneticFluxDensityNorm, generator.initialMagneticFluxDensityNorm)
+        val magneticFluxDensity4 = generator.initialMagneticFluxDensityNormAsMeasurement
+        requireNotNull(magneticFluxDensity4)
+        assertEquals(initialMagneticFluxDensityNorm, magneticFluxDensity4.value.toDouble(), 0.0)
+        assertEquals(MagneticFluxDensityUnit.TESLA, magneticFluxDensity4.unit)
+        assertTrue(generator.getInitialMagneticFluxDensityNormAsMeasurement(magneticFluxDensity3))
+        assertEquals(magneticFluxDensity4, magneticFluxDensity3)
     }
 
     private companion object {

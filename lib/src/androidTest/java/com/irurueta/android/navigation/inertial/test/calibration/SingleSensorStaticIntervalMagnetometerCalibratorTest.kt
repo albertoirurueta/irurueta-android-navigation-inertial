@@ -16,7 +16,6 @@
 package com.irurueta.android.navigation.inertial.test.calibration
 
 import android.content.Context
-import android.location.Location
 import android.util.Log
 import androidx.test.filters.RequiresDevice
 import androidx.test.platform.app.InstrumentationRegistry
@@ -35,8 +34,6 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
 
     @Volatile
     private var completed = 0
-
-    private var currentLocation: Location? = null
 
     @get:Rule
     val permissionRule: GrantPermissionRule = GrantPermissionRule.grant(

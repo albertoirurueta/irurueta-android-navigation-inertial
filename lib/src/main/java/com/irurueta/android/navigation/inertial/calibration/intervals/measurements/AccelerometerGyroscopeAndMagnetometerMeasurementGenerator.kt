@@ -311,6 +311,7 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
             if (magnetometerBaseNoiseLevel == null && (status == Status.INITIALIZATION_COMPLETED || status == Status.STATIC_INTERVAL || status == Status.DYNAMIC_INTERVAL)) {
                 magnetometerBaseNoiseLevel =
                     magnetometerAccumulatedNoiseEstimator.standardDeviationNorm
+                initialMagneticFluxDensityNorm = magnetometerAccumulatedNoiseEstimator.avgNorm
             }
 
             magnetometerMeasurementListener?.onMeasurement(
@@ -468,6 +469,37 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
      */
     fun getMagnetometerBaseNoiseLevelAsMeasurement(result: MagneticFluxDensity): Boolean {
         val value = magnetometerBaseNoiseLevel ?: return false
+        result.value = value
+        result.unit = MagneticFluxDensityUnit.TESLA
+        return true
+    }
+
+    /**
+     * Norm of average magnetic flux density obtained during initialization and expressed in
+     * Teslas (T).
+     */
+    var initialMagneticFluxDensityNorm: Double? = null
+        private set
+
+    /**
+     * Gets norm of average magnetic flux density obtained during initialization.
+     * This is only available once generator completes initialization.
+     */
+    val initialMagneticFluxDensityNormAsMeasurement: MagneticFluxDensity?
+        get() {
+            val value = initialMagneticFluxDensityNorm ?: return null
+            return MagneticFluxDensity(value, MagneticFluxDensityUnit.TESLA)
+        }
+
+    /**
+     * Gets norm of average magnetic flux density obtained during initialization.
+     * This is only available once generator completes initialization.
+     *
+     * @param result instance where result will be stored.
+     * @return true if result is available, false otherwise.
+     */
+    fun getInitialMagneticFluxDensityNormAsMeasurement(result: MagneticFluxDensity): Boolean {
+        val value = initialMagneticFluxDensityNorm ?: return false
         result.value = value
         result.unit = MagneticFluxDensityUnit.TESLA
         return true
@@ -795,6 +827,7 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
         initialized = false
         gyroscopeBaseNoiseLevel = null
         magnetometerBaseNoiseLevel = null
+        initialMagneticFluxDensityNorm = null
         gyroscopeAccumulatedNoiseEstimator.reset()
         magnetometerAccumulatedNoiseEstimator.reset()
     }

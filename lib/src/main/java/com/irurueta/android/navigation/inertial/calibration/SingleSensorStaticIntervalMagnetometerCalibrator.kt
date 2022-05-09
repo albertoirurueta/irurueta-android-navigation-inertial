@@ -16,6 +16,7 @@
 package com.irurueta.android.navigation.inertial.calibration
 
 import android.content.Context
+import android.location.Location
 import android.util.Log
 import com.irurueta.algebra.Matrix
 import com.irurueta.android.navigation.inertial.calibration.builder.MagnetometerInternalCalibratorBuilder
@@ -29,10 +30,14 @@ import com.irurueta.navigation.inertial.calibration.MagneticFluxDensityTriad
 import com.irurueta.navigation.inertial.calibration.StandardDeviationBodyMagneticFluxDensity
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.DefaultMagnetometerQualityScoreMapper
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.QualityScoreMapper
-import com.irurueta.navigation.inertial.calibration.magnetometer.*
+import com.irurueta.navigation.inertial.calibration.magnetometer.KnownHardIronMagnetometerCalibrator
+import com.irurueta.navigation.inertial.calibration.magnetometer.MagnetometerNonLinearCalibrator
+import com.irurueta.navigation.inertial.calibration.magnetometer.UnknownHardIronMagnetometerCalibrator
+import com.irurueta.navigation.inertial.wmm.WorldMagneticModel
 import com.irurueta.units.MagneticFluxDensity
 import com.irurueta.units.MagneticFluxDensityConverter
 import com.irurueta.units.MagneticFluxDensityUnit
+import java.util.*
 import kotlin.math.pow
 import kotlin.math.sqrt
 
@@ -93,6 +98,11 @@ class SingleSensorStaticIntervalMagnetometerCalibrator private constructor(
      * Constructor.
      *
      * @param context Android context.
+     * @param location Current device location. If location and timestamp are provided, calibration
+     * will be based on Earth's magnetic model.If no location and timestamp is provided,
+     * calibration will be based on measured magnetic flux density norm at current location.
+     * @param timestamp Current timestamp.
+     * @param worldMagneticModel Earth's magnetic model. Null to use default model.
      * @param sensorType One of the supported magnetometer sensor types.
      * @param sensorDelay Delay of sensor between samples.
      * @param solveCalibrationWhenEnoughMeasurements true to automatically solve calibration once
@@ -116,6 +126,9 @@ class SingleSensorStaticIntervalMagnetometerCalibrator private constructor(
      */
     constructor(
         context: Context,
+        location: Location? = null,
+        timestamp: Date = Date(),
+        worldMagneticModel: WorldMagneticModel? = null,
         sensorType: MagnetometerSensorCollector.SensorType =
             MagnetometerSensorCollector.SensorType.MAGNETOMETER,
         sensorDelay: SensorDelay = SensorDelay.FASTEST,
@@ -147,6 +160,9 @@ class SingleSensorStaticIntervalMagnetometerCalibrator private constructor(
         stoppedListener,
         qualityScoreMapper
     ) {
+        this.location = location
+        this.timestamp = timestamp
+        this.worldMagneticModel = worldMagneticModel
         this.isGroundTruthInitialHardIron = isGroundTruthInitialHardIron
         requiredMeasurements = minimumRequiredMeasurements
         robustPreliminarySubsetSize = minimumRequiredMeasurements
@@ -162,7 +178,7 @@ class SingleSensorStaticIntervalMagnetometerCalibrator private constructor(
             // add one measurement
             val b = BodyMagneticFluxDensity(accumulatedAvgX, accumulatedAvgY, accumulatedAvgZ)
 
-            if (initialMagneticFluxDensityNorm == null) {
+            if (isInitialMagneticFluxDensityNormMeasured && initialMagneticFluxDensityNorm == null) {
                 // set initial average magnetic flux density norm measured during initialization
                 initialMagneticFluxDensityNorm = b.norm
             }
@@ -514,10 +530,65 @@ class SingleSensorStaticIntervalMagnetometerCalibrator private constructor(
         }
 
     /**
+     * Location of device when running calibration.
+     * This is only taken into account if both [location] and [timestamp] are provided to determine
+     * Earth's magnetic field according to provided World Magnetic Model.
+     * If either location or timestamp is missing, then measurement of magnetic field norm will be
+     * used instead.
+     *
+     * @throws IllegalStateException if calibrator is already running.
+     * @see [WorldMagneticModel]
+     */
+    var location: Location? = null
+        @Throws(IllegalStateException::class)
+        set(value) {
+            check(!running)
+            field = value
+        }
+
+    /**
+     * Gets or sets current timestamp.
+     * This is only taken into account if both [location] and [timestamp] are provided to determine
+     * Earth's magnetic field according to provided World Magnetic Model.
+     * If either location or timestamp is missing, then measurement of magnetic field norm will be
+     * used instead.
+     *
+     * @throws IllegalStateException if calibrator is already running.
+     * @see [WorldMagneticModel]
+     */
+    var timestamp: Date? = null
+        @Throws(IllegalStateException::class)
+        set(value) {
+            check(!running)
+            field = value
+        }
+
+    /**
+     * Sets Earth's magnetic model.
+     * Null indicates that default model is being used.
+     *
+     * @throws IllegalStateException if calibrator is already running.
+     */
+    var worldMagneticModel: WorldMagneticModel? = null
+        @Throws(IllegalStateException::class)
+        set(value) {
+            check(!running)
+            field = value
+        }
+
+    /**
      * Norm of average magnetic flux density obtained during initialization and expressed in Teslas.
      */
     var initialMagneticFluxDensityNorm: Double? = null
         private set
+
+    /**
+     * Indicates whether initial magnetic flux density norm is measured or not.
+     * If either [location] or [timestamp] is missing, magnetic flux density norm is measured,
+     * otherwise an estimation is used based on World Magnetic Model.
+     */
+    val isInitialMagneticFluxDensityNormMeasured: Boolean
+        get() = location == null || timestamp == null
 
     /**
      * Gets magnetometer sensor being used for interval detection.
@@ -1050,14 +1121,13 @@ class SingleSensorStaticIntervalMagnetometerCalibrator private constructor(
      */
     @Throws(IllegalStateException::class)
     private fun buildInternalCalibrator(): MagnetometerNonLinearCalibrator {
-        val groundTruthMagneticFluxDensityNorm = initialMagneticFluxDensityNorm
-        checkNotNull(groundTruthMagneticFluxDensityNorm)
-
         return MagnetometerInternalCalibratorBuilder(
             measurements,
-            groundTruthMagneticFluxDensityNorm,
             robustPreliminarySubsetSize,
             requiredMeasurements,
+            initialMagneticFluxDensityNorm,
+            location,
+            timestamp,
             robustMethod,
             robustConfidence,
             robustMaxIterations,
@@ -1079,6 +1149,7 @@ class SingleSensorStaticIntervalMagnetometerCalibrator private constructor(
             initialMzx,
             initialMzy,
             baseNoiseLevel,
+            worldMagneticModel,
             qualityScoreMapper
         ).build()
     }

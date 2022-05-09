@@ -44,8 +44,10 @@ import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.Qu
 import com.irurueta.navigation.inertial.calibration.magnetometer.KnownHardIronMagnetometerCalibrator
 import com.irurueta.navigation.inertial.calibration.magnetometer.MagnetometerNonLinearCalibrator
 import com.irurueta.navigation.inertial.calibration.magnetometer.UnknownHardIronMagnetometerCalibrator
+import com.irurueta.navigation.inertial.wmm.WorldMagneticModel
 import com.irurueta.numerical.robust.RobustEstimatorMethod
 import com.irurueta.units.*
+import java.util.*
 import kotlin.math.max
 
 /**
@@ -154,6 +156,14 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * Constructor.
      *
      * @param context Android context.
+     * @param location location where device is located at. When location is provided, gravity norm
+     * is assumed to be the theoretical value determined by WGS84 Earth model, otherwise, if no
+     * location is provided, gravity norm is estimated using a gravity sensor. Additionally, if
+     * location and timestamp are provided, magnetometer calibration will be based on Earth's
+     * magnetic model, otherwise magnetometer calibration will be based on measured magnetic flux
+     * density norm at current location.
+     * @param timestamp Current timestamp.
+     * @param worldMagneticModel Earth's magnetic model. Null to use default model.
      * @param accelerometerSensorType One of the supported accelerometer sensor types.
      * @param gyroscopeSensorType One of the supported gyroscope sensor types.
      * @param magnetometerSensorType One of the supported magnetometer sensor types.
@@ -179,9 +189,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * [MagnetometerSensorCollector.SensorType.MAGNETOMETER], hard iron guess is zero, otherwise
      * when it is [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED], hard iron
      * guess is the device calibrated values.
-     * @param location location where device is located at. When location is provided, gravity norm
-     * is assumed to be the theoretical value determined by WGS84 Earth model, otherwise, if no
-     * location is provided, gravity norm is estimated using a gravity sensor.
      * @param initializationStartedListener listener to notify when initialization starts.
      * @property initializationCompletedListener listener to notify when initialization completes.
      * @property errorListener listener to notify errors.
@@ -223,6 +230,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      */
     constructor(
         context: Context,
+        location: Location? = null,
+        timestamp: Date = Date(),
+        worldMagneticModel: WorldMagneticModel? = null,
         accelerometerSensorType: AccelerometerSensorCollector.SensorType =
             AccelerometerSensorCollector.SensorType.ACCELEROMETER,
         gyroscopeSensorType: GyroscopeSensorCollector.SensorType =
@@ -236,7 +246,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
         isAccelerometerGroundTruthInitialBias: Boolean = false,
         isGyroscopeGroundTruthInitialBias: Boolean = false,
         isMagnetometerGroundTruthInitialHardIron: Boolean = false,
-        location: Location? = null,
         initializationStartedListener: OnInitializationStartedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>? = null,
         initializationCompletedListener: OnInitializationCompletedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>? = null,
         errorListener: OnErrorListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>? = null,
@@ -295,6 +304,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
         magnetometerQualityScoreMapper
     ) {
         this.location = location
+        this.timestamp = timestamp
+        this.worldMagneticModel = worldMagneticModel
 
         this.isAccelerometerGroundTruthInitialBias = isAccelerometerGroundTruthInitialBias
         accelerometerRobustPreliminarySubsetSize = minimumRequiredAccelerometerMeasurements
@@ -414,10 +425,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * Listener  used by internal generator to handle events when a new measurement is generated.
      */
     private val generatorGeneratedMagnetometerMeasurementListener =
-        AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedMagnetometerMeasurementListener { _, measurement ->
-            if (initialMagneticFluxDensityNorm == null) {
+        AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedMagnetometerMeasurementListener { generator, measurement ->
+            if (isInitialMagneticFluxDensityNormMeasured && initialMagneticFluxDensityNorm == null) {
                 // set initial average magnetic flux density norm measured during initialization
-                initialMagneticFluxDensityNorm = measurement.magneticFluxDensity.norm
+                initialMagneticFluxDensityNorm = generator.initialMagneticFluxDensityNorm
             }
 
             magnetometerMeasurements.add(measurement)
@@ -573,6 +584,14 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      */
     var initialMagneticFluxDensityNorm: Double? = null
         private set
+
+    /**
+     * Indicates whether initial magnetic flux density norm is measured or not.
+     * If either [location] or [timestamp] is missing, magnetic flux density norm is measured,
+     * otherwise an estimation is used based on World Magnetic Model.
+     */
+    val isInitialMagneticFluxDensityNormMeasured: Boolean
+        get() = location == null || timestamp == null
 
     /**
      * Contains gravity norm (either obtained by the gravity sensor, or determined by current
@@ -1422,6 +1441,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * If location is provided, WGS84 Earth model is used to determine gravity norm
      * at such location, otherwise gravity norm is estimated during initialization by using the
      * gravity sensor of device.
+     * Additionally, if both [location] and [timestamp] are provided, magnetometer calibration
+     * uses World Magnetic Model, otherwise magnetometer calibration uses measured norm of magnetic
+     * field.
      *
      * @throws IllegalStateException if calibrator is already running.
      */
@@ -1434,6 +1456,36 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
                 // set gravity norm based on provided location
                 gravityNorm = GravityHelper.getGravityNormForLocation(value)
             }
+        }
+
+    /**
+     * Gets or sets current timestamp.
+     * This is only taken into account if both [location] and [timestamp] are provided to determine
+     * Earth's magnetic field according to provided World Magnetic Model.
+     * If either location or timestamp is missing, then measurement of magnetic field norm will be
+     * used instead.
+     *
+     * @throws IllegalStateException if calibrator is already running.
+     * @see [WorldMagneticModel]
+     */
+    var timestamp: Date? = null
+        @Throws(IllegalStateException::class)
+        set(value) {
+            check(!running)
+            field = value
+        }
+
+    /**
+     * Sets Earth's magnetic model.
+     * Null indicates that default model is being used.
+     *
+     * @throws IllegalStateException if calibrator is already running.
+     */
+    var worldMagneticModel: WorldMagneticModel? = null
+        @Throws(IllegalStateException::class)
+        set(value) {
+            check(!running)
+            field = value
         }
 
     /**
@@ -4566,14 +4618,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      */
     @Throws(IllegalStateException::class)
     private fun buildMagnetometerInternalCalibrator(): MagnetometerNonLinearCalibrator {
-        val groundTruthMagneticFluxDensityNorm = initialMagneticFluxDensityNorm
-        checkNotNull(groundTruthMagneticFluxDensityNorm)
-
         return MagnetometerInternalCalibratorBuilder(
             magnetometerMeasurements,
-            groundTruthMagneticFluxDensityNorm,
             magnetometerRobustPreliminarySubsetSize,
             minimumRequiredMagnetometerMeasurements,
+            initialMagneticFluxDensityNorm,
+            location,
+            timestamp,
             magnetometerRobustMethod,
             magnetometerRobustConfidence,
             magnetometerRobustMaxIterations,
@@ -4595,6 +4646,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
             magnetometerInitialMzx,
             magnetometerInitialMzy,
             magnetometerBaseNoiseLevel,
+            worldMagneticModel,
             magnetometerQualityScoreMapper
         ).build()
     }

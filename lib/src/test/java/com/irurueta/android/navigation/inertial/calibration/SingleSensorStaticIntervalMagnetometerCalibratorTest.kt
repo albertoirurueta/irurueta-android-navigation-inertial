@@ -45,6 +45,7 @@ import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.Qu
 import com.irurueta.navigation.inertial.calibration.magnetometer.*
 import com.irurueta.navigation.inertial.estimators.BodyMagneticFluxDensityEstimator
 import com.irurueta.navigation.inertial.wmm.WMMEarthMagneticFluxDensityEstimator
+import com.irurueta.navigation.inertial.wmm.WorldMagneticModel
 import com.irurueta.numerical.robust.RobustEstimatorMethod
 import com.irurueta.statistics.GaussianRandomizer
 import com.irurueta.statistics.UniformRandomizer
@@ -72,6 +73,10 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
 
         // check default values
         assertSame(context, calibrator.context)
+        assertNull(calibrator.location)
+        assertNotNull(calibrator.timestamp)
+        assertNull(calibrator.worldMagneticModel)
+        assertTrue(calibrator.isInitialMagneticFluxDensityNormMeasured)
         assertEquals(MagnetometerSensorCollector.SensorType.MAGNETOMETER, calibrator.sensorType)
         assertEquals(SensorDelay.FASTEST, calibrator.sensorDelay)
         assertTrue(calibrator.solveCalibrationWhenEnoughMeasurements)
@@ -225,2348 +230,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
     }
 
     @Test
-    fun constructor_whenSensorType_returnsExpectedValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator =
-            SingleSensorStaticIntervalMagnetometerCalibrator(
-                context,
-                MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED
-            )
-
-        // check default values
-        assertSame(context, calibrator.context)
-        assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
-            calibrator.sensorType
-        )
-        assertEquals(SensorDelay.FASTEST, calibrator.sensorDelay)
-        assertTrue(calibrator.solveCalibrationWhenEnoughMeasurements)
-        assertFalse(calibrator.isGroundTruthInitialHardIron)
-        assertNull(calibrator.initializationStartedListener)
-        assertNull(calibrator.initializationCompletedListener)
-        assertNull(calibrator.errorListener)
-        assertNull(calibrator.initialHardIronAvailableListener)
-        assertNull(calibrator.newCalibrationMeasurementAvailableListener)
-        assertNull(calibrator.readyToSolveCalibrationListener)
-        assertNull(calibrator.calibrationSolvingStartedListener)
-        assertNull(calibrator.calibrationCompletedListener)
-        assertNull(calibrator.stoppedListener)
-        assertNotNull(calibrator.qualityScoreMapper)
-        assertTrue(calibrator.measurements.isEmpty())
-        assertFalse(calibrator.isReadyToSolveCalibration)
-        assertNull(calibrator.initialMagneticFluxDensityNorm)
-        assertNull(calibrator.initialHardIronX)
-        assertNull(calibrator.initialHardIronY)
-        assertNull(calibrator.initialHardIronZ)
-        assertNull(calibrator.initialHardIronXAsMeasurement)
-        val b = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        assertFalse(calibrator.getInitialHardIronXAsMeasurement(b))
-        assertNull(calibrator.initialHardIronYAsMeasurement)
-        assertFalse(calibrator.getInitialHardIronYAsMeasurement(b))
-        assertNull(calibrator.initialHardIronZAsMeasurement)
-        assertFalse(calibrator.getInitialHardIronZAsMeasurement(b))
-        assertNull(calibrator.initialHardIronAsTriad)
-        val triad = MagneticFluxDensityTriad()
-        assertFalse(calibrator.getInitialHardIronAsTriad(triad))
-        assertFalse(calibrator.running)
-        assertNull(calibrator.magnetometerSensor)
-        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
-            calibrator.initialStaticSamples
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
-            calibrator.thresholdFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
-            calibrator.instantaneousNoiseLevelFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            0.0
-        )
-        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
-        assertEquals(
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            baseNoiseLevel1.value.toDouble(),
-            0.0
-        )
-        assertEquals(MagneticFluxDensityUnit.TESLA, baseNoiseLevel1.unit)
-        val baseNoiseLevel2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
-        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
-        assertNull(calibrator.baseNoiseLevel)
-        assertNull(calibrator.baseNoiseLevelAsMeasurement)
-        assertFalse(calibrator.getBaseNoiseLevelAsMeasurement(b))
-        assertNull(calibrator.baseNoiseLevelPsd)
-        assertNull(calibrator.baseNoiseLevelRootPsd)
-        assertNull(calibrator.threshold)
-        assertNull(calibrator.thresholdAsMeasurement)
-        assertFalse(calibrator.getThresholdAsMeasurement(b))
-        assertNull(calibrator.averageTimeInterval)
-        assertNull(calibrator.averageTimeIntervalAsTime)
-        val time = Time(0.0, TimeUnit.SECOND)
-        assertFalse(calibrator.getAverageTimeIntervalAsTime(time))
-        assertNull(calibrator.timeIntervalVariance)
-        assertNull(calibrator.timeIntervalStandardDeviation)
-        assertNull(calibrator.timeIntervalStandardDeviationAsTime)
-        assertFalse(calibrator.getTimeIntervalStandardDeviationAsTime(time))
-        assertEquals(0.0, calibrator.initialSx, 0.0)
-        assertEquals(0.0, calibrator.initialSy, 0.0)
-        assertEquals(0.0, calibrator.initialSz, 0.0)
-        assertEquals(0.0, calibrator.initialMxy, 0.0)
-        assertEquals(0.0, calibrator.initialMxz, 0.0)
-        assertEquals(0.0, calibrator.initialMyx, 0.0)
-        assertEquals(0.0, calibrator.initialMyz, 0.0)
-        assertEquals(0.0, calibrator.initialMzx, 0.0)
-        assertEquals(0.0, calibrator.initialMzy, 0.0)
-        val mm1 = Matrix(MM_SIZE, MM_SIZE)
-        assertEquals(mm1, calibrator.initialMm)
-        val mm2 = Matrix.identity(MM_SIZE, MM_SIZE)
-        calibrator.getInitialMm(mm2)
-        assertEquals(mm1, mm2)
-        assertFalse(calibrator.isCommonAxisUsed)
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.UNKNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.minimumRequiredMeasurements
-        )
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.UNKNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.requiredMeasurements
-        )
-        assertNull(calibrator.robustMethod)
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.ROBUST_DEFAULT_CONFIDENCE,
-            calibrator.robustConfidence,
-            0.0
-        )
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.ROBUST_DEFAULT_MAX_ITERATIONS,
-            calibrator.robustMaxIterations
-        )
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.UNKNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.robustPreliminarySubsetSize
-        )
-        assertNull(calibrator.robustThreshold)
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.DEFAULT_ROBUST_THRESHOLD_FACTOR,
-            calibrator.robustThresholdFactor,
-            0.0
-        )
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR,
-            calibrator.robustStopThresholdFactor,
-            0.0
-        )
-        assertNull(calibrator.estimatedMm)
-        assertNull(calibrator.estimatedSx)
-        assertNull(calibrator.estimatedSy)
-        assertNull(calibrator.estimatedSz)
-        assertNull(calibrator.estimatedMxy)
-        assertNull(calibrator.estimatedMxz)
-        assertNull(calibrator.estimatedMyx)
-        assertNull(calibrator.estimatedMyz)
-        assertNull(calibrator.estimatedMzx)
-        assertNull(calibrator.estimatedMzy)
-        assertNull(calibrator.estimatedCovariance)
-        assertNull(calibrator.estimatedChiSq)
-        assertNull(calibrator.estimatedMse)
-        assertNull(calibrator.estimatedHardIronX)
-        assertNull(calibrator.estimatedHardIronY)
-        assertNull(calibrator.estimatedHardIronZ)
-        assertNull(calibrator.estimatedHardIronXAsMeasurement)
-        assertFalse(calibrator.getEstimatedHardIronXAsMeasurement(b))
-        assertNull(calibrator.estimatedHardIronYAsMeasurement)
-        assertFalse(calibrator.getEstimatedHardIronYAsMeasurement(b))
-        assertNull(calibrator.estimatedHardIronZAsMeasurement)
-        assertFalse(calibrator.getEstimatedHardIronZAsMeasurement(b))
-        assertNull(calibrator.estimatedHardIronAsTriad)
-        assertFalse(calibrator.getEstimatedHardIronAsTriad(triad))
-    }
-
-    @Test
-    fun constructor_whenSensorDelay_returnsExpectedValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator =
-            SingleSensorStaticIntervalMagnetometerCalibrator(
-                context,
-                MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
-                SensorDelay.NORMAL
-            )
-
-        // check default values
-        assertSame(context, calibrator.context)
-        assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
-            calibrator.sensorType
-        )
-        assertEquals(SensorDelay.NORMAL, calibrator.sensorDelay)
-        assertTrue(calibrator.solveCalibrationWhenEnoughMeasurements)
-        assertFalse(calibrator.isGroundTruthInitialHardIron)
-        assertNull(calibrator.initializationStartedListener)
-        assertNull(calibrator.initializationCompletedListener)
-        assertNull(calibrator.errorListener)
-        assertNull(calibrator.initialHardIronAvailableListener)
-        assertNull(calibrator.newCalibrationMeasurementAvailableListener)
-        assertNull(calibrator.readyToSolveCalibrationListener)
-        assertNull(calibrator.calibrationSolvingStartedListener)
-        assertNull(calibrator.calibrationCompletedListener)
-        assertNull(calibrator.stoppedListener)
-        assertNotNull(calibrator.qualityScoreMapper)
-        assertTrue(calibrator.measurements.isEmpty())
-        assertFalse(calibrator.isReadyToSolveCalibration)
-        assertNull(calibrator.initialMagneticFluxDensityNorm)
-        assertNull(calibrator.initialHardIronX)
-        assertNull(calibrator.initialHardIronY)
-        assertNull(calibrator.initialHardIronZ)
-        assertNull(calibrator.initialHardIronXAsMeasurement)
-        val b = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        assertFalse(calibrator.getInitialHardIronXAsMeasurement(b))
-        assertNull(calibrator.initialHardIronYAsMeasurement)
-        assertFalse(calibrator.getInitialHardIronYAsMeasurement(b))
-        assertNull(calibrator.initialHardIronZAsMeasurement)
-        assertFalse(calibrator.getInitialHardIronZAsMeasurement(b))
-        assertNull(calibrator.initialHardIronAsTriad)
-        val triad = MagneticFluxDensityTriad()
-        assertFalse(calibrator.getInitialHardIronAsTriad(triad))
-        assertFalse(calibrator.running)
-        assertNull(calibrator.magnetometerSensor)
-        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
-            calibrator.initialStaticSamples
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
-            calibrator.thresholdFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
-            calibrator.instantaneousNoiseLevelFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            0.0
-        )
-        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
-        assertEquals(
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            baseNoiseLevel1.value.toDouble(),
-            0.0
-        )
-        assertEquals(MagneticFluxDensityUnit.TESLA, baseNoiseLevel1.unit)
-        val baseNoiseLevel2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
-        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
-        assertNull(calibrator.baseNoiseLevel)
-        assertNull(calibrator.baseNoiseLevelAsMeasurement)
-        assertFalse(calibrator.getBaseNoiseLevelAsMeasurement(b))
-        assertNull(calibrator.baseNoiseLevelPsd)
-        assertNull(calibrator.baseNoiseLevelRootPsd)
-        assertNull(calibrator.threshold)
-        assertNull(calibrator.thresholdAsMeasurement)
-        assertFalse(calibrator.getThresholdAsMeasurement(b))
-        assertNull(calibrator.averageTimeInterval)
-        assertNull(calibrator.averageTimeIntervalAsTime)
-        val time = Time(0.0, TimeUnit.SECOND)
-        assertFalse(calibrator.getAverageTimeIntervalAsTime(time))
-        assertNull(calibrator.timeIntervalVariance)
-        assertNull(calibrator.timeIntervalStandardDeviation)
-        assertNull(calibrator.timeIntervalStandardDeviationAsTime)
-        assertFalse(calibrator.getTimeIntervalStandardDeviationAsTime(time))
-        assertEquals(0.0, calibrator.initialSx, 0.0)
-        assertEquals(0.0, calibrator.initialSy, 0.0)
-        assertEquals(0.0, calibrator.initialSz, 0.0)
-        assertEquals(0.0, calibrator.initialMxy, 0.0)
-        assertEquals(0.0, calibrator.initialMxz, 0.0)
-        assertEquals(0.0, calibrator.initialMyx, 0.0)
-        assertEquals(0.0, calibrator.initialMyz, 0.0)
-        assertEquals(0.0, calibrator.initialMzx, 0.0)
-        assertEquals(0.0, calibrator.initialMzy, 0.0)
-        val mm1 = Matrix(MM_SIZE, MM_SIZE)
-        assertEquals(mm1, calibrator.initialMm)
-        val mm2 = Matrix.identity(MM_SIZE, MM_SIZE)
-        calibrator.getInitialMm(mm2)
-        assertEquals(mm1, mm2)
-        assertFalse(calibrator.isCommonAxisUsed)
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.UNKNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.minimumRequiredMeasurements
-        )
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.UNKNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.requiredMeasurements
-        )
-        assertNull(calibrator.robustMethod)
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.ROBUST_DEFAULT_CONFIDENCE,
-            calibrator.robustConfidence,
-            0.0
-        )
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.ROBUST_DEFAULT_MAX_ITERATIONS,
-            calibrator.robustMaxIterations
-        )
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.UNKNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.robustPreliminarySubsetSize
-        )
-        assertNull(calibrator.robustThreshold)
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.DEFAULT_ROBUST_THRESHOLD_FACTOR,
-            calibrator.robustThresholdFactor,
-            0.0
-        )
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR,
-            calibrator.robustStopThresholdFactor,
-            0.0
-        )
-        assertNull(calibrator.estimatedMm)
-        assertNull(calibrator.estimatedSx)
-        assertNull(calibrator.estimatedSy)
-        assertNull(calibrator.estimatedSz)
-        assertNull(calibrator.estimatedMxy)
-        assertNull(calibrator.estimatedMxz)
-        assertNull(calibrator.estimatedMyx)
-        assertNull(calibrator.estimatedMyz)
-        assertNull(calibrator.estimatedMzx)
-        assertNull(calibrator.estimatedMzy)
-        assertNull(calibrator.estimatedCovariance)
-        assertNull(calibrator.estimatedChiSq)
-        assertNull(calibrator.estimatedMse)
-        assertNull(calibrator.estimatedHardIronX)
-        assertNull(calibrator.estimatedHardIronY)
-        assertNull(calibrator.estimatedHardIronZ)
-        assertNull(calibrator.estimatedHardIronXAsMeasurement)
-        assertFalse(calibrator.getEstimatedHardIronXAsMeasurement(b))
-        assertNull(calibrator.estimatedHardIronYAsMeasurement)
-        assertFalse(calibrator.getEstimatedHardIronYAsMeasurement(b))
-        assertNull(calibrator.estimatedHardIronZAsMeasurement)
-        assertFalse(calibrator.getEstimatedHardIronZAsMeasurement(b))
-        assertNull(calibrator.estimatedHardIronAsTriad)
-        assertFalse(calibrator.getEstimatedHardIronAsTriad(triad))
-    }
-
-    @Test
-    fun constructor_whenSolveCalibrationWhenEnoughMeasurements_returnsExpectedValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator =
-            SingleSensorStaticIntervalMagnetometerCalibrator(
-                context,
-                MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
-                SensorDelay.NORMAL,
-                false
-            )
-
-        // check default values
-        assertSame(context, calibrator.context)
-        assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
-            calibrator.sensorType
-        )
-        assertEquals(SensorDelay.NORMAL, calibrator.sensorDelay)
-        assertFalse(calibrator.solveCalibrationWhenEnoughMeasurements)
-        assertFalse(calibrator.isGroundTruthInitialHardIron)
-        assertNull(calibrator.initializationStartedListener)
-        assertNull(calibrator.initializationCompletedListener)
-        assertNull(calibrator.errorListener)
-        assertNull(calibrator.initialHardIronAvailableListener)
-        assertNull(calibrator.newCalibrationMeasurementAvailableListener)
-        assertNull(calibrator.readyToSolveCalibrationListener)
-        assertNull(calibrator.calibrationSolvingStartedListener)
-        assertNull(calibrator.calibrationCompletedListener)
-        assertNull(calibrator.stoppedListener)
-        assertNotNull(calibrator.qualityScoreMapper)
-        assertTrue(calibrator.measurements.isEmpty())
-        assertFalse(calibrator.isReadyToSolveCalibration)
-        assertNull(calibrator.initialMagneticFluxDensityNorm)
-        assertNull(calibrator.initialHardIronX)
-        assertNull(calibrator.initialHardIronY)
-        assertNull(calibrator.initialHardIronZ)
-        assertNull(calibrator.initialHardIronXAsMeasurement)
-        val b = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        assertFalse(calibrator.getInitialHardIronXAsMeasurement(b))
-        assertNull(calibrator.initialHardIronYAsMeasurement)
-        assertFalse(calibrator.getInitialHardIronYAsMeasurement(b))
-        assertNull(calibrator.initialHardIronZAsMeasurement)
-        assertFalse(calibrator.getInitialHardIronZAsMeasurement(b))
-        assertNull(calibrator.initialHardIronAsTriad)
-        val triad = MagneticFluxDensityTriad()
-        assertFalse(calibrator.getInitialHardIronAsTriad(triad))
-        assertFalse(calibrator.running)
-        assertNull(calibrator.magnetometerSensor)
-        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
-            calibrator.initialStaticSamples
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
-            calibrator.thresholdFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
-            calibrator.instantaneousNoiseLevelFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            0.0
-        )
-        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
-        assertEquals(
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            baseNoiseLevel1.value.toDouble(),
-            0.0
-        )
-        assertEquals(MagneticFluxDensityUnit.TESLA, baseNoiseLevel1.unit)
-        val baseNoiseLevel2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
-        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
-        assertNull(calibrator.baseNoiseLevel)
-        assertNull(calibrator.baseNoiseLevelAsMeasurement)
-        assertFalse(calibrator.getBaseNoiseLevelAsMeasurement(b))
-        assertNull(calibrator.baseNoiseLevelPsd)
-        assertNull(calibrator.baseNoiseLevelRootPsd)
-        assertNull(calibrator.threshold)
-        assertNull(calibrator.thresholdAsMeasurement)
-        assertFalse(calibrator.getThresholdAsMeasurement(b))
-        assertNull(calibrator.averageTimeInterval)
-        assertNull(calibrator.averageTimeIntervalAsTime)
-        val time = Time(0.0, TimeUnit.SECOND)
-        assertFalse(calibrator.getAverageTimeIntervalAsTime(time))
-        assertNull(calibrator.timeIntervalVariance)
-        assertNull(calibrator.timeIntervalStandardDeviation)
-        assertNull(calibrator.timeIntervalStandardDeviationAsTime)
-        assertFalse(calibrator.getTimeIntervalStandardDeviationAsTime(time))
-        assertEquals(0.0, calibrator.initialSx, 0.0)
-        assertEquals(0.0, calibrator.initialSy, 0.0)
-        assertEquals(0.0, calibrator.initialSz, 0.0)
-        assertEquals(0.0, calibrator.initialMxy, 0.0)
-        assertEquals(0.0, calibrator.initialMxz, 0.0)
-        assertEquals(0.0, calibrator.initialMyx, 0.0)
-        assertEquals(0.0, calibrator.initialMyz, 0.0)
-        assertEquals(0.0, calibrator.initialMzx, 0.0)
-        assertEquals(0.0, calibrator.initialMzy, 0.0)
-        val mm1 = Matrix(MM_SIZE, MM_SIZE)
-        assertEquals(mm1, calibrator.initialMm)
-        val mm2 = Matrix.identity(MM_SIZE, MM_SIZE)
-        calibrator.getInitialMm(mm2)
-        assertEquals(mm1, mm2)
-        assertFalse(calibrator.isCommonAxisUsed)
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.UNKNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.minimumRequiredMeasurements
-        )
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.UNKNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.requiredMeasurements
-        )
-        assertNull(calibrator.robustMethod)
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.ROBUST_DEFAULT_CONFIDENCE,
-            calibrator.robustConfidence,
-            0.0
-        )
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.ROBUST_DEFAULT_MAX_ITERATIONS,
-            calibrator.robustMaxIterations
-        )
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.UNKNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.robustPreliminarySubsetSize
-        )
-        assertNull(calibrator.robustThreshold)
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.DEFAULT_ROBUST_THRESHOLD_FACTOR,
-            calibrator.robustThresholdFactor,
-            0.0
-        )
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR,
-            calibrator.robustStopThresholdFactor,
-            0.0
-        )
-        assertNull(calibrator.estimatedMm)
-        assertNull(calibrator.estimatedSx)
-        assertNull(calibrator.estimatedSy)
-        assertNull(calibrator.estimatedSz)
-        assertNull(calibrator.estimatedMxy)
-        assertNull(calibrator.estimatedMxz)
-        assertNull(calibrator.estimatedMyx)
-        assertNull(calibrator.estimatedMyz)
-        assertNull(calibrator.estimatedMzx)
-        assertNull(calibrator.estimatedMzy)
-        assertNull(calibrator.estimatedCovariance)
-        assertNull(calibrator.estimatedChiSq)
-        assertNull(calibrator.estimatedMse)
-        assertNull(calibrator.estimatedHardIronX)
-        assertNull(calibrator.estimatedHardIronY)
-        assertNull(calibrator.estimatedHardIronZ)
-        assertNull(calibrator.estimatedHardIronXAsMeasurement)
-        assertFalse(calibrator.getEstimatedHardIronXAsMeasurement(b))
-        assertNull(calibrator.estimatedHardIronYAsMeasurement)
-        assertFalse(calibrator.getEstimatedHardIronYAsMeasurement(b))
-        assertNull(calibrator.estimatedHardIronZAsMeasurement)
-        assertFalse(calibrator.getEstimatedHardIronZAsMeasurement(b))
-        assertNull(calibrator.estimatedHardIronAsTriad)
-        assertFalse(calibrator.getEstimatedHardIronAsTriad(triad))
-    }
-
-    @Test
-    fun constructor_whenGroundTruthInitialHardIron_returnsExpectedValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator =
-            SingleSensorStaticIntervalMagnetometerCalibrator(
-                context,
-                MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
-                SensorDelay.NORMAL,
-                solveCalibrationWhenEnoughMeasurements = false,
-                isGroundTruthInitialHardIron = true
-            )
-
-        // check default values
-        assertSame(context, calibrator.context)
-        assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
-            calibrator.sensorType
-        )
-        assertEquals(SensorDelay.NORMAL, calibrator.sensorDelay)
-        assertFalse(calibrator.solveCalibrationWhenEnoughMeasurements)
-        assertTrue(calibrator.isGroundTruthInitialHardIron)
-        assertNull(calibrator.initializationStartedListener)
-        assertNull(calibrator.initializationCompletedListener)
-        assertNull(calibrator.errorListener)
-        assertNull(calibrator.initialHardIronAvailableListener)
-        assertNull(calibrator.newCalibrationMeasurementAvailableListener)
-        assertNull(calibrator.readyToSolveCalibrationListener)
-        assertNull(calibrator.calibrationSolvingStartedListener)
-        assertNull(calibrator.calibrationCompletedListener)
-        assertNull(calibrator.stoppedListener)
-        assertNotNull(calibrator.qualityScoreMapper)
-        assertTrue(calibrator.measurements.isEmpty())
-        assertFalse(calibrator.isReadyToSolveCalibration)
-        assertNull(calibrator.initialMagneticFluxDensityNorm)
-        assertNull(calibrator.initialHardIronX)
-        assertNull(calibrator.initialHardIronY)
-        assertNull(calibrator.initialHardIronZ)
-        assertNull(calibrator.initialHardIronXAsMeasurement)
-        val b = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        assertFalse(calibrator.getInitialHardIronXAsMeasurement(b))
-        assertNull(calibrator.initialHardIronYAsMeasurement)
-        assertFalse(calibrator.getInitialHardIronYAsMeasurement(b))
-        assertNull(calibrator.initialHardIronZAsMeasurement)
-        assertFalse(calibrator.getInitialHardIronZAsMeasurement(b))
-        assertNull(calibrator.initialHardIronAsTriad)
-        val triad = MagneticFluxDensityTriad()
-        assertFalse(calibrator.getInitialHardIronAsTriad(triad))
-        assertFalse(calibrator.running)
-        assertNull(calibrator.magnetometerSensor)
-        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
-            calibrator.initialStaticSamples
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
-            calibrator.thresholdFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
-            calibrator.instantaneousNoiseLevelFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            0.0
-        )
-        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
-        assertEquals(
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            baseNoiseLevel1.value.toDouble(),
-            0.0
-        )
-        assertEquals(MagneticFluxDensityUnit.TESLA, baseNoiseLevel1.unit)
-        val baseNoiseLevel2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
-        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
-        assertNull(calibrator.baseNoiseLevel)
-        assertNull(calibrator.baseNoiseLevelAsMeasurement)
-        assertFalse(calibrator.getBaseNoiseLevelAsMeasurement(b))
-        assertNull(calibrator.baseNoiseLevelPsd)
-        assertNull(calibrator.baseNoiseLevelRootPsd)
-        assertNull(calibrator.threshold)
-        assertNull(calibrator.thresholdAsMeasurement)
-        assertFalse(calibrator.getThresholdAsMeasurement(b))
-        assertNull(calibrator.averageTimeInterval)
-        assertNull(calibrator.averageTimeIntervalAsTime)
-        val time = Time(0.0, TimeUnit.SECOND)
-        assertFalse(calibrator.getAverageTimeIntervalAsTime(time))
-        assertNull(calibrator.timeIntervalVariance)
-        assertNull(calibrator.timeIntervalStandardDeviation)
-        assertNull(calibrator.timeIntervalStandardDeviationAsTime)
-        assertFalse(calibrator.getTimeIntervalStandardDeviationAsTime(time))
-        assertEquals(0.0, calibrator.initialSx, 0.0)
-        assertEquals(0.0, calibrator.initialSy, 0.0)
-        assertEquals(0.0, calibrator.initialSz, 0.0)
-        assertEquals(0.0, calibrator.initialMxy, 0.0)
-        assertEquals(0.0, calibrator.initialMxz, 0.0)
-        assertEquals(0.0, calibrator.initialMyx, 0.0)
-        assertEquals(0.0, calibrator.initialMyz, 0.0)
-        assertEquals(0.0, calibrator.initialMzx, 0.0)
-        assertEquals(0.0, calibrator.initialMzy, 0.0)
-        val mm1 = Matrix(MM_SIZE, MM_SIZE)
-        assertEquals(mm1, calibrator.initialMm)
-        val mm2 = Matrix.identity(MM_SIZE, MM_SIZE)
-        calibrator.getInitialMm(mm2)
-        assertEquals(mm1, mm2)
-        assertFalse(calibrator.isCommonAxisUsed)
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.KNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.minimumRequiredMeasurements
-        )
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.KNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.requiredMeasurements
-        )
-        assertNull(calibrator.robustMethod)
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.ROBUST_DEFAULT_CONFIDENCE,
-            calibrator.robustConfidence,
-            0.0
-        )
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.ROBUST_DEFAULT_MAX_ITERATIONS,
-            calibrator.robustMaxIterations
-        )
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.KNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.robustPreliminarySubsetSize
-        )
-        assertNull(calibrator.robustThreshold)
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.DEFAULT_ROBUST_THRESHOLD_FACTOR,
-            calibrator.robustThresholdFactor,
-            0.0
-        )
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR,
-            calibrator.robustStopThresholdFactor,
-            0.0
-        )
-        assertNull(calibrator.estimatedMm)
-        assertNull(calibrator.estimatedSx)
-        assertNull(calibrator.estimatedSy)
-        assertNull(calibrator.estimatedSz)
-        assertNull(calibrator.estimatedMxy)
-        assertNull(calibrator.estimatedMxz)
-        assertNull(calibrator.estimatedMyx)
-        assertNull(calibrator.estimatedMyz)
-        assertNull(calibrator.estimatedMzx)
-        assertNull(calibrator.estimatedMzy)
-        assertNull(calibrator.estimatedCovariance)
-        assertNull(calibrator.estimatedChiSq)
-        assertNull(calibrator.estimatedMse)
-        assertNull(calibrator.estimatedHardIronX)
-        assertNull(calibrator.estimatedHardIronY)
-        assertNull(calibrator.estimatedHardIronZ)
-        assertNull(calibrator.estimatedHardIronXAsMeasurement)
-        assertFalse(calibrator.getEstimatedHardIronXAsMeasurement(b))
-        assertNull(calibrator.estimatedHardIronYAsMeasurement)
-        assertFalse(calibrator.getEstimatedHardIronYAsMeasurement(b))
-        assertNull(calibrator.estimatedHardIronZAsMeasurement)
-        assertFalse(calibrator.getEstimatedHardIronZAsMeasurement(b))
-        assertNull(calibrator.estimatedHardIronAsTriad)
-        assertFalse(calibrator.getEstimatedHardIronAsTriad(triad))
-    }
-
-    @Test
-    fun constructor_whenInitializationStartedListener_returnsExpectedValues() {
-        val initializationStartedListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnInitializationStartedListener<SingleSensorStaticIntervalMagnetometerCalibrator>>()
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator =
-            SingleSensorStaticIntervalMagnetometerCalibrator(
-                context,
-                MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
-                SensorDelay.NORMAL,
-                solveCalibrationWhenEnoughMeasurements = false,
-                isGroundTruthInitialHardIron = true,
-                initializationStartedListener
-            )
-
-        // check default values
-        assertSame(context, calibrator.context)
-        assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
-            calibrator.sensorType
-        )
-        assertEquals(SensorDelay.NORMAL, calibrator.sensorDelay)
-        assertFalse(calibrator.solveCalibrationWhenEnoughMeasurements)
-        assertTrue(calibrator.isGroundTruthInitialHardIron)
-        assertSame(initializationStartedListener, calibrator.initializationStartedListener)
-        assertNull(calibrator.initializationCompletedListener)
-        assertNull(calibrator.errorListener)
-        assertNull(calibrator.initialHardIronAvailableListener)
-        assertNull(calibrator.newCalibrationMeasurementAvailableListener)
-        assertNull(calibrator.readyToSolveCalibrationListener)
-        assertNull(calibrator.calibrationSolvingStartedListener)
-        assertNull(calibrator.calibrationCompletedListener)
-        assertNull(calibrator.stoppedListener)
-        assertNotNull(calibrator.qualityScoreMapper)
-        assertTrue(calibrator.measurements.isEmpty())
-        assertFalse(calibrator.isReadyToSolveCalibration)
-        assertNull(calibrator.initialMagneticFluxDensityNorm)
-        assertNull(calibrator.initialHardIronX)
-        assertNull(calibrator.initialHardIronY)
-        assertNull(calibrator.initialHardIronZ)
-        assertNull(calibrator.initialHardIronXAsMeasurement)
-        val b = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        assertFalse(calibrator.getInitialHardIronXAsMeasurement(b))
-        assertNull(calibrator.initialHardIronYAsMeasurement)
-        assertFalse(calibrator.getInitialHardIronYAsMeasurement(b))
-        assertNull(calibrator.initialHardIronZAsMeasurement)
-        assertFalse(calibrator.getInitialHardIronZAsMeasurement(b))
-        assertNull(calibrator.initialHardIronAsTriad)
-        val triad = MagneticFluxDensityTriad()
-        assertFalse(calibrator.getInitialHardIronAsTriad(triad))
-        assertFalse(calibrator.running)
-        assertNull(calibrator.magnetometerSensor)
-        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
-            calibrator.initialStaticSamples
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
-            calibrator.thresholdFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
-            calibrator.instantaneousNoiseLevelFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            0.0
-        )
-        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
-        assertEquals(
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            baseNoiseLevel1.value.toDouble(),
-            0.0
-        )
-        assertEquals(MagneticFluxDensityUnit.TESLA, baseNoiseLevel1.unit)
-        val baseNoiseLevel2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
-        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
-        assertNull(calibrator.baseNoiseLevel)
-        assertNull(calibrator.baseNoiseLevelAsMeasurement)
-        assertFalse(calibrator.getBaseNoiseLevelAsMeasurement(b))
-        assertNull(calibrator.baseNoiseLevelPsd)
-        assertNull(calibrator.baseNoiseLevelRootPsd)
-        assertNull(calibrator.threshold)
-        assertNull(calibrator.thresholdAsMeasurement)
-        assertFalse(calibrator.getThresholdAsMeasurement(b))
-        assertNull(calibrator.averageTimeInterval)
-        assertNull(calibrator.averageTimeIntervalAsTime)
-        val time = Time(0.0, TimeUnit.SECOND)
-        assertFalse(calibrator.getAverageTimeIntervalAsTime(time))
-        assertNull(calibrator.timeIntervalVariance)
-        assertNull(calibrator.timeIntervalStandardDeviation)
-        assertNull(calibrator.timeIntervalStandardDeviationAsTime)
-        assertFalse(calibrator.getTimeIntervalStandardDeviationAsTime(time))
-        assertEquals(0.0, calibrator.initialSx, 0.0)
-        assertEquals(0.0, calibrator.initialSy, 0.0)
-        assertEquals(0.0, calibrator.initialSz, 0.0)
-        assertEquals(0.0, calibrator.initialMxy, 0.0)
-        assertEquals(0.0, calibrator.initialMxz, 0.0)
-        assertEquals(0.0, calibrator.initialMyx, 0.0)
-        assertEquals(0.0, calibrator.initialMyz, 0.0)
-        assertEquals(0.0, calibrator.initialMzx, 0.0)
-        assertEquals(0.0, calibrator.initialMzy, 0.0)
-        val mm1 = Matrix(MM_SIZE, MM_SIZE)
-        assertEquals(mm1, calibrator.initialMm)
-        val mm2 = Matrix.identity(MM_SIZE, MM_SIZE)
-        calibrator.getInitialMm(mm2)
-        assertEquals(mm1, mm2)
-        assertFalse(calibrator.isCommonAxisUsed)
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.KNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.minimumRequiredMeasurements
-        )
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.KNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.requiredMeasurements
-        )
-        assertNull(calibrator.robustMethod)
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.ROBUST_DEFAULT_CONFIDENCE,
-            calibrator.robustConfidence,
-            0.0
-        )
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.ROBUST_DEFAULT_MAX_ITERATIONS,
-            calibrator.robustMaxIterations
-        )
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.KNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.robustPreliminarySubsetSize
-        )
-        assertNull(calibrator.robustThreshold)
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.DEFAULT_ROBUST_THRESHOLD_FACTOR,
-            calibrator.robustThresholdFactor,
-            0.0
-        )
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR,
-            calibrator.robustStopThresholdFactor,
-            0.0
-        )
-        assertNull(calibrator.estimatedMm)
-        assertNull(calibrator.estimatedSx)
-        assertNull(calibrator.estimatedSy)
-        assertNull(calibrator.estimatedSz)
-        assertNull(calibrator.estimatedMxy)
-        assertNull(calibrator.estimatedMxz)
-        assertNull(calibrator.estimatedMyx)
-        assertNull(calibrator.estimatedMyz)
-        assertNull(calibrator.estimatedMzx)
-        assertNull(calibrator.estimatedMzy)
-        assertNull(calibrator.estimatedCovariance)
-        assertNull(calibrator.estimatedChiSq)
-        assertNull(calibrator.estimatedMse)
-        assertNull(calibrator.estimatedHardIronX)
-        assertNull(calibrator.estimatedHardIronY)
-        assertNull(calibrator.estimatedHardIronZ)
-        assertNull(calibrator.estimatedHardIronXAsMeasurement)
-        assertFalse(calibrator.getEstimatedHardIronXAsMeasurement(b))
-        assertNull(calibrator.estimatedHardIronYAsMeasurement)
-        assertFalse(calibrator.getEstimatedHardIronYAsMeasurement(b))
-        assertNull(calibrator.estimatedHardIronZAsMeasurement)
-        assertFalse(calibrator.getEstimatedHardIronZAsMeasurement(b))
-        assertNull(calibrator.estimatedHardIronAsTriad)
-        assertFalse(calibrator.getEstimatedHardIronAsTriad(triad))
-    }
-
-    @Test
-    fun constructor_whenInitializationCompletedListener_returnsExpectedValues() {
-        val initializationStartedListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnInitializationStartedListener<SingleSensorStaticIntervalMagnetometerCalibrator>>()
-        val initializationCompletedListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnInitializationCompletedListener<SingleSensorStaticIntervalMagnetometerCalibrator>>()
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator =
-            SingleSensorStaticIntervalMagnetometerCalibrator(
-                context,
-                MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
-                SensorDelay.NORMAL,
-                solveCalibrationWhenEnoughMeasurements = false,
-                isGroundTruthInitialHardIron = true,
-                initializationStartedListener,
-                initializationCompletedListener
-            )
-
-        // check default values
-        assertSame(context, calibrator.context)
-        assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
-            calibrator.sensorType
-        )
-        assertEquals(SensorDelay.NORMAL, calibrator.sensorDelay)
-        assertFalse(calibrator.solveCalibrationWhenEnoughMeasurements)
-        assertTrue(calibrator.isGroundTruthInitialHardIron)
-        assertSame(initializationStartedListener, calibrator.initializationStartedListener)
-        assertSame(initializationCompletedListener, calibrator.initializationCompletedListener)
-        assertNull(calibrator.errorListener)
-        assertNull(calibrator.initialHardIronAvailableListener)
-        assertNull(calibrator.newCalibrationMeasurementAvailableListener)
-        assertNull(calibrator.readyToSolveCalibrationListener)
-        assertNull(calibrator.calibrationSolvingStartedListener)
-        assertNull(calibrator.calibrationCompletedListener)
-        assertNull(calibrator.stoppedListener)
-        assertNotNull(calibrator.qualityScoreMapper)
-        assertTrue(calibrator.measurements.isEmpty())
-        assertFalse(calibrator.isReadyToSolveCalibration)
-        assertNull(calibrator.initialMagneticFluxDensityNorm)
-        assertNull(calibrator.initialHardIronX)
-        assertNull(calibrator.initialHardIronY)
-        assertNull(calibrator.initialHardIronZ)
-        assertNull(calibrator.initialHardIronXAsMeasurement)
-        val b = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        assertFalse(calibrator.getInitialHardIronXAsMeasurement(b))
-        assertNull(calibrator.initialHardIronYAsMeasurement)
-        assertFalse(calibrator.getInitialHardIronYAsMeasurement(b))
-        assertNull(calibrator.initialHardIronZAsMeasurement)
-        assertFalse(calibrator.getInitialHardIronZAsMeasurement(b))
-        assertNull(calibrator.initialHardIronAsTriad)
-        val triad = MagneticFluxDensityTriad()
-        assertFalse(calibrator.getInitialHardIronAsTriad(triad))
-        assertFalse(calibrator.running)
-        assertNull(calibrator.magnetometerSensor)
-        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
-            calibrator.initialStaticSamples
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
-            calibrator.thresholdFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
-            calibrator.instantaneousNoiseLevelFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            0.0
-        )
-        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
-        assertEquals(
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            baseNoiseLevel1.value.toDouble(),
-            0.0
-        )
-        assertEquals(MagneticFluxDensityUnit.TESLA, baseNoiseLevel1.unit)
-        val baseNoiseLevel2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
-        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
-        assertNull(calibrator.baseNoiseLevel)
-        assertNull(calibrator.baseNoiseLevelAsMeasurement)
-        assertFalse(calibrator.getBaseNoiseLevelAsMeasurement(b))
-        assertNull(calibrator.baseNoiseLevelPsd)
-        assertNull(calibrator.baseNoiseLevelRootPsd)
-        assertNull(calibrator.threshold)
-        assertNull(calibrator.thresholdAsMeasurement)
-        assertFalse(calibrator.getThresholdAsMeasurement(b))
-        assertNull(calibrator.averageTimeInterval)
-        assertNull(calibrator.averageTimeIntervalAsTime)
-        val time = Time(0.0, TimeUnit.SECOND)
-        assertFalse(calibrator.getAverageTimeIntervalAsTime(time))
-        assertNull(calibrator.timeIntervalVariance)
-        assertNull(calibrator.timeIntervalStandardDeviation)
-        assertNull(calibrator.timeIntervalStandardDeviationAsTime)
-        assertFalse(calibrator.getTimeIntervalStandardDeviationAsTime(time))
-        assertEquals(0.0, calibrator.initialSx, 0.0)
-        assertEquals(0.0, calibrator.initialSy, 0.0)
-        assertEquals(0.0, calibrator.initialSz, 0.0)
-        assertEquals(0.0, calibrator.initialMxy, 0.0)
-        assertEquals(0.0, calibrator.initialMxz, 0.0)
-        assertEquals(0.0, calibrator.initialMyx, 0.0)
-        assertEquals(0.0, calibrator.initialMyz, 0.0)
-        assertEquals(0.0, calibrator.initialMzx, 0.0)
-        assertEquals(0.0, calibrator.initialMzy, 0.0)
-        val mm1 = Matrix(MM_SIZE, MM_SIZE)
-        assertEquals(mm1, calibrator.initialMm)
-        val mm2 = Matrix.identity(MM_SIZE, MM_SIZE)
-        calibrator.getInitialMm(mm2)
-        assertEquals(mm1, mm2)
-        assertFalse(calibrator.isCommonAxisUsed)
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.KNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.minimumRequiredMeasurements
-        )
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.KNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.requiredMeasurements
-        )
-        assertNull(calibrator.robustMethod)
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.ROBUST_DEFAULT_CONFIDENCE,
-            calibrator.robustConfidence,
-            0.0
-        )
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.ROBUST_DEFAULT_MAX_ITERATIONS,
-            calibrator.robustMaxIterations
-        )
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.KNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.robustPreliminarySubsetSize
-        )
-        assertNull(calibrator.robustThreshold)
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.DEFAULT_ROBUST_THRESHOLD_FACTOR,
-            calibrator.robustThresholdFactor,
-            0.0
-        )
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR,
-            calibrator.robustStopThresholdFactor,
-            0.0
-        )
-        assertNull(calibrator.estimatedMm)
-        assertNull(calibrator.estimatedSx)
-        assertNull(calibrator.estimatedSy)
-        assertNull(calibrator.estimatedSz)
-        assertNull(calibrator.estimatedMxy)
-        assertNull(calibrator.estimatedMxz)
-        assertNull(calibrator.estimatedMyx)
-        assertNull(calibrator.estimatedMyz)
-        assertNull(calibrator.estimatedMzx)
-        assertNull(calibrator.estimatedMzy)
-        assertNull(calibrator.estimatedCovariance)
-        assertNull(calibrator.estimatedChiSq)
-        assertNull(calibrator.estimatedMse)
-        assertNull(calibrator.estimatedHardIronX)
-        assertNull(calibrator.estimatedHardIronY)
-        assertNull(calibrator.estimatedHardIronZ)
-        assertNull(calibrator.estimatedHardIronXAsMeasurement)
-        assertFalse(calibrator.getEstimatedHardIronXAsMeasurement(b))
-        assertNull(calibrator.estimatedHardIronYAsMeasurement)
-        assertFalse(calibrator.getEstimatedHardIronYAsMeasurement(b))
-        assertNull(calibrator.estimatedHardIronZAsMeasurement)
-        assertFalse(calibrator.getEstimatedHardIronZAsMeasurement(b))
-        assertNull(calibrator.estimatedHardIronAsTriad)
-        assertFalse(calibrator.getEstimatedHardIronAsTriad(triad))
-    }
-
-    @Test
-    fun constructor_whenErrorListener_returnsExpectedValues() {
-        val initializationStartedListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnInitializationStartedListener<SingleSensorStaticIntervalMagnetometerCalibrator>>()
-        val initializationCompletedListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnInitializationCompletedListener<SingleSensorStaticIntervalMagnetometerCalibrator>>()
-        val errorListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnErrorListener<SingleSensorStaticIntervalMagnetometerCalibrator>>()
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator =
-            SingleSensorStaticIntervalMagnetometerCalibrator(
-                context,
-                MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
-                SensorDelay.NORMAL,
-                solveCalibrationWhenEnoughMeasurements = false,
-                isGroundTruthInitialHardIron = true,
-                initializationStartedListener,
-                initializationCompletedListener,
-                errorListener
-            )
-
-        // check default values
-        assertSame(context, calibrator.context)
-        assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
-            calibrator.sensorType
-        )
-        assertEquals(SensorDelay.NORMAL, calibrator.sensorDelay)
-        assertFalse(calibrator.solveCalibrationWhenEnoughMeasurements)
-        assertTrue(calibrator.isGroundTruthInitialHardIron)
-        assertSame(initializationStartedListener, calibrator.initializationStartedListener)
-        assertSame(initializationCompletedListener, calibrator.initializationCompletedListener)
-        assertSame(errorListener, calibrator.errorListener)
-        assertNull(calibrator.initialHardIronAvailableListener)
-        assertNull(calibrator.newCalibrationMeasurementAvailableListener)
-        assertNull(calibrator.readyToSolveCalibrationListener)
-        assertNull(calibrator.calibrationSolvingStartedListener)
-        assertNull(calibrator.calibrationCompletedListener)
-        assertNull(calibrator.stoppedListener)
-        assertNotNull(calibrator.qualityScoreMapper)
-        assertTrue(calibrator.measurements.isEmpty())
-        assertFalse(calibrator.isReadyToSolveCalibration)
-        assertNull(calibrator.initialMagneticFluxDensityNorm)
-        assertNull(calibrator.initialHardIronX)
-        assertNull(calibrator.initialHardIronY)
-        assertNull(calibrator.initialHardIronZ)
-        assertNull(calibrator.initialHardIronXAsMeasurement)
-        val b = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        assertFalse(calibrator.getInitialHardIronXAsMeasurement(b))
-        assertNull(calibrator.initialHardIronYAsMeasurement)
-        assertFalse(calibrator.getInitialHardIronYAsMeasurement(b))
-        assertNull(calibrator.initialHardIronZAsMeasurement)
-        assertFalse(calibrator.getInitialHardIronZAsMeasurement(b))
-        assertNull(calibrator.initialHardIronAsTriad)
-        val triad = MagneticFluxDensityTriad()
-        assertFalse(calibrator.getInitialHardIronAsTriad(triad))
-        assertFalse(calibrator.running)
-        assertNull(calibrator.magnetometerSensor)
-        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
-            calibrator.initialStaticSamples
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
-            calibrator.thresholdFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
-            calibrator.instantaneousNoiseLevelFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            0.0
-        )
-        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
-        assertEquals(
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            baseNoiseLevel1.value.toDouble(),
-            0.0
-        )
-        assertEquals(MagneticFluxDensityUnit.TESLA, baseNoiseLevel1.unit)
-        val baseNoiseLevel2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
-        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
-        assertNull(calibrator.baseNoiseLevel)
-        assertNull(calibrator.baseNoiseLevelAsMeasurement)
-        assertFalse(calibrator.getBaseNoiseLevelAsMeasurement(b))
-        assertNull(calibrator.baseNoiseLevelPsd)
-        assertNull(calibrator.baseNoiseLevelRootPsd)
-        assertNull(calibrator.threshold)
-        assertNull(calibrator.thresholdAsMeasurement)
-        assertFalse(calibrator.getThresholdAsMeasurement(b))
-        assertNull(calibrator.averageTimeInterval)
-        assertNull(calibrator.averageTimeIntervalAsTime)
-        val time = Time(0.0, TimeUnit.SECOND)
-        assertFalse(calibrator.getAverageTimeIntervalAsTime(time))
-        assertNull(calibrator.timeIntervalVariance)
-        assertNull(calibrator.timeIntervalStandardDeviation)
-        assertNull(calibrator.timeIntervalStandardDeviationAsTime)
-        assertFalse(calibrator.getTimeIntervalStandardDeviationAsTime(time))
-        assertEquals(0.0, calibrator.initialSx, 0.0)
-        assertEquals(0.0, calibrator.initialSy, 0.0)
-        assertEquals(0.0, calibrator.initialSz, 0.0)
-        assertEquals(0.0, calibrator.initialMxy, 0.0)
-        assertEquals(0.0, calibrator.initialMxz, 0.0)
-        assertEquals(0.0, calibrator.initialMyx, 0.0)
-        assertEquals(0.0, calibrator.initialMyz, 0.0)
-        assertEquals(0.0, calibrator.initialMzx, 0.0)
-        assertEquals(0.0, calibrator.initialMzy, 0.0)
-        val mm1 = Matrix(MM_SIZE, MM_SIZE)
-        assertEquals(mm1, calibrator.initialMm)
-        val mm2 = Matrix.identity(MM_SIZE, MM_SIZE)
-        calibrator.getInitialMm(mm2)
-        assertEquals(mm1, mm2)
-        assertFalse(calibrator.isCommonAxisUsed)
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.KNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.minimumRequiredMeasurements
-        )
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.KNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.requiredMeasurements
-        )
-        assertNull(calibrator.robustMethod)
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.ROBUST_DEFAULT_CONFIDENCE,
-            calibrator.robustConfidence,
-            0.0
-        )
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.ROBUST_DEFAULT_MAX_ITERATIONS,
-            calibrator.robustMaxIterations
-        )
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.KNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.robustPreliminarySubsetSize
-        )
-        assertNull(calibrator.robustThreshold)
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.DEFAULT_ROBUST_THRESHOLD_FACTOR,
-            calibrator.robustThresholdFactor,
-            0.0
-        )
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR,
-            calibrator.robustStopThresholdFactor,
-            0.0
-        )
-        assertNull(calibrator.estimatedMm)
-        assertNull(calibrator.estimatedSx)
-        assertNull(calibrator.estimatedSy)
-        assertNull(calibrator.estimatedSz)
-        assertNull(calibrator.estimatedMxy)
-        assertNull(calibrator.estimatedMxz)
-        assertNull(calibrator.estimatedMyx)
-        assertNull(calibrator.estimatedMyz)
-        assertNull(calibrator.estimatedMzx)
-        assertNull(calibrator.estimatedMzy)
-        assertNull(calibrator.estimatedCovariance)
-        assertNull(calibrator.estimatedChiSq)
-        assertNull(calibrator.estimatedMse)
-        assertNull(calibrator.estimatedHardIronX)
-        assertNull(calibrator.estimatedHardIronY)
-        assertNull(calibrator.estimatedHardIronZ)
-        assertNull(calibrator.estimatedHardIronXAsMeasurement)
-        assertFalse(calibrator.getEstimatedHardIronXAsMeasurement(b))
-        assertNull(calibrator.estimatedHardIronYAsMeasurement)
-        assertFalse(calibrator.getEstimatedHardIronYAsMeasurement(b))
-        assertNull(calibrator.estimatedHardIronZAsMeasurement)
-        assertFalse(calibrator.getEstimatedHardIronZAsMeasurement(b))
-        assertNull(calibrator.estimatedHardIronAsTriad)
-        assertFalse(calibrator.getEstimatedHardIronAsTriad(triad))
-    }
-
-    @Test
-    fun constructor_whenInitialHardIronAvailableListener_returnsExpectedValues() {
-        val initializationStartedListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnInitializationStartedListener<SingleSensorStaticIntervalMagnetometerCalibrator>>()
-        val initializationCompletedListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnInitializationCompletedListener<SingleSensorStaticIntervalMagnetometerCalibrator>>()
-        val errorListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnErrorListener<SingleSensorStaticIntervalMagnetometerCalibrator>>()
-        val initialHardIronAvailableListener =
-            mockk<SingleSensorStaticIntervalMagnetometerCalibrator.OnInitialHardIronAvailableListener>()
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator =
-            SingleSensorStaticIntervalMagnetometerCalibrator(
-                context,
-                MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
-                SensorDelay.NORMAL,
-                solveCalibrationWhenEnoughMeasurements = false,
-                isGroundTruthInitialHardIron = true,
-                initializationStartedListener,
-                initializationCompletedListener,
-                errorListener,
-                initialHardIronAvailableListener
-            )
-
-        // check default values
-        assertSame(context, calibrator.context)
-        assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
-            calibrator.sensorType
-        )
-        assertEquals(SensorDelay.NORMAL, calibrator.sensorDelay)
-        assertFalse(calibrator.solveCalibrationWhenEnoughMeasurements)
-        assertTrue(calibrator.isGroundTruthInitialHardIron)
-        assertSame(initializationStartedListener, calibrator.initializationStartedListener)
-        assertSame(initializationCompletedListener, calibrator.initializationCompletedListener)
-        assertSame(errorListener, calibrator.errorListener)
-        assertSame(initialHardIronAvailableListener, calibrator.initialHardIronAvailableListener)
-        assertNull(calibrator.newCalibrationMeasurementAvailableListener)
-        assertNull(calibrator.readyToSolveCalibrationListener)
-        assertNull(calibrator.calibrationSolvingStartedListener)
-        assertNull(calibrator.calibrationCompletedListener)
-        assertNull(calibrator.stoppedListener)
-        assertNotNull(calibrator.qualityScoreMapper)
-        assertTrue(calibrator.measurements.isEmpty())
-        assertFalse(calibrator.isReadyToSolveCalibration)
-        assertNull(calibrator.initialMagneticFluxDensityNorm)
-        assertNull(calibrator.initialHardIronX)
-        assertNull(calibrator.initialHardIronY)
-        assertNull(calibrator.initialHardIronZ)
-        assertNull(calibrator.initialHardIronXAsMeasurement)
-        val b = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        assertFalse(calibrator.getInitialHardIronXAsMeasurement(b))
-        assertNull(calibrator.initialHardIronYAsMeasurement)
-        assertFalse(calibrator.getInitialHardIronYAsMeasurement(b))
-        assertNull(calibrator.initialHardIronZAsMeasurement)
-        assertFalse(calibrator.getInitialHardIronZAsMeasurement(b))
-        assertNull(calibrator.initialHardIronAsTriad)
-        val triad = MagneticFluxDensityTriad()
-        assertFalse(calibrator.getInitialHardIronAsTriad(triad))
-        assertFalse(calibrator.running)
-        assertNull(calibrator.magnetometerSensor)
-        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
-            calibrator.initialStaticSamples
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
-            calibrator.thresholdFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
-            calibrator.instantaneousNoiseLevelFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            0.0
-        )
-        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
-        assertEquals(
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            baseNoiseLevel1.value.toDouble(),
-            0.0
-        )
-        assertEquals(MagneticFluxDensityUnit.TESLA, baseNoiseLevel1.unit)
-        val baseNoiseLevel2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
-        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
-        assertNull(calibrator.baseNoiseLevel)
-        assertNull(calibrator.baseNoiseLevelAsMeasurement)
-        assertFalse(calibrator.getBaseNoiseLevelAsMeasurement(b))
-        assertNull(calibrator.baseNoiseLevelPsd)
-        assertNull(calibrator.baseNoiseLevelRootPsd)
-        assertNull(calibrator.threshold)
-        assertNull(calibrator.thresholdAsMeasurement)
-        assertFalse(calibrator.getThresholdAsMeasurement(b))
-        assertNull(calibrator.averageTimeInterval)
-        assertNull(calibrator.averageTimeIntervalAsTime)
-        val time = Time(0.0, TimeUnit.SECOND)
-        assertFalse(calibrator.getAverageTimeIntervalAsTime(time))
-        assertNull(calibrator.timeIntervalVariance)
-        assertNull(calibrator.timeIntervalStandardDeviation)
-        assertNull(calibrator.timeIntervalStandardDeviationAsTime)
-        assertFalse(calibrator.getTimeIntervalStandardDeviationAsTime(time))
-        assertEquals(0.0, calibrator.initialSx, 0.0)
-        assertEquals(0.0, calibrator.initialSy, 0.0)
-        assertEquals(0.0, calibrator.initialSz, 0.0)
-        assertEquals(0.0, calibrator.initialMxy, 0.0)
-        assertEquals(0.0, calibrator.initialMxz, 0.0)
-        assertEquals(0.0, calibrator.initialMyx, 0.0)
-        assertEquals(0.0, calibrator.initialMyz, 0.0)
-        assertEquals(0.0, calibrator.initialMzx, 0.0)
-        assertEquals(0.0, calibrator.initialMzy, 0.0)
-        val mm1 = Matrix(MM_SIZE, MM_SIZE)
-        assertEquals(mm1, calibrator.initialMm)
-        val mm2 = Matrix.identity(MM_SIZE, MM_SIZE)
-        calibrator.getInitialMm(mm2)
-        assertEquals(mm1, mm2)
-        assertFalse(calibrator.isCommonAxisUsed)
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.KNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.minimumRequiredMeasurements
-        )
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.KNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.requiredMeasurements
-        )
-        assertNull(calibrator.robustMethod)
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.ROBUST_DEFAULT_CONFIDENCE,
-            calibrator.robustConfidence,
-            0.0
-        )
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.ROBUST_DEFAULT_MAX_ITERATIONS,
-            calibrator.robustMaxIterations
-        )
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.KNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.robustPreliminarySubsetSize
-        )
-        assertNull(calibrator.robustThreshold)
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.DEFAULT_ROBUST_THRESHOLD_FACTOR,
-            calibrator.robustThresholdFactor,
-            0.0
-        )
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR,
-            calibrator.robustStopThresholdFactor,
-            0.0
-        )
-        assertNull(calibrator.estimatedMm)
-        assertNull(calibrator.estimatedSx)
-        assertNull(calibrator.estimatedSy)
-        assertNull(calibrator.estimatedSz)
-        assertNull(calibrator.estimatedMxy)
-        assertNull(calibrator.estimatedMxz)
-        assertNull(calibrator.estimatedMyx)
-        assertNull(calibrator.estimatedMyz)
-        assertNull(calibrator.estimatedMzx)
-        assertNull(calibrator.estimatedMzy)
-        assertNull(calibrator.estimatedCovariance)
-        assertNull(calibrator.estimatedChiSq)
-        assertNull(calibrator.estimatedMse)
-        assertNull(calibrator.estimatedHardIronX)
-        assertNull(calibrator.estimatedHardIronY)
-        assertNull(calibrator.estimatedHardIronZ)
-        assertNull(calibrator.estimatedHardIronXAsMeasurement)
-        assertFalse(calibrator.getEstimatedHardIronXAsMeasurement(b))
-        assertNull(calibrator.estimatedHardIronYAsMeasurement)
-        assertFalse(calibrator.getEstimatedHardIronYAsMeasurement(b))
-        assertNull(calibrator.estimatedHardIronZAsMeasurement)
-        assertFalse(calibrator.getEstimatedHardIronZAsMeasurement(b))
-        assertNull(calibrator.estimatedHardIronAsTriad)
-        assertFalse(calibrator.getEstimatedHardIronAsTriad(triad))
-    }
-
-    @Test
-    fun constructor_whenNewCalibrationMeasurementAvailableListener_returnsExpectedValues() {
-        val initializationStartedListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnInitializationStartedListener<SingleSensorStaticIntervalMagnetometerCalibrator>>()
-        val initializationCompletedListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnInitializationCompletedListener<SingleSensorStaticIntervalMagnetometerCalibrator>>()
-        val errorListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnErrorListener<SingleSensorStaticIntervalMagnetometerCalibrator>>()
-        val initialHardIronAvailableListener =
-            mockk<SingleSensorStaticIntervalMagnetometerCalibrator.OnInitialHardIronAvailableListener>()
-        val newCalibrationMeasurementAvailableListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnNewCalibrationMeasurementAvailableListener<SingleSensorStaticIntervalMagnetometerCalibrator, StandardDeviationBodyMagneticFluxDensity>>()
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator =
-            SingleSensorStaticIntervalMagnetometerCalibrator(
-                context,
-                MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
-                SensorDelay.NORMAL,
-                solveCalibrationWhenEnoughMeasurements = false,
-                isGroundTruthInitialHardIron = true,
-                initializationStartedListener,
-                initializationCompletedListener,
-                errorListener,
-                initialHardIronAvailableListener,
-                newCalibrationMeasurementAvailableListener
-            )
-
-        // check default values
-        assertSame(context, calibrator.context)
-        assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
-            calibrator.sensorType
-        )
-        assertEquals(SensorDelay.NORMAL, calibrator.sensorDelay)
-        assertFalse(calibrator.solveCalibrationWhenEnoughMeasurements)
-        assertTrue(calibrator.isGroundTruthInitialHardIron)
-        assertSame(initializationStartedListener, calibrator.initializationStartedListener)
-        assertSame(initializationCompletedListener, calibrator.initializationCompletedListener)
-        assertSame(errorListener, calibrator.errorListener)
-        assertSame(initialHardIronAvailableListener, calibrator.initialHardIronAvailableListener)
-        assertSame(
-            newCalibrationMeasurementAvailableListener,
-            calibrator.newCalibrationMeasurementAvailableListener
-        )
-        assertNull(calibrator.readyToSolveCalibrationListener)
-        assertNull(calibrator.calibrationSolvingStartedListener)
-        assertNull(calibrator.calibrationCompletedListener)
-        assertNull(calibrator.stoppedListener)
-        assertNotNull(calibrator.qualityScoreMapper)
-        assertTrue(calibrator.measurements.isEmpty())
-        assertFalse(calibrator.isReadyToSolveCalibration)
-        assertNull(calibrator.initialMagneticFluxDensityNorm)
-        assertNull(calibrator.initialHardIronX)
-        assertNull(calibrator.initialHardIronY)
-        assertNull(calibrator.initialHardIronZ)
-        assertNull(calibrator.initialHardIronXAsMeasurement)
-        val b = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        assertFalse(calibrator.getInitialHardIronXAsMeasurement(b))
-        assertNull(calibrator.initialHardIronYAsMeasurement)
-        assertFalse(calibrator.getInitialHardIronYAsMeasurement(b))
-        assertNull(calibrator.initialHardIronZAsMeasurement)
-        assertFalse(calibrator.getInitialHardIronZAsMeasurement(b))
-        assertNull(calibrator.initialHardIronAsTriad)
-        val triad = MagneticFluxDensityTriad()
-        assertFalse(calibrator.getInitialHardIronAsTriad(triad))
-        assertFalse(calibrator.running)
-        assertNull(calibrator.magnetometerSensor)
-        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
-            calibrator.initialStaticSamples
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
-            calibrator.thresholdFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
-            calibrator.instantaneousNoiseLevelFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            0.0
-        )
-        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
-        assertEquals(
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            baseNoiseLevel1.value.toDouble(),
-            0.0
-        )
-        assertEquals(MagneticFluxDensityUnit.TESLA, baseNoiseLevel1.unit)
-        val baseNoiseLevel2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
-        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
-        assertNull(calibrator.baseNoiseLevel)
-        assertNull(calibrator.baseNoiseLevelAsMeasurement)
-        assertFalse(calibrator.getBaseNoiseLevelAsMeasurement(b))
-        assertNull(calibrator.baseNoiseLevelPsd)
-        assertNull(calibrator.baseNoiseLevelRootPsd)
-        assertNull(calibrator.threshold)
-        assertNull(calibrator.thresholdAsMeasurement)
-        assertFalse(calibrator.getThresholdAsMeasurement(b))
-        assertNull(calibrator.averageTimeInterval)
-        assertNull(calibrator.averageTimeIntervalAsTime)
-        val time = Time(0.0, TimeUnit.SECOND)
-        assertFalse(calibrator.getAverageTimeIntervalAsTime(time))
-        assertNull(calibrator.timeIntervalVariance)
-        assertNull(calibrator.timeIntervalStandardDeviation)
-        assertNull(calibrator.timeIntervalStandardDeviationAsTime)
-        assertFalse(calibrator.getTimeIntervalStandardDeviationAsTime(time))
-        assertEquals(0.0, calibrator.initialSx, 0.0)
-        assertEquals(0.0, calibrator.initialSy, 0.0)
-        assertEquals(0.0, calibrator.initialSz, 0.0)
-        assertEquals(0.0, calibrator.initialMxy, 0.0)
-        assertEquals(0.0, calibrator.initialMxz, 0.0)
-        assertEquals(0.0, calibrator.initialMyx, 0.0)
-        assertEquals(0.0, calibrator.initialMyz, 0.0)
-        assertEquals(0.0, calibrator.initialMzx, 0.0)
-        assertEquals(0.0, calibrator.initialMzy, 0.0)
-        val mm1 = Matrix(MM_SIZE, MM_SIZE)
-        assertEquals(mm1, calibrator.initialMm)
-        val mm2 = Matrix.identity(MM_SIZE, MM_SIZE)
-        calibrator.getInitialMm(mm2)
-        assertEquals(mm1, mm2)
-        assertFalse(calibrator.isCommonAxisUsed)
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.KNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.minimumRequiredMeasurements
-        )
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.KNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.requiredMeasurements
-        )
-        assertNull(calibrator.robustMethod)
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.ROBUST_DEFAULT_CONFIDENCE,
-            calibrator.robustConfidence,
-            0.0
-        )
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.ROBUST_DEFAULT_MAX_ITERATIONS,
-            calibrator.robustMaxIterations
-        )
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.KNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.robustPreliminarySubsetSize
-        )
-        assertNull(calibrator.robustThreshold)
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.DEFAULT_ROBUST_THRESHOLD_FACTOR,
-            calibrator.robustThresholdFactor,
-            0.0
-        )
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR,
-            calibrator.robustStopThresholdFactor,
-            0.0
-        )
-        assertNull(calibrator.estimatedMm)
-        assertNull(calibrator.estimatedSx)
-        assertNull(calibrator.estimatedSy)
-        assertNull(calibrator.estimatedSz)
-        assertNull(calibrator.estimatedMxy)
-        assertNull(calibrator.estimatedMxz)
-        assertNull(calibrator.estimatedMyx)
-        assertNull(calibrator.estimatedMyz)
-        assertNull(calibrator.estimatedMzx)
-        assertNull(calibrator.estimatedMzy)
-        assertNull(calibrator.estimatedCovariance)
-        assertNull(calibrator.estimatedChiSq)
-        assertNull(calibrator.estimatedMse)
-        assertNull(calibrator.estimatedHardIronX)
-        assertNull(calibrator.estimatedHardIronY)
-        assertNull(calibrator.estimatedHardIronZ)
-        assertNull(calibrator.estimatedHardIronXAsMeasurement)
-        assertFalse(calibrator.getEstimatedHardIronXAsMeasurement(b))
-        assertNull(calibrator.estimatedHardIronYAsMeasurement)
-        assertFalse(calibrator.getEstimatedHardIronYAsMeasurement(b))
-        assertNull(calibrator.estimatedHardIronZAsMeasurement)
-        assertFalse(calibrator.getEstimatedHardIronZAsMeasurement(b))
-        assertNull(calibrator.estimatedHardIronAsTriad)
-        assertFalse(calibrator.getEstimatedHardIronAsTriad(triad))
-    }
-
-    @Test
-    fun constructor_whenReadyToSolveCalibrationListener_returnsExpectedValues() {
-        val initializationStartedListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnInitializationStartedListener<SingleSensorStaticIntervalMagnetometerCalibrator>>()
-        val initializationCompletedListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnInitializationCompletedListener<SingleSensorStaticIntervalMagnetometerCalibrator>>()
-        val errorListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnErrorListener<SingleSensorStaticIntervalMagnetometerCalibrator>>()
-        val initialHardIronAvailableListener =
-            mockk<SingleSensorStaticIntervalMagnetometerCalibrator.OnInitialHardIronAvailableListener>()
-        val newCalibrationMeasurementAvailableListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnNewCalibrationMeasurementAvailableListener<SingleSensorStaticIntervalMagnetometerCalibrator, StandardDeviationBodyMagneticFluxDensity>>()
-        val readyToSolveCalibrationListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnReadyToSolveCalibrationListener<SingleSensorStaticIntervalMagnetometerCalibrator>>()
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator =
-            SingleSensorStaticIntervalMagnetometerCalibrator(
-                context,
-                MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
-                SensorDelay.NORMAL,
-                solveCalibrationWhenEnoughMeasurements = false,
-                isGroundTruthInitialHardIron = true,
-                initializationStartedListener,
-                initializationCompletedListener,
-                errorListener,
-                initialHardIronAvailableListener,
-                newCalibrationMeasurementAvailableListener,
-                readyToSolveCalibrationListener
-            )
-
-        // check default values
-        assertSame(context, calibrator.context)
-        assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
-            calibrator.sensorType
-        )
-        assertEquals(SensorDelay.NORMAL, calibrator.sensorDelay)
-        assertFalse(calibrator.solveCalibrationWhenEnoughMeasurements)
-        assertTrue(calibrator.isGroundTruthInitialHardIron)
-        assertSame(initializationStartedListener, calibrator.initializationStartedListener)
-        assertSame(initializationCompletedListener, calibrator.initializationCompletedListener)
-        assertSame(errorListener, calibrator.errorListener)
-        assertSame(initialHardIronAvailableListener, calibrator.initialHardIronAvailableListener)
-        assertSame(
-            newCalibrationMeasurementAvailableListener,
-            calibrator.newCalibrationMeasurementAvailableListener
-        )
-        assertSame(readyToSolveCalibrationListener, calibrator.readyToSolveCalibrationListener)
-        assertNull(calibrator.calibrationSolvingStartedListener)
-        assertNull(calibrator.calibrationCompletedListener)
-        assertNull(calibrator.stoppedListener)
-        assertNotNull(calibrator.qualityScoreMapper)
-        assertTrue(calibrator.measurements.isEmpty())
-        assertFalse(calibrator.isReadyToSolveCalibration)
-        assertNull(calibrator.initialMagneticFluxDensityNorm)
-        assertNull(calibrator.initialHardIronX)
-        assertNull(calibrator.initialHardIronY)
-        assertNull(calibrator.initialHardIronZ)
-        assertNull(calibrator.initialHardIronXAsMeasurement)
-        val b = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        assertFalse(calibrator.getInitialHardIronXAsMeasurement(b))
-        assertNull(calibrator.initialHardIronYAsMeasurement)
-        assertFalse(calibrator.getInitialHardIronYAsMeasurement(b))
-        assertNull(calibrator.initialHardIronZAsMeasurement)
-        assertFalse(calibrator.getInitialHardIronZAsMeasurement(b))
-        assertNull(calibrator.initialHardIronAsTriad)
-        val triad = MagneticFluxDensityTriad()
-        assertFalse(calibrator.getInitialHardIronAsTriad(triad))
-        assertFalse(calibrator.running)
-        assertNull(calibrator.magnetometerSensor)
-        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
-            calibrator.initialStaticSamples
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
-            calibrator.thresholdFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
-            calibrator.instantaneousNoiseLevelFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            0.0
-        )
-        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
-        assertEquals(
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            baseNoiseLevel1.value.toDouble(),
-            0.0
-        )
-        assertEquals(MagneticFluxDensityUnit.TESLA, baseNoiseLevel1.unit)
-        val baseNoiseLevel2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
-        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
-        assertNull(calibrator.baseNoiseLevel)
-        assertNull(calibrator.baseNoiseLevelAsMeasurement)
-        assertFalse(calibrator.getBaseNoiseLevelAsMeasurement(b))
-        assertNull(calibrator.baseNoiseLevelPsd)
-        assertNull(calibrator.baseNoiseLevelRootPsd)
-        assertNull(calibrator.threshold)
-        assertNull(calibrator.thresholdAsMeasurement)
-        assertFalse(calibrator.getThresholdAsMeasurement(b))
-        assertNull(calibrator.averageTimeInterval)
-        assertNull(calibrator.averageTimeIntervalAsTime)
-        val time = Time(0.0, TimeUnit.SECOND)
-        assertFalse(calibrator.getAverageTimeIntervalAsTime(time))
-        assertNull(calibrator.timeIntervalVariance)
-        assertNull(calibrator.timeIntervalStandardDeviation)
-        assertNull(calibrator.timeIntervalStandardDeviationAsTime)
-        assertFalse(calibrator.getTimeIntervalStandardDeviationAsTime(time))
-        assertEquals(0.0, calibrator.initialSx, 0.0)
-        assertEquals(0.0, calibrator.initialSy, 0.0)
-        assertEquals(0.0, calibrator.initialSz, 0.0)
-        assertEquals(0.0, calibrator.initialMxy, 0.0)
-        assertEquals(0.0, calibrator.initialMxz, 0.0)
-        assertEquals(0.0, calibrator.initialMyx, 0.0)
-        assertEquals(0.0, calibrator.initialMyz, 0.0)
-        assertEquals(0.0, calibrator.initialMzx, 0.0)
-        assertEquals(0.0, calibrator.initialMzy, 0.0)
-        val mm1 = Matrix(MM_SIZE, MM_SIZE)
-        assertEquals(mm1, calibrator.initialMm)
-        val mm2 = Matrix.identity(MM_SIZE, MM_SIZE)
-        calibrator.getInitialMm(mm2)
-        assertEquals(mm1, mm2)
-        assertFalse(calibrator.isCommonAxisUsed)
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.KNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.minimumRequiredMeasurements
-        )
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.KNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.requiredMeasurements
-        )
-        assertNull(calibrator.robustMethod)
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.ROBUST_DEFAULT_CONFIDENCE,
-            calibrator.robustConfidence,
-            0.0
-        )
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.ROBUST_DEFAULT_MAX_ITERATIONS,
-            calibrator.robustMaxIterations
-        )
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.KNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.robustPreliminarySubsetSize
-        )
-        assertNull(calibrator.robustThreshold)
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.DEFAULT_ROBUST_THRESHOLD_FACTOR,
-            calibrator.robustThresholdFactor,
-            0.0
-        )
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR,
-            calibrator.robustStopThresholdFactor,
-            0.0
-        )
-        assertNull(calibrator.estimatedMm)
-        assertNull(calibrator.estimatedSx)
-        assertNull(calibrator.estimatedSy)
-        assertNull(calibrator.estimatedSz)
-        assertNull(calibrator.estimatedMxy)
-        assertNull(calibrator.estimatedMxz)
-        assertNull(calibrator.estimatedMyx)
-        assertNull(calibrator.estimatedMyz)
-        assertNull(calibrator.estimatedMzx)
-        assertNull(calibrator.estimatedMzy)
-        assertNull(calibrator.estimatedCovariance)
-        assertNull(calibrator.estimatedChiSq)
-        assertNull(calibrator.estimatedMse)
-        assertNull(calibrator.estimatedHardIronX)
-        assertNull(calibrator.estimatedHardIronY)
-        assertNull(calibrator.estimatedHardIronZ)
-        assertNull(calibrator.estimatedHardIronXAsMeasurement)
-        assertFalse(calibrator.getEstimatedHardIronXAsMeasurement(b))
-        assertNull(calibrator.estimatedHardIronYAsMeasurement)
-        assertFalse(calibrator.getEstimatedHardIronYAsMeasurement(b))
-        assertNull(calibrator.estimatedHardIronZAsMeasurement)
-        assertFalse(calibrator.getEstimatedHardIronZAsMeasurement(b))
-        assertNull(calibrator.estimatedHardIronAsTriad)
-        assertFalse(calibrator.getEstimatedHardIronAsTriad(triad))
-    }
-
-    @Test
-    fun constructor_whenCalibrationSolvingStartedListener_returnsExpectedValues() {
-        val initializationStartedListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnInitializationStartedListener<SingleSensorStaticIntervalMagnetometerCalibrator>>()
-        val initializationCompletedListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnInitializationCompletedListener<SingleSensorStaticIntervalMagnetometerCalibrator>>()
-        val errorListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnErrorListener<SingleSensorStaticIntervalMagnetometerCalibrator>>()
-        val initialHardIronAvailableListener =
-            mockk<SingleSensorStaticIntervalMagnetometerCalibrator.OnInitialHardIronAvailableListener>()
-        val newCalibrationMeasurementAvailableListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnNewCalibrationMeasurementAvailableListener<SingleSensorStaticIntervalMagnetometerCalibrator, StandardDeviationBodyMagneticFluxDensity>>()
-        val readyToSolveCalibrationListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnReadyToSolveCalibrationListener<SingleSensorStaticIntervalMagnetometerCalibrator>>()
-        val calibrationSolvingStartedListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnCalibrationSolvingStartedListener<SingleSensorStaticIntervalMagnetometerCalibrator>>()
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator =
-            SingleSensorStaticIntervalMagnetometerCalibrator(
-                context,
-                MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
-                SensorDelay.NORMAL,
-                solveCalibrationWhenEnoughMeasurements = false,
-                isGroundTruthInitialHardIron = true,
-                initializationStartedListener,
-                initializationCompletedListener,
-                errorListener,
-                initialHardIronAvailableListener,
-                newCalibrationMeasurementAvailableListener,
-                readyToSolveCalibrationListener,
-                calibrationSolvingStartedListener
-            )
-
-        // check default values
-        assertSame(context, calibrator.context)
-        assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
-            calibrator.sensorType
-        )
-        assertEquals(SensorDelay.NORMAL, calibrator.sensorDelay)
-        assertFalse(calibrator.solveCalibrationWhenEnoughMeasurements)
-        assertTrue(calibrator.isGroundTruthInitialHardIron)
-        assertSame(initializationStartedListener, calibrator.initializationStartedListener)
-        assertSame(initializationCompletedListener, calibrator.initializationCompletedListener)
-        assertSame(errorListener, calibrator.errorListener)
-        assertSame(initialHardIronAvailableListener, calibrator.initialHardIronAvailableListener)
-        assertSame(
-            newCalibrationMeasurementAvailableListener,
-            calibrator.newCalibrationMeasurementAvailableListener
-        )
-        assertSame(readyToSolveCalibrationListener, calibrator.readyToSolveCalibrationListener)
-        assertSame(calibrationSolvingStartedListener, calibrator.calibrationSolvingStartedListener)
-        assertNull(calibrator.calibrationCompletedListener)
-        assertNull(calibrator.stoppedListener)
-        assertNotNull(calibrator.qualityScoreMapper)
-        assertTrue(calibrator.measurements.isEmpty())
-        assertFalse(calibrator.isReadyToSolveCalibration)
-        assertNull(calibrator.initialMagneticFluxDensityNorm)
-        assertNull(calibrator.initialHardIronX)
-        assertNull(calibrator.initialHardIronY)
-        assertNull(calibrator.initialHardIronZ)
-        assertNull(calibrator.initialHardIronXAsMeasurement)
-        val b = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        assertFalse(calibrator.getInitialHardIronXAsMeasurement(b))
-        assertNull(calibrator.initialHardIronYAsMeasurement)
-        assertFalse(calibrator.getInitialHardIronYAsMeasurement(b))
-        assertNull(calibrator.initialHardIronZAsMeasurement)
-        assertFalse(calibrator.getInitialHardIronZAsMeasurement(b))
-        assertNull(calibrator.initialHardIronAsTriad)
-        val triad = MagneticFluxDensityTriad()
-        assertFalse(calibrator.getInitialHardIronAsTriad(triad))
-        assertFalse(calibrator.running)
-        assertNull(calibrator.magnetometerSensor)
-        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
-            calibrator.initialStaticSamples
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
-            calibrator.thresholdFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
-            calibrator.instantaneousNoiseLevelFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            0.0
-        )
-        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
-        assertEquals(
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            baseNoiseLevel1.value.toDouble(),
-            0.0
-        )
-        assertEquals(MagneticFluxDensityUnit.TESLA, baseNoiseLevel1.unit)
-        val baseNoiseLevel2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
-        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
-        assertNull(calibrator.baseNoiseLevel)
-        assertNull(calibrator.baseNoiseLevelAsMeasurement)
-        assertFalse(calibrator.getBaseNoiseLevelAsMeasurement(b))
-        assertNull(calibrator.baseNoiseLevelPsd)
-        assertNull(calibrator.baseNoiseLevelRootPsd)
-        assertNull(calibrator.threshold)
-        assertNull(calibrator.thresholdAsMeasurement)
-        assertFalse(calibrator.getThresholdAsMeasurement(b))
-        assertNull(calibrator.averageTimeInterval)
-        assertNull(calibrator.averageTimeIntervalAsTime)
-        val time = Time(0.0, TimeUnit.SECOND)
-        assertFalse(calibrator.getAverageTimeIntervalAsTime(time))
-        assertNull(calibrator.timeIntervalVariance)
-        assertNull(calibrator.timeIntervalStandardDeviation)
-        assertNull(calibrator.timeIntervalStandardDeviationAsTime)
-        assertFalse(calibrator.getTimeIntervalStandardDeviationAsTime(time))
-        assertEquals(0.0, calibrator.initialSx, 0.0)
-        assertEquals(0.0, calibrator.initialSy, 0.0)
-        assertEquals(0.0, calibrator.initialSz, 0.0)
-        assertEquals(0.0, calibrator.initialMxy, 0.0)
-        assertEquals(0.0, calibrator.initialMxz, 0.0)
-        assertEquals(0.0, calibrator.initialMyx, 0.0)
-        assertEquals(0.0, calibrator.initialMyz, 0.0)
-        assertEquals(0.0, calibrator.initialMzx, 0.0)
-        assertEquals(0.0, calibrator.initialMzy, 0.0)
-        val mm1 = Matrix(MM_SIZE, MM_SIZE)
-        assertEquals(mm1, calibrator.initialMm)
-        val mm2 = Matrix.identity(MM_SIZE, MM_SIZE)
-        calibrator.getInitialMm(mm2)
-        assertEquals(mm1, mm2)
-        assertFalse(calibrator.isCommonAxisUsed)
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.KNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.minimumRequiredMeasurements
-        )
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.KNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.requiredMeasurements
-        )
-        assertNull(calibrator.robustMethod)
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.ROBUST_DEFAULT_CONFIDENCE,
-            calibrator.robustConfidence,
-            0.0
-        )
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.ROBUST_DEFAULT_MAX_ITERATIONS,
-            calibrator.robustMaxIterations
-        )
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.KNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.robustPreliminarySubsetSize
-        )
-        assertNull(calibrator.robustThreshold)
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.DEFAULT_ROBUST_THRESHOLD_FACTOR,
-            calibrator.robustThresholdFactor,
-            0.0
-        )
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR,
-            calibrator.robustStopThresholdFactor,
-            0.0
-        )
-        assertNull(calibrator.estimatedMm)
-        assertNull(calibrator.estimatedSx)
-        assertNull(calibrator.estimatedSy)
-        assertNull(calibrator.estimatedSz)
-        assertNull(calibrator.estimatedMxy)
-        assertNull(calibrator.estimatedMxz)
-        assertNull(calibrator.estimatedMyx)
-        assertNull(calibrator.estimatedMyz)
-        assertNull(calibrator.estimatedMzx)
-        assertNull(calibrator.estimatedMzy)
-        assertNull(calibrator.estimatedCovariance)
-        assertNull(calibrator.estimatedChiSq)
-        assertNull(calibrator.estimatedMse)
-        assertNull(calibrator.estimatedHardIronX)
-        assertNull(calibrator.estimatedHardIronY)
-        assertNull(calibrator.estimatedHardIronZ)
-        assertNull(calibrator.estimatedHardIronXAsMeasurement)
-        assertFalse(calibrator.getEstimatedHardIronXAsMeasurement(b))
-        assertNull(calibrator.estimatedHardIronYAsMeasurement)
-        assertFalse(calibrator.getEstimatedHardIronYAsMeasurement(b))
-        assertNull(calibrator.estimatedHardIronZAsMeasurement)
-        assertFalse(calibrator.getEstimatedHardIronZAsMeasurement(b))
-        assertNull(calibrator.estimatedHardIronAsTriad)
-        assertFalse(calibrator.getEstimatedHardIronAsTriad(triad))
-    }
-
-    @Test
-    fun constructor_whenCalibrationCompletedListener_returnsExpectedValues() {
-        val initializationStartedListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnInitializationStartedListener<SingleSensorStaticIntervalMagnetometerCalibrator>>()
-        val initializationCompletedListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnInitializationCompletedListener<SingleSensorStaticIntervalMagnetometerCalibrator>>()
-        val errorListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnErrorListener<SingleSensorStaticIntervalMagnetometerCalibrator>>()
-        val initialHardIronAvailableListener =
-            mockk<SingleSensorStaticIntervalMagnetometerCalibrator.OnInitialHardIronAvailableListener>()
-        val newCalibrationMeasurementAvailableListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnNewCalibrationMeasurementAvailableListener<SingleSensorStaticIntervalMagnetometerCalibrator, StandardDeviationBodyMagneticFluxDensity>>()
-        val readyToSolveCalibrationListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnReadyToSolveCalibrationListener<SingleSensorStaticIntervalMagnetometerCalibrator>>()
-        val calibrationSolvingStartedListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnCalibrationSolvingStartedListener<SingleSensorStaticIntervalMagnetometerCalibrator>>()
-        val calibrationCompletedListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnCalibrationCompletedListener<SingleSensorStaticIntervalMagnetometerCalibrator>>()
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator =
-            SingleSensorStaticIntervalMagnetometerCalibrator(
-                context,
-                MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
-                SensorDelay.NORMAL,
-                solveCalibrationWhenEnoughMeasurements = false,
-                isGroundTruthInitialHardIron = true,
-                initializationStartedListener,
-                initializationCompletedListener,
-                errorListener,
-                initialHardIronAvailableListener,
-                newCalibrationMeasurementAvailableListener,
-                readyToSolveCalibrationListener,
-                calibrationSolvingStartedListener,
-                calibrationCompletedListener
-            )
-
-        // check default values
-        assertSame(context, calibrator.context)
-        assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
-            calibrator.sensorType
-        )
-        assertEquals(SensorDelay.NORMAL, calibrator.sensorDelay)
-        assertFalse(calibrator.solveCalibrationWhenEnoughMeasurements)
-        assertTrue(calibrator.isGroundTruthInitialHardIron)
-        assertSame(initializationStartedListener, calibrator.initializationStartedListener)
-        assertSame(initializationCompletedListener, calibrator.initializationCompletedListener)
-        assertSame(errorListener, calibrator.errorListener)
-        assertSame(initialHardIronAvailableListener, calibrator.initialHardIronAvailableListener)
-        assertSame(
-            newCalibrationMeasurementAvailableListener,
-            calibrator.newCalibrationMeasurementAvailableListener
-        )
-        assertSame(readyToSolveCalibrationListener, calibrator.readyToSolveCalibrationListener)
-        assertSame(calibrationSolvingStartedListener, calibrator.calibrationSolvingStartedListener)
-        assertSame(calibrationCompletedListener, calibrator.calibrationCompletedListener)
-        assertNull(calibrator.stoppedListener)
-        assertNotNull(calibrator.qualityScoreMapper)
-        assertTrue(calibrator.measurements.isEmpty())
-        assertFalse(calibrator.isReadyToSolveCalibration)
-        assertNull(calibrator.initialMagneticFluxDensityNorm)
-        assertNull(calibrator.initialHardIronX)
-        assertNull(calibrator.initialHardIronY)
-        assertNull(calibrator.initialHardIronZ)
-        assertNull(calibrator.initialHardIronXAsMeasurement)
-        val b = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        assertFalse(calibrator.getInitialHardIronXAsMeasurement(b))
-        assertNull(calibrator.initialHardIronYAsMeasurement)
-        assertFalse(calibrator.getInitialHardIronYAsMeasurement(b))
-        assertNull(calibrator.initialHardIronZAsMeasurement)
-        assertFalse(calibrator.getInitialHardIronZAsMeasurement(b))
-        assertNull(calibrator.initialHardIronAsTriad)
-        val triad = MagneticFluxDensityTriad()
-        assertFalse(calibrator.getInitialHardIronAsTriad(triad))
-        assertFalse(calibrator.running)
-        assertNull(calibrator.magnetometerSensor)
-        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
-            calibrator.initialStaticSamples
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
-            calibrator.thresholdFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
-            calibrator.instantaneousNoiseLevelFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            0.0
-        )
-        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
-        assertEquals(
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            baseNoiseLevel1.value.toDouble(),
-            0.0
-        )
-        assertEquals(MagneticFluxDensityUnit.TESLA, baseNoiseLevel1.unit)
-        val baseNoiseLevel2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
-        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
-        assertNull(calibrator.baseNoiseLevel)
-        assertNull(calibrator.baseNoiseLevelAsMeasurement)
-        assertFalse(calibrator.getBaseNoiseLevelAsMeasurement(b))
-        assertNull(calibrator.baseNoiseLevelPsd)
-        assertNull(calibrator.baseNoiseLevelRootPsd)
-        assertNull(calibrator.threshold)
-        assertNull(calibrator.thresholdAsMeasurement)
-        assertFalse(calibrator.getThresholdAsMeasurement(b))
-        assertNull(calibrator.averageTimeInterval)
-        assertNull(calibrator.averageTimeIntervalAsTime)
-        val time = Time(0.0, TimeUnit.SECOND)
-        assertFalse(calibrator.getAverageTimeIntervalAsTime(time))
-        assertNull(calibrator.timeIntervalVariance)
-        assertNull(calibrator.timeIntervalStandardDeviation)
-        assertNull(calibrator.timeIntervalStandardDeviationAsTime)
-        assertFalse(calibrator.getTimeIntervalStandardDeviationAsTime(time))
-        assertEquals(0.0, calibrator.initialSx, 0.0)
-        assertEquals(0.0, calibrator.initialSy, 0.0)
-        assertEquals(0.0, calibrator.initialSz, 0.0)
-        assertEquals(0.0, calibrator.initialMxy, 0.0)
-        assertEquals(0.0, calibrator.initialMxz, 0.0)
-        assertEquals(0.0, calibrator.initialMyx, 0.0)
-        assertEquals(0.0, calibrator.initialMyz, 0.0)
-        assertEquals(0.0, calibrator.initialMzx, 0.0)
-        assertEquals(0.0, calibrator.initialMzy, 0.0)
-        val mm1 = Matrix(MM_SIZE, MM_SIZE)
-        assertEquals(mm1, calibrator.initialMm)
-        val mm2 = Matrix.identity(MM_SIZE, MM_SIZE)
-        calibrator.getInitialMm(mm2)
-        assertEquals(mm1, mm2)
-        assertFalse(calibrator.isCommonAxisUsed)
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.KNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.minimumRequiredMeasurements
-        )
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.KNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.requiredMeasurements
-        )
-        assertNull(calibrator.robustMethod)
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.ROBUST_DEFAULT_CONFIDENCE,
-            calibrator.robustConfidence,
-            0.0
-        )
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.ROBUST_DEFAULT_MAX_ITERATIONS,
-            calibrator.robustMaxIterations
-        )
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.KNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.robustPreliminarySubsetSize
-        )
-        assertNull(calibrator.robustThreshold)
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.DEFAULT_ROBUST_THRESHOLD_FACTOR,
-            calibrator.robustThresholdFactor,
-            0.0
-        )
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR,
-            calibrator.robustStopThresholdFactor,
-            0.0
-        )
-        assertNull(calibrator.estimatedMm)
-        assertNull(calibrator.estimatedSx)
-        assertNull(calibrator.estimatedSy)
-        assertNull(calibrator.estimatedSz)
-        assertNull(calibrator.estimatedMxy)
-        assertNull(calibrator.estimatedMxz)
-        assertNull(calibrator.estimatedMyx)
-        assertNull(calibrator.estimatedMyz)
-        assertNull(calibrator.estimatedMzx)
-        assertNull(calibrator.estimatedMzy)
-        assertNull(calibrator.estimatedCovariance)
-        assertNull(calibrator.estimatedChiSq)
-        assertNull(calibrator.estimatedMse)
-        assertNull(calibrator.estimatedHardIronX)
-        assertNull(calibrator.estimatedHardIronY)
-        assertNull(calibrator.estimatedHardIronZ)
-        assertNull(calibrator.estimatedHardIronXAsMeasurement)
-        assertFalse(calibrator.getEstimatedHardIronXAsMeasurement(b))
-        assertNull(calibrator.estimatedHardIronYAsMeasurement)
-        assertFalse(calibrator.getEstimatedHardIronYAsMeasurement(b))
-        assertNull(calibrator.estimatedHardIronZAsMeasurement)
-        assertFalse(calibrator.getEstimatedHardIronZAsMeasurement(b))
-        assertNull(calibrator.estimatedHardIronAsTriad)
-        assertFalse(calibrator.getEstimatedHardIronAsTriad(triad))
-    }
-
-    @Test
-    fun constructor_whenStoppedListener_returnsExpectedValues() {
-        val initializationStartedListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnInitializationStartedListener<SingleSensorStaticIntervalMagnetometerCalibrator>>()
-        val initializationCompletedListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnInitializationCompletedListener<SingleSensorStaticIntervalMagnetometerCalibrator>>()
-        val errorListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnErrorListener<SingleSensorStaticIntervalMagnetometerCalibrator>>()
-        val initialHardIronAvailableListener =
-            mockk<SingleSensorStaticIntervalMagnetometerCalibrator.OnInitialHardIronAvailableListener>()
-        val newCalibrationMeasurementAvailableListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnNewCalibrationMeasurementAvailableListener<SingleSensorStaticIntervalMagnetometerCalibrator, StandardDeviationBodyMagneticFluxDensity>>()
-        val readyToSolveCalibrationListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnReadyToSolveCalibrationListener<SingleSensorStaticIntervalMagnetometerCalibrator>>()
-        val calibrationSolvingStartedListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnCalibrationSolvingStartedListener<SingleSensorStaticIntervalMagnetometerCalibrator>>()
-        val calibrationCompletedListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnCalibrationCompletedListener<SingleSensorStaticIntervalMagnetometerCalibrator>>()
-        val stoppedListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnStoppedListener<SingleSensorStaticIntervalMagnetometerCalibrator>>()
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator =
-            SingleSensorStaticIntervalMagnetometerCalibrator(
-                context,
-                MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
-                SensorDelay.NORMAL,
-                solveCalibrationWhenEnoughMeasurements = false,
-                isGroundTruthInitialHardIron = true,
-                initializationStartedListener,
-                initializationCompletedListener,
-                errorListener,
-                initialHardIronAvailableListener,
-                newCalibrationMeasurementAvailableListener,
-                readyToSolveCalibrationListener,
-                calibrationSolvingStartedListener,
-                calibrationCompletedListener,
-                stoppedListener
-            )
-
-        // check default values
-        assertSame(context, calibrator.context)
-        assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
-            calibrator.sensorType
-        )
-        assertEquals(SensorDelay.NORMAL, calibrator.sensorDelay)
-        assertFalse(calibrator.solveCalibrationWhenEnoughMeasurements)
-        assertTrue(calibrator.isGroundTruthInitialHardIron)
-        assertSame(initializationStartedListener, calibrator.initializationStartedListener)
-        assertSame(initializationCompletedListener, calibrator.initializationCompletedListener)
-        assertSame(errorListener, calibrator.errorListener)
-        assertSame(initialHardIronAvailableListener, calibrator.initialHardIronAvailableListener)
-        assertSame(
-            newCalibrationMeasurementAvailableListener,
-            calibrator.newCalibrationMeasurementAvailableListener
-        )
-        assertSame(readyToSolveCalibrationListener, calibrator.readyToSolveCalibrationListener)
-        assertSame(calibrationSolvingStartedListener, calibrator.calibrationSolvingStartedListener)
-        assertSame(calibrationCompletedListener, calibrator.calibrationCompletedListener)
-        assertSame(stoppedListener, calibrator.stoppedListener)
-        assertNotNull(calibrator.qualityScoreMapper)
-        assertTrue(calibrator.measurements.isEmpty())
-        assertFalse(calibrator.isReadyToSolveCalibration)
-        assertNull(calibrator.initialMagneticFluxDensityNorm)
-        assertNull(calibrator.initialHardIronX)
-        assertNull(calibrator.initialHardIronY)
-        assertNull(calibrator.initialHardIronZ)
-        assertNull(calibrator.initialHardIronXAsMeasurement)
-        val b = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        assertFalse(calibrator.getInitialHardIronXAsMeasurement(b))
-        assertNull(calibrator.initialHardIronYAsMeasurement)
-        assertFalse(calibrator.getInitialHardIronYAsMeasurement(b))
-        assertNull(calibrator.initialHardIronZAsMeasurement)
-        assertFalse(calibrator.getInitialHardIronZAsMeasurement(b))
-        assertNull(calibrator.initialHardIronAsTriad)
-        val triad = MagneticFluxDensityTriad()
-        assertFalse(calibrator.getInitialHardIronAsTriad(triad))
-        assertFalse(calibrator.running)
-        assertNull(calibrator.magnetometerSensor)
-        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
-            calibrator.initialStaticSamples
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
-            calibrator.thresholdFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
-            calibrator.instantaneousNoiseLevelFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            0.0
-        )
-        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
-        assertEquals(
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            baseNoiseLevel1.value.toDouble(),
-            0.0
-        )
-        assertEquals(MagneticFluxDensityUnit.TESLA, baseNoiseLevel1.unit)
-        val baseNoiseLevel2 = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
-        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
-        assertNull(calibrator.baseNoiseLevel)
-        assertNull(calibrator.baseNoiseLevelAsMeasurement)
-        assertFalse(calibrator.getBaseNoiseLevelAsMeasurement(b))
-        assertNull(calibrator.baseNoiseLevelPsd)
-        assertNull(calibrator.baseNoiseLevelRootPsd)
-        assertNull(calibrator.threshold)
-        assertNull(calibrator.thresholdAsMeasurement)
-        assertFalse(calibrator.getThresholdAsMeasurement(b))
-        assertNull(calibrator.averageTimeInterval)
-        assertNull(calibrator.averageTimeIntervalAsTime)
-        val time = Time(0.0, TimeUnit.SECOND)
-        assertFalse(calibrator.getAverageTimeIntervalAsTime(time))
-        assertNull(calibrator.timeIntervalVariance)
-        assertNull(calibrator.timeIntervalStandardDeviation)
-        assertNull(calibrator.timeIntervalStandardDeviationAsTime)
-        assertFalse(calibrator.getTimeIntervalStandardDeviationAsTime(time))
-        assertEquals(0.0, calibrator.initialSx, 0.0)
-        assertEquals(0.0, calibrator.initialSy, 0.0)
-        assertEquals(0.0, calibrator.initialSz, 0.0)
-        assertEquals(0.0, calibrator.initialMxy, 0.0)
-        assertEquals(0.0, calibrator.initialMxz, 0.0)
-        assertEquals(0.0, calibrator.initialMyx, 0.0)
-        assertEquals(0.0, calibrator.initialMyz, 0.0)
-        assertEquals(0.0, calibrator.initialMzx, 0.0)
-        assertEquals(0.0, calibrator.initialMzy, 0.0)
-        val mm1 = Matrix(MM_SIZE, MM_SIZE)
-        assertEquals(mm1, calibrator.initialMm)
-        val mm2 = Matrix.identity(MM_SIZE, MM_SIZE)
-        calibrator.getInitialMm(mm2)
-        assertEquals(mm1, mm2)
-        assertFalse(calibrator.isCommonAxisUsed)
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.KNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.minimumRequiredMeasurements
-        )
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.KNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.requiredMeasurements
-        )
-        assertNull(calibrator.robustMethod)
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.ROBUST_DEFAULT_CONFIDENCE,
-            calibrator.robustConfidence,
-            0.0
-        )
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.ROBUST_DEFAULT_MAX_ITERATIONS,
-            calibrator.robustMaxIterations
-        )
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.KNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.robustPreliminarySubsetSize
-        )
-        assertNull(calibrator.robustThreshold)
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.DEFAULT_ROBUST_THRESHOLD_FACTOR,
-            calibrator.robustThresholdFactor,
-            0.0
-        )
-        assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR,
-            calibrator.robustStopThresholdFactor,
-            0.0
-        )
-        assertNull(calibrator.estimatedMm)
-        assertNull(calibrator.estimatedSx)
-        assertNull(calibrator.estimatedSy)
-        assertNull(calibrator.estimatedSz)
-        assertNull(calibrator.estimatedMxy)
-        assertNull(calibrator.estimatedMxz)
-        assertNull(calibrator.estimatedMyx)
-        assertNull(calibrator.estimatedMyz)
-        assertNull(calibrator.estimatedMzx)
-        assertNull(calibrator.estimatedMzy)
-        assertNull(calibrator.estimatedCovariance)
-        assertNull(calibrator.estimatedChiSq)
-        assertNull(calibrator.estimatedMse)
-        assertNull(calibrator.estimatedHardIronX)
-        assertNull(calibrator.estimatedHardIronY)
-        assertNull(calibrator.estimatedHardIronZ)
-        assertNull(calibrator.estimatedHardIronXAsMeasurement)
-        assertFalse(calibrator.getEstimatedHardIronXAsMeasurement(b))
-        assertNull(calibrator.estimatedHardIronYAsMeasurement)
-        assertFalse(calibrator.getEstimatedHardIronYAsMeasurement(b))
-        assertNull(calibrator.estimatedHardIronZAsMeasurement)
-        assertFalse(calibrator.getEstimatedHardIronZAsMeasurement(b))
-        assertNull(calibrator.estimatedHardIronAsTriad)
-        assertFalse(calibrator.getEstimatedHardIronAsTriad(triad))
-    }
-
-    @Test
-    fun constructor_whenQualityScoreMapper_returnsExpectedValues() {
+    fun constructor_whenAllParameters_returnsExpectedValues() {
         val initializationStartedListener =
             mockk<SingleSensorStaticIntervalCalibrator.OnInitializationStartedListener<SingleSensorStaticIntervalMagnetometerCalibrator>>()
         val initializationCompletedListener =
@@ -2587,10 +251,16 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             mockk<SingleSensorStaticIntervalCalibrator.OnStoppedListener<SingleSensorStaticIntervalMagnetometerCalibrator>>()
         val qualityScoreMapper =
             mockk<QualityScoreMapper<StandardDeviationBodyMagneticFluxDensity>>()
+        val location = getLocation()
+        val timestamp = Date()
+        val worldMagneticModel = WorldMagneticModel()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             SingleSensorStaticIntervalMagnetometerCalibrator(
                 context,
+                location,
+                timestamp,
+                worldMagneticModel,
                 MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
                 SensorDelay.NORMAL,
                 solveCalibrationWhenEnoughMeasurements = false,
@@ -2609,6 +279,10 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
 
         // check default values
         assertSame(context, calibrator.context)
+        assertSame(location, calibrator.location)
+        assertSame(timestamp, calibrator.timestamp)
+        assertSame(worldMagneticModel, calibrator.worldMagneticModel)
+        assertFalse(calibrator.isInitialMagneticFluxDensityNormMeasured)
         assertEquals(
             MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
             calibrator.sensorType
@@ -2947,6 +621,112 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
         setPrivateProperty(SingleSensorStaticIntervalCalibrator::class, calibrator, "running", true)
 
         calibrator.isGroundTruthInitialHardIron = true
+    }
+
+    @Test
+    fun location_whenNotRunning_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = SingleSensorStaticIntervalMagnetometerCalibrator(context)
+
+        // check default value
+        assertNull(calibrator.location)
+
+        // set new value
+        val location = getLocation()
+        calibrator.location = location
+
+        // check
+        assertSame(location, calibrator.location)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun location_whenRunning_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = SingleSensorStaticIntervalMagnetometerCalibrator(context)
+
+        setPrivateProperty(SingleSensorStaticIntervalCalibrator::class, calibrator, "running", true)
+
+        calibrator.location = getLocation()
+    }
+
+    @Test
+    fun timestamp_whenNotRunning_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = SingleSensorStaticIntervalMagnetometerCalibrator(context)
+
+        // check default value
+        assertNotNull(calibrator.timestamp)
+
+        // set new value
+        val timestamp = Date()
+        calibrator.timestamp = timestamp
+
+        // check
+        assertSame(timestamp, calibrator.timestamp)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun timestamp_whenRunning_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = SingleSensorStaticIntervalMagnetometerCalibrator(context)
+
+        setPrivateProperty(SingleSensorStaticIntervalCalibrator::class, calibrator, "running", true)
+
+        calibrator.timestamp = Date()
+    }
+
+    @Test
+    fun worldMagneticModel_whenNotRunning_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = SingleSensorStaticIntervalMagnetometerCalibrator(context)
+
+        // check default value
+        assertNull(calibrator.worldMagneticModel)
+
+        // set new value
+        val worldMagneticModel = WorldMagneticModel()
+        calibrator.worldMagneticModel = worldMagneticModel
+
+        // check
+        assertSame(worldMagneticModel, calibrator.worldMagneticModel)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun worldMagneticModel_whenRunning_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = SingleSensorStaticIntervalMagnetometerCalibrator(context)
+
+        setPrivateProperty(SingleSensorStaticIntervalCalibrator::class, calibrator, "running", true)
+
+        calibrator.worldMagneticModel = WorldMagneticModel()
+    }
+
+    @Test
+    fun isInitialMagneticFluxDensityNormMeasured_returnsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = SingleSensorStaticIntervalMagnetometerCalibrator(context)
+
+        // check default values
+        assertTrue(calibrator.isInitialMagneticFluxDensityNormMeasured)
+        assertNull(calibrator.location)
+        assertNotNull(calibrator.timestamp)
+
+        // set location
+        val location = getLocation()
+        calibrator.location = location
+
+        // check
+        assertFalse(calibrator.isInitialMagneticFluxDensityNormMeasured)
+        assertSame(location, calibrator.location)
+        assertNotNull(calibrator.timestamp)
+
+        // unset timestamp
+        calibrator.timestamp = null
+
+        // check
+        assertTrue(calibrator.isInitialMagneticFluxDensityNormMeasured)
+        assertSame(location, calibrator.location)
+        assertNull(calibrator.timestamp)
     }
 
     @Test
@@ -4325,11 +2105,13 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
     }
 
     @Test
-    fun onDynamicIntervalDetected_whenNoInitialMagneticFluxDensityNorm_setsInitialMagneticFluxDensityNorm() {
+    fun onDynamicIntervalDetected_whenNoInitialMagneticFluxDensityNormAndNoLocation_setsInitialMagneticFluxDensityNorm() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = SingleSensorStaticIntervalMagnetometerCalibrator(context)
 
         assertNull(calibrator.initialMagneticFluxDensityNorm)
+        assertNull(calibrator.location)
+        assertTrue(calibrator.isInitialMagneticFluxDensityNormMeasured)
 
         val intervalDetectorDynamicIntervalDetectedListener: IntervalDetector.OnDynamicIntervalDetectedListener<MagnetometerIntervalDetector>? =
             calibrator.getPrivateProperty("intervalDetectorDynamicIntervalDetectedListener")
@@ -4357,11 +2139,13 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
     }
 
     @Test
-    fun onDynamicIntervalDetected_whenInitialMagneticFluxDensityNorm_keepsInitialValue() {
+    fun onDynamicIntervalDetected_whenInitialMagneticFluxDensityNormAndNoLocation_keepsInitialValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = SingleSensorStaticIntervalMagnetometerCalibrator(context)
 
         assertNull(calibrator.initialMagneticFluxDensityNorm)
+        assertNull(calibrator.location)
+        assertTrue(calibrator.isInitialMagneticFluxDensityNormMeasured)
 
         val intervalDetectorDynamicIntervalDetectedListener: IntervalDetector.OnDynamicIntervalDetectedListener<MagnetometerIntervalDetector>? =
             calibrator.getPrivateProperty("intervalDetectorDynamicIntervalDetectedListener")
@@ -4406,6 +2190,40 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
 
         // check that value is preserved
         assertEquals(norm, calibrator.initialMagneticFluxDensityNorm)
+    }
+
+    @Test
+    fun onDynamicIntervalDetected_whenNoInitialMagneticFluxDensityNormAndLocation_doesNotSetInitialMagneticFluxDensityNorm() {
+        val location = getLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = SingleSensorStaticIntervalMagnetometerCalibrator(context, location)
+
+        assertNull(calibrator.initialMagneticFluxDensityNorm)
+        assertSame(location, calibrator.location)
+        assertFalse(calibrator.isInitialMagneticFluxDensityNormMeasured)
+
+        val intervalDetectorDynamicIntervalDetectedListener: IntervalDetector.OnDynamicIntervalDetectedListener<MagnetometerIntervalDetector>? =
+            calibrator.getPrivateProperty("intervalDetectorDynamicIntervalDetectedListener")
+        requireNotNull(intervalDetectorDynamicIntervalDetectedListener)
+
+        val intervalDetector = mockk<MagnetometerIntervalDetector>()
+        intervalDetectorDynamicIntervalDetectedListener.onDynamicIntervalDetected(
+            intervalDetector,
+            1.0,
+            2.0,
+            3.0,
+            4.0,
+            5.0,
+            6.0,
+            7.0,
+            8.0,
+            9.0,
+            10.0,
+            11.0,
+            12.0
+        )
+
+        assertNull(calibrator.initialMagneticFluxDensityNorm)
     }
 
     @Test
@@ -6600,7 +4418,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
     }
 
     @Test
-    fun buildInternalCalibrator_whenNoInitialMagneticFluxDensityNorm_throwsIllegalStateException() {
+    fun buildInternalCalibrator_whenNoInitialMagneticFluxDensityNormAndNoLocation_throwsIllegalStateException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = SingleSensorStaticIntervalMagnetometerCalibrator(context)
 
@@ -6610,6 +4428,103 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             assertNull(calibrator.callPrivateFuncWithResult("buildInternalCalibrator"))
         }
         assertTrue(ex.cause is java.lang.IllegalStateException)
+    }
+
+    @Test
+    fun buildInternalCalibrator_whenLocation_buildsExpectedCalibrator() {
+        val location = getLocation()
+        val worldMagneticModel = WorldMagneticModel()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val calibrator = SingleSensorStaticIntervalMagnetometerCalibrator(
+            context,
+            location,
+            worldMagneticModel = worldMagneticModel,
+            isGroundTruthInitialHardIron = true
+        )
+
+        assertNull(calibrator.initialMagneticFluxDensityNorm)
+        assertSame(location, calibrator.location)
+        assertNotNull(calibrator.timestamp)
+        assertSame(worldMagneticModel, calibrator.worldMagneticModel)
+        assertFalse(calibrator.isInitialMagneticFluxDensityNormMeasured)
+
+        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
+        for (i in 1..13) {
+            calibrator.measurements.add(measurement)
+        }
+
+        calibrator.isCommonAxisUsed = false
+
+        val randomizer = UniformRandomizer()
+        val initialHardIronX = randomizer.nextDouble()
+        val initialHardIronY = randomizer.nextDouble()
+        val initialHardIronZ = randomizer.nextDouble()
+        calibrator.setPrivateProperty("initialHardIronX", initialHardIronX)
+        calibrator.setPrivateProperty("initialHardIronY", initialHardIronY)
+        calibrator.setPrivateProperty("initialHardIronZ", initialHardIronZ)
+        val initialSx = randomizer.nextDouble()
+        val initialSy = randomizer.nextDouble()
+        val initialSz = randomizer.nextDouble()
+        val initialMxy = randomizer.nextDouble()
+        val initialMxz = randomizer.nextDouble()
+        val initialMyx = randomizer.nextDouble()
+        val initialMyz = randomizer.nextDouble()
+        val initialMzx = randomizer.nextDouble()
+        val initialMzy = randomizer.nextDouble()
+        calibrator.setInitialScalingFactorsAndCrossCouplingErrors(
+            initialSx,
+            initialSy,
+            initialSz,
+            initialMxy,
+            initialMxz,
+            initialMyx,
+            initialMyz,
+            initialMzx,
+            initialMzy
+        )
+
+        assertNull(calibrator.robustMethod)
+        assertTrue(calibrator.isGroundTruthInitialHardIron)
+
+        assertNull(calibrator.initialMagneticFluxDensityNorm)
+
+        val internalCalibrator: MagnetometerNonLinearCalibrator? =
+            calibrator.callPrivateFuncWithResult("buildInternalCalibrator")
+        requireNotNull(internalCalibrator)
+
+        // check
+        val internalCalibrator2 =
+            internalCalibrator as KnownHardIronPositionAndInstantMagnetometerCalibrator
+        assertNull(internalCalibrator2.groundTruthMagneticFluxDensityNorm)
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        val calendar = GregorianCalendar()
+        val timestamp = calibrator.timestamp
+        requireNotNull(timestamp)
+        calendar.time = timestamp
+        val year = WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
+        assertEquals(year, internalCalibrator2.year, 0.0)
+        assertSame(worldMagneticModel, internalCalibrator2.magneticModel)
+        assertSame(calibrator.measurements, internalCalibrator2.measurements)
+        assertFalse(internalCalibrator2.isCommonAxisUsed)
+        assertEquals(initialHardIronX, internalCalibrator2.hardIronX, 0.0)
+        assertEquals(initialHardIronY, internalCalibrator2.hardIronY, 0.0)
+        assertEquals(initialHardIronZ, internalCalibrator2.hardIronZ, 0.0)
+        assertEquals(initialSx, internalCalibrator2.initialSx, 0.0)
+        assertEquals(initialSy, internalCalibrator2.initialSy, 0.0)
+        assertEquals(initialSz, internalCalibrator2.initialSz, 0.0)
+        assertEquals(initialMxy, internalCalibrator2.initialMxy, 0.0)
+        assertEquals(initialMxz, internalCalibrator2.initialMxz, 0.0)
+        assertEquals(initialMyx, internalCalibrator2.initialMyx, 0.0)
+        assertEquals(initialMyz, internalCalibrator2.initialMyz, 0.0)
+        assertEquals(initialMzx, internalCalibrator2.initialMzx, 0.0)
+        assertEquals(initialMzy, internalCalibrator2.initialMzy, 0.0)
+
+        assertTrue(internalCalibrator2.isReady)
+        assertEquals(10, internalCalibrator2.minimumRequiredMeasurements)
+        assertEquals(
+            calibrator.minimumRequiredMeasurements,
+            internalCalibrator2.minimumRequiredMeasurements
+        )
     }
 
     @Test
@@ -10862,6 +8777,8 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
         const val MAGNETOMETER_NOISE_STD = 200e-9
 
         const val SMALL_ABSOLUTE_ERROR = 1e-12
+
+        const val ABSOLUTE_ERROR = 1e-6
 
         fun getLocation(): Location {
             val randomizer = UniformRandomizer()
