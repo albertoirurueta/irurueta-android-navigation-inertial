@@ -198,21 +198,9 @@ class MagnetometerIntervalDetector(
                 }
             }
 
-            val bxT = MagneticFluxDensityConverter.convert(
-                bx.toDouble(),
-                MagneticFluxDensityUnit.MICROTESLA,
-                MagneticFluxDensityUnit.TESLA
-            )
-            val byT = MagneticFluxDensityConverter.convert(
-                by.toDouble(),
-                MagneticFluxDensityUnit.MICROTESLA,
-                MagneticFluxDensityUnit.TESLA
-            )
-            val bzT = MagneticFluxDensityConverter.convert(
-                bz.toDouble(),
-                MagneticFluxDensityUnit.MICROTESLA,
-                MagneticFluxDensityUnit.TESLA
-            )
+            val bxT = MagneticFluxDensityConverter.microTeslaToTesla(bx.toDouble())
+            val byT = MagneticFluxDensityConverter.microTeslaToTesla(by.toDouble())
+            val bzT = MagneticFluxDensityConverter.microTeslaToTesla(bz.toDouble())
 
             internalDetector.process(bxT, byT, bzT)
             numberOfProcessedMeasurements++
