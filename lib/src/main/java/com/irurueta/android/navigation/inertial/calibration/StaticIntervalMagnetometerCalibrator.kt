@@ -82,22 +82,22 @@ class StaticIntervalMagnetometerCalibrator private constructor(
     accelerometerSensorDelay: SensorDelay,
     val magnetometerSensorDelay: SensorDelay,
     solveCalibrationWhenEnoughMeasurements: Boolean,
-    initializationStartedListener: OnInitializationStartedListener<StaticIntervalMagnetometerCalibrator>?,
-    initializationCompletedListener: OnInitializationCompletedListener<StaticIntervalMagnetometerCalibrator>?,
-    errorListener: OnErrorListener<StaticIntervalMagnetometerCalibrator>?,
-    staticIntervalDetectedListener: OnStaticIntervalDetectedListener<StaticIntervalMagnetometerCalibrator>?,
-    dynamicIntervalDetectedListener: OnDynamicIntervalDetectedListener<StaticIntervalMagnetometerCalibrator>?,
-    staticIntervalSkippedListener: OnStaticIntervalSkippedListener<StaticIntervalMagnetometerCalibrator>?,
-    dynamicIntervalSkippedListener: OnDynamicIntervalSkippedListener<StaticIntervalMagnetometerCalibrator>?,
+    initializationStartedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalMagnetometerCalibrator>?,
+    initializationCompletedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalMagnetometerCalibrator>?,
+    errorListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalMagnetometerCalibrator>?,
+    staticIntervalDetectedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<StaticIntervalMagnetometerCalibrator>?,
+    dynamicIntervalDetectedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener<StaticIntervalMagnetometerCalibrator>?,
+    staticIntervalSkippedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalSkippedListener<StaticIntervalMagnetometerCalibrator>?,
+    dynamicIntervalSkippedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalSkippedListener<StaticIntervalMagnetometerCalibrator>?,
     var generatedMagnetometerMeasurementListener: OnGeneratedMagnetometerMeasurementListener?,
-    readyToSolveCalibrationListener: OnReadyToSolveCalibrationListener<StaticIntervalMagnetometerCalibrator>?,
-    calibrationSolvingStartedListener: OnCalibrationSolvingStartedListener<StaticIntervalMagnetometerCalibrator>?,
-    calibrationCompletedListener: OnCalibrationCompletedListener<StaticIntervalMagnetometerCalibrator>?,
-    stoppedListener: OnStoppedListener<StaticIntervalMagnetometerCalibrator>?,
+    readyToSolveCalibrationListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener<StaticIntervalMagnetometerCalibrator>?,
+    calibrationSolvingStartedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalMagnetometerCalibrator>?,
+    calibrationCompletedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<StaticIntervalMagnetometerCalibrator>?,
+    stoppedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalMagnetometerCalibrator>?,
     var initialMagnetometerHardIronAvailableListener: OnInitialMagnetometerHardIronAvailableListener?,
     accuracyChangedListener: SensorCollector.OnAccuracyChangedListener?,
     val magnetometerQualityScoreMapper: QualityScoreMapper<StandardDeviationBodyMagneticFluxDensity>
-) : StaticIntervalWithMeasurementGeneratorCalibrator<StaticIntervalMagnetometerCalibrator, BodyKinematicsAndMagneticFluxDensity>(
+) : BaseStaticIntervalWithMeasurementGeneratorCalibrator<StaticIntervalMagnetometerCalibrator, BodyKinematicsAndMagneticFluxDensity>(
     context,
     accelerometerSensorType,
     accelerometerSensorDelay,
@@ -172,18 +172,18 @@ class StaticIntervalMagnetometerCalibrator private constructor(
         magnetometerSensorDelay: SensorDelay = SensorDelay.FASTEST,
         solveCalibrationWhenEnoughMeasurements: Boolean = true,
         isMagnetometerGroundTruthInitialHardIron: Boolean = false,
-        initializationStartedListener: OnInitializationStartedListener<StaticIntervalMagnetometerCalibrator>? = null,
-        initializationCompletedListener: OnInitializationCompletedListener<StaticIntervalMagnetometerCalibrator>? = null,
-        errorListener: OnErrorListener<StaticIntervalMagnetometerCalibrator>? = null,
-        staticIntervalDetectedListener: OnStaticIntervalDetectedListener<StaticIntervalMagnetometerCalibrator>? = null,
-        dynamicIntervalDetectedListener: OnDynamicIntervalDetectedListener<StaticIntervalMagnetometerCalibrator>? = null,
-        staticIntervalSkippedListener: OnStaticIntervalSkippedListener<StaticIntervalMagnetometerCalibrator>? = null,
-        dynamicIntervalSkippedListener: OnDynamicIntervalSkippedListener<StaticIntervalMagnetometerCalibrator>? = null,
+        initializationStartedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalMagnetometerCalibrator>? = null,
+        initializationCompletedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalMagnetometerCalibrator>? = null,
+        errorListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalMagnetometerCalibrator>? = null,
+        staticIntervalDetectedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<StaticIntervalMagnetometerCalibrator>? = null,
+        dynamicIntervalDetectedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener<StaticIntervalMagnetometerCalibrator>? = null,
+        staticIntervalSkippedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalSkippedListener<StaticIntervalMagnetometerCalibrator>? = null,
+        dynamicIntervalSkippedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalSkippedListener<StaticIntervalMagnetometerCalibrator>? = null,
         generatedMagnetometerMeasurementListener: OnGeneratedMagnetometerMeasurementListener? = null,
-        readyToSolveCalibrationListener: OnReadyToSolveCalibrationListener<StaticIntervalMagnetometerCalibrator>? = null,
-        calibrationSolvingStartedListener: OnCalibrationSolvingStartedListener<StaticIntervalMagnetometerCalibrator>? = null,
-        calibrationCompletedListener: OnCalibrationCompletedListener<StaticIntervalMagnetometerCalibrator>? = null,
-        stoppedListener: OnStoppedListener<StaticIntervalMagnetometerCalibrator>? = null,
+        readyToSolveCalibrationListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener<StaticIntervalMagnetometerCalibrator>? = null,
+        calibrationSolvingStartedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalMagnetometerCalibrator>? = null,
+        calibrationCompletedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<StaticIntervalMagnetometerCalibrator>? = null,
+        stoppedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalMagnetometerCalibrator>? = null,
         initialMagnetometerHardIronAvailableListener: OnInitialMagnetometerHardIronAvailableListener? = null,
         accuracyChangedListener: SensorCollector.OnAccuracyChangedListener? = null,
         magnetometerQualityScoreMapper: QualityScoreMapper<StandardDeviationBodyMagneticFluxDensity> = DefaultMagnetometerQualityScoreMapper()
@@ -714,7 +714,7 @@ class StaticIntervalMagnetometerCalibrator private constructor(
      * Gets accelerometer sensor being used for interval detection.
      * This can be used to obtain additional information about the sensor.
      */
-    val accelerometerSensor
+    override val accelerometerSensor
         get() = generator.accelerometerSensor
 
     /**

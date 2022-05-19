@@ -77,22 +77,22 @@ class StaticIntervalGyroscopeCalibrator private constructor(
     accelerometerSensorDelay: SensorDelay,
     val gyroscopeSensorDelay: SensorDelay,
     solveCalibrationWhenEnoughMeasurements: Boolean,
-    initializationStartedListener: OnInitializationStartedListener<StaticIntervalGyroscopeCalibrator>?,
-    initializationCompletedListener: OnInitializationCompletedListener<StaticIntervalGyroscopeCalibrator>?,
-    errorListener: OnErrorListener<StaticIntervalGyroscopeCalibrator>?,
-    staticIntervalDetectedListener: OnStaticIntervalDetectedListener<StaticIntervalGyroscopeCalibrator>?,
-    dynamicIntervalDetectedListener: OnDynamicIntervalDetectedListener<StaticIntervalGyroscopeCalibrator>?,
-    staticIntervalSkippedListener: OnStaticIntervalSkippedListener<StaticIntervalGyroscopeCalibrator>?,
-    dynamicIntervalSkippedListener: OnDynamicIntervalSkippedListener<StaticIntervalGyroscopeCalibrator>?,
+    initializationStartedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalGyroscopeCalibrator>?,
+    initializationCompletedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalGyroscopeCalibrator>?,
+    errorListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalGyroscopeCalibrator>?,
+    staticIntervalDetectedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<StaticIntervalGyroscopeCalibrator>?,
+    dynamicIntervalDetectedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener<StaticIntervalGyroscopeCalibrator>?,
+    staticIntervalSkippedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalSkippedListener<StaticIntervalGyroscopeCalibrator>?,
+    dynamicIntervalSkippedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalSkippedListener<StaticIntervalGyroscopeCalibrator>?,
     var generatedGyroscopeMeasurementListener: OnGeneratedGyroscopeMeasurementListener?,
-    readyToSolveCalibrationListener: OnReadyToSolveCalibrationListener<StaticIntervalGyroscopeCalibrator>?,
-    calibrationSolvingStartedListener: OnCalibrationSolvingStartedListener<StaticIntervalGyroscopeCalibrator>?,
-    calibrationCompletedListener: OnCalibrationCompletedListener<StaticIntervalGyroscopeCalibrator>?,
-    stoppedListener: OnStoppedListener<StaticIntervalGyroscopeCalibrator>?,
+    readyToSolveCalibrationListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener<StaticIntervalGyroscopeCalibrator>?,
+    calibrationSolvingStartedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalGyroscopeCalibrator>?,
+    calibrationCompletedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<StaticIntervalGyroscopeCalibrator>?,
+    stoppedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalGyroscopeCalibrator>?,
     var initialGyroscopeBiasAvailableListener: OnInitialGyroscopeBiasAvailableListener?,
     accuracyChangedListener: SensorCollector.OnAccuracyChangedListener?,
     val gyroscopeQualityScoreMapper: QualityScoreMapper<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>
-) : StaticIntervalWithMeasurementGeneratorCalibrator<StaticIntervalGyroscopeCalibrator, TimedBodyKinematics>(
+) : BaseStaticIntervalWithMeasurementGeneratorCalibrator<StaticIntervalGyroscopeCalibrator, TimedBodyKinematics>(
     context,
     accelerometerSensorType,
     accelerometerSensorDelay,
@@ -158,18 +158,18 @@ class StaticIntervalGyroscopeCalibrator private constructor(
         gyroscopeSensorDelay: SensorDelay = SensorDelay.FASTEST,
         solveCalibrationWhenEnoughMeasurements: Boolean = true,
         isGyroscopeGroundTruthInitialBias: Boolean = false,
-        initializationStartedListener: OnInitializationStartedListener<StaticIntervalGyroscopeCalibrator>? = null,
-        initializationCompletedListener: OnInitializationCompletedListener<StaticIntervalGyroscopeCalibrator>? = null,
-        errorListener: OnErrorListener<StaticIntervalGyroscopeCalibrator>? = null,
-        staticIntervalDetectedListener: OnStaticIntervalDetectedListener<StaticIntervalGyroscopeCalibrator>? = null,
-        dynamicIntervalDetectedListener: OnDynamicIntervalDetectedListener<StaticIntervalGyroscopeCalibrator>? = null,
-        staticIntervalSkippedListener: OnStaticIntervalSkippedListener<StaticIntervalGyroscopeCalibrator>? = null,
-        dynamicIntervalSkippedListener: OnDynamicIntervalSkippedListener<StaticIntervalGyroscopeCalibrator>? = null,
+        initializationStartedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalGyroscopeCalibrator>? = null,
+        initializationCompletedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalGyroscopeCalibrator>? = null,
+        errorListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalGyroscopeCalibrator>? = null,
+        staticIntervalDetectedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<StaticIntervalGyroscopeCalibrator>? = null,
+        dynamicIntervalDetectedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener<StaticIntervalGyroscopeCalibrator>? = null,
+        staticIntervalSkippedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalSkippedListener<StaticIntervalGyroscopeCalibrator>? = null,
+        dynamicIntervalSkippedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalSkippedListener<StaticIntervalGyroscopeCalibrator>? = null,
         generatedGyroscopeMeasurementListener: OnGeneratedGyroscopeMeasurementListener? = null,
-        readyToSolveCalibrationListener: OnReadyToSolveCalibrationListener<StaticIntervalGyroscopeCalibrator>? = null,
-        calibrationSolvingStartedListener: OnCalibrationSolvingStartedListener<StaticIntervalGyroscopeCalibrator>? = null,
-        calibrationCompletedListener: OnCalibrationCompletedListener<StaticIntervalGyroscopeCalibrator>? = null,
-        stoppedListener: OnStoppedListener<StaticIntervalGyroscopeCalibrator>? = null,
+        readyToSolveCalibrationListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener<StaticIntervalGyroscopeCalibrator>? = null,
+        calibrationSolvingStartedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalGyroscopeCalibrator>? = null,
+        calibrationCompletedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<StaticIntervalGyroscopeCalibrator>? = null,
+        stoppedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalGyroscopeCalibrator>? = null,
         initialGyroscopeBiasAvailableListener: OnInitialGyroscopeBiasAvailableListener? = null,
         accuracyChangedListener: SensorCollector.OnAccuracyChangedListener? = null,
         gyroscopeQualityScoreMapper: QualityScoreMapper<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>> = DefaultGyroscopeQualityScoreMapper()
@@ -929,7 +929,7 @@ class StaticIntervalGyroscopeCalibrator private constructor(
      * Gets accelerometer sensor being used for interval detection.
      * This can be used to obtain additional information about the sensor.
      */
-    val accelerometerSensor
+    override val accelerometerSensor
         get() = generator.accelerometerSensor
 
     /**
