@@ -6313,7 +6313,7 @@ class StaticIntervalGyroscopeCalibratorTest {
 
         // set running
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -6354,7 +6354,7 @@ class StaticIntervalGyroscopeCalibratorTest {
 
         // set running
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -6395,7 +6395,7 @@ class StaticIntervalGyroscopeCalibratorTest {
 
         // set running
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -6441,7 +6441,7 @@ class StaticIntervalGyroscopeCalibratorTest {
 
         // set running
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -6514,7 +6514,7 @@ class StaticIntervalGyroscopeCalibratorTest {
 
         // set running
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -6587,7 +6587,7 @@ class StaticIntervalGyroscopeCalibratorTest {
 
         // set running
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -6667,7 +6667,7 @@ class StaticIntervalGyroscopeCalibratorTest {
 
         // set running
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -6745,7 +6745,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -6789,7 +6789,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -6892,7 +6892,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -6928,7 +6928,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -6964,7 +6964,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -7000,7 +7000,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -7036,7 +7036,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -7072,7 +7072,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -7108,7 +7108,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -7144,7 +7144,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -7180,7 +7180,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -7226,7 +7226,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -7290,7 +7290,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -7372,7 +7372,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -7428,7 +7428,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -7484,7 +7484,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -7516,7 +7516,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -7675,7 +7675,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -7725,7 +7725,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -7766,7 +7766,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -7810,7 +7810,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -7856,7 +7856,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -7898,7 +7898,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -7943,7 +7943,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -7974,7 +7974,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -8048,7 +8048,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -8115,7 +8115,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -8150,7 +8150,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -8185,7 +8185,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -8220,7 +8220,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -8255,7 +8255,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -8290,7 +8290,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -8325,7 +8325,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -8360,7 +8360,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -8395,7 +8395,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -8436,7 +8436,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -8495,7 +8495,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -8547,7 +8547,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -8588,7 +8588,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -8630,7 +8630,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -8676,7 +8676,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -8722,7 +8722,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -8772,7 +8772,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -8846,7 +8846,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -8941,7 +8941,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -8983,7 +8983,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         )
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -11592,7 +11592,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -11625,7 +11625,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -11653,7 +11653,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true

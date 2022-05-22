@@ -1021,7 +1021,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -1057,7 +1057,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -1091,7 +1091,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -1519,7 +1519,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -1552,7 +1552,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -1584,7 +1584,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -1678,7 +1678,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -1779,7 +1779,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -1813,7 +1813,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -1847,7 +1847,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -1881,7 +1881,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -1915,7 +1915,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -1949,7 +1949,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -1983,7 +1983,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -2017,7 +2017,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -2051,7 +2051,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -2091,7 +2091,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -2155,7 +2155,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -2237,7 +2237,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -2303,7 +2303,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -2413,7 +2413,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -2451,7 +2451,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -2489,7 +2489,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -2527,7 +2527,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -2565,7 +2565,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -2603,7 +2603,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -2641,7 +2641,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -2679,7 +2679,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -2717,7 +2717,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -2765,7 +2765,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -2831,7 +2831,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -2915,7 +2915,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -2973,7 +2973,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -3094,7 +3094,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -3196,7 +3196,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -3234,7 +3234,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -3272,7 +3272,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -3310,7 +3310,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -3348,7 +3348,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -3386,7 +3386,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -3424,7 +3424,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -3462,7 +3462,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -3500,7 +3500,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -3548,7 +3548,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -3614,7 +3614,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -3698,7 +3698,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -3750,7 +3750,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -3783,7 +3783,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -3817,7 +3817,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -3851,7 +3851,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -4483,7 +4483,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -4537,7 +4537,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -4581,7 +4581,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -4628,7 +4628,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -4677,7 +4677,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -4722,7 +4722,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -4770,7 +4770,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -4802,7 +4802,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -4856,7 +4856,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -4900,7 +4900,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -4947,7 +4947,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -4996,7 +4996,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -5041,7 +5041,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -5089,7 +5089,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -5121,7 +5121,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -5175,7 +5175,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -5219,7 +5219,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -5266,7 +5266,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -5315,7 +5315,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -5360,7 +5360,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -5408,7 +5408,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -5448,7 +5448,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -5492,7 +5492,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -5537,7 +5537,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -5586,7 +5586,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -5635,7 +5635,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -5688,7 +5688,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -5766,7 +5766,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -5866,7 +5866,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -5909,7 +5909,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             )
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -11795,7 +11795,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -11832,7 +11832,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -11869,7 +11869,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -11899,7 +11899,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true

@@ -769,7 +769,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -799,7 +799,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
-        setPrivateProperty(StaticIntervalWithMeasurementGeneratorCalibrator::class,
+        setPrivateProperty(BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator, "running", true)
 
         calibrator.location = getLocation()
@@ -826,7 +826,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
-        setPrivateProperty(StaticIntervalWithMeasurementGeneratorCalibrator::class,
+        setPrivateProperty(BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator, "running", true)
 
         calibrator.timestamp = Date()
@@ -853,7 +853,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
-        setPrivateProperty(StaticIntervalWithMeasurementGeneratorCalibrator::class,
+        setPrivateProperty(BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator, "running", true)
 
         calibrator.worldMagneticModel = WorldMagneticModel()
@@ -968,7 +968,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -1064,7 +1064,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -1096,7 +1096,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -1128,7 +1128,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -1160,7 +1160,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -1192,7 +1192,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -1224,7 +1224,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -1256,7 +1256,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -1288,7 +1288,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -1320,7 +1320,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -1358,7 +1358,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -1420,7 +1420,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -1500,7 +1500,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -1549,7 +1549,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -1579,7 +1579,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -1629,7 +1629,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -1670,7 +1670,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -1714,7 +1714,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -1760,7 +1760,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -1802,7 +1802,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -1847,7 +1847,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -1884,7 +1884,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -1925,7 +1925,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -1967,7 +1967,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -2013,7 +2013,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -2059,7 +2059,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -2109,7 +2109,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -2183,7 +2183,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -2278,7 +2278,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -2320,7 +2320,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         )
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -4263,7 +4263,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -4296,7 +4296,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true
@@ -4324,7 +4324,7 @@ class StaticIntervalMagnetometerCalibratorTest {
         val calibrator = StaticIntervalMagnetometerCalibrator(context)
 
         setPrivateProperty(
-            StaticIntervalWithMeasurementGeneratorCalibrator::class,
+            BaseStaticIntervalWithMeasurementGeneratorCalibrator::class,
             calibrator,
             "running",
             true

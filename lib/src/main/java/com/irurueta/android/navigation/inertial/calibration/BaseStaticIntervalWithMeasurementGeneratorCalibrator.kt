@@ -16,7 +16,7 @@
 package com.irurueta.android.navigation.inertial.calibration
 
 import android.content.Context
-import android.hardware.Sensor
+import com.irurueta.android.navigation.inertial.calibration.intervals.measurements.CalibrationMeasurementGenerator
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
@@ -51,107 +51,47 @@ import com.irurueta.units.Time
  * @param C an implementation of [StaticIntervalWithMeasurementGeneratorCalibrator].
  * @param I type of input data to be processed by internal generator.
  */
-interface StaticIntervalWithMeasurementGeneratorCalibrator<C : StaticIntervalWithMeasurementGeneratorCalibrator<C, I>, I> {
+abstract class BaseStaticIntervalWithMeasurementGeneratorCalibrator<C : StaticIntervalWithMeasurementGeneratorCalibrator<C, I>, I>(
+    override val context: Context,
+    override val accelerometerSensorType: AccelerometerSensorCollector.SensorType = AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+    override val accelerometerSensorDelay: SensorDelay = SensorDelay.FASTEST,
+    override val solveCalibrationWhenEnoughMeasurements: Boolean = true,
+    override var initializationStartedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<C>? = null,
+    override var initializationCompletedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<C>? = null,
+    override var errorListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<C>? = null,
+    override var staticIntervalDetectedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<C>? = null,
+    override var dynamicIntervalDetectedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener<C>? = null,
+    override var staticIntervalSkippedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalSkippedListener<C>? = null,
+    override var dynamicIntervalSkippedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalSkippedListener<C>? = null,
+    override var readyToSolveCalibrationListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener<C>? = null,
+    override var calibrationSolvingStartedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<C>? = null,
+    override var calibrationCompletedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<C>? = null,
+    override var stoppedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<C>? = null,
+    override var accuracyChangedListener: SensorCollector.OnAccuracyChangedListener? = null
+) : StaticIntervalWithMeasurementGeneratorCalibrator<C, I>{
     /**
-     * Android context.
+     * Internal generator to generate measurements for calibration.
      */
-    val context: Context
+    protected abstract val generator: CalibrationMeasurementGenerator<I>
 
     /**
-     * One of the supported accelerometer sensor types.
+     * Indicates whether the generator has picked the first accelerometer measurement.
      */
-    val accelerometerSensorType: AccelerometerSensorCollector.SensorType
-
-    /**
-     * Delay of sensor between samples.
-     */
-    val accelerometerSensorDelay: SensorDelay
-
-    /**
-     * Indicates whether calibration is automatically solved when enough measurements are available.
-     */
-    val solveCalibrationWhenEnoughMeasurements: Boolean
-
-    /**
-     * Listener to notify when initialization starts.
-     */
-    var initializationStartedListener: OnInitializationStartedListener<C>?
-
-    /**
-     * Listener to notify when initialization completes.
-     */
-    var initializationCompletedListener: OnInitializationCompletedListener<C>?
-
-    /**
-     * Listener to notify errors.
-     */
-    var errorListener: OnErrorListener<C>?
-
-    /**
-     * Listener to notify when a static interval is detected.
-     */
-    var staticIntervalDetectedListener: OnStaticIntervalDetectedListener<C>?
-
-    /**
-     * Listener to notify when a dynamic interval is detected.
-     */
-    var dynamicIntervalDetectedListener: OnDynamicIntervalDetectedListener<C>?
-
-    /**
-     * Listener to notify when a static interval is skipped if
-     * its duration is too short.
-     */
-    var staticIntervalSkippedListener: OnStaticIntervalSkippedListener<C>?
-
-    /**
-     * Listener to notify when a dynamic interval is skipped if
-     * its duration is too long.
-     */
-    var dynamicIntervalSkippedListener: OnDynamicIntervalSkippedListener<C>?
-
-    /**
-     * Listener to notify when enough measurements have been
-     * collected and calibrator is ready to solve calibration.
-     */
-    var readyToSolveCalibrationListener: OnReadyToSolveCalibrationListener<C>?
-
-    /**
-     * Listener to notify when calibration solving starts.
-     */
-    var calibrationSolvingStartedListener: OnCalibrationSolvingStartedListener<C>?
-
-    /**
-     * Listener to notify when calibration solving completes.
-     */
-    var calibrationCompletedListener: OnCalibrationCompletedListener<C>?
-
-    /**
-     * Listener to notify when calibrator is stopped.
-     */
-    var stoppedListener: OnStoppedListener<C>?
-
-    /**
-     * Listener to notify when sensor accuracy changes.
-     */
-    var accuracyChangedListener: SensorCollector.OnAccuracyChangedListener?
+    protected val isFirstAccelerometerMeasurement
+        get() = generator.numberOfProcessedAccelerometerMeasurements <= FIRST_MEASUREMENT
 
     /**
      * Indicates whether enough measurements have been picked at static intervals so that the
      * calibration process can be solved.
      */
-    val isReadyToSolveCalibration: Boolean
+    abstract override val isReadyToSolveCalibration: Boolean
 
     /**
      * Indicates whether calibrator is running.
      * While calibrator is running, calibrator parameters cannot be changed.
      */
-    val running: Boolean
-
-    /**
-     * Gets accelerometer sensor being used for interval detection.
-     * This can be used to obtain additional information about the sensor.
-     */
-    val accelerometerSensor: Sensor?
+    override var running: Boolean = false
+        protected set
 
     /**
      * Gets or sets length of number of samples to keep within the window being processed to
@@ -162,7 +102,13 @@ interface StaticIntervalWithMeasurementGeneratorCalibrator<C : StaticIntervalWit
      * @throws IllegalArgumentException if provided value is not valid.
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var windowSize: Int
+    override var windowSize
+        get() = generator.windowSize
+        @Throws(IllegalArgumentException::class, IllegalStateException::class)
+        set(value) {
+            check(!running)
+            generator.windowSize = value
+        }
 
     /**
      * Gets or sets number of samples to be processed initially by the internal
@@ -173,7 +119,13 @@ interface StaticIntervalWithMeasurementGeneratorCalibrator<C : StaticIntervalWit
      * [TriadStaticIntervalDetector.MINIMUM_INITIAL_STATIC_SAMPLES].
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var initialStaticSamples: Int
+    override var initialStaticSamples
+        get() = generator.initialStaticSamples
+        @Throws(IllegalArgumentException::class, IllegalStateException::class)
+        set(value) {
+            check(!running)
+            generator.initialStaticSamples = value
+        }
 
     /**
      * Gets or sets factor to be applied to detected base noise level in order to determine a
@@ -182,7 +134,13 @@ interface StaticIntervalWithMeasurementGeneratorCalibrator<C : StaticIntervalWit
      * @throws IllegalArgumentException if provided value is zero or negative.
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var thresholdFactor: Double
+    override var thresholdFactor
+        get() = generator.thresholdFactor
+        @Throws(IllegalArgumentException::class, IllegalStateException::class)
+        set(value) {
+            check(!running)
+            generator.thresholdFactor = value
+        }
 
     /**
      * Gets or sets factor to determine that a sudden movement has occurred during initialization if
@@ -192,7 +150,13 @@ interface StaticIntervalWithMeasurementGeneratorCalibrator<C : StaticIntervalWit
      * @throws IllegalArgumentException if provided value is zero or negative.
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var instantaneousNoiseLevelFactor: Double
+    override var instantaneousNoiseLevelFactor
+        get() = generator.instantaneousNoiseLevelFactor
+        @Throws(IllegalArgumentException::class, IllegalStateException::class)
+        set(value) {
+            check(!running)
+            generator.instantaneousNoiseLevelFactor = value
+        }
 
     /**
      * Gets or sets overall absolute threshold to determine whether there has been excessive motion
@@ -203,7 +167,13 @@ interface StaticIntervalWithMeasurementGeneratorCalibrator<C : StaticIntervalWit
      * @throws IllegalArgumentException if provided value is zero or negative.
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var baseNoiseLevelAbsoluteThreshold: Double
+    override var baseNoiseLevelAbsoluteThreshold
+        get() = generator.baseNoiseLevelAbsoluteThreshold
+        @Throws(IllegalArgumentException::class, IllegalStateException::class)
+        set(value) {
+            check(!running)
+            generator.baseNoiseLevelAbsoluteThreshold = value
+        }
 
     /**
      * Gets or sets overall absolute threshold to determine whether there has been excessive motion
@@ -213,7 +183,13 @@ interface StaticIntervalWithMeasurementGeneratorCalibrator<C : StaticIntervalWit
      * @throws IllegalArgumentException if provided value is zero or negative.
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var baseNoiseLevelAbsoluteThresholdAsMeasurement: Acceleration
+    override var baseNoiseLevelAbsoluteThresholdAsMeasurement
+        get() = generator.baseNoiseLevelAbsoluteThresholdAsMeasurement
+        @Throws(IllegalArgumentException::class, IllegalStateException::class)
+        set(value) {
+            check(!running)
+            generator.baseNoiseLevelAbsoluteThresholdAsMeasurement = value
+        }
 
     /**
      * Gets overall absolute threshold to determine whether there has been excessive motion during
@@ -222,20 +198,24 @@ interface StaticIntervalWithMeasurementGeneratorCalibrator<C : StaticIntervalWit
      *
      * @param result instance where result will be stored.
      */
-    fun getBaseNoiseLevelAbsoluteThresholdAsMeasurement(result: Acceleration)
+    override fun getBaseNoiseLevelAbsoluteThresholdAsMeasurement(result: Acceleration) {
+        generator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(result)
+    }
 
     /**
      * Gets accelerometer measurement base noise level that has been detected during initialization
      * expressed in meters per squared second (m/s^2).
      * This is only available once internal generator completes initialization.
      */
-    val accelerometerBaseNoiseLevel: Double?
+    override val accelerometerBaseNoiseLevel
+        get() = generator.accelerometerBaseNoiseLevel
 
     /**
      * Gets accelerometer measurement base noise level that has been detected during initialization.
      * This is only available once internal generator completes initialization.
      */
-    val accelerometerBaseNoiseLevelAsMeasurement: Acceleration?
+    override val accelerometerBaseNoiseLevelAsMeasurement
+        get() = generator.accelerometerBaseNoiseLevelAsMeasurement
 
     /**
      * Gets sensor measurement base noise level that has been detected during initialization.
@@ -244,33 +224,39 @@ interface StaticIntervalWithMeasurementGeneratorCalibrator<C : StaticIntervalWit
      * @param result instance where result will be stored.
      * @return true if result is available, false otherwise.
      */
-    fun getAccelerometerBaseNoiseLevelAsMeasurement(result: Acceleration): Boolean
+    override fun getAccelerometerBaseNoiseLevelAsMeasurement(result: Acceleration): Boolean {
+        return generator.getAccelerometerBaseNoiseLevelAsMeasurement(result)
+    }
 
     /**
      * Gets measurement base noise level PSD (Power Spectral Density) expressed in (m^2 * s^-3).
      * This is only available once internal generator completes initialization.
      */
-    val accelerometerBaseNoiseLevelPsd: Double?
+    override val accelerometerBaseNoiseLevelPsd
+        get() = generator.accelerometerBaseNoiseLevelPsd
 
     /**
      * Gets measurement base noise level root PSD (Power Spectral Density) expressed
      * in (m * s^-1.5).
      * This is only available once internal generator completes initialization.
      */
-    val accelerometerBaseNoiseLevelRootPsd: Double?
+    override val accelerometerBaseNoiseLevelRootPsd
+        get() = generator.accelerometerBaseNoiseLevelRootPsd
 
     /**
      * Gets estimated threshold to determine static/dynamic period changes expressed in meters per
      * squared second (m/s^2).
      * This is only available once internal generator completes initialization.
      */
-    val threshold: Double?
+    override val threshold
+        get() = generator.threshold
 
     /**
      * Gets estimated threshold to determine static/dynamic period changes.
      * This is only available once internal generator completes initialization.
      */
-    val thresholdAsMeasurement: Acceleration?
+    override val thresholdAsMeasurement
+        get() = generator.thresholdAsMeasurement
 
     /**
      * Gets estimated threshold to determine static/dynamic period changes.
@@ -279,39 +265,47 @@ interface StaticIntervalWithMeasurementGeneratorCalibrator<C : StaticIntervalWit
      * @param result instance where result will be stored.
      * @return true if result is available, false otherwise.
      */
-    fun getThresholdAsMeasurement(result: Acceleration): Boolean
+    override fun getThresholdAsMeasurement(result: Acceleration): Boolean {
+        return generator.getThresholdAsMeasurement(result)
+    }
 
     /**
      * Gets number of samples that have been processed in a static period so far.
      */
-    val processedStaticSamples: Int
+    override val processedStaticSamples
+        get() = generator.processedStaticSamples
 
     /**
      * Gets number of samples that have been processed in a dynamic period so far.
      */
-    val processedDynamicSamples: Int
+    override val processedDynamicSamples
+        get() = generator.processedDynamicSamples
 
     /**
      * Indicates whether last static interval must be skipped.
      */
-    val isStaticIntervalSkipped: Boolean
+    override val isStaticIntervalSkipped
+        get() = generator.isStaticIntervalSkipped
 
     /**
      * Indicates whether last dynamic interval must be skipped.
      */
-    val isDynamicIntervalSkipped: Boolean
+    override val isDynamicIntervalSkipped
+        get() = generator.isDynamicIntervalSkipped
 
     /**
      * Gets average time interval between accelerometer samples expressed in seconds (s).
      * This is only available once the internal generator completes initialization.
      */
-    val accelerometerAverageTimeInterval: Double?
+    override val accelerometerAverageTimeInterval
+        get() = generator.accelerometerAverageTimeInterval
 
     /**
      * Gets average time interval between accelerometer samples.
      * This is only available once the internal generator completes initialization.
      */
-    val accelerometerAverageTimeIntervalAsTime: Time?
+    override val accelerometerAverageTimeIntervalAsTime
+        get() = generator.accelerometerAverageTimeIntervalAsTime
 
     /**
      * Gets average time interval between accelerometer measurements.
@@ -320,27 +314,32 @@ interface StaticIntervalWithMeasurementGeneratorCalibrator<C : StaticIntervalWit
      * @param result instance where result will be stored.
      * @return true if result is available, false otherwise.
      */
-    fun getAccelerometerAverageTimeIntervalAsTime(result: Time): Boolean
+    override fun getAccelerometerAverageTimeIntervalAsTime(result: Time): Boolean {
+        return generator.getAccelerometerAverageTimeIntervalAsTime(result)
+    }
 
     /**
      * Gets estimated variance of time interval between accelerometer measurements expressed in
      * squared seconds (s^2).
      * This is only available once internal generator completes initialization.
      */
-    val accelerometerTimeIntervalVariance: Double?
+    override val accelerometerTimeIntervalVariance
+        get() = generator.accelerometerTimeIntervalVariance
 
     /**
      * Gets estimated standard deviation of time interval between accelerometer measurements
      * expressed in seconds (s).
      * This is only available once internal generator completes initialization.
      */
-    val accelerometerTimeIntervalStandardDeviation: Double?
+    override val accelerometerTimeIntervalStandardDeviation
+        get() = generator.accelerometerTimeIntervalStandardDeviation
 
     /**
      * Gets estimated standard deviation of time interval between accelerometer measurements.
      * This is only available once internal generator completes initialization.
      */
-    val accelerometerTimeIntervalStandardDeviationAsTime: Time?
+    override val accelerometerTimeIntervalStandardDeviationAsTime
+        get() = generator.accelerometerTimeIntervalStandardDeviationAsTime
 
     /**
      * Gets estimated standard deviation of time interval between accelerometer measurements.
@@ -349,14 +348,16 @@ interface StaticIntervalWithMeasurementGeneratorCalibrator<C : StaticIntervalWit
      * @param result instance where result will be stored.
      * @return true if result is available, false otherwise.
      */
-    fun getAccelerometerTimeIntervalStandardDeviationAsTime(result: Time): Boolean
+    override fun getAccelerometerTimeIntervalStandardDeviationAsTime(result: Time): Boolean {
+        return generator.getAccelerometerTimeIntervalStandardDeviationAsTime(result)
+    }
 
     /**
      * Gets minimum number of required measurements to start calibration.
      * Each time that the device is kept static, a new measurement is collected.
      * When the required number of measurements is collected, calibration can start.
      */
-    val minimumRequiredMeasurements: Int
+    abstract override val minimumRequiredMeasurements: Int
 
     /**
      * Required number of measurements to be collected before calibration can start.
@@ -367,13 +368,20 @@ interface StaticIntervalWithMeasurementGeneratorCalibrator<C : StaticIntervalWit
      * @throws IllegalArgumentException if provided value is zero or negative.
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var requiredMeasurements: Int
+    override var requiredMeasurements: Int = 0
+        @Throws(IllegalArgumentException::class, IllegalStateException::class)
+        set(value) {
+            require(value > 0)
+            check(!running)
+            field = value
+        }
 
 
     /**
      * Number of accelerometer measurements that have been processed.
      */
-    val numberOfProcessedAccelerometerMeasurements: Int
+    override val numberOfProcessedAccelerometerMeasurements
+        get() = generator.numberOfProcessedAccelerometerMeasurements
 
     /**
      * Starts calibrator.
@@ -390,13 +398,22 @@ interface StaticIntervalWithMeasurementGeneratorCalibrator<C : StaticIntervalWit
      * missing.
      */
     @Throws(IllegalStateException::class)
-    fun start()
+    override fun start() {
+        check(!running)
+
+        reset()
+
+        running = true
+        generator.start()
+    }
 
     /**
      * Stops calibrator.
      * When this is called, no more sensor measurements are collected.
      */
-    fun stop()
+    override fun stop() {
+        internalStop(false)
+    }
 
     /**
      * Solves calibration using collected measurements.
@@ -409,172 +426,44 @@ interface StaticIntervalWithMeasurementGeneratorCalibrator<C : StaticIntervalWit
      * have already been collected.
      */
     @Throws(IllegalStateException::class)
-    fun calibrate(): Boolean
-
-    /**
-     * Interface to notify when calibrator starts initialization.
-     *
-     * @param C an implementation of [StaticIntervalWithMeasurementGeneratorCalibrator].
-     */
-    fun interface OnInitializationStartedListener<C : StaticIntervalWithMeasurementGeneratorCalibrator<C, *>> {
-        /**
-         * Called when calibrator starts initialization to determine base noise level when device
-         * remains static.
-         *
-         * @param calibrator calibrator that raised the event.
-         */
-        fun onInitializationStarted(calibrator: C)
+    override fun calibrate(): Boolean {
+        check(isReadyToSolveCalibration)
+        check(!running)
+        return internalCalibrate()
     }
 
     /**
-     * Interface to notify when calibrator successfully completes initialization.
+     * Stops calibrator.
+     * When this is called, no more magnetometer measurements are collected.
      *
-     * @param C an implementation of [StaticIntervalWithMeasurementGeneratorCalibrator].
+     * @param running specifies the running parameter to be set. This is true when stop occurs
+     * internally during measurement collection to start solving calibration, otherwise is false
+     * when calling public [stop] method.
      */
-    fun interface OnInitializationCompletedListener<C : StaticIntervalWithMeasurementGeneratorCalibrator<C, *>> {
-        /**
-         * Called when calibrator successfully completes initialization to determine base noise
-         * level when device remains static.
-         *
-         * @param calibrator calibrator that raised the event.
-         */
-        fun onInitializationCompleted(calibrator: C)
+    protected open fun internalStop(running: Boolean) {
+        generator.stop()
+        this.running = running
+
+        @Suppress("UNCHECKED_CAST")
+        stoppedListener?.onStopped(this as C)
     }
 
     /**
-     * Interface to notify when an error occurs.
-     *
-     * @param C an implementation of [StaticIntervalWithMeasurementGeneratorCalibrator].
+     * Internally solves calibration using collected measurements without checking pre-requisites
+     * (if either calibrator is already running or enough measurements are available).
      */
-    fun interface OnErrorListener<C : StaticIntervalWithMeasurementGeneratorCalibrator<C, *>> {
-        /**
-         * Called when an error is detected, either at initialization because excessive noise
-         * is detected, because a sensor becomes unreliable or because obtained
-         * measurements produce a numerically unstable calibration solution.
-         *
-         * @param calibrator calibrator that raised the event.
-         * @param errorReason reason why error was detected.
-         */
-        fun onError(calibrator: C, errorReason: CalibratorErrorReason)
-    }
+    @Throws(IllegalStateException::class)
+    protected abstract fun internalCalibrate(): Boolean
 
     /**
-     * Interface to notify that a new static interval is detected.
-     *
-     * @param C an implementation of [StaticIntervalWithMeasurementGeneratorCalibrator].
+     * Resets calibrator to its initial state.
      */
-    fun interface OnStaticIntervalDetectedListener<C : StaticIntervalWithMeasurementGeneratorCalibrator<C, *>> {
-        /**
-         * Called when a static interval has been detected after initialization.
-         *
-         * @param calibrator calibrator that raised the event.
-         */
-        fun onStaticIntervalDetected(calibrator: C)
-    }
+    protected abstract fun reset()
 
-    /**
-     * Interface to notify that a new dynamic interval is detected.
-     *
-     * @param C an implementation of [StaticIntervalWithMeasurementGeneratorCalibrator].
-     */
-    fun interface OnDynamicIntervalDetectedListener<C : StaticIntervalWithMeasurementGeneratorCalibrator<C, *>> {
+    companion object {
         /**
-         * Called when a dynamic interval has been detected after initialization.
-         *
-         * @param calibrator calibrator that raised the event.
+         * Indicates when first sensor measurement is obtained.
          */
-        fun onDynamicIntervalDetected(calibrator: C)
-    }
-
-    /**
-     * Interface to notify when a static interval is skipped.
-     * This happens when interval is too short.
-     *
-     * @param C an implementation of [StaticIntervalWithMeasurementGeneratorCalibrator].
-     */
-    fun interface OnStaticIntervalSkippedListener<C : StaticIntervalWithMeasurementGeneratorCalibrator<C, *>> {
-        /**
-         * Called when a detected static interval is skipped because there are not enough samples to
-         * be processed.
-         *
-         * @param calibrator calibrator that raised the event.
-         */
-        fun onStaticIntervalSkipped(calibrator: C)
-    }
-
-    /**
-     * Interface to notify when a dynamic interval is skipped.
-     * This happens when interval is too long.
-     *
-     * @param C an implementation of [StaticIntervalWithMeasurementGeneratorCalibrator].
-     */
-    fun interface OnDynamicIntervalSkippedListener<C : StaticIntervalWithMeasurementGeneratorCalibrator<C, *>> {
-        /**
-         * Called when a detected dynamic interval is skipped because it has too many samples in it.
-         *
-         * @param calibrator calibrator that raised the event.
-         */
-        fun onDynamicIntervalSkipped(calibrator: C)
-    }
-
-    /**
-     * Interface to notify when enough measurements are obtained to start solving calibration.
-     *
-     * @param C an implementation of [StaticIntervalWithMeasurementGeneratorCalibrator].
-     */
-    fun interface OnReadyToSolveCalibrationListener<C : StaticIntervalWithMeasurementGeneratorCalibrator<C, *>> {
-        /**
-         * Called when enough measurements are obtained to start solving calibration.
-         *
-         * @param calibrator calibrator that raised the event.
-         */
-        fun onReadyToSolveCalibration(calibrator: C)
-    }
-
-    /**
-     * Interface to notify when calibration starts being solved.
-     *
-     * @param C an implementation of [StaticIntervalWithMeasurementGeneratorCalibrator].
-     */
-    fun interface OnCalibrationSolvingStartedListener<C : StaticIntervalWithMeasurementGeneratorCalibrator<C, *>> {
-        /**
-         * Called when calibration starts being solved after enough measurements are found.
-         * Calibration can automatically started when enough measurements are available if
-         * [solveCalibrationWhenEnoughMeasurements] is true, otherwise [calibrate] must be called
-         * after enough measurements are found, which raises this event.
-         *
-         * @param calibrator calibrator that raised the event.
-         */
-        fun onCalibrationSolvingStarted(calibrator: C)
-    }
-
-    /**
-     * Interface to notify when calibration is solved and completed.
-     *
-     * @param C an implementation of [StaticIntervalWithMeasurementGeneratorCalibrator]
-     */
-    fun interface OnCalibrationCompletedListener<C : StaticIntervalWithMeasurementGeneratorCalibrator<C, *>> {
-        /**
-         * Called when calibration successfully completes.
-         *
-         * @param calibrator calibrator that raised the event.
-         */
-        fun onCalibrationCompleted(calibrator: C)
-    }
-
-    /**
-     * Interface to notify when measurement collection stops.
-     * This happens automatically when enough measurements are found after periods when
-     * device stops being static, or if an error occurs.
-     */
-    fun interface OnStoppedListener<C : StaticIntervalWithMeasurementGeneratorCalibrator<C, *>> {
-        /**
-         * Called when measurement collection stops.
-         * This happens automatically when enough measurements are found after periods when
-         * device stops being static, or if an error occurs.
-         *
-         * @param calibrator calibrator that raised the event.
-         */
-        fun onStopped(calibrator: C)
+        private const val FIRST_MEASUREMENT = 1
     }
 }

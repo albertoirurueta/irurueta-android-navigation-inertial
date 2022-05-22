@@ -17,45 +17,28 @@ package com.irurueta.android.navigation.inertial.calibration
 
 import android.content.Context
 import android.location.Location
-import android.util.Log
 import com.irurueta.algebra.Matrix
-import com.irurueta.android.navigation.inertial.GravityHelper
-import com.irurueta.android.navigation.inertial.calibration.builder.AccelerometerInternalCalibratorBuilder
-import com.irurueta.android.navigation.inertial.calibration.builder.GyroscopeInternalCalibratorBuilder
-import com.irurueta.android.navigation.inertial.calibration.builder.MagnetometerInternalCalibratorBuilder
-import com.irurueta.android.navigation.inertial.calibration.intervals.measurements.*
-import com.irurueta.android.navigation.inertial.calibration.noise.AccumulatedMeasurementEstimator
-import com.irurueta.android.navigation.inertial.calibration.noise.GravityNormEstimator
-import com.irurueta.android.navigation.inertial.calibration.noise.StopMode
 import com.irurueta.android.navigation.inertial.collectors.*
-import com.irurueta.navigation.NavigationException
-import com.irurueta.navigation.inertial.BodyKinematics
 import com.irurueta.navigation.inertial.calibration.*
-import com.irurueta.navigation.inertial.calibration.accelerometer.AccelerometerNonLinearCalibrator
-import com.irurueta.navigation.inertial.calibration.accelerometer.KnownBiasAccelerometerCalibrator
-import com.irurueta.navigation.inertial.calibration.accelerometer.UnknownBiasAccelerometerCalibrator
-import com.irurueta.navigation.inertial.calibration.gyroscope.GyroscopeNonLinearCalibrator
-import com.irurueta.navigation.inertial.calibration.gyroscope.KnownBiasGyroscopeCalibrator
-import com.irurueta.navigation.inertial.calibration.gyroscope.UnknownBiasGyroscopeCalibrator
+import com.irurueta.navigation.inertial.calibration.intervals.TriadStaticIntervalDetector
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.DefaultAccelerometerQualityScoreMapper
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.DefaultGyroscopeQualityScoreMapper
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.DefaultMagnetometerQualityScoreMapper
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.QualityScoreMapper
-import com.irurueta.navigation.inertial.calibration.magnetometer.KnownHardIronMagnetometerCalibrator
-import com.irurueta.navigation.inertial.calibration.magnetometer.MagnetometerNonLinearCalibrator
-import com.irurueta.navigation.inertial.calibration.magnetometer.UnknownHardIronMagnetometerCalibrator
 import com.irurueta.navigation.inertial.wmm.WorldMagneticModel
-import com.irurueta.numerical.robust.RobustEstimatorMethod
-import com.irurueta.units.*
+import com.irurueta.units.Acceleration
+import com.irurueta.units.AngularSpeed
+import com.irurueta.units.MagneticFluxDensity
+import com.irurueta.units.Time
 import java.util.*
 import kotlin.math.max
 
 /**
  * Collects accelerometer, gyroscope and magnetometer measurements by detecting periods when device
- * remains static or dynamic using the accelerometer, using such periods to determine orientation
- * based on gravity vector at the end of static intervals, and integrating values of gyroscope
- * measurements during dynamic ones, and using static periods to obtain averaged accelerometer and
- * magnetometer values.
+ * remains static or dynamic using the accelerometer and magnetometer, using such periods to
+ * determine orientation based on gravity vector at the end of static intervals, and integrating
+ * values of gyroscope measurements during dynamic ones, and using static periods to obtain
+ * averaged accelerometer and magnetometer values.
  *
  * @property context Android context.
  * @property accelerometerSensorType One of the supported accelerometer sensor types.
@@ -103,55 +86,39 @@ import kotlin.math.max
  * into quality scores, based on the amount of standard deviation (the larger the variability, the
  * worse the score will be).
  */
-class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private constructor(
-    context: Context,
-    accelerometerSensorType: AccelerometerSensorCollector.SensorType,
+class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2 private constructor(
+    override val context: Context,
+    override val accelerometerSensorType: AccelerometerSensorCollector.SensorType,
     val gyroscopeSensorType: GyroscopeSensorCollector.SensorType,
     val magnetometerSensorType: MagnetometerSensorCollector.SensorType,
-    accelerometerSensorDelay: SensorDelay,
+    override val accelerometerSensorDelay: SensorDelay,
     val gyroscopeSensorDelay: SensorDelay,
     val magnetometerSensorDelay: SensorDelay,
-    solveCalibrationWhenEnoughMeasurements: Boolean,
-    initializationStartedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>?,
-    initializationCompletedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>?,
-    errorListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>?,
-    staticIntervalDetectedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>?,
-    dynamicIntervalDetectedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>?,
-    staticIntervalSkippedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalSkippedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>?,
-    dynamicIntervalSkippedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalSkippedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>?,
+    override val solveCalibrationWhenEnoughMeasurements: Boolean,
+    override var initializationStartedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>?,
+    override var initializationCompletedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>?,
+    override var errorListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>?,
+    override var staticIntervalDetectedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>?,
+    override var dynamicIntervalDetectedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>?,
+    override var staticIntervalSkippedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalSkippedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>?,
+    override var dynamicIntervalSkippedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalSkippedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>?,
     var generatedAccelerometerMeasurementListener: OnGeneratedAccelerometerMeasurementListener?,
     var generatedGyroscopeMeasurementListener: OnGeneratedGyroscopeMeasurementListener?,
     var generatedMagnetometerMeasurementListener: OnGeneratedMagnetometerMeasurementListener?,
-    readyToSolveCalibrationListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>?,
-    calibrationSolvingStartedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>?,
-    calibrationCompletedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>?,
-    stoppedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>?,
+    override var readyToSolveCalibrationListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>?,
+    override var calibrationSolvingStartedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>?,
+    override var calibrationCompletedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>?,
+    override var stoppedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>?,
     var unreliableGravityNormEstimationListener: OnUnreliableGravityEstimationListener?,
     var initialAccelerometerBiasAvailableListener: OnInitialAccelerometerBiasAvailableListener?,
     var initialGyroscopeBiasAvailableListener: OnInitialGyroscopeBiasAvailableListener?,
     var initialMagnetometerHardIronAvailableListener: OnInitialMagnetometerHardIronAvailableListener?,
-    accuracyChangedListener: SensorCollector.OnAccuracyChangedListener?,
+    override var accuracyChangedListener: SensorCollector.OnAccuracyChangedListener?,
     val accelerometerQualityScoreMapper: QualityScoreMapper<StandardDeviationBodyKinematics>,
     val gyroscopeQualityScoreMapper: QualityScoreMapper<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>,
     val magnetometerQualityScoreMapper: QualityScoreMapper<StandardDeviationBodyMagneticFluxDensity>
-) : BaseStaticIntervalWithMeasurementGeneratorCalibrator<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator, TimedBodyKinematicsAndMagneticFluxDensity>(
-    context,
-    accelerometerSensorType,
-    accelerometerSensorDelay,
-    solveCalibrationWhenEnoughMeasurements,
-    initializationStartedListener,
-    initializationCompletedListener,
-    errorListener,
-    staticIntervalDetectedListener,
-    dynamicIntervalDetectedListener,
-    staticIntervalSkippedListener,
-    dynamicIntervalSkippedListener,
-    readyToSolveCalibrationListener,
-    calibrationSolvingStartedListener,
-    calibrationCompletedListener,
-    stoppedListener,
-    accuracyChangedListener
-) {
+) : StaticIntervalWithMeasurementGeneratorCalibrator<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2, TimedBodyKinematicsAndMagneticFluxDensity> {
+
     /**
      * Constructor.
      *
@@ -246,20 +213,20 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
         isAccelerometerGroundTruthInitialBias: Boolean = false,
         isGyroscopeGroundTruthInitialBias: Boolean = false,
         isMagnetometerGroundTruthInitialHardIron: Boolean = false,
-        initializationStartedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>? = null,
-        initializationCompletedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>? = null,
-        errorListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>? = null,
-        staticIntervalDetectedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>? = null,
-        dynamicIntervalDetectedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>? = null,
-        staticIntervalSkippedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalSkippedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>? = null,
-        dynamicIntervalSkippedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalSkippedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>? = null,
+        initializationStartedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>? = null,
+        initializationCompletedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>? = null,
+        errorListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>? = null,
+        staticIntervalDetectedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>? = null,
+        dynamicIntervalDetectedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>? = null,
+        staticIntervalSkippedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalSkippedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>? = null,
+        dynamicIntervalSkippedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalSkippedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>? = null,
         generatedAccelerometerMeasurementListener: OnGeneratedAccelerometerMeasurementListener? = null,
         generatedGyroscopeMeasurementListener: OnGeneratedGyroscopeMeasurementListener? = null,
         generatedMagnetometerMeasurementListener: OnGeneratedMagnetometerMeasurementListener? = null,
-        readyToSolveCalibrationListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>? = null,
-        calibrationSolvingStartedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>? = null,
-        calibrationCompletedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>? = null,
-        stoppedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>? = null,
+        readyToSolveCalibrationListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>? = null,
+        calibrationSolvingStartedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>? = null,
+        calibrationCompletedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>? = null,
+        stoppedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>? = null,
         unreliableGravityNormEstimationListener: OnUnreliableGravityEstimationListener? = null,
         initialAccelerometerBiasAvailableListener: OnInitialAccelerometerBiasAvailableListener? = null,
         initialGyroscopeBiasAvailableListener: OnInitialGyroscopeBiasAvailableListener? = null,
@@ -320,293 +287,698 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
     }
 
     /**
-     * Listener used by internal generator to handle events when initialization is started.
+     * Internal accelerometer and gyroscope calibrator.
      */
-    private val generatorInitializationStartedListener =
-        AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationStartedListener {
-            initializationStartedListener?.onInitializationStarted(this@StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator)
-        }
-
-    /**
-     * Listener used by internal generator to handle events when initialization is completed.
-     */
-    private val generatorInitializationCompletedListener =
-        AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationCompletedListener { _, _ ->
-            initializationCompletedListener?.onInitializationCompleted(this@StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator)
-        }
-
-    /**
-     * Listener used by internal generator to handle events when an error occurs.
-     */
-    private val generatorErrorListener =
-        AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnErrorListener { _, reason ->
-            stop()
-            errorListener?.onError(
-                this@StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator,
-                CalibratorErrorReason.mapErrorReason(reason)
-            )
-        }
-
-    /**
-     * Listener used by internal generator to handle events when a static interval is detected.
-     */
-    private val generatorStaticIntervalDetectedListener =
-        AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnStaticIntervalDetectedListener {
-            staticIntervalDetectedListener?.onStaticIntervalDetected(
-                this@StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator
-            )
-        }
-
-    /**
-     * Listener used by internal generator to handle events when a dynamic interval is detected.
-     */
-    private val generatorDynamicIntervalDetectedListener =
-        AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnDynamicIntervalDetectedListener {
-            dynamicIntervalDetectedListener?.onDynamicIntervalDetected(this@StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator)
-        }
-
-    /**
-     * Listener used by internal generator to handle events when a static interval is skipped.
-     */
-    private val generatorStaticIntervalSkippedListener =
-        AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnStaticIntervalSkippedListener {
-            staticIntervalSkippedListener?.onStaticIntervalSkipped(this@StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator)
-        }
-
-    /**
-     * Listener used by internal generator to handle events when a dynamic interval is skipped.
-     */
-    private val generatorDynamicIntervalSkippedListener =
-        AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnDynamicIntervalSkippedListener {
-            dynamicIntervalSkippedListener?.onDynamicIntervalSkipped(this@StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator)
-        }
-
-    /**
-     * Listener used by internal generator to handle events when a new accelerometer measurement is generated.
-     */
-    private val generatorGeneratedAccelerometerMeasurementListener =
-        AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedAccelerometerMeasurementListener { _, measurement ->
-            accelerometerMeasurements.add(measurement)
-
-            val reqMeasurements = requiredMeasurements.coerceAtLeast(minimumRequiredMeasurements)
-            val measurementsSize = accelerometerMeasurements.size
-
-            generatedAccelerometerMeasurementListener?.onGeneratedAccelerometerMeasurement(
-                this@StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator,
-                measurement,
-                measurementsSize,
-                reqMeasurements
-            )
-
-            checkMeasurementsAndSolveCalibration()
-        }
-
-    /**
-     * Listener  used by internal generator to handle events when a new gyroscope measurement is generated.
-     */
-    private val generatorGeneratedGyroscopeMeasurementListener =
-        AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedGyroscopeMeasurementListener { _, measurement ->
-            gyroscopeMeasurements.add(measurement)
-
-            val reqMeasurements = requiredMeasurements.coerceAtLeast(minimumRequiredMeasurements)
-            val measurementsSize = gyroscopeMeasurements.size
-
-            generatedGyroscopeMeasurementListener?.onGeneratedGyroscopeMeasurement(
-                this@StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator,
-                measurement,
-                measurementsSize,
-                reqMeasurements
-            )
-
-            checkMeasurementsAndSolveCalibration()
-        }
-
-    /**
-     * Listener  used by internal generator to handle events when a new measurement is generated.
-     */
-    private val generatorGeneratedMagnetometerMeasurementListener =
-        AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedMagnetometerMeasurementListener { generator, measurement ->
-            if (isInitialMagneticFluxDensityNormMeasured && initialMagneticFluxDensityNorm == null) {
-                // set initial average magnetic flux density norm measured during initialization
-                initialMagneticFluxDensityNorm = generator.initialMagneticFluxDensityNorm
-            }
-
-            magnetometerMeasurements.add(measurement)
-
-            val reqMeasurements = requiredMeasurements.coerceAtLeast(minimumRequiredMeasurements)
-            val measurementsSize = magnetometerMeasurements.size
-
-            generatedMagnetometerMeasurementListener?.onGeneratedMagnetometerMeasurement(
-                this@StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator,
-                measurement,
-                measurementsSize,
-                reqMeasurements
-            )
-
-            checkMeasurementsAndSolveCalibration()
-        }
-
-    /**
-     * Listener for accelerometer sensor collector.
-     * This is used to determine device calibration and obtain initial guesses
-     * for accelerometer bias (only available if
-     * [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED] is used, otherwise zero
-     * bias is assumed as an initial guess).
-     */
-    private val generatorAccelerometerMeasurementListener =
-        AccelerometerSensorCollector.OnMeasurementListener { _, _, _, bx, by, bz, _, _ ->
-            if (isFirstAccelerometerMeasurement) {
-                updateAccelerometerInitialBiases(bx, by, bz)
-            }
-        }
-
-    /**
-     * Listener for gyroscope sensor collector.
-     * This is used to determine device calibration and obtain initial guesses
-     * for gyroscope bias (only available if
-     * [GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED] is used, otherwise zero
-     * bias is assumed as an initial guess).
-     */
-    private val generatorGyroscopeMeasurementListener =
-        GyroscopeSensorCollector.OnMeasurementListener { _, _, _, bx, by, bz, _, _ ->
-            if (isFirstGyroscopeMeasurement) {
-                updateGyroscopeInitialBiases(bx, by, bz)
-            }
-        }
-
-    /**
-     * Listener for magnetometer sensor collector.
-     * This is used to determine device calibration and obtain initial guesses
-     * for magnetometer hard iron values (only available if
-     * [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED] is used, otherwise zero
-     * hard iron is assumed as an initial guess).
-     */
-    private val generatorMagnetometerMeasurementListener =
-        MagnetometerSensorCollector.OnMeasurementListener { _, _, _, hardIronX, hardIronY, hardIronZ, _, _ ->
-            if (isFirstMagnetometerMeasurement) {
-                val hardIronXTesla = if (hardIronX != null)
-                    MagneticFluxDensityConverter.microTeslaToTesla(hardIronX.toDouble())
-                else
-                    null
-                val hardIronYTesla = if (hardIronY != null)
-                    MagneticFluxDensityConverter.microTeslaToTesla(hardIronY.toDouble())
-                else
-                    null
-                val hardIronZTesla = if (hardIronZ != null)
-                    MagneticFluxDensityConverter.microTeslaToTesla(hardIronZ.toDouble())
-                else
-                    null
-                updateMagnetometerInitialHardIrons(hardIronXTesla, hardIronYTesla, hardIronZTesla)
-            }
-        }
-
-    /**
-     * Listener for gravity norm estimator.
-     * This is used to approximately estimate gravity when no location is provided, by using the
-     * gravity sensor provided by the device.
-     */
-    private val gravityNormCompletedListener =
-        AccumulatedMeasurementEstimator.OnEstimationCompletedListener<GravityNormEstimator> { estimator ->
-            gravityNorm = estimator.averageNorm
-        }
-
-    /**
-     * Listener to handle events when gravity sensor becomes unreliable.
-     * When this happens, result of calibration is marked as unreliable and should probably be
-     * discarded.
-     */
-    private val gravityNormUnreliableListener =
-        AccumulatedMeasurementEstimator.OnUnreliableListener<GravityNormEstimator> {
-            accelerometerResultUnreliable = true
-            unreliableGravityNormEstimationListener?.onUnreliableGravityEstimation(this@StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator)
-        }
-
-    /**
-     * Internal generator to generate measurements for calibration.
-     */
-    override val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
-        context,
-        accelerometerSensorType,
-        accelerometerSensorDelay,
-        gyroscopeSensorType,
-        gyroscopeSensorDelay,
-        magnetometerSensorType,
-        magnetometerSensorDelay,
-        generatorInitializationStartedListener,
-        generatorInitializationCompletedListener,
-        generatorErrorListener,
-        generatorStaticIntervalDetectedListener,
-        generatorDynamicIntervalDetectedListener,
-        generatorStaticIntervalSkippedListener,
-        generatorDynamicIntervalSkippedListener,
-        generatorGeneratedAccelerometerMeasurementListener,
-        generatorGeneratedGyroscopeMeasurementListener,
-        generatorGeneratedMagnetometerMeasurementListener,
-        accelerometerMeasurementListener = generatorAccelerometerMeasurementListener,
-        gyroscopeMeasurementListener = generatorGyroscopeMeasurementListener,
-        magnetometerMeasurementListener = generatorMagnetometerMeasurementListener,
-        accuracyChangedListener = accuracyChangedListener
-    )
-
-    /**
-     * Gravity norm estimator. It is used to estimate gravity norm when no location is provided.
-     */
-    private val gravityNormEstimator: GravityNormEstimator =
-        GravityNormEstimator(
+    private val accelerometerAndGyroscopeCalibrator =
+        StaticIntervalAccelerometerAndGyroscopeCalibrator(
             context,
+            accelerometerSensorType,
+            gyroscopeSensorType,
             accelerometerSensorDelay,
-            initialStaticSamples,
-            stopMode = StopMode.MAX_SAMPLES_ONLY,
-            completedListener = gravityNormCompletedListener,
-            unreliableListener = gravityNormUnreliableListener
+            gyroscopeSensorDelay,
+            solveCalibrationWhenEnoughMeasurements,
+            initializationStartedListener = {
+                accelerometerAndGyroscopeInitializationStarted = true
+                if (!magnetometerInitializationStarted) {
+                    this.initializationStartedListener?.onInitializationStarted(
+                        this@StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2
+                    )
+                }
+            },
+            initializationCompletedListener = {
+                accelerometerAndGyroscopeInitializationCompleted = true
+                if (magnetometerInitializationCompleted) {
+                    this.initializationCompletedListener?.onInitializationCompleted(
+                        this@StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2
+                    )
+                }
+            },
+            errorListener = { _, errorReason ->
+                stop()
+                this.errorListener?.onError(
+                    this@StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2,
+                    errorReason
+                )
+            },
+            staticIntervalDetectedListener = {
+                this.staticIntervalDetectedListener?.onStaticIntervalDetected(
+                    this@StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2
+                )
+            },
+            dynamicIntervalDetectedListener = {
+                this.dynamicIntervalDetectedListener?.onDynamicIntervalDetected(
+                    this@StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2
+                )
+            },
+            staticIntervalSkippedListener = {
+                this.staticIntervalSkippedListener?.onStaticIntervalSkipped(
+                    this@StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2
+                )
+            },
+            dynamicIntervalSkippedListener = {
+                this.dynamicIntervalSkippedListener?.onDynamicIntervalSkipped(
+                    this@StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2
+                )
+            },
+            generatedAccelerometerMeasurementListener = { _, measurement, measurementsFoundSoFar, requiredMeasurements ->
+                this.generatedAccelerometerMeasurementListener?.onGeneratedAccelerometerMeasurement(
+                    this@StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2,
+                    measurement,
+                    measurementsFoundSoFar,
+                    requiredMeasurements
+                )
+            },
+            generatedGyroscopeMeasurementListener = { _, measurement, measurementsFoundSoFar, requiredMeasurements ->
+                this.generatedGyroscopeMeasurementListener?.onGeneratedGyroscopeMeasurement(
+                    this@StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2,
+                    measurement,
+                    measurementsFoundSoFar,
+                    requiredMeasurements
+                )
+            },
+            readyToSolveCalibrationListener = {
+                accelerometerAndGyroscopeReadyToSolveCalibration = true
+                if (magnetometerReadyToSolveCalibration) {
+                    this.readyToSolveCalibrationListener?.onReadyToSolveCalibration(
+                        this@StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2
+                    )
+                }
+            },
+            calibrationSolvingStartedListener = {
+                accelerometerAndGyroscopeCalibrationSolvingStarted = true
+                if (magnetometerReadyToSolveCalibration
+                    && !magnetometerCalibrationSolvingStarted
+                ) {
+                    this.calibrationSolvingStartedListener?.onCalibrationSolvingStarted(
+                        this@StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2
+                    )
+                }
+            },
+            calibrationCompletedListener = {
+                accelerometerAndGyroscopeCalibrationCompleted = true
+                if (magnetometerCalibrationCompleted) {
+                    this.calibrationCompletedListener?.onCalibrationCompleted(
+                        this@StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2
+                    )
+                }
+            },
+            stoppedListener = {
+                accelerometerAndGyroscopeStopped = true
+                if (magnetometerStopped) {
+                    this.stoppedListener?.onStopped(
+                        this@StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2
+                    )
+                }
+            },
+            unreliableGravityNormEstimationListener = {
+                this.unreliableGravityNormEstimationListener?.onUnreliableGravityEstimation(
+                    this@StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2
+                )
+            },
+            initialAccelerometerBiasAvailableListener = { _, biasX, biasY, biasZ ->
+                this.initialAccelerometerBiasAvailableListener?.onInitialBiasAvailable(
+                    this@StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2,
+                    biasX,
+                    biasY,
+                    biasZ
+                )
+            },
+            initialGyroscopeBiasAvailableListener = { _, biasX, biasY, biasZ ->
+                this.initialGyroscopeBiasAvailableListener?.onInitialBiasAvailable(
+                    this@StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2,
+                    biasX,
+                    biasY,
+                    biasZ
+                )
+            },
+            accuracyChangedListener = { accuracy ->
+                this.accuracyChangedListener?.onAccuracyChanged(
+                    accuracy
+                )
+            },
+            accelerometerQualityScoreMapper = accelerometerQualityScoreMapper,
+            gyroscopeQualityScoreMapper = gyroscopeQualityScoreMapper
         )
 
     /**
-     * Internal accelerometer calibrator used to solve the calibration parameters once enough
-     * measurements are collected at static intervals.
+     * Internal magnetometer calibrator.
      */
-    private var accelerometerInternalCalibrator: AccelerometerNonLinearCalibrator? = null
+    private val magnetometerCalibrator = SingleSensorStaticIntervalMagnetometerCalibrator(
+        context,
+        location = null,
+        sensorType = magnetometerSensorType,
+        sensorDelay = magnetometerSensorDelay,
+        solveCalibrationWhenEnoughMeasurements = solveCalibrationWhenEnoughMeasurements,
+        initializationStartedListener = {
+            magnetometerInitializationStarted = true
+            if (!accelerometerAndGyroscopeInitializationStarted) {
+                this.initializationStartedListener?.onInitializationStarted(
+                    this@StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2
+                )
+            }
+        },
+        initializationCompletedListener = {
+            magnetometerInitializationCompleted = true
+            if (accelerometerAndGyroscopeInitializationCompleted) {
+                this.initializationCompletedListener?.onInitializationCompleted(
+                    this@StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2
+                )
+            }
+        },
+        errorListener = { _, errorReason ->
+            stop()
+            this.errorListener?.onError(
+                this@StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2,
+                errorReason
+            )
+        },
+        initialHardIronAvailableListener = { _, hardIronX, hardIronY, hardIronZ ->
+            this.initialMagnetometerHardIronAvailableListener?.onInitialHardIronAvailable(
+                this@StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2,
+                hardIronX,
+                hardIronY,
+                hardIronZ
+            )
+        },
+        newCalibrationMeasurementAvailableListener = { _, newMeasurement, measurementsFoundSoFar, requiredMeasurements ->
+            this.generatedMagnetometerMeasurementListener?.onGeneratedMagnetometerMeasurement(
+                this@StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2,
+                newMeasurement,
+                measurementsFoundSoFar,
+                requiredMeasurements
+            )
+        },
+        readyToSolveCalibrationListener = {
+            magnetometerReadyToSolveCalibration = true
+            if (accelerometerAndGyroscopeReadyToSolveCalibration) {
+                this.readyToSolveCalibrationListener?.onReadyToSolveCalibration(
+                    this@StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2
+                )
+            }
+        },
+        calibrationSolvingStartedListener = {
+            magnetometerCalibrationSolvingStarted = true
+            if (accelerometerAndGyroscopeReadyToSolveCalibration
+                && !accelerometerAndGyroscopeCalibrationSolvingStarted
+            ) {
+                this.calibrationSolvingStartedListener?.onCalibrationSolvingStarted(
+                    this@StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2
+                )
+            }
+        },
+        calibrationCompletedListener = {
+            magnetometerCalibrationCompleted = true
+            if (accelerometerAndGyroscopeCalibrationCompleted) {
+                this.calibrationCompletedListener?.onCalibrationCompleted(
+                    this@StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2
+                )
+            }
+        },
+        stoppedListener = {
+            magnetometerStopped = true
+            if (accelerometerAndGyroscopeStopped) {
+                this.stoppedListener?.onStopped(
+                    this@StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2
+                )
+            }
+        },
+        qualityScoreMapper = magnetometerQualityScoreMapper
+    )
 
     /**
-     * Internal calibrator used to solve the calibration parameters once enough measurements are
-     * collected during dynamic intervals.
+     * Indicates when internal accelerometer and gyroscope calibrator has started its
+     * initialization.
      */
-    private var gyroscopeInternalCalibrator: GyroscopeNonLinearCalibrator? = null
+    private var accelerometerAndGyroscopeInitializationStarted = false
 
     /**
-     * Internal calibrator used to solve the calibration parameters once enough measurements are
-     * collected at static intervals.
+     * Indicates when internal magnetometer calibrator has started its initialization.
      */
-    private var magnetometerInternalCalibrator: MagnetometerNonLinearCalibrator? = null
+    private var magnetometerInitializationStarted = false
+
+    /**
+     * Indicates when internal accelerometer and gyroscope calibrator completes initialization.
+     */
+    private var accelerometerAndGyroscopeInitializationCompleted = false
+
+    /**
+     * Indicates when internal magnetometer calibrator completes initialization.
+     */
+    private var magnetometerInitializationCompleted = false
+
+    /**
+     * Indicates when internal accelerometer and gyroscope calibrator is ready to solve calibration.
+     */
+    private var accelerometerAndGyroscopeReadyToSolveCalibration = false
+
+    /**
+     * Indicates when internal magnetometer calibrator is ready to solve calibration.
+     */
+    private var magnetometerReadyToSolveCalibration = false
+
+    /**
+     * Indicates when internal accelerometer and gyroscope calibrator starts solving calibration.
+     */
+    private var accelerometerAndGyroscopeCalibrationSolvingStarted = false
+
+    /**
+     * Indicates when internal magnetometer calibrator starts solving calibration.
+     */
+    private var magnetometerCalibrationSolvingStarted = false
+
+    /**
+     * Indicates when internal accelerometer and gyroscope calibrator completes calibration.
+     */
+    private var accelerometerAndGyroscopeCalibrationCompleted = false
+
+    /**
+     * Indicates when internal magnetometer calibrator completes calibration.
+     */
+    private var magnetometerCalibrationCompleted = false
+
+    /**
+     * Indicates when internal accelerometer and gyroscope calibrator has been stopped.
+     */
+    private var accelerometerAndGyroscopeStopped = false
+
+    /**
+     * Indicates when internal magnetometer calibrator has been stopped.
+     */
+    private var magnetometerStopped = false
+
+    /**
+     * Indicates whether calibrator is running.
+     * While calibrator is running, calibrator parameters cannot be changed.
+     */
+    override val running: Boolean
+        get() = accelerometerAndGyroscopeCalibrator.running || magnetometerCalibrator.running
+
+    /**
+     * Gets or sets length of number of samples to keep within the window being processed to
+     * determine instantaneous sensor noise level during initialization of the internal calibrator
+     * measurement generator. Window size must always be larger than allowed minimum value, which
+     * is 2 and must have an odd value.
+     *
+     * @throws IllegalArgumentException if provided value is not valid.
+     * @throws IllegalStateException if calibrator is currently running.
+     */
+    override var windowSize
+        get() = accelerometerAndGyroscopeCalibrator.windowSize
+        @Throws(IllegalArgumentException::class, IllegalStateException::class)
+        set(value) {
+            accelerometerAndGyroscopeCalibrator.windowSize = value
+            magnetometerCalibrator.windowSize = value
+        }
+
+    /**
+     * Gets or sets number of samples to be processed initially by the internal
+     * measurement generator, while keeping the sensor static in order to find the base noise level
+     * when device is static.
+     *
+     * @throws IllegalArgumentException if provided value is less than
+     * [TriadStaticIntervalDetector.MINIMUM_INITIAL_STATIC_SAMPLES].
+     * @throws IllegalStateException if calibrator is currently running.
+     */
+    override var initialStaticSamples
+        get() = accelerometerAndGyroscopeCalibrator.initialStaticSamples
+        @Throws(IllegalArgumentException::class, IllegalStateException::class)
+        set(value) {
+            accelerometerAndGyroscopeCalibrator.initialStaticSamples = value
+            magnetometerCalibrator.initialStaticSamples = value
+        }
+
+    /**
+     * Gets or sets factor to be applied to detected base noise level in order to determine a
+     * threshold for static/dynamic period changes. This factor is unit-less.
+     *
+     * @throws IllegalArgumentException if provided value is zero or negative.
+     * @throws IllegalStateException if calibrator is currently running.
+     */
+    override var thresholdFactor
+        get() = accelerometerAndGyroscopeCalibrator.thresholdFactor
+        @Throws(IllegalArgumentException::class, IllegalStateException::class)
+        set(value) {
+            accelerometerAndGyroscopeCalibrator.thresholdFactor = value
+            magnetometerCalibrator.thresholdFactor = value
+        }
+
+    /**
+     * Gets or sets factor to determine that a sudden movement has occurred during initialization if
+     * instantaneous noise level exceeds accumulated noise level by this factor amount. This factor
+     * is unit-less.
+     *
+     * @throws IllegalArgumentException if provided value is zero or negative.
+     * @throws IllegalStateException if calibrator is currently running.
+     */
+    override var instantaneousNoiseLevelFactor
+        get() = accelerometerAndGyroscopeCalibrator.instantaneousNoiseLevelFactor
+        @Throws(IllegalArgumentException::class, IllegalStateException::class)
+        set(value) {
+            accelerometerAndGyroscopeCalibrator.instantaneousNoiseLevelFactor = value
+            magnetometerCalibrator.instantaneousNoiseLevelFactor = value
+        }
+
+    /**
+     * Gets or sets overall absolute threshold to determine whether there has been excessive motion
+     * during the whole initialization phase. Failure will be detected if estimated base noise level
+     * exceeds this threshold when initialization completes. This threshold is expressed in meters
+     * per squared second (m/s^2).
+     *
+     * @throws IllegalArgumentException if provided value is zero or negative.
+     * @throws IllegalStateException if calibrator is currently running.
+     */
+    override var baseNoiseLevelAbsoluteThreshold by accelerometerAndGyroscopeCalibrator::baseNoiseLevelAbsoluteThreshold
+
+    /**
+     * Gets or sets overall absolute threshold to determine whether there has been excessive motion
+     * during the whole initialization phase. Failure will be detected if estimated base noise level
+     * exceeds this threshold when initialization completes.
+     *
+     * @throws IllegalArgumentException if provided value is zero or negative.
+     * @throws IllegalStateException if calibrator is currently running.
+     */
+    override var baseNoiseLevelAbsoluteThresholdAsMeasurement by accelerometerAndGyroscopeCalibrator::baseNoiseLevelAbsoluteThresholdAsMeasurement
+
+    /**
+     * Gets overall absolute threshold to determine whether there has been excessive motion during
+     * the whole initialization phase. Failure will be detected if estimated base noise level
+     * exceeds this threshold when initialization completes.
+     *
+     * @param result instance where result will be stored.
+     */
+    override fun getBaseNoiseLevelAbsoluteThresholdAsMeasurement(result: Acceleration) {
+        accelerometerAndGyroscopeCalibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(result)
+    }
+
+    /**
+     * Gets or sets overall absolute threshold to determine whether there has been excessive motion
+     * during the whole initialization phase. Failure will be detected if estimated base noise level
+     * exceeds this threshold when initialization completes. This threshold is expressed in Teslas
+     * (T).
+     *
+     * @throws IllegalArgumentException if provided value is zero or negative.
+     * @throws IllegalStateException if calibrator is currently running.
+     */
+    var magnetometerBaseNoiseLevelAbsoluteThreshold by magnetometerCalibrator::baseNoiseLevelAbsoluteThreshold
+
+    /**
+     * Gets or sets overall absolute threshold to determine whether there has been excessive motion
+     * during the whole initialization phase. Failure will be detected if estimated base noise level
+     * exceeds this threshold when initialization completes.
+     *
+     * @throws IllegalArgumentException if provided value is zero or negative.
+     * @throws IllegalStateException if calibrator is currently running.
+     */
+    var magnetometerBaseNoiseLevelAbsoluteThresholdAsMeasurement by magnetometerCalibrator::baseNoiseLevelAbsoluteThresholdAsMeasurement
+
+    /**
+     * Gets overall absolute threshold to determine whether there has been excessive motion during
+     * the whole initialization phase. Failure will be detected if estimated base noise level
+     * exceeds this threshold when initialization completes.
+     *
+     * @param result instance where result will be stored.
+     */
+    fun getMagnetometerBaseNoiseLevelAbsoluteThresholdAsMeasurement(result: MagneticFluxDensity) {
+        magnetometerCalibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(result)
+    }
+
+    /**
+     * Gets accelerometer measurement base noise level that has been detected during initialization
+     * expressed in meters per squared second (m/s^2).
+     * This is only available once internal generator completes initialization.
+     */
+    override val accelerometerBaseNoiseLevel by accelerometerAndGyroscopeCalibrator::accelerometerBaseNoiseLevel
+
+    /**
+     * Gets accelerometer measurement base noise level that has been detected during initialization.
+     * This is only available once internal generator completes initialization.
+     */
+    override val accelerometerBaseNoiseLevelAsMeasurement by accelerometerAndGyroscopeCalibrator::accelerometerBaseNoiseLevelAsMeasurement
+
+    /**
+     * Gets sensor measurement base noise level that has been detected during initialization.
+     * This is only available once detector completes initialization.
+     *
+     * @param result instance where result will be stored.
+     * @return true if result is available, false otherwise.
+     */
+    override fun getAccelerometerBaseNoiseLevelAsMeasurement(result: Acceleration): Boolean {
+        return accelerometerAndGyroscopeCalibrator.getAccelerometerBaseNoiseLevelAsMeasurement(
+            result
+        )
+    }
+
+    /**
+     * Gets measurement base noise level PSD (Power Spectral Density) expressed in (m^2 * s^-3).
+     * This is only available once internal generator completes initialization.
+     */
+    override val accelerometerBaseNoiseLevelPsd by accelerometerAndGyroscopeCalibrator::accelerometerBaseNoiseLevelPsd
+
+    /**
+     * Gets measurement base noise level root PSD (Power Spectral Density) expressed
+     * in (m * s^-1.5).
+     * This is only available once internal generator completes initialization.
+     */
+    override val accelerometerBaseNoiseLevelRootPsd by accelerometerAndGyroscopeCalibrator::accelerometerBaseNoiseLevelRootPsd
+
+    /**
+     * Gets magnetometer measurement base noise level PSD (Power Spectral Density) expressed
+     * (T^2 * s).
+     * This is only available once initialization is completed.
+     */
+    val magnetometerBaseNoiseLevelPsd by magnetometerCalibrator::baseNoiseLevelPsd
+
+    /**
+     * Gets magnetometer measurement base noise level root PSD (Power Spectral Density) expressed in
+     * (T * s^0.5).
+     * This is only available once initialization is completed.
+     */
+    val magnetometerBaseNoiseLevelRootPsd by magnetometerCalibrator::baseNoiseLevelRootPsd
+
+    /**
+     * Gets estimated threshold to determine static/dynamic period changes expressed in meters per
+     * squared second (m/s^2).
+     * This is only available once internal generator completes initialization.
+     */
+    override val threshold by accelerometerAndGyroscopeCalibrator::threshold
+
+    /**
+     * Gets estimated threshold to determine static/dynamic period changes.
+     * This is only available once internal generator completes initialization.
+     */
+    override val thresholdAsMeasurement by accelerometerAndGyroscopeCalibrator::thresholdAsMeasurement
+
+    /**
+     * Gets estimated threshold to determine static/dynamic period changes.
+     * This is only available once internal generator completes initialization.
+     *
+     * @param result instance where result will be stored.
+     * @return true if result is available, false otherwise.
+     */
+    override fun getThresholdAsMeasurement(result: Acceleration): Boolean {
+        return accelerometerAndGyroscopeCalibrator.getThresholdAsMeasurement(result)
+    }
+
+    /**
+     * Gets estimated threshold to determine static/dynamic period changes expressed Teslas (T).
+     * This is only available once initialization is completed.
+     */
+    val magnetometerThreshold by magnetometerCalibrator::threshold
+
+    /**
+     * Gets estimated threshold to determine static/dynamic period changes.
+     * This is only available once initialization is completed.
+     */
+    val magnetometerThresholdAsMeasurement by magnetometerCalibrator::thresholdAsMeasurement
+
+    /**
+     * Gets estimated threshold to determine static/dynamic period changes.
+     * This is only available once initialization is completed.
+     *
+     * @param result instance where result will be stored.
+     * @return true if result is available, false otherwise.
+     */
+    fun getMagnetometerThresholdAsMeasurement(result: MagneticFluxDensity): Boolean {
+        return magnetometerCalibrator.getThresholdAsMeasurement(result)
+    }
+
+    /**
+     * Gets number of samples that have been processed in a static period so far.
+     */
+    override val processedStaticSamples by accelerometerAndGyroscopeCalibrator::processedStaticSamples
+
+    /**
+     * Gets number of samples that have been processed in a dynamic period so far.
+     */
+    override val processedDynamicSamples by accelerometerAndGyroscopeCalibrator::processedDynamicSamples
+
+    /**
+     * Indicates whether last static interval must be skipped.
+     */
+    override val isStaticIntervalSkipped by accelerometerAndGyroscopeCalibrator::isStaticIntervalSkipped
+
+    /**
+     * Indicates whether last dynamic interval must be skipped.
+     */
+    override val isDynamicIntervalSkipped by accelerometerAndGyroscopeCalibrator::isDynamicIntervalSkipped
+
+    /**
+     * Gets average time interval between accelerometer samples expressed in seconds (s).
+     * This is only available once the internal generator completes initialization.
+     */
+    override val accelerometerAverageTimeInterval by accelerometerAndGyroscopeCalibrator::accelerometerAverageTimeInterval
+
+    /**
+     * Gets average time interval between accelerometer samples.
+     * This is only available once the internal generator completes initialization.
+     */
+    override val accelerometerAverageTimeIntervalAsTime by accelerometerAndGyroscopeCalibrator::accelerometerAverageTimeIntervalAsTime
+
+    /**
+     * Gets average time interval between accelerometer measurements.
+     * This is only available once the internal generator completes initialization.
+     *
+     * @param result instance where result will be stored.
+     * @return true if result is available, false otherwise.
+     */
+    override fun getAccelerometerAverageTimeIntervalAsTime(result: Time): Boolean {
+        return accelerometerAndGyroscopeCalibrator.getAccelerometerAverageTimeIntervalAsTime(result)
+    }
+
+    /**
+     * Gets average time interval between magnetometer samples expressed in seconds (s).
+     * Time interval is estimated only while initialization is running, consequently, this is
+     * only available once initialization is completed.
+     */
+    val magnetometerAverageTimeInterval by magnetometerCalibrator::averageTimeInterval
+
+    /**
+     * Gets average time interval between magnetometer samples.
+     * Time interval is estimated only while initialization is running, consequently, this is
+     * only available once initialization is completed.
+     */
+    val magnetometerAverageTimeIntervalAsTime by magnetometerCalibrator::averageTimeIntervalAsTime
+
+    /**
+     * Gets average time interval between magnetometer measurements.
+     * Time interval is estimated only while initialization is running, consequently, this is
+     * only available once initialization is completed.
+     *
+     * @param result instance where result will be stored.
+     * @return true if result is available, false otherwise.
+     */
+    fun getMagnetometerAverageTimeIntervalAsTime(result: Time): Boolean {
+        return magnetometerCalibrator.getAverageTimeIntervalAsTime(result)
+    }
+
+    /**
+     * Gets estimated variance of time interval between accelerometer measurements expressed in
+     * squared seconds (s^2).
+     * This is only available once internal generator completes initialization.
+     */
+    override val accelerometerTimeIntervalVariance by accelerometerAndGyroscopeCalibrator::accelerometerTimeIntervalVariance
+
+    /**
+     * Gets estimated standard deviation of time interval between accelerometer measurements
+     * expressed in seconds (s).
+     * This is only available once internal generator completes initialization.
+     */
+    override val accelerometerTimeIntervalStandardDeviation by accelerometerAndGyroscopeCalibrator::accelerometerTimeIntervalStandardDeviation
+
+    /**
+     * Gets estimated standard deviation of time interval between accelerometer measurements.
+     * This is only available once internal generator completes initialization.
+     */
+    override val accelerometerTimeIntervalStandardDeviationAsTime by accelerometerAndGyroscopeCalibrator::accelerometerTimeIntervalStandardDeviationAsTime
+
+    /**
+     * Gets estimated standard deviation of time interval between accelerometer measurements.
+     * This is only available once internal generator completes initialization.
+     *
+     * @param result instance where result will be stored.
+     * @return true if result is available, false otherwise.
+     */
+    override fun getAccelerometerTimeIntervalStandardDeviationAsTime(result: Time): Boolean {
+        return accelerometerAndGyroscopeCalibrator.getAccelerometerTimeIntervalStandardDeviationAsTime(
+            result
+        )
+    }
+
+    /**
+     * Gets estimated variance of time interval between magnetometer measurements expressed in
+     * squared seconds (s^2).
+     * Time interval is estimated only while initialization is running, consequently, this is
+     * only available once initialization is completed.
+     */
+    val magnetometerTimeIntervalVariance by magnetometerCalibrator::timeIntervalVariance
+
+    /**
+     * Gets estimated standard deviation of time interval between magnetometer measurements
+     * expressed in seconds (s).
+     * Time interval is estimated only while initialization is running, consequently, this is
+     * only available once initialization is completed.
+     */
+    val magnetometerTimeIntervalStandardDeviation by magnetometerCalibrator::timeIntervalStandardDeviation
+
+    /**
+     * Gets estimated standard deviation of time interval between magnetometer measurements.
+     * Time interval is estimated only while initialization is running, consequently, this is
+     * only available once initialization is completed.
+     */
+    val magnetometerTimeIntervalStandardDeviationAsTime by magnetometerCalibrator::timeIntervalStandardDeviationAsTime
+
+    /**
+     * Gets estimated standard deviation of magnetometer time interval between measurements.
+     * Time interval is estimated only while initialization is running, consequently, this is
+     * only available once initialization is completed.
+     *
+     * @param result instance where result will be stored.
+     * @return true if result is available, false othewise.
+     */
+    fun getMagnetometerTimeIntervalStandardDeviationAsTime(result: Time): Boolean {
+        return magnetometerCalibrator.getTimeIntervalStandardDeviationAsTime(result)
+    }
+
+    /**
+     * Required number of measurements to be collected before calibration can start.
+     * The number of required measurements must be greater than [minimumRequiredMeasurements],
+     * otherwise at least [minimumRequiredMeasurements] will be collected before calibration can
+     * start.
+     *
+     * @throws IllegalArgumentException if provided value is zero or negative.
+     * @throws IllegalStateException if calibrator is currently running.
+     */
+    override var requiredMeasurements by accelerometerAndGyroscopeCalibrator::requiredMeasurements
+
+    /**
+     * Number of accelerometer measurements that have been processed.
+     */
+    override val numberOfProcessedAccelerometerMeasurements by accelerometerAndGyroscopeCalibrator::numberOfProcessedAccelerometerMeasurements
 
     /**
      * Norm of average magnetic flux density obtained during initialization and expressed in Teslas.
      */
-    var initialMagneticFluxDensityNorm: Double? = null
-        private set
+    val initialMagneticFluxDensityNorm by magnetometerCalibrator::initialMagneticFluxDensityNorm
 
     /**
      * Indicates whether initial magnetic flux density norm is measured or not.
      * If either [location] or [timestamp] is missing, magnetic flux density norm is measured,
      * otherwise an estimation is used based on World Magnetic Model.
      */
-    val isInitialMagneticFluxDensityNormMeasured: Boolean
-        get() = location == null || timestamp == null
+    val isInitialMagneticFluxDensityNormMeasured by magnetometerCalibrator::isInitialMagneticFluxDensityNormMeasured
 
     /**
      * Contains gravity norm (either obtained by the gravity sensor, or determined by current
      * location using WGS84 Earth model). Expressed in meters per squared second (m/s^2).
      */
-    var gravityNorm: Double? = null
-        private set
+    val gravityNorm by accelerometerAndGyroscopeCalibrator::gravityNorm
 
     /**
      * Indicates if accelerometer result is unreliable. This can happen if no location is provided
      * and gravity estimation becomes unreliable. When this happens result of calibration should
      * probably be discarded.
      */
-    var accelerometerResultUnreliable = false
-        private set
+    val accelerometerResultUnreliable by accelerometerAndGyroscopeCalibrator::accelerometerResultUnreliable
 
     /**
      * Gets x-coordinate of accelerometer bias used as an initial guess and expressed in meters per
@@ -623,8 +995,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * [estimatedAccelerometerBiasX] will be the estimated bias after solving calibration, which
      * will differ from [accelerometerInitialBiasX].
      */
-    var accelerometerInitialBiasX: Double? = null
-        private set
+    val accelerometerInitialBiasX by accelerometerAndGyroscopeCalibrator::accelerometerInitialBiasX
 
     /**
      * Gets y-coordinate of accelerometer bias used as an initial guess and expressed in meters per
@@ -641,8 +1012,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * [estimatedAccelerometerBiasY] will be the estimated bias after solving calibration, which
      * will differ from [accelerometerInitialBiasY].
      */
-    var accelerometerInitialBiasY: Double? = null
-        private set
+    val accelerometerInitialBiasY by accelerometerAndGyroscopeCalibrator::accelerometerInitialBiasY
 
     /**
      * Gets z-coordinate of accelerometer bias used as an initial guess and expressed in meters per
@@ -659,8 +1029,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * [estimatedAccelerometerBiasZ] will be the estimated bias after solving calibration, which
      * will differ from [accelerometerInitialBiasZ].
      */
-    var accelerometerInitialBiasZ: Double? = null
-        private set
+    val accelerometerInitialBiasZ by accelerometerAndGyroscopeCalibrator::accelerometerInitialBiasZ
 
     /**
      * Gets accelerometer X-coordinate of bias used as an initial guess.
@@ -676,11 +1045,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * [estimatedAccelerometerBiasX] will be the estimated bias after solving calibration, which
      * will differ from [accelerometerInitialBiasX].
      */
-    val accelerometerInitialBiasXAsMeasurement: Acceleration?
-        get() {
-            val initialBiasX = accelerometerInitialBiasX ?: return null
-            return Acceleration(initialBiasX, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        }
+    val accelerometerInitialBiasXAsMeasurement by accelerometerAndGyroscopeCalibrator::accelerometerInitialBiasXAsMeasurement
 
     /**
      * Gets accelerometer X-coordinate of bias used as an initial guess.
@@ -700,14 +1065,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * @return true if initial bias is available, false otherwise.
      */
     fun getAccelerometerInitialBiasXAsMeasurement(result: Acceleration): Boolean {
-        val initialBiasX = accelerometerInitialBiasX
-        return if (initialBiasX != null) {
-            result.value = initialBiasX
-            result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-            true
-        } else {
-            false
-        }
+        return accelerometerAndGyroscopeCalibrator.getAccelerometerInitialBiasXAsMeasurement(result)
     }
 
     /**
@@ -724,11 +1082,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * [estimatedAccelerometerBiasY] will be the estimated bias after solving calibration, which
      * will differ from [accelerometerInitialBiasY].
      */
-    val accelerometerInitialBiasYAsMeasurement: Acceleration?
-        get() {
-            val initialBiasY = accelerometerInitialBiasY ?: return null
-            return Acceleration(initialBiasY, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        }
+    val accelerometerInitialBiasYAsMeasurement by accelerometerAndGyroscopeCalibrator::accelerometerInitialBiasYAsMeasurement
 
     /**
      * Gets accelerometer Y-coordinate of bias used as an initial guess.
@@ -748,14 +1102,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * @return true if initial bias is available, false otherwise.
      */
     fun getAccelerometerInitialBiasYAsMeasurement(result: Acceleration): Boolean {
-        val initialBiasY = accelerometerInitialBiasY
-        return if (initialBiasY != null) {
-            result.value = initialBiasY
-            result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-            true
-        } else {
-            false
-        }
+        return accelerometerAndGyroscopeCalibrator.getAccelerometerInitialBiasYAsMeasurement(result)
     }
 
     /**
@@ -772,11 +1119,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * [estimatedAccelerometerBiasZ] will be the estimated bias after solving calibration, which
      * will differ from [accelerometerInitialBiasZ].
      */
-    val accelerometerInitialBiasZAsMeasurement: Acceleration?
-        get() {
-            val initialBiasZ = accelerometerInitialBiasZ ?: return null
-            return Acceleration(initialBiasZ, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        }
+    val accelerometerInitialBiasZAsMeasurement by accelerometerAndGyroscopeCalibrator::accelerometerInitialBiasZAsMeasurement
 
     /**
      * Gets accelerometer Z-coordinate of bias used as an initial guess.
@@ -796,14 +1139,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * @return true if initial bias is available, false otherwise.
      */
     fun getAccelerometerInitialBiasZAsMeasurement(result: Acceleration): Boolean {
-        val initialBiasZ = accelerometerInitialBiasZ
-        return if (initialBiasZ != null) {
-            result.value = initialBiasZ
-            result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-            true
-        } else {
-            false
-        }
+        return accelerometerAndGyroscopeCalibrator.getAccelerometerInitialBiasZAsMeasurement(result)
     }
 
     /**
@@ -820,22 +1156,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * [estimatedAccelerometerBiasAsTriad] will be the estimated bias after solving calibration,
      * which will differ from [estimatedAccelerometerBiasAsTriad].
      */
-    val accelerometerInitialBiasAsTriad: AccelerationTriad?
-        get() {
-            val initialBiasX = accelerometerInitialBiasX
-            val initialBiasY = accelerometerInitialBiasY
-            val initialBiasZ = accelerometerInitialBiasZ
-            return if (initialBiasX != null && initialBiasY != null && initialBiasZ != null) {
-                AccelerationTriad(
-                    AccelerationUnit.METERS_PER_SQUARED_SECOND,
-                    initialBiasX,
-                    initialBiasY,
-                    initialBiasZ
-                )
-            } else {
-                null
-            }
-        }
+    val accelerometerInitialBiasAsTriad by accelerometerAndGyroscopeCalibrator::accelerometerInitialBiasAsTriad
 
     /**
      * Gets initial bias coordinates used as an initial guess.
@@ -855,20 +1176,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * @return true if result is available, false otherwise.
      */
     fun getAccelerometerInitialBiasAsTriad(result: AccelerationTriad): Boolean {
-        val initialBiasX = accelerometerInitialBiasX
-        val initialBiasY = accelerometerInitialBiasY
-        val initialBiasZ = accelerometerInitialBiasZ
-        return if (initialBiasX != null && initialBiasY != null && initialBiasZ != null) {
-            result.setValueCoordinatesAndUnit(
-                initialBiasX,
-                initialBiasY,
-                initialBiasZ,
-                AccelerationUnit.METERS_PER_SQUARED_SECOND
-            )
-            true
-        } else {
-            false
-        }
+        return accelerometerAndGyroscopeCalibrator.getAccelerometerInitialBiasAsTriad(result)
     }
 
     /**
@@ -886,8 +1194,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * will be the estimated bias after solving calibration, which will differ from
      * [gyroscopeInitialBiasX].
      */
-    var gyroscopeInitialBiasX: Double? = null
-        private set
+    val gyroscopeInitialBiasX by accelerometerAndGyroscopeCalibrator::gyroscopeInitialBiasX
 
     /**
      * Gets y-coordinate of gyroscope bias used as an initial guess and expressed in radians per
@@ -904,8 +1211,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * will be the estimated bias after solving calibration, which will differ from
      * [gyroscopeInitialBiasY].
      */
-    var gyroscopeInitialBiasY: Double? = null
-        private set
+    val gyroscopeInitialBiasY by accelerometerAndGyroscopeCalibrator::gyroscopeInitialBiasY
 
     /**
      * Gets z-coordinate of gyroscope bias used as an initial guess and expressed in radians per
@@ -922,8 +1228,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * will be the estimated bias after solving calibration, which will differ from
      * [gyroscopeInitialBiasZ].
      */
-    var gyroscopeInitialBiasZ: Double? = null
-        private set
+    val gyroscopeInitialBiasZ by accelerometerAndGyroscopeCalibrator::gyroscopeInitialBiasZ
 
     /**
      * Gets x-coordinate of gyroscope bias used as an initial guess.
@@ -939,11 +1244,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * will be the estimated bias after solving calibration, which will differ from
      * [gyroscopeInitialBiasX].
      */
-    val gyroscopeInitialBiasXAsMeasurement: AngularSpeed?
-        get() {
-            val initialBiasX = gyroscopeInitialBiasX ?: return null
-            return AngularSpeed(initialBiasX, AngularSpeedUnit.RADIANS_PER_SECOND)
-        }
+    val gyroscopeInitialBiasXAsMeasurement by accelerometerAndGyroscopeCalibrator::gyroscopeInitialBiasXAsMeasurement
 
     /**
      * Gets x-coordinate of gyroscope bias used as an initial guess.
@@ -963,14 +1264,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * @return true if initial bias is available, false otherwise.
      */
     fun getGyroscopeInitialBiasXAsMeasurement(result: AngularSpeed): Boolean {
-        val initialBiasX = gyroscopeInitialBiasX
-        return if (initialBiasX != null) {
-            result.value = initialBiasX
-            result.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-            true
-        } else {
-            false
-        }
+        return accelerometerAndGyroscopeCalibrator.getGyroscopeInitialBiasXAsMeasurement(result)
     }
 
     /**
@@ -987,11 +1281,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * will be the estimated bias after solving calibration, which will differ from
      * [gyroscopeInitialBiasY].
      */
-    val gyroscopeInitialBiasYAsMeasurement: AngularSpeed?
-        get() {
-            val initialBiasY = gyroscopeInitialBiasY ?: return null
-            return AngularSpeed(initialBiasY, AngularSpeedUnit.RADIANS_PER_SECOND)
-        }
+    val gyroscopeInitialBiasYAsMeasurement by accelerometerAndGyroscopeCalibrator::gyroscopeInitialBiasYAsMeasurement
 
     /**
      * Gets y-coordinate of gyroscope bias used as an initial guess.
@@ -1011,14 +1301,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * @return true if initial bias is available, false otherwise.
      */
     fun getGyroscopeInitialBiasYAsMeasurement(result: AngularSpeed): Boolean {
-        val initialBiasY = gyroscopeInitialBiasY
-        return if (initialBiasY != null) {
-            result.value = initialBiasY
-            result.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-            true
-        } else {
-            false
-        }
+        return accelerometerAndGyroscopeCalibrator.getGyroscopeInitialBiasYAsMeasurement(result)
     }
 
     /**
@@ -1035,11 +1318,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * will be the estimated bias after solving calibration, which will differ from
      * [gyroscopeInitialBiasZ].
      */
-    val gyroscopeInitialBiasZAsMeasurement: AngularSpeed?
-        get() {
-            val initialBiasZ = gyroscopeInitialBiasZ ?: return null
-            return AngularSpeed(initialBiasZ, AngularSpeedUnit.RADIANS_PER_SECOND)
-        }
+    val gyroscopeInitialBiasZAsMeasurement by accelerometerAndGyroscopeCalibrator::gyroscopeInitialBiasZAsMeasurement
 
     /**
      * Gets z-coordinate of gyroscope bias used as an initial guess.
@@ -1059,14 +1338,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * @return true if initial bias is available, false otherwise.
      */
     fun getGyroscopeInitialBiasZAsMeasurement(result: AngularSpeed): Boolean {
-        val initialBiasZ = gyroscopeInitialBiasZ
-        return if (initialBiasZ != null) {
-            result.value = initialBiasZ
-            result.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-            true
-        } else {
-            false
-        }
+        return accelerometerAndGyroscopeCalibrator.getGyroscopeInitialBiasZAsMeasurement(result)
     }
 
     /**
@@ -1083,22 +1355,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * [estimatedGyroscopeBiasAsTriad] will be the estimated bias after solving calibration, which
      * will differ from [gyroscopeInitialBiasAsTriad].
      */
-    val gyroscopeInitialBiasAsTriad: AngularSpeedTriad?
-        get() {
-            val initialBiasX = gyroscopeInitialBiasX
-            val initialBiasY = gyroscopeInitialBiasY
-            val initialBiasZ = gyroscopeInitialBiasZ
-            return if (initialBiasX != null && initialBiasY != null && initialBiasZ != null) {
-                AngularSpeedTriad(
-                    AngularSpeedUnit.RADIANS_PER_SECOND,
-                    initialBiasX,
-                    initialBiasY,
-                    initialBiasZ
-                )
-            } else {
-                null
-            }
-        }
+    val gyroscopeInitialBiasAsTriad by accelerometerAndGyroscopeCalibrator::gyroscopeInitialBiasAsTriad
 
     /**
      * Gets gyroscope bias used as an initial guess.
@@ -1115,20 +1372,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * will differ from [gyroscopeInitialBiasAsTriad].
      */
     fun getGyroscopeInitialBiasAsTriad(result: AngularSpeedTriad): Boolean {
-        val initialBiasX = gyroscopeInitialBiasX
-        val initialBiasY = gyroscopeInitialBiasY
-        val initialBiasZ = gyroscopeInitialBiasZ
-        return if (initialBiasX != null && initialBiasY != null && initialBiasZ != null) {
-            result.setValueCoordinatesAndUnit(
-                initialBiasX,
-                initialBiasY,
-                initialBiasZ,
-                AngularSpeedUnit.RADIANS_PER_SECOND
-            )
-            true
-        } else {
-            false
-        }
+        return accelerometerAndGyroscopeCalibrator.getGyroscopeInitialBiasAsTriad(result)
     }
 
     /**
@@ -1145,8 +1389,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * [estimatedMagnetometerHardIronX] will be the estimated hard iron after solving calibration,
      * which will differ from [magnetometerInitialHardIronX].
      */
-    var magnetometerInitialHardIronX: Double? = null
-        private set
+    val magnetometerInitialHardIronX by magnetometerCalibrator::initialHardIronX
 
     /**
      * Gets Y-coordinate of hard iron used as an initial guess and expressed in Teslas (T).
@@ -1162,8 +1405,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * [estimatedMagnetometerHardIronY] will be the estimated hard iron after solving calibration,
      * which will differ from [magnetometerInitialHardIronY].
      */
-    var magnetometerInitialHardIronY: Double? = null
-        private set
+    val magnetometerInitialHardIronY by magnetometerCalibrator::initialHardIronY
 
     /**
      * Gets Y-coordinate of hard iron used as an initial guess and expressed in Teslas (T).
@@ -1179,8 +1421,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * [estimatedMagnetometerHardIronZ] will be the estimated hard iron after solving calibration,
      * which will differ from [magnetometerInitialHardIronZ].
      */
-    var magnetometerInitialHardIronZ: Double? = null
-        private set
+    val magnetometerInitialHardIronZ by magnetometerCalibrator::initialHardIronZ
 
     /**
      * Gets X-coordinate of hard iron used as an initial guess.
@@ -1196,11 +1437,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * [estimatedMagnetometerHardIronX] will be the estimated hard iron after solving calibration,
      * which will differ from [magnetometerInitialHardIronX].
      */
-    val magnetometerInitialHardIronXAsMeasurement: MagneticFluxDensity?
-        get() {
-            val initialHardIronX = magnetometerInitialHardIronX ?: return null
-            return MagneticFluxDensity(initialHardIronX, MagneticFluxDensityUnit.TESLA)
-        }
+    val magnetometerInitialHardIronXAsMeasurement by magnetometerCalibrator::initialHardIronXAsMeasurement
 
     /**
      * Gets X-coordinate of hard iron used as an initial guess.
@@ -1220,14 +1457,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * @return true if initial hard iron is available, false otherwise.
      */
     fun getMagnetometerInitialHardIronXAsMeasurement(result: MagneticFluxDensity): Boolean {
-        val initialHardIronX = magnetometerInitialHardIronX
-        return if (initialHardIronX != null) {
-            result.value = initialHardIronX
-            result.unit = MagneticFluxDensityUnit.TESLA
-            true
-        } else {
-            false
-        }
+        return magnetometerCalibrator.getInitialHardIronXAsMeasurement(result)
     }
 
     /**
@@ -1244,11 +1474,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * [estimatedMagnetometerHardIronY] will be the estimated hard iron after solving calibration,
      * which will differ from [magnetometerInitialHardIronY].
      */
-    val magnetometerInitialHardIronYAsMeasurement: MagneticFluxDensity?
-        get() {
-            val initialHardIronY = magnetometerInitialHardIronY ?: return null
-            return MagneticFluxDensity(initialHardIronY, MagneticFluxDensityUnit.TESLA)
-        }
+    val magnetometerInitialHardIronYAsMeasurement by magnetometerCalibrator::initialHardIronYAsMeasurement
 
     /**
      * Gets Y-coordinate of hard iron used as an initial guess.
@@ -1268,14 +1494,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * @return true if initial hard iron is available, false otherwise.
      */
     fun getMagnetometerInitialHardIronYAsMeasurement(result: MagneticFluxDensity): Boolean {
-        val initialHardIronY = magnetometerInitialHardIronY
-        return if (initialHardIronY != null) {
-            result.value = initialHardIronY
-            result.unit = MagneticFluxDensityUnit.TESLA
-            true
-        } else {
-            false
-        }
+        return magnetometerCalibrator.getInitialHardIronYAsMeasurement(result)
     }
 
     /**
@@ -1292,11 +1511,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * [estimatedMagnetometerHardIronZ] will be the estimated hard iron after solving calibration,
      * which will differ from [magnetometerInitialHardIronZ].
      */
-    val magnetometerInitialHardIronZAsMeasurement: MagneticFluxDensity?
-        get() {
-            val initialHardIronZ = magnetometerInitialHardIronZ ?: return null
-            return MagneticFluxDensity(initialHardIronZ, MagneticFluxDensityUnit.TESLA)
-        }
+    val magnetometerInitialHardIronZAsMeasurement by magnetometerCalibrator::initialHardIronZAsMeasurement
 
     /**
      * Gets Z-coordinate of hard iron used as an initial guess.
@@ -1316,14 +1531,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * @return true if initial hard iron is available, false otherwise.
      */
     fun getMagnetometerInitialHardIronZAsMeasurement(result: MagneticFluxDensity): Boolean {
-        val initialHardIronZ = magnetometerInitialHardIronZ
-        return if (initialHardIronZ != null) {
-            result.value = initialHardIronZ
-            result.unit = MagneticFluxDensityUnit.TESLA
-            true
-        } else {
-            false
-        }
+        return magnetometerCalibrator.getInitialHardIronZAsMeasurement(result)
     }
 
     /**
@@ -1340,22 +1548,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * [estimatedMagnetometerHardIronAsTriad] will be the estimated hard iron after solving calibration,
      * which will differ from [magnetometerInitialHardIronAsTriad].
      */
-    val magnetometerInitialHardIronAsTriad: MagneticFluxDensityTriad?
-        get() {
-            val initialHardIronX = magnetometerInitialHardIronX
-            val initialHardIronY = magnetometerInitialHardIronY
-            val initialHardIronZ = magnetometerInitialHardIronZ
-            return if (initialHardIronX != null && initialHardIronY != null && initialHardIronZ != null) {
-                MagneticFluxDensityTriad(
-                    MagneticFluxDensityUnit.TESLA,
-                    initialHardIronX,
-                    initialHardIronY,
-                    initialHardIronZ
-                )
-            } else {
-                null
-            }
-        }
+    val magnetometerInitialHardIronAsTriad by magnetometerCalibrator::initialHardIronAsTriad
 
     /**
      * Gets initial hard iron used as an initial guess.
@@ -1375,20 +1568,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * @return true if result is available, false otherwise.
      */
     fun getMagnetometerInitialHardIronAsTriad(result: MagneticFluxDensityTriad): Boolean {
-        val initialHardIronX = magnetometerInitialHardIronX
-        val initialHardIronY = magnetometerInitialHardIronY
-        val initialHardIronZ = magnetometerInitialHardIronZ
-        return if (initialHardIronX != null && initialHardIronY != null && initialHardIronZ != null) {
-            result.setValueCoordinatesAndUnit(
-                initialHardIronX,
-                initialHardIronY,
-                initialHardIronZ,
-                MagneticFluxDensityUnit.TESLA
-            )
-            true
-        } else {
-            false
-        }
+        return magnetometerCalibrator.getInitialHardIronAsTriad(result)
     }
 
     /**
@@ -1399,12 +1579,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      *
      * @throws IllegalStateException if calibrator is already running.
      */
-    var isAccelerometerGroundTruthInitialBias: Boolean = false
-        @Throws(IllegalStateException::class)
-        set(value) {
-            check(!running)
-            field = value
-        }
+    var isAccelerometerGroundTruthInitialBias by accelerometerAndGyroscopeCalibrator::isAccelerometerGroundTruthInitialBias
 
     /**
      * Indicates whether gyroscope initial bias is considered a ground-truth known bias.
@@ -1414,12 +1589,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      *
      * @throws IllegalStateException if calibrator is already running.
      */
-    var isGyroscopeGroundTruthInitialBias: Boolean = false
-        @Throws(IllegalStateException::class)
-        set(value) {
-            check(!running)
-            field = value
-        }
+    var isGyroscopeGroundTruthInitialBias by accelerometerAndGyroscopeCalibrator::isGyroscopeGroundTruthInitialBias
 
     /**
      * Indicates whether initial hard iron is considered a ground-truth known bias.
@@ -1429,12 +1599,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      *
      * @throws IllegalStateException if calibrator is already running.
      */
-    var isMagnetometerGroundTruthInitialHardIron: Boolean = false
-        @Throws(IllegalStateException::class)
-        set(value) {
-            check(!running)
-            field = value
-        }
+    var isMagnetometerGroundTruthInitialHardIron by magnetometerCalibrator::isGroundTruthInitialHardIron
 
     /**
      * Location of device when running calibration.
@@ -1447,15 +1612,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      *
      * @throws IllegalStateException if calibrator is already running.
      */
-    var location: Location? = null
+    var location
+        get() = accelerometerAndGyroscopeCalibrator.location
         @Throws(IllegalStateException::class)
         set(value) {
-            check(!running)
-            field = value
-            if (value != null) {
-                // set gravity norm based on provided location
-                gravityNorm = GravityHelper.getGravityNormForLocation(value)
-            }
+            accelerometerAndGyroscopeCalibrator.location = value
+            magnetometerCalibrator.location = value
         }
 
     /**
@@ -1468,12 +1630,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * @throws IllegalStateException if calibrator is already running.
      * @see [WorldMagneticModel]
      */
-    var timestamp: Date? = null
-        @Throws(IllegalStateException::class)
-        set(value) {
-            check(!running)
-            field = value
-        }
+    var timestamp by magnetometerCalibrator::timestamp
 
     /**
      * Sets Earth's magnetic model.
@@ -1481,48 +1638,38 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      *
      * @throws IllegalStateException if calibrator is already running.
      */
-    var worldMagneticModel: WorldMagneticModel? = null
-        @Throws(IllegalStateException::class)
-        set(value) {
-            check(!running)
-            field = value
-        }
+    var worldMagneticModel by magnetometerCalibrator::worldMagneticModel
 
     /**
      * Indicates whether gravity norm is estimated during initialization.
      * If location is provided, gravity is not estimated and instead theoretical
      * gravity for provided location is used.
      */
-    val isGravityNormEstimated
-        get() = location == null
+    val isGravityNormEstimated by accelerometerAndGyroscopeCalibrator::isGravityNormEstimated
 
     /**
      * Gets accelerometer sensor being used for interval detection.
      * This can be used to obtain additional information about the sensor.
      */
-    override val accelerometerSensor
-        get() = generator.accelerometerSensor
+    override val accelerometerSensor by accelerometerAndGyroscopeCalibrator::accelerometerSensor
 
     /**
      * Gets gyroscope sensor being used to obtain measurements, or null if not available.
      * This can be used to obtain additional information about the sensor.
      */
-    val gyroscopeSensor
-        get() = generator.gyroscopeSensor
+    val gyroscopeSensor by accelerometerAndGyroscopeCalibrator::gyroscopeSensor
 
     /**
      * Gets magnetometer sensor being used to obtain measurements, or null if not available.
      * This can be used to obtain additional information about the sensor.
      */
-    val magnetometerSensor
-        get() = generator.magnetometerSensor
+    val magnetometerSensor by magnetometerCalibrator::magnetometerSensor
 
     /**
      * Gets gravity sensor being used for gravity estimation.
      * This can be used to obtain additional information about the sensor.
      */
-    val gravitySensor
-        get() = gravityNormEstimator.sensor
+    val gravitySensor by accelerometerAndGyroscopeCalibrator::gravitySensor
 
     /**
      * Gets or sets initial accelerometer scaling factors and cross coupling errors matrix.
@@ -1530,29 +1677,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * @throws IllegalStateException if calibrator is currently running.
      * @throws IllegalArgumentException if provided matrix is not 3x3.
      */
-    var accelerometerInitialMa: Matrix
-        get() {
-            val result = Matrix(BodyKinematics.COMPONENTS, BodyKinematics.COMPONENTS)
-            getAccelerometerInitialMa(result)
-            return result
-        }
-        @Throws(IllegalStateException::class, IllegalArgumentException::class)
-        set(value) {
-            check(!running)
-            require(value.rows == BodyKinematics.COMPONENTS && value.columns == BodyKinematics.COMPONENTS)
-
-            accelerometerInitialSx = value.getElementAtIndex(0)
-            accelerometerInitialMyx = value.getElementAtIndex(1)
-            accelerometerInitialMzx = value.getElementAtIndex(2)
-
-            accelerometerInitialMxy = value.getElementAtIndex(3)
-            accelerometerInitialSy = value.getElementAtIndex(4)
-            accelerometerInitialMzy = value.getElementAtIndex(5)
-
-            accelerometerInitialMxz = value.getElementAtIndex(6)
-            accelerometerInitialMyz = value.getElementAtIndex(7)
-            accelerometerInitialSz = value.getElementAtIndex(8)
-        }
+    var accelerometerInitialMa by accelerometerAndGyroscopeCalibrator::accelerometerInitialMa
 
     /**
      * Gets initial accelerometer scale factors and cross coupling errors matrix.
@@ -1562,19 +1687,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      */
     @Throws(IllegalArgumentException::class)
     fun getAccelerometerInitialMa(result: Matrix) {
-        require(result.rows == BodyKinematics.COMPONENTS && result.columns == BodyKinematics.COMPONENTS)
-
-        result.setElementAtIndex(0, accelerometerInitialSx)
-        result.setElementAtIndex(1, accelerometerInitialMyx)
-        result.setElementAtIndex(2, accelerometerInitialMzx)
-
-        result.setElementAtIndex(3, accelerometerInitialMxy)
-        result.setElementAtIndex(4, accelerometerInitialSy)
-        result.setElementAtIndex(5, accelerometerInitialMzy)
-
-        result.setElementAtIndex(6, accelerometerInitialMxz)
-        result.setElementAtIndex(7, accelerometerInitialMyz)
-        result.setElementAtIndex(8, accelerometerInitialSz)
+        accelerometerAndGyroscopeCalibrator.getAccelerometerInitialMa(result)
     }
 
     /**
@@ -1582,108 +1695,63 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      *
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var accelerometerInitialSx: Double = 0.0
-        @Throws(IllegalStateException::class)
-        set(value) {
-            check(!running)
-            field = value
-        }
+    var accelerometerInitialSx by accelerometerAndGyroscopeCalibrator::accelerometerInitialSx
 
     /**
      * Gets or sets initial y scaling factor for accelerometer calibration.
      *
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var accelerometerInitialSy: Double = 0.0
-        @Throws(IllegalStateException::class)
-        set(value) {
-            check(!running)
-            field = value
-        }
+    var accelerometerInitialSy by accelerometerAndGyroscopeCalibrator::accelerometerInitialSy
 
     /**
      * Gets or sets initial z scaling factor for accelerometer calibration.
      *
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var accelerometerInitialSz: Double = 0.0
-        @Throws(IllegalStateException::class)
-        set(value) {
-            check(!running)
-            field = value
-        }
+    var accelerometerInitialSz by accelerometerAndGyroscopeCalibrator::accelerometerInitialSz
 
     /**
      * Gets or sets initial x-y cross coupling error for accelerometer calibration.
      *
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var accelerometerInitialMxy: Double = 0.0
-        @Throws(IllegalStateException::class)
-        set(value) {
-            check(!running)
-            field = value
-        }
+    var accelerometerInitialMxy by accelerometerAndGyroscopeCalibrator::accelerometerInitialMxy
 
     /**
      * Gets or sets initial x-z cross coupling error for accelerometer calibration.
      *
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var accelerometerInitialMxz: Double = 0.0
-        @Throws(IllegalStateException::class)
-        set(value) {
-            check(!running)
-            field = value
-        }
+    var accelerometerInitialMxz by accelerometerAndGyroscopeCalibrator::accelerometerInitialMxz
 
     /**
      * Gets or sets initial y-x cross coupling error for accelerometer calibration.
      *
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var accelerometerInitialMyx: Double = 0.0
-        @Throws(IllegalStateException::class)
-        set(value) {
-            check(!running)
-            field = value
-        }
+    var accelerometerInitialMyx by accelerometerAndGyroscopeCalibrator::accelerometerInitialMyx
 
     /**
      * Gets or sets initial y-z cross coupling error for accelerometer calibration.
      *
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var accelerometerInitialMyz: Double = 0.0
-        @Throws(IllegalStateException::class)
-        set(value) {
-            check(!running)
-            field = value
-        }
+    var accelerometerInitialMyz by accelerometerAndGyroscopeCalibrator::accelerometerInitialMyz
 
     /**
      * Gets or sets initial z-x cross coupling error for accelerometer calibration.
      *
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var accelerometerInitialMzx: Double = 0.0
-        @Throws(IllegalStateException::class)
-        set(value) {
-            check(!running)
-            field = value
-        }
+    var accelerometerInitialMzx by accelerometerAndGyroscopeCalibrator::accelerometerInitialMzx
 
     /**
      * Gets or sets initial z-y cross coupling error for accelerometer calibration.
      *
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var accelerometerInitialMzy: Double = 0.0
-        @Throws(IllegalStateException::class)
-        set(value) {
-            check(!running)
-            field = value
-        }
+    var accelerometerInitialMzy by accelerometerAndGyroscopeCalibrator::accelerometerInitialMzy
 
     /**
      * Sets initial scaling factors for accelerometer calibration.
@@ -1699,10 +1767,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
         accelerometerInitialSy: Double,
         accelerometerInitialSz: Double
     ) {
-        check(!running)
-        this.accelerometerInitialSx = accelerometerInitialSx
-        this.accelerometerInitialSy = accelerometerInitialSy
-        this.accelerometerInitialSz = accelerometerInitialSz
+        accelerometerAndGyroscopeCalibrator.setAccelerometerInitialScalingFactors(
+            accelerometerInitialSx,
+            accelerometerInitialSy,
+            accelerometerInitialSz
+        )
     }
 
     /**
@@ -1725,13 +1794,14 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
         accelerometerInitialMzx: Double,
         accelerometerInitialMzy: Double
     ) {
-        check(!running)
-        this.accelerometerInitialMxy = accelerometerInitialMxy
-        this.accelerometerInitialMxz = accelerometerInitialMxz
-        this.accelerometerInitialMyx = accelerometerInitialMyx
-        this.accelerometerInitialMyz = accelerometerInitialMyz
-        this.accelerometerInitialMzx = accelerometerInitialMzx
-        this.accelerometerInitialMzy = accelerometerInitialMzy
+        accelerometerAndGyroscopeCalibrator.setAccelerometerInitialCrossCouplingErrors(
+            accelerometerInitialMxy,
+            accelerometerInitialMxz,
+            accelerometerInitialMyx,
+            accelerometerInitialMyz,
+            accelerometerInitialMzx,
+            accelerometerInitialMzy
+        )
     }
 
     /**
@@ -1760,12 +1830,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
         accelerometerInitialMzx: Double,
         accelerometerInitialMzy: Double
     ) {
-        setAccelerometerInitialScalingFactors(
+        accelerometerAndGyroscopeCalibrator.setAccelerometerInitialScalingFactorsAndCrossCouplingErrors(
             accelerometerInitialSx,
             accelerometerInitialSy,
-            accelerometerInitialSz
-        )
-        setAccelerometerInitialCrossCouplingErrors(
+            accelerometerInitialSz,
             accelerometerInitialMxy,
             accelerometerInitialMxz,
             accelerometerInitialMyx,
@@ -1781,29 +1849,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * @throws IllegalStateException if calibrator is currently running.
      * @throws IllegalArgumentException if provided matrix is not 3x3.
      */
-    var gyroscopeInitialMg: Matrix
-        get() {
-            val result = Matrix(BodyKinematics.COMPONENTS, BodyKinematics.COMPONENTS)
-            getGyroscopeInitialMg(result)
-            return result
-        }
-        @Throws(IllegalStateException::class, IllegalArgumentException::class)
-        set(value) {
-            check(!running)
-            require(value.rows == BodyKinematics.COMPONENTS && value.columns == BodyKinematics.COMPONENTS)
-
-            gyroscopeInitialSx = value.getElementAtIndex(0)
-            gyroscopeInitialMyx = value.getElementAtIndex(1)
-            gyroscopeInitialMzx = value.getElementAtIndex(2)
-
-            gyroscopeInitialMxy = value.getElementAtIndex(3)
-            gyroscopeInitialSy = value.getElementAtIndex(4)
-            gyroscopeInitialMzy = value.getElementAtIndex(5)
-
-            gyroscopeInitialMxz = value.getElementAtIndex(6)
-            gyroscopeInitialMyz = value.getElementAtIndex(7)
-            gyroscopeInitialSz = value.getElementAtIndex(8)
-        }
+    var gyroscopeInitialMg by accelerometerAndGyroscopeCalibrator::gyroscopeInitialMg
 
     /**
      * Gets initial gyroscope scale factors and cross coupling errors matrix.
@@ -1813,19 +1859,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      */
     @Throws(IllegalArgumentException::class)
     fun getGyroscopeInitialMg(result: Matrix) {
-        require(result.rows == BodyKinematics.COMPONENTS && result.columns == BodyKinematics.COMPONENTS)
-
-        result.setElementAtIndex(0, gyroscopeInitialSx)
-        result.setElementAtIndex(1, gyroscopeInitialMyx)
-        result.setElementAtIndex(2, gyroscopeInitialMzx)
-
-        result.setElementAtIndex(3, gyroscopeInitialMxy)
-        result.setElementAtIndex(4, gyroscopeInitialSy)
-        result.setElementAtIndex(5, gyroscopeInitialMzy)
-
-        result.setElementAtIndex(6, gyroscopeInitialMxz)
-        result.setElementAtIndex(7, gyroscopeInitialMyz)
-        result.setElementAtIndex(8, gyroscopeInitialSz)
+        accelerometerAndGyroscopeCalibrator.getGyroscopeInitialMg(result)
     }
 
     /**
@@ -1833,108 +1867,63 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      *
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var gyroscopeInitialSx: Double = 0.0
-        @Throws(IllegalStateException::class)
-        set(value) {
-            check(!running)
-            field = value
-        }
+    var gyroscopeInitialSx by accelerometerAndGyroscopeCalibrator::gyroscopeInitialSx
 
     /**
      * Gets or sets initial y scaling factor for gyroscope calibration.
      *
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var gyroscopeInitialSy: Double = 0.0
-        @Throws(IllegalStateException::class)
-        set(value) {
-            check(!running)
-            field = value
-        }
+    var gyroscopeInitialSy by accelerometerAndGyroscopeCalibrator::gyroscopeInitialSy
 
     /**
      * Gets or sets initial z scaling factor for gyroscope calibration.
      *
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var gyroscopeInitialSz: Double = 0.0
-        @Throws(IllegalStateException::class)
-        set(value) {
-            check(!running)
-            field = value
-        }
+    var gyroscopeInitialSz by accelerometerAndGyroscopeCalibrator::gyroscopeInitialSz
 
     /**
      * Gets or sets initial x-y cross coupling error for gyroscope calibration.
      *
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var gyroscopeInitialMxy: Double = 0.0
-        @Throws(IllegalStateException::class)
-        set(value) {
-            check(!running)
-            field = value
-        }
+    var gyroscopeInitialMxy by accelerometerAndGyroscopeCalibrator::gyroscopeInitialMxy
 
     /**
      * Gets or sets initial x-z cross coupling error for gyroscope calibration.
      *
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var gyroscopeInitialMxz: Double = 0.0
-        @Throws(IllegalStateException::class)
-        set(value) {
-            check(!running)
-            field = value
-        }
+    var gyroscopeInitialMxz by accelerometerAndGyroscopeCalibrator::gyroscopeInitialMxz
 
     /**
      * Gets or sets initial y-x cross coupling error for gyroscope calibration.
      *
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var gyroscopeInitialMyx: Double = 0.0
-        @Throws(IllegalStateException::class)
-        set(value) {
-            check(!running)
-            field = value
-        }
+    var gyroscopeInitialMyx by accelerometerAndGyroscopeCalibrator::gyroscopeInitialMyx
 
     /**
      * Gets or sets initial y-z cross coupling error for gyroscope calibration.
      *
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var gyroscopeInitialMyz: Double = 0.0
-        @Throws(IllegalStateException::class)
-        set(value) {
-            check(!running)
-            field = value
-        }
+    var gyroscopeInitialMyz by accelerometerAndGyroscopeCalibrator::gyroscopeInitialMyz
 
     /**
      * Gets or sets initial z-x cross coupling error for gyroscope calibration.
      *
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var gyroscopeInitialMzx: Double = 0.0
-        @Throws(IllegalStateException::class)
-        set(value) {
-            check(!running)
-            field = value
-        }
+    var gyroscopeInitialMzx by accelerometerAndGyroscopeCalibrator::gyroscopeInitialMzx
 
     /**
      * Gets or sets initial z-y cross coupling error for gyroscope calibration.
      *
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var gyroscopeInitialMzy: Double = 0.0
-        @Throws(IllegalStateException::class)
-        set(value) {
-            check(!running)
-            field = value
-        }
+    var gyroscopeInitialMzy by accelerometerAndGyroscopeCalibrator::gyroscopeInitialMzy
 
     /**
      * Sets initial scaling factors for gyroscope calibration.
@@ -1949,10 +1938,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
         gyroscopeInitialSy: Double,
         gyroscopeInitialSz: Double
     ) {
-        check(!running)
-        this.gyroscopeInitialSx = gyroscopeInitialSx
-        this.gyroscopeInitialSy = gyroscopeInitialSy
-        this.gyroscopeInitialSz = gyroscopeInitialSz
+        accelerometerAndGyroscopeCalibrator.setGyroscopeInitialScalingFactors(
+            gyroscopeInitialSx,
+            gyroscopeInitialSy,
+            gyroscopeInitialSz
+        )
     }
 
     /**
@@ -1975,13 +1965,14 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
         gyroscopeInitialMzx: Double,
         gyroscopeInitialMzy: Double
     ) {
-        check(!running)
-        this.gyroscopeInitialMxy = gyroscopeInitialMxy
-        this.gyroscopeInitialMxz = gyroscopeInitialMxz
-        this.gyroscopeInitialMyx = gyroscopeInitialMyx
-        this.gyroscopeInitialMyz = gyroscopeInitialMyz
-        this.gyroscopeInitialMzx = gyroscopeInitialMzx
-        this.gyroscopeInitialMzy = gyroscopeInitialMzy
+        accelerometerAndGyroscopeCalibrator.setGyroscopeInitialCrossCouplingErrors(
+            gyroscopeInitialMxy,
+            gyroscopeInitialMxz,
+            gyroscopeInitialMyx,
+            gyroscopeInitialMyz,
+            gyroscopeInitialMzx,
+            gyroscopeInitialMzy
+        )
     }
 
     /**
@@ -2009,12 +2000,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
         gyroscopeInitialMzx: Double,
         gyroscopeInitialMzy: Double
     ) {
-        setGyroscopeInitialScalingFactors(
+        accelerometerAndGyroscopeCalibrator.setGyroscopeInitialScalingFactorsAndCrossCouplingErrors(
             gyroscopeInitialSx,
             gyroscopeInitialSy,
-            gyroscopeInitialSz
-        )
-        setGyroscopeInitialCrossCouplingErrors(
+            gyroscopeInitialSz,
             gyroscopeInitialMxy,
             gyroscopeInitialMxz,
             gyroscopeInitialMyx,
@@ -2031,14 +2020,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * @throws IllegalStateException if calibrator is currently running.
      * @throws IllegalArgumentException if provided matrix is not 3x3.
      */
-    var gyroscopeInitialGg: Matrix = Matrix(BodyKinematics.COMPONENTS, BodyKinematics.COMPONENTS)
-        @Throws(IllegalStateException::class, IllegalArgumentException::class)
-        set(value) {
-            check(!running)
-            require(value.rows == BodyKinematics.COMPONENTS && value.columns == BodyKinematics.COMPONENTS)
-
-            field = value
-        }
+    var gyroscopeInitialGg by accelerometerAndGyroscopeCalibrator::gyroscopeInitialGg
 
     /**
      * Gets or sets initial magnetometer scaling factors and cross coupling errors matrix.
@@ -2046,30 +2028,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * @throws IllegalStateException if calibrator is currently running.
      * @throws IllegalArgumentException if provided matrix is not 3x3.
      */
-    var magnetometerInitialMm: Matrix
-        get() {
-            val result =
-                Matrix(MagneticFluxDensityTriad.COMPONENTS, MagneticFluxDensityTriad.COMPONENTS)
-            getMagnetometerInitialMm(result)
-            return result
-        }
-        @Throws(IllegalStateException::class, IllegalArgumentException::class)
-        set(value) {
-            check(!running)
-            require(value.rows == MagneticFluxDensityTriad.COMPONENTS && value.columns == MagneticFluxDensityTriad.COMPONENTS)
-
-            magnetometerInitialSx = value.getElementAtIndex(0)
-            magnetometerInitialMyx = value.getElementAtIndex(1)
-            magnetometerInitialMzx = value.getElementAtIndex(2)
-
-            magnetometerInitialMxy = value.getElementAtIndex(3)
-            magnetometerInitialSy = value.getElementAtIndex(4)
-            magnetometerInitialMzy = value.getElementAtIndex(5)
-
-            magnetometerInitialMxz = value.getElementAtIndex(6)
-            magnetometerInitialMyz = value.getElementAtIndex(7)
-            magnetometerInitialSz = value.getElementAtIndex(8)
-        }
+    var magnetometerInitialMm by magnetometerCalibrator::initialMm
 
     /**
      * Gets initial magnetometer scale factors and cross coupling errors matrix.
@@ -2079,19 +2038,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      */
     @Throws(IllegalArgumentException::class)
     fun getMagnetometerInitialMm(result: Matrix) {
-        require(result.rows == MagneticFluxDensityTriad.COMPONENTS && result.columns == MagneticFluxDensityTriad.COMPONENTS)
-
-        result.setElementAtIndex(0, magnetometerInitialSx)
-        result.setElementAtIndex(1, magnetometerInitialMyx)
-        result.setElementAtIndex(2, magnetometerInitialMzx)
-
-        result.setElementAtIndex(3, magnetometerInitialMxy)
-        result.setElementAtIndex(4, magnetometerInitialSy)
-        result.setElementAtIndex(5, magnetometerInitialMzy)
-
-        result.setElementAtIndex(6, magnetometerInitialMxz)
-        result.setElementAtIndex(7, magnetometerInitialMyz)
-        result.setElementAtIndex(8, magnetometerInitialSz)
+        magnetometerCalibrator.getInitialMm(result)
     }
 
     /**
@@ -2099,108 +2046,63 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      *
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var magnetometerInitialSx: Double = 0.0
-        @Throws(IllegalStateException::class)
-        set(value) {
-            check(!running)
-            field = value
-        }
+    var magnetometerInitialSx by magnetometerCalibrator::initialSx
 
     /**
      * Gets or sets initial y scaling factor for magnetometer calibration.
      *
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var magnetometerInitialSy: Double = 0.0
-        @Throws(IllegalStateException::class)
-        set(value) {
-            check(!running)
-            field = value
-        }
+    var magnetometerInitialSy by magnetometerCalibrator::initialSy
 
     /**
      * Gets or sets initial z scaling factor for magnetometer calibration.
      *
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var magnetometerInitialSz: Double = 0.0
-        @Throws(IllegalStateException::class)
-        set(value) {
-            check(!running)
-            field = value
-        }
+    var magnetometerInitialSz by magnetometerCalibrator::initialSz
 
     /**
      * Gets or sets initial x-y cross coupling error for magnetometer calibration.
      *
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var magnetometerInitialMxy: Double = 0.0
-        @Throws(IllegalStateException::class)
-        set(value) {
-            check(!running)
-            field = value
-        }
+    var magnetometerInitialMxy by magnetometerCalibrator::initialMxy
 
     /**
      * Gets or sets initial x-z cross coupling error for magnetometer calibration.
      *
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var magnetometerInitialMxz: Double = 0.0
-        @Throws(IllegalStateException::class)
-        set(value) {
-            check(!running)
-            field = value
-        }
+    var magnetometerInitialMxz by magnetometerCalibrator::initialMxz
 
     /**
      * Gets or sets initial y-x cross coupling error for magnetometer calibration.
      *
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var magnetometerInitialMyx: Double = 0.0
-        @Throws(IllegalStateException::class)
-        set(value) {
-            check(!running)
-            field = value
-        }
+    var magnetometerInitialMyx by magnetometerCalibrator::initialMyx
 
     /**
      * Gets or sets initial y-z cross coupling error for magnetometer calibration.
      *
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var magnetometerInitialMyz: Double = 0.0
-        @Throws(IllegalStateException::class)
-        set(value) {
-            check(!running)
-            field = value
-        }
+    var magnetometerInitialMyz by magnetometerCalibrator::initialMyz
 
     /**
      * Gets or sets initial z-x cross coupling error for magnetometer calibration.
      *
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var magnetometerInitialMzx: Double = 0.0
-        @Throws(IllegalStateException::class)
-        set(value) {
-            check(!running)
-            field = value
-        }
+    var magnetometerInitialMzx by magnetometerCalibrator::initialMzx
 
     /**
      * Gets or sets initial z-y cross coupling error for magnetometer calibration.
      *
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var magnetometerInitialMzy: Double = 0.0
-        @Throws(IllegalStateException::class)
-        set(value) {
-            check(!running)
-            field = value
-        }
+    var magnetometerInitialMzy by magnetometerCalibrator::initialMzy
 
     /**
      * Sets initial scaling factors for magnetometer calibration.
@@ -2216,10 +2118,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
         magnetometerInitialSy: Double,
         magnetometerInitialSz: Double
     ) {
-        check(!running)
-        this.magnetometerInitialSx = magnetometerInitialSx
-        this.magnetometerInitialSy = magnetometerInitialSy
-        this.magnetometerInitialSz = magnetometerInitialSz
+        magnetometerCalibrator.setInitialScalingFactors(
+            magnetometerInitialSx,
+            magnetometerInitialSy,
+            magnetometerInitialSz
+        )
     }
 
     /**
@@ -2242,13 +2145,14 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
         magnetometerInitialMzx: Double,
         magnetometerInitialMzy: Double
     ) {
-        check(!running)
-        this.magnetometerInitialMxy = magnetometerInitialMxy
-        this.magnetometerInitialMxz = magnetometerInitialMxz
-        this.magnetometerInitialMyx = magnetometerInitialMyx
-        this.magnetometerInitialMyz = magnetometerInitialMyz
-        this.magnetometerInitialMzx = magnetometerInitialMzx
-        this.magnetometerInitialMzy = magnetometerInitialMzy
+        magnetometerCalibrator.setInitialCrossCouplingErrors(
+            magnetometerInitialMxy,
+            magnetometerInitialMxz,
+            magnetometerInitialMyx,
+            magnetometerInitialMyz,
+            magnetometerInitialMzx,
+            magnetometerInitialMzy
+        )
     }
 
     /**
@@ -2277,12 +2181,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
         magnetometerInitialMzx: Double,
         magnetometerInitialMzy: Double
     ) {
-        setMagnetometerInitialScalingFactors(
+        magnetometerCalibrator.setInitialScalingFactorsAndCrossCouplingErrors(
             magnetometerInitialSx,
             magnetometerInitialSy,
-            magnetometerInitialSz
-        )
-        setMagnetometerInitialCrossCouplingErrors(
+            magnetometerInitialSz,
             magnetometerInitialMxy,
             magnetometerInitialMxz,
             magnetometerInitialMyx,
@@ -2299,13 +2201,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      *
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var isAccelerometerCommonAxisUsed: Boolean =
-        StaticIntervalAccelerometerCalibrator.DEFAULT_USE_COMMON_Z_AXIS
-        @Throws(IllegalStateException::class)
-        set(value) {
-            check(!running)
-            field = value
-        }
+    var isAccelerometerCommonAxisUsed by accelerometerAndGyroscopeCalibrator::isAccelerometerCommonAxisUsed
 
     /**
      * Indicates or specifies whether z-axis is assumed to be common for gyroscope. When enabled,
@@ -2313,13 +2209,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      *
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var isGyroscopeCommonAxisUsed: Boolean =
-        StaticIntervalGyroscopeCalibrator.DEFAULT_USE_COMMON_Z_AXIS
-        @Throws(IllegalStateException::class)
-        set(value) {
-            check(!running)
-            field = value
-        }
+    var isGyroscopeCommonAxisUsed by accelerometerAndGyroscopeCalibrator::isGyroscopeCommonAxisUsed
 
     /**
      * Indicates or specifies whether z-axis is assumed to be common for magnetometer and
@@ -2327,13 +2217,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      *
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var isMagnetometerCommonAxisUsed: Boolean =
-        StaticIntervalMagnetometerCalibrator.DEFAULT_USE_COMMON_Z_AXIS
-        @Throws(IllegalStateException::class)
-        set(value) {
-            check(!running)
-            field = value
-        }
+    var isMagnetometerCommonAxisUsed by magnetometerCalibrator::isCommonAxisUsed
 
     /**
      * Indicates or specifies whether G-dependent cross biases are being estimated or not. When enabled,
@@ -2341,91 +2225,28 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      *
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var isGDependentCrossBiasesEstimated: Boolean =
-        StaticIntervalGyroscopeCalibrator.DEFAULT_ESTIMATE_G_DEPENDENT_CROSS_BIASES
-        @Throws(IllegalStateException::class)
-        set(value) {
-            check(!running)
-            field = value
-        }
+    var isGDependentCrossBiasesEstimated by accelerometerAndGyroscopeCalibrator::isGDependentCrossBiasesEstimated
 
     /**
      * Gets minimum number of required measurements to start accelerometer calibration.
      * Each time that the device is kept static, a new measurement is collected.
      * When the required number of measurements for all sensors is collected, calibration can start.
      */
-    val minimumRequiredAccelerometerMeasurements: Int
-        get() = if (isAccelerometerCommonAxisUsed) {
-            if (isAccelerometerGroundTruthInitialBias) {
-                StaticIntervalAccelerometerCalibrator.ACCELEROMETER_KNOWN_BIAS_MINIMUM_MEASUREMENTS_COMMON_Z_AXIS
-            } else {
-                StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_COMMON_Z_AXIS
-            }
-        } else {
-            if (isAccelerometerGroundTruthInitialBias) {
-                StaticIntervalAccelerometerCalibrator.ACCELEROMETER_KNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL
-            } else {
-                StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL
-            }
-        }
+    val minimumRequiredAccelerometerMeasurements by accelerometerAndGyroscopeCalibrator::minimumRequiredAccelerometerMeasurements
 
     /**
      * Gets minimum number of required measurements to start gyroscope calibration.
      * Each time that the device is moved, a new measurement is collected.
      * When the required number of measurements for all sensors is collected, calibration can start.
      */
-    val minimumRequiredGyroscopeMeasurements: Int
-        get() = if (isGyroscopeGroundTruthInitialBias) {
-            // Known bias
-            if (isGyroscopeCommonAxisUsed) {
-                if (isGDependentCrossBiasesEstimated) {
-                    StaticIntervalGyroscopeCalibrator.GYROSCOPE_KNOWN_BIAS_MINIMUM_SEQUENCES_COMMON_Z_AXIS_AND_CROSS_BIASES
-                } else {
-                    StaticIntervalGyroscopeCalibrator.GYROSCOPE_KNOWN_BIAS_MINIMUM_SEQUENCES_COMMON_Z_AXIS
-                }
-            } else {
-                if (isGDependentCrossBiasesEstimated) {
-                    StaticIntervalGyroscopeCalibrator.GYROSCOPE_KNOWN_BIAS_MINIMUM_SEQUENCES_GENERAL_AND_CROSS_BIASES
-                } else {
-                    StaticIntervalGyroscopeCalibrator.GYROSCOPE_KNOWN_BIAS_MINIMUM_SEQUENCES_GENERAL
-                }
-            }
-        } else {
-            // Unknown bias
-            if (isGyroscopeCommonAxisUsed) {
-                if (isGDependentCrossBiasesEstimated) {
-                    StaticIntervalGyroscopeCalibrator.GYROSCOPE_UNKNOWN_BIAS_MINIMUM_SEQUENCES_COMMON_Z_AXIS_AND_CROSS_BIASES
-                } else {
-                    StaticIntervalGyroscopeCalibrator.GYROSCOPE_UNKNOWN_BIAS_MINIMUM_SEQUENCES_COMMON_Z_AXIS
-                }
-            } else {
-                if (isGDependentCrossBiasesEstimated) {
-                    StaticIntervalGyroscopeCalibrator.GYROSCOPE_UNKNOWN_BIAS_MINIMUM_SEQUENCES_GENERAL_AND_CROSS_BIASES
-                } else {
-                    StaticIntervalGyroscopeCalibrator.GYROSCOPE_UNKNOWN_BIAS_MINIMUM_SEQUENCES_GENERAL
-                }
-            }
-        }
+    val minimumRequiredGyroscopeMeasurements by accelerometerAndGyroscopeCalibrator::minimumRequiredGyroscopeMeasurements
 
     /**
      * Gets minimum number of required measurements to start magnetometer calibration.
      * Each time that the device is kept static, a new measurement is collected.
      * When the required number of measurements for all sensors is collected, calibration can start.
      */
-    val minimumRequiredMagnetometerMeasurements: Int
-        get() = if (isMagnetometerCommonAxisUsed) {
-            if (isMagnetometerGroundTruthInitialHardIron) {
-                StaticIntervalMagnetometerCalibrator.MAGNETOMETER_KNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_COMMON_Z_AXIS
-            } else {
-                StaticIntervalMagnetometerCalibrator.MAGNETOMETER_UNKNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_COMMON_Z_AXIS
-            }
-        } else {
-            if (isMagnetometerGroundTruthInitialHardIron) {
-                StaticIntervalMagnetometerCalibrator.MAGNETOMETER_KNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL
-            } else {
-                StaticIntervalMagnetometerCalibrator.MAGNETOMETER_UNKNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL
-            }
-        }
+    val minimumRequiredMagnetometerMeasurements by magnetometerCalibrator::minimumRequiredMeasurements
 
     /**
      * Gets minimum number of required measurements to start calibration.
@@ -2435,79 +2256,48 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      */
     override val minimumRequiredMeasurements: Int
         get() = max(
-            max(
-                minimumRequiredAccelerometerMeasurements,
-                minimumRequiredGyroscopeMeasurements
-            ), minimumRequiredMagnetometerMeasurements
+            accelerometerAndGyroscopeCalibrator.minimumRequiredMeasurements,
+            minimumRequiredMagnetometerMeasurements
         )
 
     /**
      * Gets estimated average of gravity norm expressed in meters per squared second (m/s^2).
      * This is only available if no location is provided and initialization has completed.
      */
-    val averageGravityNorm
-        get() = if (isGravityNormEstimated) {
-            gravityNormEstimator.averageNorm
-        } else {
-            null
-        }
+    val averageGravityNorm by accelerometerAndGyroscopeCalibrator::averageGravityNorm
 
     /**
      * Gets estimated average gravity norm as Acceleration.
      * This is only available if no location is provided and initialization has completed.
      */
-    val averageGravityNormAsMeasurement
-        get() = if (isGravityNormEstimated) {
-            gravityNormEstimator.averageNormAsMeasurement
-        } else {
-            null
-        }
+    val averageGravityNormAsMeasurement by accelerometerAndGyroscopeCalibrator::averageGravityNormAsMeasurement
 
     /**
      * Gets estimated average gravity norm as Acceleration.
      * This is only available if no location is provided and initialization has completed.
      */
     fun getAverageGravityNormAsMeasurement(result: Acceleration): Boolean {
-        return if (isGravityNormEstimated) {
-            gravityNormEstimator.getAverageNormAsMeasurement(result)
-        } else {
-            false
-        }
+        return accelerometerAndGyroscopeCalibrator.getAverageGravityNormAsMeasurement(result)
     }
 
     /**
      * Gets estimated variance of gravity norm expressed in (m^2/s^4).
      * This is only available if no location is provided and initialization has completed.
      */
-    val gravityNormVariance
-        get() = if (isGravityNormEstimated) {
-            gravityNormEstimator.normVariance
-        } else {
-            null
-        }
+    val gravityNormVariance by accelerometerAndGyroscopeCalibrator::gravityNormVariance
 
     /**
      * Gets estimated standard deviation of gravity norm expressed in meters per squared second
      * (m/s^2).
      * This is only available if no location is provided and initialization has completed.
      */
-    val gravityNormStandardDeviation
-        get() = if (isGravityNormEstimated) {
-            gravityNormEstimator.normStandardDeviation
-        } else {
-            null
-        }
+    val gravityNormStandardDeviation by accelerometerAndGyroscopeCalibrator::gravityNormStandardDeviation
 
     /**
      * Gets estimated standard deviation of gravity norm as Acceleration.
      * This is only available if no location is provided and initialization has completed.
      */
-    val gravityNormStandardDeviationAsMeasurement
-        get() = if (isGravityNormEstimated) {
-            gravityNormEstimator.normStandardDeviationAsMeasurement
-        } else {
-            null
-        }
+    val gravityNormStandardDeviationAsMeasurement by accelerometerAndGyroscopeCalibrator::gravityNormStandardDeviationAsMeasurement
 
     /**
      * Gets estimated standard deviation of gravity norm as Acceleration.
@@ -2517,34 +2307,22 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * @return true i result is available, false otherwise.
      */
     fun getGravityNormStandardDeviationAsMeasurement(result: Acceleration): Boolean {
-        return if (isGravityNormEstimated) {
-            gravityNormEstimator.getNormStandardDeviationAsMeasurement(result)
-        } else {
-            false
-        }
+        return accelerometerAndGyroscopeCalibrator.getGravityNormStandardDeviationAsMeasurement(
+            result
+        )
     }
 
     /**
      * Gets PSD (Power Spectral Density) of gravity norm expressed in (m^2 * s^-3).
      * This is only available if no location is provided and initialization has completed.
      */
-    val gravityPsd
-        get() = if (isGravityNormEstimated) {
-            gravityNormEstimator.psd
-        } else {
-            null
-        }
+    val gravityPsd by accelerometerAndGyroscopeCalibrator::gravityPsd
 
     /**
      * Gets root PSD (Power Spectral Density) of gravity norm expressed in (m * s^-1.5).
      * This is only available if no location is provided and initialization has completed.
      */
-    val gravityRootPsd
-        get() = if (isGravityNormEstimated) {
-            gravityNormEstimator.rootPsd
-        } else {
-            null
-        }
+    val gravityRootPsd by accelerometerAndGyroscopeCalibrator::gravityRootPsd
 
     /**
      * Indicates robust method used to solve accelerometer calibration.
@@ -2552,12 +2330,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      *
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var accelerometerRobustMethod: RobustEstimatorMethod? = null
-        @Throws(IllegalStateException::class)
-        set(value) {
-            check(!running)
-            field = value
-        }
+    var accelerometerRobustMethod by accelerometerAndGyroscopeCalibrator::accelerometerRobustMethod
 
     /**
      * Confidence of estimated accelerometer calibration result expressed as a value between 0.0
@@ -2572,15 +2345,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * included).
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var accelerometerRobustConfidence: Double =
-        StaticIntervalAccelerometerCalibrator.ROBUST_DEFAULT_CONFIDENCE
-        @Throws(IllegalArgumentException::class, IllegalStateException::class)
-        set(value) {
-            require(value in 0.0..1.0)
-            check(!running)
-
-            field = value
-        }
+    var accelerometerRobustConfidence by accelerometerAndGyroscopeCalibrator::accelerometerRobustConfidence
 
     /**
      * Maximum number of iterations to attempt to find a robust accelerometer calibration solution.
@@ -2591,14 +2356,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * @throws IllegalArgumentException if provided value is zero or negative.
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var accelerometerRobustMaxIterations: Int =
-        StaticIntervalAccelerometerCalibrator.ROBUST_DEFAULT_MAX_ITERATIONS
-        @Throws(IllegalArgumentException::class, IllegalStateException::class)
-        set(value) {
-            require(value > 0)
-            check(!running)
-            field = value
-        }
+    var accelerometerRobustMaxIterations by accelerometerAndGyroscopeCalibrator::accelerometerRobustMaxIterations
 
     /**
      * Size of preliminary subsets picked while finding a robust accelerometer calibration solution.
@@ -2614,13 +2372,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * [minimumRequiredAccelerometerMeasurements] at the moment the setter is called.
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var accelerometerRobustPreliminarySubsetSize: Int = 0
-        @Throws(IllegalArgumentException::class, IllegalStateException::class)
-        set(value) {
-            require(value >= minimumRequiredAccelerometerMeasurements)
-            check(!running)
-            field = value
-        }
+    var accelerometerRobustPreliminarySubsetSize by accelerometerAndGyroscopeCalibrator::accelerometerRobustPreliminarySubsetSize
 
     /**
      * Threshold to be used to determine whether a measurement is considered an outlier by robust
@@ -2635,13 +2387,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * @throws IllegalArgumentException if provided value is zero or negative.
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var accelerometerRobustThreshold: Double? = null
-        @Throws(IllegalArgumentException::class, IllegalStateException::class)
-        set(value) {
-            require(value == null || value > 0.0)
-            check(!running)
-            field = value
-        }
+    var accelerometerRobustThreshold by accelerometerAndGyroscopeCalibrator::accelerometerRobustThreshold
 
     /**
      * Factor to be used respect estimated accelerometer base noise level to consider a measurement
@@ -2654,14 +2400,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * @throws IllegalArgumentException if provided value is zero or negative.
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var accelerometerRobustThresholdFactor: Double =
-        StaticIntervalAccelerometerCalibrator.DEFAULT_ROBUST_THRESHOLD_FACTOR
-        @Throws(IllegalArgumentException::class, IllegalStateException::class)
-        set(value) {
-            require(value > 0.0)
-            check(!running)
-            field = value
-        }
+    var accelerometerRobustThresholdFactor by accelerometerAndGyroscopeCalibrator::accelerometerRobustThresholdFactor
 
     /**
      * Additional factor to be taken into account for robust methods based on LMedS or PROMedS,
@@ -2671,14 +2410,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * @throws IllegalArgumentException if provided value is zero or negative.
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var accelerometerRobustStopThresholdFactor: Double =
-        StaticIntervalAccelerometerCalibrator.DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR
-        @Throws(IllegalArgumentException::class, IllegalStateException::class)
-        set(value) {
-            require(value > 0.0)
-            check(!running)
-            field = value
-        }
+    var accelerometerRobustStopThresholdFactor by accelerometerAndGyroscopeCalibrator::accelerometerRobustStopThresholdFactor
 
     /**
      * Indicates robust method used to solve gyroscope calibration.
@@ -2686,12 +2418,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      *
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var gyroscopeRobustMethod: RobustEstimatorMethod? = null
-        @Throws(IllegalStateException::class)
-        set(value) {
-            check(!running)
-            field = value
-        }
+    var gyroscopeRobustMethod by accelerometerAndGyroscopeCalibrator::gyroscopeRobustMethod
 
     /**
      * Confidence of estimated gyroscope calibration result expressed as a value between 0.0
@@ -2706,15 +2433,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * included).
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var gyroscopeRobustConfidence: Double =
-        StaticIntervalGyroscopeCalibrator.ROBUST_DEFAULT_CONFIDENCE
-        @Throws(IllegalArgumentException::class, IllegalStateException::class)
-        set(value) {
-            require(value in 0.0..1.0)
-            check(!running)
-
-            field = value
-        }
+    var gyroscopeRobustConfidence by accelerometerAndGyroscopeCalibrator::gyroscopeRobustConfidence
 
     /**
      * Maximum number of iterations to attempt to find a robust gyroscope calibration solution.
@@ -2725,14 +2444,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * @throws IllegalArgumentException if provided value is zero or negative.
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var gyroscopeRobustMaxIterations: Int =
-        StaticIntervalGyroscopeCalibrator.ROBUST_DEFAULT_MAX_ITERATIONS
-        @Throws(IllegalArgumentException::class, IllegalStateException::class)
-        set(value) {
-            require(value > 0)
-            check(!running)
-            field = value
-        }
+    var gyroscopeRobustMaxIterations by accelerometerAndGyroscopeCalibrator::gyroscopeRobustMaxIterations
 
     /**
      * Size of preliminary subsets picked while finding a robust gyroscope calibration solution.
@@ -2748,13 +2460,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * [minimumRequiredGyroscopeMeasurements] at the moment the setter is called.
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var gyroscopeRobustPreliminarySubsetSize: Int = 0
-        @Throws(IllegalArgumentException::class, IllegalStateException::class)
-        set(value) {
-            require(value >= minimumRequiredGyroscopeMeasurements)
-            check(!running)
-            field = value
-        }
+    var gyroscopeRobustPreliminarySubsetSize by accelerometerAndGyroscopeCalibrator::gyroscopeRobustPreliminarySubsetSize
 
     /**
      * Threshold to be used to determine whether a measurement is considered an outlier by robust
@@ -2769,13 +2475,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * @throws IllegalArgumentException if provided value is zero or negative.
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var gyroscopeRobustThreshold: Double? = null
-        @Throws(IllegalArgumentException::class, IllegalStateException::class)
-        set(value) {
-            require(value == null || value > 0.0)
-            check(!running)
-            field = value
-        }
+    var gyroscopeRobustThreshold by accelerometerAndGyroscopeCalibrator::gyroscopeRobustThreshold
 
     /**
      * Factor to be used respect estimated gyroscope base noise level to consider a measurement
@@ -2788,14 +2488,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * @throws IllegalArgumentException if provided value is zero or negative.
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var gyroscopeRobustThresholdFactor: Double =
-        StaticIntervalGyroscopeCalibrator.DEFAULT_ROBUST_THRESHOLD_FACTOR
-        @Throws(IllegalArgumentException::class, IllegalStateException::class)
-        set(value) {
-            require(value > 0.0)
-            check(!running)
-            field = value
-        }
+    var gyroscopeRobustThresholdFactor by accelerometerAndGyroscopeCalibrator::gyroscopeRobustThresholdFactor
 
     /**
      * Additional factor to be taken into account for robust methods based on LMedS or PROMedS,
@@ -2805,14 +2498,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * @throws IllegalArgumentException if provided value is zero or negative.
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var gyroscopeRobustStopThresholdFactor: Double =
-        StaticIntervalGyroscopeCalibrator.DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR
-        @Throws(IllegalArgumentException::class, IllegalStateException::class)
-        set(value) {
-            require(value > 0.0)
-            check(!running)
-            field = value
-        }
+    var gyroscopeRobustStopThresholdFactor by accelerometerAndGyroscopeCalibrator::gyroscopeRobustStopThresholdFactor
 
     /**
      * Indicates robust method used to solve magnetometer calibration.
@@ -2820,12 +2506,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      *
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var magnetometerRobustMethod: RobustEstimatorMethod? = null
-        @Throws(IllegalStateException::class)
-        set(value) {
-            check(!running)
-            field = value
-        }
+    var magnetometerRobustMethod by magnetometerCalibrator::robustMethod
 
     /**
      * Confidence of estimated magnetometer calibration result expressed as a value between 0.0
@@ -2840,15 +2521,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * included).
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var magnetometerRobustConfidence: Double =
-        StaticIntervalMagnetometerCalibrator.ROBUST_DEFAULT_CONFIDENCE
-        @Throws(IllegalArgumentException::class, IllegalStateException::class)
-        set(value) {
-            require(value in 0.0..1.0)
-            check(!running)
-
-            field = value
-        }
+    var magnetometerRobustConfidence by magnetometerCalibrator::robustConfidence
 
     /**
      * Maximum number of iterations to attempt to find a robust magnetometer calibration solution.
@@ -2859,14 +2532,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * @throws IllegalArgumentException if provided value is zero or negative.
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var magnetometerRobustMaxIterations: Int =
-        StaticIntervalMagnetometerCalibrator.ROBUST_DEFAULT_MAX_ITERATIONS
-        @Throws(IllegalArgumentException::class, IllegalStateException::class)
-        set(value) {
-            require(value > 0)
-            check(!running)
-            field = value
-        }
+    var magnetometerRobustMaxIterations by magnetometerCalibrator::robustMaxIterations
 
     /**
      * Size of preliminary subsets picked while finding a robust magnetometer calibration solution.
@@ -2882,13 +2548,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * [minimumRequiredMagnetometerMeasurements] at the moment the setter is called.
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var magnetometerRobustPreliminarySubsetSize: Int = 0
-        @Throws(IllegalArgumentException::class, IllegalStateException::class)
-        set(value) {
-            require(value >= minimumRequiredMagnetometerMeasurements)
-            check(!running)
-            field = value
-        }
+    var magnetometerRobustPreliminarySubsetSize by magnetometerCalibrator::robustPreliminarySubsetSize
 
     /**
      * Threshold to be used to determine whether a measurement is considered an outlier by robust
@@ -2903,13 +2563,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * @throws IllegalArgumentException if provided value is zero or negative.
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var magnetometerRobustThreshold: Double? = null
-        @Throws(IllegalArgumentException::class, IllegalStateException::class)
-        set(value) {
-            require(value == null || value > 0.0)
-            check(!running)
-            field = value
-        }
+    var magnetometerRobustThreshold by magnetometerCalibrator::robustThreshold
 
     /**
      * Factor to be used respect estimated magnetometer base noise level to consider a measurement
@@ -2922,14 +2576,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * @throws IllegalArgumentException if provided value is zero or negative.
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var magnetometerRobustThresholdFactor: Double =
-        StaticIntervalMagnetometerCalibrator.DEFAULT_ROBUST_THRESHOLD_FACTOR
-        @Throws(IllegalArgumentException::class, IllegalStateException::class)
-        set(value) {
-            require(value > 0.0)
-            check(!running)
-            field = value
-        }
+    var magnetometerRobustThresholdFactor by magnetometerCalibrator::robustThresholdFactor
 
     /**
      * Additional factor to be taken into account for robust methods based on LMedS or PROMedS,
@@ -2939,14 +2586,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * @throws IllegalArgumentException if provided value is zero or negative.
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var magnetometerRobustStopThresholdFactor: Double =
-        StaticIntervalMagnetometerCalibrator.DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR
-        @Throws(IllegalArgumentException::class, IllegalStateException::class)
-        set(value) {
-            require(value > 0.0)
-            check(!running)
-            field = value
-        }
+    var magnetometerRobustStopThresholdFactor by magnetometerCalibrator::robustStopThresholdFactor
 
     /**
      * Gets estimated accelerometer scale factors and cross coupling errors, or null if not
@@ -2988,62 +2628,52 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * </pre>
      * Values of this matrix are unit-less.
      */
-    val estimatedAccelerometerMa
-        get() = accelerometerInternalCalibrator?.estimatedMa
+    val estimatedAccelerometerMa by accelerometerAndGyroscopeCalibrator::estimatedAccelerometerMa
 
     /**
      * Gets estimated accelerometer x-axis scale factor or null if not available.
      */
-    val estimatedAccelerometerSx: Double?
-        get() = accelerometerInternalCalibrator?.estimatedSx
+    val estimatedAccelerometerSx by accelerometerAndGyroscopeCalibrator::estimatedAccelerometerSx
 
     /**
      * Gets estimated accelerometer y-axis scale factor or null if not available.
      */
-    val estimatedAccelerometerSy: Double?
-        get() = accelerometerInternalCalibrator?.estimatedSy
+    val estimatedAccelerometerSy by accelerometerAndGyroscopeCalibrator::estimatedAccelerometerSy
 
     /**
      * Gets estimated accelerometer z-axis scale factor or null if not available.
      */
-    val estimatedAccelerometerSz: Double?
-        get() = accelerometerInternalCalibrator?.estimatedSz
+    val estimatedAccelerometerSz by accelerometerAndGyroscopeCalibrator::estimatedAccelerometerSz
 
     /**
      * Gets estimated accelerometer x-y cross-coupling error or null if not available.
      */
-    val estimatedAccelerometerMxy: Double?
-        get() = accelerometerInternalCalibrator?.estimatedMxy
+    val estimatedAccelerometerMxy by accelerometerAndGyroscopeCalibrator::estimatedAccelerometerMxy
 
     /**
      * Gets estimated accelerometer x-z cross-coupling error or null if not available.
      */
-    val estimatedAccelerometerMxz: Double?
-        get() = accelerometerInternalCalibrator?.estimatedMxz
+    val estimatedAccelerometerMxz by accelerometerAndGyroscopeCalibrator::estimatedAccelerometerMxz
 
     /**
      * Gets estimated accelerometer y-x cross-coupling error or null if not available.
      */
-    val estimatedAccelerometerMyx: Double?
-        get() = accelerometerInternalCalibrator?.estimatedMyx
+    val estimatedAccelerometerMyx by accelerometerAndGyroscopeCalibrator::estimatedAccelerometerMyx
 
     /**
      * Gets estimated accelerometer y-z cross-coupling error or null if not available.
      */
-    val estimatedAccelerometerMyz: Double?
-        get() = accelerometerInternalCalibrator?.estimatedMyz
+    val estimatedAccelerometerMyz by accelerometerAndGyroscopeCalibrator::estimatedAccelerometerMyz
 
     /**
      * Gets estimated accelerometer z-x cross-coupling error or null if not available.
      */
-    val estimatedAccelerometerMzx: Double?
-        get() = accelerometerInternalCalibrator?.estimatedMzx
+    val estimatedAccelerometerMzx by accelerometerAndGyroscopeCalibrator::estimatedAccelerometerMzx
 
     /**
      * Gets estimated accelerometer z-y cross-coupling error or null if not available.
      */
-    val estimatedAccelerometerMzy: Double?
-        get() = accelerometerInternalCalibrator?.estimatedMzy
+    val estimatedAccelerometerMzy by accelerometerAndGyroscopeCalibrator::estimatedAccelerometerMzy
 
     /**
      * Gets estimated covariance matrix for estimated accelerometer parameters or null if not
@@ -3055,21 +2685,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * variance for the following parameters (following indicated order): bx, by, bz, sx, sy, sz,
      * mxy, mxz, myx, myz, mzx, mzy, where bx, by, bz corresponds to bias or hard iron coordinates.
      */
-    val estimatedAccelerometerCovariance: Matrix?
-        get() = accelerometerInternalCalibrator?.estimatedCovariance
+    val estimatedAccelerometerCovariance by accelerometerAndGyroscopeCalibrator::estimatedAccelerometerCovariance
 
     /**
      * Gets estimated chi square value for accelerometer or null if not available.
      */
-    val estimatedAccelerometerChiSq: Double?
-        get() = accelerometerInternalCalibrator?.estimatedChiSq
+    val estimatedAccelerometerChiSq by accelerometerAndGyroscopeCalibrator::estimatedAccelerometerChiSq
 
     /**
      * Gets estimated mean square error respect to provided accelerometer measurements or null if
      * not available.
      */
-    val estimatedAccelerometerMse: Double?
-        get() = accelerometerInternalCalibrator?.estimatedMse
+    val estimatedAccelerometerMse by accelerometerAndGyroscopeCalibrator::estimatedAccelerometerMse
 
     /**
      * Gets x coordinate of estimated accelerometer bias expressed in meters per squared second
@@ -3078,20 +2705,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * [accelerometerInitialBiasX], otherwise it will be the estimated value obtained after solving
      * calibration, that might differ from [accelerometerInitialBiasX].
      */
-    val estimatedAccelerometerBiasX: Double?
-        get() {
-            return when (val internalCalibrator = accelerometerInternalCalibrator) {
-                is UnknownBiasAccelerometerCalibrator -> {
-                    internalCalibrator.estimatedBiasFx
-                }
-                is KnownBiasAccelerometerCalibrator -> {
-                    internalCalibrator.biasX
-                }
-                else -> {
-                    null
-                }
-            }
-        }
+    val estimatedAccelerometerBiasX by accelerometerAndGyroscopeCalibrator::estimatedAccelerometerBiasX
 
     /**
      * Gets y coordinate of estimated accelerometer bias expressed in meters per squared second
@@ -3100,20 +2714,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * [accelerometerInitialBiasY], otherwise it will be the estimated value obtained after solving
      * calibration, that might differ from [accelerometerInitialBiasY].
      */
-    val estimatedAccelerometerBiasY: Double?
-        get() {
-            return when (val internalCalibrator = accelerometerInternalCalibrator) {
-                is UnknownBiasAccelerometerCalibrator -> {
-                    internalCalibrator.estimatedBiasFy
-                }
-                is KnownBiasAccelerometerCalibrator -> {
-                    internalCalibrator.biasY
-                }
-                else -> {
-                    null
-                }
-            }
-        }
+    val estimatedAccelerometerBiasY by accelerometerAndGyroscopeCalibrator::estimatedAccelerometerBiasY
 
     /**
      * Gets z coordinate of estimated accelerometer bias expressed in meters per squared second
@@ -3122,20 +2723,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * [accelerometerInitialBiasZ], otherwise it will be the estimated value obtained after solving
      * calibration, that might differ from [accelerometerInitialBiasZ].
      */
-    val estimatedAccelerometerBiasZ: Double?
-        get() {
-            return when (val internalCalibrator = accelerometerInternalCalibrator) {
-                is UnknownBiasAccelerometerCalibrator -> {
-                    internalCalibrator.estimatedBiasFz
-                }
-                is KnownBiasAccelerometerCalibrator -> {
-                    internalCalibrator.biasZ
-                }
-                else -> {
-                    null
-                }
-            }
-        }
+    val estimatedAccelerometerBiasZ by accelerometerAndGyroscopeCalibrator::estimatedAccelerometerBiasZ
 
     /**
      * Gets x coordinate of estimated accelerometer bias.
@@ -3143,20 +2731,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * [accelerometerInitialBiasX], otherwise it will be the estimated value obtained after solving
      * calibration, that might differ from [accelerometerInitialBiasX].
      */
-    val estimatedAccelerometerBiasXAsMeasurement: Acceleration?
-        get() {
-            return when (val internalCalibrator = accelerometerInternalCalibrator) {
-                is UnknownBiasAccelerometerCalibrator -> {
-                    internalCalibrator.estimatedBiasFxAsAcceleration
-                }
-                is KnownBiasAccelerometerCalibrator -> {
-                    internalCalibrator.biasXAsAcceleration
-                }
-                else -> {
-                    null
-                }
-            }
-        }
+    val estimatedAccelerometerBiasXAsMeasurement by accelerometerAndGyroscopeCalibrator::estimatedAccelerometerBiasXAsMeasurement
 
     /**
      * Gets x coordinate of estimated accelerometer bias.
@@ -3168,18 +2743,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * @return true if result is available, false otherwise.
      */
     fun getEstimatedAccelerometerBiasXAsMeasurement(result: Acceleration): Boolean {
-        return when (val internalCalibrator = accelerometerInternalCalibrator) {
-            is UnknownBiasAccelerometerCalibrator -> {
-                internalCalibrator.getEstimatedBiasFxAsAcceleration(result)
-            }
-            is KnownBiasAccelerometerCalibrator -> {
-                internalCalibrator.getBiasXAsAcceleration(result)
-                true
-            }
-            else -> {
-                false
-            }
-        }
+        return accelerometerAndGyroscopeCalibrator.getEstimatedAccelerometerBiasXAsMeasurement(
+            result
+        )
     }
 
     /**
@@ -3188,20 +2754,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * [accelerometerInitialBiasY], otherwise it will be the estimated value obtained after solving
      * calibration, that might differ from [accelerometerInitialBiasY].
      */
-    val estimatedAccelerometerBiasYAsMeasurement: Acceleration?
-        get() {
-            return when (val internalCalibrator = accelerometerInternalCalibrator) {
-                is UnknownBiasAccelerometerCalibrator -> {
-                    internalCalibrator.estimatedBiasFyAsAcceleration
-                }
-                is KnownBiasAccelerometerCalibrator -> {
-                    internalCalibrator.biasYAsAcceleration
-                }
-                else -> {
-                    null
-                }
-            }
-        }
+    val estimatedAccelerometerBiasYAsMeasurement by accelerometerAndGyroscopeCalibrator::estimatedAccelerometerBiasYAsMeasurement
 
     /**
      * Gets y coordinate of estimated accelerometer bias.
@@ -3213,18 +2766,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * @return true if result is available, false otherwise.
      */
     fun getEstimatedAccelerometerBiasYAsMeasurement(result: Acceleration): Boolean {
-        return when (val internalCalibrator = accelerometerInternalCalibrator) {
-            is UnknownBiasAccelerometerCalibrator -> {
-                internalCalibrator.getEstimatedBiasFyAsAcceleration(result)
-            }
-            is KnownBiasAccelerometerCalibrator -> {
-                internalCalibrator.getBiasYAsAcceleration(result)
-                true
-            }
-            else -> {
-                false
-            }
-        }
+        return accelerometerAndGyroscopeCalibrator.getEstimatedAccelerometerBiasYAsMeasurement(
+            result
+        )
     }
 
     /**
@@ -3233,20 +2777,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * [accelerometerInitialBiasZ], otherwise it will be the estimated value obtained after solving
      * calibration, that might differ from [accelerometerInitialBiasZ].
      */
-    val estimatedAccelerometerBiasZAsMeasurement: Acceleration?
-        get() {
-            return when (val internalCalibrator = accelerometerInternalCalibrator) {
-                is UnknownBiasAccelerometerCalibrator -> {
-                    internalCalibrator.estimatedBiasFzAsAcceleration
-                }
-                is KnownBiasAccelerometerCalibrator -> {
-                    internalCalibrator.biasZAsAcceleration
-                }
-                else -> {
-                    null
-                }
-            }
-        }
+    val estimatedAccelerometerBiasZAsMeasurement by accelerometerAndGyroscopeCalibrator::estimatedAccelerometerBiasZAsMeasurement
 
     /**
      * Gets z coordinate of estimated accelerometer bias.
@@ -3258,18 +2789,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * @return true if result is available, false otherwise.
      */
     fun getEstimatedAccelerometerBiasZAsMeasurement(result: Acceleration): Boolean {
-        return when (val internalCalibrator = accelerometerInternalCalibrator) {
-            is UnknownBiasAccelerometerCalibrator -> {
-                internalCalibrator.getEstimatedBiasFzAsAcceleration(result)
-            }
-            is KnownBiasAccelerometerCalibrator -> {
-                internalCalibrator.getBiasZAsAcceleration(result)
-                true
-            }
-            else -> {
-                false
-            }
-        }
+        return accelerometerAndGyroscopeCalibrator.getEstimatedAccelerometerBiasZAsMeasurement(
+            result
+        )
     }
 
     /**
@@ -3278,20 +2800,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * [accelerometerInitialBiasAsTriad], otherwise it will be the estimated value obtained after
      * solving calibration, that might differ from [accelerometerInitialBiasAsTriad].
      */
-    val estimatedAccelerometerBiasAsTriad: AccelerationTriad?
-        get() {
-            return when (val internalCalibrator = accelerometerInternalCalibrator) {
-                is UnknownBiasAccelerometerCalibrator -> {
-                    internalCalibrator.estimatedBiasAsTriad
-                }
-                is KnownBiasAccelerometerCalibrator -> {
-                    internalCalibrator.biasAsTriad
-                }
-                else -> {
-                    null
-                }
-            }
-        }
+    val estimatedAccelerometerBiasAsTriad by accelerometerAndGyroscopeCalibrator::estimatedAccelerometerBiasAsTriad
 
     /**
      * Gets estimated accelerometer bias.
@@ -3303,33 +2812,14 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * @return true if result is available, false otherwise.
      */
     fun getEstimatedAccelerometerBiasAsTriad(result: AccelerationTriad): Boolean {
-        return when (val internalCalibrator = accelerometerInternalCalibrator) {
-            is UnknownBiasAccelerometerCalibrator -> {
-                internalCalibrator.getEstimatedBiasAsTriad(result)
-            }
-            is KnownBiasAccelerometerCalibrator -> {
-                internalCalibrator.getBiasAsTriad(result)
-                true
-            }
-            else -> {
-                false
-            }
-        }
+        return accelerometerAndGyroscopeCalibrator.getEstimatedAccelerometerBiasAsTriad(result)
     }
 
     /**
      * Gets norm of estimated standard deviation of accelerometer bias expressed in meters per
      * squared second (m/s^2), or null if not available.
      */
-    val estimatedAccelerometerBiasStandardDeviationNorm: Double?
-        get() {
-            val internalCalibrator = accelerometerInternalCalibrator ?: return null
-            return if (internalCalibrator is AccelerometerBiasUncertaintySource) {
-                internalCalibrator.estimatedBiasStandardDeviationNorm
-            } else {
-                null
-            }
-        }
+    val estimatedAccelerometerBiasStandardDeviationNorm by accelerometerAndGyroscopeCalibrator::estimatedAccelerometerBiasStandardDeviationNorm
 
     /**
      * Gets estimated gyroscope scale factors and cross coupling errors, or null if not
@@ -3371,69 +2861,58 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * </pre>
      * Values of this matrix are unit-less.
      */
-    val estimatedGyroscopeMg
-        get() = gyroscopeInternalCalibrator?.estimatedMg
+    val estimatedGyroscopeMg by accelerometerAndGyroscopeCalibrator::estimatedGyroscopeMg
 
     /**
      * Gets estimated gyroscope x-axis scale factor or null if not available.
      */
-    val estimatedGyroscopeSx: Double?
-        get() = gyroscopeInternalCalibrator?.estimatedSx
+    val estimatedGyroscopeSx by accelerometerAndGyroscopeCalibrator::estimatedGyroscopeSx
 
     /**
      * Gets estimated gyroscope y-axis scale factor or null if not available.
      */
-    val estimatedGyroscopeSy: Double?
-        get() = gyroscopeInternalCalibrator?.estimatedSy
+    val estimatedGyroscopeSy by accelerometerAndGyroscopeCalibrator::estimatedGyroscopeSy
 
     /**
      * Gets estimated gyroscope z-axis scale factor or null if not available.
      */
-    val estimatedGyroscopeSz: Double?
-        get() = gyroscopeInternalCalibrator?.estimatedSz
+    val estimatedGyroscopeSz by accelerometerAndGyroscopeCalibrator::estimatedGyroscopeSz
 
     /**
      * Gets estimated gyroscope x-y cross-coupling error or null if not available.
      */
-    val estimatedGyroscopeMxy: Double?
-        get() = gyroscopeInternalCalibrator?.estimatedMxy
+    val estimatedGyroscopeMxy by accelerometerAndGyroscopeCalibrator::estimatedGyroscopeMxy
 
     /**
      * Gets estimated gyroscope x-z cross-coupling error or null if not available.
      */
-    val estimatedGyroscopeMxz: Double?
-        get() = gyroscopeInternalCalibrator?.estimatedMxz
+    val estimatedGyroscopeMxz by accelerometerAndGyroscopeCalibrator::estimatedGyroscopeMxz
 
     /**
      * Gets estimated gyroscope y-x cross-coupling error or null if not available.
      */
-    val estimatedGyroscopeMyx: Double?
-        get() = gyroscopeInternalCalibrator?.estimatedMyx
+    val estimatedGyroscopeMyx by accelerometerAndGyroscopeCalibrator::estimatedGyroscopeMyx
 
     /**
      * Gets estimated gyroscope y-z cross-coupling error or null if not available.
      */
-    val estimatedGyroscopeMyz: Double?
-        get() = gyroscopeInternalCalibrator?.estimatedMyz
+    val estimatedGyroscopeMyz by accelerometerAndGyroscopeCalibrator::estimatedGyroscopeMyz
 
     /**
      * Gets estimated gyroscope z-x cross-coupling error or null if not available.
      */
-    val estimatedGyroscopeMzx: Double?
-        get() = gyroscopeInternalCalibrator?.estimatedMzx
+    val estimatedGyroscopeMzx by accelerometerAndGyroscopeCalibrator::estimatedGyroscopeMzx
 
     /**
      * Gets estimated gyroscope z-y cross-coupling error or null if not available.
      */
-    val estimatedGyroscopeMzy: Double?
-        get() = gyroscopeInternalCalibrator?.estimatedMzy
+    val estimatedGyroscopeMzy by accelerometerAndGyroscopeCalibrator::estimatedGyroscopeMzy
 
     /**
      * Gets estimated gyroscope G-dependent cross biases introduced on the gyroscope by the specific
      * forces sensed by the accelerometer.
      */
-    val estimatedGyroscopeGg
-        get() = gyroscopeInternalCalibrator?.estimatedGg
+    val estimatedGyroscopeGg by accelerometerAndGyroscopeCalibrator::estimatedGyroscopeGg
 
     /**
      * Gets estimated covariance matrix for estimated gyroscope parameters or null if not
@@ -3445,21 +2924,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * variance for the following parameters (following indicated order): bx, by, bz, sx, sy, sz,
      * mxy, mxz, myx, myz, mzx, mzy, where bx, by, bz corresponds to bias or hard iron coordinates.
      */
-    val estimatedGyroscopeCovariance: Matrix?
-        get() = gyroscopeInternalCalibrator?.estimatedCovariance
+    val estimatedGyroscopeCovariance by accelerometerAndGyroscopeCalibrator::estimatedGyroscopeCovariance
 
     /**
      * Gets estimated chi square value for gyroscope or null if not available.
      */
-    val estimatedGyroscopeChiSq: Double?
-        get() = gyroscopeInternalCalibrator?.estimatedChiSq
+    val estimatedGyroscopeChiSq by accelerometerAndGyroscopeCalibrator::estimatedGyroscopeChiSq
 
     /**
      * Gets estimated mean square error respect to provided gyroscope measurements or null if
      * not available.
      */
-    val estimatedGyroscopeMse: Double?
-        get() = gyroscopeInternalCalibrator?.estimatedMse
+    val estimatedGyroscopeMse by accelerometerAndGyroscopeCalibrator::estimatedGyroscopeMse
 
     /**
      * Gets x coordinate of estimated gyroscope bias expressed in radians per second (rad/s).
@@ -3467,20 +2943,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * [gyroscopeInitialBiasX], otherwise it will be the estimated value obtained after solving
      * calibration, that might differ from [gyroscopeInitialBiasX].
      */
-    val estimatedGyroscopeBiasX: Double?
-        get() {
-            return when (val internalCalibrator = gyroscopeInternalCalibrator) {
-                is UnknownBiasGyroscopeCalibrator -> {
-                    internalCalibrator.estimatedBiasX
-                }
-                is KnownBiasGyroscopeCalibrator -> {
-                    internalCalibrator.biasX
-                }
-                else -> {
-                    null
-                }
-            }
-        }
+    val estimatedGyroscopeBiasX by accelerometerAndGyroscopeCalibrator::estimatedGyroscopeBiasX
 
     /**
      * Gets y coordinate of estimated gyroscope bias expressed in radians per second (rad/s).
@@ -3488,20 +2951,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * [gyroscopeInitialBiasY], otherwise it will be the estimated value obtained after solving
      * calibration, that might differ from [gyroscopeInitialBiasY].
      */
-    val estimatedGyroscopeBiasY: Double?
-        get() {
-            return when (val internalCalibrator = gyroscopeInternalCalibrator) {
-                is UnknownBiasGyroscopeCalibrator -> {
-                    internalCalibrator.estimatedBiasY
-                }
-                is KnownBiasGyroscopeCalibrator -> {
-                    internalCalibrator.biasY
-                }
-                else -> {
-                    null
-                }
-            }
-        }
+    val estimatedGyroscopeBiasY by accelerometerAndGyroscopeCalibrator::estimatedGyroscopeBiasY
 
     /**
      * Gets z coordinate of estimated gyroscope bias expressed in radians per second (rad/s).
@@ -3509,20 +2959,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * [gyroscopeInitialBiasZ], otherwise it will be the estimated value obtained after solving
      * calibration, that might differ from [gyroscopeInitialBiasZ].
      */
-    val estimatedGyroscopeBiasZ: Double?
-        get() {
-            return when (val internalCalibrator = gyroscopeInternalCalibrator) {
-                is UnknownBiasGyroscopeCalibrator -> {
-                    internalCalibrator.estimatedBiasZ
-                }
-                is KnownBiasGyroscopeCalibrator -> {
-                    internalCalibrator.biasZ
-                }
-                else -> {
-                    null
-                }
-            }
-        }
+    val estimatedGyroscopeBiasZ by accelerometerAndGyroscopeCalibrator::estimatedGyroscopeBiasZ
 
     /**
      * Gets x coordinate of estimated gyroscope bias.
@@ -3530,20 +2967,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * [gyroscopeInitialBiasX], otherwise it will be the estimated value obtained after solving
      * calibration, that might differ from [gyroscopeInitialBiasX].
      */
-    val estimatedGyroscopeBiasXAsMeasurement: AngularSpeed?
-        get() {
-            return when (val internalCalibrator = gyroscopeInternalCalibrator) {
-                is UnknownBiasGyroscopeCalibrator -> {
-                    internalCalibrator.estimatedBiasAngularSpeedX
-                }
-                is KnownBiasGyroscopeCalibrator -> {
-                    internalCalibrator.biasAngularSpeedX
-                }
-                else -> {
-                    null
-                }
-            }
-        }
+    val estimatedGyroscopeBiasXAsMeasurement by accelerometerAndGyroscopeCalibrator::estimatedGyroscopeBiasXAsMeasurement
 
     /**
      * Gets x coordinate of estimated gyroscope bias.
@@ -3555,18 +2979,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * @return true if result is available, false otherwise.
      */
     fun getEstimatedGyroscopeBiasXAsMeasurement(result: AngularSpeed): Boolean {
-        return when (val internalCalibrator = gyroscopeInternalCalibrator) {
-            is UnknownBiasGyroscopeCalibrator -> {
-                internalCalibrator.getEstimatedBiasAngularSpeedX(result)
-            }
-            is KnownBiasGyroscopeCalibrator -> {
-                internalCalibrator.getBiasAngularSpeedX(result)
-                true
-            }
-            else -> {
-                false
-            }
-        }
+        return accelerometerAndGyroscopeCalibrator.getEstimatedGyroscopeBiasXAsMeasurement(result)
     }
 
     /**
@@ -3575,20 +2988,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * [gyroscopeInitialBiasY], otherwise it will be the estimated value obtained after solving
      * calibration, that might differ from [gyroscopeInitialBiasY].
      */
-    val estimatedGyroscopeBiasYAsMeasurement: AngularSpeed?
-        get() {
-            return when (val internalCalibrator = gyroscopeInternalCalibrator) {
-                is UnknownBiasGyroscopeCalibrator -> {
-                    internalCalibrator.estimatedBiasAngularSpeedY
-                }
-                is KnownBiasGyroscopeCalibrator -> {
-                    internalCalibrator.biasAngularSpeedY
-                }
-                else -> {
-                    null
-                }
-            }
-        }
+    val estimatedGyroscopeBiasYAsMeasurement by accelerometerAndGyroscopeCalibrator::estimatedGyroscopeBiasYAsMeasurement
 
     /**
      * Gets y coordinate of estimated gyroscope bias.
@@ -3600,18 +3000,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * @return true if result is available, false otherwise.
      */
     fun getEstimatedGyroscopeBiasYAsMeasurement(result: AngularSpeed): Boolean {
-        return when (val internalCalibrator = gyroscopeInternalCalibrator) {
-            is UnknownBiasGyroscopeCalibrator -> {
-                internalCalibrator.getEstimatedBiasAngularSpeedY(result)
-            }
-            is KnownBiasGyroscopeCalibrator -> {
-                internalCalibrator.getBiasAngularSpeedY(result)
-                true
-            }
-            else -> {
-                false
-            }
-        }
+        return accelerometerAndGyroscopeCalibrator.getEstimatedGyroscopeBiasYAsMeasurement(result)
     }
 
     /**
@@ -3620,20 +3009,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * [gyroscopeInitialBiasZ], otherwise it will be the estimated value obtained after solving
      * calibration, that might differ from [gyroscopeInitialBiasZ].
      */
-    val estimatedGyroscopeBiasZAsMeasurement: AngularSpeed?
-        get() {
-            return when (val internalCalibrator = gyroscopeInternalCalibrator) {
-                is UnknownBiasGyroscopeCalibrator -> {
-                    internalCalibrator.estimatedBiasAngularSpeedZ
-                }
-                is KnownBiasGyroscopeCalibrator -> {
-                    internalCalibrator.biasAngularSpeedZ
-                }
-                else -> {
-                    null
-                }
-            }
-        }
+    val estimatedGyroscopeBiasZAsMeasurement by accelerometerAndGyroscopeCalibrator::estimatedGyroscopeBiasZAsMeasurement
 
     /**
      * Gets z coordinate of estimated gyroscope bias.
@@ -3645,18 +3021,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * @return true if result is available, false otherwise.
      */
     fun getEstimatedGyroscopeBiasZAsMeasurement(result: AngularSpeed): Boolean {
-        return when (val internalCalibrator = gyroscopeInternalCalibrator) {
-            is UnknownBiasGyroscopeCalibrator -> {
-                internalCalibrator.getEstimatedBiasAngularSpeedZ(result)
-            }
-            is KnownBiasGyroscopeCalibrator -> {
-                internalCalibrator.getBiasAngularSpeedZ(result)
-                true
-            }
-            else -> {
-                false
-            }
-        }
+        return accelerometerAndGyroscopeCalibrator.getEstimatedGyroscopeBiasZAsMeasurement(result)
     }
 
     /**
@@ -3665,25 +3030,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * [gyroscopeInitialBiasAsTriad], otherwise it will be the estimated value obtained after
      * solving calibration, that might differ from [gyroscopeInitialBiasAsTriad].
      */
-    val estimatedGyroscopeBiasAsTriad: AngularSpeedTriad?
-        get() {
-            return when (val internalCalibrator = gyroscopeInternalCalibrator) {
-                is UnknownBiasGyroscopeCalibrator -> {
-                    internalCalibrator.estimatedBiasAsTriad
-                }
-                is KnownBiasGyroscopeCalibrator -> {
-                    AngularSpeedTriad(
-                        AngularSpeedUnit.RADIANS_PER_SECOND,
-                        internalCalibrator.biasX,
-                        internalCalibrator.biasY,
-                        internalCalibrator.biasZ
-                    )
-                }
-                else -> {
-                    null
-                }
-            }
-        }
+    val estimatedGyroscopeBiasAsTriad by accelerometerAndGyroscopeCalibrator::estimatedGyroscopeBiasAsTriad
 
     /**
      * Gets estimated gyroscope bias.
@@ -3695,38 +3042,14 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * @return true if result is available, false otherwise.
      */
     fun getEstimatedGyroscopeBiasAsTriad(result: AngularSpeedTriad): Boolean {
-        return when (val internalCalibrator = gyroscopeInternalCalibrator) {
-            is UnknownBiasGyroscopeCalibrator -> {
-                internalCalibrator.getEstimatedBiasAsTriad(result)
-            }
-            is KnownBiasGyroscopeCalibrator -> {
-                result.setValueCoordinatesAndUnit(
-                    internalCalibrator.biasX,
-                    internalCalibrator.biasY,
-                    internalCalibrator.biasZ,
-                    AngularSpeedUnit.RADIANS_PER_SECOND
-                )
-                true
-            }
-            else -> {
-                false
-            }
-        }
+        return accelerometerAndGyroscopeCalibrator.getEstimatedGyroscopeBiasAsTriad(result)
     }
 
     /**
      * Gets norm of estimated standard deviation of accelerometer bias expressed in radians per
      * second (rad/s), or null if not available.
      */
-    val estimatedGyroscopeBiasStandardDeviationNorm: Double?
-        get() {
-            val internalCalibrator = gyroscopeInternalCalibrator ?: return null
-            return if (internalCalibrator is GyroscopeBiasUncertaintySource) {
-                internalCalibrator.estimatedBiasStandardDeviationNorm
-            } else {
-                null
-            }
-        }
+    val estimatedGyroscopeBiasStandardDeviationNorm by accelerometerAndGyroscopeCalibrator::estimatedGyroscopeBiasStandardDeviationNorm
 
     /**
      * Gets estimated magnetometer soft-iron matrix containing scale factors and cross coupling
@@ -3768,62 +3091,52 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * </pre>
      * Values of this matrix are unit-less.
      */
-    val estimatedMagnetometerMm
-        get() = magnetometerInternalCalibrator?.estimatedMm
+    val estimatedMagnetometerMm by magnetometerCalibrator::estimatedMm
 
     /**
      * Gets estimated magnetometer x-axis scale factor or null if not available.
      */
-    val estimatedMagnetometerSx: Double?
-        get() = magnetometerInternalCalibrator?.estimatedSx
+    val estimatedMagnetometerSx by magnetometerCalibrator::estimatedSx
 
     /**
      * Gets estimated magnetometer y-axis scale factor or null if not available.
      */
-    val estimatedMagnetometerSy: Double?
-        get() = magnetometerInternalCalibrator?.estimatedSy
+    val estimatedMagnetometerSy by magnetometerCalibrator::estimatedSy
 
     /**
      * Gets estimated magnetometer z-axis scale factor or null if not available.
      */
-    val estimatedMagnetometerSz: Double?
-        get() = magnetometerInternalCalibrator?.estimatedSz
+    val estimatedMagnetometerSz by magnetometerCalibrator::estimatedSz
 
     /**
      * Gets estimated magnetometer x-y cross-coupling error or null if not available.
      */
-    val estimatedMagnetometerMxy: Double?
-        get() = magnetometerInternalCalibrator?.estimatedMxy
+    val estimatedMagnetometerMxy by magnetometerCalibrator::estimatedMxy
 
     /**
      * Gets estimated magnetometer x-z cross-coupling error or null if not available.
      */
-    val estimatedMagnetometerMxz: Double?
-        get() = magnetometerInternalCalibrator?.estimatedMxz
+    val estimatedMagnetometerMxz by magnetometerCalibrator::estimatedMxz
 
     /**
      * Gets estimated magnetometer y-x cross-coupling error or null if not available.
      */
-    val estimatedMagnetometerMyx: Double?
-        get() = magnetometerInternalCalibrator?.estimatedMyx
+    val estimatedMagnetometerMyx by magnetometerCalibrator::estimatedMyx
 
     /**
      * Gets estimated magnetometer y-z cross-coupling error or null if not available.
      */
-    val estimatedMagnetometerMyz: Double?
-        get() = magnetometerInternalCalibrator?.estimatedMyz
+    val estimatedMagnetometerMyz by magnetometerCalibrator::estimatedMyz
 
     /**
      * Gets estimated magnetometer z-x cross-coupling error or null if not available.
      */
-    val estimatedMagnetometerMzx: Double?
-        get() = magnetometerInternalCalibrator?.estimatedMzx
+    val estimatedMagnetometerMzx by magnetometerCalibrator::estimatedMzx
 
     /**
      * Gets estimated magnetometer z-y cross-coupling error or null if not available.
      */
-    val estimatedMagnetometerMzy: Double?
-        get() = magnetometerInternalCalibrator?.estimatedMzy
+    val estimatedMagnetometerMzy by magnetometerCalibrator::estimatedMzy
 
     /**
      * Gets estimated covariance matrix for estimated magnetometer parameters or null if not
@@ -3834,21 +3147,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * the following parameters (following indicated order): bx, by, bz, sx, sy, sz, mxy, mxz,
      * myx, myz, mzx, mzy.
      */
-    val estimatedMagnetometerCovariance: Matrix?
-        get() = magnetometerInternalCalibrator?.estimatedCovariance
+    val estimatedMagnetometerCovariance by magnetometerCalibrator::estimatedCovariance
 
     /**
      * Gets estimated chi square value for magnetometer or null if not available.
      */
-    val estimatedMagnetometerChiSq: Double?
-        get() = magnetometerInternalCalibrator?.estimatedChiSq
+    val estimatedMagnetometerChiSq by magnetometerCalibrator::estimatedChiSq
 
     /**
      * Gets estimated mean square error respect to provided magnetometer measurements or null if
      * not available.
      */
-    val estimatedMagnetometerMse: Double?
-        get() = magnetometerInternalCalibrator?.estimatedMse
+    val estimatedMagnetometerMse by magnetometerCalibrator::estimatedMse
 
     /**
      * Gets x coordinate of estimated magnetometer hard iron expressed in Teslas (T).
@@ -3856,20 +3166,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * [magnetometerInitialHardIronX], otherwise it will be the estimated value obtained after
      * solving calibration, that might differ from [magnetometerInitialHardIronX].
      */
-    val estimatedMagnetometerHardIronX: Double?
-        get() {
-            return when (val internalCalibrator = magnetometerInternalCalibrator) {
-                is UnknownHardIronMagnetometerCalibrator -> {
-                    internalCalibrator.estimatedHardIronX
-                }
-                is KnownHardIronMagnetometerCalibrator -> {
-                    internalCalibrator.hardIronX
-                }
-                else -> {
-                    null
-                }
-            }
-        }
+    val estimatedMagnetometerHardIronX by magnetometerCalibrator::estimatedHardIronX
 
     /**
      * Gets y coordinate of estimated magnetometer hard iron expressed in Teslas (T).
@@ -3877,20 +3174,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * [magnetometerInitialHardIronY], otherwise it will be the estimated value obtained after
      * solving calibration, that might differ from [magnetometerInitialHardIronY].
      */
-    val estimatedMagnetometerHardIronY: Double?
-        get() {
-            return when (val internalCalibrator = magnetometerInternalCalibrator) {
-                is UnknownHardIronMagnetometerCalibrator -> {
-                    internalCalibrator.estimatedHardIronY
-                }
-                is KnownHardIronMagnetometerCalibrator -> {
-                    internalCalibrator.hardIronY
-                }
-                else -> {
-                    null
-                }
-            }
-        }
+    val estimatedMagnetometerHardIronY by magnetometerCalibrator::estimatedHardIronY
 
     /**
      * Gets z coordinate of estimated magnetometer hard iron expressed in Teslas (T).
@@ -3898,20 +3182,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * [magnetometerInitialHardIronZ], otherwise it will be the estimated value obtained after
      * solving calibration, that might differ from [magnetometerInitialHardIronZ].
      */
-    val estimatedMagnetometerHardIronZ: Double?
-        get() {
-            return when (val internalCalibrator = magnetometerInternalCalibrator) {
-                is UnknownHardIronMagnetometerCalibrator -> {
-                    internalCalibrator.estimatedHardIronZ
-                }
-                is KnownHardIronMagnetometerCalibrator -> {
-                    internalCalibrator.hardIronZ
-                }
-                else -> {
-                    null
-                }
-            }
-        }
+    val estimatedMagnetometerHardIronZ by magnetometerCalibrator::estimatedHardIronZ
 
     /**
      * Gets x coordinate of estimated magnetometer hard iron.
@@ -3920,20 +3191,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * obtained after solving calibration, that might differ from
      * [magnetometerInitialHardIronXAsMeasurement].
      */
-    val estimatedMagnetometerHardIronXAsMeasurement: MagneticFluxDensity?
-        get() {
-            return when (val internalCalibrator = magnetometerInternalCalibrator) {
-                is UnknownHardIronMagnetometerCalibrator -> {
-                    internalCalibrator.estimatedHardIronXAsMagneticFluxDensity
-                }
-                is KnownHardIronMagnetometerCalibrator -> {
-                    internalCalibrator.hardIronXAsMagneticFluxDensity
-                }
-                else -> {
-                    null
-                }
-            }
-        }
+    val estimatedMagnetometerHardIronXAsMeasurement by magnetometerCalibrator::estimatedHardIronXAsMeasurement
 
     /**
      * Gets x coordinate of estimated magnetometer hard iron.
@@ -3946,18 +3204,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * @return true if result is available, false otherwise.
      */
     fun getEstimatedMagnetometerHardIronXAsMeasurement(result: MagneticFluxDensity): Boolean {
-        return when (val internalCalibrator = magnetometerInternalCalibrator) {
-            is UnknownHardIronMagnetometerCalibrator -> {
-                internalCalibrator.getEstimatedHardIronXAsMagneticFluxDensity(result)
-            }
-            is KnownHardIronMagnetometerCalibrator -> {
-                internalCalibrator.getHardIronXAsMagneticFluxDensity(result)
-                true
-            }
-            else -> {
-                false
-            }
-        }
+        return magnetometerCalibrator.getEstimatedHardIronXAsMeasurement(result)
     }
 
     /**
@@ -3967,20 +3214,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * obtained after solving calibration, that might differ from
      * [magnetometerInitialHardIronYAsMeasurement].
      */
-    val estimatedMagnetometerHardIronYAsMeasurement: MagneticFluxDensity?
-        get() {
-            return when (val internalCalibrator = magnetometerInternalCalibrator) {
-                is UnknownHardIronMagnetometerCalibrator -> {
-                    internalCalibrator.estimatedHardIronYAsMagneticFluxDensity
-                }
-                is KnownHardIronMagnetometerCalibrator -> {
-                    internalCalibrator.hardIronYAsMagneticFluxDensity
-                }
-                else -> {
-                    null
-                }
-            }
-        }
+    val estimatedMagnetometerHardIronYAsMeasurement by magnetometerCalibrator::estimatedHardIronYAsMeasurement
 
     /**
      * Gets y coordinate of estimated magnetometer hard iron.
@@ -3993,18 +3227,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * @return true if result is available, false otherwise.
      */
     fun getEstimatedMagnetometerHardIronYAsMeasurement(result: MagneticFluxDensity): Boolean {
-        return when (val internalCalibrator = magnetometerInternalCalibrator) {
-            is UnknownHardIronMagnetometerCalibrator -> {
-                internalCalibrator.getEstimatedHardIronYAsMagneticFluxDensity(result)
-            }
-            is KnownHardIronMagnetometerCalibrator -> {
-                internalCalibrator.getHardIronYAsMagneticFluxDensity(result)
-                true
-            }
-            else -> {
-                false
-            }
-        }
+        return magnetometerCalibrator.getEstimatedHardIronYAsMeasurement(result)
     }
 
     /**
@@ -4014,20 +3237,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * obtained after solving calibration, that might differ from
      * [magnetometerInitialHardIronZAsMeasurement].
      */
-    val estimatedMagnetometerHardIronZAsMeasurement: MagneticFluxDensity?
-        get() {
-            return when (val internalCalibrator = magnetometerInternalCalibrator) {
-                is UnknownHardIronMagnetometerCalibrator -> {
-                    internalCalibrator.estimatedHardIronZAsMagneticFluxDensity
-                }
-                is KnownHardIronMagnetometerCalibrator -> {
-                    internalCalibrator.hardIronZAsMagneticFluxDensity
-                }
-                else -> {
-                    null
-                }
-            }
-        }
+    val estimatedMagnetometerHardIronZAsMeasurement by magnetometerCalibrator::estimatedHardIronZAsMeasurement
 
     /**
      * Gets z coordinate of estimated magnetometer hard iron.
@@ -4040,18 +3250,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * @return true if result is available, false otherwise.
      */
     fun getEstimatedMagnetometerHardIronZAsMeasurement(result: MagneticFluxDensity): Boolean {
-        return when (val internalCalibrator = magnetometerInternalCalibrator) {
-            is UnknownHardIronMagnetometerCalibrator -> {
-                internalCalibrator.getEstimatedHardIronZAsMagneticFluxDensity(result)
-            }
-            is KnownHardIronMagnetometerCalibrator -> {
-                internalCalibrator.getHardIronZAsMagneticFluxDensity(result)
-                true
-            }
-            else -> {
-                false
-            }
-        }
+        return magnetometerCalibrator.getEstimatedHardIronZAsMeasurement(result)
     }
 
     /**
@@ -4060,20 +3259,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * [magnetometerInitialHardIronAsTriad], otherwise it will be the estimated value obtained after
      * solving calibration, that might differ from [magnetometerInitialHardIronAsTriad].
      */
-    val estimatedMagnetometerHardIronAsTriad: MagneticFluxDensityTriad?
-        get() {
-            return when (val internalCalibrator = magnetometerInternalCalibrator) {
-                is UnknownHardIronMagnetometerCalibrator -> {
-                    internalCalibrator.estimatedHardIronAsTriad
-                }
-                is KnownHardIronMagnetometerCalibrator -> {
-                    internalCalibrator.hardIronAsTriad
-                }
-                else -> {
-                    null
-                }
-            }
-        }
+    val estimatedMagnetometerHardIronAsTriad by magnetometerCalibrator::estimatedHardIronAsTriad
 
     /**
      * Gets estimated magnetometer hard iron.
@@ -4085,18 +3271,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * @return true if result is available, false otherwise.
      */
     fun getEstimatedMagnetometerHardIronAsTriad(result: MagneticFluxDensityTriad): Boolean {
-        return when (val internalCalibrator = magnetometerInternalCalibrator) {
-            is UnknownHardIronMagnetometerCalibrator -> {
-                internalCalibrator.getEstimatedHardIronAsTriad(result)
-            }
-            is KnownHardIronMagnetometerCalibrator -> {
-                internalCalibrator.getHardIronAsTriad(result)
-                true
-            }
-            else -> {
-                false
-            }
-        }
+        return magnetometerCalibrator.getEstimatedHardIronAsTriad(result)
     }
 
     /**
@@ -4104,15 +3279,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * expressed in radians per second (rad/s).
      * This is only available once generator completes initialization.
      */
-    val gyroscopeBaseNoiseLevel
-        get() = generator.gyroscopeBaseNoiseLevel
+    val gyroscopeBaseNoiseLevel by accelerometerAndGyroscopeCalibrator::gyroscopeBaseNoiseLevel
 
     /**
      * Gets gyroscope measurement base noise level that has been detected during initialization.
      * This is only available once generator completes initialization.
      */
-    val gyroscopeBaseNoiseLevelAsMeasurement
-        get() = generator.gyroscopeBaseNoiseLevelAsMeasurement
+    val gyroscopeBaseNoiseLevelAsMeasurement by accelerometerAndGyroscopeCalibrator::gyroscopeBaseNoiseLevelAsMeasurement
 
     /**
      * Gets gyroscope measurement base noise level that has been detected during initialization.
@@ -4122,7 +3295,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * @return true if result is available, false otherwise.
      */
     fun getGyroscopeBaseNoiseLevelAsMeasurement(result: AngularSpeed): Boolean {
-        return generator.getGyroscopeBaseNoiseLevelAsMeasurement(result)
+        return accelerometerAndGyroscopeCalibrator.getGyroscopeBaseNoiseLevelAsMeasurement(result)
     }
 
     /**
@@ -4130,15 +3303,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * expressed in Teslas (T).
      * This is only available once generator completes initialization.
      */
-    val magnetometerBaseNoiseLevel
-        get() = generator.magnetometerBaseNoiseLevel
+    val magnetometerBaseNoiseLevel by magnetometerCalibrator::baseNoiseLevel
 
     /**
      * Gets magnetometer measurement base noise level that has been detected during initialization.
      * This is only available once generator completes initialization.
      */
-    val magnetometerBaseNoiseLevelAsMeasurement
-        get() = generator.magnetometerBaseNoiseLevelAsMeasurement
+    val magnetometerBaseNoiseLevelAsMeasurement by magnetometerCalibrator::baseNoiseLevelAsMeasurement
 
     /**
      * Gets magnetometer measurement base noise level that has been detected during initialization.
@@ -4148,20 +3319,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * @return true if result is available, false otherwise.
      */
     fun getMagnetometerBaseNoiseLevelAsMeasurement(result: MagneticFluxDensity): Boolean {
-        return generator.getMagnetometerBaseNoiseLevelAsMeasurement(result)
+        return magnetometerCalibrator.getBaseNoiseLevelAsMeasurement(result)
     }
 
     /**
      * Number of gyroscope measurements that have been processed.
      */
-    val numberOfProcessedGyroscopeMeasurements
-        get() = generator.numberOfProcessedGyroscopeMeasurements
-
-    /**
-     * Number of magnetometer measurements that have been processed.
-     */
-    val numberOfProcessedMagnetometerMeasurements
-        get() = generator.numberOfProcessedMagnetometerMeasurements
+    val numberOfProcessedGyroscopeMeasurements by accelerometerAndGyroscopeCalibrator::numberOfProcessedGyroscopeMeasurements
 
     /**
      * List of accelerometer measurements that have been collected so far to be used for
@@ -4169,7 +3333,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * Items in return list can be modified if needed, but beware that this might
      * have consequences on solved calibration result.
      */
-    val accelerometerMeasurements = mutableListOf<StandardDeviationBodyKinematics>()
+    val accelerometerMeasurements by accelerometerAndGyroscopeCalibrator::accelerometerMeasurements
 
     /**
      * List of gyroscope measurements that have been collected so far to be used for
@@ -4177,8 +3341,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * Items in return list can be modified if needed, but beware that this might
      * have consequences on solved calibration result.
      */
-    val gyroscopeMeasurements =
-        mutableListOf<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>()
+    val gyroscopeMeasurements by accelerometerAndGyroscopeCalibrator::gyroscopeMeasurements
 
     /**
      * List of magnetometer measurements that have been collected so far to be used for
@@ -4186,476 +3349,99 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * Items in return list can be modified if needed, but beware that this might
      * have consequences on solved calibration result.
      */
-    val magnetometerMeasurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
+    val magnetometerMeasurements by magnetometerCalibrator::measurements
 
     /**
      * Indicates whether enough measurements have been picked at static intervals so that the
      * accelerometer calibration process can be solved.
      */
-    val isReadyToSolveAccelerometerCalibration
-        get() = accelerometerMeasurements.size >= requiredMeasurements.coerceAtLeast(
-            minimumRequiredMeasurements
-        )
+    val isReadyToSolveAccelerometerCalibration by accelerometerAndGyroscopeCalibrator::isReadyToSolveAccelerometerCalibration
 
     /**
      * Indicates whether enough measurements have been picked at dynamic intervals so that the
      * gyroscope calibration process can be solved.
      */
-    val isReadyToSolveGyroscopeCalibration
-        get() = gyroscopeMeasurements.size >= requiredMeasurements.coerceAtLeast(
-            minimumRequiredMeasurements
-        )
+    val isReadyToSolveGyroscopeCalibration by accelerometerAndGyroscopeCalibrator::isReadyToSolveGyroscopeCalibration
 
     /**
      * Indicates whether enough measurements have been picked at static intervals so that the
      * calibration process can be solved.
      */
-    val isReadyToSolveMagnetometerCalibration: Boolean
-        get() = magnetometerMeasurements.size >= requiredMeasurements.coerceAtLeast(
-            minimumRequiredMeasurements
-        )
+    val isReadyToSolveMagnetometerCalibration by magnetometerCalibrator::isReadyToSolveCalibration
 
     /**
      * Indicates whether enough measurements have been picked at static or dynamic intervals so that
      * the calibration process can be solved.
      */
     override val isReadyToSolveCalibration: Boolean
-        get() = isReadyToSolveAccelerometerCalibration && isReadyToSolveGyroscopeCalibration && isReadyToSolveMagnetometerCalibration
+        get() = accelerometerAndGyroscopeCalibrator.isReadyToSolveCalibration
+                && isReadyToSolveMagnetometerCalibration
 
     /**
      * Starts calibrator.
-     * This method starts collecting accelerometer and gyroscope measurements.
-     * When calibrator is started, it begins with an initialization stage where accelerometer noise
-     * is estimated while device remains static. If no location is provided, during initialization
-     * gravity norm is also estimated.
+     * This method starts collecting sensor measurements.
+     * When calibrator is started, it begins with an initialization stage where sensor noise
+     * is estimated while device remains static.
      * Once initialization is completed, calibrator determines intervals where device remains static
      * when device has different poses, so that measurements are collected to solve calibration.
      * If [solveCalibrationWhenEnoughMeasurements] is true, calibration is automatically solved
      * once enough measurements are collected, otherwise a call to [calibrate] must be done to solve
      * calibration.
      *
-     * @throws IllegalStateException if calibrator is already running or a sensor is missing
-     * (either accelerometer or gravity if it is being used when no location is provided).
+     * @throws IllegalStateException if calibrator is already running or magnetometer sensor is
+     * missing.
      */
     @Throws(IllegalStateException::class)
     override fun start() {
-        super.start()
-        if (isGravityNormEstimated) {
-            gravityNormEstimator.start()
-        }
+        check(!running)
+
+        reset()
+
+        accelerometerAndGyroscopeCalibrator.start()
+        magnetometerCalibrator.start()
     }
 
     /**
      * Stops calibrator.
-     * When this is called, no more accelerometer, gyroscope or gravity measurements are collected.
-     *
-     * @param running specifies the running parameter to be set. This is true when stop occurs
-     * internally during measurement collection to start solving calibration, otherwise is false
-     * when calling public [stop] method.
+     * When this is called, no more sensor measurements are collected.
      */
-    override fun internalStop(running: Boolean) {
-        if (gravityNormEstimator.running) {
-            gravityNormEstimator.stop()
-        }
-        super.internalStop(running)
+    override fun stop() {
+        accelerometerAndGyroscopeCalibrator.stop()
+        magnetometerCalibrator.stop()
     }
 
     /**
-     * Internally solves calibration using collected measurements without checking pre-requisites
-     * (if either calibrator is already running or enough measurements are available).
-     * This is called when calibration occurs automatically when enough measurements are collected.
-     * When calling [calibrate] method, pre-requisites are checked before calling this method.
+     * Solves calibration using collected measurements.
+     * This must be explicitly called after enough measurements are collected if
+     * [solveCalibrationWhenEnoughMeasurements] is false.
+     *
+     * @return true if calibration completes successfully, false if a numerical error occurs while
+     * solving calibration (which is notified using provided [errorListener].
+     * @throws IllegalStateException if calibrator is already running or not enough measurements
+     * have already been collected.
      */
     @Throws(IllegalStateException::class)
-    override fun internalCalibrate(): Boolean {
-        return try {
-            calibrationSolvingStartedListener?.onCalibrationSolvingStarted(this)
-            accelerometerInternalCalibrator?.calibrate()
-
-            // once accelerometer is calibrated, build gyroscope calibrator using estimated
-            // accelerometer parameters
-            gyroscopeInternalCalibrator = buildGyroscopeInternalCalibrator()
-            gyroscopeInternalCalibrator?.calibrate()
-
-            magnetometerInternalCalibrator?.calibrate()
-
-            calibrationCompletedListener?.onCalibrationCompleted(this)
-            running = false
-            true
-        } catch (e: NavigationException) {
-            Log.e(
-                StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator::class.qualifiedName,
-                "Calibration estimation failed",
-                e
-            )
-            errorListener?.onError(
-                this,
-                CalibratorErrorReason.NUMERICAL_INSTABILITY_DURING_CALIBRATION
-            )
-            running = false
-            false
-        }
+    override fun calibrate(): Boolean {
+        return accelerometerAndGyroscopeCalibrator.calibrate()
+                && magnetometerCalibrator.calibrate()
     }
 
     /**
-     * Resets calibrator to its initial state.
+     * Resets this calibrator.
      */
-    override fun reset() {
-        accelerometerMeasurements.clear()
-        gyroscopeMeasurements.clear()
-        magnetometerMeasurements.clear()
-
-        gravityNorm = null
-        accelerometerResultUnreliable = false
-        accelerometerInitialBiasX = null
-        accelerometerInitialBiasY = null
-        accelerometerInitialBiasZ = null
-
-        gyroscopeInitialBiasX = null
-        gyroscopeInitialBiasY = null
-        gyroscopeInitialBiasZ = null
-
-        magnetometerInitialHardIronX = null
-        magnetometerInitialHardIronY = null
-        magnetometerInitialHardIronZ = null
-
-        accelerometerInternalCalibrator = null
-        gyroscopeInternalCalibrator = null
-        magnetometerInternalCalibrator = null
-
-        initialMagneticFluxDensityNorm = null
-    }
-
-    /**
-     * Checks current accelerometer and gyroscope calibration measurements, if enough and
-     * [solveCalibrationWhenEnoughMeasurements] is true, starts calibration.
-     */
-    private fun checkMeasurementsAndSolveCalibration() {
-        val reqMeasurements = requiredMeasurements.coerceAtLeast(minimumRequiredMeasurements)
-        val accelerometerMeasurementsSize = accelerometerMeasurements.size
-        val gyroscopeMeasurementsSize = gyroscopeMeasurements.size
-        val magnetometerMeasurements = magnetometerMeasurements.size
-
-        // check if enough measurements have been collected
-        val isReadyToCalibrate =
-            accelerometerMeasurementsSize >= reqMeasurements
-                    && gyroscopeMeasurementsSize >= reqMeasurements
-                    && magnetometerMeasurements >= reqMeasurements
-
-        if (isReadyToCalibrate) {
-            readyToSolveCalibrationListener?.onReadyToSolveCalibration(
-                this@StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator
-            )
-
-            // stop internal generator since no more measurements need to be collected
-            internalStop(true)
-
-            // build accelerometer and magnetometer calibrators
-            accelerometerInternalCalibrator = buildAccelerometerInternalCalibrator()
-            magnetometerInternalCalibrator = buildMagnetometerInternalCalibrator()
-
-            if (solveCalibrationWhenEnoughMeasurements) {
-                // execute calibration
-                internalCalibrate()
-            }
-        }
-    }
-
-    /**
-     * Updates initial biases values when first accelerometer measurement is received, so
-     * that hardware calibrated biases are retrieved if
-     * [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED] is used.
-     *
-     * @param bx x-coordinate of initial bias to be set expressed in meters per squared second
-     * (m/s^2).
-     * @param by y-coordinate of initial bias to be set expressed in meters per squared second
-     * (m/s^2).
-     * @param bz z-coordinate of initial bias to be set expressed in meters per squared second
-     * (m/s^2).
-     */
-    private fun updateAccelerometerInitialBiases(bx: Float?, by: Float?, bz: Float?) {
-        val initialBiasX: Double
-        val initialBiasY: Double
-        val initialBiasZ: Double
-        if (bx != null && by != null && bz != null) {
-            initialBiasX = bx.toDouble()
-            initialBiasY = by.toDouble()
-            initialBiasZ = bz.toDouble()
-        } else {
-            initialBiasX = 0.0
-            initialBiasY = 0.0
-            initialBiasZ = 0.0
-        }
-
-        accelerometerInitialBiasX = initialBiasX
-        accelerometerInitialBiasY = initialBiasY
-        accelerometerInitialBiasZ = initialBiasZ
-
-        initialAccelerometerBiasAvailableListener?.onInitialBiasAvailable(
-            this,
-            initialBiasX,
-            initialBiasY,
-            initialBiasZ
-        )
-    }
-
-    /**
-     * Updates initial biases values when first gyroscope measurement is received, so
-     * that hardware calibrated biases are retrieved if
-     * [GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED] is used.
-     *
-     * @param bx x-coordinate of initial bias to be set expressed in radians per second (rad/s).
-     * @param by y-coordinate of initial bias to be set expressed in radians per second (rad/s).
-     * @param bz z-coordinate of initial bias to be set expressed in radians per second (rad/s).
-     */
-    private fun updateGyroscopeInitialBiases(bx: Float?, by: Float?, bz: Float?) {
-        val initialBiasX: Double
-        val initialBiasY: Double
-        val initialBiasZ: Double
-        if (bx != null && by != null && bz != null) {
-            initialBiasX = bx.toDouble()
-            initialBiasY = by.toDouble()
-            initialBiasZ = bz.toDouble()
-        } else {
-            initialBiasX = 0.0
-            initialBiasY = 0.0
-            initialBiasZ = 0.0
-        }
-
-        gyroscopeInitialBiasX = initialBiasX
-        gyroscopeInitialBiasY = initialBiasY
-        gyroscopeInitialBiasZ = initialBiasZ
-
-        initialGyroscopeBiasAvailableListener?.onInitialBiasAvailable(
-            this,
-            initialBiasX,
-            initialBiasY,
-            initialBiasZ
-        )
-    }
-
-    /**
-     * Updates initial hard iron values when first magnetometer measurement is received, so
-     * that hardware calibrated biases are retrieved if
-     * [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED] is used.
-     *
-     * @param hardIronX hard iron on device x-axis expressed in micro-Teslas (µT). Only
-     * available when using [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED].
-     * If available, this value remains constant with calibrated bias value.
-     * @param hardIronY hard iron on device y-axis expressed in micro-Teslas (µT). Only
-     * available when using [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED].
-     * If available, this value remains constant with calibrated bias value.
-     * @param hardIronZ hard iron on device y-axis expressed in micro-Teslas (µT). Only
-     * available when using [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED].
-     * If available, this value remains constant with calibrated bias value.
-     */
-    private fun updateMagnetometerInitialHardIrons(
-        hardIronX: Double?,
-        hardIronY: Double?,
-        hardIronZ: Double?
-    ) {
-        val initialHardIronX: Double
-        val initialHardIronY: Double
-        val initialHardIronZ: Double
-        if (hardIronX != null && hardIronY != null && hardIronZ != null) {
-            initialHardIronX = hardIronX.toDouble()
-            initialHardIronY = hardIronY.toDouble()
-            initialHardIronZ = hardIronZ.toDouble()
-        } else {
-            initialHardIronX = 0.0
-            initialHardIronY = 0.0
-            initialHardIronZ = 0.0
-        }
-
-        magnetometerInitialHardIronX = initialHardIronX
-        magnetometerInitialHardIronY = initialHardIronY
-        magnetometerInitialHardIronZ = initialHardIronZ
-
-        initialMagnetometerHardIronAvailableListener?.onInitialHardIronAvailable(
-            this,
-            initialHardIronX,
-            initialHardIronY,
-            initialHardIronZ
-        )
-    }
-
-    /**
-     * Indicates whether the generator has picked the first gyroscope measurement.
-     */
-    private val isFirstGyroscopeMeasurement: Boolean
-        get() = generator.numberOfProcessedGyroscopeMeasurements <= FIRST_MEASUREMENT
-
-    /**
-     * Indicates whether the generator has picked the first accelerometer measurement.
-     */
-    private val isFirstMagnetometerMeasurement: Boolean
-        get() = generator.numberOfProcessedMagnetometerMeasurements <= FIRST_MEASUREMENT
-
-    /**
-     * Builds an internal accelerometer calibrator based on all provided parameters.
-     *
-     * @return an internal accelerometer calibrator.
-     * @throws IllegalStateException if no suitable calibrator can be built.
-     */
-    @Throws(IllegalStateException::class)
-    private fun buildAccelerometerInternalCalibrator(): AccelerometerNonLinearCalibrator {
-        return AccelerometerInternalCalibratorBuilder(
-            accelerometerMeasurements,
-            accelerometerRobustPreliminarySubsetSize,
-            minimumRequiredAccelerometerMeasurements,
-            accelerometerRobustMethod,
-            accelerometerRobustConfidence,
-            accelerometerRobustMaxIterations,
-            accelerometerRobustThreshold,
-            accelerometerRobustThresholdFactor,
-            accelerometerRobustStopThresholdFactor,
-            location,
-            gravityNorm,
-            isAccelerometerGroundTruthInitialBias,
-            isAccelerometerCommonAxisUsed,
-            accelerometerInitialBiasX,
-            accelerometerInitialBiasY,
-            accelerometerInitialBiasZ,
-            accelerometerInitialSx,
-            accelerometerInitialSy,
-            accelerometerInitialSz,
-            accelerometerInitialMxy,
-            accelerometerInitialMxz,
-            accelerometerInitialMyx,
-            accelerometerInitialMyz,
-            accelerometerInitialMzx,
-            accelerometerInitialMzy,
-            accelerometerBaseNoiseLevel,
-            accelerometerQualityScoreMapper
-        ).build()
-    }
-
-    /**
-     * Builds an internal gyroscope calibrator based on all provided parameters.
-     * To be able to build the gyroscope internal calibrator, first accelerometer calibration must
-     * be solved.
-     *
-     * @return an internal gyroscope calibrator.
-     * @throws IllegalStateException if no suitable calibrator can be built.
-     */
-    @Throws(IllegalStateException::class)
-    private fun buildGyroscopeInternalCalibrator(): GyroscopeNonLinearCalibrator {
-        val accelerometerSx = estimatedAccelerometerSx
-        checkNotNull(accelerometerSx)
-
-        val accelerometerSy = estimatedAccelerometerSy
-        checkNotNull(accelerometerSy)
-
-        val accelerometerSz = estimatedAccelerometerSz
-        checkNotNull(accelerometerSz)
-
-        val accelerometerMxy = estimatedAccelerometerMxy
-        checkNotNull(accelerometerMxy)
-
-        val accelerometerMxz = estimatedAccelerometerMxz
-        checkNotNull(accelerometerMxz)
-
-        val accelerometerMyx = estimatedAccelerometerMyx
-        checkNotNull(accelerometerMyx)
-
-        val accelerometerMyz = estimatedAccelerometerMyz
-        checkNotNull(accelerometerMyz)
-
-        val accelerometerMzx = estimatedAccelerometerMzx
-        checkNotNull(accelerometerMzx)
-
-        val accelerometerMzy = estimatedAccelerometerMzy
-        checkNotNull(accelerometerMzy)
-
-        return GyroscopeInternalCalibratorBuilder(
-            gyroscopeMeasurements,
-            gyroscopeRobustPreliminarySubsetSize,
-            minimumRequiredGyroscopeMeasurements,
-            gyroscopeRobustMethod,
-            gyroscopeRobustConfidence,
-            gyroscopeRobustMaxIterations,
-            gyroscopeRobustThreshold,
-            gyroscopeRobustThresholdFactor,
-            gyroscopeRobustStopThresholdFactor,
-            isGyroscopeGroundTruthInitialBias,
-            isGyroscopeCommonAxisUsed,
-            gyroscopeInitialBiasX,
-            gyroscopeInitialBiasY,
-            gyroscopeInitialBiasZ,
-            gyroscopeInitialSx,
-            gyroscopeInitialSy,
-            gyroscopeInitialSz,
-            gyroscopeInitialMxy,
-            gyroscopeInitialMxz,
-            gyroscopeInitialMyx,
-            gyroscopeInitialMyz,
-            gyroscopeInitialMzx,
-            gyroscopeInitialMzy,
-            isGDependentCrossBiasesEstimated,
-            gyroscopeInitialGg,
-            estimatedAccelerometerBiasX,
-            estimatedAccelerometerBiasY,
-            estimatedAccelerometerBiasZ,
-            accelerometerSx,
-            accelerometerSy,
-            accelerometerSz,
-            accelerometerMxy,
-            accelerometerMxz,
-            accelerometerMyx,
-            accelerometerMyz,
-            accelerometerMzx,
-            accelerometerMzy,
-            gyroscopeBaseNoiseLevel,
-            gyroscopeQualityScoreMapper
-        ).build()
-    }
-
-    /**
-     * Builds an internal magnetometer calibrator based on all provided parameters.
-     *
-     * @return an internal magnetometer calibrator.
-     * @throws IllegalStateException if no suitable calibrator can be built.
-     */
-    @Throws(IllegalStateException::class)
-    private fun buildMagnetometerInternalCalibrator(): MagnetometerNonLinearCalibrator {
-        return MagnetometerInternalCalibratorBuilder(
-            magnetometerMeasurements,
-            magnetometerRobustPreliminarySubsetSize,
-            minimumRequiredMagnetometerMeasurements,
-            initialMagneticFluxDensityNorm,
-            location,
-            timestamp,
-            magnetometerRobustMethod,
-            magnetometerRobustConfidence,
-            magnetometerRobustMaxIterations,
-            magnetometerRobustThreshold,
-            magnetometerRobustThresholdFactor,
-            magnetometerRobustStopThresholdFactor,
-            isMagnetometerGroundTruthInitialHardIron,
-            isMagnetometerCommonAxisUsed,
-            magnetometerInitialHardIronX,
-            magnetometerInitialHardIronY,
-            magnetometerInitialHardIronZ,
-            magnetometerInitialSx,
-            magnetometerInitialSy,
-            magnetometerInitialSz,
-            magnetometerInitialMxy,
-            magnetometerInitialMxz,
-            magnetometerInitialMyx,
-            magnetometerInitialMyz,
-            magnetometerInitialMzx,
-            magnetometerInitialMzy,
-            magnetometerBaseNoiseLevel,
-            worldMagneticModel,
-            magnetometerQualityScoreMapper
-        ).build()
-    }
-
-    private companion object {
-        /**
-         * Indicates when first sensor measurement is obtained.
-         */
-        private const val FIRST_MEASUREMENT = 1
+    private fun reset() {
+        accelerometerAndGyroscopeInitializationStarted = false
+        magnetometerInitializationStarted = false
+        accelerometerAndGyroscopeInitializationCompleted = false
+        magnetometerInitializationCompleted = false
+        accelerometerAndGyroscopeReadyToSolveCalibration = false
+        magnetometerReadyToSolveCalibration = false
+        accelerometerAndGyroscopeCalibrationSolvingStarted = false
+        magnetometerCalibrationSolvingStarted = false
+        accelerometerAndGyroscopeCalibrationCompleted = false
+        magnetometerCalibrationCompleted = false
+        accelerometerAndGyroscopeStopped = false
+        magnetometerStopped = false
     }
 
     /**
@@ -4671,7 +3457,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
          * @param requiredMeasurements required number of measurements to solve calibration.
          */
         fun onGeneratedAccelerometerMeasurement(
-            calibrator: StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator,
+            calibrator: StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2,
             measurement: StandardDeviationBodyKinematics,
             measurementsFoundSoFar: Int,
             requiredMeasurements: Int
@@ -4691,7 +3477,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
          * @param requiredMeasurements required number of measurements to solve calibration.
          */
         fun onGeneratedGyroscopeMeasurement(
-            calibrator: StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator,
+            calibrator: StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2,
             measurement: BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>,
             measurementsFoundSoFar: Int,
             requiredMeasurements: Int
@@ -4712,7 +3498,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
          * @param requiredMeasurements required number of measurements to solve calibration.
          */
         fun onGeneratedMagnetometerMeasurement(
-            calibrator: StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator,
+            calibrator: StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2,
             measurement: StandardDeviationBodyMagneticFluxDensity,
             measurementsFoundSoFar: Int,
             requiredMeasurements: Int
@@ -4731,7 +3517,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
          * @param calibrator calibrator that raised the event.
          */
         fun onUnreliableGravityEstimation(
-            calibrator: StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator
+            calibrator: StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2
         )
     }
 
@@ -4753,7 +3539,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
          * @param biasZ z-coordinate of bias expressed in meters per squared second (m/s^2).
          */
         fun onInitialBiasAvailable(
-            calibrator: StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator,
+            calibrator: StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2,
             biasX: Double,
             biasY: Double,
             biasZ: Double
@@ -4778,7 +3564,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
          * @param biasZ z-coordinate of bias expressed in radians per second (rad/s).
          */
         fun onInitialBiasAvailable(
-            calibrator: StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator,
+            calibrator: StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2,
             biasX: Double,
             biasY: Double,
             biasZ: Double
@@ -4805,7 +3591,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
          * @param hardIronZ z-coordinate of hard iron expressed in micro-Teslas (µT).
          */
         fun onInitialHardIronAvailable(
-            calibrator: StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator,
+            calibrator: StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2,
             hardIronX: Double,
             hardIronY: Double,
             hardIronZ: Double
