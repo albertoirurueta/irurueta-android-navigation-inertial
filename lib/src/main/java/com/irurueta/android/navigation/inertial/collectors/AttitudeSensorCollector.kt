@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,43 +20,53 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import com.irurueta.algebra.Matrix
+import com.irurueta.android.navigation.inertial.AttitudeHelper
+import com.irurueta.geometry.MatrixRotation3D
 import com.irurueta.geometry.Quaternion
-import com.irurueta.geometry.Rotation3D
 import com.irurueta.navigation.frames.CoordinateTransformation
 import com.irurueta.navigation.frames.FrameType
 
 /**
- * Handles attitude sensor to collect device orientation measurements.
+ * Manages and collects attitude sensor measurements.
  *
  * @property context Android context.
  * @property sensorType One of the supported attitude sensor types.
  * @property sensorDelay Delay of sensor between samples.
+ * @property estimateCoordinateTransformation true to estimate coordinate transformation along with
+ * attitude on each measurement, false to only obtain attitude.
  * @property measurementListener listener to notify new attitude measurements.
- * @property accuracyChangedListener listener to notify changes in sensor accuracy.
+ * @property accuracyChangedListener listener to notify changes in attitude accuracy.
  */
 class AttitudeSensorCollector(
     context: Context,
     val sensorType: SensorType = SensorType.ABSOLUTE_ATTITUDE,
     sensorDelay: SensorDelay = SensorDelay.FASTEST,
+    var estimateCoordinateTransformation: Boolean = false,
     var measurementListener: OnMeasurementListener? = null,
     accuracyChangedListener: OnAccuracyChangedListener? = null
 ) : SensorCollector(context, sensorDelay, accuracyChangedListener) {
-    /**
-     * Internal quaternion reused for efficiency reasons containing measured orientation.
-     */
-    private val quaternion = Quaternion()
 
     /**
-     * Internal matrix reused for efficiency reasons containing measured orientation.
+     * Instance being reused for performance reasons and containing device attitude expressed in
+     * NED coordinate system.
      */
-    private val rotationMatrix: Matrix =
-        Matrix.identity(CoordinateTransformation.ROWS, CoordinateTransformation.COLS)
+    private val orientation = Quaternion()
 
     /**
-     * Coordinate transformation reused for efficiency reasons containing measured orientation.
+     * Instance being reused for performance reasons and containing device attitude expressed in
+     * NED coordinate system.
      */
     private val coordinateTransformation =
-        CoordinateTransformation(FrameType.LOCAL_NAVIGATION_FRAME, FrameType.BODY_FRAME)
+        CoordinateTransformation(FrameType.BODY_FRAME, FrameType.LOCAL_NAVIGATION_FRAME)
+
+    /**
+     * Instance being reused for performance reasons and containing device attitude expressed in
+     * NED coordinate system.
+     */
+    private val matrix = Matrix(
+        MatrixRotation3D.ROTATION3D_INHOM_MATRIX_ROWS,
+        MatrixRotation3D.ROTATION3D_INHOM_MATRIX_COLS
+    )
 
     /**
      * Internal listener to handle sensor events.
@@ -66,38 +76,28 @@ class AttitudeSensorCollector(
             if (event == null) {
                 return
             }
+
             if (SensorType.from(event.sensor.type) == null) {
                 return
             }
 
             val sensorAccuracy = SensorAccuracy.from(event.accuracy)
             val timestamp = event.timestamp
-
-            val headingAccuracyAvailable = event.values.size >= 5 && event.values[4] != -1.0f
-            val headingAccuracyRadians = if (headingAccuracyAvailable) {
-                event.values[4]
+            val headingAccuracy = if (estimateCoordinateTransformation) {
+                 AttitudeHelper.convertToNED(
+                    event.values,
+                    coordinateTransformation,
+                    orientation,
+                    matrix
+                )
             } else {
-                null
+                AttitudeHelper.convertToNED(event.values, orientation)
             }
 
-            val a = event.values[3]
-            val b = event.values[0]
-            val c = event.values[1]
-            val d = event.values[2]
-            quaternion.a = a.toDouble()
-            quaternion.b = b.toDouble()
-            quaternion.c = c.toDouble()
-            quaternion.d = d.toDouble()
-            quaternion.normalize()
-
-            quaternion.asInhomogeneousMatrix(rotationMatrix)
-
-            coordinateTransformation.matrix = rotationMatrix
-
             measurementListener?.onMeasurement(
-                quaternion,
-                coordinateTransformation,
-                headingAccuracyRadians,
+                orientation,
+                if (estimateCoordinateTransformation) coordinateTransformation else null,
+                headingAccuracy,
                 timestamp,
                 sensorAccuracy
             )
@@ -107,6 +107,7 @@ class AttitudeSensorCollector(
             if (sensor == null) {
                 return
             }
+
             if (SensorType.from(sensor.type) == null) {
                 return
             }
@@ -114,41 +115,50 @@ class AttitudeSensorCollector(
             val sensorAccuracy = SensorAccuracy.from(accuracy)
             accuracyChangedListener?.onAccuracyChanged(sensorAccuracy)
         }
+
     }
 
     /**
-     * Sensor being used to obtain orientation measurements or null if not available.
+     * Sensor being used to obtain measurements or null if not available.
      * This can be used to obtain additional information about the sensor.
+     *
      * @see sensorAvailable
      */
     override val sensor: Sensor? by lazy { sensorManager?.getDefaultSensor(sensorType.value) }
 
     /**
-     * Indicates the orientation types supported by this sensor.
+     * Indicates the supported attitude types.
      *
-     * @property value numerical value representing orientation sensor type.
+     * @property value numerical value representing attitude sensor type.
      */
     enum class SensorType(val value: Int) {
         /**
-         * Absolute attitude.
-         * This sensor requires a magnetometer and returns absolute device orientation respect to
-         * Earth.
+         * Returns relative device attitude respect to an arbitrary system of coordinates.
+         * The measured attitude may drift after some time.
+         */
+        RELATIVE_ATTITUdE(Sensor.TYPE_GAME_ROTATION_VECTOR),
+
+        /**
+         * Returns absolute device attitude respect to Earth.
+         * Uses a fusion of gyroscope and magnetometer measurements to avoid attitude drift.
+         * Attitude is expressed in NED coordinates.
          */
         ABSOLUTE_ATTITUDE(Sensor.TYPE_ROTATION_VECTOR),
 
         /**
-         * Relative attitude.
-         * This sensor does not require a magnetometer and returns device orientation respect to
-         * an arbitrary initial orientation that might drift over time.
+         * Returns absolute device attitude respect to Earth.
+         * Only uses magnetometer measurements, which might be noisier than using gyroscope
+         * and accelerometer measurements alone but uses less power and has no drift.
+         * Attitude is expressed in NED coordinates.
          */
-        RELATIVE_ATTITUDE(Sensor.TYPE_GAME_ROTATION_VECTOR);
+        GEOMAGNETIC_ABSOLUTE_ATTITUDE(Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR);
 
         companion object {
             /**
              * Gets attitude sensor type based on provided numerical value.
              *
              * @param value numerical value representing attitude sensor type.
-             * @return attitude sensor type as an enum or null if value has no match.
+             * @return corresponding sensor type as an enum or null if value has no match.
              */
             fun from(value: Int): SensorType? {
                 return values().find { it.value == value }
@@ -163,20 +173,18 @@ class AttitudeSensorCollector(
         /**
          * Called when a new attitude measurement is available.
          *
-         * @param rotation contains measured device orientation (either absolute or relative).
-         * @param coordinationTransformation contains measured device orientation as a coordinate
-         * transformation.
-         * @param headingAccuracyRadians accuracy of heading measurement expressed in radians (rad),
-         * if available.
+         * @param coordinateTransformation coordinate transformation contained measured attitude.
+         * @param attitude measured attitude.
+         * @param headingAccuracy accuracy of heading angle expressed in radians.
          * @param timestamp time in nanoseconds at which the measurement was made. Each measurement
          * will be monotonically increasing using the same time base as
          * [android.os.SystemClock.elapsedRealtimeNanos].
-         * @param accuracy attitude sensor accuracy.
+         * @param accuracy accelerometer sensor accuracy.
          */
         fun onMeasurement(
-            rotation: Rotation3D,
-            coordinationTransformation: CoordinateTransformation,
-            headingAccuracyRadians: Float?,
+            attitude: Quaternion,
+            coordinateTransformation: CoordinateTransformation?,
+            headingAccuracy: Double?,
             timestamp: Long,
             accuracy: SensorAccuracy?
         )

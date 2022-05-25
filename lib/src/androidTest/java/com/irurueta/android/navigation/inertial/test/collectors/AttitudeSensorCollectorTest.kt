@@ -42,7 +42,25 @@ class AttitudeSensorCollectorTest {
     fun sensor_whenAbsoluteAttitudeSensorType_returnsSensor() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val collector =
-            AttitudeSensorCollector(context, AttitudeSensorCollector.SensorType.ABSOLUTE_ATTITUDE)
+            AttitudeSensorCollector(
+                context,
+                AttitudeSensorCollector.SensorType.ABSOLUTE_ATTITUDE
+            )
+
+        val sensor = collector.sensor
+        requireNotNull(sensor)
+
+        logSensor(sensor)
+    }
+
+    @Test
+    fun sensor_whenGeomagneticAbsoluteAttitudeSensorType_returnsSensor() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val collector =
+            AttitudeSensorCollector(
+                context,
+                AttitudeSensorCollector.SensorType.GEOMAGNETIC_ABSOLUTE_ATTITUDE
+            )
 
         val sensor = collector.sensor
         requireNotNull(sensor)
@@ -54,7 +72,7 @@ class AttitudeSensorCollectorTest {
     fun sensor_whenRelativeAttitudeSensorType_returnsSensor() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val collector =
-            AttitudeSensorCollector(context, AttitudeSensorCollector.SensorType.RELATIVE_ATTITUDE)
+            AttitudeSensorCollector(context, AttitudeSensorCollector.SensorType.RELATIVE_ATTITUdE)
 
         val sensor = collector.sensor
         requireNotNull(sensor)
@@ -72,10 +90,19 @@ class AttitudeSensorCollectorTest {
     }
 
     @Test
+    fun sensorAvailable_whenGeomagneticAbsoluteAttitudeSensorType_returnsTrue() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val collector =
+            AttitudeSensorCollector(context, AttitudeSensorCollector.SensorType.GEOMAGNETIC_ABSOLUTE_ATTITUDE)
+
+        assertTrue(collector.sensorAvailable)
+    }
+
+    @Test
     fun sensorAvailable_whenRelativeAttitudeSensorType_returnsTrue() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val collector =
-            AttitudeSensorCollector(context, AttitudeSensorCollector.SensorType.RELATIVE_ATTITUDE)
+            AttitudeSensorCollector(context, AttitudeSensorCollector.SensorType.RELATIVE_ATTITUdE)
 
         assertTrue(collector.sensorAvailable)
     }
@@ -121,11 +148,51 @@ class AttitudeSensorCollectorTest {
     }
 
     @Test
-    fun startAndStop_whenRelativeAttitudeSensorType_collectsMeasurements() {
+    fun startAndStop_whenGeomagneticAbsoluteAttitudeSensorType_collectsMeasurements() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val collector = AttitudeSensorCollector(
             context,
-            AttitudeSensorCollector.SensorType.RELATIVE_ATTITUDE,
+            AttitudeSensorCollector.SensorType.GEOMAGNETIC_ABSOLUTE_ATTITUDE,
+            SensorDelay.FASTEST,
+            measurementListener = { rotation, _, headingAccuracyRadians, timestamp, accuracy ->
+                val quaternion = rotation.toQuaternion()
+                val angles = quaternion.toEulerAngles()
+                val roll = angles[0]
+                val pitch = angles[1]
+                val yaw = angles[2]
+
+                Log.d(
+                    "AttitudeSensorCollectorTest", "onMeasurement - roll: $roll rad, "
+                            + "pitch: $pitch rad, "
+                            + "yaw: $yaw rad, "
+                            + "headingAccuracy: $headingAccuracyRadians rad, "
+                            + "timestamp: $timestamp, accuracy: $accuracy"
+                )
+
+                syncHelper.notifyAll { measured++ }
+            }
+        ) { accuracy ->
+            Log.d(
+                "AttitudeSensorCollectorTest",
+                "onAccuracyChanged - accuracy: $accuracy"
+            )
+        }
+
+        collector.start()
+
+        syncHelper.waitOnCondition({ measured < 1 })
+
+        collector.stop()
+
+        assertTrue(measured > 0)
+    }
+
+    @Test
+    fun startAndStop_whenRelativeOrientationSensorType_collectsMeasurements() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val collector = AttitudeSensorCollector(
+            context,
+            AttitudeSensorCollector.SensorType.RELATIVE_ATTITUdE,
             SensorDelay.FASTEST,
             measurementListener = { rotation, _, headingAccuracyRadians, timestamp, accuracy ->
                 val quaternion = rotation.toQuaternion()
@@ -195,7 +262,7 @@ class AttitudeSensorCollectorTest {
         val wakeUpSensor = sensor.isWakeUpSensor
 
         Log.d(
-            "AccelerometerSensorCollectorTest", "Sensor - fifoMaxEventCount: $fifoMaxEventCount, "
+            "AttitudeSensorCollectorTest", "Sensor - fifoMaxEventCount: $fifoMaxEventCount, "
                     + "fifoReversedEventCount: $fifoReversedEventCount, "
                     + "highestDirectReportRateLevel: $highestDirectReportRateLevel, "
                     + "highestDirectReportRateLevelName: $highestDirectReportRateLevelName, "

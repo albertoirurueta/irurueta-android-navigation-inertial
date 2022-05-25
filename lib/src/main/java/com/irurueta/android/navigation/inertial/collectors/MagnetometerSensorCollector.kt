@@ -115,6 +115,12 @@ class MagnetometerSensorCollector(
         MAGNETOMETER_UNCALIBRATED(Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED);
 
         companion object {
+            /**
+             * Gets magnetometer sensor type based on provided numerical value.
+             *
+             * @param value numerical value representing magnetometer sensor type.
+             * @return corresponding sensor type as an enum or null if value has no match.
+             */
             fun from(value: Int): SensorType? {
                 return values().find { it.value == value }
             }
