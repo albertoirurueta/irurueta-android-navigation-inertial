@@ -16,9 +16,11 @@
 package com.irurueta.android.navigation.inertial
 
 import android.hardware.SensorEvent
-import com.irurueta.geometry.EuclideanTransformation3D
-import com.irurueta.geometry.Point3D
-import com.irurueta.geometry.Quaternion
+import com.irurueta.algebra.Matrix
+import com.irurueta.geometry.*
+import com.irurueta.navigation.frames.*
+import com.irurueta.navigation.frames.converters.ECEFtoNEDPositionVelocityConverter
+import com.irurueta.navigation.frames.converters.NEDtoECEFPositionVelocityConverter
 
 /**
  * Converts [SensorEvent] values into a Quaternion representing a 3D rotation that represents the
@@ -120,8 +122,10 @@ object PoseHelper {
     ): Float {
         require(values.size >= MIN_LENGTH)
         require(translationResult.size == Point3D.POINT3D_INHOMOGENEOUS_COORDINATES_LENGTH)
-        require(deltaTranslationResult == null
-                || deltaTranslationResult.size == Point3D.POINT3D_INHOMOGENEOUS_COORDINATES_LENGTH)
+        require(
+            deltaTranslationResult == null
+                    || deltaTranslationResult.size == Point3D.POINT3D_INHOMOGENEOUS_COORDINATES_LENGTH
+        )
 
         AttitudeHelper.convertQuaternion(values, 0, attitudeResult)
         convertTranslation(values, 4, translationResult)
@@ -292,8 +296,10 @@ object PoseHelper {
         deltaTransformationResult: EuclideanTransformation3D? = null
     ): Float {
         require(translationResult.size == Point3D.POINT3D_INHOMOGENEOUS_COORDINATES_LENGTH)
-        require(deltaTranslationResult == null
-                || deltaTranslationResult.size == Point3D.POINT3D_INHOMOGENEOUS_COORDINATES_LENGTH)
+        require(
+            deltaTranslationResult == null
+                    || deltaTranslationResult.size == Point3D.POINT3D_INHOMOGENEOUS_COORDINATES_LENGTH
+        )
 
         val transformationResult2 = transformationResult ?: EuclideanTransformation3D()
         val deltaTransformationResult2 =
@@ -320,6 +326,416 @@ object PoseHelper {
         }
 
         return result
+    }
+
+    /**
+     * Converts array of values contained in [SensorEvent] along with an absolute start position
+     * (respect to Earth) into a frame expressed in NED coordinates. If provided, result can
+     * also be stored as a 3D rotation expressed in NED (North, East, Down) coordinates, a relative
+     * translation and a 3D euclidean transformations.
+     *
+     * @param values array of values to be converted.
+     * @param startPosition a start absolute position respect to Earth and expressed as ECEF
+     * coordinates.
+     * @param frameResult instance where frame (absolute position, attitude and velocity respect to
+     * Earth) will be stored expressed in NED coordinates.
+     * @param attitudeResult instance where converted attitude will be stored expressed in NED
+     * coordinates.
+     * @param translationResult instance where converted relative translation will be stored.
+     * Expressed in device body coordinates.
+     * @param deltaAttitudeResult if provided, instance where converted delta attitude will be
+     * stored expressed in NED coordinates. Delta attitude refers to the variation of attitude
+     * since last received [SensorEvent].
+     * @param deltaTranslationResult if provided, instance where converted relative delta
+     * translation will be stored. Delta translation refers to the variation of translation since
+     * last received [SensorEvent]. Expressed in device body coordinates.
+     * @param transformationResult if provided, instance where converted 3D euclidean transformation
+     * will be stored describing device position and attitude expressed in local coordinates.
+     * @param deltaTransformationResult if provided, instance where converted 3D euclidean
+     * transformation of pose changes since last event will be stored. Expressed in local
+     * coordinates.
+     * @return sequence number.
+     * @throws IllegalArgumentException if provided values array does not have at least [MIN_LENGTH]
+     * elements.
+     */
+    @Throws(IllegalArgumentException::class)
+    fun convertToNED(
+        values: FloatArray,
+        startPosition: ECEFPosition,
+        frameResult: NEDFrame,
+        attitudeResult: Quaternion? = null,
+        translationResult: Point3D? = null,
+        deltaAttitudeResult: Quaternion? = null,
+        deltaTranslationResult: Point3D? = null,
+        transformationResult: EuclideanTransformation3D? = null,
+        deltaTransformationResult: EuclideanTransformation3D? = null,
+        rotationMatrix: Matrix? = null,
+        endEcefPosition: ECEFPosition? = null,
+        endNedPosition: NEDPosition? = null,
+        endVelocity: NEDVelocity? = null,
+        timeInterval: Double? = null
+    ): Float {
+        val q = attitudeResult ?: Quaternion()
+        val t = translationResult ?: InhomogeneousPoint3D()
+        val dq = deltaAttitudeResult ?: Quaternion()
+        val dt = deltaTranslationResult ?: InhomogeneousPoint3D()
+        val transformation = transformationResult ?: EuclideanTransformation3D()
+        val deltaTransformation = deltaTransformationResult ?: EuclideanTransformation3D()
+        val result = convertToNED(values, q, t, dq, dt, transformation, deltaTransformation)
+
+        val m: Matrix = if (rotationMatrix != null) {
+            // reuse provided matrix if available
+            if (rotationMatrix.rows != MatrixRotation3D.ROTATION3D_INHOM_MATRIX_ROWS || rotationMatrix.columns != MatrixRotation3D.ROTATION3D_INHOM_MATRIX_COLS) {
+                rotationMatrix.resize(
+                    MatrixRotation3D.ROTATION3D_INHOM_MATRIX_ROWS,
+                    MatrixRotation3D.ROTATION3D_INHOM_MATRIX_COLS
+                )
+
+            }
+            rotationMatrix
+        } else {
+            Matrix(
+                MatrixRotation3D.ROTATION3D_INHOM_MATRIX_ROWS,
+                MatrixRotation3D.ROTATION3D_INHOM_MATRIX_COLS
+            )
+        }
+        q.toMatrixRotation(m)
+
+        val c = frameResult.coordinateTransformation
+        c.matrix = m
+        frameResult.coordinateTransformation = c
+
+        val ecefPos = endEcefPosition ?: ECEFPosition()
+        ecefPos.setCoordinates(
+            startPosition.x + t.inhomX,
+            startPosition.y + t.inhomY,
+            startPosition.z + t.inhomZ
+        )
+        val nedPos = endNedPosition ?: NEDPosition()
+        val nedEVelocity = endVelocity ?: NEDVelocity()
+        val vx: Double
+        val vy: Double
+        val vz: Double
+        if (timeInterval != null) {
+            vx = dt.inhomX / timeInterval
+            vy = dt.inhomY / timeInterval
+            vz = dt.inhomZ / timeInterval
+        } else {
+            vx = 0.0
+            vy = 0.0
+            vz = 0.0
+        }
+        ECEFtoNEDPositionVelocityConverter.convertECEFtoNED(
+            ecefPos.x,
+            ecefPos.y,
+            ecefPos.z,
+            vx,
+            vy,
+            vz,
+            nedPos,
+            nedEVelocity
+        )
+        frameResult.position = nedPos
+        frameResult.velocity = nedEVelocity
+
+        return result
+    }
+
+    /**
+     * Converts array of values contained in [SensorEvent] along with an absolute start position
+     * (respect to Earth) into a frame expressed in NED coordinates. If provided, result can
+     * also be stored as a 3D rotation expressed in NED (North, East, Down) coordinates, a relative
+     * translation and a 3D euclidean transformations.
+     *
+     * @param values array of values to be converted.
+     * @param startPosition a start absolute position respect to Earth and expressed as ECEF
+     * coordinates.
+     * @param frameResult instance where frame (absolute position, attitude and velocity respect to
+     * Earth) will be stored expressed in NED coordinates.
+     * @param attitudeResult instance where converted attitude will be stored expressed in NED
+     * coordinates.
+     * @param translationResult array where converted relative translation will be stored. Must have
+     * size 3.
+     * Expressed in device body coordinates.
+     * @param deltaAttitudeResult if provided, instance where converted delta attitude will be
+     * stored expressed in NED coordinates. Delta attitude refers to the variation of attitude
+     * since last received [SensorEvent].
+     * @param deltaTranslationResult if provided, array where converted relative delta
+     * translation will be stored. Delta translation refers to the variation of translation since
+     * last received [SensorEvent]. Expressed in device body coordinates. Must be null or have
+     * size 3.
+     * @param transformationResult if provided, instance where converted 3D euclidean transformation
+     * will be stored describing device position and attitude expressed in local coordinates.
+     * @param deltaTransformationResult if provided, instance where converted 3D euclidean
+     * transformation of pose changes since last event will be stored. Expressed in local
+     * coordinates.
+     * @param rotationMatrix matrix to be reused and containing estimated attitude in matrix form.
+     * @param endEcefPosition if provided, will contain end position expressed in ECEF coordinates.
+     * @param endNedPosition if provided, will contain end position expressed in NED coordinates.
+     * @param endVelocity if provided, will contain estimated position in NED coordinates based
+     * on estimated delta translation and provided time interval. If no time interval is provided,
+     * estimated velocity will be zero.
+     * @param timeInterval time interval between current and previous [SensorEvent] expressed in
+     * seconds.
+     * @return sequence number.
+     * @throws IllegalArgumentException if provided values array does not have at least [MIN_LENGTH]
+     * elements, or if translation arrays have invalid size.
+     */
+    @Throws(IllegalArgumentException::class)
+    fun convertToNED(
+        values: FloatArray,
+        startPosition: ECEFPosition,
+        frameResult: NEDFrame,
+        attitudeResult: Quaternion,
+        translationResult: DoubleArray,
+        deltaAttitudeResult: Quaternion? = null,
+        deltaTranslationResult: DoubleArray? = null,
+        transformationResult: EuclideanTransformation3D? = null,
+        deltaTransformationResult: EuclideanTransformation3D? = null,
+        rotationMatrix: Matrix? = null,
+        endEcefPosition: ECEFPosition? = null,
+        endNedPosition: NEDPosition? = null,
+        endVelocity: NEDVelocity? = null,
+        timeInterval: Double? = null
+    ): Float {
+        val dq = deltaAttitudeResult ?: Quaternion()
+        val dt =
+            deltaTranslationResult ?: DoubleArray(Point3D.POINT3D_INHOMOGENEOUS_COORDINATES_LENGTH)
+        val transformation = transformationResult ?: EuclideanTransformation3D()
+        val deltaTransformation = deltaTransformationResult ?: EuclideanTransformation3D()
+        val result =
+            convertToNED(
+                values,
+                attitudeResult,
+                translationResult,
+                dq,
+                dt,
+                transformation,
+                deltaTransformation
+            )
+
+        val m: Matrix = if (rotationMatrix != null) {
+            // reuse provided matrix if available
+            if (rotationMatrix.rows != MatrixRotation3D.ROTATION3D_INHOM_MATRIX_ROWS || rotationMatrix.columns != MatrixRotation3D.ROTATION3D_INHOM_MATRIX_COLS) {
+                rotationMatrix.resize(
+                    MatrixRotation3D.ROTATION3D_INHOM_MATRIX_ROWS,
+                    MatrixRotation3D.ROTATION3D_INHOM_MATRIX_COLS
+                )
+
+            }
+            rotationMatrix
+        } else {
+            Matrix(
+                MatrixRotation3D.ROTATION3D_INHOM_MATRIX_ROWS,
+                MatrixRotation3D.ROTATION3D_INHOM_MATRIX_COLS
+            )
+        }
+        attitudeResult.toMatrixRotation(m)
+
+        val c = frameResult.coordinateTransformation
+        c.matrix = m
+        frameResult.coordinateTransformation = c
+
+        val ecefPos = endEcefPosition ?: ECEFPosition()
+        ecefPos.setCoordinates(
+            startPosition.x + translationResult[0],
+            startPosition.y + translationResult[1],
+            startPosition.z + translationResult[2]
+        )
+        val nedPos = endNedPosition ?: NEDPosition()
+        val nedEVelocity = endVelocity ?: NEDVelocity()
+        val vx: Double
+        val vy: Double
+        val vz: Double
+        if (timeInterval != null) {
+            vx = dt[0] / timeInterval
+            vy = dt[1] / timeInterval
+            vz = dt[2] / timeInterval
+        } else {
+            vx = 0.0
+            vy = 0.0
+            vz = 0.0
+        }
+        ECEFtoNEDPositionVelocityConverter.convertECEFtoNED(
+            ecefPos.x,
+            ecefPos.y,
+            ecefPos.z,
+            vx,
+            vy,
+            vz,
+            nedPos,
+            nedEVelocity
+        )
+        frameResult.position = nedPos
+        frameResult.velocity = nedEVelocity
+
+        return result
+    }
+
+    /**
+     * Converts array of values contained in [SensorEvent] along with an absolute start position
+     * (respect to Earth) into a frame expressed in NED coordinates. If provided, result can
+     * also be stored as a 3D rotation expressed in NED (North, East, Down) coordinates, a relative
+     * translation and a 3D euclidean transformations.
+     *
+     * @param values array of values to be converted.
+     * @param startPosition a start absolute position respect to Earth and expressed in NED
+     * coordinates.
+     * @param frameResult instance where frame (absolute position, attitude and velocity respect to
+     * Earth) will be stored expressed in NED coordinates.
+     * @param attitudeResult instance where converted attitude will be stored expressed in NED
+     * coordinates.
+     * @param translationResult instance where converted relative translation will be stored.
+     * Expressed in device body coordinates.
+     * @param deltaAttitudeResult if provided, instance where converted delta attitude will be
+     * stored expressed in NED coordinates. Delta attitude refers to the variation of attitude
+     * since last received [SensorEvent].
+     * @param deltaTranslationResult if provided, instance where converted relative delta
+     * translation will be stored. Delta translation refers to the variation of translation since
+     * last received [SensorEvent]. Expressed in device body coordinates.
+     * @param transformationResult if provided, instance where converted 3D euclidean transformation
+     * will be stored describing device position and attitude expressed in local coordinates.
+     * @param deltaTransformationResult if provided, instance where converted 3D euclidean
+     * transformation of pose changes since last event will be stored. Expressed in local
+     * coordinates.
+     * @param rotationMatrix matrix to be reused and containing estimated attitude in matrix form.
+     * @param endEcefPosition if provided, will contain end position expressed in ECEF coordinates.
+     * @param endNedPosition if provided, will contain end position expressed in NED coordinates.
+     * @param endVelocity if provided, will contain estimated position in NED coordinates based
+     * on estimated delta translation and provided time interval. If no time interval is provided,
+     * estimated velocity will be zero.
+     * @param timeInterval time interval between current and previous [SensorEvent] expressed in
+     * seconds.
+     * @return sequence number.
+     * @throws IllegalArgumentException if provided values array does not have at least [MIN_LENGTH]
+     * elements.
+     */
+    @Throws(IllegalArgumentException::class)
+    fun convertToNED(
+        values: FloatArray,
+        startPosition: NEDPosition,
+        frameResult: NEDFrame,
+        attitudeResult: Quaternion? = null,
+        translationResult: Point3D? = null,
+        deltaAttitudeResult: Quaternion? = null,
+        deltaTranslationResult: Point3D? = null,
+        transformationResult: EuclideanTransformation3D? = null,
+        deltaTransformationResult: EuclideanTransformation3D? = null,
+        rotationMatrix: Matrix? = null,
+        endEcefPosition: ECEFPosition? = null,
+        endNedPosition: NEDPosition? = null,
+        endVelocity: NEDVelocity? = null,
+        timeInterval: Double? = null
+    ): Float {
+        val nedVelocity = endVelocity ?: NEDVelocity()
+        val startEcefPosition = ECEFPosition()
+        val ecefVelocity = ECEFVelocity()
+        NEDtoECEFPositionVelocityConverter.convertNEDtoECEF(
+            startPosition,
+            nedVelocity,
+            startEcefPosition,
+            ecefVelocity
+        )
+        return convertToNED(
+            values,
+            startEcefPosition,
+            frameResult,
+            attitudeResult,
+            translationResult,
+            deltaAttitudeResult,
+            deltaTranslationResult,
+            transformationResult,
+            deltaTransformationResult,
+            rotationMatrix,
+            endEcefPosition,
+            endNedPosition,
+            endVelocity,
+            timeInterval
+        )
+    }
+
+    /**
+     * Converts array of values contained in [SensorEvent] along with an absolute start position
+     * (respect to Earth) into a frame expressed in NED coordinates. If provided, result can
+     * also be stored as a 3D rotation expressed in NED (North, East, Down) coordinates, a relative
+     * translation and a 3D euclidean transformations.
+     *
+     * @param values array of values to be converted.
+     * @param startPosition a start absolute position respect to Earth and expressed in NED
+     * coordinates.
+     * @param frameResult instance where frame (absolute position, attitude and velocity respect to
+     * Earth) will be stored expressed in NED coordinates.
+     * @param attitudeResult instance where converted attitude will be stored expressed in NED
+     * coordinates.
+     * @param translationResult array where converted relative translation will be stored. Must have
+     * size 3.
+     * Expressed in device body coordinates.
+     * @param deltaAttitudeResult if provided, instance where converted delta attitude will be
+     * stored expressed in NED coordinates. Delta attitude refers to the variation of attitude
+     * since last received [SensorEvent].
+     * @param deltaTranslationResult if provided, array where converted relative delta
+     * translation will be stored. Delta translation refers to the variation of translation since
+     * last received [SensorEvent]. Expressed in device body coordinates. Must be null or have
+     * size 3.
+     * @param transformationResult if provided, instance where converted 3D euclidean transformation
+     * will be stored describing device position and attitude expressed in local coordinates.
+     * @param deltaTransformationResult if provided, instance where converted 3D euclidean
+     * transformation of pose changes since last event will be stored. Expressed in local
+     * coordinates.
+     * @param rotationMatrix matrix to be reused and containing estimated attitude in matrix form.
+     * @param endEcefPosition if provided, will contain end position expressed in ECEF coordinates.
+     * @param endNedPosition if provided, will contain end position expressed in NED coordinates.
+     * @param endVelocity if provided, will contain estimated position in NED coordinates based
+     * on estimated delta translation and provided time interval. If no time interval is provided,
+     * estimated velocity will be zero.
+     * @param timeInterval time interval between current and previous [SensorEvent] expressed in
+     * seconds.
+     * @return sequence number.
+     * @throws IllegalArgumentException if provided values array does not have at least [MIN_LENGTH]
+     * elements, or if translation arrays have invalid size.
+     */
+    @Throws(IllegalArgumentException::class)
+    fun convertToNED(
+        values: FloatArray,
+        startPosition: NEDPosition,
+        frameResult: NEDFrame,
+        attitudeResult: Quaternion,
+        translationResult: DoubleArray,
+        deltaAttitudeResult: Quaternion? = null,
+        deltaTranslationResult: DoubleArray? = null,
+        transformationResult: EuclideanTransformation3D? = null,
+        deltaTransformationResult: EuclideanTransformation3D? = null,
+        rotationMatrix: Matrix? = null,
+        endEcefPosition: ECEFPosition? = null,
+        endNedPosition: NEDPosition? = null,
+        endVelocity: NEDVelocity? = null,
+        timeInterval: Double? = null
+    ): Float {
+        val nedVelocity = endVelocity ?: NEDVelocity()
+        val startEcefPosition = ECEFPosition()
+        val ecefVelocity = ECEFVelocity()
+        NEDtoECEFPositionVelocityConverter.convertNEDtoECEF(
+            startPosition,
+            nedVelocity,
+            startEcefPosition,
+            ecefVelocity
+        )
+        return convertToNED(
+            values,
+            startEcefPosition,
+            frameResult,
+            attitudeResult,
+            translationResult,
+            deltaAttitudeResult,
+            deltaTranslationResult,
+            transformationResult,
+            deltaTransformationResult,
+            rotationMatrix,
+            endEcefPosition,
+            endNedPosition,
+            endVelocity,
+            timeInterval
+        )
     }
 
     /**
