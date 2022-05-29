@@ -50,7 +50,7 @@ class AttitudeSensorCollector(
      * Instance being reused for performance reasons and containing device attitude expressed in
      * NED coordinate system.
      */
-    private val orientation = Quaternion()
+    private val attitude = Quaternion()
 
     /**
      * Instance being reused for performance reasons and containing device attitude expressed in
@@ -87,15 +87,15 @@ class AttitudeSensorCollector(
                  AttitudeHelper.convertToNED(
                     event.values,
                     coordinateTransformation,
-                    orientation,
+                    attitude,
                     matrix
                 )
             } else {
-                AttitudeHelper.convertToNED(event.values, orientation)
+                AttitudeHelper.convertToNED(event.values, attitude)
             }
 
             measurementListener?.onMeasurement(
-                orientation,
+                attitude,
                 if (estimateCoordinateTransformation) coordinateTransformation else null,
                 headingAccuracy,
                 timestamp,
@@ -136,7 +136,7 @@ class AttitudeSensorCollector(
          * Returns relative device attitude respect to an arbitrary system of coordinates.
          * The measured attitude may drift after some time.
          */
-        RELATIVE_ATTITUdE(Sensor.TYPE_GAME_ROTATION_VECTOR),
+        RELATIVE_ATTITUDE(Sensor.TYPE_GAME_ROTATION_VECTOR),
 
         /**
          * Returns absolute device attitude respect to Earth.
@@ -179,7 +179,7 @@ class AttitudeSensorCollector(
          * @param timestamp time in nanoseconds at which the measurement was made. Each measurement
          * will be monotonically increasing using the same time base as
          * [android.os.SystemClock.elapsedRealtimeNanos].
-         * @param accuracy accelerometer sensor accuracy.
+         * @param accuracy sensor accuracy.
          */
         fun onMeasurement(
             attitude: Quaternion,

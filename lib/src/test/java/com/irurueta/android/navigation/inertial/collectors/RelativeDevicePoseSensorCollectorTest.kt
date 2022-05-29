@@ -20,10 +20,17 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.location.Location
 import androidx.test.core.app.ApplicationProvider
 import com.irurueta.android.navigation.inertial.getPrivateProperty
+import com.irurueta.android.navigation.inertial.toNEDPosition
+import com.irurueta.geometry.EuclideanTransformation3D
+import com.irurueta.geometry.InhomogeneousPoint3D
+import com.irurueta.geometry.Point3D
 import com.irurueta.geometry.Quaternion
-import com.irurueta.navigation.frames.CoordinateTransformation
+import com.irurueta.navigation.frames.*
+import com.irurueta.navigation.frames.converters.ECEFtoNEDPositionVelocityConverter
+import com.irurueta.navigation.frames.converters.NEDtoECEFPositionVelocityConverter
 import com.irurueta.statistics.UniformRandomizer
 import io.mockk.*
 import org.junit.Assert.*
@@ -32,203 +39,199 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
-class AttitudeSensorCollectorTest {
+class RelativeDevicePoseSensorCollectorTest {
 
     @Test
     fun constructor_whenContext_setsDefaultValues() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val collector = AttitudeSensorCollector(context)
+        val collector = RelativeDevicePoseSensorCollector(context)
 
         // check values
         assertSame(context, collector.context)
-        assertEquals(
-            AttitudeSensorCollector.SensorType.ABSOLUTE_ATTITUDE,
-            collector.sensorType
-        )
         assertEquals(SensorDelay.FASTEST, collector.sensorDelay)
-        assertFalse(collector.estimateCoordinateTransformation)
+        assertEquals(0.0, collector.timeInterval, 0.0)
         assertNull(collector.measurementListener)
         assertNull(collector.accuracyChangedListener)
+        assertNull(collector.location)
         assertNull(collector.sensor)
         assertFalse(collector.sensorAvailable)
 
         val sensorManager: SensorManager? =
             getPrivateProperty(SensorCollector::class, collector, "sensorManager")
         assertNotNull(sensorManager)
-    }
-
-    @Test
-    fun constructor_whenSensorType_setsExpectedValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val collector = AttitudeSensorCollector(
-            context,
-            AttitudeSensorCollector.SensorType.GEOMAGNETIC_ABSOLUTE_ATTITUDE
-        )
-
-        // check values
-        assertSame(context, collector.context)
-        assertEquals(
-            AttitudeSensorCollector.SensorType.GEOMAGNETIC_ABSOLUTE_ATTITUDE,
-            collector.sensorType
-        )
-        assertEquals(SensorDelay.FASTEST, collector.sensorDelay)
-        assertFalse(collector.estimateCoordinateTransformation)
-        assertNull(collector.measurementListener)
-        assertNull(collector.accuracyChangedListener)
-        assertNull(collector.sensor)
-        assertFalse(collector.sensorAvailable)
-
-        val sensorManager: SensorManager? =
-            getPrivateProperty(SensorCollector::class, collector, "sensorManager")
-        assertNotNull(sensorManager)
+        assertNull(collector.getPrivateProperty("startPosition"))
     }
 
     @Test
     fun constructor_whenSensorDelay_setsExpectedValues() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val collector = AttitudeSensorCollector(
+        val collector = RelativeDevicePoseSensorCollector(
             context,
-            AttitudeSensorCollector.SensorType.GEOMAGNETIC_ABSOLUTE_ATTITUDE,
             SensorDelay.NORMAL
         )
 
         // check values
         assertSame(context, collector.context)
-        assertEquals(
-            AttitudeSensorCollector.SensorType.GEOMAGNETIC_ABSOLUTE_ATTITUDE,
-            collector.sensorType
-        )
         assertEquals(SensorDelay.NORMAL, collector.sensorDelay)
-        assertFalse(collector.estimateCoordinateTransformation)
+        assertEquals(0.0, collector.timeInterval, 0.0)
         assertNull(collector.measurementListener)
         assertNull(collector.accuracyChangedListener)
+        assertNull(collector.location)
         assertNull(collector.sensor)
         assertFalse(collector.sensorAvailable)
 
         val sensorManager: SensorManager? =
             getPrivateProperty(SensorCollector::class, collector, "sensorManager")
         assertNotNull(sensorManager)
+        assertNull(collector.getPrivateProperty("startPosition"))
     }
 
     @Test
-    fun constructor_whenEstimateCoordinateTransformation_setsExpectedValues() {
+    fun constructor_whenLocation_setsExpectedValues() {
+        val location = createLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val collector = AttitudeSensorCollector(
+        val collector = RelativeDevicePoseSensorCollector(
             context,
-            AttitudeSensorCollector.SensorType.GEOMAGNETIC_ABSOLUTE_ATTITUDE,
             SensorDelay.NORMAL,
-            estimateCoordinateTransformation = true
+            location
         )
 
         // check values
         assertSame(context, collector.context)
-        assertEquals(
-            AttitudeSensorCollector.SensorType.GEOMAGNETIC_ABSOLUTE_ATTITUDE,
-            collector.sensorType
-        )
         assertEquals(SensorDelay.NORMAL, collector.sensorDelay)
-        assertTrue(collector.estimateCoordinateTransformation)
+        assertEquals(0.0, collector.timeInterval, 0.0)
         assertNull(collector.measurementListener)
         assertNull(collector.accuracyChangedListener)
+        assertSame(location, collector.location)
         assertNull(collector.sensor)
         assertFalse(collector.sensorAvailable)
 
         val sensorManager: SensorManager? =
             getPrivateProperty(SensorCollector::class, collector, "sensorManager")
         assertNotNull(sensorManager)
+        val startPosition: NEDPosition? = collector.getPrivateProperty("startPosition")
+        requireNotNull(startPosition)
+        assertEquals(startPosition, location.toNEDPosition())
+    }
+
+    @Test
+    fun constructor_whenTimeInterval_setsExpectedValues() {
+        val location = createLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val collector = RelativeDevicePoseSensorCollector(
+            context,
+            SensorDelay.NORMAL,
+            location,
+            TIME_INTERVAL
+        )
+
+        // check values
+        assertSame(context, collector.context)
+        assertEquals(SensorDelay.NORMAL, collector.sensorDelay)
+        assertEquals(TIME_INTERVAL, collector.timeInterval, 0.0)
+        assertNull(collector.measurementListener)
+        assertNull(collector.accuracyChangedListener)
+        assertSame(location, collector.location)
+        assertNull(collector.sensor)
+        assertFalse(collector.sensorAvailable)
+
+        val sensorManager: SensorManager? =
+            getPrivateProperty(SensorCollector::class, collector, "sensorManager")
+        assertNotNull(sensorManager)
+        val startPosition: NEDPosition? = collector.getPrivateProperty("startPosition")
+        requireNotNull(startPosition)
+        assertEquals(startPosition, location.toNEDPosition())
     }
 
     @Test
     fun constructor_whenMeasurementListener_setsExpectedValues() {
+        val location = createLocation()
+        val measurementListener = mockk<RelativeDevicePoseSensorCollector.OnMeasurementListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val measurementListener = mockk<AttitudeSensorCollector.OnMeasurementListener>()
-        val collector = AttitudeSensorCollector(
+        val collector = RelativeDevicePoseSensorCollector(
             context,
-            AttitudeSensorCollector.SensorType.GEOMAGNETIC_ABSOLUTE_ATTITUDE,
             SensorDelay.NORMAL,
-            estimateCoordinateTransformation = true,
+            location,
+            TIME_INTERVAL,
             measurementListener
         )
 
         // check values
         assertSame(context, collector.context)
-        assertEquals(
-            AttitudeSensorCollector.SensorType.GEOMAGNETIC_ABSOLUTE_ATTITUDE,
-            collector.sensorType
-        )
         assertEquals(SensorDelay.NORMAL, collector.sensorDelay)
-        assertTrue(collector.estimateCoordinateTransformation)
+        assertEquals(TIME_INTERVAL, collector.timeInterval, 0.0)
         assertSame(measurementListener, collector.measurementListener)
         assertNull(collector.accuracyChangedListener)
+        assertSame(location, collector.location)
         assertNull(collector.sensor)
         assertFalse(collector.sensorAvailable)
 
         val sensorManager: SensorManager? =
             getPrivateProperty(SensorCollector::class, collector, "sensorManager")
         assertNotNull(sensorManager)
+        val startPosition: NEDPosition? = collector.getPrivateProperty("startPosition")
+        requireNotNull(startPosition)
+        assertEquals(startPosition, location.toNEDPosition())
     }
 
     @Test
-    fun constructor_whenAccuracyListener_setsExpectedValues() {
+    fun constructor_whenAccuracyChangedListener_setsExpectedValues() {
+        val location = createLocation()
+        val measurementListener = mockk<RelativeDevicePoseSensorCollector.OnMeasurementListener>()
+        val accuracyChangedListener = mockk<SensorCollector.OnAccuracyChangedListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val measurementListener = mockk<AttitudeSensorCollector.OnMeasurementListener>()
-        val accuracyChangedListener =
-            mockk<SensorCollector.OnAccuracyChangedListener>()
-        val collector = AttitudeSensorCollector(
+        val collector = RelativeDevicePoseSensorCollector(
             context,
-            AttitudeSensorCollector.SensorType.GEOMAGNETIC_ABSOLUTE_ATTITUDE,
             SensorDelay.NORMAL,
-            estimateCoordinateTransformation = true,
+            location,
+            TIME_INTERVAL,
             measurementListener,
             accuracyChangedListener
         )
 
         // check values
         assertSame(context, collector.context)
-        assertEquals(
-            AttitudeSensorCollector.SensorType.GEOMAGNETIC_ABSOLUTE_ATTITUDE,
-            collector.sensorType
-        )
         assertEquals(SensorDelay.NORMAL, collector.sensorDelay)
-        assertTrue(collector.estimateCoordinateTransformation)
+        assertEquals(TIME_INTERVAL, collector.timeInterval, 0.0)
         assertSame(measurementListener, collector.measurementListener)
-        assertSame(
-            accuracyChangedListener,
-            collector.accuracyChangedListener
-        )
+        assertSame(accuracyChangedListener, collector.accuracyChangedListener)
+        assertSame(location, collector.location)
         assertNull(collector.sensor)
         assertFalse(collector.sensorAvailable)
 
         val sensorManager: SensorManager? =
             getPrivateProperty(SensorCollector::class, collector, "sensorManager")
         assertNotNull(sensorManager)
+        val startPosition: NEDPosition? = collector.getPrivateProperty("startPosition")
+        requireNotNull(startPosition)
+        assertEquals(startPosition, location.toNEDPosition())
     }
 
     @Test
-    fun estimateCoordinateTransformation_setsExpectedValue() {
+    fun timeInterval_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val collector = AttitudeSensorCollector(context)
+        val collector = RelativeDevicePoseSensorCollector(context)
 
         // check default value
-        assertFalse(collector.estimateCoordinateTransformation)
+        assertEquals(0.0, collector.timeInterval, 0.0)
 
         // set new value
-        collector.estimateCoordinateTransformation = true
+        collector.timeInterval = TIME_INTERVAL
 
         // check
-        assertTrue(collector.estimateCoordinateTransformation)
+        assertEquals(TIME_INTERVAL, collector.timeInterval, 0.0)
     }
 
     @Test
     fun measurementListener_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val collector = AttitudeSensorCollector(context)
+        val collector = RelativeDevicePoseSensorCollector(context)
 
         // check default value
         assertNull(collector.measurementListener)
 
         // set new value
-        val measurementListener = mockk<AttitudeSensorCollector.OnMeasurementListener>()
+        val measurementListener = mockk<RelativeDevicePoseSensorCollector.OnMeasurementListener>()
         collector.measurementListener = measurementListener
 
         // check
@@ -238,7 +241,7 @@ class AttitudeSensorCollectorTest {
     @Test
     fun accuracyChangedListener_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val collector = AttitudeSensorCollector(context)
+        val collector = RelativeDevicePoseSensorCollector(context)
 
         // check default value
         assertNull(collector.accuracyChangedListener)
@@ -252,135 +255,68 @@ class AttitudeSensorCollectorTest {
     }
 
     @Test
-    fun sensor_whenSensorTypeRelativeAttitude_returnsExpectedValue() {
+    fun location_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val collector = RelativeDevicePoseSensorCollector(context)
+
+        // check default value
+        assertNull(collector.location)
+        assertNull(collector.getPrivateProperty("startPosition"))
+
+        // set new value
+        val location = createLocation()
+        collector.location = location
+
+        // check
+        assertSame(location, collector.location)
+        val startPosition: NEDPosition? = collector.getPrivateProperty("startPosition")
+        requireNotNull(startPosition)
+        assertEquals(startPosition, location.toNEDPosition())
+
+        // set as null
+        collector.location = null
+
+        // check
+        assertNull(collector.location)
+        assertNull(collector.getPrivateProperty("startPosition"))
+    }
+
+    @Test
+    fun sensor_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val sensorManager: SensorManager? =
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
         val sensorMock = mockk<Sensor>()
-        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GAME_ROTATION_VECTOR) }.returns(
-            sensorMock
-        )
+        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_POSE_6DOF) }.returns(sensorMock)
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
-        val collector = AttitudeSensorCollector(
-            contextSpy,
-            AttitudeSensorCollector.SensorType.RELATIVE_ATTITUDE
-        )
+        val collector = RelativeDevicePoseSensorCollector(contextSpy)
 
         assertSame(sensorMock, collector.sensor)
         verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
-        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GAME_ROTATION_VECTOR) }
+        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_POSE_6DOF) }
     }
 
     @Test
-    fun sensor_whenSensorTypeAbsoluteAttitude_returnsExpectedValue() {
+    fun sensorAvailable_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val sensorManager: SensorManager? =
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
         val sensorMock = mockk<Sensor>()
-        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR) }.returns(
-            sensorMock
-        )
+        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_POSE_6DOF) }.returns(sensorMock)
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
-        val collector = AttitudeSensorCollector(
-            contextSpy,
-            AttitudeSensorCollector.SensorType.ABSOLUTE_ATTITUDE
-        )
+        val collector = RelativeDevicePoseSensorCollector(contextSpy)
 
-        assertSame(sensorMock, collector.sensor)
+        assertTrue(collector.sensorAvailable)
         verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
-        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR) }
-    }
-
-    @Test
-    fun sensor_whenSensorTypeGeomagneticAbsoluteAttitude_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val sensorManager: SensorManager? =
-            context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
-        requireNotNull(sensorManager)
-        val sensorManagerSpy = spyk(sensorManager)
-        val sensorMock = mockk<Sensor>()
-        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR) }.returns(
-            sensorMock
-        )
-        val contextSpy = spyk(context)
-        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
-
-        val collector = AttitudeSensorCollector(
-            contextSpy,
-            AttitudeSensorCollector.SensorType.GEOMAGNETIC_ABSOLUTE_ATTITUDE
-        )
-
-        assertSame(sensorMock, collector.sensor)
-        verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
-        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR) }
-    }
-
-    @Test
-    fun sensorAvailable_whenSensorTypeRelativeAttitude_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val sensorManager: SensorManager? =
-            context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
-        requireNotNull(sensorManager)
-        val sensorManagerSpy = spyk(sensorManager)
-        val contextSpy = spyk(context)
-        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
-
-        val collector = AttitudeSensorCollector(
-            contextSpy,
-            AttitudeSensorCollector.SensorType.RELATIVE_ATTITUDE
-        )
-
-        assertFalse(collector.sensorAvailable)
-        verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
-        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GAME_ROTATION_VECTOR) }
-    }
-
-    @Test
-    fun sensorAvailable_whenSensorTypeAbsoluteAttitude_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val sensorManager: SensorManager? =
-            context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
-        requireNotNull(sensorManager)
-        val sensorManagerSpy = spyk(sensorManager)
-        val contextSpy = spyk(context)
-        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
-
-        val collector = AttitudeSensorCollector(
-            contextSpy,
-            AttitudeSensorCollector.SensorType.ABSOLUTE_ATTITUDE
-        )
-
-        assertFalse(collector.sensorAvailable)
-        verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
-        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR) }
-    }
-
-    @Test
-    fun sensorAvailable_whenSensorTypeGeomagneticAbsoluteAttitude_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val sensorManager: SensorManager? =
-            context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
-        requireNotNull(sensorManager)
-        val sensorManagerSpy = spyk(sensorManager)
-        val contextSpy = spyk(context)
-        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
-
-        val collector = AttitudeSensorCollector(
-            contextSpy,
-            AttitudeSensorCollector.SensorType.GEOMAGNETIC_ABSOLUTE_ATTITUDE
-        )
-
-        assertFalse(collector.sensorAvailable)
-        verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
-        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR) }
+        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_POSE_6DOF) }
     }
 
     @Test
@@ -389,7 +325,7 @@ class AttitudeSensorCollectorTest {
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(null)
 
-        val collector = AttitudeSensorCollector(contextSpy)
+        val collector = RelativeDevicePoseSensorCollector(contextSpy)
         assertFalse(collector.start())
 
         verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
@@ -402,12 +338,12 @@ class AttitudeSensorCollectorTest {
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
-        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR) }.returns(null)
+        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_POSE_6DOF) }.returns(null)
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
-        val collector = AttitudeSensorCollector(contextSpy)
+        val collector = RelativeDevicePoseSensorCollector(contextSpy)
         assertFalse(collector.start())
 
         verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
@@ -428,12 +364,12 @@ class AttitudeSensorCollectorTest {
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
         val sensorMock = mockk<Sensor>()
-        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR) }.returns(sensorMock)
+        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_POSE_6DOF) }.returns(sensorMock)
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
-        val collector = AttitudeSensorCollector(contextSpy)
+        val collector = RelativeDevicePoseSensorCollector(contextSpy)
         assertTrue(collector.start())
 
         verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
@@ -456,7 +392,7 @@ class AttitudeSensorCollectorTest {
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(null)
 
-        val collector = AttitudeSensorCollector(contextSpy)
+        val collector = RelativeDevicePoseSensorCollector(contextSpy)
         collector.stop()
     }
 
@@ -468,12 +404,12 @@ class AttitudeSensorCollectorTest {
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
         val sensorMock = mockk<Sensor>()
-        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR) }.returns(sensorMock)
+        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_POSE_6DOF) }.returns(sensorMock)
         justRun { sensorManagerSpy.unregisterListener(any(), any<Sensor>()) }
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
-        val collector = AttitudeSensorCollector(contextSpy)
+        val collector = RelativeDevicePoseSensorCollector(contextSpy)
         collector.stop()
 
         verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
@@ -492,14 +428,14 @@ class AttitudeSensorCollectorTest {
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
         val sensorMock = mockk<Sensor>()
-        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR) }.returns(sensorMock)
+        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_POSE_6DOF) }.returns(sensorMock)
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
-        val measurementListener = mockk<AttitudeSensorCollector.OnMeasurementListener>()
+        val measurementListener = mockk<RelativeDevicePoseSensorCollector.OnMeasurementListener>()
         val collector =
-            AttitudeSensorCollector(contextSpy, measurementListener = measurementListener)
+            RelativeDevicePoseSensorCollector(contextSpy, measurementListener = measurementListener)
         assertTrue(collector.start())
 
         val slot = slot<SensorEventListener>()
@@ -525,14 +461,14 @@ class AttitudeSensorCollectorTest {
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
         val sensorMock = mockk<Sensor>()
-        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR) }.returns(sensorMock)
+        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_POSE_6DOF) }.returns(sensorMock)
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
-        val measurementListener = mockk<AttitudeSensorCollector.OnMeasurementListener>()
+        val measurementListener = mockk<RelativeDevicePoseSensorCollector.OnMeasurementListener>()
         val collector =
-            AttitudeSensorCollector(contextSpy, measurementListener = measurementListener)
+            RelativeDevicePoseSensorCollector(contextSpy, measurementListener = measurementListener)
         assertTrue(collector.start())
 
         val slot = slot<SensorEventListener>()
@@ -563,12 +499,12 @@ class AttitudeSensorCollectorTest {
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
         val sensorMock = mockk<Sensor>()
-        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR) }.returns(sensorMock)
+        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_POSE_6DOF) }.returns(sensorMock)
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
-        val collector = AttitudeSensorCollector(contextSpy)
+        val collector = RelativeDevicePoseSensorCollector(contextSpy)
         assertTrue(collector.start())
 
         val slot = slot<SensorEventListener>()
@@ -593,14 +529,15 @@ class AttitudeSensorCollectorTest {
     }
 
     @Test
-    fun onSensorChanged_whenListenerRelativeAttitude_notifiesEvent() {
+    fun onSensorChanged_whenListenerAndLocation_notifiesEvent() {
+        val location = createLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val sensorManager: SensorManager? =
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
         val sensorMock = mockk<Sensor>()
-        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GAME_ROTATION_VECTOR) }.returns(
+        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_POSE_6DOF) }.returns(
             sensorMock
         )
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
@@ -608,12 +545,13 @@ class AttitudeSensorCollectorTest {
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val measurementListener =
-            mockk<AttitudeSensorCollector.OnMeasurementListener>(relaxUnitFun = true)
+            mockk<RelativeDevicePoseSensorCollector.OnMeasurementListener>(relaxUnitFun = true)
         val collector =
-            AttitudeSensorCollector(
+            RelativeDevicePoseSensorCollector(
                 contextSpy,
-                AttitudeSensorCollector.SensorType.RELATIVE_ATTITUDE,
-                measurementListener = measurementListener
+                location = location,
+                measurementListener = measurementListener,
+                timeInterval = TIME_INTERVAL
             )
         assertTrue(collector.start())
 
@@ -628,7 +566,7 @@ class AttitudeSensorCollectorTest {
 
         val eventListener = slotEventListener.captured
 
-        every { sensorMock.type }.returns(AttitudeSensorCollector.SensorType.RELATIVE_ATTITUDE.value)
+        every { sensorMock.type }.returns(Sensor.TYPE_POSE_6DOF)
         val event = mockk<SensorEvent>()
         event.sensor = sensorMock
         event.timestamp = System.nanoTime()
@@ -636,43 +574,143 @@ class AttitudeSensorCollectorTest {
         val valuesField = SensorEvent::class.java.getDeclaredField("values")
         valuesField.isAccessible = true
 
-        val attitude = createQuaternion()
-        val a = attitude.a.toFloat()
-        val b = attitude.b.toFloat()
-        val c = attitude.c.toFloat()
-        val d = attitude.d.toFloat()
+        val startNedPosition = location.toNEDPosition()
+        val startEcefPosition = ECEFPosition()
+        NEDtoECEFPositionVelocityConverter.convertNEDtoECEF(
+            startNedPosition,
+            NEDVelocity(),
+            startEcefPosition,
+            ECEFVelocity()
+        )
 
-        val randomizer = UniformRandomizer()
-        val accuracy = Math.toRadians(randomizer.nextDouble()).toFloat()
-        val values = floatArrayOf(b, c, d, a, accuracy)
+        val attitude1 = createQuaternion()
+        val attitude2 = createQuaternion()
+        val invAttitude1 = attitude1.inverseAndReturnNew()
+        val deltaAttitude = invAttitude1.combineAndReturnNew(attitude2)
+
+        val translation1 = createTranslation()
+        val translation2 = createTranslation()
+        val deltaTranslation = InhomogeneousPoint3D(
+            translation2.inhomX - translation1.inhomX,
+            translation2.inhomY - translation1.inhomY,
+            translation2.inhomZ - translation1.inhomZ
+        )
+
+        val transformation2 = EuclideanTransformation3D(attitude2, translation2.asArray())
+
+        val a2 = attitude2.a.toFloat()
+        val b2 = attitude2.b.toFloat()
+        val c2 = attitude2.c.toFloat()
+        val d2 = attitude2.d.toFloat()
+
+        val x2 = translation2.inhomX.toFloat()
+        val y2 = translation2.inhomY.toFloat()
+        val z2 = translation2.inhomZ.toFloat()
+
+        val aDelta = deltaAttitude.a.toFloat()
+        val bDelta = deltaAttitude.b.toFloat()
+        val cDelta = deltaAttitude.c.toFloat()
+        val dDelta = deltaAttitude.d.toFloat()
+
+        val xDelta = deltaTranslation.inhomX.toFloat()
+        val yDelta = deltaTranslation.inhomY.toFloat()
+        val zDelta = deltaTranslation.inhomZ.toFloat()
+
+        val values = floatArrayOf(
+            b2,
+            c2,
+            d2,
+            a2,
+            x2,
+            y2,
+            z2,
+            bDelta,
+            cDelta,
+            dDelta,
+            aDelta,
+            xDelta,
+            yDelta,
+            zDelta,
+            SEQUENCE_NUMBER
+        )
+
         valuesField.set(event, values)
         eventListener.onSensorChanged(event)
 
         verify(exactly = 1) { sensorMock.type }
-        val slot = slot<Quaternion>()
+        val quaternionSlot = slot<Quaternion>()
+        val translationSlot = slot<Point3D>()
+        val frameSlot = slot<NEDFrame>()
+        val transformationSlot = slot<EuclideanTransformation3D>()
         verify(exactly = 1) {
             measurementListener.onMeasurement(
-                capture(slot),
-                null,
-                accuracy.toDouble(),
+                capture(quaternionSlot),
+                capture(translationSlot),
+                capture(frameSlot),
+                capture(transformationSlot),
                 event.timestamp,
                 SensorAccuracy.HIGH
             )
         }
 
-        val quaternion = slot.captured
-        assertTrue(attitude.equals(quaternion.conjugateAndReturnNew(), ABSOLUTE_ERROR))
+        val quaternion = quaternionSlot.captured
+        val translation = translationSlot.captured
+        val frame = frameSlot.captured
+        val transformation = transformationSlot.captured
+        assertEquals(quaternion, transformation.rotation)
+        assertEquals(translation, transformation.translationPoint)
+        assertTrue(
+            transformation.asMatrix()
+                .equals(transformation2.inverseAndReturnNew().asMatrix(), ABSOLUTE_ERROR)
+        )
+        val endEcefPosition = ECEFPosition(
+            startEcefPosition.x + translation.inhomX,
+            startEcefPosition.y + translation.inhomY,
+            startEcefPosition.z + translation.inhomZ
+        )
+        val deltaTranslationResult: InhomogeneousPoint3D? =
+            collector.getPrivateProperty("deltaTranslation")
+        requireNotNull(deltaTranslationResult)
+        val endEcefVelocity = ECEFVelocity(
+            deltaTranslationResult.inhomX / TIME_INTERVAL,
+            deltaTranslationResult.inhomY / TIME_INTERVAL,
+            deltaTranslationResult.inhomZ / TIME_INTERVAL
+        )
+        val endNedPosition = NEDPosition()
+        val endNedVelocity = NEDVelocity()
+        ECEFtoNEDPositionVelocityConverter.convertECEFtoNED(
+            endEcefPosition,
+            endEcefVelocity,
+            endNedPosition,
+            endNedVelocity
+        )
+        assertTrue(frame.position.equals(endNedPosition, ABSOLUTE_ERROR))
+        assertTrue(
+            attitude2.equals(
+                quaternion.conjugateAndReturnNew(),
+                ABSOLUTE_ERROR
+            )
+        )
+        val c = CoordinateTransformation(
+            quaternion.asInhomogeneousMatrix(),
+            FrameType.BODY_FRAME,
+            FrameType.LOCAL_NAVIGATION_FRAME
+        )
+        val frame2 = NEDFrame(endNedPosition, endNedVelocity, c)
+        assertTrue(frame.equals(frame2, ABSOLUTE_ERROR))
+        assertEquals(frame.coordinateTransformation, frame2.coordinateTransformation)
+        assertEquals(frame.position, frame2.position)
     }
 
     @Test
-    fun onSensorChanged_whenListenerAbsoluteAttitude_notifiesEvent() {
+    fun onSensorChanged_whenListenerAndNoLocation_notifiesEvent() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val sensorManager: SensorManager? =
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
         val sensorMock = mockk<Sensor>()
-        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR) }.returns(
+        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_POSE_6DOF) }.returns(
             sensorMock
         )
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
@@ -680,12 +718,12 @@ class AttitudeSensorCollectorTest {
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val measurementListener =
-            mockk<AttitudeSensorCollector.OnMeasurementListener>(relaxUnitFun = true)
+            mockk<RelativeDevicePoseSensorCollector.OnMeasurementListener>(relaxUnitFun = true)
         val collector =
-            AttitudeSensorCollector(
+            RelativeDevicePoseSensorCollector(
                 contextSpy,
-                AttitudeSensorCollector.SensorType.ABSOLUTE_ATTITUDE,
-                measurementListener = measurementListener
+                measurementListener = measurementListener,
+                timeInterval = TIME_INTERVAL
             )
         assertTrue(collector.start())
 
@@ -700,7 +738,7 @@ class AttitudeSensorCollectorTest {
 
         val eventListener = slotEventListener.captured
 
-        every { sensorMock.type }.returns(AttitudeSensorCollector.SensorType.ABSOLUTE_ATTITUDE.value)
+        every { sensorMock.type }.returns(Sensor.TYPE_POSE_6DOF)
         val event = mockk<SensorEvent>()
         event.sensor = sensorMock
         event.timestamp = System.nanoTime()
@@ -708,183 +746,93 @@ class AttitudeSensorCollectorTest {
         val valuesField = SensorEvent::class.java.getDeclaredField("values")
         valuesField.isAccessible = true
 
-        val attitude = createQuaternion()
-        val a = attitude.a.toFloat()
-        val b = attitude.b.toFloat()
-        val c = attitude.c.toFloat()
-        val d = attitude.d.toFloat()
+        val attitude1 = createQuaternion()
+        val attitude2 = createQuaternion()
+        val invAttitude1 = attitude1.inverseAndReturnNew()
+        val deltaAttitude = invAttitude1.combineAndReturnNew(attitude2)
 
-        val randomizer = UniformRandomizer()
-        val accuracy = Math.toRadians(randomizer.nextDouble()).toFloat()
-        val values = floatArrayOf(b, c, d, a, accuracy)
+        val translation1 = createTranslation()
+        val translation2 = createTranslation()
+        val deltaTranslation = InhomogeneousPoint3D(
+            translation2.inhomX - translation1.inhomX,
+            translation2.inhomY - translation1.inhomY,
+            translation2.inhomZ - translation1.inhomZ
+        )
+
+        val transformation2 = EuclideanTransformation3D(attitude2, translation2.asArray())
+
+        val a2 = attitude2.a.toFloat()
+        val b2 = attitude2.b.toFloat()
+        val c2 = attitude2.c.toFloat()
+        val d2 = attitude2.d.toFloat()
+
+        val x2 = translation2.inhomX.toFloat()
+        val y2 = translation2.inhomY.toFloat()
+        val z2 = translation2.inhomZ.toFloat()
+
+        val aDelta = deltaAttitude.a.toFloat()
+        val bDelta = deltaAttitude.b.toFloat()
+        val cDelta = deltaAttitude.c.toFloat()
+        val dDelta = deltaAttitude.d.toFloat()
+
+        val xDelta = deltaTranslation.inhomX.toFloat()
+        val yDelta = deltaTranslation.inhomY.toFloat()
+        val zDelta = deltaTranslation.inhomZ.toFloat()
+
+        val values = floatArrayOf(
+            b2,
+            c2,
+            d2,
+            a2,
+            x2,
+            y2,
+            z2,
+            bDelta,
+            cDelta,
+            dDelta,
+            aDelta,
+            xDelta,
+            yDelta,
+            zDelta,
+            SEQUENCE_NUMBER
+        )
+
         valuesField.set(event, values)
         eventListener.onSensorChanged(event)
 
         verify(exactly = 1) { sensorMock.type }
-        val slot = slot<Quaternion>()
+        val quaternionSlot = slot<Quaternion>()
+        val translationSlot = slot<Point3D>()
+        val transformationSlot = slot<EuclideanTransformation3D>()
         verify(exactly = 1) {
             measurementListener.onMeasurement(
-                capture(slot),
+                capture(quaternionSlot),
+                capture(translationSlot),
                 null,
-                accuracy.toDouble(),
+                capture(transformationSlot),
                 event.timestamp,
                 SensorAccuracy.HIGH
             )
         }
 
-        val quaternion = slot.captured
-        assertTrue(attitude.equals(quaternion.conjugateAndReturnNew(), ABSOLUTE_ERROR))
-    }
-
-    @Test
-    fun onSensorChanged_whenListenerGeomagneticAbsoluteAttitude_notifiesEvent() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val sensorManager: SensorManager? =
-            context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
-        requireNotNull(sensorManager)
-        val sensorManagerSpy = spyk(sensorManager)
-        val sensorMock = mockk<Sensor>()
-        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR) }.returns(
-            sensorMock
+        val quaternion = quaternionSlot.captured
+        val translation = translationSlot.captured
+        val transformation = transformationSlot.captured
+        assertEquals(quaternion, transformation.rotation)
+        assertEquals(translation, transformation.translationPoint)
+        assertTrue(
+            transformation.asMatrix()
+                .equals(transformation2.inverseAndReturnNew().asMatrix(), ABSOLUTE_ERROR)
         )
-        every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
-        val contextSpy = spyk(context)
-        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
-
-        val measurementListener =
-            mockk<AttitudeSensorCollector.OnMeasurementListener>(relaxUnitFun = true)
-        val collector =
-            AttitudeSensorCollector(
-                contextSpy,
-                AttitudeSensorCollector.SensorType.GEOMAGNETIC_ABSOLUTE_ATTITUDE,
-                measurementListener = measurementListener
+        val deltaTranslationResult: InhomogeneousPoint3D? =
+            collector.getPrivateProperty("deltaTranslation")
+        requireNotNull(deltaTranslationResult)
+        assertTrue(
+            attitude2.equals(
+                quaternion.conjugateAndReturnNew(),
+                ABSOLUTE_ERROR
             )
-        assertTrue(collector.start())
-
-        val slotEventListener = slot<SensorEventListener>()
-        verify(exactly = 1) {
-            sensorManagerSpy.registerListener(
-                capture(slotEventListener),
-                sensorMock,
-                collector.sensorDelay.value
-            )
-        }
-
-        val eventListener = slotEventListener.captured
-
-        every { sensorMock.type }.returns(AttitudeSensorCollector.SensorType.GEOMAGNETIC_ABSOLUTE_ATTITUDE.value)
-        val event = mockk<SensorEvent>()
-        event.sensor = sensorMock
-        event.timestamp = System.nanoTime()
-        event.accuracy = SensorAccuracy.HIGH.value
-        val valuesField = SensorEvent::class.java.getDeclaredField("values")
-        valuesField.isAccessible = true
-
-        val attitude = createQuaternion()
-        val a = attitude.a.toFloat()
-        val b = attitude.b.toFloat()
-        val c = attitude.c.toFloat()
-        val d = attitude.d.toFloat()
-
-        val randomizer = UniformRandomizer()
-        val accuracy = Math.toRadians(randomizer.nextDouble()).toFloat()
-        val values = floatArrayOf(b, c, d, a, accuracy)
-        valuesField.set(event, values)
-        eventListener.onSensorChanged(event)
-
-        verify(exactly = 1) { sensorMock.type }
-        val slot = slot<Quaternion>()
-        verify(exactly = 1) {
-            measurementListener.onMeasurement(
-                capture(slot),
-                null,
-                accuracy.toDouble(),
-                event.timestamp,
-                SensorAccuracy.HIGH
-            )
-        }
-
-        val quaternion = slot.captured
-        assertTrue(attitude.equals(quaternion.conjugateAndReturnNew(), ABSOLUTE_ERROR))
-    }
-
-    @Test
-    fun onSensorChanged_whenListenerAndEstimateCoordinateTransformation_notifiesEvent() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val sensorManager: SensorManager? =
-            context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
-        requireNotNull(sensorManager)
-        val sensorManagerSpy = spyk(sensorManager)
-        val sensorMock = mockk<Sensor>()
-        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR) }.returns(
-            sensorMock
         )
-        every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
-        val contextSpy = spyk(context)
-        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
-
-        val measurementListener =
-            mockk<AttitudeSensorCollector.OnMeasurementListener>(relaxUnitFun = true)
-        val collector =
-            AttitudeSensorCollector(
-                contextSpy,
-                AttitudeSensorCollector.SensorType.ABSOLUTE_ATTITUDE,
-                estimateCoordinateTransformation = true,
-                measurementListener = measurementListener
-            )
-        assertTrue(collector.start())
-
-        val slotEventListener = slot<SensorEventListener>()
-        verify(exactly = 1) {
-            sensorManagerSpy.registerListener(
-                capture(slotEventListener),
-                sensorMock,
-                collector.sensorDelay.value
-            )
-        }
-
-        val eventListener = slotEventListener.captured
-
-        every { sensorMock.type }.returns(AttitudeSensorCollector.SensorType.ABSOLUTE_ATTITUDE.value)
-        val event = mockk<SensorEvent>()
-        event.sensor = sensorMock
-        event.timestamp = System.nanoTime()
-        event.accuracy = SensorAccuracy.HIGH.value
-        val valuesField = SensorEvent::class.java.getDeclaredField("values")
-        valuesField.isAccessible = true
-
-        val attitude = createQuaternion()
-        val a = attitude.a.toFloat()
-        val b = attitude.b.toFloat()
-        val c = attitude.c.toFloat()
-        val d = attitude.d.toFloat()
-
-        val randomizer = UniformRandomizer()
-        val accuracy = Math.toRadians(randomizer.nextDouble()).toFloat()
-        val values = floatArrayOf(b, c, d, a, accuracy)
-        valuesField.set(event, values)
-        eventListener.onSensorChanged(event)
-
-        verify(exactly = 1) { sensorMock.type }
-        val slotQuaternion = slot<Quaternion>()
-        val slotTransformation = slot<CoordinateTransformation>()
-        verify(exactly = 1) {
-            measurementListener.onMeasurement(
-                capture(slotQuaternion),
-                capture(slotTransformation),
-                accuracy.toDouble(),
-                event.timestamp,
-                SensorAccuracy.HIGH
-            )
-        }
-
-        val quaternion1 = slotQuaternion.captured
-        assertTrue(attitude.equals(quaternion1.conjugateAndReturnNew(), ABSOLUTE_ERROR))
-        val transformation = slotTransformation.captured
-        val quaternion2 = Quaternion()
-        transformation.asRotation(quaternion2)
-
-        assertEquals(quaternion1, quaternion2)
     }
 
     @Test
@@ -895,14 +843,14 @@ class AttitudeSensorCollectorTest {
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
         val sensorMock = mockk<Sensor>()
-        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR) }.returns(sensorMock)
+        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_POSE_6DOF) }.returns(sensorMock)
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val accuracyChangedListener =
             mockk<SensorCollector.OnAccuracyChangedListener>(relaxUnitFun = true)
-        val collector = AttitudeSensorCollector(
+        val collector = RelativeDevicePoseSensorCollector(
             contextSpy,
             accuracyChangedListener = accuracyChangedListener
         )
@@ -932,14 +880,14 @@ class AttitudeSensorCollectorTest {
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
         val sensorMock = mockk<Sensor>()
-        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR) }.returns(sensorMock)
+        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_POSE_6DOF) }.returns(sensorMock)
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val accuracyChangedListener =
             mockk<SensorCollector.OnAccuracyChangedListener>(relaxUnitFun = true)
-        val collector = AttitudeSensorCollector(
+        val collector = RelativeDevicePoseSensorCollector(
             contextSpy,
             accuracyChangedListener = accuracyChangedListener
         )
@@ -970,14 +918,14 @@ class AttitudeSensorCollectorTest {
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
         val sensorMock = mockk<Sensor>()
-        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR) }.returns(sensorMock)
+        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_POSE_6DOF) }.returns(sensorMock)
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val accuracyChangedListener =
             mockk<SensorCollector.OnAccuracyChangedListener>(relaxUnitFun = true)
-        val collector = AttitudeSensorCollector(
+        val collector = RelativeDevicePoseSensorCollector(
             contextSpy,
             accuracyChangedListener = accuracyChangedListener
         )
@@ -994,7 +942,7 @@ class AttitudeSensorCollectorTest {
 
         val eventListener = slot.captured
 
-        every { sensorMock.type }.returns(AttitudeSensorCollector.SensorType.ABSOLUTE_ATTITUDE.value)
+        every { sensorMock.type }.returns(Sensor.TYPE_POSE_6DOF)
         eventListener.onAccuracyChanged(sensorMock, SensorAccuracy.HIGH.value)
 
         verify(exactly = 1) {
@@ -1002,28 +950,46 @@ class AttitudeSensorCollectorTest {
         }
     }
 
-    @Test
-    fun sensorType_fromValue_returnsExpected() {
-        assertEquals(3, AttitudeSensorCollector.SensorType.values().size)
-        assertEquals(
-            AttitudeSensorCollector.SensorType.RELATIVE_ATTITUDE,
-            AttitudeSensorCollector.SensorType.from(Sensor.TYPE_GAME_ROTATION_VECTOR)
-        )
-        assertEquals(
-            AttitudeSensorCollector.SensorType.ABSOLUTE_ATTITUDE,
-            AttitudeSensorCollector.SensorType.from(Sensor.TYPE_ROTATION_VECTOR)
-        )
-        assertEquals(
-            AttitudeSensorCollector.SensorType.GEOMAGNETIC_ABSOLUTE_ATTITUDE,
-            AttitudeSensorCollector.SensorType.from(Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR)
-        )
-    }
-
     private companion object {
         const val ABSOLUTE_ERROR = 1e-6
 
+        const val TIME_INTERVAL = 0.02
+
+        const val MIN_LATITUDE_DEGREES = -90.0
+        const val MAX_LATITUDE_DEGREES = 90.0
+
+        const val MIN_LONGITUDE_DEGREES = -180.0
+        const val MAX_LONGITUDE_DEGREES = 180.0
+
+        const val MIN_HEIGHT = -100.0
+        const val MAX_HEIGHT = 100.0
+
         const val MIN_ANGLE_DEGREES = -90.0
         const val MAX_ANGLE_DEGREES = 90.0
+
+        const val MIN_POS = -10.0
+        const val MAX_POS = 10.0
+
+        const val SEQUENCE_NUMBER = 1.0f
+
+        fun createLocation(): Location {
+            val randomizer = UniformRandomizer()
+            val location = mockk<Location>()
+            every { location.latitude }.returns(
+                randomizer.nextDouble(
+                    MIN_LATITUDE_DEGREES,
+                    MAX_LATITUDE_DEGREES
+                )
+            )
+            every { location.longitude }.returns(
+                randomizer.nextDouble(
+                    MIN_LONGITUDE_DEGREES,
+                    MAX_LONGITUDE_DEGREES
+                )
+            )
+            every { location.altitude }.returns(randomizer.nextDouble(MIN_HEIGHT, MAX_HEIGHT))
+            return location
+        }
 
         fun createQuaternion(): Quaternion {
             val randomizer = UniformRandomizer()
@@ -1032,6 +998,13 @@ class AttitudeSensorCollectorTest {
             val yaw = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
             return Quaternion(roll, pitch, yaw)
         }
-    }
 
+        fun createTranslation(): Point3D {
+            val randomizer = UniformRandomizer()
+            val x = randomizer.nextDouble(MIN_POS, MAX_POS)
+            val y = randomizer.nextDouble(MIN_POS, MAX_POS)
+            val z = randomizer.nextDouble(MIN_POS, MAX_POS)
+            return InhomogeneousPoint3D(x, y, z)
+        }
+    }
 }

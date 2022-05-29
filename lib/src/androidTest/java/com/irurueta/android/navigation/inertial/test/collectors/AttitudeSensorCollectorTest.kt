@@ -74,7 +74,7 @@ class AttitudeSensorCollectorTest {
     fun sensor_whenRelativeAttitudeSensorType_returnsSensor() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val collector =
-            AttitudeSensorCollector(context, AttitudeSensorCollector.SensorType.RELATIVE_ATTITUdE)
+            AttitudeSensorCollector(context, AttitudeSensorCollector.SensorType.RELATIVE_ATTITUDE)
 
         val sensor = collector.sensor
         requireNotNull(sensor)
@@ -104,7 +104,7 @@ class AttitudeSensorCollectorTest {
     fun sensorAvailable_whenRelativeAttitudeSensorType_returnsTrue() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val collector =
-            AttitudeSensorCollector(context, AttitudeSensorCollector.SensorType.RELATIVE_ATTITUdE)
+            AttitudeSensorCollector(context, AttitudeSensorCollector.SensorType.RELATIVE_ATTITUDE)
 
         assertTrue(collector.sensorAvailable)
     }
@@ -194,7 +194,7 @@ class AttitudeSensorCollectorTest {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val collector = AttitudeSensorCollector(
             context,
-            AttitudeSensorCollector.SensorType.RELATIVE_ATTITUdE,
+            AttitudeSensorCollector.SensorType.RELATIVE_ATTITUDE,
             SensorDelay.FASTEST,
             measurementListener = { rotation, _, headingAccuracyRadians, timestamp, accuracy ->
                 val quaternion = rotation.toQuaternion()
