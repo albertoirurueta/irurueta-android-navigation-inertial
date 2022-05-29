@@ -1412,7 +1412,7 @@ class PoseHelperTest {
         )
         assertTrue(
             deltaTransformationResult.asMatrix()
-                .equals(deltaTransformation.inverseAndReturnNew().asMatrix(), ABSOLUTE_ERROR)
+                .equals(deltaTransformation.inverseAndReturnNew().asMatrix(), 10.0 * ABSOLUTE_ERROR)
         )
 
         val endEcefPosition2 = ECEFPosition(
@@ -2134,7 +2134,7 @@ class PoseHelperTest {
         )
         assertTrue(
             deltaTransformationResult.asMatrix()
-                .equals(deltaTransformation.inverseAndReturnNew().asMatrix(), ABSOLUTE_ERROR)
+                .equals(deltaTransformation.inverseAndReturnNew().asMatrix(), 10.0 * ABSOLUTE_ERROR)
         )
 
         val endEcefPosition2 = ECEFPosition(
