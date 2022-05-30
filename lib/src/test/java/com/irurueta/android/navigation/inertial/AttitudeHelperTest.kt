@@ -62,7 +62,7 @@ class AttitudeHelperTest {
 
     @Test(expected = IllegalArgumentException::class)
     fun convertToNEU_whenInvalidValuesSize_throwsIllegalArgumentException() {
-        val values = FloatArray(4)
+        val values = FloatArray(3)
         val quaternionResult = Quaternion()
         AttitudeHelper.convertToNEU(values, quaternionResult)
     }
@@ -103,7 +103,7 @@ class AttitudeHelperTest {
 
     @Test(expected = IllegalArgumentException::class)
     fun convertToNED_whenInvalidValuesSize_throwsIllegalArgumentException() {
-        val values = FloatArray(4)
+        val values = FloatArray(3)
         val quaternionResult = Quaternion()
         AttitudeHelper.convertToNED(values, quaternionResult)
     }
@@ -275,7 +275,7 @@ class AttitudeHelperTest {
 
     @Test(expected = IllegalArgumentException::class)
     fun convertToNED_whenCoordinateTransformationQuaternionMatrixAndInvalidValuesSize_throwsIllegalArgumentException() {
-        val values = FloatArray(4)
+        val values = FloatArray(3)
         val transformationResult = CoordinateTransformation(
             FrameType.BODY_FRAME,
             FrameType.LOCAL_NAVIGATION_FRAME

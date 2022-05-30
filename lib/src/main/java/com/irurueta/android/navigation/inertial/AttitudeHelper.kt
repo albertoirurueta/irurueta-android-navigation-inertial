@@ -42,7 +42,7 @@ object AttitudeHelper {
     /**
      * Minimum required length of values array.
      */
-    private const val MIN_LENGTH = 5
+    private const val MIN_LENGTH = 4
 
     /**
      * Value indicating that heading accuracy is not available.
@@ -73,11 +73,12 @@ object AttitudeHelper {
 
         convertQuaternion(values, 0, result)
 
-        val headingAccuracy = if (values[4] != UNAVAILABLE_HEADING_ACCURACY) {
-            values[4].toDouble()
-        } else {
-            null
-        }
+        val headingAccuracy =
+            if (values.size > MIN_LENGTH && values[4] != UNAVAILABLE_HEADING_ACCURACY) {
+                values[4].toDouble()
+            } else {
+                null
+            }
 
         return headingAccuracy
     }
