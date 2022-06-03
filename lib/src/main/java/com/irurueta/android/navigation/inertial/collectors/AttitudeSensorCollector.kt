@@ -173,8 +173,8 @@ class AttitudeSensorCollector(
         /**
          * Called when a new attitude measurement is available.
          *
-         * @param coordinateTransformation coordinate transformation contained measured attitude.
          * @param attitude measured attitude.
+         * @param coordinateTransformation coordinate transformation containing measured attitude.
          * @param headingAccuracy accuracy of heading angle expressed in radians.
          * @param timestamp time in nanoseconds at which the measurement was made. Each measurement
          * will be monotonically increasing using the same time base as
