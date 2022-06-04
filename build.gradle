@@ -20,6 +20,7 @@ buildscript {
         espresso_core_version = '3.4.0'
         jacoco_version = '0.8.7'
         nexus_publish_version = '1.1.0'
+        irurueta_android_glutils_version = '1.0.9'
         irurueta_android_gl_cube = '1.0.0'
         irurueta_navigation = '1.1.0'
         irurueta_navigation_inertial = '1.2.0'

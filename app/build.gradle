@@ -101,7 +101,9 @@ dependencies {
     api "com.irurueta:irurueta-navigation:$irurueta_navigation"
     api "com.irurueta:irurueta-navigation-inertial:$irurueta_navigation_inertial"
     api "com.irurueta:irurueta-navigation-inertial-extra:$irurueta_navigation_inertial_extra"
+    api "com.irurueta:irurueta-android-glutils:$irurueta_android_glutils_version"
     api "com.irurueta:irurueta-android-gl-cube:$irurueta_android_gl_cube"
+    implementation project(path: ':lib')
     //implementation project(':lib')
     testImplementation "junit:junit:$junit_version"
     androidTestImplementation "androidx.test.ext:junit:$ext_junit_version"

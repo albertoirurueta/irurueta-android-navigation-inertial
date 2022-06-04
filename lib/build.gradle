@@ -131,7 +131,6 @@ dependencies {
     api "com.irurueta:irurueta-navigation:$irurueta_navigation"
     api "com.irurueta:irurueta-navigation-inertial:$irurueta_navigation_inertial"
     api "com.irurueta:irurueta-navigation-inertial-extra:$irurueta_navigation_inertial_extra"
-    api "com.irurueta:irurueta-android-gl-cube:$irurueta_android_gl_cube"
     testImplementation "androidx.test:core-ktx:$test_core_ktx_version"
     testImplementation "junit:junit:$junit_version"
     testImplementation "io.mockk:mockk:$mockk_version"

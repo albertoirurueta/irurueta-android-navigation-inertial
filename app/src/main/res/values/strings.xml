@@ -1,3 +1,6 @@
 <resources>
-    <string name="app_name">irurueta-android-navigation-inertial</string>
+    <string name="app_name">Inertial Navigation</string>
+    <string name="absolute_attitude">Absolute attitude</string>
+    <string name="relative_attitude">Relative attitude</string>
+    <string name="geomagnetic_attitude">Geomagnetic attitude</string>
 </resources>

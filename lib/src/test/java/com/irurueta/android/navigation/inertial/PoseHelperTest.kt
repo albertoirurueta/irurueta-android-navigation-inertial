@@ -917,11 +917,11 @@ class PoseHelperTest {
         assertEquals(deltaTranslationResult, deltaTransformationResult.translationPoint)
         assertTrue(
             transformationResult.asMatrix()
-                .equals(transformation2.inverseAndReturnNew().asMatrix(), ABSOLUTE_ERROR)
+                .equals(transformation2.inverseAndReturnNew().asMatrix(), 10.0 * ABSOLUTE_ERROR)
         )
         assertTrue(
             deltaTransformationResult.asMatrix()
-                .equals(deltaTransformation.inverseAndReturnNew().asMatrix(), ABSOLUTE_ERROR)
+                .equals(deltaTransformation.inverseAndReturnNew().asMatrix(), 10.0 * ABSOLUTE_ERROR)
         )
     }
 
@@ -1550,11 +1550,11 @@ class PoseHelperTest {
         assertArrayEquals(deltaTranslationResult, deltaTransformationResult.translation, 0.0)
         assertTrue(
             transformationResult.asMatrix()
-                .equals(transformation2.inverseAndReturnNew().asMatrix(), ABSOLUTE_ERROR)
+                .equals(transformation2.inverseAndReturnNew().asMatrix(), 10.0 * ABSOLUTE_ERROR)
         )
         assertTrue(
             deltaTransformationResult.asMatrix()
-                .equals(deltaTransformation.inverseAndReturnNew().asMatrix(), ABSOLUTE_ERROR)
+                .equals(deltaTransformation.inverseAndReturnNew().asMatrix(), 10.0 * ABSOLUTE_ERROR)
         )
 
         val endEcefPosition2 = ECEFPosition(
@@ -1841,11 +1841,11 @@ class PoseHelperTest {
         assertEquals(deltaTranslationResult, deltaTransformationResult.translationPoint)
         assertTrue(
             transformationResult.asMatrix()
-                .equals(transformation2.inverseAndReturnNew().asMatrix(), ABSOLUTE_ERROR)
+                .equals(transformation2.inverseAndReturnNew().asMatrix(), 10.0 * ABSOLUTE_ERROR)
         )
         assertTrue(
             deltaTransformationResult.asMatrix()
-                .equals(deltaTransformation.inverseAndReturnNew().asMatrix(), ABSOLUTE_ERROR)
+                .equals(deltaTransformation.inverseAndReturnNew().asMatrix(), 10.0 * ABSOLUTE_ERROR)
         )
 
         val endEcefPosition2 = ECEFPosition(
@@ -1988,11 +1988,11 @@ class PoseHelperTest {
         assertEquals(deltaTranslationResult, deltaTransformationResult.translationPoint)
         assertTrue(
             transformationResult.asMatrix()
-                .equals(transformation2.inverseAndReturnNew().asMatrix(), ABSOLUTE_ERROR)
+                .equals(transformation2.inverseAndReturnNew().asMatrix(), 10.0 * ABSOLUTE_ERROR)
         )
         assertTrue(
             deltaTransformationResult.asMatrix()
-                .equals(deltaTransformation.inverseAndReturnNew().asMatrix(), ABSOLUTE_ERROR)
+                .equals(deltaTransformation.inverseAndReturnNew().asMatrix(), 10.0 * ABSOLUTE_ERROR)
         )
 
         val endEcefPosition2 = ECEFPosition(
@@ -2130,7 +2130,7 @@ class PoseHelperTest {
         assertArrayEquals(deltaTranslationResult, deltaTransformationResult.translation, 0.0)
         assertTrue(
             transformationResult.asMatrix()
-                .equals(transformation2.inverseAndReturnNew().asMatrix(), ABSOLUTE_ERROR)
+                .equals(transformation2.inverseAndReturnNew().asMatrix(), 10.0 * ABSOLUTE_ERROR)
         )
         assertTrue(
             deltaTransformationResult.asMatrix()
@@ -2279,11 +2279,11 @@ class PoseHelperTest {
         assertArrayEquals(deltaTranslationResult, deltaTransformationResult.translation, 0.0)
         assertTrue(
             transformationResult.asMatrix()
-                .equals(transformation2.inverseAndReturnNew().asMatrix(), ABSOLUTE_ERROR)
+                .equals(transformation2.inverseAndReturnNew().asMatrix(), 10.0 * ABSOLUTE_ERROR)
         )
         assertTrue(
             deltaTransformationResult.asMatrix()
-                .equals(deltaTransformation.inverseAndReturnNew().asMatrix(), ABSOLUTE_ERROR)
+                .equals(deltaTransformation.inverseAndReturnNew().asMatrix(), 10.0 * ABSOLUTE_ERROR)
         )
 
         val endEcefPosition2 = ECEFPosition(
