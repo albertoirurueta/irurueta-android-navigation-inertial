@@ -5520,162 +5520,180 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun onDynamicIntervalDetected_whenSolveCalibrationEnabledAndListenersAvailable_solvesCalibrationAndNotifies() {
-        val readyToSolveCalibrationListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnReadyToSolveCalibrationListener<SingleSensorStaticIntervalAccelerometerCalibrator>>(
-                relaxUnitFun = true
-            )
-        val stoppedListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnStoppedListener<SingleSensorStaticIntervalAccelerometerCalibrator>>(
-                relaxUnitFun = true
-            )
-        val calibrationSolvingStartedListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnCalibrationSolvingStartedListener<SingleSensorStaticIntervalAccelerometerCalibrator>>(
-                relaxUnitFun = true
-            )
-        val calibrationCompletedListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnCalibrationCompletedListener<SingleSensorStaticIntervalAccelerometerCalibrator>>(
-                relaxUnitFun = true
-            )
-        val errorListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnErrorListener<SingleSensorStaticIntervalAccelerometerCalibrator>>(
-                relaxUnitFun = true
-            )
-        val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = SingleSensorStaticIntervalAccelerometerCalibrator(
-            context,
-            location = location,
-            solveCalibrationWhenEnoughMeasurements = true,
-            readyToSolveCalibrationListener = readyToSolveCalibrationListener,
-            stoppedListener = stoppedListener,
-            calibrationSolvingStartedListener = calibrationSolvingStartedListener,
-            calibrationCompletedListener = calibrationCompletedListener,
-            errorListener = errorListener
-        )
-
-        assertFalse(calibrator.isCommonAxisUsed)
-        assertFalse(calibrator.isGroundTruthInitialBias)
-
-        val nedPosition = location.toNEDPosition()
-
-        val requiredMeasurements = calibrator.requiredMeasurements
-        assertEquals(13, requiredMeasurements)
-        val minimumRequiredMeasurements = calibrator.minimumRequiredMeasurements
-        assertEquals(13, minimumRequiredMeasurements)
-        val reqMeasurements = requiredMeasurements.coerceAtLeast(minimumRequiredMeasurements)
-
-        val intervalDetector: AccelerometerIntervalDetector? =
-            calibrator.getPrivateProperty("intervalDetector")
-        requireNotNull(intervalDetector)
-
-        val intervalDetectorDynamicIntervalDetectedListener: IntervalDetector.OnDynamicIntervalDetectedListener<AccelerometerIntervalDetector>? =
-            calibrator.getPrivateProperty("intervalDetectorDynamicIntervalDetectedListener")
-        requireNotNull(intervalDetectorDynamicIntervalDetectedListener)
-
-        val ba = generateBa()
-        val bg = generateBg()
-        val ma = generateMaGeneral()
-        val mg = generateMg()
-        val gg = generateGg()
-
-        val accelNoiseRootPSD = 0.0
-        val gyroNoiseRootPSD = 0.0
-        val accelQuantLevel = 0.0
-        val gyroQuantLevel = 0.0
-
-        val errors = IMUErrors(
-            ba,
-            bg,
-            ma,
-            mg,
-            gg,
-            accelNoiseRootPSD,
-            gyroNoiseRootPSD,
-            accelQuantLevel,
-            gyroQuantLevel
-        )
-
-        val randomizer = UniformRandomizer()
-        val random = Random()
-
-        for (i in 1..reqMeasurements) {
-            val roll = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
-            val pitch = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
-            val yaw = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
-            val nedC = CoordinateTransformation(
-                roll,
-                pitch,
-                yaw,
-                FrameType.BODY_FRAME,
-                FrameType.LOCAL_NAVIGATION_FRAME
+        var numValid = 0
+        for (t in 1..TIMES) {
+            val readyToSolveCalibrationListener =
+                mockk<SingleSensorStaticIntervalCalibrator.OnReadyToSolveCalibrationListener<SingleSensorStaticIntervalAccelerometerCalibrator>>(
+                    relaxUnitFun = true
+                )
+            val stoppedListener =
+                mockk<SingleSensorStaticIntervalCalibrator.OnStoppedListener<SingleSensorStaticIntervalAccelerometerCalibrator>>(
+                    relaxUnitFun = true
+                )
+            val calibrationSolvingStartedListener =
+                mockk<SingleSensorStaticIntervalCalibrator.OnCalibrationSolvingStartedListener<SingleSensorStaticIntervalAccelerometerCalibrator>>(
+                    relaxUnitFun = true
+                )
+            val calibrationCompletedListener =
+                mockk<SingleSensorStaticIntervalCalibrator.OnCalibrationCompletedListener<SingleSensorStaticIntervalAccelerometerCalibrator>>(
+                    relaxUnitFun = true
+                )
+            val errorListener =
+                mockk<SingleSensorStaticIntervalCalibrator.OnErrorListener<SingleSensorStaticIntervalAccelerometerCalibrator>>(
+                    relaxUnitFun = true
+                )
+            val location = getLocation()
+            val context = ApplicationProvider.getApplicationContext<Context>()
+            val calibrator = SingleSensorStaticIntervalAccelerometerCalibrator(
+                context,
+                location = location,
+                solveCalibrationWhenEnoughMeasurements = true,
+                readyToSolveCalibrationListener = readyToSolveCalibrationListener,
+                stoppedListener = stoppedListener,
+                calibrationSolvingStartedListener = calibrationSolvingStartedListener,
+                calibrationCompletedListener = calibrationCompletedListener,
+                errorListener = errorListener
             )
 
-            val nedFrame = NEDFrame(nedPosition, nedC)
-            val ecefFrame = NEDtoECEFFrameConverter.convertNEDtoECEFAndReturnNew(nedFrame)
+            assertFalse(calibrator.isCommonAxisUsed)
+            assertFalse(calibrator.isGroundTruthInitialBias)
 
-            val trueKinematics = ECEFKinematicsEstimator.estimateKinematicsAndReturnNew(
-                TIME_INTERVAL_SECONDS, ecefFrame, ecefFrame
+            val nedPosition = location.toNEDPosition()
+
+            val requiredMeasurements = calibrator.requiredMeasurements
+            assertEquals(13, requiredMeasurements)
+            val minimumRequiredMeasurements = calibrator.minimumRequiredMeasurements
+            assertEquals(13, minimumRequiredMeasurements)
+            val reqMeasurements = requiredMeasurements.coerceAtLeast(minimumRequiredMeasurements)
+
+            val intervalDetector: AccelerometerIntervalDetector? =
+                calibrator.getPrivateProperty("intervalDetector")
+            requireNotNull(intervalDetector)
+
+            val intervalDetectorDynamicIntervalDetectedListener: IntervalDetector.OnDynamicIntervalDetectedListener<AccelerometerIntervalDetector>? =
+                calibrator.getPrivateProperty("intervalDetectorDynamicIntervalDetectedListener")
+            requireNotNull(intervalDetectorDynamicIntervalDetectedListener)
+
+            val ba = generateBa()
+            val bg = generateBg()
+            val ma = generateMaGeneral()
+            val mg = generateMg()
+            val gg = generateGg()
+
+            val accelNoiseRootPSD = 0.0
+            val gyroNoiseRootPSD = 0.0
+            val accelQuantLevel = 0.0
+            val gyroQuantLevel = 0.0
+
+            val errors = IMUErrors(
+                ba,
+                bg,
+                ma,
+                mg,
+                gg,
+                accelNoiseRootPSD,
+                gyroNoiseRootPSD,
+                accelQuantLevel,
+                gyroQuantLevel
             )
 
-            val measuredKinematics = BodyKinematicsGenerator
-                .generate(TIME_INTERVAL_SECONDS, trueKinematics, errors, random)
+            val randomizer = UniformRandomizer()
+            val random = Random()
 
-            intervalDetectorDynamicIntervalDetectedListener.onDynamicIntervalDetected(
-                intervalDetector,
-                1.0,
-                2.0,
-                3.0,
-                4.0,
-                5.0,
-                6.0,
-                measuredKinematics.fx,
-                measuredKinematics.fy,
-                measuredKinematics.fz,
-                ACCUMULATED_STD,
-                ACCUMULATED_STD,
-                ACCUMULATED_STD
-            )
+            for (i in 1..reqMeasurements) {
+                val roll =
+                    Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
+                val pitch =
+                    Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
+                val yaw =
+                    Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
+                val nedC = CoordinateTransformation(
+                    roll,
+                    pitch,
+                    yaw,
+                    FrameType.BODY_FRAME,
+                    FrameType.LOCAL_NAVIGATION_FRAME
+                )
+
+                val nedFrame = NEDFrame(nedPosition, nedC)
+                val ecefFrame = NEDtoECEFFrameConverter.convertNEDtoECEFAndReturnNew(nedFrame)
+
+                val trueKinematics = ECEFKinematicsEstimator.estimateKinematicsAndReturnNew(
+                    TIME_INTERVAL_SECONDS, ecefFrame, ecefFrame
+                )
+
+                val measuredKinematics = BodyKinematicsGenerator
+                    .generate(TIME_INTERVAL_SECONDS, trueKinematics, errors, random)
+
+                intervalDetectorDynamicIntervalDetectedListener.onDynamicIntervalDetected(
+                    intervalDetector,
+                    1.0,
+                    2.0,
+                    3.0,
+                    4.0,
+                    5.0,
+                    6.0,
+                    measuredKinematics.fx,
+                    measuredKinematics.fy,
+                    measuredKinematics.fz,
+                    ACCUMULATED_STD,
+                    ACCUMULATED_STD,
+                    ACCUMULATED_STD
+                )
+            }
+
+            if (calibrator.estimatedMa == null) {
+                continue
+            }
+            assertNotNull(calibrator.estimatedMa)
+            assertNotNull(calibrator.estimatedSx)
+            assertNotNull(calibrator.estimatedSy)
+            assertNotNull(calibrator.estimatedSz)
+            assertNotNull(calibrator.estimatedMxy)
+            assertNotNull(calibrator.estimatedMxz)
+            assertNotNull(calibrator.estimatedMyx)
+            assertNotNull(calibrator.estimatedMyz)
+            assertNotNull(calibrator.estimatedMzx)
+            assertNotNull(calibrator.estimatedMzy)
+            assertNotNull(calibrator.estimatedCovariance)
+            assertNotNull(calibrator.estimatedChiSq)
+            assertNotNull(calibrator.estimatedMse)
+            assertNotNull(calibrator.estimatedBiasX)
+            assertNotNull(calibrator.estimatedBiasY)
+            assertNotNull(calibrator.estimatedBiasZ)
+            assertNotNull(calibrator.estimatedBiasXAsMeasurement)
+            val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+            assertTrue(calibrator.getEstimatedBiasXAsMeasurement(acceleration))
+            assertNotNull(calibrator.estimatedBiasYAsMeasurement)
+            assertTrue(calibrator.getEstimatedBiasYAsMeasurement(acceleration))
+            assertNotNull(calibrator.estimatedBiasZAsMeasurement)
+            assertTrue(calibrator.getEstimatedBiasZAsMeasurement(acceleration))
+            assertNotNull(calibrator.estimatedBiasAsTriad)
+            val triad = AccelerationTriad()
+            assertTrue(calibrator.getEstimatedBiasAsTriad(triad))
+            assertNotNull(calibrator.estimatedBiasStandardDeviationNorm)
+
+            verify(exactly = 1) {
+                readyToSolveCalibrationListener.onReadyToSolveCalibration(
+                    calibrator
+                )
+            }
+            verify(exactly = 1) { stoppedListener.onStopped(calibrator) }
+            verify(exactly = 1) {
+                calibrationSolvingStartedListener.onCalibrationSolvingStarted(
+                    calibrator
+                )
+            }
+            verify(exactly = 1) { calibrationCompletedListener.onCalibrationCompleted(calibrator) }
+            verify { errorListener wasNot Called }
+
+            assertTrue(calibrator.isReadyToSolveCalibration)
+
+            numValid++
+            break
         }
 
-        assertNotNull(calibrator.estimatedMa)
-        assertNotNull(calibrator.estimatedSx)
-        assertNotNull(calibrator.estimatedSy)
-        assertNotNull(calibrator.estimatedSz)
-        assertNotNull(calibrator.estimatedMxy)
-        assertNotNull(calibrator.estimatedMxz)
-        assertNotNull(calibrator.estimatedMyx)
-        assertNotNull(calibrator.estimatedMyz)
-        assertNotNull(calibrator.estimatedMzx)
-        assertNotNull(calibrator.estimatedMzy)
-        assertNotNull(calibrator.estimatedCovariance)
-        assertNotNull(calibrator.estimatedChiSq)
-        assertNotNull(calibrator.estimatedMse)
-        assertNotNull(calibrator.estimatedBiasX)
-        assertNotNull(calibrator.estimatedBiasY)
-        assertNotNull(calibrator.estimatedBiasZ)
-        assertNotNull(calibrator.estimatedBiasXAsMeasurement)
-        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        assertTrue(calibrator.getEstimatedBiasXAsMeasurement(acceleration))
-        assertNotNull(calibrator.estimatedBiasYAsMeasurement)
-        assertTrue(calibrator.getEstimatedBiasYAsMeasurement(acceleration))
-        assertNotNull(calibrator.estimatedBiasZAsMeasurement)
-        assertTrue(calibrator.getEstimatedBiasZAsMeasurement(acceleration))
-        assertNotNull(calibrator.estimatedBiasAsTriad)
-        val triad = AccelerationTriad()
-        assertTrue(calibrator.getEstimatedBiasAsTriad(triad))
-        assertNotNull(calibrator.estimatedBiasStandardDeviationNorm)
-
-        verify(exactly = 1) { readyToSolveCalibrationListener.onReadyToSolveCalibration(calibrator) }
-        verify(exactly = 1) { stoppedListener.onStopped(calibrator) }
-        verify(exactly = 1) {
-            calibrationSolvingStartedListener.onCalibrationSolvingStarted(
-                calibrator
-            )
-        }
-        verify(exactly = 1) { calibrationCompletedListener.onCalibrationCompleted(calibrator) }
-        verify { errorListener wasNot Called }
-
-        assertTrue(calibrator.isReadyToSolveCalibration)
+        assertTrue(numValid > 0)
     }
 
     @Test
@@ -16878,6 +16896,8 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
         const val DEG_TO_RAD = 0.01745329252
 
         const val ABSOLUTE_ERROR = 1e-6
+
+        const val TIMES = 2
 
         fun getLocation(): Location {
             val randomizer = UniformRandomizer()
