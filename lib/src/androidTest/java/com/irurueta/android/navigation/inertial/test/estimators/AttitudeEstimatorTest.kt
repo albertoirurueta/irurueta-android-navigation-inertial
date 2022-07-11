@@ -31,9 +31,11 @@ import com.irurueta.geometry.Quaternion
 import io.mockk.spyk
 import org.junit.Assert.*
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 
+@Ignore
 class AttitudeEstimatorTest {
 
     @get:Rule

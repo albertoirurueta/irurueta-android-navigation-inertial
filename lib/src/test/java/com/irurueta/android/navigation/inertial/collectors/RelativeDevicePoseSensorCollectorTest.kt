@@ -21,6 +21,8 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.location.Location
+import android.view.Display
+import android.view.Surface
 import androidx.test.core.app.ApplicationProvider
 import com.irurueta.android.navigation.inertial.getPrivateProperty
 import com.irurueta.android.navigation.inertial.toNEDPosition
@@ -531,7 +533,11 @@ class RelativeDevicePoseSensorCollectorTest {
     @Test
     fun onSensorChanged_whenListenerAndLocation_notifiesEvent() {
         val location = createLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        val display = mockk<Display>()
+        every { display.rotation }.returns(Surface.ROTATION_0)
+        val context = spyk(ApplicationProvider.getApplicationContext())
+        every { context.display }.returns(display)
+
         val sensorManager: SensorManager? =
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
@@ -541,14 +547,13 @@ class RelativeDevicePoseSensorCollectorTest {
             sensorMock
         )
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
-        val contextSpy = spyk(context)
-        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val measurementListener =
             mockk<RelativeDevicePoseSensorCollector.OnMeasurementListener>(relaxUnitFun = true)
         val collector =
             RelativeDevicePoseSensorCollector(
-                contextSpy,
+                context,
                 location = location,
                 measurementListener = measurementListener,
                 timeInterval = TIME_INTERVAL
@@ -704,7 +709,11 @@ class RelativeDevicePoseSensorCollectorTest {
 
     @Test
     fun onSensorChanged_whenListenerAndNoLocation_notifiesEvent() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        val display = mockk<Display>()
+        every { display.rotation }.returns(Surface.ROTATION_0)
+        val context = spyk(ApplicationProvider.getApplicationContext())
+        every { context.display }.returns(display)
+
         val sensorManager: SensorManager? =
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
@@ -714,14 +723,13 @@ class RelativeDevicePoseSensorCollectorTest {
             sensorMock
         )
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
-        val contextSpy = spyk(context)
-        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val measurementListener =
             mockk<RelativeDevicePoseSensorCollector.OnMeasurementListener>(relaxUnitFun = true)
         val collector =
             RelativeDevicePoseSensorCollector(
-                contextSpy,
+                context,
                 measurementListener = measurementListener,
                 timeInterval = TIME_INTERVAL
             )
@@ -822,7 +830,7 @@ class RelativeDevicePoseSensorCollectorTest {
         assertEquals(translation, transformation.translationPoint)
         assertTrue(
             transformation.asMatrix()
-                .equals(transformation2.inverseAndReturnNew().asMatrix(), ABSOLUTE_ERROR)
+                .equals(transformation2.inverseAndReturnNew().asMatrix(), 10.0 * ABSOLUTE_ERROR)
         )
         val deltaTranslationResult: InhomogeneousPoint3D? =
             collector.getPrivateProperty("deltaTranslation")

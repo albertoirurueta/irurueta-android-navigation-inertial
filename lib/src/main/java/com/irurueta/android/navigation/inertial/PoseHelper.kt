@@ -15,6 +15,7 @@
  */
 package com.irurueta.android.navigation.inertial
 
+import android.content.Context
 import android.hardware.SensorEvent
 import com.irurueta.algebra.Matrix
 import com.irurueta.geometry.*
@@ -39,6 +40,7 @@ object PoseHelper {
      * Converts array of values contained in a [SensorEvent] into a 3D rotation expressed in NEU
      * (North, East, Up) system coordinates and a relative translation.
      *
+     * @param context Android context.
      * @param values array of values to be converted.
      * @param attitudeResult instance where converted attitude will be stored.
      * @param translationResult instance where converted relative translation will be stored.
@@ -53,6 +55,7 @@ object PoseHelper {
      */
     @Throws(IllegalArgumentException::class)
     fun convertToNEU(
+        context: Context,
         values: FloatArray,
         attitudeResult: Quaternion,
         translationResult: Point3D,
@@ -84,10 +87,10 @@ object PoseHelper {
 
         require(values.size >= MIN_LENGTH)
 
-        AttitudeHelper.convertQuaternion(values, 0, attitudeResult)
+        AttitudeHelper.convertQuaternion(context, values, 0, attitudeResult)
         convertTranslation(values, 4, translationResult)
         if (deltaAttitudeResult != null) {
-            AttitudeHelper.convertQuaternion(values, 7, deltaAttitudeResult)
+            AttitudeHelper.convertQuaternion(context, values, 7, deltaAttitudeResult)
         }
         if (deltaTranslationResult != null) {
             convertTranslation(values, 11, deltaTranslationResult)
@@ -99,6 +102,7 @@ object PoseHelper {
      * Converts array of values contained in a [SensorEvent] into a 3D rotation expressed in NEU
      * (North, East, Up) system coordinates and a relative translation.
      *
+     * @param context Android context.
      * @param values array of values to be converted.
      * @param attitudeResult instance where converted attitude will be stored.
      * @param translationResult array where converted relative translation will be stored. Must have
@@ -114,6 +118,7 @@ object PoseHelper {
      */
     @Throws(IllegalArgumentException::class)
     fun convertToNEU(
+        context: Context,
         values: FloatArray,
         attitudeResult: Quaternion,
         translationResult: DoubleArray,
@@ -127,10 +132,10 @@ object PoseHelper {
                     || deltaTranslationResult.size == Point3D.POINT3D_INHOMOGENEOUS_COORDINATES_LENGTH
         )
 
-        AttitudeHelper.convertQuaternion(values, 0, attitudeResult)
+        AttitudeHelper.convertQuaternion(context, values, 0, attitudeResult)
         convertTranslation(values, 4, translationResult)
         if (deltaAttitudeResult != null) {
-            AttitudeHelper.convertQuaternion(values, 7, deltaAttitudeResult)
+            AttitudeHelper.convertQuaternion(context, values, 7, deltaAttitudeResult)
         }
         if (deltaTranslationResult != null) {
             convertTranslation(values, 11, deltaTranslationResult)
@@ -142,6 +147,7 @@ object PoseHelper {
      * Converts array of values contained in [SensorEvent] into a 3D euclidean transformation
      * expressed in NEU (North, East, Up) system coordinates.
      *
+     * @param context Android context.
      * @param values array of values to be converted.
      * @param transformationResult instance where converted 3D euclidean transformation will be
      * stored.
@@ -153,6 +159,7 @@ object PoseHelper {
      */
     @Throws(IllegalArgumentException::class)
     fun convertToNEU(
+        context: Context,
         values: FloatArray,
         transformationResult: EuclideanTransformation3D,
         deltaTransformationResult: EuclideanTransformation3D? = null
@@ -173,7 +180,8 @@ object PoseHelper {
             deltaRotation?.toQuaternion()
         }
         val deltaTranslation = deltaTransformationResult?.translation
-        val result = convertToNEU(values, rotationQ, translation, deltaRotationQ, deltaTranslation)
+        val result =
+            convertToNEU(context, values, rotationQ, translation, deltaRotationQ, deltaTranslation)
 
         // Rotation only needs to be set if a copy of rotation was made
         if (rotation !== rotationQ) {
@@ -190,6 +198,7 @@ object PoseHelper {
      * Converts array of values contained in [SensorEvent] into a 3D euclidean transformation
      * expressed in NED (North, East, Down) system coordinates.
      *
+     * @param context Android context.
      * @param values array of values to be converted.
      * @param transformationResult instance where converted 3D euclidean transformation will be
      * stored.
@@ -200,11 +209,12 @@ object PoseHelper {
      * elements.
      */
     fun convertToNED(
+        context: Context,
         values: FloatArray,
         transformationResult: EuclideanTransformation3D,
         deltaTransformationResult: EuclideanTransformation3D? = null
     ): Float {
-        val result = convertToNEU(values, transformationResult, deltaTransformationResult)
+        val result = convertToNEU(context, values, transformationResult, deltaTransformationResult)
         transformationResult.inverse()
         deltaTransformationResult?.inverse()
         return result
@@ -215,6 +225,7 @@ object PoseHelper {
      * (North, East, Down) system coordinates and a relative translation. If provided, result can
      * also be stored as 3D euclidean transformations.
      *
+     * @param context Android context.
      * @param values array of values to be converted.
      * @param attitudeResult instance where converted attitude will be stored.
      * @param translationResult instance where converted relative translation will be stored.
@@ -233,6 +244,7 @@ object PoseHelper {
      */
     @Throws(IllegalArgumentException::class)
     fun convertToNED(
+        context: Context,
         values: FloatArray,
         attitudeResult: Quaternion,
         translationResult: Point3D,
@@ -249,7 +261,8 @@ object PoseHelper {
                 deltaTransformationResult
             }
 
-        val result = convertToNED(values, transformationResult2, deltaTransformationResult2)
+        val result =
+            convertToNED(context, values, transformationResult2, deltaTransformationResult2)
 
         transformationResult2.rotation.toQuaternion(attitudeResult)
         transformationResult2.getTranslationPoint(translationResult)
@@ -268,6 +281,7 @@ object PoseHelper {
      * (North, East, Down) system coordinates and a relative translation. If provided, result can
      * also be stored as 3D euclidean transformations.
      *
+     * @param context Android context.
      * @param values array of values to be converted.
      * @param attitudeResult instance where converted attitude will be stored.
      * @param translationResult array where converted relative translation will be stored. Must have
@@ -287,6 +301,7 @@ object PoseHelper {
      */
     @Throws(IllegalArgumentException::class)
     fun convertToNED(
+        context: Context,
         values: FloatArray,
         attitudeResult: Quaternion,
         translationResult: DoubleArray,
@@ -309,7 +324,8 @@ object PoseHelper {
                 deltaTransformationResult
             }
 
-        val result = convertToNED(values, transformationResult2, deltaTransformationResult2)
+        val result =
+            convertToNED(context, values, transformationResult2, deltaTransformationResult2)
 
         transformationResult2.rotation.toQuaternion(attitudeResult)
         translationResult[0] = transformationResult2.translationX
@@ -334,6 +350,7 @@ object PoseHelper {
      * also be stored as a 3D rotation expressed in NED (North, East, Down) coordinates, a relative
      * translation and a 3D euclidean transformations.
      *
+     * @param context Android context.
      * @param values array of values to be converted.
      * @param startPosition a start absolute position respect to Earth and expressed as ECEF
      * coordinates.
@@ -360,6 +377,7 @@ object PoseHelper {
      */
     @Throws(IllegalArgumentException::class)
     fun convertToNED(
+        context: Context,
         values: FloatArray,
         startPosition: ECEFPosition,
         frameResult: NEDFrame,
@@ -381,7 +399,8 @@ object PoseHelper {
         val dt = deltaTranslationResult ?: InhomogeneousPoint3D()
         val transformation = transformationResult ?: EuclideanTransformation3D()
         val deltaTransformation = deltaTransformationResult ?: EuclideanTransformation3D()
-        val result = convertToNED(values, q, t, dq, dt, transformation, deltaTransformation)
+        val result =
+            convertToNED(context, values, q, t, dq, dt, transformation, deltaTransformation)
 
         val m: Matrix = if (rotationMatrix != null) {
             // reuse provided matrix if available
@@ -447,6 +466,7 @@ object PoseHelper {
      * also be stored as a 3D rotation expressed in NED (North, East, Down) coordinates, a relative
      * translation and a 3D euclidean transformations.
      *
+     * @param context Android context.
      * @param values array of values to be converted.
      * @param startPosition a start absolute position respect to Earth and expressed as ECEF
      * coordinates.
@@ -483,6 +503,7 @@ object PoseHelper {
      */
     @Throws(IllegalArgumentException::class)
     fun convertToNED(
+        context: Context,
         values: FloatArray,
         startPosition: ECEFPosition,
         frameResult: NEDFrame,
@@ -505,6 +526,7 @@ object PoseHelper {
         val deltaTransformation = deltaTransformationResult ?: EuclideanTransformation3D()
         val result =
             convertToNED(
+                context,
                 values,
                 attitudeResult,
                 translationResult,
@@ -578,6 +600,7 @@ object PoseHelper {
      * also be stored as a 3D rotation expressed in NED (North, East, Down) coordinates, a relative
      * translation and a 3D euclidean transformations.
      *
+     * @param context Android context.
      * @param values array of values to be converted.
      * @param startPosition a start absolute position respect to Earth and expressed in NED
      * coordinates.
@@ -612,6 +635,7 @@ object PoseHelper {
      */
     @Throws(IllegalArgumentException::class)
     fun convertToNED(
+        context: Context,
         values: FloatArray,
         startPosition: NEDPosition,
         frameResult: NEDFrame,
@@ -637,6 +661,7 @@ object PoseHelper {
             ecefVelocity
         )
         return convertToNED(
+            context,
             values,
             startEcefPosition,
             frameResult,
@@ -660,6 +685,7 @@ object PoseHelper {
      * also be stored as a 3D rotation expressed in NED (North, East, Down) coordinates, a relative
      * translation and a 3D euclidean transformations.
      *
+     * @param context Android context.
      * @param values array of values to be converted.
      * @param startPosition a start absolute position respect to Earth and expressed in NED
      * coordinates.
@@ -696,6 +722,7 @@ object PoseHelper {
      */
     @Throws(IllegalArgumentException::class)
     fun convertToNED(
+        context: Context,
         values: FloatArray,
         startPosition: NEDPosition,
         frameResult: NEDFrame,
@@ -721,6 +748,7 @@ object PoseHelper {
             ecefVelocity
         )
         return convertToNED(
+            context,
             values,
             startEcefPosition,
             frameResult,

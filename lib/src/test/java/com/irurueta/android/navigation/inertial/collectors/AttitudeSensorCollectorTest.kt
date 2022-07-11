@@ -20,6 +20,8 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.view.Display
+import android.view.Surface
 import androidx.test.core.app.ApplicationProvider
 import com.irurueta.android.navigation.inertial.getPrivateProperty
 import com.irurueta.geometry.Quaternion
@@ -594,7 +596,11 @@ class AttitudeSensorCollectorTest {
 
     @Test
     fun onSensorChanged_whenListenerRelativeAttitude_notifiesEvent() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        val display = mockk<Display>()
+        every { display.rotation }.returns(Surface.ROTATION_0)
+        val context = spyk(ApplicationProvider.getApplicationContext())
+        every { context.display }.returns(display)
+
         val sensorManager: SensorManager? =
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
@@ -604,14 +610,13 @@ class AttitudeSensorCollectorTest {
             sensorMock
         )
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
-        val contextSpy = spyk(context)
-        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val measurementListener =
             mockk<AttitudeSensorCollector.OnMeasurementListener>(relaxUnitFun = true)
         val collector =
             AttitudeSensorCollector(
-                contextSpy,
+                context,
                 AttitudeSensorCollector.SensorType.RELATIVE_ATTITUDE,
                 measurementListener = measurementListener
             )
@@ -666,7 +671,11 @@ class AttitudeSensorCollectorTest {
 
     @Test
     fun onSensorChanged_whenListenerAbsoluteAttitude_notifiesEvent() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        val display = mockk<Display>()
+        every { display.rotation }.returns(Surface.ROTATION_0)
+        val context = spyk(ApplicationProvider.getApplicationContext())
+        every { context.display }.returns(display)
+
         val sensorManager: SensorManager? =
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
@@ -676,14 +685,13 @@ class AttitudeSensorCollectorTest {
             sensorMock
         )
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
-        val contextSpy = spyk(context)
-        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val measurementListener =
             mockk<AttitudeSensorCollector.OnMeasurementListener>(relaxUnitFun = true)
         val collector =
             AttitudeSensorCollector(
-                contextSpy,
+                context,
                 AttitudeSensorCollector.SensorType.ABSOLUTE_ATTITUDE,
                 measurementListener = measurementListener
             )
@@ -738,7 +746,11 @@ class AttitudeSensorCollectorTest {
 
     @Test
     fun onSensorChanged_whenListenerGeomagneticAbsoluteAttitude_notifiesEvent() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        val display = mockk<Display>()
+        every { display.rotation }.returns(Surface.ROTATION_0)
+        val context = spyk(ApplicationProvider.getApplicationContext())
+        every { context.display }.returns(display)
+
         val sensorManager: SensorManager? =
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
@@ -748,14 +760,13 @@ class AttitudeSensorCollectorTest {
             sensorMock
         )
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
-        val contextSpy = spyk(context)
-        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val measurementListener =
             mockk<AttitudeSensorCollector.OnMeasurementListener>(relaxUnitFun = true)
         val collector =
             AttitudeSensorCollector(
-                contextSpy,
+                context,
                 AttitudeSensorCollector.SensorType.GEOMAGNETIC_ABSOLUTE_ATTITUDE,
                 measurementListener = measurementListener
             )
@@ -810,7 +821,11 @@ class AttitudeSensorCollectorTest {
 
     @Test
     fun onSensorChanged_whenListenerAndEstimateCoordinateTransformation_notifiesEvent() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        val display = mockk<Display>()
+        every { display.rotation }.returns(Surface.ROTATION_0)
+        val context = spyk(ApplicationProvider.getApplicationContext())
+        every { context.display }.returns(display)
+
         val sensorManager: SensorManager? =
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
@@ -820,14 +835,13 @@ class AttitudeSensorCollectorTest {
             sensorMock
         )
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
-        val contextSpy = spyk(context)
-        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val measurementListener =
             mockk<AttitudeSensorCollector.OnMeasurementListener>(relaxUnitFun = true)
         val collector =
             AttitudeSensorCollector(
-                contextSpy,
+                context,
                 AttitudeSensorCollector.SensorType.ABSOLUTE_ATTITUDE,
                 estimateCoordinateTransformation = true,
                 measurementListener = measurementListener

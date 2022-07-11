@@ -53,6 +53,11 @@ class AttitudeSensorCollector(
     private val attitude = Quaternion()
 
     /**
+     * Instance to be reused containing display orientation.
+     */
+    private val displayOrientation = Quaternion()
+
+    /**
      * Instance being reused for performance reasons and containing device attitude expressed in
      * NED coordinate system.
      */
@@ -84,14 +89,16 @@ class AttitudeSensorCollector(
             val sensorAccuracy = SensorAccuracy.from(event.accuracy)
             val timestamp = event.timestamp
             val headingAccuracy = if (estimateCoordinateTransformation) {
-                 AttitudeHelper.convertToNED(
+                AttitudeHelper.convertToNED(
+                    context,
                     event.values,
                     coordinateTransformation,
                     attitude,
+                    displayOrientation,
                     matrix
                 )
             } else {
-                AttitudeHelper.convertToNED(event.values, attitude)
+                AttitudeHelper.convertToNED(context, event.values, attitude, displayOrientation)
             }
 
             measurementListener?.onMeasurement(

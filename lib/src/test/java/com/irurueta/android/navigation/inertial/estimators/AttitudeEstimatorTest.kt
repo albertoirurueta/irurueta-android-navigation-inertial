@@ -1,3 +1,18 @@
+/*
+ * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.irurueta.android.navigation.inertial.estimators
 
 import android.content.Context
@@ -19,11 +34,13 @@ import com.irurueta.statistics.UniformRandomizer
 import com.irurueta.units.MagneticFluxDensityConverter
 import io.mockk.*
 import org.junit.Assert.*
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.util.*
 
+@Ignore("Will be replaced")
 @RunWith(RobolectricTestRunner::class)
 class AttitudeEstimatorTest {
 
@@ -46,8 +63,10 @@ class AttitudeEstimatorTest {
         assertEquals(SensorDelay.UI, estimator.accelerometerSensorDelay)
         assertEquals(SensorDelay.UI, estimator.gyroscopeSensorDelay)
         assertEquals(SensorDelay.UI, estimator.magnetometerSensorDelay)
+        assertEquals(SensorDelay.UI, estimator.gravitySensorDelay)
         assertNull(estimator.location)
         assertFalse(estimator.estimateImuLeveling)
+        assertTrue(estimator.gravitySensorEnabled)
         assertNull(estimator.worldMagneticModel)
         assertNotNull(estimator.timestamp)
         assertNull(estimator.attitudeAvailableListener)
@@ -69,7 +88,7 @@ class AttitudeEstimatorTest {
     }
 
     @Test
-    fun constructor_whenAllProperties_setsExpectdValues() {
+    fun constructor_whenAllProperties_setsExpectedValues() {
         val attitudeAvailableListener = mockk<AttitudeEstimator.OnAttitudeAvailableListener>()
         val timestamp = Date()
         val worldMagneticModel = WorldMagneticModel()
@@ -83,8 +102,10 @@ class AttitudeEstimatorTest {
             SensorDelay.NORMAL,
             SensorDelay.GAME,
             SensorDelay.FASTEST,
+            SensorDelay.UI,
             location,
             estimateImuLeveling = true,
+            gravitySensorEnabled = false,
             worldMagneticModel,
             timestamp,
             attitudeAvailableListener
@@ -107,8 +128,10 @@ class AttitudeEstimatorTest {
         assertEquals(SensorDelay.NORMAL, estimator.accelerometerSensorDelay)
         assertEquals(SensorDelay.GAME, estimator.gyroscopeSensorDelay)
         assertEquals(SensorDelay.FASTEST, estimator.magnetometerSensorDelay)
+        assertEquals(SensorDelay.UI, estimator.gravitySensorDelay)
         assertSame(location, estimator.location)
         assertTrue(estimator.estimateImuLeveling)
+        assertFalse(estimator.gravitySensorEnabled)
         assertSame(worldMagneticModel, estimator.worldMagneticModel)
         assertSame(timestamp, estimator.timestamp)
         assertSame(attitudeAvailableListener, estimator.attitudeAvailableListener)
@@ -124,9 +147,11 @@ class AttitudeEstimatorTest {
         assertNull(estimator.accelerometerSensor)
         assertNull(estimator.gyroscopeSensor)
         assertNull(estimator.magnetometerSensor)
+        assertNull(estimator.gravitySensor)
         assertFalse(estimator.accelerometerSensorAvailable)
         assertFalse(estimator.gyroscopeSensorAvailable)
         assertFalse(estimator.magnetometerSensorAvailable)
+        assertFalse(estimator.gravitySensorAvailable)
         assertFalse(estimator.isLevelingEnabled)
         assertFalse(estimator.isImprovedLevelingEnabled)
         assertFalse(estimator.isGeomagneticAttitudeEnabled)
@@ -858,10 +883,11 @@ class AttitudeEstimatorTest {
     }
 
     @Test
-    fun start_whenReadyNotRunningGeomagneticAndSensorsStart_startsAccelerometerAndMagnetometerAndReturnsTrue() {
+    fun start_whenGravitySensorNotEnabledReadyNotRunningGeomagneticAndSensorsStart_startsAccelerometerAndMagnetometerAndReturnsTrue() {
         val location = createLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = AttitudeEstimator(context, location = location)
+        val estimator =
+            AttitudeEstimator(context, location = location, gravitySensorEnabled = false)
 
         // set accelerometerSensorAvailable value
         val accelerometerSensorCollector: AccelerometerSensorCollector? =
@@ -898,10 +924,11 @@ class AttitudeEstimatorTest {
     }
 
     @Test
-    fun start_whenReadyNotRunningGeomagneticAndAccelerometerStartFails_stopsSensorsAndReturnsFalse() {
+    fun start_whenGravitySensorNotEnabledReadyNotRunningGeomagneticAndAccelerometerStartFails_stopsSensorsAndReturnsFalse() {
         val location = createLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = AttitudeEstimator(context, location = location)
+        val estimator =
+            AttitudeEstimator(context, location = location, gravitySensorEnabled = false)
 
         // set accelerometerSensorAvailable value
         val accelerometerSensorCollector: AccelerometerSensorCollector? =
@@ -940,10 +967,11 @@ class AttitudeEstimatorTest {
     }
 
     @Test
-    fun start_whenReadyNotRunningGeomagneticAndGyroscopeStartFails_stopsSensorsAndReturnsFalse() {
+    fun start_whenGravitySensorNotEnabledReadyNotRunningGeomagneticAndGyroscopeStartFails_stopsSensorsAndReturnsFalse() {
         val location = createLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = AttitudeEstimator(context, location = location)
+        val estimator =
+            AttitudeEstimator(context, location = location, gravitySensorEnabled = false)
 
         // set accelerometerSensorAvailable value
         val accelerometerSensorCollector: AccelerometerSensorCollector? =
@@ -982,9 +1010,10 @@ class AttitudeEstimatorTest {
     }
 
     @Test
-    fun start_whenReadyNotRunningLevelingAndSensorsStart_startsAccelerometerAndGyroscopeAndReturnsTrue() {
+    fun start_whenGravitySensorNotEnabledReadyNotRunningLevelingAndSensorsStart_startsAccelerometerAndGyroscopeAndReturnsTrue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = AttitudeEstimator(context, estimateImuLeveling = true)
+        val estimator =
+            AttitudeEstimator(context, estimateImuLeveling = true, gravitySensorEnabled = false)
 
         // set accelerometerSensorAvailable value
         val accelerometerSensorCollector: AccelerometerSensorCollector? =
@@ -1021,9 +1050,10 @@ class AttitudeEstimatorTest {
     }
 
     @Test
-    fun start_whenReadyNotRunningLevelingAndAccelerometerStartFails_stopsSensorsAndReturnsFalse() {
+    fun start_whenGravitySensorNotEnabledReadyNotRunningLevelingAndAccelerometerStartFails_stopsSensorsAndReturnsFalse() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = AttitudeEstimator(context, estimateImuLeveling = true)
+        val estimator =
+            AttitudeEstimator(context, estimateImuLeveling = true, gravitySensorEnabled = false)
 
         // set accelerometerSensorAvailable value
         val accelerometerSensorCollector: AccelerometerSensorCollector? =
@@ -1062,9 +1092,10 @@ class AttitudeEstimatorTest {
     }
 
     @Test
-    fun start_whenReadyNotRunningLevelingAndGyroscopeStartFails_stopsSensorsAndReturnsFalse() {
+    fun start_whenGravitySensorNotEnabledReadyNotRunningLevelingAndGyroscopeStartFails_stopsSensorsAndReturnsFalse() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = AttitudeEstimator(context, estimateImuLeveling = true)
+        val estimator =
+            AttitudeEstimator(context, estimateImuLeveling = true, gravitySensorEnabled = false)
 
         // set accelerometerSensorAvailable value
         val accelerometerSensorCollector: AccelerometerSensorCollector? =
@@ -1093,6 +1124,214 @@ class AttitudeEstimatorTest {
         verify(exactly = 1) { accelerometerSensorCollectorSpy.start() }
         verify(exactly = 1) { gyroscopeSensorCollectorSpy.start() }
         verify(exactly = 1) { accelerometerSensorCollectorSpy.stop() }
+        verify(exactly = 1) { gyroscopeSensorCollectorSpy.stop() }
+        assertFalse(estimator.running)
+
+        val magnetometerSampleAvailable: Boolean? =
+            estimator.getPrivateProperty("magnetometerSampleAvailable")
+        requireNotNull(magnetometerSampleAvailable)
+        assertFalse(magnetometerSampleAvailable)
+    }
+
+    @Test
+    fun start_whenGravitySensorEnabledReadyNotRunningGeomagneticAndSensorsStart_startsGravityAndMagnetometerAndReturnsTrue() {
+        val location = createLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val estimator =
+            AttitudeEstimator(context, location = location, gravitySensorEnabled = true)
+
+        // set accelerometerSensorAvailable value
+        val gravitySensorCollector: GravitySensorCollector? =
+            estimator.getPrivateProperty("gravitySensorCollector")
+        requireNotNull(gravitySensorCollector)
+        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
+        every { gravitySensorCollectorSpy.sensorAvailable }.returns(true)
+        every { gravitySensorCollectorSpy.start() }.returns(true)
+        estimator.setPrivateProperty(
+            "gravitySensorCollector",
+            gravitySensorCollectorSpy
+        )
+
+        // set magnetometerSensorAvailable value
+        val magnetometerSensorCollector: MagnetometerSensorCollector? =
+            estimator.getPrivateProperty("magnetometerSensorCollector")
+        requireNotNull(magnetometerSensorCollector)
+        val magnetometerSensorCollectorSpy = spyk(magnetometerSensorCollector)
+        every { magnetometerSensorCollectorSpy.sensorAvailable }.returns(true)
+        every { magnetometerSensorCollectorSpy.start() }.returns(true)
+        estimator.setPrivateProperty("magnetometerSensorCollector", magnetometerSensorCollectorSpy)
+
+        assertTrue(estimator.isReady)
+
+        assertTrue(estimator.start())
+        verify(exactly = 1) { gravitySensorCollectorSpy.start() }
+        verify(exactly = 1) { magnetometerSensorCollectorSpy.start() }
+        assertTrue(estimator.running)
+
+        val gyroscopeSampleAvailable: Boolean? =
+            estimator.getPrivateProperty("gyroscopeSampleAvailable")
+        requireNotNull(gyroscopeSampleAvailable)
+        assertTrue(gyroscopeSampleAvailable)
+    }
+
+    @Test
+    fun start_whenGravitySensorEnabledReadyNotRunningGeomagneticAndGravityStartFails_stopsSensorsAndReturnsFalse() {
+        val location = createLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val estimator =
+            AttitudeEstimator(context, location = location, gravitySensorEnabled = true)
+
+        // set accelerometerSensorAvailable value
+        val gravitySensorCollector: GravitySensorCollector? =
+            estimator.getPrivateProperty("gravitySensorCollector")
+        requireNotNull(gravitySensorCollector)
+        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
+        every { gravitySensorCollectorSpy.sensorAvailable }.returns(true)
+        every { gravitySensorCollectorSpy.start() }.returns(false)
+        estimator.setPrivateProperty(
+            "gravitySensorCollector",
+            gravitySensorCollectorSpy
+        )
+
+        // set magnetometerSensorAvailable value
+        val magnetometerSensorCollector: MagnetometerSensorCollector? =
+            estimator.getPrivateProperty("magnetometerSensorCollector")
+        requireNotNull(magnetometerSensorCollector)
+        val magnetometerSensorCollectorSpy = spyk(magnetometerSensorCollector)
+        every { magnetometerSensorCollectorSpy.sensorAvailable }.returns(true)
+        every { magnetometerSensorCollectorSpy.start() }.returns(true)
+        estimator.setPrivateProperty("magnetometerSensorCollector", magnetometerSensorCollectorSpy)
+
+        assertTrue(estimator.isReady)
+
+        assertFalse(estimator.start())
+        verify(exactly = 1) { gravitySensorCollectorSpy.start() }
+        verify(exactly = 0) { magnetometerSensorCollectorSpy.start() }
+        verify(exactly = 1) { gravitySensorCollectorSpy.stop() }
+        verify(exactly = 1) { magnetometerSensorCollectorSpy.stop() }
+        assertFalse(estimator.running)
+
+        val gyroscopeSampleAvailable: Boolean? =
+            estimator.getPrivateProperty("gyroscopeSampleAvailable")
+        requireNotNull(gyroscopeSampleAvailable)
+        assertFalse(gyroscopeSampleAvailable)
+    }
+
+    @Test
+    fun start_whenGravitySensorEnabledReadyNotRunningLevelingAndSensorsStart_startsGravityAndGyroscopeAndReturnsTrue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val estimator =
+            AttitudeEstimator(context, estimateImuLeveling = true, gravitySensorEnabled = true)
+
+        // set accelerometerSensorAvailable value
+        val gravitySensorCollector: GravitySensorCollector? =
+            estimator.getPrivateProperty("gravitySensorCollector")
+        requireNotNull(gravitySensorCollector)
+        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
+        every { gravitySensorCollectorSpy.sensorAvailable }.returns(true)
+        every { gravitySensorCollectorSpy.start() }.returns(true)
+        estimator.setPrivateProperty(
+            "gravitySensorCollector",
+            gravitySensorCollectorSpy
+        )
+
+        // set gyroscopeSensorAvailable value
+        val gyroscopeSensorCollector: GyroscopeSensorCollector? =
+            estimator.getPrivateProperty("gyroscopeSensorCollector")
+        requireNotNull(gyroscopeSensorCollector)
+        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
+        every { gyroscopeSensorCollectorSpy.sensorAvailable }.returns(true)
+        every { gyroscopeSensorCollectorSpy.start() }.returns(true)
+        estimator.setPrivateProperty("gyroscopeSensorCollector", gyroscopeSensorCollectorSpy)
+
+        assertTrue(estimator.isReady)
+
+        assertTrue(estimator.start())
+        verify(exactly = 1) { gravitySensorCollectorSpy.start() }
+        verify(exactly = 1) { gyroscopeSensorCollectorSpy.start() }
+        assertTrue(estimator.running)
+
+        val magnetometerSampleAvailable: Boolean? =
+            estimator.getPrivateProperty("magnetometerSampleAvailable")
+        requireNotNull(magnetometerSampleAvailable)
+        assertTrue(magnetometerSampleAvailable)
+    }
+
+    @Test
+    fun start_whenGravitySensorEnabledReadyNotRunningLevelingAndGravityStartFails_stopsSensorsAndReturnsFalse() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val estimator =
+            AttitudeEstimator(context, estimateImuLeveling = true, gravitySensorEnabled = true)
+
+        // set accelerometerSensorAvailable value
+        val gravitySensorCollector: GravitySensorCollector? =
+            estimator.getPrivateProperty("gravitySensorCollector")
+        requireNotNull(gravitySensorCollector)
+        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
+        every { gravitySensorCollectorSpy.sensorAvailable }.returns(true)
+        every { gravitySensorCollectorSpy.start() }.returns(false)
+        estimator.setPrivateProperty(
+            "gravitySensorCollector",
+            gravitySensorCollectorSpy
+        )
+
+        // set gyroscopeSensorAvailable value
+        val gyroscopeSensorCollector: GyroscopeSensorCollector? =
+            estimator.getPrivateProperty("gyroscopeSensorCollector")
+        requireNotNull(gyroscopeSensorCollector)
+        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
+        every { gyroscopeSensorCollectorSpy.sensorAvailable }.returns(true)
+        every { gyroscopeSensorCollectorSpy.start() }.returns(true)
+        estimator.setPrivateProperty("gyroscopeSensorCollector", gyroscopeSensorCollectorSpy)
+
+        assertTrue(estimator.isReady)
+
+        assertFalse(estimator.start())
+        verify(exactly = 1) { gravitySensorCollectorSpy.start() }
+        verify(exactly = 0) { gyroscopeSensorCollectorSpy.start() }
+        verify(exactly = 1) { gravitySensorCollectorSpy.stop() }
+        verify(exactly = 1) { gyroscopeSensorCollectorSpy.stop() }
+        assertFalse(estimator.running)
+
+        val magnetometerSampleAvailable: Boolean? =
+            estimator.getPrivateProperty("magnetometerSampleAvailable")
+        requireNotNull(magnetometerSampleAvailable)
+        assertFalse(magnetometerSampleAvailable)
+    }
+
+    @Test
+    fun start_whenGravitySensorEnabledReadyNotRunningLevelingAndGyroscopeStartFails_stopsSensorsAndReturnsFalse() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val estimator =
+            AttitudeEstimator(context, estimateImuLeveling = true, gravitySensorEnabled = true)
+
+        // set accelerometerSensorAvailable value
+        val gravitySensorCollector: GravitySensorCollector? =
+            estimator.getPrivateProperty("gravitySensorCollector")
+        requireNotNull(gravitySensorCollector)
+        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
+        every { gravitySensorCollectorSpy.sensorAvailable }.returns(true)
+        every { gravitySensorCollectorSpy.start() }.returns(true)
+        estimator.setPrivateProperty(
+            "gravitySensorCollector",
+            gravitySensorCollectorSpy
+        )
+
+        // set gyroscopeSensorAvailable value
+        val gyroscopeSensorCollector: GyroscopeSensorCollector? =
+            estimator.getPrivateProperty("gyroscopeSensorCollector")
+        requireNotNull(gyroscopeSensorCollector)
+        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
+        every { gyroscopeSensorCollectorSpy.sensorAvailable }.returns(true)
+        every { gyroscopeSensorCollectorSpy.start() }.returns(false)
+        estimator.setPrivateProperty("gyroscopeSensorCollector", gyroscopeSensorCollectorSpy)
+
+        assertTrue(estimator.isReady)
+
+        assertFalse(estimator.start())
+        verify(exactly = 1) { gravitySensorCollectorSpy.start() }
+        verify(exactly = 1) { gyroscopeSensorCollectorSpy.start() }
+        verify(exactly = 1) { gravitySensorCollectorSpy.stop() }
         verify(exactly = 1) { gyroscopeSensorCollectorSpy.stop() }
         assertFalse(estimator.running)
 
@@ -1342,7 +1581,7 @@ class AttitudeEstimatorTest {
     }
 
     @Test
-    fun processSamples_whenGeomagnetic_processesGeomagneticAttitudeAndNotifies() {
+    fun processSamples_whenGravitySensorNotEnabledGeomagnetic_processesGeomagneticAttitudeAndNotifies() {
         val attitudeAvailableListener =
             mockk<AttitudeEstimator.OnAttitudeAvailableListener>(relaxUnitFun = true)
         val location = createLocation()
@@ -1350,7 +1589,8 @@ class AttitudeEstimatorTest {
         val estimator = AttitudeEstimator(
             context,
             location = location,
-            attitudeAvailableListener = attitudeAvailableListener
+            attitudeAvailableListener = attitudeAvailableListener,
+            gravitySensorEnabled = false
         )
 
         // set accelerometerSensorAvailable value
@@ -1486,7 +1726,7 @@ class AttitudeEstimatorTest {
         val gyroscopeSampleAvailable4: Boolean? =
             estimator.getPrivateProperty("gyroscopeSampleAvailable")
         requireNotNull(gyroscopeSampleAvailable4)
-        assertFalse(gyroscopeSampleAvailable4)
+        assertTrue(gyroscopeSampleAvailable4)
         val magnetometerSampleAvailable4: Boolean? =
             estimator.getPrivateProperty("magnetometerSampleAvailable")
         requireNotNull(magnetometerSampleAvailable4)
@@ -1527,7 +1767,7 @@ class AttitudeEstimatorTest {
     }
 
     @Test
-    fun processSamples_whenImprovedLeveling_processesImprovedLevelingAndNotifies() {
+    fun processSamples_whenGravitySensorNotEnabledImprovedLeveling_processesImprovedLevelingAndNotifies() {
         val attitudeAvailableListener =
             mockk<AttitudeEstimator.OnAttitudeAvailableListener>(relaxUnitFun = true)
         val location = createLocation()
@@ -1536,7 +1776,8 @@ class AttitudeEstimatorTest {
             context,
             location = location,
             attitudeAvailableListener = attitudeAvailableListener,
-            estimateImuLeveling = true
+            estimateImuLeveling = true,
+            gravitySensorEnabled = false
         )
 
         // set accelerometerSensorAvailable value
@@ -1669,7 +1910,7 @@ class AttitudeEstimatorTest {
         val magnetometerSampleAvailable4: Boolean? =
             estimator.getPrivateProperty("magnetometerSampleAvailable")
         requireNotNull(magnetometerSampleAvailable4)
-        assertFalse(magnetometerSampleAvailable4)
+        assertTrue(magnetometerSampleAvailable4)
 
         val nedPosition = estimator.nedPosition
         requireNotNull(nedPosition)
@@ -1700,14 +1941,15 @@ class AttitudeEstimatorTest {
     }
 
     @Test
-    fun processSamples_whenLeveling_processesImprovedLevelingAndNotifies() {
+    fun processSamples_whenGravitySensorNotEnabledAndLeveling_processesImprovedLevelingAndNotifies() {
         val attitudeAvailableListener =
             mockk<AttitudeEstimator.OnAttitudeAvailableListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = AttitudeEstimator(
             context,
             attitudeAvailableListener = attitudeAvailableListener,
-            estimateImuLeveling = true
+            estimateImuLeveling = true,
+            gravitySensorEnabled = false
         )
 
         // set accelerometerSensorAvailable value
@@ -1840,7 +2082,7 @@ class AttitudeEstimatorTest {
         val magnetometerSampleAvailable4: Boolean? =
             estimator.getPrivateProperty("magnetometerSampleAvailable")
         requireNotNull(magnetometerSampleAvailable4)
-        assertFalse(magnetometerSampleAvailable4)
+        assertTrue(magnetometerSampleAvailable4)
 
         val coordinateTransformation: CoordinateTransformation? =
             estimator.getPrivateProperty("coordinateTransformation")
@@ -1850,6 +2092,529 @@ class AttitudeEstimatorTest {
                 ax.toDouble(),
                 ay.toDouble(),
                 az.toDouble(),
+                wx.toDouble(),
+                wy.toDouble(),
+                wz.toDouble(),
+                coordinateTransformation
+            )
+        }
+        val attitude: Quaternion? = estimator.getPrivateProperty("attitude")
+        requireNotNull(attitude)
+        verify(exactly = 1) {
+            attitudeAvailableListener.onAttitudeAvailable(
+                attitude,
+                coordinateTransformation,
+                AttitudeEstimator.AttitudeEstimatorType.LEVELING
+            )
+        }
+    }
+
+    @Test
+    fun processSamples_whenGravitySensorEnabledGeomagnetic_processesGeomagneticAttitudeAndNotifies() {
+        val attitudeAvailableListener =
+            mockk<AttitudeEstimator.OnAttitudeAvailableListener>(relaxUnitFun = true)
+        val location = createLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val estimator = AttitudeEstimator(
+            context,
+            location = location,
+            attitudeAvailableListener = attitudeAvailableListener,
+            gravitySensorEnabled = true
+        )
+
+        // set accelerometerSensorAvailable value
+        val gravitySensorCollector: GravitySensorCollector? =
+            estimator.getPrivateProperty("gravitySensorCollector")
+        requireNotNull(gravitySensorCollector)
+        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
+        every { gravitySensorCollectorSpy.sensorAvailable }.returns(true)
+        every { gravitySensorCollectorSpy.start() }.returns(true)
+        estimator.setPrivateProperty(
+            "gravitySensorCollector",
+            gravitySensorCollectorSpy
+        )
+
+        // set magnetometerSensorAvailable value
+        val magnetometerSensorCollector: MagnetometerSensorCollector? =
+            estimator.getPrivateProperty("magnetometerSensorCollector")
+        requireNotNull(magnetometerSensorCollector)
+        val magnetometerSensorCollectorSpy = spyk(magnetometerSensorCollector)
+        every { magnetometerSensorCollectorSpy.sensorAvailable }.returns(true)
+        every { magnetometerSensorCollectorSpy.start() }.returns(true)
+        estimator.setPrivateProperty("magnetometerSensorCollector", magnetometerSensorCollectorSpy)
+
+        callPrivateFunc(AttitudeEstimator::class, estimator, "computeType")
+        assertEquals(AttitudeEstimator.AttitudeEstimatorType.GEOMAGNETIC, estimator.type)
+
+        assertTrue(estimator.isReady)
+        val gravitySampleAvailable1: Boolean? =
+            estimator.getPrivateProperty("gravitySampleAvailable")
+        requireNotNull(gravitySampleAvailable1)
+        assertFalse(gravitySampleAvailable1)
+        val gyroscopeSampleAvailable1: Boolean? =
+            estimator.getPrivateProperty("gyroscopeSampleAvailable")
+        requireNotNull(gyroscopeSampleAvailable1)
+        assertFalse(gyroscopeSampleAvailable1)
+        val magnetometerSampleAvailable1: Boolean? =
+            estimator.getPrivateProperty("magnetometerSampleAvailable")
+        requireNotNull(magnetometerSampleAvailable1)
+        assertFalse(magnetometerSampleAvailable1)
+
+        val internalAttitudeEstimator: com.irurueta.navigation.inertial.estimators.AttitudeEstimator? =
+            estimator.getPrivateProperty("attitudeEstimator")
+        requireNotNull(internalAttitudeEstimator)
+        val internalAttitudeEstimatorSpy = spyk(internalAttitudeEstimator)
+        estimator.setPrivateProperty("attitudeEstimator", internalAttitudeEstimatorSpy)
+
+        assertTrue(estimator.start())
+
+        // collect gravity measurement
+        val gravitySampleAvailable2: Boolean? =
+            estimator.getPrivateProperty("gravitySampleAvailable")
+        requireNotNull(gravitySampleAvailable2)
+        assertFalse(gravitySampleAvailable2)
+        val gyroscopeSampleAvailable2: Boolean? =
+            estimator.getPrivateProperty("gyroscopeSampleAvailable")
+        requireNotNull(gyroscopeSampleAvailable2)
+        assertTrue(gyroscopeSampleAvailable2)
+        val magnetometerSampleAvailable2: Boolean? =
+            estimator.getPrivateProperty("magnetometerSampleAvailable")
+        requireNotNull(magnetometerSampleAvailable2)
+        assertFalse(magnetometerSampleAvailable2)
+
+        val gravityMeasurementListener = gravitySensorCollector.measurementListener
+        requireNotNull(gravityMeasurementListener)
+
+        val randomizer = UniformRandomizer()
+        val gx = randomizer.nextFloat()
+        val gy = randomizer.nextFloat()
+        val gz = randomizer.nextFloat()
+        val g = randomizer.nextDouble()
+        val timestamp = SystemClock.elapsedRealtimeNanos()
+        gravityMeasurementListener.onMeasurement(
+            gx,
+            gy,
+            gz,
+            g,
+            timestamp,
+            SensorAccuracy.HIGH
+        )
+
+        // check
+        assertEquals(gx, estimator.getPrivateProperty("gx"))
+        assertEquals(gy, estimator.getPrivateProperty("gy"))
+        assertEquals(gz, estimator.getPrivateProperty("gz"))
+        val accelerometerSampleAvailable3: Boolean? =
+            estimator.getPrivateProperty("gravitySampleAvailable")
+        requireNotNull(accelerometerSampleAvailable3)
+        assertTrue(accelerometerSampleAvailable3)
+        val gyroscopeSampleAvailable3: Boolean? =
+            estimator.getPrivateProperty("gyroscopeSampleAvailable")
+        requireNotNull(gyroscopeSampleAvailable3)
+        assertTrue(gyroscopeSampleAvailable3)
+        val magnetometerSampleAvailable3: Boolean? =
+            estimator.getPrivateProperty("magnetometerSampleAvailable")
+        requireNotNull(magnetometerSampleAvailable3)
+        assertFalse(magnetometerSampleAvailable3)
+
+        val magnetometerMeasurementListener = magnetometerSensorCollector.measurementListener
+        requireNotNull(magnetometerMeasurementListener)
+
+        val bx = randomizer.nextFloat()
+        val by = randomizer.nextFloat()
+        val bz = randomizer.nextFloat()
+        val hardIronX = randomizer.nextFloat()
+        val hardIronY = randomizer.nextFloat()
+        val hardIronZ = randomizer.nextFloat()
+        magnetometerMeasurementListener.onMeasurement(
+            bx,
+            by,
+            bz,
+            hardIronX,
+            hardIronY,
+            hardIronZ,
+            timestamp,
+            SensorAccuracy.HIGH
+        )
+
+        // check
+        assertEquals(gx, estimator.getPrivateProperty("gx"))
+        assertEquals(gy, estimator.getPrivateProperty("gy"))
+        assertEquals(gz, estimator.getPrivateProperty("gz"))
+        assertEquals(bx, estimator.getPrivateProperty("bx"))
+        assertEquals(by, estimator.getPrivateProperty("by"))
+        assertEquals(bz, estimator.getPrivateProperty("bz"))
+        val gravitySampleAvailable4: Boolean? =
+            estimator.getPrivateProperty("gravitySampleAvailable")
+        requireNotNull(gravitySampleAvailable4)
+        assertFalse(gravitySampleAvailable4)
+        val gyroscopeSampleAvailable4: Boolean? =
+            estimator.getPrivateProperty("gyroscopeSampleAvailable")
+        requireNotNull(gyroscopeSampleAvailable4)
+        assertTrue(gyroscopeSampleAvailable4)
+        val magnetometerSampleAvailable4: Boolean? =
+            estimator.getPrivateProperty("magnetometerSampleAvailable")
+        requireNotNull(magnetometerSampleAvailable4)
+        assertFalse(magnetometerSampleAvailable4)
+
+        val nedPosition = estimator.nedPosition
+        requireNotNull(nedPosition)
+        val bxTesla = MagneticFluxDensityConverter.microTeslaToTesla(bx.toDouble())
+        val byTesla = MagneticFluxDensityConverter.microTeslaToTesla(by.toDouble())
+        val bzTesla = MagneticFluxDensityConverter.microTeslaToTesla(bz.toDouble())
+        val coordinateTransformation: CoordinateTransformation? =
+            estimator.getPrivateProperty("coordinateTransformation")
+        requireNotNull(coordinateTransformation)
+        verify(exactly = 1) {
+            internalAttitudeEstimatorSpy.getAttitude(
+                nedPosition.latitude,
+                nedPosition.longitude,
+                nedPosition.height,
+                estimator.timestamp,
+                gx.toDouble(),
+                gy.toDouble(),
+                gz.toDouble(),
+                bxTesla,
+                byTesla,
+                bzTesla,
+                coordinateTransformation
+            )
+        }
+        val attitude: Quaternion? = estimator.getPrivateProperty("attitude")
+        requireNotNull(attitude)
+        verify(exactly = 1) {
+            attitudeAvailableListener.onAttitudeAvailable(
+                attitude,
+                coordinateTransformation,
+                AttitudeEstimator.AttitudeEstimatorType.GEOMAGNETIC
+            )
+        }
+    }
+
+    @Test
+    fun processSamples_whenGravitySensorEnabledImprovedLeveling_processesImprovedLevelingAndNotifies() {
+        val attitudeAvailableListener =
+            mockk<AttitudeEstimator.OnAttitudeAvailableListener>(relaxUnitFun = true)
+        val location = createLocation()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val estimator = AttitudeEstimator(
+            context,
+            location = location,
+            attitudeAvailableListener = attitudeAvailableListener,
+            estimateImuLeveling = true,
+            gravitySensorEnabled = true
+        )
+
+        // set accelerometerSensorAvailable value
+        val gravitySensorCollector: GravitySensorCollector? =
+            estimator.getPrivateProperty("gravitySensorCollector")
+        requireNotNull(gravitySensorCollector)
+        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
+        every { gravitySensorCollectorSpy.sensorAvailable }.returns(true)
+        every { gravitySensorCollectorSpy.start() }.returns(true)
+        estimator.setPrivateProperty(
+            "gravitySensorCollector",
+            gravitySensorCollectorSpy
+        )
+
+        // set gyroscopeSensorAvailable value
+        val gyroscopeSensorCollector: GyroscopeSensorCollector? =
+            estimator.getPrivateProperty("gyroscopeSensorCollector")
+        requireNotNull(gyroscopeSensorCollector)
+        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
+        every { gyroscopeSensorCollectorSpy.sensorAvailable }.returns(true)
+        every { gyroscopeSensorCollectorSpy.start() }.returns(true)
+        estimator.setPrivateProperty("gyroscopeSensorCollector", gyroscopeSensorCollectorSpy)
+
+        callPrivateFunc(AttitudeEstimator::class, estimator, "computeType")
+        assertEquals(AttitudeEstimator.AttitudeEstimatorType.IMPROVED_LEVELING, estimator.type)
+
+        mockkStatic(LevelingEstimator2::class)
+
+        assertTrue(estimator.isReady)
+        val gravitySampleAvailable1: Boolean? =
+            estimator.getPrivateProperty("gravitySampleAvailable")
+        requireNotNull(gravitySampleAvailable1)
+        assertFalse(gravitySampleAvailable1)
+        val gyroscopeSampleAvailable1: Boolean? =
+            estimator.getPrivateProperty("gyroscopeSampleAvailable")
+        requireNotNull(gyroscopeSampleAvailable1)
+        assertFalse(gyroscopeSampleAvailable1)
+        val magnetometerSampleAvailable1: Boolean? =
+            estimator.getPrivateProperty("magnetometerSampleAvailable")
+        requireNotNull(magnetometerSampleAvailable1)
+        assertFalse(magnetometerSampleAvailable1)
+
+        assertTrue(estimator.start())
+
+        // collect gravity measurement
+        val gravitySampleAvailable2: Boolean? =
+            estimator.getPrivateProperty("gravitySampleAvailable")
+        requireNotNull(gravitySampleAvailable2)
+        assertFalse(gravitySampleAvailable2)
+        val gyroscopeSampleAvailable2: Boolean? =
+            estimator.getPrivateProperty("gyroscopeSampleAvailable")
+        requireNotNull(gyroscopeSampleAvailable2)
+        assertFalse(gyroscopeSampleAvailable2)
+        val magnetometerSampleAvailable2: Boolean? =
+            estimator.getPrivateProperty("magnetometerSampleAvailable")
+        requireNotNull(magnetometerSampleAvailable2)
+        assertTrue(magnetometerSampleAvailable2)
+
+        val gravityMeasurementListener = gravitySensorCollector.measurementListener
+        requireNotNull(gravityMeasurementListener)
+
+        val randomizer = UniformRandomizer()
+        val gx = randomizer.nextFloat()
+        val gy = randomizer.nextFloat()
+        val gz = randomizer.nextFloat()
+        val g = randomizer.nextDouble()
+        val biasX = randomizer.nextFloat()
+        val biasY = randomizer.nextFloat()
+        val biasZ = randomizer.nextFloat()
+        val timestamp = SystemClock.elapsedRealtimeNanos()
+        gravityMeasurementListener.onMeasurement(
+            gx,
+            gy,
+            gz,
+            g,
+            timestamp,
+            SensorAccuracy.HIGH
+        )
+
+        // check
+        assertEquals(gx, estimator.getPrivateProperty("gx"))
+        assertEquals(gy, estimator.getPrivateProperty("gy"))
+        assertEquals(gz, estimator.getPrivateProperty("gz"))
+        val gravitySampleAvailable3: Boolean? =
+            estimator.getPrivateProperty("gravitySampleAvailable")
+        requireNotNull(gravitySampleAvailable3)
+        assertTrue(gravitySampleAvailable3)
+        val gyroscopeSampleAvailable3: Boolean? =
+            estimator.getPrivateProperty("gyroscopeSampleAvailable")
+        requireNotNull(gyroscopeSampleAvailable3)
+        assertFalse(gyroscopeSampleAvailable3)
+        val magnetometerSampleAvailable3: Boolean? =
+            estimator.getPrivateProperty("magnetometerSampleAvailable")
+        requireNotNull(magnetometerSampleAvailable3)
+        assertTrue(magnetometerSampleAvailable3)
+
+        val gyroscopeMeasurementListener = gyroscopeSensorCollector.measurementListener
+        requireNotNull(gyroscopeMeasurementListener)
+
+        val wx = randomizer.nextFloat()
+        val wy = randomizer.nextFloat()
+        val wz = randomizer.nextFloat()
+        gyroscopeMeasurementListener.onMeasurement(
+            wx,
+            wy,
+            wz,
+            biasX,
+            biasY,
+            biasZ,
+            timestamp,
+            SensorAccuracy.HIGH
+        )
+
+        // check
+        assertEquals(gx, estimator.getPrivateProperty("gx"))
+        assertEquals(gy, estimator.getPrivateProperty("gy"))
+        assertEquals(gz, estimator.getPrivateProperty("gz"))
+        assertEquals(wx, estimator.getPrivateProperty("wx"))
+        assertEquals(wy, estimator.getPrivateProperty("wy"))
+        assertEquals(wz, estimator.getPrivateProperty("wz"))
+        val gravitySampleAvailable4: Boolean? =
+            estimator.getPrivateProperty("gravitySampleAvailable")
+        requireNotNull(gravitySampleAvailable4)
+        assertFalse(gravitySampleAvailable4)
+        val gyroscopeSampleAvailable4: Boolean? =
+            estimator.getPrivateProperty("gyroscopeSampleAvailable")
+        requireNotNull(gyroscopeSampleAvailable4)
+        assertFalse(gyroscopeSampleAvailable4)
+        val magnetometerSampleAvailable4: Boolean? =
+            estimator.getPrivateProperty("magnetometerSampleAvailable")
+        requireNotNull(magnetometerSampleAvailable4)
+        assertTrue(magnetometerSampleAvailable4)
+
+        val nedPosition = estimator.nedPosition
+        requireNotNull(nedPosition)
+        val coordinateTransformation: CoordinateTransformation? =
+            estimator.getPrivateProperty("coordinateTransformation")
+        requireNotNull(coordinateTransformation)
+        verify(exactly = 1) {
+            LevelingEstimator2.getAttitude(
+                nedPosition,
+                gx.toDouble(),
+                gy.toDouble(),
+                gz.toDouble(),
+                wx.toDouble(),
+                wy.toDouble(),
+                wz.toDouble(),
+                coordinateTransformation
+            )
+        }
+        val attitude: Quaternion? = estimator.getPrivateProperty("attitude")
+        requireNotNull(attitude)
+        verify(exactly = 1) {
+            attitudeAvailableListener.onAttitudeAvailable(
+                attitude,
+                coordinateTransformation,
+                AttitudeEstimator.AttitudeEstimatorType.IMPROVED_LEVELING
+            )
+        }
+    }
+
+    @Test
+    fun processSamples_whenGravitySensorEnabledAndLeveling_processesImprovedLevelingAndNotifies() {
+        val attitudeAvailableListener =
+            mockk<AttitudeEstimator.OnAttitudeAvailableListener>(relaxUnitFun = true)
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val estimator = AttitudeEstimator(
+            context,
+            attitudeAvailableListener = attitudeAvailableListener,
+            estimateImuLeveling = true,
+            gravitySensorEnabled = true
+        )
+
+        // set gravitySensorAvailable value
+        val gravitySensorCollector: GravitySensorCollector? =
+            estimator.getPrivateProperty("gravitySensorCollector")
+        requireNotNull(gravitySensorCollector)
+        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
+        every { gravitySensorCollectorSpy.sensorAvailable }.returns(true)
+        every { gravitySensorCollectorSpy.start() }.returns(true)
+        estimator.setPrivateProperty(
+            "gravitySensorCollector",
+            gravitySensorCollectorSpy
+        )
+
+        // set gyroscopeSensorAvailable value
+        val gyroscopeSensorCollector: GyroscopeSensorCollector? =
+            estimator.getPrivateProperty("gyroscopeSensorCollector")
+        requireNotNull(gyroscopeSensorCollector)
+        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
+        every { gyroscopeSensorCollectorSpy.sensorAvailable }.returns(true)
+        every { gyroscopeSensorCollectorSpy.start() }.returns(true)
+        estimator.setPrivateProperty("gyroscopeSensorCollector", gyroscopeSensorCollectorSpy)
+
+        callPrivateFunc(AttitudeEstimator::class, estimator, "computeType")
+        assertEquals(AttitudeEstimator.AttitudeEstimatorType.LEVELING, estimator.type)
+
+        mockkStatic(LevelingEstimator::class)
+
+        assertTrue(estimator.isReady)
+        val gravitySampleAvailable1: Boolean? =
+            estimator.getPrivateProperty("gravitySampleAvailable")
+        requireNotNull(gravitySampleAvailable1)
+        assertFalse(gravitySampleAvailable1)
+        val gyroscopeSampleAvailable1: Boolean? =
+            estimator.getPrivateProperty("gyroscopeSampleAvailable")
+        requireNotNull(gyroscopeSampleAvailable1)
+        assertFalse(gyroscopeSampleAvailable1)
+        val magnetometerSampleAvailable1: Boolean? =
+            estimator.getPrivateProperty("magnetometerSampleAvailable")
+        requireNotNull(magnetometerSampleAvailable1)
+        assertFalse(magnetometerSampleAvailable1)
+
+        assertTrue(estimator.start())
+
+        // collect gravity measurement
+        val gravitySampleAvailable2: Boolean? =
+            estimator.getPrivateProperty("gravitySampleAvailable")
+        requireNotNull(gravitySampleAvailable2)
+        assertFalse(gravitySampleAvailable2)
+        val gyroscopeSampleAvailable2: Boolean? =
+            estimator.getPrivateProperty("gyroscopeSampleAvailable")
+        requireNotNull(gyroscopeSampleAvailable2)
+        assertFalse(gyroscopeSampleAvailable2)
+        val magnetometerSampleAvailable2: Boolean? =
+            estimator.getPrivateProperty("magnetometerSampleAvailable")
+        requireNotNull(magnetometerSampleAvailable2)
+        assertTrue(magnetometerSampleAvailable2)
+
+        val gravityMeasurementListener = gravitySensorCollector.measurementListener
+        requireNotNull(gravityMeasurementListener)
+
+        val randomizer = UniformRandomizer()
+        val gx = randomizer.nextFloat()
+        val gy = randomizer.nextFloat()
+        val gz = randomizer.nextFloat()
+        val g = randomizer.nextDouble()
+        val timestamp = SystemClock.elapsedRealtimeNanos()
+        gravityMeasurementListener.onMeasurement(
+            gx,
+            gy,
+            gz,
+            g,
+            timestamp,
+            SensorAccuracy.HIGH
+        )
+
+        // check
+        assertEquals(gx, estimator.getPrivateProperty("gx"))
+        assertEquals(gy, estimator.getPrivateProperty("gy"))
+        assertEquals(gz, estimator.getPrivateProperty("gz"))
+        val gravitySampleAvailable3: Boolean? =
+            estimator.getPrivateProperty("gravitySampleAvailable")
+        requireNotNull(gravitySampleAvailable3)
+        assertTrue(gravitySampleAvailable3)
+        val gyroscopeSampleAvailable3: Boolean? =
+            estimator.getPrivateProperty("gyroscopeSampleAvailable")
+        requireNotNull(gyroscopeSampleAvailable3)
+        assertFalse(gyroscopeSampleAvailable3)
+        val magnetometerSampleAvailable3: Boolean? =
+            estimator.getPrivateProperty("magnetometerSampleAvailable")
+        requireNotNull(magnetometerSampleAvailable3)
+        assertTrue(magnetometerSampleAvailable3)
+
+        val gyroscopeMeasurementListener = gyroscopeSensorCollector.measurementListener
+        requireNotNull(gyroscopeMeasurementListener)
+
+        val wx = randomizer.nextFloat()
+        val wy = randomizer.nextFloat()
+        val wz = randomizer.nextFloat()
+        val biasX = randomizer.nextFloat()
+        val biasY = randomizer.nextFloat()
+        val biasZ = randomizer.nextFloat()
+        gyroscopeMeasurementListener.onMeasurement(
+            wx,
+            wy,
+            wz,
+            biasX,
+            biasY,
+            biasZ,
+            timestamp,
+            SensorAccuracy.HIGH
+        )
+
+        // check
+        assertEquals(gx, estimator.getPrivateProperty("gx"))
+        assertEquals(gy, estimator.getPrivateProperty("gy"))
+        assertEquals(gz, estimator.getPrivateProperty("gz"))
+        assertEquals(wx, estimator.getPrivateProperty("wx"))
+        assertEquals(wy, estimator.getPrivateProperty("wy"))
+        assertEquals(wz, estimator.getPrivateProperty("wz"))
+        val gravitySampleAvailable4: Boolean? =
+            estimator.getPrivateProperty("gravitySampleAvailable")
+        requireNotNull(gravitySampleAvailable4)
+        assertFalse(gravitySampleAvailable4)
+        val gyroscopeSampleAvailable4: Boolean? =
+            estimator.getPrivateProperty("gyroscopeSampleAvailable")
+        requireNotNull(gyroscopeSampleAvailable4)
+        assertFalse(gyroscopeSampleAvailable4)
+        val magnetometerSampleAvailable4: Boolean? =
+            estimator.getPrivateProperty("magnetometerSampleAvailable")
+        requireNotNull(magnetometerSampleAvailable4)
+        assertTrue(magnetometerSampleAvailable4)
+
+        val coordinateTransformation: CoordinateTransformation? =
+            estimator.getPrivateProperty("coordinateTransformation")
+        requireNotNull(coordinateTransformation)
+        verify(exactly = 1) {
+            LevelingEstimator.getAttitude(
+                gx.toDouble(),
+                gy.toDouble(),
+                gz.toDouble(),
                 wx.toDouble(),
                 wy.toDouble(),
                 wz.toDouble(),

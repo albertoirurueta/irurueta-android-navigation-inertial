@@ -20,11 +20,16 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatTextView
 import com.irurueta.android.gl.cube.CubeRenderer
 import com.irurueta.android.gl.cube.CubeTextureView
-import com.irurueta.android.navigation.inertial.collectors.AttitudeSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.navigation.inertial.estimators.LevelingEstimator
+import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
+import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
+import com.irurueta.android.navigation.inertial.estimators.filter.MeanAveragingFilter
+import com.irurueta.android.navigation.inertial.estimators.filter.MedianAveragingFilter
 import com.irurueta.geometry.*
 
-class AttitudeSensorCollectorActivity : AppCompatActivity() {
+class LevelingEstimatorActivity : AppCompatActivity() {
 
     private var cubeView: CubeTextureView? = null
 
@@ -32,31 +37,29 @@ class AttitudeSensorCollectorActivity : AppCompatActivity() {
 
     private var pitchView: AppCompatTextView? = null
 
-    private var yawView: AppCompatTextView? = null
-
-    private var accuracyView: AppCompatTextView? = null
-
     private var rotation = Quaternion()
 
     private var eulerAngles = DoubleArray(3)
 
     private var camera: PinholeCamera? = null
 
-    private var attitudeSensorCollector: AttitudeSensorCollector? = null
+    private var levelingEstimator: LevelingEstimator? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         val extras = intent.extras
-        val serializable =
-            extras?.getSerializable(SENSOR_TYPE) as AttitudeSensorCollector.SensorType?
-        val sensorType = serializable ?: AttitudeSensorCollector.SensorType.RELATIVE_ATTITUDE
-        setContentView(R.layout.activity_attitude_sensor_collector)
+        val useAccelerometer = extras?.getBoolean(USE_ACCELEROMETER, false) ?: false
+        val accelerometerSensorType =
+            (extras?.getSerializable(ACCELEROMETER_SENSOR_TYPE) as AccelerometerSensorCollector.SensorType?)
+                ?: AccelerometerSensorCollector.SensorType.ACCELEROMETER
+        val averagingFilterType = extras?.getString(AVERAGING_FILTER_TYPE)
+        val averagingFilter = buildAveragingFilter(averagingFilterType)
+
+        setContentView(R.layout.activity_leveling_estimator)
         cubeView = findViewById(R.id.cube)
         rollView = findViewById(R.id.roll)
         pitchView = findViewById(R.id.pitch)
-        yawView = findViewById(R.id.yaw)
-        accuracyView = findViewById(R.id.accuracy)
 
         val cubeView = cubeView ?: return
         cubeView.onSurfaceChangedListener = object : CubeTextureView.OnSurfaceChangedListener {
@@ -68,50 +71,50 @@ class AttitudeSensorCollectorActivity : AppCompatActivity() {
             }
         }
 
-        attitudeSensorCollector = AttitudeSensorCollector(
+        levelingEstimator = LevelingEstimator(
             this,
-            sensorType,
-            SensorDelay.UI,
-            measurementListener = { attitude, _, accuracy, _, _ ->
-                attitude.toQuaternion(rotation)
-                cubeView.cubeRotation = rotation
+            SensorDelay.GAME,
+            useAccelerometer = useAccelerometer,
+            accelerometerSensorType = accelerometerSensorType,
+            accelerometerAveragingFilter = averagingFilter
+        ) { _, attitude, _, _, _ ->
+            attitude.toQuaternion(rotation)
+            cubeView.cubeRotation = rotation
 
-                rotation.toEulerAngles(eulerAngles)
-                rollView?.text = getString(R.string.roll_degrees, -Math.toDegrees(eulerAngles[0]))
-                pitchView?.text = getString(R.string.pitch_degrees, -Math.toDegrees(eulerAngles[1]))
-                yawView?.text = getString(R.string.yaw_degrees, -Math.toDegrees(eulerAngles[2]))
-                if (accuracy != null) {
-                    accuracyView?.text =
-                        getString(
-                            R.string.yaw_standard_deviation_degrees,
-                            Math.toDegrees(accuracy.toDouble())
-                        )
-                }
-            }
-        )
+            rotation.toEulerAngles(eulerAngles)
+            rollView?.text = getString(R.string.roll_degrees, -Math.toDegrees(eulerAngles[0]))
+            pitchView?.text = getString(R.string.pitch_degrees, -Math.toDegrees(eulerAngles[1]))
+        }
     }
 
     override fun onResume() {
         super.onResume()
         cubeView?.onResume()
-        attitudeSensorCollector?.start()
+        levelingEstimator?.start()
     }
 
     override fun onPause() {
         super.onPause()
-        attitudeSensorCollector?.stop()
+        levelingEstimator?.stop()
         cubeView?.onPause()
     }
 
+    private fun buildAveragingFilter(averagingFilterType: String?): AveragingFilter {
+        return when (averagingFilterType) {
+            MEAN_AVERAGING_FILTER -> MeanAveragingFilter()
+            MEDIAN_AVERAGING_FILTER -> MedianAveragingFilter()
+            else -> LowPassAveragingFilter()
+        }
+    }
+
     companion object {
-        const val SENSOR_TYPE = "sensorType"
+        const val USE_ACCELEROMETER = "useAccelerometer"
+        const val ACCELEROMETER_SENSOR_TYPE = "accelerometerSensorType"
+        const val AVERAGING_FILTER_TYPE = "averagingFilterType"
 
-        val ABSOLUTE_ATTITUDE = AttitudeSensorCollector.SensorType.ABSOLUTE_ATTITUDE
-
-        val RELATIVE_ATTITUDE = AttitudeSensorCollector.SensorType.RELATIVE_ATTITUDE
-
-        val GEOMAGNETIC_ABSOLUTE_ATTITUDE =
-            AttitudeSensorCollector.SensorType.GEOMAGNETIC_ABSOLUTE_ATTITUDE
+        const val LOW_PASS_AVERAGING_FILTER = "losPassAveragingFilter"
+        const val MEAN_AVERAGING_FILTER = "meanAveragingFilter"
+        const val MEDIAN_AVERAGING_FILTER = "medianAveragingFilter"
 
         private const val HORIZONTAL_FOCAL_LENGTH = 2065.920810699463
 

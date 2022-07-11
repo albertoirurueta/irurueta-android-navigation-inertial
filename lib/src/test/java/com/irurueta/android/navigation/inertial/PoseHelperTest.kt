@@ -15,20 +15,35 @@
  */
 package com.irurueta.android.navigation.inertial
 
+import android.content.Context
+import android.view.Display
+import android.view.Surface
+import androidx.test.core.app.ApplicationProvider
 import com.irurueta.algebra.Matrix
 import com.irurueta.geometry.*
 import com.irurueta.navigation.frames.*
 import com.irurueta.navigation.frames.converters.ECEFtoNEDPositionVelocityConverter
 import com.irurueta.navigation.frames.converters.NEDtoECEFPositionVelocityConverter
 import com.irurueta.statistics.UniformRandomizer
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.spyk
 import org.junit.Assert.*
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 
+@RunWith(RobolectricTestRunner::class)
 class PoseHelperTest {
 
     @Test
     fun convertToNEU_whenTranslationPoints_returnsExpectedValues() {
         // Notice that: attitude2 = attitude1 * deltaAttitude
+        val display = mockk<Display>()
+        every { display.rotation }.returns(Surface.ROTATION_0)
+        val context = spyk(ApplicationProvider.getApplicationContext())
+        every { context.display }.returns(display)
+
         val attitude1 = createQuaternion()
         val attitude2 = createQuaternion()
         val invAttitude1 = attitude1.inverseAndReturnNew()
@@ -83,6 +98,7 @@ class PoseHelperTest {
         val deltaAttitudeResult = Quaternion()
         val deltaTranslationResult = InhomogeneousPoint3D()
         val result = PoseHelper.convertToNEU(
+            context,
             values,
             attitudeResult,
             translationResult,
@@ -101,6 +117,11 @@ class PoseHelperTest {
     @Test
     fun convertToNEU_whenTranslationPointsAndOnlyRequiredParameters_returnsExpectedValues() {
         // Notice that: attitude2 = attitude1 * deltaAttitude
+        val display = mockk<Display>()
+        every { display.rotation }.returns(Surface.ROTATION_0)
+        val context = spyk(ApplicationProvider.getApplicationContext())
+        every { context.display }.returns(display)
+
         val attitude1 = createQuaternion()
         val attitude2 = createQuaternion()
         val invAttitude1 = attitude1.inverseAndReturnNew()
@@ -153,6 +174,7 @@ class PoseHelperTest {
         val attitudeResult = Quaternion()
         val translationResult = InhomogeneousPoint3D()
         val result = PoseHelper.convertToNEU(
+            context,
             values,
             attitudeResult,
             translationResult
@@ -166,6 +188,7 @@ class PoseHelperTest {
 
     @Test(expected = IllegalArgumentException::class)
     fun convertToNEU_whenTranslationPointsAndInvalidValuesSize_throwsIllegalArgumentException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
         val values = FloatArray(14)
 
         val attitudeResult = Quaternion()
@@ -173,6 +196,7 @@ class PoseHelperTest {
         val deltaAttitudeResult = Quaternion()
         val deltaTranslationResult = InhomogeneousPoint3D()
         PoseHelper.convertToNEU(
+            context,
             values,
             attitudeResult,
             translationResult,
@@ -184,6 +208,11 @@ class PoseHelperTest {
     @Test
     fun convertToNEU_whenTranslationArrays_returnsExpectedValues() {
         // Notice that: attitude2 = attitude1 * deltaAttitude
+        val display = mockk<Display>()
+        every { display.rotation }.returns(Surface.ROTATION_0)
+        val context = spyk(ApplicationProvider.getApplicationContext())
+        every { context.display }.returns(display)
+
         val attitude1 = createQuaternion()
         val attitude2 = createQuaternion()
         val invAttitude1 = attitude1.inverseAndReturnNew()
@@ -238,6 +267,7 @@ class PoseHelperTest {
         val deltaAttitudeResult = Quaternion()
         val deltaTranslationResult = DoubleArray(Point3D.POINT3D_INHOMOGENEOUS_COORDINATES_LENGTH)
         val result = PoseHelper.convertToNEU(
+            context,
             values,
             attitudeResult,
             translationResult,
@@ -256,6 +286,11 @@ class PoseHelperTest {
     @Test
     fun convertToNEU_whenTranslationArraysAndOnlyRequiredParameters_returnsExpectedValues() {
         // Notice that: attitude2 = attitude1 * deltaAttitude
+        val display = mockk<Display>()
+        every { display.rotation }.returns(Surface.ROTATION_0)
+        val context = spyk(ApplicationProvider.getApplicationContext())
+        every { context.display }.returns(display)
+
         val attitude1 = createQuaternion()
         val attitude2 = createQuaternion()
         val invAttitude1 = attitude1.inverseAndReturnNew()
@@ -308,6 +343,7 @@ class PoseHelperTest {
         val attitudeResult = Quaternion()
         val translationResult = DoubleArray(Point3D.POINT3D_INHOMOGENEOUS_COORDINATES_LENGTH)
         val result = PoseHelper.convertToNEU(
+            context,
             values,
             attitudeResult,
             translationResult
@@ -321,6 +357,7 @@ class PoseHelperTest {
 
     @Test(expected = IllegalArgumentException::class)
     fun convertToNEU_whenTranslationArraysInvalidValuesSize_returnsExpectedValues() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
         val values = FloatArray(14)
 
         val attitudeResult = Quaternion()
@@ -328,6 +365,7 @@ class PoseHelperTest {
         val deltaAttitudeResult = Quaternion()
         val deltaTranslationResult = DoubleArray(Point3D.POINT3D_INHOMOGENEOUS_COORDINATES_LENGTH)
         PoseHelper.convertToNEU(
+            context,
             values,
             attitudeResult,
             translationResult,
@@ -339,6 +377,7 @@ class PoseHelperTest {
     @Test(expected = IllegalArgumentException::class)
     fun convertToNEU_whenInvalidTranslationResultArray_returnsExpectedValues() {
         // Notice that: attitude2 = attitude1 * deltaAttitude
+        val context = ApplicationProvider.getApplicationContext<Context>()
         val attitude1 = createQuaternion()
         val attitude2 = createQuaternion()
         val invAttitude1 = attitude1.inverseAndReturnNew()
@@ -393,6 +432,7 @@ class PoseHelperTest {
         val deltaAttitudeResult = Quaternion()
         val deltaTranslationResult = DoubleArray(Point3D.POINT3D_INHOMOGENEOUS_COORDINATES_LENGTH)
         PoseHelper.convertToNEU(
+            context,
             values,
             attitudeResult,
             translationResult,
@@ -404,6 +444,7 @@ class PoseHelperTest {
     @Test(expected = IllegalArgumentException::class)
     fun convertToNEU_whenInvalidDeltaTranslationResultArray_returnsExpectedValues() {
         // Notice that: attitude2 = attitude1 * deltaAttitude
+        val context = ApplicationProvider.getApplicationContext<Context>()
         val attitude1 = createQuaternion()
         val attitude2 = createQuaternion()
         val invAttitude1 = attitude1.inverseAndReturnNew()
@@ -458,6 +499,7 @@ class PoseHelperTest {
         val deltaAttitudeResult = Quaternion()
         val deltaTranslationResult = DoubleArray(2)
         PoseHelper.convertToNEU(
+            context,
             values,
             attitudeResult,
             translationResult,
@@ -469,6 +511,11 @@ class PoseHelperTest {
     @Test
     fun convertToNEU_whenTransformationsWithQuaternionRotations_returnsExpectedValues() {
         // Notice that: attitude2 = attitude1 * deltaAttitude
+        val display = mockk<Display>()
+        every { display.rotation }.returns(Surface.ROTATION_0)
+        val context = spyk(ApplicationProvider.getApplicationContext())
+        every { context.display }.returns(display)
+
         val attitude1 = createQuaternion()
         val attitude2 = createQuaternion()
         val invAttitude1 = attitude1.inverseAndReturnNew()
@@ -524,6 +571,7 @@ class PoseHelperTest {
         assertTrue(deltaTransformationResult.rotation is Quaternion)
 
         val result = PoseHelper.convertToNEU(
+            context,
             values,
             transformationResult,
             deltaTransformationResult
@@ -548,6 +596,11 @@ class PoseHelperTest {
     @Test
     fun convertToNEU_whenTransformationsWithNonQuaternionRotations_returnsExpectedValues() {
         // Notice that: attitude2 = attitude1 * deltaAttitude
+        val display = mockk<Display>()
+        every { display.rotation }.returns(Surface.ROTATION_0)
+        val context = spyk(ApplicationProvider.getApplicationContext())
+        every { context.display }.returns(display)
+
         val attitude1 = createQuaternion()
         val attitude2 = createQuaternion()
         val invAttitude1 = attitude1.inverseAndReturnNew()
@@ -605,6 +658,7 @@ class PoseHelperTest {
         assertFalse(deltaTransformationResult.rotation is Quaternion)
 
         val result = PoseHelper.convertToNEU(
+            context,
             values,
             transformationResult,
             deltaTransformationResult
@@ -629,6 +683,11 @@ class PoseHelperTest {
     @Test
     fun convertToNEU_whenOnlyTransformationResult_returnsExpectedValues() {
         // Notice that: attitude2 = attitude1 * deltaAttitude
+        val display = mockk<Display>()
+        every { display.rotation }.returns(Surface.ROTATION_0)
+        val context = spyk(ApplicationProvider.getApplicationContext())
+        every { context.display }.returns(display)
+
         val attitude1 = createQuaternion()
         val attitude2 = createQuaternion()
         val invAttitude1 = attitude1.inverseAndReturnNew()
@@ -680,6 +739,7 @@ class PoseHelperTest {
 
         val transformationResult = EuclideanTransformation3D()
         val result = PoseHelper.convertToNEU(
+            context,
             values,
             transformationResult
         )
@@ -693,6 +753,11 @@ class PoseHelperTest {
     @Test
     fun convertToNED_whenTransformations_returnsExpectedValues() {
         // Notice that: attitude2 = attitude1 * deltaAttitude
+        val display = mockk<Display>()
+        every { display.rotation }.returns(Surface.ROTATION_0)
+        val context = spyk(ApplicationProvider.getApplicationContext())
+        every { context.display }.returns(display)
+
         val attitude1 = createQuaternion()
         val attitude2 = createQuaternion()
         val invAttitude1 = attitude1.inverseAndReturnNew()
@@ -750,6 +815,7 @@ class PoseHelperTest {
         val deltaTransformationResult = EuclideanTransformation3D()
 
         val result = PoseHelper.convertToNED(
+            context,
             values,
             transformationResult,
             deltaTransformationResult
@@ -770,6 +836,11 @@ class PoseHelperTest {
     @Test
     fun convertToNED_whenOnlyTransformationResult_returnsExpectedValues() {
         // Notice that: attitude2 = attitude1 * deltaAttitude
+        val display = mockk<Display>()
+        every { display.rotation }.returns(Surface.ROTATION_0)
+        val context = spyk(ApplicationProvider.getApplicationContext())
+        every { context.display }.returns(display)
+
         val attitude1 = createQuaternion()
         val attitude2 = createQuaternion()
         val invAttitude1 = attitude1.inverseAndReturnNew()
@@ -824,6 +895,7 @@ class PoseHelperTest {
         val transformationResult = EuclideanTransformation3D()
 
         val result = PoseHelper.convertToNED(
+            context,
             values,
             transformationResult
         )
@@ -839,6 +911,11 @@ class PoseHelperTest {
     @Test
     fun convertToNED_whenTransformationsQuaternionsAndPoints_returnsExpectedValues() {
         // Notice that: attitude2 = attitude1 * deltaAttitude
+        val display = mockk<Display>()
+        every { display.rotation }.returns(Surface.ROTATION_0)
+        val context = spyk(ApplicationProvider.getApplicationContext())
+        every { context.display }.returns(display)
+
         val attitude1 = createQuaternion()
         val attitude2 = createQuaternion()
         val invAttitude1 = attitude1.inverseAndReturnNew()
@@ -900,6 +977,7 @@ class PoseHelperTest {
         val deltaTransformationResult = EuclideanTransformation3D()
 
         val result = PoseHelper.convertToNED(
+            context,
             values,
             attitudeResult,
             translationResult,
@@ -928,6 +1006,11 @@ class PoseHelperTest {
     @Test
     fun convertToNED_whenRequiredQuaternionsAndPoints_returnsExpectedValues() {
         // Notice that: attitude2 = attitude1 * deltaAttitude
+        val display = mockk<Display>()
+        every { display.rotation }.returns(Surface.ROTATION_0)
+        val context = spyk(ApplicationProvider.getApplicationContext())
+        every { context.display }.returns(display)
+
         val attitude1 = createQuaternion()
         val attitude2 = createQuaternion()
         val invAttitude1 = attitude1.inverseAndReturnNew()
@@ -983,6 +1066,7 @@ class PoseHelperTest {
         val translationResult = InhomogeneousPoint3D()
 
         val result = PoseHelper.convertToNED(
+            context,
             values,
             attitudeResult,
             translationResult
@@ -1001,6 +1085,11 @@ class PoseHelperTest {
     @Test
     fun convertToNED_whenTransformationsQuaternionsAndArrays_returnsExpectedValues() {
         // Notice that: attitude2 = attitude1 * deltaAttitude
+        val display = mockk<Display>()
+        every { display.rotation }.returns(Surface.ROTATION_0)
+        val context = spyk(ApplicationProvider.getApplicationContext())
+        every { context.display }.returns(display)
+
         val attitude1 = createQuaternion()
         val attitude2 = createQuaternion()
         val invAttitude1 = attitude1.inverseAndReturnNew()
@@ -1062,6 +1151,7 @@ class PoseHelperTest {
         val deltaTransformationResult = EuclideanTransformation3D()
 
         val result = PoseHelper.convertToNED(
+            context,
             values,
             attitudeResult,
             translationResult,
@@ -1079,17 +1169,22 @@ class PoseHelperTest {
         assertArrayEquals(deltaTranslationResult, deltaTransformationResult.translation, 0.0)
         assertTrue(
             transformationResult.asMatrix()
-                .equals(transformation2.inverseAndReturnNew().asMatrix(), ABSOLUTE_ERROR)
+                .equals(transformation2.inverseAndReturnNew().asMatrix(), 10.0 * ABSOLUTE_ERROR)
         )
         assertTrue(
             deltaTransformationResult.asMatrix()
-                .equals(deltaTransformation.inverseAndReturnNew().asMatrix(), ABSOLUTE_ERROR)
+                .equals(deltaTransformation.inverseAndReturnNew().asMatrix(), 10.0 * ABSOLUTE_ERROR)
         )
     }
 
     @Test
     fun convertToNED_whenRequiredQuaternionsAndArrays_returnsExpectedValues() {
         // Notice that: attitude2 = attitude1 * deltaAttitude
+        val display = mockk<Display>()
+        every { display.rotation }.returns(Surface.ROTATION_0)
+        val context = spyk(ApplicationProvider.getApplicationContext())
+        every { context.display }.returns(display)
+
         val attitude1 = createQuaternion()
         val attitude2 = createQuaternion()
         val invAttitude1 = attitude1.inverseAndReturnNew()
@@ -1145,6 +1240,7 @@ class PoseHelperTest {
         val translationResult = DoubleArray(Point3D.POINT3D_INHOMOGENEOUS_COORDINATES_LENGTH)
 
         val result = PoseHelper.convertToNED(
+            context,
             values,
             attitudeResult,
             translationResult
@@ -1162,6 +1258,11 @@ class PoseHelperTest {
 
     @Test
     fun convertToNED_whenECEFStartPositionFramesTransformationsQuaternionsAndPoints_returnsExpectedValues() {
+        val display = mockk<Display>()
+        every { display.rotation }.returns(Surface.ROTATION_0)
+        val context = spyk(ApplicationProvider.getApplicationContext())
+        every { context.display }.returns(display)
+
         val startNedPosition = createNEDPosition()
         val startEcefPosition = ECEFPosition()
         NEDtoECEFPositionVelocityConverter.convertNEDtoECEF(
@@ -1237,6 +1338,7 @@ class PoseHelperTest {
         val endVelocity = NEDVelocity()
 
         val result = PoseHelper.convertToNED(
+            context,
             values,
             startEcefPosition,
             frameResult,
@@ -1301,6 +1403,11 @@ class PoseHelperTest {
 
     @Test
     fun convertToNED_whenECEFStartPositionFrameOnly_returnsExpectedValues() {
+        val display = mockk<Display>()
+        every { display.rotation }.returns(Surface.ROTATION_0)
+        val context = spyk(ApplicationProvider.getApplicationContext())
+        every { context.display }.returns(display)
+
         val startNedPosition = createNEDPosition()
         val startEcefPosition = ECEFPosition()
         NEDtoECEFPositionVelocityConverter.convertNEDtoECEF(
@@ -1377,6 +1484,7 @@ class PoseHelperTest {
         val endVelocity = NEDVelocity()
 
         val result1 = PoseHelper.convertToNED(
+            context,
             values,
             startEcefPosition,
             frameResult1,
@@ -1394,6 +1502,7 @@ class PoseHelperTest {
         )
 
         val result2 = PoseHelper.convertToNED(
+            context,
             values,
             startEcefPosition,
             frameResult2
@@ -1451,6 +1560,11 @@ class PoseHelperTest {
 
     @Test
     fun convertToNED_whenECEFStartPositionFramesTransformationsQuaternionsAndArrays_returnsExpectedValues() {
+        val display = mockk<Display>()
+        every { display.rotation }.returns(Surface.ROTATION_0)
+        val context = spyk(ApplicationProvider.getApplicationContext())
+        every { context.display }.returns(display)
+
         val startNedPosition = createNEDPosition()
         val startEcefPosition = ECEFPosition()
         NEDtoECEFPositionVelocityConverter.convertNEDtoECEF(
@@ -1526,6 +1640,7 @@ class PoseHelperTest {
         val endVelocity = NEDVelocity()
 
         val result = PoseHelper.convertToNED(
+            context,
             values,
             startEcefPosition,
             frameResult,
@@ -1590,6 +1705,11 @@ class PoseHelperTest {
 
     @Test
     fun convertToNED_whenECEFStartPositionFrameAttitudeAndTranslationArrayOnly_returnsExpectedValues() {
+        val display = mockk<Display>()
+        every { display.rotation }.returns(Surface.ROTATION_0)
+        val context = spyk(ApplicationProvider.getApplicationContext())
+        every { context.display }.returns(display)
+
         val startNedPosition = createNEDPosition()
         val startEcefPosition = ECEFPosition()
         NEDtoECEFPositionVelocityConverter.convertNEDtoECEF(
@@ -1666,6 +1786,7 @@ class PoseHelperTest {
         val endVelocity = NEDVelocity()
 
         val result1 = PoseHelper.convertToNED(
+            context,
             values,
             startEcefPosition,
             frameResult1,
@@ -1683,6 +1804,7 @@ class PoseHelperTest {
         )
 
         val result2 = PoseHelper.convertToNED(
+            context,
             values,
             startEcefPosition,
             frameResult2,
@@ -1742,6 +1864,11 @@ class PoseHelperTest {
 
     @Test
     fun convertToNED_whenNEDStartPositionFramesTransformationsQuaternionsAndPoints_returnsExpectedValues() {
+        val display = mockk<Display>()
+        every { display.rotation }.returns(Surface.ROTATION_0)
+        val context = spyk(ApplicationProvider.getApplicationContext())
+        every { context.display }.returns(display)
+
         val startNedPosition = createNEDPosition()
         val startEcefPosition = ECEFPosition()
         NEDtoECEFPositionVelocityConverter.convertNEDtoECEF(
@@ -1817,6 +1944,7 @@ class PoseHelperTest {
         val endVelocity = NEDVelocity()
 
         val result = PoseHelper.convertToNED(
+            context,
             values,
             startNedPosition,
             frameResult,
@@ -1881,6 +2009,11 @@ class PoseHelperTest {
 
     @Test
     fun convertToNED_whenNEDStartPositionFrameOnly_returnsExpectedValues() {
+        val display = mockk<Display>()
+        every { display.rotation }.returns(Surface.ROTATION_0)
+        val context = spyk(ApplicationProvider.getApplicationContext())
+        every { context.display }.returns(display)
+
         val startNedPosition = createNEDPosition()
         val startEcefPosition = ECEFPosition()
         NEDtoECEFPositionVelocityConverter.convertNEDtoECEF(
@@ -1957,6 +2090,7 @@ class PoseHelperTest {
         val endVelocity = NEDVelocity()
 
         val result1 = PoseHelper.convertToNED(
+            context,
             values,
             startNedPosition,
             frameResult1,
@@ -1974,6 +2108,7 @@ class PoseHelperTest {
         )
 
         val result2 = PoseHelper.convertToNED(
+            context,
             values,
             startEcefPosition,
             frameResult2
@@ -2031,6 +2166,11 @@ class PoseHelperTest {
 
     @Test
     fun convertToNED_whenNEDStartPositionFramesTransformationsQuaternionsAndArrays_returnsExpectedValues() {
+        val display = mockk<Display>()
+        every { display.rotation }.returns(Surface.ROTATION_0)
+        val context = spyk(ApplicationProvider.getApplicationContext())
+        every { context.display }.returns(display)
+
         val startNedPosition = createNEDPosition()
         val startEcefPosition = ECEFPosition()
         NEDtoECEFPositionVelocityConverter.convertNEDtoECEF(
@@ -2106,6 +2246,7 @@ class PoseHelperTest {
         val endVelocity = NEDVelocity()
 
         val result = PoseHelper.convertToNED(
+            context,
             values,
             startNedPosition,
             frameResult,
@@ -2170,6 +2311,11 @@ class PoseHelperTest {
 
     @Test
     fun convertToNED_whenNEDStartPositionFrameAttitudeAndTranslationArrayOnly_returnsExpectedValues() {
+        val display = mockk<Display>()
+        every { display.rotation }.returns(Surface.ROTATION_0)
+        val context = spyk(ApplicationProvider.getApplicationContext())
+        every { context.display }.returns(display)
+
         val startNedPosition = createNEDPosition()
         val startEcefPosition = ECEFPosition()
         NEDtoECEFPositionVelocityConverter.convertNEDtoECEF(
@@ -2246,6 +2392,7 @@ class PoseHelperTest {
         val endVelocity = NEDVelocity()
 
         val result1 = PoseHelper.convertToNED(
+            context,
             values,
             startNedPosition,
             frameResult1,
@@ -2263,6 +2410,7 @@ class PoseHelperTest {
         )
 
         val result2 = PoseHelper.convertToNED(
+            context,
             values,
             startEcefPosition,
             frameResult2,

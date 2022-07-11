@@ -160,6 +160,7 @@ class RelativeDevicePoseSensorCollector private constructor(
             val startPosition = this@RelativeDevicePoseSensorCollector.startPosition
             if (startPosition != null) {
                 PoseHelper.convertToNED(
+                    context,
                     event.values,
                     startPosition,
                     frame,
@@ -177,6 +178,7 @@ class RelativeDevicePoseSensorCollector private constructor(
                 )
             } else {
                 PoseHelper.convertToNED(
+                    context,
                     event.values,
                     attitude,
                     translation,

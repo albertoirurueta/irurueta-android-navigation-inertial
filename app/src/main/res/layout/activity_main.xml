@@ -6,37 +6,239 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <androidx.appcompat.widget.AppCompatButton
-        android:id="@+id/absolute_attitude_button"
-        android:text="@string/absolute_attitude"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="24dp"
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/relative_attitude_button"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        />
-    <androidx.appcompat.widget.AppCompatButton
-        android:id="@+id/relative_attitude_button"
-        android:text="@string/relative_attitude"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="24dp"
-        app:layout_constraintTop_toBottomOf="@id/absolute_attitude_button"
-        app:layout_constraintBottom_toTopOf="@id/geomagnetic_attitude_button"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        />
-    <androidx.appcompat.widget.AppCompatButton
-        android:id="@+id/geomagnetic_attitude_button"
-        android:text="@string/geomagnetic_attitude"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="24dp"
-        app:layout_constraintTop_toBottomOf="@id/relative_attitude_button"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        />
+        app:layout_constraintBottom_toBottomOf="parent">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <androidx.appcompat.widget.AppCompatTextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/system_attitude_sensors"
+                android:layout_marginStart="24dp"
+                android:layout_marginEnd="24dp"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center">
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/absolute_attitude_button"
+                    android:text="@string/absolute_attitude"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="24dp" />
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/relative_attitude_button"
+                    android:text="@string/relative_attitude"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="24dp" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center">
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/geomagnetic_attitude_button"
+                    android:text="@string/geomagnetic_attitude"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="24dp" />
+            </LinearLayout>
+            <androidx.appcompat.widget.AppCompatTextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/other_attitude_estimators"
+                android:layout_marginStart="24dp"
+                android:layout_marginEnd="24dp"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center">
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/leveling_attitude_button"
+                    android:text="@string/leveling"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="24dp" />
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/improved_leveling_attitude_button"
+                    android:text="@string/improved_leveling"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="24dp" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center">
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/geomagnetic_leveling_attitude_button"
+                    android:text="@string/geomagnetic_attitude"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="24dp" />
+            </LinearLayout>
+            <androidx.appcompat.widget.AppCompatTextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/leveling_estimator"
+                android:layout_marginStart="24dp"
+                android:layout_marginEnd="24dp"/>
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/gravity_leveling_button"
+                android:text="@string/gravity_leveling"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_margin="24dp" />
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/accelerometer_low_pass_filter_leveling_button"
+                android:text="@string/accelerometer_low_pass_filter_leveling"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_margin="24dp" />
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/accelerometer_mean_filter_leveling_button"
+                android:text="@string/accelerometer_mean_filter_leveling"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_margin="24dp" />
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/accelerometer_median_filter_leveling_button"
+                android:text="@string/accelerometer_median_filter_leveling"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_margin="24dp" />
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/accelerometer_uncalibrated_low_pass_filter_leveling_button"
+                android:text="@string/accelerometer_uncalibrated_low_pass_filter_leveling"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_margin="24dp" />
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/accelerometer_uncalibrated_mean_filter_leveling_button"
+                android:text="@string/accelerometer_uncalibrated_mean_filter_leveling"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_margin="24dp" />
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/accelerometer_uncalibrated_median_filter_leveling_button"
+                android:text="@string/accelerometer_uncalibrated_median_filter_leveling"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_margin="24dp" />
+            <androidx.appcompat.widget.AppCompatTextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/accurate_leveling_estimator"
+                android:layout_marginStart="24dp"
+                android:layout_marginEnd="24dp"/>
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/gravity_accurate_leveling_button"
+                android:text="@string/gravity_accurate_leveling"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_margin="24dp" />
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/accelerometer_low_pass_filter_accurate_leveling_button"
+                android:text="@string/accelerometer_low_pass_filter_accurate_leveling"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_margin="24dp" />
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/accelerometer_mean_filter_accurate_leveling_button"
+                android:text="@string/accelerometer_mean_filter_accurate_leveling"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_margin="24dp" />
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/accelerometer_median_filter_accurate_leveling_button"
+                android:text="@string/accelerometer_median_filter_accurate_leveling"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_margin="24dp" />
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/accelerometer_uncalibrated_low_pass_filter_accurate_leveling_button"
+                android:text="@string/accelerometer_uncalibrated_low_pass_filter_accurate_leveling"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_margin="24dp" />
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/accelerometer_uncalibrated_mean_filter_accurate_leveling_button"
+                android:text="@string/accelerometer_uncalibrated_mean_filter_accurate_leveling"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_margin="24dp" />
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/accelerometer_uncalibrated_median_filter_accurate_leveling_button"
+                android:text="@string/accelerometer_uncalibrated_median_filter_accurate_leveling"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_margin="24dp" />
+            <androidx.appcompat.widget.AppCompatTextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/relative_gyroscope_attitude_estimator"
+                android:layout_marginStart="24dp"
+                android:layout_marginEnd="24dp"/>
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/relative_gyroscope_attitude_button"
+                android:text="@string/relative_gyroscope_attitude_estimator_calibrated"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_margin="24dp" />
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/relative_uncalibrated_gyroscope_attitude_button"
+                android:text="@string/relative_gyroscope_attitude_estimator_uncalibrated"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_margin="24dp" />
+            <androidx.appcompat.widget.AppCompatTextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/accurate_relative_gyroscope_attitude_estimator"
+                android:layout_marginStart="24dp"
+                android:layout_marginEnd="24dp"/>
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/accurate_relative_gyroscope_attitude_button"
+                android:text="@string/accurate_relative_gyroscope_attitude_estimator_calibrated"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_margin="24dp" />
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/accurate_relative_uncalibrated_gyroscope_attitude_button"
+                android:text="@string/accurate_relative_gyroscope_attitude_estimator_uncalibrated"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_margin="24dp" />
+        </LinearLayout>
+    </ScrollView>
 </androidx.constraintlayout.widget.ConstraintLayout>

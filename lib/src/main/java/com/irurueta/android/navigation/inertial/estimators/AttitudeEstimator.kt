@@ -19,18 +19,22 @@ import android.content.Context
 import android.hardware.Sensor
 import android.location.Location
 import android.os.Build
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.algebra.ArrayUtils
+import com.irurueta.algebra.Matrix
+import com.irurueta.algebra.Utils
+import com.irurueta.android.navigation.inertial.DisplayOrientationHelper
+import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.toNEDPosition
+import com.irurueta.geometry.InvalidRotationMatrixException
 import com.irurueta.geometry.Quaternion
+import com.irurueta.geometry.Rotation3D
 import com.irurueta.navigation.frames.CoordinateTransformation
 import com.irurueta.navigation.frames.FrameType
 import com.irurueta.navigation.frames.NEDPosition
 import com.irurueta.navigation.inertial.estimators.AttitudeEstimator
 import com.irurueta.navigation.inertial.estimators.LevelingEstimator
 import com.irurueta.navigation.inertial.estimators.LevelingEstimator2
+import com.irurueta.navigation.inertial.estimators.NEDGravityEstimator
 import com.irurueta.navigation.inertial.wmm.WorldMagneticModel
 import com.irurueta.units.MagneticFluxDensityConverter
 import java.util.*
@@ -54,6 +58,7 @@ import java.util.*
  * @property accelerometerSensorDelay Delay of accelerometer sensor between samples.
  * @property gyroscopeSensorDelay Delay of gyroscope sensor between samples.
  * @property magnetometerSensorDelay Delay of magnetometer sensor between samples.
+ * @property gravitySensorDelay Delay of gravity sensor between samples.
  * @property timestamp Timestamp when World Magnetic Model will be evaluated to obtain current
  * magnetic declination.
  * @property attitudeAvailableListener listener to notify when a new attitude has been estimated.
@@ -66,6 +71,7 @@ class AttitudeEstimator private constructor(
     val accelerometerSensorDelay: SensorDelay,
     val gyroscopeSensorDelay: SensorDelay,
     val magnetometerSensorDelay: SensorDelay,
+    val gravitySensorDelay: SensorDelay,
     var timestamp: Date,
     var attitudeAvailableListener: OnAttitudeAvailableListener?
 ) {
@@ -99,8 +105,10 @@ class AttitudeEstimator private constructor(
         accelerometerSensorDelay: SensorDelay = SensorDelay.UI,
         gyroscopeSensorDelay: SensorDelay = SensorDelay.UI,
         magnetometerSensorDelay: SensorDelay = SensorDelay.UI,
+        gravitySensorDelay: SensorDelay = SensorDelay.UI,
         location: Location? = null,
         estimateImuLeveling: Boolean = false,
+        gravitySensorEnabled: Boolean = true,
         worldMagneticModel: WorldMagneticModel? = null,
         timestamp: Date = Date(),
         attitudeAvailableListener: OnAttitudeAvailableListener? = null
@@ -112,13 +120,17 @@ class AttitudeEstimator private constructor(
         accelerometerSensorDelay,
         gyroscopeSensorDelay,
         magnetometerSensorDelay,
+        gravitySensorDelay,
         timestamp,
         attitudeAvailableListener
     ) {
         this.location = location
         this.estimateImuLeveling = estimateImuLeveling
+        this.gravitySensorEnabled = gravitySensorEnabled
         this.worldMagneticModel = worldMagneticModel
     }
+
+    private val rotationMatrix = Matrix(Rotation3D.INHOM_COORDS, Rotation3D.INHOM_COORDS)
 
     /**
      * Instance to be reused containing coordinate transformation in NED coordinates.
@@ -130,6 +142,8 @@ class AttitudeEstimator private constructor(
      * Instance to be reused containing estimated attitude in NED coordinates.
      */
     private val attitude = Quaternion()
+
+    private val displayOrientation = Quaternion()
 
     /**
      * Estimator to obtain geomagnetic attitude using accelerometer + magnetometer measurements.
@@ -144,17 +158,17 @@ class AttitudeEstimator private constructor(
     /**
      * Last accelerometer x-coordinate measurement expressed in meters per squared second (m/s^2).
      */
-    private var ax = 0.0f
+    private var sensorAx = 0.0f
 
     /**
      * Last accelerometer y-coordinate measurement expressed in meters per squared second (m/s^2).
      */
-    private var ay = 0.0f
+    private var sensorAy = 0.0f
 
     /**
      * Last accelerometer z-coordinate measurement expressed in meters per squared second (m/s^2).
      */
-    private var az = 0.0f
+    private var sensorAz = 0.0f
 
     /**
      * Internal accelerometer sensor collector.
@@ -162,9 +176,9 @@ class AttitudeEstimator private constructor(
     private val accelerometerSensorCollector = AccelerometerSensorCollector(
         context, accelerometerSensorType, accelerometerSensorDelay,
         { ax, ay, az, _, _, _, _, _ ->
-            this@AttitudeEstimator.ax = ax
-            this@AttitudeEstimator.ay = ay
-            this@AttitudeEstimator.az = az
+            this@AttitudeEstimator.sensorAx = ax
+            this@AttitudeEstimator.sensorAy = ay
+            this@AttitudeEstimator.sensorAz = az
             accelerometerSampleAvailable = true
             processSamples()
         })
@@ -177,17 +191,17 @@ class AttitudeEstimator private constructor(
     /**
      * Last gyroscope x-coordinate measurement expressed in radians per second (rad/s).
      */
-    private var wx = 0.0f
+    private var sensorWx = 0.0f
 
     /**
      * Last gyroscope y-coordinate measurement expressed in radians per second (rad/s).
      */
-    private var wy = 0.0f
+    private var sensorWy = 0.0f
 
     /**
      * Last gyroscope z-coordinate measurement expressed in radians per second (rad/s).
      */
-    private var wz = 0.0f
+    private var sensorWz = 0.0f
 
     /**
      * Internal gyroscope sensor collector.
@@ -197,9 +211,9 @@ class AttitudeEstimator private constructor(
         gyroscopeSensorType,
         gyroscopeSensorDelay,
         { wx, wy, wz, _, _, _, _, _ ->
-            this@AttitudeEstimator.wx = wx
-            this@AttitudeEstimator.wy = wy
-            this@AttitudeEstimator.wz = wz
+            this@AttitudeEstimator.sensorWx = wx
+            this@AttitudeEstimator.sensorWy = wy
+            this@AttitudeEstimator.sensorWz = wz
             gyroscopeSampleAvailable = true
             processSamples()
         })
@@ -212,17 +226,17 @@ class AttitudeEstimator private constructor(
     /**
      * Last magnetometer x-coordinate measurement expressed in micro Teslas (µT).
      */
-    private var bx = 0.0f
+    private var sensorBx = 0.0f
 
     /**
      * Last magnetometer y-coordinate measurement expressed in micro Teslas (µT).
      */
-    private var by = 0.0f
+    private var sensorBy = 0.0f
 
     /**
      * Last magnetometer z-coordinate measurement expressed in micro Teslas (µT).
      */
-    private var bz = 0.0f
+    private var sensorBz = 0.0f
 
     /**
      * Internal magnetometer sensor collector.
@@ -232,10 +246,44 @@ class AttitudeEstimator private constructor(
         magnetometerSensorType,
         magnetometerSensorDelay,
         { bx, by, bz, _, _, _, _, _ ->
-            this@AttitudeEstimator.bx = bx
-            this@AttitudeEstimator.by = by
-            this@AttitudeEstimator.bz = bz
+            this@AttitudeEstimator.sensorBx = bx
+            this@AttitudeEstimator.sensorBy = by
+            this@AttitudeEstimator.sensorBz = bz
             magnetometerSampleAvailable = true
+            processSamples()
+        })
+
+    /**
+     * Indicates that a new gravity sample is available since last processing.
+     */
+    private var gravitySampleAvailable = false
+
+    /**
+     * Last gravity x-coordinate measurement expressed in meters per squared seconds (m/s^2).
+     */
+    private var sensorGx = 0.0f
+
+    /**
+     * Last gravity y-coordinate measurement expressed in meters per squared seconds (m/s^2).
+     */
+    private var sensorGy = 0.0f
+
+    /**
+     * Last gravity z-coordinate measurement expressed in meters per squared seconds (m/s^2).
+     */
+    private var sensorGz = 0.0f
+
+    /**
+     * Internal gravity sensor collector.
+     */
+    private val gravitySensorCollector = GravitySensorCollector(
+        context,
+        gravitySensorDelay,
+        measurementListener = { gx, gy, gz, _, _, _ ->
+            this@AttitudeEstimator.sensorGx = gx
+            this@AttitudeEstimator.sensorGy = gy
+            this@AttitudeEstimator.sensorGz = gz
+            gravitySampleAvailable = true
             processSamples()
         })
 
@@ -310,8 +358,25 @@ class AttitudeEstimator private constructor(
      * When true accelerometer + gyroscope is used for attitude estimation even if location is
      * provided.
      * When false accelerometer + magnetometer is used when location is provided.
+     *
+     * @throws IllegalStateException if estimator is running
      */
     var estimateImuLeveling: Boolean = false
+        @Throws(IllegalStateException::class)
+        set(value) {
+            check(!running)
+
+            field = value
+            computeType()
+        }
+
+    /**
+     * Indicates whether gravity sensor is used instead of accelerometer to obtain gravity readings.
+     * If accelerometer is used, readings are low-pass filtered to estimate gravity
+     *
+     * @throws IllegalStateException if estimator is running.
+     */
+    var gravitySensorEnabled: Boolean = true
         @Throws(IllegalStateException::class)
         set(value) {
             check(!running)
@@ -342,6 +407,13 @@ class AttitudeEstimator private constructor(
         get() = magnetometerSensorCollector.sensor
 
     /**
+     * Gets gravity sensor being used to obtain measurements or null if not available.
+     * This can be used to obtain additional information about the sensor.
+     */
+    val gravitySensor: Sensor?
+        get() = gravitySensorCollector.sensor
+
+    /**
      * Indicates whether requested accelerometer sensor is available or not.
      */
     val accelerometerSensorAvailable: Boolean
@@ -360,11 +432,18 @@ class AttitudeEstimator private constructor(
         get() = magnetometerSensorCollector.sensorAvailable
 
     /**
+     * Indicates whether requested gravity sensor is available or not.
+     */
+    val gravitySensorAvailable: Boolean
+        get() = gravitySensorCollector.sensorAvailable
+
+    /**
      * Indicates whether this estimator will use IMU leveling using accelerometer + gyroscope
      * measurements to estimate attitude.
      */
     val isLevelingEnabled
-        get() = estimateImuLeveling && accelerometerSensorAvailable && gyroscopeSensorAvailable
+        get() = estimateImuLeveling && (accelerometerSensorAvailable || gravitySensorAvailable)
+                && gyroscopeSensorAvailable
 
     /**
      * Indicates whether this estimator will use improved IMU leveling using accelerometer +
@@ -379,7 +458,9 @@ class AttitudeEstimator private constructor(
      * Model.
      */
     val isGeomagneticAttitudeEnabled
-        get() = location != null && !estimateImuLeveling && accelerometerSensorAvailable && magnetometerSensorAvailable
+        get() = location != null && !estimateImuLeveling
+                && (accelerometerSensorAvailable || gravitySensorAvailable)
+                && magnetometerSensorAvailable
 
     /**
      * Gets type of attitude estimator being used.
@@ -406,24 +487,52 @@ class AttitudeEstimator private constructor(
         check(!running)
 
         return if (isGeomagneticAttitudeEnabled) {
-            if (!accelerometerSensorCollector.start() || !magnetometerSensorCollector.start()) {
-                accelerometerSensorCollector.stop()
-                magnetometerSensorCollector.stop()
-                false
+            if (gravitySensorEnabled) {
+                if (!gravitySensorCollector.start() || !magnetometerSensorCollector.start()) {
+                    gravitySensorCollector.stop()
+                    magnetometerSensorCollector.stop()
+                    false
+                } else {
+                    gyroscopeSampleAvailable = true
+                    accelerometerSampleAvailable = true
+                    running = true
+                    true
+                }
             } else {
-                gyroscopeSampleAvailable = true
-                running = true
-                true
+                if (!accelerometerSensorCollector.start() || !magnetometerSensorCollector.start()) {
+                    accelerometerSensorCollector.stop()
+                    magnetometerSensorCollector.stop()
+                    false
+                } else {
+                    gyroscopeSampleAvailable = true
+                    gravitySampleAvailable = true
+                    running = true
+                    true
+                }
             }
         } else {
-            if (!accelerometerSensorCollector.start() || !gyroscopeSensorCollector.start()) {
-                accelerometerSensorCollector.stop()
-                gyroscopeSensorCollector.stop()
-                false
+            if (gravitySensorEnabled) {
+                if (!gravitySensorCollector.start() || !gyroscopeSensorCollector.start()) {
+                    gravitySensorCollector.stop()
+                    gyroscopeSensorCollector.stop()
+                    false
+                } else {
+                    magnetometerSampleAvailable = true
+                    accelerometerSampleAvailable = true
+                    running = true
+                    true
+                }
             } else {
-                magnetometerSampleAvailable = true
-                running = true
-                true
+                if (!accelerometerSensorCollector.start() || !gyroscopeSensorCollector.start()) {
+                    accelerometerSensorCollector.stop()
+                    gyroscopeSensorCollector.stop()
+                    false
+                } else {
+                    magnetometerSampleAvailable = true
+                    gravitySampleAvailable = true
+                    running = true
+                    true
+                }
             }
         }
     }
@@ -459,17 +568,69 @@ class AttitudeEstimator private constructor(
      * Processes current samples when all required ones are available.
      */
     private fun processSamples() {
-        if (accelerometerSampleAvailable && gyroscopeSampleAvailable && magnetometerSampleAvailable) {
-            if (isGeomagneticAttitudeEnabled) {
-                processGeomagneticAttitude()
-            } else if (isImprovedLevelingEnabled) {
-                processImprovedLeveling()
+        if ((accelerometerSampleAvailable || gravitySampleAvailable) && gyroscopeSampleAvailable
+            && magnetometerSampleAvailable
+        ) {
+            // In navigation, body frame is defined as follows:
+            // x is the forward axis, pointing in the usual direction of travel;
+            // z is the down axis, pointing in the usual direction of gravity;
+            // and y is the right axis, completing the orthogonal set.
+            // For angular motion, the body-frame axes are also known as roll, pitch, and yaw.
+            // Roll motion is about the x-axis,
+            // pitch motion is about the y-axis,
+            // and yaw motion is about the z-axis
+            // These are the NED coordinates system.
+
+            // On the other hand, values returned by Android sensors are as follows:
+            // The X axis is horizontal and points to the right,
+            // the Y axis is vertical and points up and the Z axis points towards the outside
+            // of the front face of the screen. In this system, coordinates behind the screen
+            // have negative Z values
+
+            // Consequently, to convert to NED coordinates, we have to negate z-axis, and
+            // exchange x and y axes
+            // [x2] = [0    1   0 ][x1] = [y1 ]
+            // [y2]   [1    0   0 ][y1]   [x1 ]
+            // [z2]   [0    0   -1][z1]   [-z1]
+
+            // Additionally, if screen is rotated an angle of theta, then sensor coordinates
+            // need to be rotated as well
+            //[x3] = [cosTheta -sinTheta   0][x2] = [x2*cosTheta - y2*sinTheta]
+            //[y3]   [sinTheta cosTheta    0][y2]   [x2*sinTheta + y2*cosTheta]
+            //[z3]   [0        0           1][z2]   [z2]
+
+            val fx: Double
+            val fy: Double
+            val fz: Double
+            if (gravitySensorEnabled) {
+
+                // gravity sensor obtains amount of gravity on each coordinate, but sensed specific
+                // force is the negated gravity vector f = -g
+                fx = -sensorGx.toDouble()
+                fy = -sensorGy.toDouble()
+                fz = -sensorGz.toDouble()
+
             } else {
-                processLeveling()
+                fx = sensorAx.toDouble()
+                fy = sensorAy.toDouble()
+                fz = sensorAz.toDouble()
             }
-            accelerometerSampleAvailable = false
-            gyroscopeSampleAvailable = false
-            magnetometerSampleAvailable = false
+
+            if (isGeomagneticAttitudeEnabled) {
+                processGeomagneticAttitude(fx, fy, fz)
+                magnetometerSampleAvailable = false
+            } else if (isImprovedLevelingEnabled) {
+                processImprovedLeveling(fx, fy, fz)
+                gyroscopeSampleAvailable = false
+            } else {
+                processLeveling(fx, fy, fz)
+                gyroscopeSampleAvailable = false
+            }
+            if (gravitySensorEnabled) {
+                gravitySampleAvailable = false
+            } else {
+                accelerometerSampleAvailable = false
+            }
 
             // notify
             val type = this.type ?: return
@@ -480,40 +641,132 @@ class AttitudeEstimator private constructor(
     /**
      * Process accelerometer and magnetometer measurements along with current device location and
      * timestamp to estimate attitude.
+     *
+     * @param fx x-coordinate of measured body specific force expressed in meters per squared
+     * second (m/s^2).
+     * @param fy y-coordinate of measured body specific force expressed in meters per squared
+     * second (m/s^2).
+     * @param fz z-coordinate of measured body specific force expressed in meters per squared
+     * second (m/s^2).
      */
-    private fun processGeomagneticAttitude() {
+    private fun processGeomagneticAttitude(fx: Double, fy: Double, fz: Double) {
         val nedPosition = this.nedPosition ?: return
         val attitudeEstimator = this.attitudeEstimator ?: return
-        attitudeEstimator.getAttitude(
+        val displayRotationRadians = DisplayOrientationHelper.getDisplayRotationRadians(context)
+        displayOrientation.setFromEulerAngles(0.0, 0.0, displayRotationRadians)
+
+        val bx = MagneticFluxDensityConverter.microTeslaToTesla(sensorBx.toDouble())
+        val by = MagneticFluxDensityConverter.microTeslaToTesla(sensorBy.toDouble())
+        val bz = MagneticFluxDensityConverter.microTeslaToTesla(sensorBz.toDouble())
+
+        val roll = LevelingEstimator.getRoll(fy, fz)
+        val pitch = LevelingEstimator.getPitch(fx, fy, fz)
+        val yaw = AttitudeEstimator.getYaw(bx, by, bz, 0.0, roll, pitch)
+
+        attitude.setFromEulerAngles(roll, pitch, yaw)
+        attitude.combine(displayOrientation)
+        attitude.inverse()
+        attitude.normalize()
+        attitude.asInhomogeneousMatrix(rotationMatrix)
+        try {
+            coordinateTransformation.matrix = rotationMatrix
+        } catch (ignore: InvalidRotationMatrixException) {
+        }
+
+
+        /*val normF = doubleArrayOf(fx, fy, fz)
+        ArrayUtils.normalize(normF)
+
+        val nedGravity =
+            NEDGravityEstimator.estimateGravityAndReturnNew(
+                nedPosition.latitude,
+                nedPosition.height
+            )
+
+        val normG = nedGravity.asArray()
+
+        ArrayUtils.multiplyByScalar(normG, -1.0, normG)
+
+        ArrayUtils.normalize(normG)
+
+        val cosAlpha = ArrayUtils.dotProduct(normF, normG)
+
+        val skew = Utils.skewMatrix(normG)
+        val tmp1 = Matrix.newFromArray(normF)
+        val tmp2 = skew.multiplyAndReturnNew(tmp1)
+
+        val sinAlpha = Utils.normF(tmp2)
+
+        val axis = tmp2.toArray()
+        ArrayUtils.normalize(axis)
+
+        val alpha = Math.atan2(sinAlpha, cosAlpha)
+
+        attitude.setFromAxisAndRotation(axis, alpha)
+
+
+        val roll = LevelingEstimator.getRoll(fy, fz)
+        val pitch = LevelingEstimator.getPitch(fx, fy, fz)
+        val yaw = AttitudeEstimator.getYaw(bx, by, bz, 0.0, roll, pitch)
+
+        attitude.setFromEulerAngles(roll, pitch, yaw)
+        attitude.inverse()
+        attitude.normalize()
+        attitude.asInhomogeneousMatrix(rotationMatrix)
+        try {
+            coordinateTransformation.matrix = rotationMatrix
+        } catch (ignore: InvalidRotationMatrixException) {
+
+        }
+
+        attitude.inverse()
+        val eulerAngles = attitude.toEulerAngles()
+        val roll = eulerAngles[0]
+        val pitch = eulerAngles[1]
+        val yaw = AttitudeEstimator.getYaw(bx, by, bz, 0.0, roll, pitch)
+        attitude.setFromEulerAngles(roll, pitch, yaw)
+        attitude.inverse()*/
+
+        /*attitudeEstimator.getAttitude(
             nedPosition.latitude,
             nedPosition.longitude,
             nedPosition.height,
             timestamp,
-            ax.toDouble(),
-            ay.toDouble(),
-            az.toDouble(),
-            MagneticFluxDensityConverter.microTeslaToTesla(bx.toDouble()),
-            MagneticFluxDensityConverter.microTeslaToTesla(by.toDouble()),
-            MagneticFluxDensityConverter.microTeslaToTesla(bz.toDouble()),
+            fx,
+            fy,
+            fz,
+            bx,
+            by,
+            bz,
             coordinateTransformation
         )
         coordinateTransformation.inverse()
-        coordinateTransformation.asRotation(attitude)
+        coordinateTransformation.asRotation(attitude)*/
     }
 
     /**
      * Processes accelerometer and gyroscope measurements along with current device location to
      * estimate attitude by means of improved leveling.
+     *
+     * @param fx x-coordinate of measured body specific force expressed in meters per squared
+     * second (m/s^2).
+     * @param fy y-coordinate of measured body specific force expressed in meters per squared
+     * second (m/s^2).
+     * @param fz z-coordinate of measured body specific force expressed in meters per squared
+     * second (m/s^2).
      */
-    private fun processImprovedLeveling() {
+    private fun processImprovedLeveling(fx: Double, fy: Double, fz: Double) {
+        val wx = sensorWy.toDouble()
+        val wy = sensorWx.toDouble()
+        val wz = -sensorWz.toDouble()
         LevelingEstimator2.getAttitude(
             nedPosition,
-            ax.toDouble(),
-            ay.toDouble(),
-            az.toDouble(),
-            wx.toDouble(),
-            wy.toDouble(),
-            wz.toDouble(),
+            fx,
+            fy,
+            fz,
+            wx,
+            wy,
+            wz,
             coordinateTransformation
         )
         coordinateTransformation.inverse()
@@ -522,15 +775,25 @@ class AttitudeEstimator private constructor(
 
     /**
      * Processes accelerometer and gyroscope measurements to estimate attitude by means of leveling.
+     *
+     * @param fx x-coordinate of measured body specific force expressed in meters per squared
+     * second (m/s^2).
+     * @param fy y-coordinate of measured body specific force expressed in meters per squared
+     * second (m/s^2).
+     * @param fz z-coordinate of measured body specific force expressed in meters per squared
+     * second (m/s^2).
      */
-    private fun processLeveling() {
+    private fun processLeveling(fx: Double, fy: Double, fz: Double) {
+        val wx = sensorWy.toDouble()
+        val wy = sensorWx.toDouble()
+        val wz = -sensorWz.toDouble()
         LevelingEstimator.getAttitude(
-            ax.toDouble(),
-            ay.toDouble(),
-            az.toDouble(),
-            wx.toDouble(),
-            wy.toDouble(),
-            wz.toDouble(),
+            fx,
+            fy,
+            fz,
+            wx,
+            wy,
+            wz,
             coordinateTransformation
         )
         coordinateTransformation.inverse()

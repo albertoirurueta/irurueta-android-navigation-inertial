@@ -20,11 +20,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatTextView
 import com.irurueta.android.gl.cube.CubeRenderer
 import com.irurueta.android.gl.cube.CubeTextureView
-import com.irurueta.android.navigation.inertial.collectors.AttitudeSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.navigation.inertial.estimators.AccurateRelativeGyroscopeAttitudeEstimator
 import com.irurueta.geometry.*
 
-class AttitudeSensorCollectorActivity : AppCompatActivity() {
+class AccurateRelativeGyroscopeAttitudeEstimatorActivity : AppCompatActivity() {
 
     private var cubeView: CubeTextureView? = null
 
@@ -34,29 +35,27 @@ class AttitudeSensorCollectorActivity : AppCompatActivity() {
 
     private var yawView: AppCompatTextView? = null
 
-    private var accuracyView: AppCompatTextView? = null
-
     private var rotation = Quaternion()
 
     private var eulerAngles = DoubleArray(3)
 
     private var camera: PinholeCamera? = null
 
-    private var attitudeSensorCollector: AttitudeSensorCollector? = null
+    private var attitudeEstimator: AccurateRelativeGyroscopeAttitudeEstimator? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         val extras = intent.extras
-        val serializable =
-            extras?.getSerializable(SENSOR_TYPE) as AttitudeSensorCollector.SensorType?
-        val sensorType = serializable ?: AttitudeSensorCollector.SensorType.RELATIVE_ATTITUDE
-        setContentView(R.layout.activity_attitude_sensor_collector)
+        val gyroscopeSensorType =
+            (extras?.getSerializable(GYROSCOPE_SENSOR_TYPE) as GyroscopeSensorCollector.SensorType?)
+                ?: GyroscopeSensorCollector.SensorType.GYROSCOPE
+
+        setContentView(R.layout.activity_relative_gyroscope_attitude_estimator)
         cubeView = findViewById(R.id.cube)
         rollView = findViewById(R.id.roll)
         pitchView = findViewById(R.id.pitch)
         yawView = findViewById(R.id.yaw)
-        accuracyView = findViewById(R.id.accuracy)
 
         val cubeView = cubeView ?: return
         cubeView.onSurfaceChangedListener = object : CubeTextureView.OnSurfaceChangedListener {
@@ -68,50 +67,37 @@ class AttitudeSensorCollectorActivity : AppCompatActivity() {
             }
         }
 
-        attitudeSensorCollector = AttitudeSensorCollector(
+        attitudeEstimator = AccurateRelativeGyroscopeAttitudeEstimator(
             this,
-            sensorType,
-            SensorDelay.UI,
-            measurementListener = { attitude, _, accuracy, _, _ ->
-                attitude.toQuaternion(rotation)
-                cubeView.cubeRotation = rotation
+            gyroscopeSensorType,
+            SensorDelay.GAME,
+            estimateCoordinateTransformation = false,
+            estimateDisplayEulerAngles = false
+        ) { _, attitude, _, _, _, _ ->
+            attitude.toQuaternion(rotation)
+            cubeView.cubeRotation = rotation
 
-                rotation.toEulerAngles(eulerAngles)
-                rollView?.text = getString(R.string.roll_degrees, -Math.toDegrees(eulerAngles[0]))
-                pitchView?.text = getString(R.string.pitch_degrees, -Math.toDegrees(eulerAngles[1]))
-                yawView?.text = getString(R.string.yaw_degrees, -Math.toDegrees(eulerAngles[2]))
-                if (accuracy != null) {
-                    accuracyView?.text =
-                        getString(
-                            R.string.yaw_standard_deviation_degrees,
-                            Math.toDegrees(accuracy.toDouble())
-                        )
-                }
-            }
-        )
+            rotation.toEulerAngles(eulerAngles)
+            rollView?.text = getString(R.string.roll_degrees, -Math.toDegrees(eulerAngles[0]))
+            pitchView?.text = getString(R.string.pitch_degrees, -Math.toDegrees(eulerAngles[1]))
+            yawView?.text = getString(R.string.yaw_degrees, -Math.toDegrees(eulerAngles[2]))
+        }
     }
 
     override fun onResume() {
         super.onResume()
         cubeView?.onResume()
-        attitudeSensorCollector?.start()
+        attitudeEstimator?.start()
     }
 
     override fun onPause() {
         super.onPause()
-        attitudeSensorCollector?.stop()
+        attitudeEstimator?.stop()
         cubeView?.onPause()
     }
 
     companion object {
-        const val SENSOR_TYPE = "sensorType"
-
-        val ABSOLUTE_ATTITUDE = AttitudeSensorCollector.SensorType.ABSOLUTE_ATTITUDE
-
-        val RELATIVE_ATTITUDE = AttitudeSensorCollector.SensorType.RELATIVE_ATTITUDE
-
-        val GEOMAGNETIC_ABSOLUTE_ATTITUDE =
-            AttitudeSensorCollector.SensorType.GEOMAGNETIC_ABSOLUTE_ATTITUDE
+        const val GYROSCOPE_SENSOR_TYPE = "gyroscopeSensorType"
 
         private const val HORIZONTAL_FOCAL_LENGTH = 2065.920810699463
 

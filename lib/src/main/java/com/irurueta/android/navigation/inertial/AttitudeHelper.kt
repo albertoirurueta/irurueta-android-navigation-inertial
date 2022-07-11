@@ -15,6 +15,7 @@
  */
 package com.irurueta.android.navigation.inertial
 
+import android.content.Context
 import android.hardware.SensorEvent
 import com.irurueta.algebra.Matrix
 import com.irurueta.geometry.MatrixRotation3D
@@ -53,14 +54,22 @@ object AttitudeHelper {
      * Converts array of values contained in a [SensorEvent] into a 3D rotation expressed in NEU
      * (North, East, Up) system coordinates.
      *
+     * @param context Android context.
      * @param values array of values to be converted.
      * @param result instance where converted attitude will be stored.
+     * @param displayOrientationResult instance containing a quaternion indicating display
+     * orientation as a rotation on z-axis (yaw angle). If provided, this is meant to be reused.
      * @return accuracy of heading attitude angle expressed in radians or null if not available.
      * @throws IllegalArgumentException if provided values array does not have at least [MIN_LENGTH]
      * elements.
      */
     @Throws(IllegalArgumentException::class)
-    fun convertToNEU(values: FloatArray, result: Quaternion): Double? {
+    fun convertToNEU(
+        context: Context,
+        values: FloatArray,
+        result: Quaternion,
+        displayOrientationResult: Quaternion? = null
+    ): Double? {
         // Array contains the following values:
         // values[0]: x*sin(θ/2)
         // values[1]: y*sin(θ/2)
@@ -71,7 +80,7 @@ object AttitudeHelper {
 
         require(values.size >= MIN_LENGTH)
 
-        convertQuaternion(values, 0, result)
+        convertQuaternion(context, values, 0, result, displayOrientationResult)
 
         val headingAccuracy =
             if (values.size > MIN_LENGTH && values[4] != UNAVAILABLE_HEADING_ACCURACY) {
@@ -87,15 +96,23 @@ object AttitudeHelper {
      * Converts an array of values contained in a [SensorEvent] into a 3D rotation expressed in NED
      * (North, Easth, Down) system coordinates.
      *
+     * @param context Android context.
      * @param values array of values to be converted.
      * @param result instance where converted attitude will be stored.
      * @return accuracy of heading attitude angle expressed in radians or null if not available.
+     * @param displayOrientationResult instance containing a quaternion indicating display
+     * orientation as a rotation on z-axis (yaw angle). If provided, this is meant to be reused.
      * @throws IllegalArgumentException if provided values array does not have at least [MIN_LENGTH]
      * elements.
      */
     @Throws(IllegalArgumentException::class)
-    fun convertToNED(values: FloatArray, result: Quaternion): Double? {
-        val headingAccuracy = convertToNEU(values, result)
+    fun convertToNED(
+        context: Context,
+        values: FloatArray,
+        result: Quaternion,
+        displayOrientationResult: Quaternion? = null
+    ): Double? {
+        val headingAccuracy = convertToNEU(context, values, result, displayOrientationResult)
         result.conjugate(result)
         return headingAccuracy
     }
@@ -104,22 +121,29 @@ object AttitudeHelper {
      * Converts an array of values contained in a [SensorEvent] into a coordinate transformation
      * and the equivalent 3D rotation expressed in NED (North, Easth, Down) system coordinates.
      *
+     * @param context Android context.
      * @param values array of values to be converted.
      * @param resultC coordinate transformation instance where converted attitude will be stored.
      * @param resultQ quaternion instance where converted attitude will be stored.
+     * @param displayOrientationResult instance containing a quaternion indicating display
+     * orientation as a rotation on z-axis (yaw angle). If provided, this is meant to be reused.
+     * @param matrix result quaternion expressed in matrix form. If provided, this is meant to be
+     * reused.
      * @return accuracy of heading attitude angle expressed in radians or null if not available.
      * @throws IllegalArgumentException if provided values array does not have at least [MIN_LENGTH]
      * elements.
      */
     @Throws(IllegalArgumentException::class)
     fun convertToNED(
+        context: Context,
         values: FloatArray,
         resultC: CoordinateTransformation,
         resultQ: Quaternion? = null,
+        displayOrientationResult: Quaternion? = null,
         matrix: Matrix? = null
     ): Double? {
         val q: Quaternion = resultQ ?: Quaternion()
-        val headingAccuracy = convertToNED(values, q)
+        val headingAccuracy = convertToNED(context, values, q, displayOrientationResult)
         val transformationMatrix: Matrix = if (matrix != null) {
             // reuse provided matrix if available
             if (matrix.rows != MatrixRotation3D.ROTATION3D_INHOM_MATRIX_ROWS || matrix.columns != MatrixRotation3D.ROTATION3D_INHOM_MATRIX_COLS) {
@@ -146,11 +170,20 @@ object AttitudeHelper {
     /**
      * Converts a [SensorEvent] values array at provided position into a quaternion.
      *
+     * @param context Android context.
      * @param values values array to be converted.
      * @param offset starting position where array conversion starts.
      * @param result instance where result is stored as a rotation.
+     * @param displayOrientationResult instance containing a quaternion indicating display
+     * orientation. If provided, this is meant to be reused.
      */
-    internal fun convertQuaternion(values: FloatArray, offset: Int, result: Quaternion) {
+    internal fun convertQuaternion(
+        context: Context,
+        values: FloatArray,
+        offset: Int,
+        result: Quaternion,
+        displayOrientationResult: Quaternion? = null
+    ) {
         // Quaternions follow the expression:
         // a = cos(θ/2)
         // b = x*sin(θ/2)
@@ -167,5 +200,10 @@ object AttitudeHelper {
         result.a = values[offset + 3].toDouble()
 
         result.normalize()
+
+        val q = displayOrientationResult ?: Quaternion()
+        val displayRotationRadians = DisplayOrientationHelper.getDisplayRotationRadians(context)
+        q.setFromEulerAngles(0.0, 0.0, displayRotationRadians)
+        result.combine(q)
     }
 }

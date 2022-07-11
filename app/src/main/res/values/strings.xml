@@ -1,6 +1,36 @@
 <resources>
     <string name="app_name">Inertial Navigation</string>
+    <string name="system_attitude_sensors">System attitude sensors:</string>
     <string name="absolute_attitude">Absolute attitude</string>
     <string name="relative_attitude">Relative attitude</string>
     <string name="geomagnetic_attitude">Geomagnetic attitude</string>
+    <string name="other_attitude_estimators">Other attitude estimators:</string>
+    <string name="leveling">Leveling</string>
+    <string name="improved_leveling">Improved leveling</string>
+    <string name="roll_degrees">Roll: %1$.2f º</string>
+    <string name="pitch_degrees">Pitch: %1$.2f º</string>
+    <string name="yaw_degrees">Yaw: %1$.2f º</string>
+    <string name="yaw_standard_deviation_degrees">Yaw standard deviation: %1$.2f º</string>
+    <string name="leveling_estimator">Leveling estimator:</string>
+    <string name="gravity_leveling">Gravity leveling</string>
+    <string name="accelerometer_low_pass_filter_leveling">Accelerometer low pass leveling</string>
+    <string name="accelerometer_mean_filter_leveling">Accelerometer mean leveling</string>
+    <string name="accelerometer_median_filter_leveling">Accelerometer median leveling</string>
+    <string name="accelerometer_uncalibrated_low_pass_filter_leveling">Accelerometer uncalibrated low pass leveling</string>
+    <string name="accelerometer_uncalibrated_mean_filter_leveling">Accelerometer uncalibrated mean leveling</string>
+    <string name="accelerometer_uncalibrated_median_filter_leveling">Accelerometer uncalibrated median leveling</string>
+    <string name="accurate_leveling_estimator">Accurate leveling estimator:</string>
+    <string name="gravity_accurate_leveling">Gravity accurate leveling</string>
+    <string name="accelerometer_low_pass_filter_accurate_leveling">Accelerometer low pass accurate leveling</string>
+    <string name="accelerometer_mean_filter_accurate_leveling">Accelerometer mean accurate leveling</string>
+    <string name="accelerometer_median_filter_accurate_leveling">Accelerometer median accurate leveling</string>
+    <string name="accelerometer_uncalibrated_low_pass_filter_accurate_leveling">Accelerometer uncalibrated low pass accurate leveling</string>
+    <string name="accelerometer_uncalibrated_mean_filter_accurate_leveling">Accelerometer uncalibrated mean accurate leveling</string>
+    <string name="accelerometer_uncalibrated_median_filter_accurate_leveling">Accelerometer uncalibrated median accurate leveling</string>
+    <string name="relative_gyroscope_attitude_estimator">Relative gyroscope attitude estimator:</string>
+    <string name="relative_gyroscope_attitude_estimator_calibrated">Calibrated gyroscope</string>
+    <string name="relative_gyroscope_attitude_estimator_uncalibrated">Uncalibrated gyroscope</string>
+    <string name="accurate_relative_gyroscope_attitude_estimator">Accurate relative gyroscope attitude estimator:</string>
+    <string name="accurate_relative_gyroscope_attitude_estimator_calibrated">Calibrated gyroscope</string>
+    <string name="accurate_relative_gyroscope_attitude_estimator_uncalibrated">Uncalibrated gyroscope</string>
 </resources>

@@ -15,19 +15,34 @@
  */
 package com.irurueta.android.navigation.inertial
 
+import android.content.Context
+import android.view.Display
+import android.view.Surface
+import androidx.test.core.app.ApplicationProvider
 import com.irurueta.algebra.Matrix
 import com.irurueta.geometry.MatrixRotation3D
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.frames.CoordinateTransformation
 import com.irurueta.navigation.frames.FrameType
 import com.irurueta.statistics.UniformRandomizer
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.spyk
 import org.junit.Assert.*
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 
+@RunWith(RobolectricTestRunner::class)
 class AttitudeHelperTest {
 
     @Test
     fun convertToNEU_whenAccuracyAvailable_returnsExpectedValue() {
+        val display = mockk<Display>()
+        every { display.rotation }.returns(Surface.ROTATION_0)
+        val context = spyk(ApplicationProvider.getApplicationContext())
+        every { context.display }.returns(display)
+
         val attitude = createQuaternion()
         val a = attitude.a.toFloat()
         val b = attitude.b.toFloat()
@@ -39,7 +54,7 @@ class AttitudeHelperTest {
         val values = floatArrayOf(b, c, d, a, accuracy)
 
         val quaternionResult = Quaternion()
-        val result = AttitudeHelper.convertToNEU(values, quaternionResult)
+        val result = AttitudeHelper.convertToNEU(context, values, quaternionResult)
         requireNotNull(result)
         assertEquals(accuracy.toDouble(), result, ABSOLUTE_ERROR)
         assertTrue(quaternionResult.equals(attitude, ABSOLUTE_ERROR))
@@ -47,6 +62,11 @@ class AttitudeHelperTest {
 
     @Test
     fun convertToNEU_whenAccuracyNotAvailable_returnsExpectedValue() {
+        val display = mockk<Display>()
+        every { display.rotation }.returns(Surface.ROTATION_0)
+        val context = spyk(ApplicationProvider.getApplicationContext())
+        every { context.display }.returns(display)
+
         val attitude = createQuaternion()
         val a = attitude.a.toFloat()
         val b = attitude.b.toFloat()
@@ -56,19 +76,25 @@ class AttitudeHelperTest {
         val values = floatArrayOf(b, c, d, a, AttitudeHelper.UNAVAILABLE_HEADING_ACCURACY)
 
         val quaternionResult = Quaternion()
-        assertNull(AttitudeHelper.convertToNEU(values, quaternionResult))
+        assertNull(AttitudeHelper.convertToNEU(context, values, quaternionResult))
         assertTrue(quaternionResult.equals(attitude, ABSOLUTE_ERROR))
     }
 
     @Test(expected = IllegalArgumentException::class)
     fun convertToNEU_whenInvalidValuesSize_throwsIllegalArgumentException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
         val values = FloatArray(3)
         val quaternionResult = Quaternion()
-        AttitudeHelper.convertToNEU(values, quaternionResult)
+        AttitudeHelper.convertToNEU(context, values, quaternionResult)
     }
 
     @Test
     fun convertToNED_whenAccuracyAvailable_returnsExpectedValue() {
+        val display = mockk<Display>()
+        every { display.rotation }.returns(Surface.ROTATION_0)
+        val context = spyk(ApplicationProvider.getApplicationContext())
+        every { context.display }.returns(display)
+
         val attitude = createQuaternion()
         val a = attitude.a.toFloat()
         val b = attitude.b.toFloat()
@@ -80,7 +106,7 @@ class AttitudeHelperTest {
         val values = floatArrayOf(b, c, d, a, accuracy)
 
         val quaternionResult = Quaternion()
-        val result = AttitudeHelper.convertToNED(values, quaternionResult)
+        val result = AttitudeHelper.convertToNED(context, values, quaternionResult)
         requireNotNull(result)
         assertEquals(accuracy.toDouble(), result, ABSOLUTE_ERROR)
         assertTrue(quaternionResult.equals(attitude.conjugateAndReturnNew(), ABSOLUTE_ERROR))
@@ -88,6 +114,11 @@ class AttitudeHelperTest {
 
     @Test
     fun convertToNED_whenAccuracyNotAvailable_returnsExpectedValue() {
+        val display = mockk<Display>()
+        every { display.rotation }.returns(Surface.ROTATION_0)
+        val context = spyk(ApplicationProvider.getApplicationContext())
+        every { context.display }.returns(display)
+
         val attitude = createQuaternion()
         val a = attitude.a.toFloat()
         val b = attitude.b.toFloat()
@@ -97,19 +128,25 @@ class AttitudeHelperTest {
         val values = floatArrayOf(b, c, d, a, AttitudeHelper.UNAVAILABLE_HEADING_ACCURACY)
 
         val quaternionResult = Quaternion()
-        assertNull(AttitudeHelper.convertToNED(values, quaternionResult))
+        assertNull(AttitudeHelper.convertToNED(context, values, quaternionResult))
         assertTrue(quaternionResult.equals(attitude.conjugateAndReturnNew(), ABSOLUTE_ERROR))
     }
 
     @Test(expected = IllegalArgumentException::class)
     fun convertToNED_whenInvalidValuesSize_throwsIllegalArgumentException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
         val values = FloatArray(3)
         val quaternionResult = Quaternion()
-        AttitudeHelper.convertToNED(values, quaternionResult)
+        AttitudeHelper.convertToNED(context, values, quaternionResult)
     }
 
     @Test
     fun convertToNED_whenCoordinateTransformation_returnsExpectedValue() {
+        val display = mockk<Display>()
+        every { display.rotation }.returns(Surface.ROTATION_0)
+        val context = spyk(ApplicationProvider.getApplicationContext())
+        every { context.display }.returns(display)
+
         val attitude = createQuaternion()
         val a = attitude.a.toFloat()
         val b = attitude.b.toFloat()
@@ -124,7 +161,7 @@ class AttitudeHelperTest {
             FrameType.EARTH_CENTERED_EARTH_FIXED_FRAME,
             FrameType.EARTH_CENTERED_EARTH_FIXED_FRAME
         )
-        val result = AttitudeHelper.convertToNED(values, transformationResult)
+        val result = AttitudeHelper.convertToNED(context, values, transformationResult)
         requireNotNull(result)
         assertEquals(accuracy.toDouble(), result, ABSOLUTE_ERROR)
         val quaternionResult = Quaternion()
@@ -134,6 +171,11 @@ class AttitudeHelperTest {
 
     @Test
     fun convertToNED_whenCoordinateTransformationAndQuaternion_returnsExpectedValue() {
+        val display = mockk<Display>()
+        every { display.rotation }.returns(Surface.ROTATION_0)
+        val context = spyk(ApplicationProvider.getApplicationContext())
+        every { context.display }.returns(display)
+
         val attitude = createQuaternion()
         val a = attitude.a.toFloat()
         val b = attitude.b.toFloat()
@@ -149,7 +191,8 @@ class AttitudeHelperTest {
             FrameType.EARTH_CENTERED_EARTH_FIXED_FRAME
         )
         val quaternionResult1 = Quaternion()
-        val result = AttitudeHelper.convertToNED(values, transformationResult, quaternionResult1)
+        val result =
+            AttitudeHelper.convertToNED(context, values, transformationResult, quaternionResult1)
         requireNotNull(result)
         assertEquals(accuracy.toDouble(), result, ABSOLUTE_ERROR)
         val quaternionResult2 = Quaternion()
@@ -161,6 +204,11 @@ class AttitudeHelperTest {
 
     @Test
     fun convertToNED_whenCoordinateTransformationQuaternionAndMatrixWithValidSize_returnsExpectedValue() {
+        val display = mockk<Display>()
+        every { display.rotation }.returns(Surface.ROTATION_0)
+        val context = spyk(ApplicationProvider.getApplicationContext())
+        every { context.display }.returns(display)
+
         val attitude = createQuaternion()
         val a = attitude.a.toFloat()
         val b = attitude.b.toFloat()
@@ -181,7 +229,64 @@ class AttitudeHelperTest {
             MatrixRotation3D.ROTATION3D_INHOM_MATRIX_COLS
         )
         val result =
-            AttitudeHelper.convertToNED(values, transformationResult, quaternionResult1, matrix1)
+            AttitudeHelper.convertToNED(
+                context,
+                values,
+                transformationResult,
+                quaternionResult1,
+                null,
+                matrix1
+            )
+        requireNotNull(result)
+        assertEquals(accuracy.toDouble(), result, ABSOLUTE_ERROR)
+        val quaternionResult2 = Quaternion()
+        transformationResult.asRotation(quaternionResult2)
+
+        assertEquals(quaternionResult1, quaternionResult2)
+        assertTrue(quaternionResult2.equals(attitude.conjugateAndReturnNew(), ABSOLUTE_ERROR))
+        val matrix2 = Matrix(
+            MatrixRotation3D.ROTATION3D_INHOM_MATRIX_ROWS,
+            MatrixRotation3D.ROTATION3D_INHOM_MATRIX_COLS
+        )
+        quaternionResult1.toMatrixRotation(matrix2)
+        assertEquals(matrix1, matrix2)
+    }
+
+    @Test
+    fun convertToNED_whenCoordinateTransformationQuaternionMatrixWithValidSizeAndDisplayOrientation_returnsExpectedValue() {
+        val display = mockk<Display>()
+        every { display.rotation }.returns(Surface.ROTATION_0)
+        val context = spyk(ApplicationProvider.getApplicationContext())
+        every { context.display }.returns(display)
+
+        val attitude = createQuaternion()
+        val a = attitude.a.toFloat()
+        val b = attitude.b.toFloat()
+        val c = attitude.c.toFloat()
+        val d = attitude.d.toFloat()
+
+        val randomizer = UniformRandomizer()
+        val accuracy = Math.toRadians(randomizer.nextDouble()).toFloat()
+        val values = floatArrayOf(b, c, d, a, accuracy)
+
+        val transformationResult = CoordinateTransformation(
+            FrameType.EARTH_CENTERED_EARTH_FIXED_FRAME,
+            FrameType.EARTH_CENTERED_EARTH_FIXED_FRAME
+        )
+        val quaternionResult1 = Quaternion()
+        val matrix1 = Matrix(
+            MatrixRotation3D.ROTATION3D_INHOM_MATRIX_ROWS,
+            MatrixRotation3D.ROTATION3D_INHOM_MATRIX_COLS
+        )
+        val result =
+            AttitudeHelper.convertToNED(
+                context,
+                values,
+                transformationResult,
+                quaternionResult1,
+                Quaternion(),
+                matrix1
+            )
         requireNotNull(result)
         assertEquals(accuracy.toDouble(), result, ABSOLUTE_ERROR)
         val quaternionResult2 = Quaternion()
@@ -199,6 +304,11 @@ class AttitudeHelperTest {
 
     @Test
     fun convertToNED_whenCoordinateTransformationQuaternionAndMatrixWithInvalidRows_returnsExpectedValue() {
+        val display = mockk<Display>()
+        every { display.rotation }.returns(Surface.ROTATION_0)
+        val context = spyk(ApplicationProvider.getApplicationContext())
+        every { context.display }.returns(display)
+
         val attitude = createQuaternion()
         val a = attitude.a.toFloat()
         val b = attitude.b.toFloat()
@@ -219,7 +329,64 @@ class AttitudeHelperTest {
             MatrixRotation3D.ROTATION3D_INHOM_MATRIX_COLS
         )
         val result =
-            AttitudeHelper.convertToNED(values, transformationResult, quaternionResult1, matrix1)
+            AttitudeHelper.convertToNED(
+                context,
+                values,
+                transformationResult,
+                quaternionResult1,
+                null,
+                matrix1
+            )
+        requireNotNull(result)
+        assertEquals(accuracy.toDouble(), result, ABSOLUTE_ERROR)
+        val quaternionResult2 = Quaternion()
+        transformationResult.asRotation(quaternionResult2)
+
+        assertEquals(quaternionResult1, quaternionResult2)
+        assertTrue(quaternionResult2.equals(attitude.conjugateAndReturnNew(), ABSOLUTE_ERROR))
+        val matrix2 = Matrix(
+            MatrixRotation3D.ROTATION3D_INHOM_MATRIX_ROWS,
+            MatrixRotation3D.ROTATION3D_INHOM_MATRIX_COLS
+        )
+        quaternionResult1.toMatrixRotation(matrix2)
+        assertEquals(matrix1, matrix2)
+    }
+
+    @Test
+    fun convertToNED_whenCoordinateTransformationQuaternionMatrixWithInvalidRowsAndDisplayOrientation_returnsExpectedValue() {
+        val display = mockk<Display>()
+        every { display.rotation }.returns(Surface.ROTATION_0)
+        val context = spyk(ApplicationProvider.getApplicationContext())
+        every { context.display }.returns(display)
+
+        val attitude = createQuaternion()
+        val a = attitude.a.toFloat()
+        val b = attitude.b.toFloat()
+        val c = attitude.c.toFloat()
+        val d = attitude.d.toFloat()
+
+        val randomizer = UniformRandomizer()
+        val accuracy = Math.toRadians(randomizer.nextDouble()).toFloat()
+        val values = floatArrayOf(b, c, d, a, accuracy)
+
+        val transformationResult = CoordinateTransformation(
+            FrameType.EARTH_CENTERED_EARTH_FIXED_FRAME,
+            FrameType.EARTH_CENTERED_EARTH_FIXED_FRAME
+        )
+        val quaternionResult1 = Quaternion()
+        val matrix1 = Matrix(
+            1,
+            MatrixRotation3D.ROTATION3D_INHOM_MATRIX_COLS
+        )
+        val result =
+            AttitudeHelper.convertToNED(
+                context,
+                values,
+                transformationResult,
+                quaternionResult1,
+                Quaternion(),
+                matrix1
+            )
         requireNotNull(result)
         assertEquals(accuracy.toDouble(), result, ABSOLUTE_ERROR)
         val quaternionResult2 = Quaternion()
@@ -237,6 +404,11 @@ class AttitudeHelperTest {
 
     @Test
     fun convertToNED_whenCoordinateTransformationQuaternionAndMatrixWithInvalidColumns_returnsExpectedValue() {
+        val display = mockk<Display>()
+        every { display.rotation }.returns(Surface.ROTATION_0)
+        val context = spyk(ApplicationProvider.getApplicationContext())
+        every { context.display }.returns(display)
+
         val attitude = createQuaternion()
         val a = attitude.a.toFloat()
         val b = attitude.b.toFloat()
@@ -257,7 +429,64 @@ class AttitudeHelperTest {
             1
         )
         val result =
-            AttitudeHelper.convertToNED(values, transformationResult, quaternionResult1, matrix1)
+            AttitudeHelper.convertToNED(
+                context,
+                values,
+                transformationResult,
+                quaternionResult1,
+                null,
+                matrix1
+            )
+        requireNotNull(result)
+        assertEquals(accuracy.toDouble(), result, ABSOLUTE_ERROR)
+        val quaternionResult2 = Quaternion()
+        transformationResult.asRotation(quaternionResult2)
+
+        assertEquals(quaternionResult1, quaternionResult2)
+        assertTrue(quaternionResult2.equals(attitude.conjugateAndReturnNew(), ABSOLUTE_ERROR))
+        val matrix2 = Matrix(
+            MatrixRotation3D.ROTATION3D_INHOM_MATRIX_ROWS,
+            MatrixRotation3D.ROTATION3D_INHOM_MATRIX_COLS
+        )
+        quaternionResult1.toMatrixRotation(matrix2)
+        assertEquals(matrix1, matrix2)
+    }
+
+    @Test
+    fun convertToNED_whenCoordinateTransformationQuaternionMatrixWithInvalidColumnsAndDisplayOrientation_returnsExpectedValue() {
+        val display = mockk<Display>()
+        every { display.rotation }.returns(Surface.ROTATION_0)
+        val context = spyk(ApplicationProvider.getApplicationContext())
+        every { context.display }.returns(display)
+
+        val attitude = createQuaternion()
+        val a = attitude.a.toFloat()
+        val b = attitude.b.toFloat()
+        val c = attitude.c.toFloat()
+        val d = attitude.d.toFloat()
+
+        val randomizer = UniformRandomizer()
+        val accuracy = Math.toRadians(randomizer.nextDouble()).toFloat()
+        val values = floatArrayOf(b, c, d, a, accuracy)
+
+        val transformationResult = CoordinateTransformation(
+            FrameType.EARTH_CENTERED_EARTH_FIXED_FRAME,
+            FrameType.EARTH_CENTERED_EARTH_FIXED_FRAME
+        )
+        val quaternionResult1 = Quaternion()
+        val matrix1 = Matrix(
+            MatrixRotation3D.ROTATION3D_INHOM_MATRIX_ROWS,
+            1
+        )
+        val result =
+            AttitudeHelper.convertToNED(
+                context,
+                values,
+                transformationResult,
+                quaternionResult1,
+                Quaternion(),
+                matrix1
+            )
         requireNotNull(result)
         assertEquals(accuracy.toDouble(), result, ABSOLUTE_ERROR)
         val quaternionResult2 = Quaternion()
@@ -275,6 +504,7 @@ class AttitudeHelperTest {
 
     @Test(expected = IllegalArgumentException::class)
     fun convertToNED_whenCoordinateTransformationQuaternionMatrixAndInvalidValuesSize_throwsIllegalArgumentException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
         val values = FloatArray(3)
         val transformationResult = CoordinateTransformation(
             FrameType.BODY_FRAME,
@@ -285,7 +515,37 @@ class AttitudeHelperTest {
             MatrixRotation3D.ROTATION3D_INHOM_MATRIX_ROWS,
             MatrixRotation3D.ROTATION3D_INHOM_MATRIX_COLS
         )
-        AttitudeHelper.convertToNED(values, transformationResult, quaternionResult, matrix)
+        AttitudeHelper.convertToNED(
+            context,
+            values,
+            transformationResult,
+            quaternionResult,
+            null,
+            matrix
+        )
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun convertToNED_whenCoordinateTransformationQuaternionMatrixInvalidValuesSizeAndDisplayOrientation_throwsIllegalArgumentException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val values = FloatArray(3)
+        val transformationResult = CoordinateTransformation(
+            FrameType.BODY_FRAME,
+            FrameType.LOCAL_NAVIGATION_FRAME
+        )
+        val quaternionResult = Quaternion()
+        val matrix = Matrix(
+            MatrixRotation3D.ROTATION3D_INHOM_MATRIX_ROWS,
+            MatrixRotation3D.ROTATION3D_INHOM_MATRIX_COLS
+        )
+        AttitudeHelper.convertToNED(
+            context,
+            values,
+            transformationResult,
+            quaternionResult,
+            Quaternion(),
+            matrix
+        )
     }
 
     @Test

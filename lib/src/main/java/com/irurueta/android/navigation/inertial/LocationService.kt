@@ -173,11 +173,11 @@ class LocationService(val context: Context) {
                 locationManager?.getCurrentLocation(
                     FUSED_PROVIDER,
                     cancellationSignal,
-                    Executors.newCachedThreadPool(),
-                    { location ->
-                        cancellationSignal = null
-                        listener.onCurrentLocation(location)
-                    })
+                    Executors.newCachedThreadPool()
+                ) { location ->
+                    cancellationSignal = null
+                    listener.onCurrentLocation(location)
+                }
             } else {
                 @Suppress("DEPRECATION")
                 locationManager?.requestSingleUpdate(FUSED_PROVIDER, { location ->
