@@ -382,15 +382,7 @@ class RelativeGyroscopeAttitudeEstimatorTest {
         verify(exactly = 1) { timeIntervalEstimatorSpy.addTimestamp(any<Double>()) }
         verify(exactly = 1) { timeIntervalEstimatorSpy.averageTimeInterval }
         verify(exactly = 1) { displayOrientationSpy.setFromEulerAngles(0.0, 0.0, -0.0) }
-        verify(exactly = 1) {
-            deltaAttitudeSpy.setFromAxisAndRotation(
-                any<Double>(),
-                any(),
-                any(),
-                any()
-            )
-        }
-        verify(exactly = 1) { deltaAttitudeSpy.normalize() }
+        verify(exactly = 1) { deltaAttitudeSpy.setFromEulerAngles(any(), any(), any()) }
         verify(exactly = 1) { internalAttitudeSpy.combine(deltaAttitudeSpy) }
         verify(exactly = 1) { internalAttitudeSpy.normalize() }
         verify(exactly = 1) { internalAttitudeSpy.copyTo(attitudeSpy) }
@@ -563,15 +555,7 @@ class RelativeGyroscopeAttitudeEstimatorTest {
         verify(exactly = 1) { timeIntervalEstimatorSpy.addTimestamp(any<Double>()) }
         verify(exactly = 1) { timeIntervalEstimatorSpy.averageTimeInterval }
         verify(exactly = 1) { displayOrientationSpy.setFromEulerAngles(0.0, 0.0, -0.0) }
-        verify(exactly = 1) {
-            deltaAttitudeSpy.setFromAxisAndRotation(
-                any<Double>(),
-                any(),
-                any(),
-                any()
-            )
-        }
-        verify(exactly = 1) { deltaAttitudeSpy.normalize() }
+        verify(exactly = 1) { deltaAttitudeSpy.setFromEulerAngles(any(), any(), any()) }
         verify(exactly = 1) { internalAttitudeSpy.combine(deltaAttitudeSpy) }
         verify(exactly = 1) { internalAttitudeSpy.normalize() }
         verify(exactly = 1) { internalAttitudeSpy.copyTo(attitudeSpy) }
@@ -741,15 +725,7 @@ class RelativeGyroscopeAttitudeEstimatorTest {
         verify(exactly = 1) { timeIntervalEstimatorSpy.addTimestamp(any<Double>()) }
         verify(exactly = 1) { timeIntervalEstimatorSpy.averageTimeInterval }
         verify(exactly = 1) { displayOrientationSpy.setFromEulerAngles(0.0, 0.0, -0.0) }
-        verify(exactly = 1) {
-            deltaAttitudeSpy.setFromAxisAndRotation(
-                any<Double>(),
-                any(),
-                any(),
-                any()
-            )
-        }
-        verify(exactly = 1) { deltaAttitudeSpy.normalize() }
+        verify(exactly = 1) { deltaAttitudeSpy.setFromEulerAngles(any(), any(), any()) }
         verify(exactly = 1) { internalAttitudeSpy.combine(deltaAttitudeSpy) }
         verify(exactly = 1) { internalAttitudeSpy.normalize() }
         verify(exactly = 1) { internalAttitudeSpy.copyTo(attitudeSpy) }
@@ -930,15 +906,7 @@ class RelativeGyroscopeAttitudeEstimatorTest {
         verify(exactly = 1) { timeIntervalEstimatorSpy.addTimestamp(any<Double>()) }
         verify(exactly = 1) { timeIntervalEstimatorSpy.averageTimeInterval }
         verify(exactly = 1) { displayOrientationSpy.setFromEulerAngles(0.0, 0.0, -0.0) }
-        verify(exactly = 1) {
-            deltaAttitudeSpy.setFromAxisAndRotation(
-                any<Double>(),
-                any(),
-                any(),
-                any()
-            )
-        }
-        verify(exactly = 1) { deltaAttitudeSpy.normalize() }
+        verify(exactly = 1) { deltaAttitudeSpy.setFromEulerAngles(any(), any(), any()) }
         verify(exactly = 1) { internalAttitudeSpy.combine(deltaAttitudeSpy) }
         verify(exactly = 1) { internalAttitudeSpy.normalize() }
         verify(exactly = 1) { internalAttitudeSpy.copyTo(attitudeSpy) }
@@ -1126,15 +1094,7 @@ class RelativeGyroscopeAttitudeEstimatorTest {
         verify(exactly = 1) { timeIntervalEstimatorSpy.addTimestamp(any<Double>()) }
         verify(exactly = 1) { timeIntervalEstimatorSpy.averageTimeInterval }
         verify(exactly = 1) { displayOrientationSpy.setFromEulerAngles(0.0, 0.0, -0.0) }
-        verify(exactly = 1) {
-            deltaAttitudeSpy.setFromAxisAndRotation(
-                any<Double>(),
-                any(),
-                any(),
-                any()
-            )
-        }
-        verify(exactly = 1) { deltaAttitudeSpy.normalize() }
+        verify(exactly = 1) { deltaAttitudeSpy.setFromEulerAngles(any(), any(), any()) }
         verify(exactly = 1) { internalAttitudeSpy.combine(deltaAttitudeSpy) }
         verify(exactly = 1) { internalAttitudeSpy.normalize() }
         verify(exactly = 1) { internalAttitudeSpy.copyTo(attitudeSpy) }
@@ -1321,15 +1281,7 @@ class RelativeGyroscopeAttitudeEstimatorTest {
         verify(exactly = 1) { timeIntervalEstimatorSpy.addTimestamp(any<Double>()) }
         verify(exactly = 1) { timeIntervalEstimatorSpy.averageTimeInterval }
         verify(exactly = 1) { displayOrientationSpy.setFromEulerAngles(0.0, 0.0, -0.0) }
-        verify(exactly = 1) {
-            deltaAttitudeSpy.setFromAxisAndRotation(
-                any<Double>(),
-                any(),
-                any(),
-                any()
-            )
-        }
-        verify(exactly = 1) { deltaAttitudeSpy.normalize() }
+        verify(exactly = 1) { deltaAttitudeSpy.setFromEulerAngles(any(), any(), any()) }
         verify(exactly = 1) { internalAttitudeSpy.combine(deltaAttitudeSpy) }
         verify(exactly = 1) { internalAttitudeSpy.normalize() }
         verify(exactly = 1) { internalAttitudeSpy.copyTo(attitudeSpy) }

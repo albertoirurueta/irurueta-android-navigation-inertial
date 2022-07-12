@@ -22,8 +22,6 @@ import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.geometry.InvalidRotationMatrixException
 import com.irurueta.navigation.frames.CoordinateTransformation
 import com.irurueta.units.TimeConverter
-import kotlin.math.pow
-import kotlin.math.sqrt
 
 /**
  * Estimates relative attitude respect to start attitude by integrating gyroscope sensor data
@@ -73,38 +71,30 @@ class RelativeGyroscopeAttitudeEstimator(
 
             val dt = timeIntervalEstimator.averageTimeInterval
 
-            var axisX = if (bx != null)
+            val currentWx = if (bx != null)
                 wx.toDouble() - bx.toDouble()
             else
                 wx.toDouble()
 
-            var axisY = if (by != null)
+            val currentWy = if (by != null)
                 wy.toDouble() - by.toDouble()
             else
                 wy.toDouble()
 
-            var axisZ = if (bz != null)
+            val currentWz = if (bz != null)
                 wz.toDouble() - bz.toDouble()
             else
                 wz.toDouble()
-
-            val norm = sqrt(axisX.pow(2.0) + axisY.pow(2.0) + axisZ.pow(2.0))
-
-            // Normalize the rotation vector if it's big enough to get the axis
-            if (norm > EPSILON) {
-                axisX /= norm
-                axisY /= norm
-                axisZ /= norm
-            }
-
-            val theta = norm * dt
 
             val displayRotationRadians =
                 DisplayOrientationHelper.getDisplayRotationRadians(context)
             displayOrientation.setFromEulerAngles(0.0, 0.0, -displayRotationRadians)
 
-            deltaAttitude.setFromAxisAndRotation(axisX, axisY, axisZ, theta)
-            deltaAttitude.normalize()
+            val roll = currentWx * dt
+            val pitch = currentWy * dt
+            val yaw = currentWz * dt
+            deltaAttitude.setFromEulerAngles(roll, pitch, yaw)
+
             internalAttitude.combine(deltaAttitude)
             internalAttitude.normalize()
 
@@ -150,13 +140,6 @@ class RelativeGyroscopeAttitudeEstimator(
                 c
             )
         })
-
-    private companion object {
-        /**
-         * Minimum angular speed norm to be taken into account for axis normalization.
-         */
-        const val EPSILON = 0.1
-    }
 
     /**
      * Interface to notify when a new attitude measurement is available.
