@@ -34,5 +34,6 @@
     <string name="accurate_relative_gyroscope_attitude_estimator_calibrated">Calibrated gyroscope</string>
     <string name="accurate_relative_gyroscope_attitude_estimator_uncalibrated">Uncalibrated gyroscope</string>
     <string name="leveled_relative_attitude_estimator">Leveled relative attitude estimator:</string>
-    <string name="normal">normal</string>
+    <string name="leveled_relative_attitude_estimator_with_accurate_leveling">Leveled relative attitude estimator with accurate leveling:</string>
+    <string name="leveled_relative_attitude_estimator_with_accurate_relative_attitude">Leveled relative attitude estimator with accurate relative attitude:</string>
 </resources>

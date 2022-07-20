@@ -57,7 +57,71 @@ class MainActivity : AppCompatActivity() {
 
     private var accurateRelativeUncalibratedGyroscopeAttitudeButton: AppCompatButton? = null
 
-    private var leveledRelativeAttitudeButton: AppCompatButton? = null
+    private var leveledRelativeAttitudeEstimatorGravityLevelingButton: AppCompatButton? = null
+
+    private var leveledRelativeAttitudeEstimatorAccelerometerLowPassFilterLevelingButton: AppCompatButton? =
+        null
+
+    private var leveledRelativeAttitudeEstimatorAccelerometerMeanFilterLevelingButton: AppCompatButton? =
+        null
+
+    private var leveledRelativeAttitudeEstimatorAccelerometerMedianFilterLevelingButton: AppCompatButton? =
+        null
+
+    private var leveledRelativeAttitudeEstimatorAccelerometerUncalibratedLowPassFilterLevelingButton: AppCompatButton? =
+        null
+
+    private var leveledRelativeAttitudeEstimatorAccelerometerUncalibratedMeanFilterLevelingButton: AppCompatButton? =
+        null
+
+    private var leveledRelativeAttitudeEstimatorAccelerometerUncalibratedMedianFilterLevelingButton: AppCompatButton? =
+        null
+
+    private var leveledRelativeAttitudeEstimatorUncalibratedGyroscopeButton: AppCompatButton? = null
+
+    private var leveledRelativeAttitudeEstimatorGravityAccurateLevelingButton: AppCompatButton? = null
+
+    private var leveledRelativeAttitudeEstimatorAccelerometerLowPassFilterAccurateLevelingButton: AppCompatButton? =
+        null
+
+    private var leveledRelativeAttitudeEstimatorAccelerometerMeanFilterAccurateLevelingButton: AppCompatButton? =
+        null
+
+    private var leveledRelativeAttitudeEstimatorAccelerometerMedianFilterAccurateLevelingButton: AppCompatButton? =
+        null
+
+    private var leveledRelativeAttitudeEstimatorAccelerometerUncalibratedLowPassFilterAccurateLevelingButton: AppCompatButton? =
+        null
+
+    private var leveledRelativeAttitudeEstimatorAccelerometerUncalibratedMeanFilterAccurateLevelingButton: AppCompatButton? =
+        null
+
+    private var leveledRelativeAttitudeEstimatorAccelerometerUncalibratedMedianFilterAccurateLevelingButton: AppCompatButton? =
+        null
+
+    private var leveledRelativeAttitudeEstimatorUncalibratedGyroscopeAccurateLevelingButton: AppCompatButton? = null
+
+    private var leveledRelativeAttitudeEstimatorGravityAccurateAttitudeButton: AppCompatButton? = null
+
+    private var leveledRelativeAttitudeEstimatorAccelerometerLowPassFilterAccurateAttitudeButton: AppCompatButton? =
+        null
+
+    private var leveledRelativeAttitudeEstimatorAccelerometerMeanFilterAccurateAttitudeButton: AppCompatButton? =
+        null
+
+    private var leveledRelativeAttitudeEstimatorAccelerometerMedianFilterAccurateAttitudeButton: AppCompatButton? =
+        null
+
+    private var leveledRelativeAttitudeEstimatorAccelerometerUncalibratedLowPassFilterAccurateAttitudeButton: AppCompatButton? =
+        null
+
+    private var leveledRelativeAttitudeEstimatorAccelerometerUncalibratedMeanFilterAccurateAttitudeButton: AppCompatButton? =
+        null
+
+    private var leveledRelativeAttitudeEstimatorAccelerometerUncalibratedMedianFilterAccurateAttitudeButton: AppCompatButton? =
+        null
+
+    private var leveledRelativeAttitudeEstimatorUncalibratedGyroscopeAccurateAttitudeButton: AppCompatButton? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -355,7 +419,10 @@ class MainActivity : AppCompatActivity() {
             findViewById(R.id.accurate_relative_gyroscope_attitude_button)
         accurateRelativeGyroscopeAttitudeButton?.setOnClickListener {
             val intent =
-                Intent(this@MainActivity, AccurateRelativeGyroscopeAttitudeEstimatorActivity::class.java)
+                Intent(
+                    this@MainActivity,
+                    AccurateRelativeGyroscopeAttitudeEstimatorActivity::class.java
+                )
             intent.putExtra(
                 AccurateRelativeGyroscopeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
                 GyroscopeSensorCollector.SensorType.GYROSCOPE
@@ -367,7 +434,10 @@ class MainActivity : AppCompatActivity() {
             findViewById(R.id.accurate_relative_uncalibrated_gyroscope_attitude_button)
         accurateRelativeUncalibratedGyroscopeAttitudeButton?.setOnClickListener {
             val intent =
-                Intent(this@MainActivity, AccurateRelativeGyroscopeAttitudeEstimatorActivity::class.java)
+                Intent(
+                    this@MainActivity,
+                    AccurateRelativeGyroscopeAttitudeEstimatorActivity::class.java
+                )
             intent.putExtra(
                 AccurateRelativeGyroscopeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
                 GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED
@@ -375,8 +445,33 @@ class MainActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
-        leveledRelativeAttitudeButton = findViewById(R.id.leveled_relative_attitude_estimator_button)
-        leveledRelativeAttitudeButton?.setOnClickListener {
+        leveledRelativeAttitudeEstimatorGravityLevelingButton =
+            findViewById(R.id.leveled_relative_attitude_estimator_gravity_leveling_button)
+        leveledRelativeAttitudeEstimatorGravityLevelingButton?.setOnClickListener {
+            val intent =
+                Intent(this@MainActivity, LeveledRelativeAttitudeEstimatorActivity::class.java)
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCELEROMETER,
+                false
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
+                GyroscopeSensorCollector.SensorType.GYROSCOPE
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_LEVELING_ESTIMATOR,
+                false
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_RELATIVE_GYROSCOPE_ATTITUDE_ESTIMATOR,
+                false
+            )
+            startActivity(intent)
+        }
+
+        leveledRelativeAttitudeEstimatorAccelerometerLowPassFilterLevelingButton =
+            findViewById(R.id.leveled_relative_attitude_estimator_accelerometer_low_pass_filter_leveling_button)
+        leveledRelativeAttitudeEstimatorAccelerometerLowPassFilterLevelingButton?.setOnClickListener {
             val intent =
                 Intent(this@MainActivity, LeveledRelativeAttitudeEstimatorActivity::class.java)
             intent.putExtra(
@@ -402,6 +497,658 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_RELATIVE_GYROSCOPE_ATTITUDE_ESTIMATOR,
                 false
+            )
+            startActivity(intent)
+        }
+
+        leveledRelativeAttitudeEstimatorAccelerometerMeanFilterLevelingButton =
+            findViewById(R.id.leveled_relative_attitude_estimator_accelerometer_mean_filter_leveling_button)
+        leveledRelativeAttitudeEstimatorAccelerometerMeanFilterLevelingButton?.setOnClickListener {
+            val intent =
+                Intent(this@MainActivity, LeveledRelativeAttitudeEstimatorActivity::class.java)
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCELEROMETER,
+                true
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
+                AccelerometerSensorCollector.SensorType.ACCELEROMETER
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
+                LeveledRelativeAttitudeEstimatorActivity.MEAN_AVERAGING_FILTER
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
+                GyroscopeSensorCollector.SensorType.GYROSCOPE
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_LEVELING_ESTIMATOR,
+                false
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_RELATIVE_GYROSCOPE_ATTITUDE_ESTIMATOR,
+                false
+            )
+            startActivity(intent)
+        }
+
+        leveledRelativeAttitudeEstimatorAccelerometerMedianFilterLevelingButton =
+            findViewById(R.id.leveled_relative_attitude_estimator_accelerometer_median_filter_leveling_button)
+        leveledRelativeAttitudeEstimatorAccelerometerMedianFilterLevelingButton?.setOnClickListener {
+            val intent =
+                Intent(this@MainActivity, LeveledRelativeAttitudeEstimatorActivity::class.java)
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCELEROMETER,
+                true
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
+                AccelerometerSensorCollector.SensorType.ACCELEROMETER
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
+                LeveledRelativeAttitudeEstimatorActivity.MEDIAN_AVERAGING_FILTER
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
+                GyroscopeSensorCollector.SensorType.GYROSCOPE
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_LEVELING_ESTIMATOR,
+                false
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_RELATIVE_GYROSCOPE_ATTITUDE_ESTIMATOR,
+                false
+            )
+            startActivity(intent)
+        }
+
+        leveledRelativeAttitudeEstimatorAccelerometerUncalibratedLowPassFilterLevelingButton =
+            findViewById(R.id.leveled_relative_attitude_estimator_accelerometer_uncalibrated_low_pass_filter_leveling_button)
+        leveledRelativeAttitudeEstimatorAccelerometerUncalibratedLowPassFilterLevelingButton?.setOnClickListener {
+            val intent =
+                Intent(this@MainActivity, LeveledRelativeAttitudeEstimatorActivity::class.java)
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCELEROMETER,
+                true
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
+                AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
+                LeveledRelativeAttitudeEstimatorActivity.LOW_PASS_AVERAGING_FILTER
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
+                GyroscopeSensorCollector.SensorType.GYROSCOPE
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_LEVELING_ESTIMATOR,
+                false
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_RELATIVE_GYROSCOPE_ATTITUDE_ESTIMATOR,
+                false
+            )
+            startActivity(intent)
+        }
+
+        leveledRelativeAttitudeEstimatorAccelerometerUncalibratedMeanFilterLevelingButton =
+            findViewById(R.id.leveled_relative_attitude_estimator_accelerometer_uncalibrated_mean_filter_leveling_button)
+        leveledRelativeAttitudeEstimatorAccelerometerUncalibratedMeanFilterLevelingButton?.setOnClickListener {
+            val intent =
+                Intent(this@MainActivity, LeveledRelativeAttitudeEstimatorActivity::class.java)
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCELEROMETER,
+                true
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
+                AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
+                LeveledRelativeAttitudeEstimatorActivity.MEAN_AVERAGING_FILTER
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
+                GyroscopeSensorCollector.SensorType.GYROSCOPE
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_LEVELING_ESTIMATOR,
+                false
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_RELATIVE_GYROSCOPE_ATTITUDE_ESTIMATOR,
+                false
+            )
+            startActivity(intent)
+        }
+
+        leveledRelativeAttitudeEstimatorAccelerometerUncalibratedMedianFilterLevelingButton =
+            findViewById(R.id.leveled_relative_attitude_estimator_accelerometer_uncalibrated_median_filter_leveling_button)
+        leveledRelativeAttitudeEstimatorAccelerometerUncalibratedMedianFilterLevelingButton?.setOnClickListener {
+            val intent =
+                Intent(this@MainActivity, LeveledRelativeAttitudeEstimatorActivity::class.java)
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCELEROMETER,
+                true
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
+                AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
+                LeveledRelativeAttitudeEstimatorActivity.MEDIAN_AVERAGING_FILTER
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
+                GyroscopeSensorCollector.SensorType.GYROSCOPE
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_LEVELING_ESTIMATOR,
+                false
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_RELATIVE_GYROSCOPE_ATTITUDE_ESTIMATOR,
+                false
+            )
+            startActivity(intent)
+        }
+
+        leveledRelativeAttitudeEstimatorUncalibratedGyroscopeButton =
+            findViewById(R.id.leveled_relative_attitude_estimator_uncalibrated_gyroscope_button)
+        leveledRelativeAttitudeEstimatorUncalibratedGyroscopeButton?.setOnClickListener {
+            val intent =
+                Intent(this@MainActivity, LeveledRelativeAttitudeEstimatorActivity::class.java)
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
+                GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_LEVELING_ESTIMATOR,
+                false
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_RELATIVE_GYROSCOPE_ATTITUDE_ESTIMATOR,
+                false
+            )
+            startActivity(intent)
+        }
+
+        leveledRelativeAttitudeEstimatorGravityAccurateLevelingButton =
+            findViewById(R.id.leveled_relative_attitude_estimator_gravity_accurate_leveling_button)
+        leveledRelativeAttitudeEstimatorGravityAccurateLevelingButton?.setOnClickListener {
+            val intent =
+                Intent(this@MainActivity, LeveledRelativeAttitudeEstimatorActivity::class.java)
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCELEROMETER,
+                false
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
+                GyroscopeSensorCollector.SensorType.GYROSCOPE
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_LEVELING_ESTIMATOR,
+                true
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_RELATIVE_GYROSCOPE_ATTITUDE_ESTIMATOR,
+                false
+            )
+            startActivity(intent)
+        }
+
+        leveledRelativeAttitudeEstimatorAccelerometerLowPassFilterAccurateLevelingButton =
+            findViewById(R.id.leveled_relative_attitude_estimator_accelerometer_low_pass_filter_accurate_leveling_button)
+        leveledRelativeAttitudeEstimatorAccelerometerLowPassFilterAccurateLevelingButton?.setOnClickListener {
+            val intent =
+                Intent(this@MainActivity, LeveledRelativeAttitudeEstimatorActivity::class.java)
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCELEROMETER,
+                true
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
+                AccelerometerSensorCollector.SensorType.ACCELEROMETER
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
+                LeveledRelativeAttitudeEstimatorActivity.LOW_PASS_AVERAGING_FILTER
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
+                GyroscopeSensorCollector.SensorType.GYROSCOPE
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_LEVELING_ESTIMATOR,
+                true
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_RELATIVE_GYROSCOPE_ATTITUDE_ESTIMATOR,
+                false
+            )
+            startActivity(intent)
+        }
+
+        leveledRelativeAttitudeEstimatorAccelerometerMeanFilterAccurateLevelingButton =
+            findViewById(R.id.leveled_relative_attitude_estimator_accelerometer_mean_filter_accurate_leveling_button)
+        leveledRelativeAttitudeEstimatorAccelerometerMeanFilterAccurateLevelingButton?.setOnClickListener {
+            val intent =
+                Intent(this@MainActivity, LeveledRelativeAttitudeEstimatorActivity::class.java)
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCELEROMETER,
+                true
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
+                AccelerometerSensorCollector.SensorType.ACCELEROMETER
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
+                LeveledRelativeAttitudeEstimatorActivity.MEAN_AVERAGING_FILTER
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
+                GyroscopeSensorCollector.SensorType.GYROSCOPE
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_LEVELING_ESTIMATOR,
+                true
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_RELATIVE_GYROSCOPE_ATTITUDE_ESTIMATOR,
+                false
+            )
+            startActivity(intent)
+        }
+
+        leveledRelativeAttitudeEstimatorAccelerometerMedianFilterAccurateLevelingButton =
+            findViewById(R.id.leveled_relative_attitude_estimator_accelerometer_median_filter_accurate_leveling_button)
+        leveledRelativeAttitudeEstimatorAccelerometerMedianFilterAccurateLevelingButton?.setOnClickListener {
+            val intent =
+                Intent(this@MainActivity, LeveledRelativeAttitudeEstimatorActivity::class.java)
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCELEROMETER,
+                true
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
+                AccelerometerSensorCollector.SensorType.ACCELEROMETER
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
+                LeveledRelativeAttitudeEstimatorActivity.MEDIAN_AVERAGING_FILTER
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
+                GyroscopeSensorCollector.SensorType.GYROSCOPE
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_LEVELING_ESTIMATOR,
+                true
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_RELATIVE_GYROSCOPE_ATTITUDE_ESTIMATOR,
+                false
+            )
+            startActivity(intent)
+        }
+
+        leveledRelativeAttitudeEstimatorAccelerometerUncalibratedLowPassFilterAccurateLevelingButton =
+            findViewById(R.id.leveled_relative_attitude_estimator_accelerometer_uncalibrated_low_pass_filter_accurate_leveling_button)
+        leveledRelativeAttitudeEstimatorAccelerometerUncalibratedLowPassFilterAccurateLevelingButton?.setOnClickListener {
+            val intent =
+                Intent(this@MainActivity, LeveledRelativeAttitudeEstimatorActivity::class.java)
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCELEROMETER,
+                true
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
+                AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
+                LeveledRelativeAttitudeEstimatorActivity.LOW_PASS_AVERAGING_FILTER
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
+                GyroscopeSensorCollector.SensorType.GYROSCOPE
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_LEVELING_ESTIMATOR,
+                true
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_RELATIVE_GYROSCOPE_ATTITUDE_ESTIMATOR,
+                false
+            )
+            startActivity(intent)
+        }
+
+        leveledRelativeAttitudeEstimatorAccelerometerUncalibratedMeanFilterAccurateLevelingButton =
+            findViewById(R.id.leveled_relative_attitude_estimator_accelerometer_uncalibrated_mean_filter_accurate_leveling_button)
+        leveledRelativeAttitudeEstimatorAccelerometerUncalibratedMeanFilterAccurateLevelingButton?.setOnClickListener {
+            val intent =
+                Intent(this@MainActivity, LeveledRelativeAttitudeEstimatorActivity::class.java)
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCELEROMETER,
+                true
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
+                AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
+                LeveledRelativeAttitudeEstimatorActivity.MEAN_AVERAGING_FILTER
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
+                GyroscopeSensorCollector.SensorType.GYROSCOPE
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_LEVELING_ESTIMATOR,
+                true
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_RELATIVE_GYROSCOPE_ATTITUDE_ESTIMATOR,
+                false
+            )
+            startActivity(intent)
+        }
+
+        leveledRelativeAttitudeEstimatorAccelerometerUncalibratedMedianFilterAccurateLevelingButton =
+            findViewById(R.id.leveled_relative_attitude_estimator_accelerometer_uncalibrated_median_filter_accurate_leveling_button)
+        leveledRelativeAttitudeEstimatorAccelerometerUncalibratedMedianFilterAccurateLevelingButton?.setOnClickListener {
+            val intent =
+                Intent(this@MainActivity, LeveledRelativeAttitudeEstimatorActivity::class.java)
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCELEROMETER,
+                true
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
+                AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
+                LeveledRelativeAttitudeEstimatorActivity.MEDIAN_AVERAGING_FILTER
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
+                GyroscopeSensorCollector.SensorType.GYROSCOPE
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_LEVELING_ESTIMATOR,
+                true
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_RELATIVE_GYROSCOPE_ATTITUDE_ESTIMATOR,
+                false
+            )
+            startActivity(intent)
+        }
+
+        leveledRelativeAttitudeEstimatorUncalibratedGyroscopeAccurateLevelingButton =
+            findViewById(R.id.leveled_relative_attitude_estimator_uncalibrated_gyroscope_accurate_leveling_button)
+        leveledRelativeAttitudeEstimatorUncalibratedGyroscopeAccurateLevelingButton?.setOnClickListener {
+            val intent =
+                Intent(this@MainActivity, LeveledRelativeAttitudeEstimatorActivity::class.java)
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
+                GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_LEVELING_ESTIMATOR,
+                true
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_RELATIVE_GYROSCOPE_ATTITUDE_ESTIMATOR,
+                false
+            )
+            startActivity(intent)
+        }
+
+        leveledRelativeAttitudeEstimatorGravityAccurateAttitudeButton =
+            findViewById(R.id.leveled_relative_attitude_estimator_gravity_accurate_attitude_button)
+        leveledRelativeAttitudeEstimatorGravityAccurateAttitudeButton?.setOnClickListener {
+            val intent =
+                Intent(this@MainActivity, LeveledRelativeAttitudeEstimatorActivity::class.java)
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCELEROMETER,
+                false
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
+                GyroscopeSensorCollector.SensorType.GYROSCOPE
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_LEVELING_ESTIMATOR,
+                false
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_RELATIVE_GYROSCOPE_ATTITUDE_ESTIMATOR,
+                true
+            )
+            startActivity(intent)
+        }
+
+        leveledRelativeAttitudeEstimatorAccelerometerLowPassFilterAccurateAttitudeButton =
+            findViewById(R.id.leveled_relative_attitude_estimator_accelerometer_low_pass_filter_accurate_attitude_button)
+        leveledRelativeAttitudeEstimatorAccelerometerLowPassFilterAccurateAttitudeButton?.setOnClickListener {
+            val intent =
+                Intent(this@MainActivity, LeveledRelativeAttitudeEstimatorActivity::class.java)
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCELEROMETER,
+                true
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
+                AccelerometerSensorCollector.SensorType.ACCELEROMETER
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
+                LeveledRelativeAttitudeEstimatorActivity.LOW_PASS_AVERAGING_FILTER
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
+                GyroscopeSensorCollector.SensorType.GYROSCOPE
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_LEVELING_ESTIMATOR,
+                false
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_RELATIVE_GYROSCOPE_ATTITUDE_ESTIMATOR,
+                true
+            )
+            startActivity(intent)
+        }
+
+        leveledRelativeAttitudeEstimatorAccelerometerMeanFilterAccurateAttitudeButton =
+            findViewById(R.id.leveled_relative_attitude_estimator_accelerometer_mean_filter_accurate_attitude_button)
+        leveledRelativeAttitudeEstimatorAccelerometerMeanFilterAccurateAttitudeButton?.setOnClickListener {
+            val intent =
+                Intent(this@MainActivity, LeveledRelativeAttitudeEstimatorActivity::class.java)
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCELEROMETER,
+                true
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
+                AccelerometerSensorCollector.SensorType.ACCELEROMETER
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
+                LeveledRelativeAttitudeEstimatorActivity.MEAN_AVERAGING_FILTER
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
+                GyroscopeSensorCollector.SensorType.GYROSCOPE
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_LEVELING_ESTIMATOR,
+                false
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_RELATIVE_GYROSCOPE_ATTITUDE_ESTIMATOR,
+                true
+            )
+            startActivity(intent)
+        }
+
+        leveledRelativeAttitudeEstimatorAccelerometerMedianFilterAccurateAttitudeButton =
+            findViewById(R.id.leveled_relative_attitude_estimator_accelerometer_median_filter_accurate_attitude_button)
+        leveledRelativeAttitudeEstimatorAccelerometerMedianFilterAccurateAttitudeButton?.setOnClickListener {
+            val intent =
+                Intent(this@MainActivity, LeveledRelativeAttitudeEstimatorActivity::class.java)
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCELEROMETER,
+                true
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
+                AccelerometerSensorCollector.SensorType.ACCELEROMETER
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
+                LeveledRelativeAttitudeEstimatorActivity.MEDIAN_AVERAGING_FILTER
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
+                GyroscopeSensorCollector.SensorType.GYROSCOPE
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_LEVELING_ESTIMATOR,
+                false
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_RELATIVE_GYROSCOPE_ATTITUDE_ESTIMATOR,
+                true
+            )
+            startActivity(intent)
+        }
+
+        leveledRelativeAttitudeEstimatorAccelerometerUncalibratedLowPassFilterAccurateAttitudeButton =
+            findViewById(R.id.leveled_relative_attitude_estimator_accelerometer_uncalibrated_low_pass_filter_accurate_attitude_button)
+        leveledRelativeAttitudeEstimatorAccelerometerUncalibratedLowPassFilterAccurateAttitudeButton?.setOnClickListener {
+            val intent =
+                Intent(this@MainActivity, LeveledRelativeAttitudeEstimatorActivity::class.java)
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCELEROMETER,
+                true
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
+                AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
+                LeveledRelativeAttitudeEstimatorActivity.LOW_PASS_AVERAGING_FILTER
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
+                GyroscopeSensorCollector.SensorType.GYROSCOPE
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_LEVELING_ESTIMATOR,
+                false
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_RELATIVE_GYROSCOPE_ATTITUDE_ESTIMATOR,
+                true
+            )
+            startActivity(intent)
+        }
+
+        leveledRelativeAttitudeEstimatorAccelerometerUncalibratedMeanFilterAccurateAttitudeButton =
+            findViewById(R.id.leveled_relative_attitude_estimator_accelerometer_uncalibrated_mean_filter_accurate_attitude_button)
+        leveledRelativeAttitudeEstimatorAccelerometerUncalibratedMeanFilterAccurateAttitudeButton?.setOnClickListener {
+            val intent =
+                Intent(this@MainActivity, LeveledRelativeAttitudeEstimatorActivity::class.java)
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCELEROMETER,
+                true
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
+                AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
+                LeveledRelativeAttitudeEstimatorActivity.MEAN_AVERAGING_FILTER
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
+                GyroscopeSensorCollector.SensorType.GYROSCOPE
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_LEVELING_ESTIMATOR,
+                false
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_RELATIVE_GYROSCOPE_ATTITUDE_ESTIMATOR,
+                true
+            )
+            startActivity(intent)
+        }
+
+        leveledRelativeAttitudeEstimatorAccelerometerUncalibratedMedianFilterAccurateAttitudeButton =
+            findViewById(R.id.leveled_relative_attitude_estimator_accelerometer_uncalibrated_median_filter_accurate_attitude_button)
+        leveledRelativeAttitudeEstimatorAccelerometerUncalibratedMedianFilterAccurateAttitudeButton?.setOnClickListener {
+            val intent =
+                Intent(this@MainActivity, LeveledRelativeAttitudeEstimatorActivity::class.java)
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCELEROMETER,
+                true
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
+                AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
+                LeveledRelativeAttitudeEstimatorActivity.MEDIAN_AVERAGING_FILTER
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
+                GyroscopeSensorCollector.SensorType.GYROSCOPE
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_LEVELING_ESTIMATOR,
+                false
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_RELATIVE_GYROSCOPE_ATTITUDE_ESTIMATOR,
+                true
+            )
+            startActivity(intent)
+        }
+
+        leveledRelativeAttitudeEstimatorUncalibratedGyroscopeAccurateAttitudeButton =
+            findViewById(R.id.leveled_relative_attitude_estimator_uncalibrated_gyroscope_accurate_attitude_button)
+        leveledRelativeAttitudeEstimatorUncalibratedGyroscopeAccurateAttitudeButton?.setOnClickListener {
+            val intent =
+                Intent(this@MainActivity, LeveledRelativeAttitudeEstimatorActivity::class.java)
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
+                GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_LEVELING_ESTIMATOR,
+                false
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_RELATIVE_GYROSCOPE_ATTITUDE_ESTIMATOR,
+                true
             )
             startActivity(intent)
         }
