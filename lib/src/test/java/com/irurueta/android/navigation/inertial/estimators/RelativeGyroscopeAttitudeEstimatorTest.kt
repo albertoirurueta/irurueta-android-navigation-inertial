@@ -53,6 +53,7 @@ class RelativeGyroscopeAttitudeEstimatorTest {
         assertTrue(estimator.estimateDisplayEulerAngles)
         assertNull(estimator.attitudeAvailableListener)
         assertFalse(estimator.running)
+        assertEquals(0.0, estimator.averageTimeInterval, 0.0)
     }
 
     @Test
@@ -80,6 +81,7 @@ class RelativeGyroscopeAttitudeEstimatorTest {
         assertFalse(estimator.estimateDisplayEulerAngles)
         assertSame(attitudeAvailableListener, estimator.attitudeAvailableListener)
         assertFalse(estimator.running)
+        assertEquals(0.0, estimator.averageTimeInterval, 0.0)
     }
 
     @Test
@@ -97,6 +99,32 @@ class RelativeGyroscopeAttitudeEstimatorTest {
 
         // check
         assertSame(attitudeAvailableListener, estimator.attitudeAvailableListener)
+    }
+
+    @Test
+    fun averageTimeInterval_returnsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val estimator = RelativeGyroscopeAttitudeEstimator(context)
+
+        val timeIntervalEstimator: TimeIntervalEstimator? =
+            getPrivateProperty(
+                BaseRelativeGyroscopeAttitudeEstimator::class,
+                estimator,
+                "timeIntervalEstimator"
+            )
+        requireNotNull(timeIntervalEstimator)
+        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+        val randomizer = UniformRandomizer()
+        val averageTimeInterval = randomizer.nextDouble()
+        every { timeIntervalEstimatorSpy.averageTimeInterval }.returns(averageTimeInterval)
+        setPrivateProperty(
+            BaseRelativeGyroscopeAttitudeEstimator::class,
+            estimator,
+            "timeIntervalEstimator",
+            timeIntervalEstimatorSpy
+        )
+
+        assertEquals(averageTimeInterval, estimator.averageTimeInterval, 0.0)
     }
 
     @Test(expected = IllegalStateException::class)

@@ -37,8 +37,9 @@ import com.irurueta.navigation.frames.FrameType
  * @property sensorDelay Delay of accelerometer or gravity sensor between samples.
  * @property useAccelerometer true to use accelerometer sensor, false to use system gravity sensor.
  * @property accelerometerSensorType One of the supported accelerometer sensor types.
+ * (Only used if [useAccelerometer] is true).
  * @property accelerometerAveragingFilter an averaging filter for accelerometer samples to obtain
- * sensed gravity component of specific force.
+ * sensed gravity component of specific force. (Only used if [useAccelerometer] is true).
  * @property estimateCoordinateTransformation true to estimate coordinate transformation, false
  * otherwise. If not needed, it can be disabled to improve performance and decrease cpu load.
  * @property estimateDisplayEulerAngles true to estimate euler angles, false otherwise. If not
@@ -129,9 +130,10 @@ abstract class BaseLevelingEstimator<T : BaseLevelingEstimator<T, L>,
                 attitude.asInhomogeneousMatrix(rotationMatrix)
                 try {
                     coordinateTransformation.matrix = rotationMatrix
+                    coordinateTransformation
                 } catch (ignore: InvalidRotationMatrixException) {
+                    null
                 }
-                coordinateTransformation
             } else {
                 null
             }

@@ -109,6 +109,12 @@ abstract class BaseRelativeGyroscopeAttitudeEstimator<T : BaseRelativeGyroscopeA
         private set
 
     /**
+     * Gets average time interval between gyroscope samples expressed in seconds.
+     */
+    val averageTimeInterval
+        get() = timeIntervalEstimator.averageTimeInterval
+
+    /**
      * Starts this estimator.
      *
      * @return true if estimator successfully started, false otherwise.

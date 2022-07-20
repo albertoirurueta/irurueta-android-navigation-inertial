@@ -38,6 +38,7 @@ import kotlin.math.atan2
  * location (which requires location permission), and at the expense of higher CPU load.
  *
  * @property context Android context.
+ * @property location Device location.
  * @property sensorDelay Delay of accelerometer or gravity sensor between samples.
  * @property useAccelerometer true to use accelerometer sensor, false to use system gravity sensor.
  * @property accelerometerSensorType One of the supported accelerometer sensor types.

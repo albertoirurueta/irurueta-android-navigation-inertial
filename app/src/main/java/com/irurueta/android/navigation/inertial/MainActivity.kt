@@ -57,6 +57,8 @@ class MainActivity : AppCompatActivity() {
 
     private var accurateRelativeUncalibratedGyroscopeAttitudeButton: AppCompatButton? = null
 
+    private var leveledRelativeAttitudeButton: AppCompatButton? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -369,6 +371,37 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra(
                 AccurateRelativeGyroscopeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
                 GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED
+            )
+            startActivity(intent)
+        }
+
+        leveledRelativeAttitudeButton = findViewById(R.id.leveled_relative_attitude_estimator_button)
+        leveledRelativeAttitudeButton?.setOnClickListener {
+            val intent =
+                Intent(this@MainActivity, LeveledRelativeAttitudeEstimatorActivity::class.java)
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCELEROMETER,
+                true
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
+                AccelerometerSensorCollector.SensorType.ACCELEROMETER
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
+                LeveledRelativeAttitudeEstimatorActivity.LOW_PASS_AVERAGING_FILTER
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
+                GyroscopeSensorCollector.SensorType.GYROSCOPE
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_LEVELING_ESTIMATOR,
+                false
+            )
+            intent.putExtra(
+                LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_RELATIVE_GYROSCOPE_ATTITUDE_ESTIMATOR,
+                false
             )
             startActivity(intent)
         }

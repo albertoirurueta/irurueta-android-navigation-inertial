@@ -26,6 +26,7 @@
         <activity android:name=".AccurateLevelingEstimatorActivity"/>
         <activity android:name=".RelativeGyroscopeAttitudeEstimatorActivity"/>
         <activity android:name=".AccurateRelativeGyroscopeAttitudeEstimatorActivity"/>
+        <activity android:name=".LeveledRelativeAttitudeEstimatorActivity"/>
     </application>
 
 </manifest>
