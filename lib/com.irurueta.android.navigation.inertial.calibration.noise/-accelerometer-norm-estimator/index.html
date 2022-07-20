@@ -1,0 +1,546 @@
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>AccelerometerNormEstimator</title>
+<link href="../../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../../";</script><script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async="async"></script><link href="../../../styles/style.css" rel="Stylesheet"><link href="../../../styles/logo-styles.css" rel="Stylesheet"><link href="../../../styles/jetbrains-mono.css" rel="Stylesheet"><link href="../../../styles/main.css" rel="Stylesheet"><script type="text/javascript" src="../../../scripts/clipboard.js" async="async"></script><script type="text/javascript" src="../../../scripts/navigation-loader.js" async="async"></script><script type="text/javascript" src="../../../scripts/platform-content-handler.js" async="async"></script><script type="text/javascript" src="../../../scripts/main.js" async="async"></script>  </head>
+  <body>
+    <div id="container">
+      <div id="leftColumn"><a href="../../../index.html">
+          <div id="logo"></div>
+        </a>
+        <div id="paneSearch"></div>
+        <div id="sideMenu"></div>
+      </div>
+      <div id="main">
+        <div id="leftToggler"><span class="icon-toggler"></span></div>
+<script type="text/javascript" src="../../../scripts/main.js"></script>        <div class="main-content" id="content" pageIds="lib::com.irurueta.android.navigation.inertial.calibration.noise/AccelerometerNormEstimator///PointingToDeclaration//1946847589">
+          <div class="navigation-wrapper" id="navigation-wrapper">
+            <div class="breadcrumbs"><a href="../../../index.html">lib</a>/<a href="../index.html">com.irurueta.android.navigation.inertial.calibration.noise</a>/<a href="index.html">AccelerometerNormEstimator</a></div>
+            <div class="pull-right d-flex">
+              <div id="searchBar"></div>
+            </div>
+          </div>
+          <div class="cover ">
+            <h1 class="cover"><span>Accelerometer</span><wbr></wbr><span>Norm</span><wbr></wbr><span><span>Estimator</span></span></h1>
+            <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">class <a href="index.html">AccelerometerNormEstimator</a>(context: <a href="https://developer.android.com/reference/kotlin/android/content/Context.html">Context</a>, sensorType: <a href="../../com.irurueta.android.navigation.inertial.collectors/-accelerometer-sensor-collector/-sensor-type/index.html">AccelerometerSensorCollector.SensorType</a>, sensorDelay: <a href="../../com.irurueta.android.navigation.inertial.collectors/-sensor-delay/index.html">SensorDelay</a>, maxSamples: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html">Int</a>, maxDurationMillis: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>, stopMode: <a href="../-stop-mode/index.html">StopMode</a>, completedListener: <a href="../-accumulated-measurement-estimator/-on-estimation-completed-listener/index.html">AccumulatedMeasurementEstimator.OnEstimationCompletedListener</a>&lt;<a href="index.html">AccelerometerNormEstimator</a>&gt;?, unreliableListener: <a href="../-accumulated-measurement-estimator/-on-unreliable-listener/index.html">AccumulatedMeasurementEstimator.OnUnreliableListener</a>&lt;<a href="index.html">AccelerometerNormEstimator</a>&gt;?, measurementListener: <a href="../../com.irurueta.android.navigation.inertial.collectors/-accelerometer-sensor-collector/-on-measurement-listener/index.html">AccelerometerSensorCollector.OnMeasurementListener</a>?) : <a href="../-accumulated-measurement-estimator/index.html">AccumulatedMeasurementEstimator</a>&lt;<a href="index.html">AccelerometerNormEstimator</a>, <span data-unresolved-link="com.irurueta.navigation.inertial.calibration.noise/AccumulatedAccelerationMeasurementNoiseEstimator///PointingToDeclaration/">AccumulatedAccelerationMeasurementNoiseEstimator</span>, <a href="../../com.irurueta.android.navigation.inertial.collectors/-accelerometer-sensor-collector/index.html">AccelerometerSensorCollector</a>, <span data-unresolved-link="com.irurueta.units/AccelerationUnit///PointingToDeclaration/">AccelerationUnit</span>, <span data-unresolved-link="com.irurueta.units/Acceleration///PointingToDeclaration/">Acceleration</span>&gt; <span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><p class="paragraph">Estimates accelerometer norm. This estimator takes a given number of measurements during a given duration of time to estimate accelerometer norm average, standard deviation and variance, as well as average time interval between measurements. For best accuracy of estimated results, device should remain static while data is being collected. In such case, average accelerometer norm should match gravity norm at current location.</p></div></div>
+          </div>
+          <div class="tabbedcontent">
+            <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="Constructors">Constructors</button><button class="section-tab" data-togglable="Functions">Functions</button><button class="section-tab" data-togglable="Properties">Properties</button><button class="section-tab" data-togglable="Parameters">Parameters</button><button class="section-tab" data-togglable="Throws">Throws</button></div>
+            <div class="tabs-section-body">
+              <h2 class="">Parameters</h2>
+              <div data-togglable="Parameters">
+                <div class="platform-hinted WithExtraAttributes" data-platform-hinted="data-platform-hinted" data-togglable="Parameters"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div data-togglable="Parameters"><div class="table" data-togglable="Parameters"><div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="main-subrow keyValue WithExtraAttributes"><div class=""><span class="inline-flex"><span><span>context</span></span></span></div><div><div class="title"><div data-togglable="Parameters"><p class="paragraph">Android context</p></div></div></div></div></div><div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="main-subrow keyValue WithExtraAttributes"><div class=""><span class="inline-flex"><span>sensor</span><wbr></wbr><span><span>Delay</span></span></span></div><div><div class="title"><div data-togglable="Parameters"><p class="paragraph">Delay of sensor between samples.</p></div></div></div></div></div><div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="main-subrow keyValue WithExtraAttributes"><div class=""><span class="inline-flex"><span>max</span><wbr></wbr><span><span>Samples</span></span></span></div><div><div class="title"><div data-togglable="Parameters"><p class="paragraph">Maximum number of samples to take into account before completion. This is only taken into account if using either <a href="../-stop-mode/-m-a-x_-s-a-m-p-l-e-s_-o-n-l-y/index.html">StopMode.MAX_SAMPLES_ONLY</a> or <a href="../-stop-mode/-m-a-x_-s-a-m-p-l-e-s_-o-r_-d-u-r-a-t-i-o-n/index.html">StopMode.MAX_SAMPLES_OR_DURATION</a>.</p></div></div></div></div></div><div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="main-subrow keyValue WithExtraAttributes"><div class=""><span class="inline-flex"><span>max</span><wbr></wbr><span>Duration</span><wbr></wbr><span><span>Millis</span></span></span></div><div><div class="title"><div data-togglable="Parameters"><p class="paragraph">Maximum duration expressed in milliseconds to take into account before completion. This is only taken into account if using either <a href="../-stop-mode/-m-a-x_-d-u-r-a-t-i-o-n_-o-n-l-y/index.html">StopMode.MAX_DURATION_ONLY</a> or <a href="../-stop-mode/-m-a-x_-s-a-m-p-l-e-s_-o-r_-d-u-r-a-t-i-o-n/index.html">StopMode.MAX_SAMPLES_OR_DURATION</a>.</p></div></div></div></div></div><div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="main-subrow keyValue WithExtraAttributes"><div class=""><span class="inline-flex"><span>stop</span><wbr></wbr><span><span>Mode</span></span></span></div><div><div class="title"><div data-togglable="Parameters"><p class="paragraph">Determines when this estimator will consider its estimation completed.</p></div></div></div></div></div><div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="main-subrow keyValue WithExtraAttributes"><div class=""><span class="inline-flex"><span>completed</span><wbr></wbr><span><span>Listener</span></span></span></div><div><div class="title"><div data-togglable="Parameters"><p class="paragraph">Listener to notify when estimation is complete.</p></div></div></div></div></div><div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="main-subrow keyValue WithExtraAttributes"><div class=""><span class="inline-flex"><span>unreliable</span><wbr></wbr><span><span>Listener</span></span></span></div><div><div class="title"><div data-togglable="Parameters"><p class="paragraph">Listener to notify when sensor becomes unreliable, and thus, estimation must be discarded.</p></div></div></div></div></div><div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="main-subrow keyValue WithExtraAttributes"><div class=""><span class="inline-flex"><span>measurement</span><wbr></wbr><span><span>Listener</span></span></span></div><div><div class="title"><div data-togglable="Parameters"><p class="paragraph">Listener to notify collected sensor measurements.</p></div></div></div></div></div></div></div></div></div>
+              </div>
+              <h2 class="">Throws</h2>
+              <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="table"><div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-illegal-argument-exception/index.html"><span>kotlin.</span><wbr></wbr><span>Illegal</span><wbr></wbr><span>Argument</span><wbr></wbr><span><span>Exception</span></span></a></span></div><div><div class="title"><p class="paragraph">when either <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccelerometerNormEstimator/maxSamples/#/PointingToDeclaration/">maxSamples</span> or <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccelerometerNormEstimator/maxDurationMillis/#/PointingToDeclaration/">maxDurationMillis</span> is negative.</p></div></div></div></div></div></div></div>
+              <h2 class="tabbedcontent">Constructors</h2>
+              <div class="table" data-togglable="Constructors"><a data-name="685703161%2FConstructors%2F1946847589" anchor-label="AccelerometerNormEstimator" id="685703161%2FConstructors%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue TabbedContent">
+                    <div class=""><span class="inline-flex"><a href="-accelerometer-norm-estimator.html">AccelerometerNormEstimator</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="685703161%2FConstructors%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">fun <a href="-accelerometer-norm-estimator.html">AccelerometerNormEstimator</a>(context: <a href="https://developer.android.com/reference/kotlin/android/content/Context.html">Context</a>, sensorType: <a href="../../com.irurueta.android.navigation.inertial.collectors/-accelerometer-sensor-collector/-sensor-type/index.html">AccelerometerSensorCollector.SensorType</a> = AccelerometerSensorCollector.SensorType.ACCELEROMETER, sensorDelay: <a href="../../com.irurueta.android.navigation.inertial.collectors/-sensor-delay/index.html">SensorDelay</a> = SensorDelay.FASTEST, maxSamples: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html">Int</a> = DEFAULT_MAX_SAMPLES, maxDurationMillis: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a> = DEFAULT_MAX_DURATION_MILLIS, stopMode: <a href="../-stop-mode/index.html">StopMode</a> = StopMode.MAX_SAMPLES_OR_DURATION, completedListener: <a href="../-accumulated-measurement-estimator/-on-estimation-completed-listener/index.html">AccumulatedMeasurementEstimator.OnEstimationCompletedListener</a>&lt;<a href="index.html">AccelerometerNormEstimator</a>&gt;? = null, unreliableListener: <a href="../-accumulated-measurement-estimator/-on-unreliable-listener/index.html">AccumulatedMeasurementEstimator.OnUnreliableListener</a>&lt;<a href="index.html">AccelerometerNormEstimator</a>&gt;? = null, measurementListener: <a href="../../com.irurueta.android.navigation.inertial.collectors/-accelerometer-sensor-collector/-on-measurement-listener/index.html">AccelerometerSensorCollector.OnMeasurementListener</a>? = null)<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <h2 class="">Functions</h2>
+              <div class="table" data-togglable="Functions"><a data-name="720241518%2FFunctions%2F1946847589" anchor-label="getAverageNormAsMeasurement" id="720241518%2FFunctions%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-gravity-norm-estimator/index.html#720241518%2FFunctions%2F1946847589"><span>get</span><wbr></wbr><span>Average</span><wbr></wbr><span>Norm</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Measurement</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="720241518%2FFunctions%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">fun <a href="../-gravity-norm-estimator/index.html#720241518%2FFunctions%2F1946847589">getAverageNormAsMeasurement</a>(result: <span data-unresolved-link="com.irurueta.units/Acceleration///PointingToDeclaration/">Acceleration</span>): <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<div class="brief "><p class="paragraph">Gets estimated average measurement norm as a measurement instance. This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedMeasurementEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true.</p></div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-1432751909%2FFunctions%2F1946847589" anchor-label="getAverageTimeIntervalAsTime" id="-1432751909%2FFunctions%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-base-accumulated-estimator/get-average-time-interval-as-time.html"><span>get</span><wbr></wbr><span>Average</span><wbr></wbr><span>Time</span><wbr></wbr><span>Interval</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Time</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1432751909%2FFunctions%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">fun <a href="../-base-accumulated-estimator/get-average-time-interval-as-time.html">getAverageTimeIntervalAsTime</a>(result: <span data-unresolved-link="com.irurueta.units/Time///PointingToDeclaration/">Time</span>): <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<div class="brief "><p class="paragraph">Gets average time interval between measurements. This is only available when estimation completes successfully and <a href="../-base-accumulated-estimator/result-available.html">resultAvailable</a> is true.</p></div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-1831136170%2FFunctions%2F1946847589" anchor-label="getElapsedTime" id="-1831136170%2FFunctions%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-base-accumulated-estimator/get-elapsed-time.html"><span>get</span><wbr></wbr><span>Elapsed</span><wbr></wbr><span><span>Time</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1831136170%2FFunctions%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">fun <a href="../-base-accumulated-estimator/get-elapsed-time.html">getElapsedTime</a>(result: <span data-unresolved-link="com.irurueta.units/Time///PointingToDeclaration/">Time</span>)<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<div class="brief "><p class="paragraph">Gets amount of time elapsed, either if computation succeeds or not.</p></div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="507151391%2FFunctions%2F1946847589" anchor-label="getNormStandardDeviationAsMeasurement" id="507151391%2FFunctions%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-gravity-norm-estimator/index.html#507151391%2FFunctions%2F1946847589"><span>get</span><wbr></wbr><span>Norm</span><wbr></wbr><span>Standard</span><wbr></wbr><span>Deviation</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Measurement</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="507151391%2FFunctions%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">fun <a href="../-gravity-norm-estimator/index.html#507151391%2FFunctions%2F1946847589">getNormStandardDeviationAsMeasurement</a>(result: <span data-unresolved-link="com.irurueta.units/Acceleration///PointingToDeclaration/">Acceleration</span>): <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<div class="brief "><p class="paragraph">Gets estimated standard deviation of norm as a measurement. This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedMeasurementEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true.</p></div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-2090159522%2FFunctions%2F1946847589" anchor-label="getTimeIntervalStandardDeviationAsTime" id="-2090159522%2FFunctions%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-base-accumulated-estimator/get-time-interval-standard-deviation-as-time.html"><span>get</span><wbr></wbr><span>Time</span><wbr></wbr><span>Interval</span><wbr></wbr><span>Standard</span><wbr></wbr><span>Deviation</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Time</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2090159522%2FFunctions%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">fun <a href="../-base-accumulated-estimator/get-time-interval-standard-deviation-as-time.html">getTimeIntervalStandardDeviationAsTime</a>(result: <span data-unresolved-link="com.irurueta.units/Time///PointingToDeclaration/">Time</span>): <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<div class="brief "><p class="paragraph">Gets estimated standard deviation of time interval between measurements. This is only available when estimation completes successfully and <a href="../-base-accumulated-estimator/result-available.html">resultAvailable</a> is true.</p></div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="1352715932%2FFunctions%2F1946847589" anchor-label="start" id="1352715932%2FFunctions%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-accumulated-measurement-estimator/start.html"><span><span>start</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1352715932%2FFunctions%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">fun <a href="../-accumulated-measurement-estimator/start.html">start</a>()<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<div class="brief "><p class="paragraph">Starts collection of sensor norm measurements.</p></div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-323518246%2FFunctions%2F1946847589" anchor-label="stop" id="-323518246%2FFunctions%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-accumulated-measurement-estimator/stop.html"><span><span>stop</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-323518246%2FFunctions%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">fun <a href="../-accumulated-measurement-estimator/stop.html">stop</a>()<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<div class="brief "><p class="paragraph">Stops collection of sensor norm measurements.</p></div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <h2 class="">Properties</h2>
+              <div class="table" data-togglable="Properties"><a data-name="-1464550747%2FProperties%2F1946847589" anchor-label="averageNorm" id="-1464550747%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-accumulated-measurement-estimator/average-norm.html">averageNorm</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1464550747%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-1464550747%2FProperties%2F1946847589" anchor-label="averageNorm" id="-1464550747%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="../-accumulated-measurement-estimator/average-norm.html">averageNorm</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html">Double</a>?<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1464550747%2FProperties%2F1946847589" anchor-label="averageNorm" id="-1464550747%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets estimated average of measurement norm expressed in measurement unit (m/s^2 for acceleration, rad/s for angular speed or T for magnetic flux density). This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedMeasurementEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="1390825739%2FProperties%2F1946847589" anchor-label="averageNormAsMeasurement" id="1390825739%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-accumulated-measurement-estimator/average-norm-as-measurement.html">averageNormAsMeasurement</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1390825739%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="1390825739%2FProperties%2F1946847589" anchor-label="averageNormAsMeasurement" id="1390825739%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="../-accumulated-measurement-estimator/average-norm-as-measurement.html">averageNormAsMeasurement</a>: <span data-unresolved-link="com.irurueta.units/Acceleration///PointingToDeclaration/">Acceleration</span>?<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="1390825739%2FProperties%2F1946847589" anchor-label="averageNormAsMeasurement" id="1390825739%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets estimated average measurement norm as a measurement. This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedMeasurementEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-989785578%2FProperties%2F1946847589" anchor-label="averageTimeInterval" id="-989785578%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-base-accumulated-estimator/average-time-interval.html">averageTimeInterval</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-989785578%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-989785578%2FProperties%2F1946847589" anchor-label="averageTimeInterval" id="-989785578%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="../-base-accumulated-estimator/average-time-interval.html">averageTimeInterval</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html">Double</a>?<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-989785578%2FProperties%2F1946847589" anchor-label="averageTimeInterval" id="-989785578%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets average time interval between measurements expressed in seconds (s). This is only available when estimation completes successfully and <a href="../-base-accumulated-estimator/result-available.html">resultAvailable</a> is true.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="1721895415%2FProperties%2F1946847589" anchor-label="averageTimeIntervalAsTime" id="1721895415%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-base-accumulated-estimator/average-time-interval-as-time.html">averageTimeIntervalAsTime</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1721895415%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="1721895415%2FProperties%2F1946847589" anchor-label="averageTimeIntervalAsTime" id="1721895415%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="../-base-accumulated-estimator/average-time-interval-as-time.html">averageTimeIntervalAsTime</a>: <span data-unresolved-link="com.irurueta.units/Time///PointingToDeclaration/">Time</span>?<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="1721895415%2FProperties%2F1946847589" anchor-label="averageTimeIntervalAsTime" id="1721895415%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets average time interval between measurements. This is only available when estimation completes successfully and <a href="../-base-accumulated-estimator/result-available.html">resultAvailable</a> is true.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-197676033%2FProperties%2F1946847589" anchor-label="completedListener" id="-197676033%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-accumulated-measurement-estimator/completed-listener.html">completedListener</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-197676033%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-197676033%2FProperties%2F1946847589" anchor-label="completedListener" id="-197676033%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="../-accumulated-measurement-estimator/completed-listener.html">completedListener</a>: <a href="../-accumulated-measurement-estimator/-on-estimation-completed-listener/index.html">AccumulatedMeasurementEstimator.OnEstimationCompletedListener</a>&lt;<a href="index.html">AccelerometerNormEstimator</a>&gt;?<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-197676033%2FProperties%2F1946847589" anchor-label="completedListener" id="-197676033%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Listener to notify when estimation is complete.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-888127057%2FProperties%2F1946847589" anchor-label="context" id="-888127057%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-accumulated-measurement-estimator/context.html">context</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-888127057%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-888127057%2FProperties%2F1946847589" anchor-label="context" id="-888127057%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="../-accumulated-measurement-estimator/context.html">context</a>: <a href="https://developer.android.com/reference/kotlin/android/content/Context.html">Context</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-888127057%2FProperties%2F1946847589" anchor-label="context" id="-888127057%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Android context.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="314350172%2FProperties%2F1946847589" anchor-label="elapsedTime" id="314350172%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-base-accumulated-estimator/elapsed-time.html">elapsedTime</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="314350172%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="314350172%2FProperties%2F1946847589" anchor-label="elapsedTime" id="314350172%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="../-base-accumulated-estimator/elapsed-time.html">elapsedTime</a>: <span data-unresolved-link="com.irurueta.units/Time///PointingToDeclaration/">Time</span><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="314350172%2FProperties%2F1946847589" anchor-label="elapsedTime" id="314350172%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets amount of elapsed time to compute sensor noise, either if computation succeeds or not.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="2070453567%2FProperties%2F1946847589" anchor-label="elapsedTimeNanos" id="2070453567%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-base-accumulated-estimator/elapsed-time-nanos.html">elapsedTimeNanos</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2070453567%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="2070453567%2FProperties%2F1946847589" anchor-label="elapsedTimeNanos" id="2070453567%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="../-base-accumulated-estimator/elapsed-time-nanos.html">elapsedTimeNanos</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="2070453567%2FProperties%2F1946847589" anchor-label="elapsedTimeNanos" id="2070453567%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets amount of elapsed time to compute sensor noise estimation expressed in nanoseconds (ns), either if computation succeeds or not.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="1526345959%2FProperties%2F1946847589" anchor-label="maxDurationMillis" id="1526345959%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-base-accumulated-estimator/max-duration-millis.html">maxDurationMillis</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1526345959%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="1526345959%2FProperties%2F1946847589" anchor-label="maxDurationMillis" id="1526345959%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="../-base-accumulated-estimator/max-duration-millis.html">maxDurationMillis</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="1526345959%2FProperties%2F1946847589" anchor-label="maxDurationMillis" id="1526345959%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets maximum duration expressed in milliseconds to take into account before completion. This is only taken into account if using either <a href="../-stop-mode/-m-a-x_-d-u-r-a-t-i-o-n_-o-n-l-y/index.html">StopMode.MAX_DURATION_ONLY</a> or <a href="../-stop-mode/-m-a-x_-s-a-m-p-l-e-s_-o-r_-d-u-r-a-t-i-o-n/index.html">StopMode.MAX_SAMPLES_OR_DURATION</a>.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-1548676240%2FProperties%2F1946847589" anchor-label="maxSamples" id="-1548676240%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-base-accumulated-estimator/max-samples.html">maxSamples</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1548676240%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-1548676240%2FProperties%2F1946847589" anchor-label="maxSamples" id="-1548676240%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="../-base-accumulated-estimator/max-samples.html">maxSamples</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html">Int</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1548676240%2FProperties%2F1946847589" anchor-label="maxSamples" id="-1548676240%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets maximum number of samples to take into account before completion. This is only taken into account if using either <a href="../-stop-mode/-m-a-x_-s-a-m-p-l-e-s_-o-n-l-y/index.html">StopMode.MAX_SAMPLES_ONLY</a> or <a href="../-stop-mode/-m-a-x_-s-a-m-p-l-e-s_-o-r_-d-u-r-a-t-i-o-n/index.html">StopMode.MAX_SAMPLES_OR_DURATION</a>.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="1025527183%2FProperties%2F1946847589" anchor-label="measurementListener" id="1025527183%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="measurement-listener.html">measurementListener</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1025527183%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="1025527183%2FProperties%2F1946847589" anchor-label="measurementListener" id="1025527183%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="measurement-listener.html">measurementListener</a>: <a href="../../com.irurueta.android.navigation.inertial.collectors/-accelerometer-sensor-collector/-on-measurement-listener/index.html">AccelerometerSensorCollector.OnMeasurementListener</a>? = null<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-1038525994%2FProperties%2F1946847589" anchor-label="normStandardDeviation" id="-1038525994%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-accumulated-measurement-estimator/norm-standard-deviation.html">normStandardDeviation</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1038525994%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-1038525994%2FProperties%2F1946847589" anchor-label="normStandardDeviation" id="-1038525994%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="../-accumulated-measurement-estimator/norm-standard-deviation.html">normStandardDeviation</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html">Double</a>?<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1038525994%2FProperties%2F1946847589" anchor-label="normStandardDeviation" id="-1038525994%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets estimated standard deviation of norm expressed in the default unit of measurement (m/s^2 for acceleration, rad/s for angular speed or T for magnetic flux density). This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedMeasurementEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-1750095494%2FProperties%2F1946847589" anchor-label="normStandardDeviationAsMeasurement" id="-1750095494%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-accumulated-measurement-estimator/norm-standard-deviation-as-measurement.html">normStandardDeviationAsMeasurement</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1750095494%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-1750095494%2FProperties%2F1946847589" anchor-label="normStandardDeviationAsMeasurement" id="-1750095494%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="../-accumulated-measurement-estimator/norm-standard-deviation-as-measurement.html">normStandardDeviationAsMeasurement</a>: <span data-unresolved-link="com.irurueta.units/Acceleration///PointingToDeclaration/">Acceleration</span>?<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1750095494%2FProperties%2F1946847589" anchor-label="normStandardDeviationAsMeasurement" id="-1750095494%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets estimated standard deviation of norm as a measurement. This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedMeasurementEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-799162897%2FProperties%2F1946847589" anchor-label="normVariance" id="-799162897%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-accumulated-measurement-estimator/norm-variance.html">normVariance</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-799162897%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-799162897%2FProperties%2F1946847589" anchor-label="normVariance" id="-799162897%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="../-accumulated-measurement-estimator/norm-variance.html">normVariance</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html">Double</a>?<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-799162897%2FProperties%2F1946847589" anchor-label="normVariance" id="-799162897%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets estimated variance of measurement norm expressed in the default squared unit of measurement (m^2/s^4 for acceleration, rad^2/s^2 for angular speed or T^2 for magnetic flux density). This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedMeasurementEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="1773122240%2FProperties%2F1946847589" anchor-label="numberOfProcessedMeasurements" id="1773122240%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-base-accumulated-estimator/number-of-processed-measurements.html">numberOfProcessedMeasurements</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1773122240%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="1773122240%2FProperties%2F1946847589" anchor-label="numberOfProcessedMeasurements" id="1773122240%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="../-base-accumulated-estimator/number-of-processed-measurements.html">numberOfProcessedMeasurements</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html">Int</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="1773122240%2FProperties%2F1946847589" anchor-label="numberOfProcessedMeasurements" id="1773122240%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Number of measurements that have been processed.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-873675427%2FProperties%2F1946847589" anchor-label="psd" id="-873675427%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-accumulated-measurement-estimator/psd.html">psd</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-873675427%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-873675427%2FProperties%2F1946847589" anchor-label="psd" id="-873675427%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="../-accumulated-measurement-estimator/psd.html">psd</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html">Double</a>?<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-873675427%2FProperties%2F1946847589" anchor-label="psd" id="-873675427%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets PSD (Power Spectral Density) of norm noise expressed in (m^2 * s^-3) for accelerometer, (rad^2/s) for gyroscope or (T^2 * s) for magnetometer. This is only available when estimation completes successfully and average time interval between measurements is reliably estimated.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="532512505%2FProperties%2F1946847589" anchor-label="resultAvailable" id="532512505%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-base-accumulated-estimator/result-available.html">resultAvailable</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="532512505%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="532512505%2FProperties%2F1946847589" anchor-label="resultAvailable" id="532512505%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="../-base-accumulated-estimator/result-available.html">resultAvailable</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="532512505%2FProperties%2F1946847589" anchor-label="resultAvailable" id="532512505%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Indicates whether estimated average and time interval between measurements are available or not.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="2064709109%2FProperties%2F1946847589" anchor-label="resultUnreliable" id="2064709109%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-base-accumulated-estimator/result-unreliable.html">resultUnreliable</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2064709109%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="2064709109%2FProperties%2F1946847589" anchor-label="resultUnreliable" id="2064709109%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="../-base-accumulated-estimator/result-unreliable.html">resultUnreliable</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="2064709109%2FProperties%2F1946847589" anchor-label="resultUnreliable" id="2064709109%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Indicates whether estimated result is unreliable or not.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-918517025%2FProperties%2F1946847589" anchor-label="rootPsd" id="-918517025%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-accumulated-measurement-estimator/root-psd.html">rootPsd</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-918517025%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-918517025%2FProperties%2F1946847589" anchor-label="rootPsd" id="-918517025%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="../-accumulated-measurement-estimator/root-psd.html">rootPsd</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html">Double</a>?<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-918517025%2FProperties%2F1946847589" anchor-label="rootPsd" id="-918517025%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets root PSD (Power Spectral Density) of norm expressed in (m * s^-1.5) for accelerometer, (rad * s^-0.5) for gyroscope or (T * s^0.5) for magnetometer. This is only available when estimation completes successfully and average time interval between measurements is reliably estimated.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-1182166113%2FProperties%2F1946847589" anchor-label="running" id="-1182166113%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-accumulated-measurement-estimator/running.html">running</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1182166113%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-1182166113%2FProperties%2F1946847589" anchor-label="running" id="-1182166113%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="../-accumulated-measurement-estimator/running.html">running</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1182166113%2FProperties%2F1946847589" anchor-label="running" id="-1182166113%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Indicates whether this estimator is already running.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="2562146%2FProperties%2F1946847589" anchor-label="sensor" id="2562146%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-accumulated-measurement-estimator/sensor.html">sensor</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2562146%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="2562146%2FProperties%2F1946847589" anchor-label="sensor" id="2562146%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="../-accumulated-measurement-estimator/sensor.html">sensor</a>: <a href="https://developer.android.com/reference/kotlin/android/hardware/Sensor.html">Sensor</a>?<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="2562146%2FProperties%2F1946847589" anchor-label="sensor" id="2562146%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets sensor being used to obtain measurements or null if not available. This can be used to obtain additional information about the sensor.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="312592949%2FProperties%2F1946847589" anchor-label="sensorDelay" id="312592949%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-accumulated-measurement-estimator/sensor-delay.html">sensorDelay</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="312592949%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="312592949%2FProperties%2F1946847589" anchor-label="sensorDelay" id="312592949%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="../-accumulated-measurement-estimator/sensor-delay.html">sensorDelay</a>: <a href="../../com.irurueta.android.navigation.inertial.collectors/-sensor-delay/index.html">SensorDelay</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="312592949%2FProperties%2F1946847589" anchor-label="sensorDelay" id="312592949%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Delay of sensor between samples.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-202395257%2FProperties%2F1946847589" anchor-label="sensorType" id="-202395257%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="sensor-type.html">sensorType</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-202395257%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-202395257%2FProperties%2F1946847589" anchor-label="sensorType" id="-202395257%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="sensor-type.html">sensorType</a>: <a href="../../com.irurueta.android.navigation.inertial.collectors/-accelerometer-sensor-collector/-sensor-type/index.html">AccelerometerSensorCollector.SensorType</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-202395257%2FProperties%2F1946847589" anchor-label="sensorType" id="-202395257%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">One of the supported accelerometer sensor types.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-1417181520%2FProperties%2F1946847589" anchor-label="stopMode" id="-1417181520%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-base-accumulated-estimator/stop-mode.html">stopMode</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1417181520%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-1417181520%2FProperties%2F1946847589" anchor-label="stopMode" id="-1417181520%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="../-base-accumulated-estimator/stop-mode.html">stopMode</a>: <a href="../-stop-mode/index.html">StopMode</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1417181520%2FProperties%2F1946847589" anchor-label="stopMode" id="-1417181520%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Determines when this estimator will consider its estimation completed.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-1608464077%2FProperties%2F1946847589" anchor-label="timeIntervalStandardDeviation" id="-1608464077%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-base-accumulated-estimator/time-interval-standard-deviation.html">timeIntervalStandardDeviation</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1608464077%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-1608464077%2FProperties%2F1946847589" anchor-label="timeIntervalStandardDeviation" id="-1608464077%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="../-base-accumulated-estimator/time-interval-standard-deviation.html">timeIntervalStandardDeviation</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html">Double</a>?<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1608464077%2FProperties%2F1946847589" anchor-label="timeIntervalStandardDeviation" id="-1608464077%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets estimated standard deviation of time interval between measurements expressed in seconds (s). This is only available when estimation completes successfully and <a href="../-base-accumulated-estimator/result-available.html">resultAvailable</a> is true.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-1057933484%2FProperties%2F1946847589" anchor-label="timeIntervalStandardDeviationAsTime" id="-1057933484%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-base-accumulated-estimator/time-interval-standard-deviation-as-time.html">timeIntervalStandardDeviationAsTime</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1057933484%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-1057933484%2FProperties%2F1946847589" anchor-label="timeIntervalStandardDeviationAsTime" id="-1057933484%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="../-base-accumulated-estimator/time-interval-standard-deviation-as-time.html">timeIntervalStandardDeviationAsTime</a>: <span data-unresolved-link="com.irurueta.units/Time///PointingToDeclaration/">Time</span>?<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1057933484%2FProperties%2F1946847589" anchor-label="timeIntervalStandardDeviationAsTime" id="-1057933484%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets estimated standard deviation of time interval between measurements. This is only available when estimation completes successfully and <a href="../-base-accumulated-estimator/result-available.html">resultAvailable</a> is true.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="1761812978%2FProperties%2F1946847589" anchor-label="timeIntervalVariance" id="1761812978%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-base-accumulated-estimator/time-interval-variance.html">timeIntervalVariance</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1761812978%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="1761812978%2FProperties%2F1946847589" anchor-label="timeIntervalVariance" id="1761812978%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="../-base-accumulated-estimator/time-interval-variance.html">timeIntervalVariance</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html">Double</a>?<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="1761812978%2FProperties%2F1946847589" anchor-label="timeIntervalVariance" id="1761812978%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets estimated variance of time interval between measurements expressed in squared seconds (s^2). This is only available when estimation completes successfully and <a href="../-base-accumulated-estimator/result-available.html">resultAvailable</a> is true.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="1687406725%2FProperties%2F1946847589" anchor-label="unreliableListener" id="1687406725%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-accumulated-measurement-estimator/unreliable-listener.html">unreliableListener</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1687406725%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="1687406725%2FProperties%2F1946847589" anchor-label="unreliableListener" id="1687406725%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="../-accumulated-measurement-estimator/unreliable-listener.html">unreliableListener</a>: <a href="../-accumulated-measurement-estimator/-on-unreliable-listener/index.html">AccumulatedMeasurementEstimator.OnUnreliableListener</a>&lt;<a href="index.html">AccelerometerNormEstimator</a>&gt;?<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="1687406725%2FProperties%2F1946847589" anchor-label="unreliableListener" id="1687406725%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Listener to notify when sensor becomes unreliable, and thus, estimation must be discarded.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="footer"><span class="go-to-top-icon"><a href="#content"></a></span><span>© 2022 Copyright</span><span class="pull-right"><span>Generated by </span><a href="https://github.com/Kotlin/dokka"><span>dokka</span><span class="padded-icon"></span></a></span></div>
+      </div>
+    </div>
+  </body>
+</html>
+

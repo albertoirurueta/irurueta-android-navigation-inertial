@@ -1,0 +1,209 @@
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>com.irurueta.android.navigation.inertial.estimators</title>
+<link href="../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../";</script><script type="text/javascript" src="../../scripts/sourceset_dependencies.js" async="async"></script><link href="../../styles/style.css" rel="Stylesheet"><link href="../../styles/logo-styles.css" rel="Stylesheet"><link href="../../styles/jetbrains-mono.css" rel="Stylesheet"><link href="../../styles/main.css" rel="Stylesheet"><script type="text/javascript" src="../../scripts/clipboard.js" async="async"></script><script type="text/javascript" src="../../scripts/navigation-loader.js" async="async"></script><script type="text/javascript" src="../../scripts/platform-content-handler.js" async="async"></script><script type="text/javascript" src="../../scripts/main.js" async="async"></script>  </head>
+  <body>
+    <div id="container">
+      <div id="leftColumn"><a href="../../index.html">
+          <div id="logo"></div>
+        </a>
+        <div id="paneSearch"></div>
+        <div id="sideMenu"></div>
+      </div>
+      <div id="main">
+        <div id="leftToggler"><span class="icon-toggler"></span></div>
+<script type="text/javascript" src="../../scripts/main.js"></script>        <div class="main-content" id="content" pageIds="lib::com.irurueta.android.navigation.inertial.estimators////PointingToDeclaration//1946847589">
+          <div class="navigation-wrapper" id="navigation-wrapper">
+            <div class="breadcrumbs"><a href="../../index.html">lib</a>/<a href="index.html">com.irurueta.android.navigation.inertial.estimators</a></div>
+            <div class="pull-right d-flex">
+              <div id="searchBar"></div>
+            </div>
+          </div>
+          <div class="cover ">
+            <h1 class="cover"><span><span>Package</span></span> <span>com.</span><wbr></wbr><span>irurueta.</span><wbr></wbr><span>android.</span><wbr></wbr><span>navigation.</span><wbr></wbr><span>inertial.</span><wbr></wbr><span>estimators</span></h1>
+          </div>
+          <div class="tabbedcontent">
+            <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="Types">Types</button></div>
+            <div class="tabs-section-body">
+              <h2 class="">Types</h2>
+              <div class="table" data-togglable="Types"><a data-name="-1868369344%2FClasslikes%2F1946847589" anchor-label="AccurateLevelingEstimator" id="-1868369344%2FClasslikes%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="-accurate-leveling-estimator/index.html"><span>Accurate</span><wbr></wbr><span>Leveling</span><wbr></wbr><span><span>Estimator</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1868369344%2FClasslikes%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">class <a href="-accurate-leveling-estimator/index.html">AccurateLevelingEstimator</a>(context: <a href="https://developer.android.com/reference/kotlin/android/content/Context.html">Context</a>, location: <a href="https://developer.android.com/reference/kotlin/android/location/Location.html">Location</a>, sensorDelay: <a href="../com.irurueta.android.navigation.inertial.collectors/-sensor-delay/index.html">SensorDelay</a>, useAccelerometer: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a>, accelerometerSensorType: <a href="../com.irurueta.android.navigation.inertial.collectors/-accelerometer-sensor-collector/-sensor-type/index.html">AccelerometerSensorCollector.SensorType</a>, accelerometerAveragingFilter: <a href="../com.irurueta.android.navigation.inertial.estimators.filter/-averaging-filter/index.html">AveragingFilter</a>, estimateCoordinateTransformation: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a>, estimateDisplayEulerAngles: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a>, levelingAvailableListener: <a href="-accurate-leveling-estimator/-on-leveling-available-listener/index.html">AccurateLevelingEstimator.OnLevelingAvailableListener</a>?) : <a href="-base-leveling-estimator/index.html">BaseLevelingEstimator</a>&lt;<a href="-accurate-leveling-estimator/index.html">AccurateLevelingEstimator</a>, <a href="-accurate-leveling-estimator/-on-leveling-available-listener/index.html">AccurateLevelingEstimator.OnLevelingAvailableListener</a>&gt; <span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<div class="brief "><p class="paragraph">Estimates leveling of device (roll and pitch angle) by estimating gravity vector using accelerometer measurements only. This estimator does not estimate attitude yaw angle, as either a magnetometer or gyroscope would be needed. This estimator is more accurate than <a href="-leveling-estimator/index.html">LevelingEstimator</a> since it takes into account device location (which requires location permission), and at the expense of higher CPU load.</p></div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="1002756227%2FClasslikes%2F1946847589" anchor-label="AccurateRelativeGyroscopeAttitudeEstimator" id="1002756227%2FClasslikes%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="-accurate-relative-gyroscope-attitude-estimator/index.html"><span>Accurate</span><wbr></wbr><span>Relative</span><wbr></wbr><span>Gyroscope</span><wbr></wbr><span>Attitude</span><wbr></wbr><span><span>Estimator</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1002756227%2FClasslikes%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">class <a href="-accurate-relative-gyroscope-attitude-estimator/index.html">AccurateRelativeGyroscopeAttitudeEstimator</a>(context: <a href="https://developer.android.com/reference/kotlin/android/content/Context.html">Context</a>, sensorType: <a href="../com.irurueta.android.navigation.inertial.collectors/-gyroscope-sensor-collector/-sensor-type/index.html">GyroscopeSensorCollector.SensorType</a>, sensorDelay: <a href="../com.irurueta.android.navigation.inertial.collectors/-sensor-delay/index.html">SensorDelay</a>, estimateCoordinateTransformation: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a>, estimateDisplayEulerAngles: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a>, attitudeAvailableListener: <a href="-accurate-relative-gyroscope-attitude-estimator/-on-attitude-available-listener/index.html">AccurateRelativeGyroscopeAttitudeEstimator.OnAttitudeAvailableListener</a>?) : <a href="-base-relative-gyroscope-attitude-estimator/index.html">BaseRelativeGyroscopeAttitudeEstimator</a>&lt;<a href="-accurate-relative-gyroscope-attitude-estimator/index.html">AccurateRelativeGyroscopeAttitudeEstimator</a>, <a href="-accurate-relative-gyroscope-attitude-estimator/-on-attitude-available-listener/index.html">AccurateRelativeGyroscopeAttitudeEstimator.OnAttitudeAvailableListener</a>&gt; <span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<div class="brief "><p class="paragraph">Estimates relative attitude respect to start attitude by integrating gyroscope sensor data using Runge-Kutta integration for greater accuracy, and without using any additional sensors.</p></div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="779971832%2FClasslikes%2F1946847589" anchor-label="AttitudeEstimator" id="779971832%2FClasslikes%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="-attitude-estimator/index.html"><span>Attitude</span><wbr></wbr><span><span>Estimator</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="779971832%2FClasslikes%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">class <a href="-attitude-estimator/index.html">AttitudeEstimator</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<div class="brief "><p class="paragraph">Estimates attitude based on accelerometer and magnetometer samples when using a given World Magnetic Model at a specific timestamp, or based on accelerometer and gyroscope samples if gyroscope is precise enough. IMU attitude estimation based on accelerometer and gyroscope should only be used when gyroscope is accurate enough, otherwise unreliable results will be obtained. Notice that when gyroscope is accurate, IMU attitude estimation can be used for purposes where device is subject to electromagnetic interference, since accelerometer and gyroscope is not interfered. However, gyroscope suffers from drift that increases with time. On the other hand, geomagnetic attitude estimation does not suffer from drift but is less precise and can be subject to electromagnetic interference.</p></div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="1757083667%2FClasslikes%2F1946847589" anchor-label="AttitudeIntegrator" id="1757083667%2FClasslikes%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="-attitude-integrator/index.html"><span>Attitude</span><wbr></wbr><span><span>Integrator</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1757083667%2FClasslikes%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">object <a href="-attitude-integrator/index.html">AttitudeIntegrator</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<div class="brief "><p class="paragraph">Integrates steps of attitude rotations using a Runge-Kutta integration algorithm.</p></div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-906289059%2FClasslikes%2F1946847589" anchor-label="BaseLevelingEstimator" id="-906289059%2FClasslikes%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="-base-leveling-estimator/index.html"><span>Base</span><wbr></wbr><span>Leveling</span><wbr></wbr><span><span>Estimator</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-906289059%2FClasslikes%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">abstract class <a href="-base-leveling-estimator/index.html">BaseLevelingEstimator</a>&lt;<a href="-base-leveling-estimator/index.html">T</a> : <a href="-base-leveling-estimator/index.html">BaseLevelingEstimator</a>&lt;<a href="-base-leveling-estimator/index.html">T</a>, <a href="-base-leveling-estimator/index.html">L</a>&gt;, <a href="-base-leveling-estimator/index.html">L</a> : <a href="-base-leveling-estimator/-on-leveling-available-listener/index.html">BaseLevelingEstimator.OnLevelingAvailableListener</a>&lt;<a href="-base-leveling-estimator/index.html">T</a>, <a href="-base-leveling-estimator/index.html">L</a>&gt;&gt;(context: <a href="https://developer.android.com/reference/kotlin/android/content/Context.html">Context</a>, sensorDelay: <a href="../com.irurueta.android.navigation.inertial.collectors/-sensor-delay/index.html">SensorDelay</a>, useAccelerometer: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a>, accelerometerSensorType: <a href="../com.irurueta.android.navigation.inertial.collectors/-accelerometer-sensor-collector/-sensor-type/index.html">AccelerometerSensorCollector.SensorType</a>, accelerometerAveragingFilter: <a href="../com.irurueta.android.navigation.inertial.estimators.filter/-averaging-filter/index.html">AveragingFilter</a>, estimateCoordinateTransformation: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a>, estimateDisplayEulerAngles: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a>, levelingAvailableListener: <a href="-base-leveling-estimator/index.html">L</a>?)<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<div class="brief "><p class="paragraph">Base class for estimators of device leveling (roll and pitch angles) by estimating gravity vector using accelerometer measurements only. Implementations of this estimator does not estimate attitude yaw angle, as either a magnetometer or gyroscope would be needed.</p></div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="1486161926%2FClasslikes%2F1946847589" anchor-label="BaseRelativeGyroscopeAttitudeEstimator" id="1486161926%2FClasslikes%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="-base-relative-gyroscope-attitude-estimator/index.html"><span>Base</span><wbr></wbr><span>Relative</span><wbr></wbr><span>Gyroscope</span><wbr></wbr><span>Attitude</span><wbr></wbr><span><span>Estimator</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1486161926%2FClasslikes%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">abstract class <a href="-base-relative-gyroscope-attitude-estimator/index.html">BaseRelativeGyroscopeAttitudeEstimator</a>&lt;<a href="-base-relative-gyroscope-attitude-estimator/index.html">T</a> : <a href="-base-relative-gyroscope-attitude-estimator/index.html">BaseRelativeGyroscopeAttitudeEstimator</a>&lt;<a href="-base-relative-gyroscope-attitude-estimator/index.html">T</a>, <a href="-base-relative-gyroscope-attitude-estimator/index.html">L</a>&gt;, <a href="-base-relative-gyroscope-attitude-estimator/index.html">L</a> : <a href="-base-relative-gyroscope-attitude-estimator/-on-attitude-available-listener/index.html">BaseRelativeGyroscopeAttitudeEstimator.OnAttitudeAvailableListener</a>&lt;<a href="-base-relative-gyroscope-attitude-estimator/index.html">T</a>, <a href="-base-relative-gyroscope-attitude-estimator/index.html">L</a>&gt;&gt;(context: <a href="https://developer.android.com/reference/kotlin/android/content/Context.html">Context</a>, sensorType: <a href="../com.irurueta.android.navigation.inertial.collectors/-gyroscope-sensor-collector/-sensor-type/index.html">GyroscopeSensorCollector.SensorType</a>, sensorDelay: <a href="../com.irurueta.android.navigation.inertial.collectors/-sensor-delay/index.html">SensorDelay</a>, estimateCoordinateTransformation: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a>, estimateDisplayEulerAngles: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a>, attitudeAvailableListener: <a href="-base-relative-gyroscope-attitude-estimator/index.html">L</a>?)<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<div class="brief "><p class="paragraph">Base class for estimators of device relative attitude respect to start attitude by integrating gyroscope sensor data without using any additional sensors.</p></div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="1856223746%2FClasslikes%2F1946847589" anchor-label="GravityEstimator" id="1856223746%2FClasslikes%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="-gravity-estimator/index.html"><span>Gravity</span><wbr></wbr><span><span>Estimator</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1856223746%2FClasslikes%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">class <a href="-gravity-estimator/index.html">GravityEstimator</a>(context: <a href="https://developer.android.com/reference/kotlin/android/content/Context.html">Context</a>, sensorDelay: <a href="../com.irurueta.android.navigation.inertial.collectors/-sensor-delay/index.html">SensorDelay</a>, useAccelerometer: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a>, accelerometerSensorType: <a href="../com.irurueta.android.navigation.inertial.collectors/-accelerometer-sensor-collector/-sensor-type/index.html">AccelerometerSensorCollector.SensorType</a>, estimationListener: <a href="-gravity-estimator/-on-estimation-listener/index.html">GravityEstimator.OnEstimationListener</a>?, accelerometerAveragingFilter: <a href="../com.irurueta.android.navigation.inertial.estimators.filter/-averaging-filter/index.html">AveragingFilter</a>)<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<div class="brief "><p class="paragraph">Estimates sensed specific force component associated to gravity by either using the OS gravity sensor or by low-pass filtering accelerometer measurements.</p></div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-968610867%2FClasslikes%2F1946847589" anchor-label="LeveledRelativeAttitudeEstimator" id="-968610867%2FClasslikes%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="-leveled-relative-attitude-estimator/index.html"><span>Leveled</span><wbr></wbr><span>Relative</span><wbr></wbr><span>Attitude</span><wbr></wbr><span><span>Estimator</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-968610867%2FClasslikes%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">class <a href="-leveled-relative-attitude-estimator/index.html">LeveledRelativeAttitudeEstimator</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<div class="brief "><p class="paragraph">Estimates a leveled relative attitude, where only yaw Euler angle is relative to the start instant of this estimator. Roll and pitch Euler angles are leveled using accelerometer or gravity sensors.</p></div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="778246444%2FClasslikes%2F1946847589" anchor-label="LevelingEstimator" id="778246444%2FClasslikes%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="-leveling-estimator/index.html"><span>Leveling</span><wbr></wbr><span><span>Estimator</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="778246444%2FClasslikes%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">class <a href="-leveling-estimator/index.html">LevelingEstimator</a>(context: <a href="https://developer.android.com/reference/kotlin/android/content/Context.html">Context</a>, sensorDelay: <a href="../com.irurueta.android.navigation.inertial.collectors/-sensor-delay/index.html">SensorDelay</a>, useAccelerometer: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a>, accelerometerSensorType: <a href="../com.irurueta.android.navigation.inertial.collectors/-accelerometer-sensor-collector/-sensor-type/index.html">AccelerometerSensorCollector.SensorType</a>, accelerometerAveragingFilter: <a href="../com.irurueta.android.navigation.inertial.estimators.filter/-averaging-filter/index.html">AveragingFilter</a>, estimateCoordinateTransformation: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a>, estimateDisplayEulerAngles: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a>, levelingAvailableListener: <a href="-leveling-estimator/-on-leveling-available-listener/index.html">LevelingEstimator.OnLevelingAvailableListener</a>?) : <a href="-base-leveling-estimator/index.html">BaseLevelingEstimator</a>&lt;<a href="-leveling-estimator/index.html">LevelingEstimator</a>, <a href="-leveling-estimator/-on-leveling-available-listener/index.html">LevelingEstimator.OnLevelingAvailableListener</a>&gt; <span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<div class="brief "><p class="paragraph">Estimates leveling of device (roll and pitch angle) by estimating gravity vector using accelerometer measurements only. This estimator does not estimate attitude yaw angle, as either a magnetometer or gyroscope would be needed.</p></div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-1273895145%2FClasslikes%2F1946847589" anchor-label="RelativeGyroscopeAttitudeEstimator" id="-1273895145%2FClasslikes%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="-relative-gyroscope-attitude-estimator/index.html"><span>Relative</span><wbr></wbr><span>Gyroscope</span><wbr></wbr><span>Attitude</span><wbr></wbr><span><span>Estimator</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1273895145%2FClasslikes%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">class <a href="-relative-gyroscope-attitude-estimator/index.html">RelativeGyroscopeAttitudeEstimator</a>(context: <a href="https://developer.android.com/reference/kotlin/android/content/Context.html">Context</a>, sensorType: <a href="../com.irurueta.android.navigation.inertial.collectors/-gyroscope-sensor-collector/-sensor-type/index.html">GyroscopeSensorCollector.SensorType</a>, sensorDelay: <a href="../com.irurueta.android.navigation.inertial.collectors/-sensor-delay/index.html">SensorDelay</a>, estimateCoordinateTransformation: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a>, estimateDisplayEulerAngles: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a>, attitudeAvailableListener: <a href="-relative-gyroscope-attitude-estimator/-on-attitude-available-listener/index.html">RelativeGyroscopeAttitudeEstimator.OnAttitudeAvailableListener</a>?) : <a href="-base-relative-gyroscope-attitude-estimator/index.html">BaseRelativeGyroscopeAttitudeEstimator</a>&lt;<a href="-relative-gyroscope-attitude-estimator/index.html">RelativeGyroscopeAttitudeEstimator</a>, <a href="-relative-gyroscope-attitude-estimator/-on-attitude-available-listener/index.html">RelativeGyroscopeAttitudeEstimator.OnAttitudeAvailableListener</a>&gt; <span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<div class="brief "><p class="paragraph">Estimates relative attitude respect to start attitude by integrating gyroscope sensor data without using any additional sensors.</p></div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="footer"><span class="go-to-top-icon"><a href="#content"></a></span><span>© 2022 Copyright</span><span class="pull-right"><span>Generated by </span><a href="https://github.com/Kotlin/dokka"><span>dokka</span><span class="padded-icon"></span></a></span></div>
+      </div>
+    </div>
+  </body>
+</html>
+
