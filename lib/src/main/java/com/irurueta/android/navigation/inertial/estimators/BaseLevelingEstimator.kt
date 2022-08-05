@@ -41,6 +41,8 @@ import com.irurueta.navigation.frames.FrameType
  * otherwise. If not needed, it can be disabled to improve performance and decrease cpu load.
  * @property estimateDisplayEulerAngles true to estimate euler angles, false otherwise. If not
  * needed, it can be disabled to improve performance and decrease cpu load.
+ * @property ignoreDisplayOrientation true to ignore display orientation, false otherwise. When
+ * context is not associated to a display, such as a background service, this must be true.
  * @property levelingAvailableListener listener to notify when a new leveling measurement is
  * available.
  */
@@ -54,6 +56,7 @@ abstract class BaseLevelingEstimator<T : BaseLevelingEstimator<T, L>,
     val accelerometerAveragingFilter: AveragingFilter = LowPassAveragingFilter(),
     val estimateCoordinateTransformation: Boolean = false,
     val estimateDisplayEulerAngles: Boolean = true,
+    val ignoreDisplayOrientation: Boolean = false,
     var levelingAvailableListener: L? = null
 ) {
 
@@ -113,7 +116,9 @@ abstract class BaseLevelingEstimator<T : BaseLevelingEstimator<T, L>,
      * (if needed) a coordinate transformation or display Euler angles.
      */
     protected fun postProcessAttitudeAndNotify() {
-        attitude.combine(displayOrientation)
+        if (!ignoreDisplayOrientation) {
+            attitude.combine(displayOrientation)
+        }
         attitude.inverse()
         attitude.normalize()
 

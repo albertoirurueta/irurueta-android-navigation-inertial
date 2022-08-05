@@ -16,11 +16,9 @@
 package com.irurueta.android.navigation.inertial.estimators
 
 import android.content.Context
-import com.irurueta.algebra.Matrix
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.geometry.Quaternion
-import com.irurueta.geometry.Rotation3D
 import com.irurueta.navigation.frames.CoordinateTransformation
 import com.irurueta.navigation.frames.FrameType
 import com.irurueta.navigation.inertial.calibration.TimeIntervalEstimator
@@ -36,6 +34,8 @@ import com.irurueta.navigation.inertial.calibration.TimeIntervalEstimator
  * otherwise. If not needed, it can be disabled to improve performance and decrease cpu load.
  * @property estimateDisplayEulerAngles true to estimate euler angles, false otherwise. If not
  * needed, it can be disabled to improve performance and decrease cpu load.
+ * @property ignoreDisplayOrientation true to ignore display orientation, false otherwise. When
+ * context is not associated to a display, such as a background service, this must be true.
  * @property attitudeAvailableListener listener to notify when a new attitude measurement is
  * available.
  */
@@ -47,6 +47,7 @@ abstract class BaseRelativeGyroscopeAttitudeEstimator<T : BaseRelativeGyroscopeA
     val sensorDelay: SensorDelay = SensorDelay.GAME,
     val estimateCoordinateTransformation: Boolean = false,
     val estimateDisplayEulerAngles: Boolean = true,
+    val ignoreDisplayOrientation: Boolean = false,
     var attitudeAvailableListener: L? = null
 ) {
     /**

@@ -829,7 +829,7 @@ class PoseHelperTest {
         )
         assertTrue(
             deltaTransformationResult.asMatrix()
-                .equals(deltaTransformation.inverseAndReturnNew().asMatrix(), ABSOLUTE_ERROR)
+                .equals(deltaTransformation.inverseAndReturnNew().asMatrix(), 2.0 * ABSOLUTE_ERROR)
         )
     }
 

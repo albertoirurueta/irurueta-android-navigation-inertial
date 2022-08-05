@@ -34,6 +34,7 @@ import com.irurueta.units.TimeConverter
  * otherwise. If not needed, it can be disabled to improve performance and decrease cpu load.
  * @property estimateDisplayEulerAngles true to estimate euler angles, false otherwise. If not
  * needed, it can be disabled to improve performance and decrease cpu load.
+ * @property ignoreDisplayOrientation true to ignore display orientation, false otherwise.
  * @property attitudeAvailableListener listener to notify when a new attitude measurement is
  * available.
  */
@@ -44,6 +45,7 @@ class RelativeGyroscopeAttitudeEstimator(
     sensorDelay: SensorDelay = SensorDelay.GAME,
     estimateCoordinateTransformation: Boolean = false,
     estimateDisplayEulerAngles: Boolean = true,
+    ignoreDisplayOrientation: Boolean = false,
     attitudeAvailableListener: OnAttitudeAvailableListener? = null
 ) : BaseRelativeGyroscopeAttitudeEstimator<RelativeGyroscopeAttitudeEstimator,
         RelativeGyroscopeAttitudeEstimator.OnAttitudeAvailableListener>(
@@ -52,6 +54,7 @@ class RelativeGyroscopeAttitudeEstimator(
     sensorDelay,
     estimateCoordinateTransformation,
     estimateDisplayEulerAngles,
+    ignoreDisplayOrientation,
     attitudeAvailableListener
 ) {
     /**
@@ -91,9 +94,11 @@ class RelativeGyroscopeAttitudeEstimator(
             else
                 wz.toDouble()
 
-            val displayRotationRadians =
-                DisplayOrientationHelper.getDisplayRotationRadians(context)
-            displayOrientation.setFromEulerAngles(0.0, 0.0, -displayRotationRadians)
+            if (!ignoreDisplayOrientation) {
+                val displayRotationRadians =
+                    DisplayOrientationHelper.getDisplayRotationRadians(context)
+                displayOrientation.setFromEulerAngles(0.0, 0.0, -displayRotationRadians)
+            }
 
             val roll = currentWx * dt
             val pitch = currentWy * dt
@@ -104,7 +109,9 @@ class RelativeGyroscopeAttitudeEstimator(
             internalAttitude.normalize()
 
             internalAttitude.copyTo(attitude)
-            attitude.combine(displayOrientation)
+            if (!ignoreDisplayOrientation) {
+                attitude.combine(displayOrientation)
+            }
             attitude.normalize()
             attitude.inverse()
             attitude.normalize()

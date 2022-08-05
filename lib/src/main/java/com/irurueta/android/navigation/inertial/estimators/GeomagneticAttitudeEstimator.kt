@@ -56,6 +56,8 @@ import java.util.*
  * otherwise. If not needed, it can be disabled to improve performance and decrease cpu load.
  * @property estimateDisplayEulerAngles true to estimate euler angles, false otherwise. If not
  * needed, it can be disabled to improve performance and decrease cpu load.
+ * @property ignoreDisplayOrientation true to ignore display orientation, false otherwise. When
+ * context is not associated to a display, such as a background service, this must be true.
  * @property attitudeAvailableListener listener to notify when a new attitude measurement is
  * available.
  */
@@ -69,6 +71,7 @@ class GeomagneticAttitudeEstimator private constructor(
     var timestamp: Date,
     val estimateCoordinateTransformation: Boolean,
     val estimateDisplayEulerAngles: Boolean,
+    val ignoreDisplayOrientation: Boolean = false,
     var attitudeAvailableListener: OnAttitudeAvailableListener?
 ) {
 
@@ -94,6 +97,8 @@ class GeomagneticAttitudeEstimator private constructor(
      * otherwise. If not needed, it can be disabled to improve performance and decrease cpu load.
      * @param estimateDisplayEulerAngles true to estimate euler angles, false otherwise. If not
      * needed, it can be disabled to improve performance and decrease cpu load.
+     * @param ignoreDisplayOrientation true to ignore display orientation, false otherwise. When
+     * context is not associated to a display, such as a background service, this must be true.
      * @param attitudeAvailableListener listener to notify when a new attitude measurement is
      * available.
      */
@@ -113,6 +118,7 @@ class GeomagneticAttitudeEstimator private constructor(
         useAccurateLevelingEstimator: Boolean = false,
         estimateCoordinateTransformation: Boolean = false,
         estimateDisplayEulerAngles: Boolean = true,
+        ignoreDisplayOrientation: Boolean = false,
         attitudeAvailableListener: OnAttitudeAvailableListener? = null
     ) : this(
         context,
@@ -124,6 +130,7 @@ class GeomagneticAttitudeEstimator private constructor(
         timestamp,
         estimateCoordinateTransformation,
         estimateDisplayEulerAngles,
+        ignoreDisplayOrientation,
         attitudeAvailableListener
     ) {
         this.location = location
@@ -329,7 +336,8 @@ class GeomagneticAttitudeEstimator private constructor(
                 accelerometerSensorType,
                 accelerometerAveragingFilter,
                 estimateCoordinateTransformation = false,
-                estimateDisplayEulerAngles = false
+                estimateDisplayEulerAngles = false,
+                ignoreDisplayOrientation = true
             ) { _, attitude, _, _, _ ->
                 processLeveling(attitude)
             }
@@ -341,7 +349,8 @@ class GeomagneticAttitudeEstimator private constructor(
                 accelerometerSensorType,
                 accelerometerAveragingFilter,
                 estimateCoordinateTransformation = false,
-                estimateDisplayEulerAngles = false
+                estimateDisplayEulerAngles = false,
+                ignoreDisplayOrientation = true
             ) { _, attitude, _, _, _ ->
                 processLeveling(attitude)
             }
@@ -373,10 +382,13 @@ class GeomagneticAttitudeEstimator private constructor(
             return
         }
 
-        val displayRotationRadians = DisplayOrientationHelper.getDisplayRotationRadians(context)
-        displayOrientation.setFromEulerAngles(0.0, 0.0, displayRotationRadians)
+        if (!ignoreDisplayOrientation) {
+            val displayRotationRadians = DisplayOrientationHelper.getDisplayRotationRadians(context)
+            displayOrientation.setFromEulerAngles(0.0, 0.0, displayRotationRadians)
+        }
 
-        attitude.copyTo(levelingAttitude)
+        attitude.inverse(levelingAttitude)
+
         // obtain roll and pitch euler angles from leveling
         levelingAttitude.toEulerAngles(displayEulerAngles)
         val roll = displayEulerAngles[0]
@@ -385,7 +397,9 @@ class GeomagneticAttitudeEstimator private constructor(
         val yaw = AttitudeEstimator.getYaw(sensorBx, sensorBy, sensorBz, declination, roll, pitch)
 
         fusedAttitude.setFromEulerAngles(roll, pitch, yaw)
-        fusedAttitude.combine(displayOrientation)
+        if (!ignoreDisplayOrientation) {
+            fusedAttitude.combine(displayOrientation)
+        }
         fusedAttitude.normalize()
         fusedAttitude.inverse()
         fusedAttitude.normalize()
@@ -415,7 +429,7 @@ class GeomagneticAttitudeEstimator private constructor(
         // notify
         attitudeAvailableListener?.onAttitudeAvailable(
             this@GeomagneticAttitudeEstimator,
-            attitude,
+            fusedAttitude,
             displayRoll,
             displayPitch,
             displayYaw,

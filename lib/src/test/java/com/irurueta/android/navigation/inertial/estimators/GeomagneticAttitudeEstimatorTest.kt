@@ -72,6 +72,7 @@ class GeomagneticAttitudeEstimatorTest {
         assertFalse(estimator.useAccurateLevelingEstimator)
         assertFalse(estimator.estimateCoordinateTransformation)
         assertTrue(estimator.estimateDisplayEulerAngles)
+        assertFalse(estimator.ignoreDisplayOrientation)
         assertNull(estimator.attitudeAvailableListener)
         assertFalse(estimator.running)
     }
@@ -98,6 +99,7 @@ class GeomagneticAttitudeEstimatorTest {
             useAccurateLevelingEstimator = true,
             estimateCoordinateTransformation = true,
             estimateDisplayEulerAngles = false,
+            ignoreDisplayOrientation = true,
             listener
         )
 
@@ -121,6 +123,7 @@ class GeomagneticAttitudeEstimatorTest {
         assertTrue(estimator.useAccurateLevelingEstimator)
         assertTrue(estimator.estimateCoordinateTransformation)
         assertFalse(estimator.estimateDisplayEulerAngles)
+        assertTrue(estimator.ignoreDisplayOrientation)
         assertSame(listener, estimator.attitudeAvailableListener)
         assertFalse(estimator.running)
     }
@@ -887,7 +890,7 @@ class GeomagneticAttitudeEstimatorTest {
         callPrivateFunc(GeomagneticAttitudeEstimator::class, estimator, "processLeveling", attitude)
 
         verify(exactly = 1) { displayOrientationSpy.setFromEulerAngles(0.0, 0.0, 0.0) }
-        verify(exactly = 1) { attitude.copyTo(levelingAttitudeSpy) }
+        verify(exactly = 1) { attitude.inverse(levelingAttitudeSpy) }
         verify(exactly = 1) { levelingAttitudeSpy.toEulerAngles(any()) }
         verify(exactly = 1) { fusedAttitudeSpy.setFromEulerAngles(any(), any(), any()) }
         verify(exactly = 1) { fusedAttitudeSpy.combine(displayOrientationSpy) }
@@ -942,7 +945,7 @@ class GeomagneticAttitudeEstimatorTest {
         callPrivateFunc(GeomagneticAttitudeEstimator::class, estimator, "processLeveling", attitude)
 
         verify(exactly = 1) { displayOrientationSpy.setFromEulerAngles(0.0, 0.0, 0.0) }
-        verify(exactly = 1) { attitude.copyTo(levelingAttitudeSpy) }
+        verify(exactly = 1) { attitude.inverse(levelingAttitudeSpy) }
         verify(exactly = 1) { levelingAttitudeSpy.toEulerAngles(any()) }
         verify(exactly = 1) { fusedAttitudeSpy.setFromEulerAngles(any(), any(), any()) }
         verify(exactly = 1) { fusedAttitudeSpy.combine(displayOrientationSpy) }
@@ -955,7 +958,7 @@ class GeomagneticAttitudeEstimatorTest {
         verify(exactly = 1) {
             listener.onAttitudeAvailable(
                 estimator,
-                attitude,
+                fusedAttitudeSpy,
                 any(),
                 any(),
                 any(),
@@ -1009,7 +1012,7 @@ class GeomagneticAttitudeEstimatorTest {
         callPrivateFunc(GeomagneticAttitudeEstimator::class, estimator, "processLeveling", attitude)
 
         verify(exactly = 1) { displayOrientationSpy.setFromEulerAngles(0.0, 0.0, 0.0) }
-        verify(exactly = 1) { attitude.copyTo(levelingAttitudeSpy) }
+        verify(exactly = 1) { attitude.inverse(levelingAttitudeSpy) }
         verify(exactly = 1) { levelingAttitudeSpy.toEulerAngles(any()) }
         verify(exactly = 1) { fusedAttitudeSpy.setFromEulerAngles(any(), any(), any()) }
         verify(exactly = 1) { fusedAttitudeSpy.combine(displayOrientationSpy) }
@@ -1022,7 +1025,7 @@ class GeomagneticAttitudeEstimatorTest {
         verify(exactly = 1) {
             listener.onAttitudeAvailable(
                 estimator,
-                attitude,
+                fusedAttitudeSpy,
                 null,
                 null,
                 null,
@@ -1073,7 +1076,7 @@ class GeomagneticAttitudeEstimatorTest {
         callPrivateFunc(GeomagneticAttitudeEstimator::class, estimator, "processLeveling", attitude)
 
         verify(exactly = 1) { displayOrientationSpy.setFromEulerAngles(0.0, 0.0, 0.0) }
-        verify(exactly = 1) { attitude.copyTo(levelingAttitudeSpy) }
+        verify(exactly = 1) { attitude.inverse(levelingAttitudeSpy) }
         verify(exactly = 1) { levelingAttitudeSpy.toEulerAngles(any()) }
         verify(exactly = 1) { fusedAttitudeSpy.setFromEulerAngles(any(), any(), any()) }
         verify(exactly = 1) { fusedAttitudeSpy.combine(displayOrientationSpy) }
@@ -1133,7 +1136,7 @@ class GeomagneticAttitudeEstimatorTest {
         callPrivateFunc(GeomagneticAttitudeEstimator::class, estimator, "processLeveling", attitude)
 
         verify(exactly = 1) { displayOrientationSpy.setFromEulerAngles(0.0, 0.0, 0.0) }
-        verify(exactly = 1) { attitude.copyTo(levelingAttitudeSpy) }
+        verify(exactly = 1) { attitude.inverse(levelingAttitudeSpy) }
         verify(exactly = 1) { levelingAttitudeSpy.toEulerAngles(any()) }
         verify(exactly = 1) { fusedAttitudeSpy.setFromEulerAngles(any(), any(), any()) }
         verify(exactly = 1) { fusedAttitudeSpy.combine(displayOrientationSpy) }
@@ -1141,6 +1144,73 @@ class GeomagneticAttitudeEstimatorTest {
         verify(exactly = 1) { fusedAttitudeSpy.inverse() }
         verify { coordinateTransformationSpy wasNot Called }
         verify(exactly = 1) { fusedAttitudeSpy.toEulerAngles(any()) }
+    }
+
+    @Test
+    fun processLeveling_whenIgnoreDisplayOrientation_estimatesAttitude() {
+        val display = mockk<Display>()
+        every { display.rotation }.returns(Surface.ROTATION_0)
+        val context = spyk(ApplicationProvider.getApplicationContext())
+        every { context.display }.returns(display)
+        val listener =
+            mockk<GeomagneticAttitudeEstimator.OnAttitudeAvailableListener>(relaxUnitFun = true)
+        val estimator = GeomagneticAttitudeEstimator(
+            context,
+            ignoreDisplayOrientation = true,
+            attitudeAvailableListener = listener
+        )
+
+        estimator.setPrivateProperty("hasMagnetometerValues", true)
+        val hasMagnetometerValues: Boolean? = estimator.getPrivateProperty("hasMagnetometerValues")
+        requireNotNull(hasMagnetometerValues)
+        assertTrue(hasMagnetometerValues)
+
+        // setup spies
+        val displayOrientation: Quaternion? = estimator.getPrivateProperty("displayOrientation")
+        requireNotNull(displayOrientation)
+        val displayOrientationSpy = spyk(displayOrientation)
+        estimator.setPrivateProperty("displayOrientation", displayOrientationSpy)
+
+        val levelingAttitude: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
+        requireNotNull(levelingAttitude)
+        val levelingAttitudeSpy = spyk(levelingAttitude)
+        estimator.setPrivateProperty("levelingAttitude", levelingAttitudeSpy)
+
+        val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
+        requireNotNull(fusedAttitude)
+        val fusedAttitudeSpy = spyk(fusedAttitude)
+        estimator.setPrivateProperty("fusedAttitude", fusedAttitudeSpy)
+
+        val coordinateTransformation: CoordinateTransformation? =
+            estimator.getPrivateProperty("coordinateTransformation")
+        requireNotNull(coordinateTransformation)
+        val coordinateTransformationSpy = spyk(coordinateTransformation)
+        estimator.setPrivateProperty("coordinateTransformation", coordinateTransformationSpy)
+
+        val attitude = spyk(Quaternion())
+        callPrivateFunc(GeomagneticAttitudeEstimator::class, estimator, "processLeveling", attitude)
+
+        verify(exactly = 0) { displayOrientationSpy.setFromEulerAngles(0.0, 0.0, 0.0) }
+        verify(exactly = 1) { attitude.inverse(levelingAttitudeSpy) }
+        verify(exactly = 1) { levelingAttitudeSpy.toEulerAngles(any()) }
+        verify(exactly = 1) { fusedAttitudeSpy.setFromEulerAngles(any(), any(), any()) }
+        verify(exactly = 0) { fusedAttitudeSpy.combine(displayOrientationSpy) }
+        verify(exactly = 3) { fusedAttitudeSpy.normalize() }
+        verify(exactly = 1) { fusedAttitudeSpy.inverse() }
+        verify(exactly = 0) { fusedAttitudeSpy.asInhomogeneousMatrix(any()) }
+        verify { coordinateTransformationSpy wasNot Called }
+        verify(exactly = 1) { fusedAttitudeSpy.toEulerAngles(any()) }
+
+        verify(exactly = 1) {
+            listener.onAttitudeAvailable(
+                estimator,
+                fusedAttitudeSpy,
+                any(),
+                any(),
+                any(),
+                null
+            )
+        }
     }
 
     private companion object {

@@ -48,6 +48,7 @@ import kotlin.math.min
  * otherwise. If not needed, it can be disabled to improve performance and decrease cpu load.
  * @property estimateDisplayEulerAngles true to estimate euler angles, false otherwise. If not
  * needed, it can be disabled to improve performance and decrease cpu load.
+ * @property ignoreDisplayOrientation true to ignore display orientation, false otherwise.
  * @property attitudeAvailableListener listener to notify when a new attitude measurement is
  * available.
  */
@@ -60,6 +61,7 @@ class LeveledRelativeAttitudeEstimator private constructor(
     val gyroscopeSensorType: GyroscopeSensorCollector.SensorType,
     val estimateCoordinateTransformation: Boolean,
     val estimateDisplayEulerAngles: Boolean,
+    val ignoreDisplayOrientation: Boolean = false,
     var attitudeAvailableListener: OnAttitudeAvailableListener?
 ) {
 
@@ -83,6 +85,7 @@ class LeveledRelativeAttitudeEstimator private constructor(
      * otherwise. If not needed, it can be disabled to improve performance and decrease cpu load.
      * @param estimateDisplayEulerAngles true to estimate euler angles, false otherwise. If not
      * needed, it can be disabled to improve performance and decrease cpu load.
+     * @param ignoreDisplayOrientation true to ignore display orientation, false otherwise.
      * @param attitudeAvailableListener listener to notify when a new attitude measurement is
      * available.
      */
@@ -100,6 +103,7 @@ class LeveledRelativeAttitudeEstimator private constructor(
         useAccurateRelativeGyroscopeAttitudeEstimator: Boolean = false,
         estimateCoordinateTransformation: Boolean = false,
         estimateDisplayEulerAngles: Boolean = true,
+        ignoreDisplayOrientation: Boolean = false,
         attitudeAvailableListener: OnAttitudeAvailableListener? = null
     ) : this(
         context,
@@ -110,6 +114,7 @@ class LeveledRelativeAttitudeEstimator private constructor(
         gyroscopeSensorType,
         estimateCoordinateTransformation,
         estimateDisplayEulerAngles,
+        ignoreDisplayOrientation,
         attitudeAvailableListener
     ) {
         this.location = location
@@ -375,7 +380,8 @@ class LeveledRelativeAttitudeEstimator private constructor(
                 accelerometerSensorType,
                 accelerometerAveragingFilter,
                 estimateCoordinateTransformation = false,
-                estimateDisplayEulerAngles = false
+                estimateDisplayEulerAngles = false,
+                ignoreDisplayOrientation = ignoreDisplayOrientation
             ) { _, attitude, _, _, _ ->
                 processLeveling(attitude)
             }
@@ -387,7 +393,8 @@ class LeveledRelativeAttitudeEstimator private constructor(
                 accelerometerSensorType,
                 accelerometerAveragingFilter,
                 estimateCoordinateTransformation = false,
-                estimateDisplayEulerAngles = false
+                estimateDisplayEulerAngles = false,
+                ignoreDisplayOrientation = ignoreDisplayOrientation
             ) { _, attitude, _, _, _ ->
                 processLeveling(attitude)
             }
@@ -404,7 +411,8 @@ class LeveledRelativeAttitudeEstimator private constructor(
                 gyroscopeSensorType,
                 sensorDelay,
                 estimateCoordinateTransformation = false,
-                estimateDisplayEulerAngles = false
+                estimateDisplayEulerAngles = false,
+                ignoreDisplayOrientation = ignoreDisplayOrientation
             ) { _, attitude, _, _, _, _ ->
                 processRelativeAttitude(attitude)
             }
@@ -414,7 +422,8 @@ class LeveledRelativeAttitudeEstimator private constructor(
                 gyroscopeSensorType,
                 sensorDelay,
                 estimateCoordinateTransformation = false,
-                estimateDisplayEulerAngles = false
+                estimateDisplayEulerAngles = false,
+                ignoreDisplayOrientation = ignoreDisplayOrientation
             ) { _, attitude, _, _, _, _ ->
                 processRelativeAttitude(attitude)
             }

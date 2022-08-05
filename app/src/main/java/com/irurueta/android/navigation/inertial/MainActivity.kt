@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatButton
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
 
 class MainActivity : AppCompatActivity() {
     private var absoluteAttitudeButton: AppCompatButton? = null
@@ -122,6 +123,29 @@ class MainActivity : AppCompatActivity() {
         null
 
     private var leveledRelativeAttitudeEstimatorUncalibratedGyroscopeAccurateAttitudeButton: AppCompatButton? = null
+
+    private var geomagneticAttitudeEstimatorButton: AppCompatButton? = null
+
+    private var geomagneticAttitudeEstimatorAccelerometerLowPassFilterButton: AppCompatButton? =
+        null
+
+    private var geomagneticAttitudeEstimatorAccelerometerMeanFilterButton: AppCompatButton? =
+        null
+
+    private var geomagneticAttitudeEstimatorAccelerometerMedianFilterButton: AppCompatButton? =
+        null
+
+    private var geomagneticAttitudeEstimatorAccelerometerUncalibratedLowPassButton: AppCompatButton? =
+        null
+
+    private var geomagneticAttitudeEstimatorAccelerometerUncalibratedMeanFilterButton: AppCompatButton? =
+        null
+
+    private var geomagneticAttitudeEstimatorAccelerometerUncalibratedMedianFilterButton: AppCompatButton? =
+        null
+
+    private var geomagneticAttitudeEstimatorUncalibratedMagnetometerButton: AppCompatButton? = null
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -1152,5 +1176,151 @@ class MainActivity : AppCompatActivity() {
             )
             startActivity(intent)
         }
+
+        geomagneticAttitudeEstimatorButton = findViewById(R.id.geomagnetic_attitude_estimator_gravity_button)
+        geomagneticAttitudeEstimatorButton?.setOnClickListener {
+            val intent = Intent(this@MainActivity, GeomagneticAttitudeEstimatorActivity::class.java)
+            intent.putExtra(GeomagneticAttitudeEstimatorActivity.USE_ACCELEROMETER, false)
+            intent.putExtra(
+                GeomagneticAttitudeEstimatorActivity.MAGNETOMETER_SENSOR_TYPE,
+                MagnetometerSensorCollector.SensorType.MAGNETOMETER
+            )
+            startActivity(intent)
+        }
+
+        geomagneticAttitudeEstimatorAccelerometerLowPassFilterButton = findViewById(R.id.geomagnetic_attitude_estimator_accelerometer_low_pass_filter_button)
+        geomagneticAttitudeEstimatorAccelerometerLowPassFilterButton?.setOnClickListener {
+            val intent = Intent(this@MainActivity, GeomagneticAttitudeEstimatorActivity::class.java)
+            intent.putExtra(GeomagneticAttitudeEstimatorActivity.USE_ACCELEROMETER, true)
+            intent.putExtra(
+                GeomagneticAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
+                AccelerometerSensorCollector.SensorType.ACCELEROMETER
+            )
+            intent.putExtra(
+                GeomagneticAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
+                GeomagneticAttitudeEstimatorActivity.LOW_PASS_AVERAGING_FILTER
+            )
+            intent.putExtra(
+                GeomagneticAttitudeEstimatorActivity.MAGNETOMETER_SENSOR_TYPE,
+                MagnetometerSensorCollector.SensorType.MAGNETOMETER
+            )
+            startActivity(intent)
+        }
+
+        geomagneticAttitudeEstimatorAccelerometerMeanFilterButton = findViewById(R.id.geomagnetic_attitude_estimator_accelerometer_mean_filter_button)
+        geomagneticAttitudeEstimatorAccelerometerMeanFilterButton?.setOnClickListener {
+            val intent = Intent(this@MainActivity, GeomagneticAttitudeEstimatorActivity::class.java)
+            intent.putExtra(GeomagneticAttitudeEstimatorActivity.USE_ACCELEROMETER, true)
+            intent.putExtra(
+                GeomagneticAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
+                AccelerometerSensorCollector.SensorType.ACCELEROMETER
+            )
+            intent.putExtra(
+                GeomagneticAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
+                GeomagneticAttitudeEstimatorActivity.MEAN_AVERAGING_FILTER
+            )
+            intent.putExtra(
+                GeomagneticAttitudeEstimatorActivity.MAGNETOMETER_SENSOR_TYPE,
+                MagnetometerSensorCollector.SensorType.MAGNETOMETER
+            )
+            startActivity(intent)
+        }
+
+        geomagneticAttitudeEstimatorAccelerometerMedianFilterButton = findViewById(R.id.geomagnetic_attitude_estimator_accelerometer_median_filter_button)
+        geomagneticAttitudeEstimatorAccelerometerMedianFilterButton?.setOnClickListener {
+            val intent = Intent(this@MainActivity, GeomagneticAttitudeEstimatorActivity::class.java)
+            intent.putExtra(GeomagneticAttitudeEstimatorActivity.USE_ACCELEROMETER, true)
+            intent.putExtra(
+                GeomagneticAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
+                AccelerometerSensorCollector.SensorType.ACCELEROMETER
+            )
+            intent.putExtra(
+                GeomagneticAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
+                GeomagneticAttitudeEstimatorActivity.MEDIAN_AVERAGING_FILTER
+            )
+            intent.putExtra(
+                GeomagneticAttitudeEstimatorActivity.MAGNETOMETER_SENSOR_TYPE,
+                MagnetometerSensorCollector.SensorType.MAGNETOMETER
+            )
+            startActivity(intent)
+        }
+
+        geomagneticAttitudeEstimatorAccelerometerUncalibratedLowPassButton = findViewById(R.id.geomagnetic_attitude_estimator_accelerometer_uncalibrated_low_pass_filter_button)
+        geomagneticAttitudeEstimatorAccelerometerUncalibratedLowPassButton?.setOnClickListener {
+            val intent = Intent(this@MainActivity, GeomagneticAttitudeEstimatorActivity::class.java)
+            intent.putExtra(GeomagneticAttitudeEstimatorActivity.USE_ACCELEROMETER, true)
+            intent.putExtra(
+                GeomagneticAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
+                AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+            )
+            intent.putExtra(
+                GeomagneticAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
+                GeomagneticAttitudeEstimatorActivity.LOW_PASS_AVERAGING_FILTER
+            )
+            intent.putExtra(
+                GeomagneticAttitudeEstimatorActivity.MAGNETOMETER_SENSOR_TYPE,
+                MagnetometerSensorCollector.SensorType.MAGNETOMETER
+            )
+            startActivity(intent)
+        }
+
+        geomagneticAttitudeEstimatorAccelerometerUncalibratedMeanFilterButton = findViewById(R.id.geomagnetic_attitude_estimator_accelerometer_uncalibrated_mean_filter_button)
+        geomagneticAttitudeEstimatorAccelerometerUncalibratedMeanFilterButton?.setOnClickListener {
+            val intent = Intent(this@MainActivity, GeomagneticAttitudeEstimatorActivity::class.java)
+            intent.putExtra(GeomagneticAttitudeEstimatorActivity.USE_ACCELEROMETER, true)
+            intent.putExtra(
+                GeomagneticAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
+                AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+            )
+            intent.putExtra(
+                GeomagneticAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
+                GeomagneticAttitudeEstimatorActivity.MEAN_AVERAGING_FILTER
+            )
+            intent.putExtra(
+                GeomagneticAttitudeEstimatorActivity.MAGNETOMETER_SENSOR_TYPE,
+                MagnetometerSensorCollector.SensorType.MAGNETOMETER
+            )
+            startActivity(intent)
+        }
+
+        geomagneticAttitudeEstimatorAccelerometerUncalibratedMedianFilterButton = findViewById(R.id.geomagnetic_attitude_estimator_accelerometer_uncalibrated_median_filter_button)
+        geomagneticAttitudeEstimatorAccelerometerUncalibratedMedianFilterButton?.setOnClickListener {
+            val intent = Intent(this@MainActivity, GeomagneticAttitudeEstimatorActivity::class.java)
+            intent.putExtra(GeomagneticAttitudeEstimatorActivity.USE_ACCELEROMETER, true)
+            intent.putExtra(
+                GeomagneticAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
+                AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+            )
+            intent.putExtra(
+                GeomagneticAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
+                GeomagneticAttitudeEstimatorActivity.MEDIAN_AVERAGING_FILTER
+            )
+            intent.putExtra(
+                GeomagneticAttitudeEstimatorActivity.MAGNETOMETER_SENSOR_TYPE,
+                MagnetometerSensorCollector.SensorType.MAGNETOMETER
+            )
+            startActivity(intent)
+        }
+
+        geomagneticAttitudeEstimatorUncalibratedMagnetometerButton = findViewById(R.id.geomagnetic_attitude_estimator_uncalibrated_magnetometer_accurate_attitude_button)
+        geomagneticAttitudeEstimatorUncalibratedMagnetometerButton?.setOnClickListener {
+            val intent = Intent(this@MainActivity, GeomagneticAttitudeEstimatorActivity::class.java)
+            intent.putExtra(GeomagneticAttitudeEstimatorActivity.USE_ACCELEROMETER, true)
+            intent.putExtra(
+                GeomagneticAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
+                AccelerometerSensorCollector.SensorType.ACCELEROMETER
+            )
+            intent.putExtra(
+                GeomagneticAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
+                GeomagneticAttitudeEstimatorActivity.LOW_PASS_AVERAGING_FILTER
+            )
+            intent.putExtra(
+                GeomagneticAttitudeEstimatorActivity.MAGNETOMETER_SENSOR_TYPE,
+                MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED
+            )
+            startActivity(intent)
+        }
+
+
     }
 }

@@ -35,6 +35,8 @@ import com.irurueta.units.TimeConverter
  * otherwise. If not needed, it can be disabled to improve performance and decrease cpu load.
  * @property estimateDisplayEulerAngles true to estimate euler angles, false otherwise. If not
  * needed, it can be disabled to improve performance and decrease cpu load.
+ * @property ignoreDisplayOrientation true to ignore display orientation, false otherwise. When
+ * context is not associated to a display, such as a background service, this must be true.
  * @property attitudeAvailableListener listener to notify when a new attitude measurement is
  * available.
  */
@@ -45,6 +47,7 @@ class AccurateRelativeGyroscopeAttitudeEstimator(
     sensorDelay: SensorDelay = SensorDelay.GAME,
     estimateCoordinateTransformation: Boolean = false,
     estimateDisplayEulerAngles: Boolean = true,
+    ignoreDisplayOrientation: Boolean = false,
     attitudeAvailableListener: OnAttitudeAvailableListener? = null
 ) : BaseRelativeGyroscopeAttitudeEstimator<AccurateRelativeGyroscopeAttitudeEstimator,
         AccurateRelativeGyroscopeAttitudeEstimator.OnAttitudeAvailableListener>(
@@ -53,6 +56,7 @@ class AccurateRelativeGyroscopeAttitudeEstimator(
     sensorDelay,
     estimateCoordinateTransformation,
     estimateDisplayEulerAngles,
+    ignoreDisplayOrientation,
     attitudeAvailableListener
 ) {
 
@@ -112,9 +116,11 @@ class AccurateRelativeGyroscopeAttitudeEstimator(
             if (!isFirst) {
                 val dt = timeIntervalEstimator.averageTimeInterval
 
-                val displayRotationRadians =
-                    DisplayOrientationHelper.getDisplayRotationRadians(context)
-                displayOrientation.setFromEulerAngles(0.0, 0.0, -displayRotationRadians)
+                if (!ignoreDisplayOrientation) {
+                    val displayRotationRadians =
+                        DisplayOrientationHelper.getDisplayRotationRadians(context)
+                    displayOrientation.setFromEulerAngles(0.0, 0.0, -displayRotationRadians)
+                }
 
                 quaternionStepIntegrator.integrate(
                     internalAttitude,
@@ -129,7 +135,9 @@ class AccurateRelativeGyroscopeAttitudeEstimator(
                 )
 
                 internalAttitude.copyTo(attitude)
-                attitude.combine(displayOrientation)
+                if (!ignoreDisplayOrientation) {
+                    attitude.combine(displayOrientation)
+                }
                 attitude.normalize()
                 attitude.inverse()
                 attitude.normalize()

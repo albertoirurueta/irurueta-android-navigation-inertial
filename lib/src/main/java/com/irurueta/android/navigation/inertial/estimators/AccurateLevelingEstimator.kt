@@ -48,6 +48,8 @@ import kotlin.math.atan2
  * otherwise. If not needed, it can be disabled to improve performance and decrease cpu load.
  * @property estimateDisplayEulerAngles true to estimate euler angles, false otherwise. If not
  * needed, it can be disabled to improve performance and decrease cpu load.
+ * @property ignoreDisplayOrientation true to ignore display orientation, false otherwise. When
+ * context is not associated to a display, such as a background service, this must be true.
  * @property levelingAvailableListener listener to notify when a new leveling measurement is
  * available.
  */
@@ -61,6 +63,7 @@ class AccurateLevelingEstimator(
     accelerometerAveragingFilter: AveragingFilter = LowPassAveragingFilter(),
     estimateCoordinateTransformation: Boolean = false,
     estimateDisplayEulerAngles: Boolean = true,
+    ignoreDisplayOrientation: Boolean = false,
     levelingAvailableListener: OnLevelingAvailableListener? = null
 ) : BaseLevelingEstimator<AccurateLevelingEstimator, AccurateLevelingEstimator.OnLevelingAvailableListener>(
     context,
@@ -70,6 +73,7 @@ class AccurateLevelingEstimator(
     accelerometerAveragingFilter,
     estimateCoordinateTransformation,
     estimateDisplayEulerAngles,
+    ignoreDisplayOrientation,
     levelingAvailableListener
 ) {
     /**
@@ -81,9 +85,11 @@ class AccurateLevelingEstimator(
         useAccelerometer,
         accelerometerSensorType,
         { _, fx, fy, fz, _ ->
-            val displayRotationRadians =
-                DisplayOrientationHelper.getDisplayRotationRadians(context)
-            displayOrientation.setFromEulerAngles(0.0, 0.0, displayRotationRadians)
+            if (!ignoreDisplayOrientation) {
+                val displayRotationRadians =
+                    DisplayOrientationHelper.getDisplayRotationRadians(context)
+                displayOrientation.setFromEulerAngles(0.0, 0.0, displayRotationRadians)
+            }
 
             computeLevelingAttitude(
                 Math.toRadians(location.latitude),

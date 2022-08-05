@@ -25,7 +25,6 @@ import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.android.navigation.inertial.estimators.filter.MeanAveragingFilter
 import com.irurueta.android.navigation.inertial.getPrivateProperty
 import com.irurueta.android.navigation.inertial.setPrivateProperty
-import com.irurueta.geometry.InvalidRotationMatrixException
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.frames.CoordinateTransformation
 import com.irurueta.statistics.UniformRandomizer
@@ -59,6 +58,7 @@ class LeveledRelativeAttitudeEstimatorTest {
         assertFalse(estimator.useAccurateRelativeGyroscopeAttitudeEstimator)
         assertFalse(estimator.estimateCoordinateTransformation)
         assertTrue(estimator.estimateDisplayEulerAngles)
+        assertFalse(estimator.ignoreDisplayOrientation)
         assertNull(estimator.attitudeAvailableListener)
         assertFalse(estimator.running)
         assertTrue(estimator.useIndirectInterpolation)
@@ -106,6 +106,7 @@ class LeveledRelativeAttitudeEstimatorTest {
             useAccurateRelativeGyroscopeAttitudeEstimator = true,
             estimateCoordinateTransformation = true,
             estimateDisplayEulerAngles = false,
+            ignoreDisplayOrientation = true,
             listener
         )
 
@@ -127,6 +128,7 @@ class LeveledRelativeAttitudeEstimatorTest {
         assertTrue(estimator.useAccurateRelativeGyroscopeAttitudeEstimator)
         assertTrue(estimator.estimateCoordinateTransformation)
         assertFalse(estimator.estimateDisplayEulerAngles)
+        assertTrue(estimator.ignoreDisplayOrientation)
         assertSame(listener, estimator.attitudeAvailableListener)
         assertFalse(estimator.running)
         assertTrue(estimator.useIndirectInterpolation)

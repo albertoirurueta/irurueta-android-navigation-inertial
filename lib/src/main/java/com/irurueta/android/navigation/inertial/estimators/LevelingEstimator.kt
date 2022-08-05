@@ -38,6 +38,7 @@ import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragi
  * otherwise. If not needed, it can be disabled to improve performance and decrease cpu load.
  * @property estimateDisplayEulerAngles true to estimate euler angles, false otherwise. If not
  * needed, it can be disabled to improve performance and decrease cpu load.
+ * @property ignoreDisplayOrientation true to ignore display orientation, false otherwise.
  * @property levelingAvailableListener listener to notify when a new leveling measurement is
  * available.
  */
@@ -50,6 +51,7 @@ class LevelingEstimator(
     accelerometerAveragingFilter: AveragingFilter = LowPassAveragingFilter(),
     estimateCoordinateTransformation: Boolean = false,
     estimateDisplayEulerAngles: Boolean = true,
+    ignoreDisplayOrientation: Boolean = false,
     levelingAvailableListener: OnLevelingAvailableListener? = null
 ) : BaseLevelingEstimator<LevelingEstimator, LevelingEstimator.OnLevelingAvailableListener>(
     context,
@@ -59,6 +61,7 @@ class LevelingEstimator(
     accelerometerAveragingFilter,
     estimateCoordinateTransformation,
     estimateDisplayEulerAngles,
+    ignoreDisplayOrientation,
     levelingAvailableListener
 ) {
     /**
@@ -70,9 +73,11 @@ class LevelingEstimator(
         useAccelerometer,
         accelerometerSensorType,
         { _, fx, fy, fz, _ ->
-            val displayRotationRadians =
-                DisplayOrientationHelper.getDisplayRotationRadians(context)
-            displayOrientation.setFromEulerAngles(0.0, 0.0, -displayRotationRadians)
+            if (!ignoreDisplayOrientation) {
+                val displayRotationRadians =
+                    DisplayOrientationHelper.getDisplayRotationRadians(context)
+                displayOrientation.setFromEulerAngles(0.0, 0.0, -displayRotationRadians)
+            }
 
             val roll = com.irurueta.navigation.inertial.estimators.LevelingEstimator.getRoll(fy, fz)
             val pitch =

@@ -56,6 +56,7 @@ class LevelingEstimatorTest {
         assertNotNull(estimator.accelerometerAveragingFilter)
         assertFalse(estimator.estimateCoordinateTransformation)
         assertTrue(estimator.estimateDisplayEulerAngles)
+        assertFalse(estimator.ignoreDisplayOrientation)
         assertNull(estimator.levelingAvailableListener)
         assertFalse(estimator.running)
     }
@@ -73,6 +74,7 @@ class LevelingEstimatorTest {
             accelerometerAveragingFilter,
             estimateCoordinateTransformation = true,
             estimateDisplayEulerAngles = false,
+            ignoreDisplayOrientation = true,
             levelingAvailableListener
         )
 
@@ -87,6 +89,7 @@ class LevelingEstimatorTest {
         assertSame(accelerometerAveragingFilter, estimator.accelerometerAveragingFilter)
         assertTrue(estimator.estimateCoordinateTransformation)
         assertFalse(estimator.estimateDisplayEulerAngles)
+        assertTrue(estimator.ignoreDisplayOrientation)
         assertSame(levelingAvailableListener, estimator.levelingAvailableListener)
         assertFalse(estimator.running)
     }
@@ -475,6 +478,124 @@ class LevelingEstimatorTest {
                 displayRoll,
                 displayPitch,
                 coordinateTransformationSpy
+            )
+        }
+    }
+
+    @Test
+    fun onGravityEstimation_whenListenerIgnoreDisplayOrientation_updatesAttitude() {
+        val display = mockk<Display>()
+        every { display.rotation }.returns(Surface.ROTATION_0)
+        val context = spyk(ApplicationProvider.getApplicationContext())
+        every { context.display }.returns(display)
+
+        val levelingAvailableListener =
+            mockk<LevelingEstimator.OnLevelingAvailableListener>(relaxUnitFun = true)
+
+        val estimator = LevelingEstimator(
+            context,
+            estimateCoordinateTransformation = false,
+            estimateDisplayEulerAngles = false,
+            ignoreDisplayOrientation = true,
+            levelingAvailableListener = levelingAvailableListener
+        )
+
+        val attitude: Quaternion? =
+            getPrivateProperty(BaseLevelingEstimator::class, estimator, "attitude")
+        requireNotNull(attitude)
+        val attitudeSpy = spyk(attitude)
+        setPrivateProperty(BaseLevelingEstimator::class, estimator, "attitude", attitudeSpy)
+
+        val displayOrientation: Quaternion? =
+            getPrivateProperty(BaseLevelingEstimator::class, estimator, "displayOrientation")
+        requireNotNull(displayOrientation)
+        val displayOrientationSpy = spyk(displayOrientation)
+        setPrivateProperty(
+            BaseLevelingEstimator::class,
+            estimator,
+            "displayOrientation",
+            displayOrientationSpy
+        )
+
+        val displayEulerAngles: DoubleArray? =
+            getPrivateProperty(BaseLevelingEstimator::class, estimator, "displayEulerAngles")
+        requireNotNull(displayEulerAngles)
+
+        val coordinateTransformation: CoordinateTransformation? =
+            getPrivateProperty(BaseLevelingEstimator::class, estimator, "coordinateTransformation")
+        requireNotNull(coordinateTransformation)
+        val coordinateTransformationSpy = spyk(coordinateTransformation)
+        setPrivateProperty(
+            BaseLevelingEstimator::class,
+            estimator,
+            "coordinateTransformation",
+            coordinateTransformationSpy
+        )
+
+        val randomizer = UniformRandomizer()
+        val latitude =
+            Math.toRadians(randomizer.nextDouble(MIN_LATITUDE_DEGREES, MAX_LATITUDE_DEGREES))
+        val height = randomizer.nextDouble(MIN_HEIGHT, MAX_HEIGHT)
+
+        // body attitude
+        val roll1 = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
+        val pitch1 = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
+        val yaw1 = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
+
+        // attitude is expressed as rotation from local navigation frame
+        // to body frame, since angles are measured on the device body
+        val bodyC = CoordinateTransformation(
+            roll1,
+            pitch1,
+            yaw1,
+            FrameType.LOCAL_NAVIGATION_FRAME,
+            FrameType.BODY_FRAME
+        )
+
+        // obtain specific force neglecting north component of gravity
+        val cnb = bodyC.matrix
+        val nedGravity = NEDGravityEstimator.estimateGravityAndReturnNew(latitude, height)
+        val g = Matrix.newFromArray(nedGravity.asArray())
+        g.multiplyByScalar(-1.0)
+        val f = cnb.multiplyAndReturnNew(g)
+
+        val fx = f.getElementAtIndex(0)
+        val fy = f.getElementAtIndex(1)
+        val fz = f.getElementAtIndex(2)
+
+        val gravityEstimator: GravityEstimator? = estimator.getPrivateProperty("gravityEstimator")
+        requireNotNull(gravityEstimator)
+        val gravityEstimatorListener: GravityEstimator.OnEstimationListener? =
+            gravityEstimator.estimationListener
+        requireNotNull(gravityEstimatorListener)
+
+        val timestamp = SystemClock.elapsedRealtimeNanos()
+        gravityEstimatorListener.onEstimation(gravityEstimator, fx, fy, fz, timestamp)
+
+        val expectedRoll =
+            com.irurueta.navigation.inertial.estimators.LevelingEstimator.getRoll(fy, fz)
+        val expectedPitch =
+            com.irurueta.navigation.inertial.estimators.LevelingEstimator.getPitch(fx, fy, fz)
+
+        assertEquals(displayOrientation, Quaternion())
+        verify(exactly = 0) { displayOrientationSpy.setFromEulerAngles(0.0, 0.0, -0.0) }
+
+        verify(exactly = 1) { attitudeSpy.setFromEulerAngles(expectedRoll, expectedPitch, 0.0) }
+        verify(exactly = 0) { attitudeSpy.combine(displayOrientationSpy) }
+        verify(exactly = 1) { attitudeSpy.inverse() }
+        verify(exactly = 2) { attitudeSpy.normalize() }
+
+        verify { coordinateTransformationSpy wasNot Called }
+
+        assertArrayEquals(displayEulerAngles, doubleArrayOf(0.0, 0.0, 0.0), 0.0)
+
+        verify(exactly = 1) {
+            levelingAvailableListener.onLevelingAvailable(
+                estimator,
+                attitudeSpy,
+                null,
+                null,
+                null
             )
         }
     }
