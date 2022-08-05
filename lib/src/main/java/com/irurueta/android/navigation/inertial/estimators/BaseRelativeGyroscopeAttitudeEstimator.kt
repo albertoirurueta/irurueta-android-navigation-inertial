@@ -62,19 +62,9 @@ abstract class BaseRelativeGyroscopeAttitudeEstimator<T : BaseRelativeGyroscopeA
     protected val internalAttitude = Quaternion()
 
     /**
-     * Instance to be reused which contains variation of attitude between gyroscope samples.
-     */
-    protected val deltaAttitude = Quaternion()
-
-    /**
      * Instance to be reused containing display rotation as a yaw angle.
      */
     protected val displayOrientation = Quaternion()
-
-    /**
-     * Instance to be reused containing rotation matrix of coordinate transformation.
-     */
-    protected val rotationMatrix = Matrix(Rotation3D.INHOM_COORDS, Rotation3D.INHOM_COORDS)
 
     /**
      * Array to be reused containing euler angles of leveling attitude.
@@ -145,7 +135,6 @@ abstract class BaseRelativeGyroscopeAttitudeEstimator<T : BaseRelativeGyroscopeA
 
         resetQuaternion(attitude)
         resetQuaternion(internalAttitude)
-        resetQuaternion(deltaAttitude)
     }
 
     internal companion object {

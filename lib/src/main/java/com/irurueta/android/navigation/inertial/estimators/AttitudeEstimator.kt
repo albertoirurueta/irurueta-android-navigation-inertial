@@ -130,8 +130,6 @@ class AttitudeEstimator private constructor(
         this.worldMagneticModel = worldMagneticModel
     }
 
-    private val rotationMatrix = Matrix(Rotation3D.INHOM_COORDS, Rotation3D.INHOM_COORDS)
-
     /**
      * Instance to be reused containing coordinate transformation in NED coordinates.
      */
@@ -667,12 +665,7 @@ class AttitudeEstimator private constructor(
         attitude.combine(displayOrientation)
         attitude.inverse()
         attitude.normalize()
-        attitude.asInhomogeneousMatrix(rotationMatrix)
-        try {
-            coordinateTransformation.matrix = rotationMatrix
-        } catch (ignore: InvalidRotationMatrixException) {
-        }
-
+        coordinateTransformation.fromRotation(attitude)
 
         /*val normF = doubleArrayOf(fx, fy, fz)
         ArrayUtils.normalize(normF)

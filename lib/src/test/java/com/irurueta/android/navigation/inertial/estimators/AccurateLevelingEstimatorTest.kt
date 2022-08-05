@@ -181,17 +181,6 @@ class AccurateLevelingEstimatorTest {
             displayOrientationSpy
         )
 
-        val rotationMatrix: Matrix? =
-            getPrivateProperty(BaseLevelingEstimator::class, estimator, "rotationMatrix")
-        requireNotNull(rotationMatrix)
-        val rotationMatrixSpy = spyk(rotationMatrix)
-        setPrivateProperty(
-            BaseLevelingEstimator::class,
-            estimator,
-            "rotationMatrix",
-            rotationMatrixSpy
-        )
-
         val displayEulerAngles: DoubleArray? =
             getPrivateProperty(BaseLevelingEstimator::class, estimator, "displayEulerAngles")
         requireNotNull(displayEulerAngles)
@@ -300,17 +289,6 @@ class AccurateLevelingEstimatorTest {
             estimator,
             "displayOrientation",
             displayOrientationSpy
-        )
-
-        val rotationMatrix: Matrix? =
-            getPrivateProperty(BaseLevelingEstimator::class, estimator, "rotationMatrix")
-        requireNotNull(rotationMatrix)
-        val rotationMatrixSpy = spyk(rotationMatrix)
-        setPrivateProperty(
-            BaseLevelingEstimator::class,
-            estimator,
-            "rotationMatrix",
-            rotationMatrixSpy
         )
 
         val displayEulerAngles: DoubleArray? =
@@ -426,17 +404,6 @@ class AccurateLevelingEstimatorTest {
             displayOrientationSpy
         )
 
-        val rotationMatrix: Matrix? =
-            getPrivateProperty(BaseLevelingEstimator::class, estimator, "rotationMatrix")
-        requireNotNull(rotationMatrix)
-        val rotationMatrixSpy = spyk(rotationMatrix)
-        setPrivateProperty(
-            BaseLevelingEstimator::class,
-            estimator,
-            "rotationMatrix",
-            rotationMatrixSpy
-        )
-
         val displayEulerAngles: DoubleArray? =
             getPrivateProperty(BaseLevelingEstimator::class, estimator, "displayEulerAngles")
         requireNotNull(displayEulerAngles)
@@ -498,10 +465,7 @@ class AccurateLevelingEstimatorTest {
         verify(exactly = 1) { attitudeSpy.combine(displayOrientationSpy) }
         verify(exactly = 1) { attitudeSpy.inverse() }
         verify(exactly = 1) { attitudeSpy.normalize() }
-        verify(exactly = 1) { attitudeSpy.asInhomogeneousMatrix(rotationMatrixSpy) }
-
-        verify(exactly = 1) { coordinateTransformationSpy.matrix = rotationMatrixSpy }
-
+        verify(exactly = 1) { coordinateTransformationSpy.fromRotation(attitudeSpy) }
         verify(exactly = 1) { attitudeSpy.toEulerAngles(displayEulerAngles) }
 
         val displayRoll = displayEulerAngles[0]

@@ -19,8 +19,9 @@ import android.content.Context
 import com.irurueta.android.navigation.inertial.DisplayOrientationHelper
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
-import com.irurueta.geometry.InvalidRotationMatrixException
 import com.irurueta.navigation.frames.CoordinateTransformation
+import com.irurueta.navigation.inertial.calibration.gyroscope.QuaternionStepIntegrator
+import com.irurueta.navigation.inertial.calibration.gyroscope.QuaternionStepIntegratorType
 import com.irurueta.units.TimeConverter
 
 /**
@@ -71,6 +72,13 @@ class AccurateRelativeGyroscopeAttitudeEstimator(
     private var previousWz = 0.0
 
     /**
+     * Integrates new gyroscope measurements into existing attitude.
+     */
+    private val quaternionStepIntegrator = QuaternionStepIntegrator.create(
+        QuaternionStepIntegratorType.RUNGE_KUTTA
+    )
+
+    /**
      * Internal gyroscope sensor collector.
      */
     override val gyroscopeSensorCollector = GyroscopeSensorCollector(
@@ -108,36 +116,28 @@ class AccurateRelativeGyroscopeAttitudeEstimator(
                     DisplayOrientationHelper.getDisplayRotationRadians(context)
                 displayOrientation.setFromEulerAngles(0.0, 0.0, -displayRotationRadians)
 
-                resetQuaternion(deltaAttitude)
-                AttitudeIntegrator.integrationStep(
-                    deltaAttitude,
+                quaternionStepIntegrator.integrate(
+                    internalAttitude,
                     previousWx,
                     previousWy,
                     previousWz,
-                    currentWy,
+                    currentWx,
                     currentWy,
                     currentWz,
                     dt,
-                    deltaAttitude
+                    internalAttitude
                 )
-                deltaAttitude.normalize()
-                internalAttitude.combine(deltaAttitude)
-                internalAttitude.normalize()
 
                 internalAttitude.copyTo(attitude)
                 attitude.combine(displayOrientation)
+                attitude.normalize()
                 attitude.inverse()
                 attitude.normalize()
 
                 val c: CoordinateTransformation? =
                     if (estimateCoordinateTransformation) {
-                        attitude.asInhomogeneousMatrix(rotationMatrix)
-                        try {
-                            coordinateTransformation.matrix = rotationMatrix
-                            coordinateTransformation
-                        } catch (ignore: InvalidRotationMatrixException) {
-                            null
-                        }
+                        coordinateTransformation.fromRotation(attitude)
+                        coordinateTransformation
                     } else {
                         null
                     }

@@ -4725,7 +4725,12 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
             sequence.setItems(measuredTimedKinematicsList)
 
             val afterQ = Quaternion()
-            QuaternionIntegrator.integrateGyroSequence(trueSequence, beforeQ, afterQ)
+            QuaternionIntegrator.integrateGyroSequence(
+                trueSequence,
+                beforeQ,
+                QuaternionStepIntegratorType.RUNGE_KUTTA,
+                afterQ
+            )
 
             val newNedC = CoordinateTransformation(
                 afterQ.asInhomogeneousMatrix(),
@@ -5069,7 +5074,12 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
             sequence.setItems(measuredTimedKinematicsList)
 
             val afterQ = Quaternion()
-            QuaternionIntegrator.integrateGyroSequence(trueSequence, beforeQ, afterQ)
+            QuaternionIntegrator.integrateGyroSequence(
+                trueSequence,
+                beforeQ,
+                QuaternionStepIntegratorType.RUNGE_KUTTA,
+                afterQ
+            )
 
             val newNedC = CoordinateTransformation(
                 afterQ.asInhomogeneousMatrix(),
@@ -5598,7 +5608,12 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
             sequence.setItems(measuredTimedKinematicsList)
 
             val afterQ = Quaternion()
-            QuaternionIntegrator.integrateGyroSequence(trueSequence, beforeQ, afterQ)
+            QuaternionIntegrator.integrateGyroSequence(
+                trueSequence,
+                beforeQ,
+                QuaternionStepIntegratorType.RUNGE_KUTTA,
+                afterQ
+            )
 
             val newNedC = CoordinateTransformation(
                 afterQ.asInhomogeneousMatrix(),
@@ -5941,7 +5956,12 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
             sequence.setItems(measuredTimedKinematicsList)
 
             val afterQ = Quaternion()
-            QuaternionIntegrator.integrateGyroSequence(trueSequence, beforeQ, afterQ)
+            QuaternionIntegrator.integrateGyroSequence(
+                trueSequence,
+                beforeQ,
+                QuaternionStepIntegratorType.RUNGE_KUTTA,
+                afterQ
+            )
 
             val newNedC = CoordinateTransformation(
                 afterQ.asInhomogeneousMatrix(),
@@ -7788,7 +7808,8 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
     fun start_whenNotRunningAndGravityNormNotEstimated_resetsAndStartsGenerator() {
         val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(context, location = location)
+        val calibrator =
+            StaticIntervalAccelerometerAndGyroscopeCalibrator(context, location = location)
 
         assertFalse(calibrator.running)
         assertFalse(calibrator.isGravityNormEstimated)
@@ -7814,7 +7835,10 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         calibrator.setPrivateProperty("gyroscopeInitialBiasZ", 0.0)
 
         val accelerometerInternalCalibrator = mockk<AccelerometerNonLinearCalibrator>()
-        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+        calibrator.setPrivateProperty(
+            "accelerometerInternalCalibrator",
+            accelerometerInternalCalibrator
+        )
 
         val gyroscopeInternalCalibrator = mockk<GyroscopeNonLinearCalibrator>()
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", gyroscopeInternalCalibrator)
@@ -7883,7 +7907,10 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         calibrator.setPrivateProperty("gyroscopeInitialBiasZ", 0.0)
 
         val accelerometerInternalCalibrator = mockk<AccelerometerNonLinearCalibrator>()
-        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+        calibrator.setPrivateProperty(
+            "accelerometerInternalCalibrator",
+            accelerometerInternalCalibrator
+        )
 
         val gyroscopeInternalCalibrator = mockk<GyroscopeNonLinearCalibrator>()
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", gyroscopeInternalCalibrator)
@@ -8254,7 +8281,12 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
             sequence.setItems(measuredTimedKinematicsList)
 
             val afterQ = Quaternion()
-            QuaternionIntegrator.integrateGyroSequence(trueSequence, beforeQ, afterQ)
+            QuaternionIntegrator.integrateGyroSequence(
+                trueSequence,
+                beforeQ,
+                QuaternionStepIntegratorType.RUNGE_KUTTA,
+                afterQ
+            )
 
             val newNedC = CoordinateTransformation(
                 afterQ.asInhomogeneousMatrix(),
@@ -8308,7 +8340,10 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
         every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
         every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
-        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+        calibrator.setPrivateProperty(
+            "accelerometerInternalCalibrator",
+            accelerometerInternalCalibrator
+        )
 
         val gyroscopeInternalCalibrator = mockk<GyroscopeNonLinearCalibrator>()
         justRun { gyroscopeInternalCalibrator.calibrate() }
@@ -18543,7 +18578,10 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
         every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
         every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
-        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+        calibrator.setPrivateProperty(
+            "accelerometerInternalCalibrator",
+            accelerometerInternalCalibrator
+        )
 
         val internalCalibrator: GyroscopeNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator")
@@ -18643,7 +18681,10 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
         every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
         every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
-        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+        calibrator.setPrivateProperty(
+            "accelerometerInternalCalibrator",
+            accelerometerInternalCalibrator
+        )
 
         val ex = assertThrows(InvocationTargetException::class.java) {
             assertNull(calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator"))
@@ -18713,7 +18754,10 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
         every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
         every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
-        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+        calibrator.setPrivateProperty(
+            "accelerometerInternalCalibrator",
+            accelerometerInternalCalibrator
+        )
 
         val ex = assertThrows(InvocationTargetException::class.java) {
             assertNull(calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator"))
@@ -18783,7 +18827,10 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
         every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
         every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
-        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+        calibrator.setPrivateProperty(
+            "accelerometerInternalCalibrator",
+            accelerometerInternalCalibrator
+        )
 
         val ex = assertThrows(InvocationTargetException::class.java) {
             assertNull(calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator"))
@@ -18853,7 +18900,10 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
         every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
         every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
-        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+        calibrator.setPrivateProperty(
+            "accelerometerInternalCalibrator",
+            accelerometerInternalCalibrator
+        )
 
         val ex = assertThrows(InvocationTargetException::class.java) {
             assertNull(calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator"))
@@ -18923,7 +18973,10 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
         every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
         every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
-        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+        calibrator.setPrivateProperty(
+            "accelerometerInternalCalibrator",
+            accelerometerInternalCalibrator
+        )
 
         val ex = assertThrows(InvocationTargetException::class.java) {
             assertNull(calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator"))
@@ -18993,7 +19046,10 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
         every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
         every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
-        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+        calibrator.setPrivateProperty(
+            "accelerometerInternalCalibrator",
+            accelerometerInternalCalibrator
+        )
 
         val ex = assertThrows(InvocationTargetException::class.java) {
             assertNull(calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator"))
@@ -19063,7 +19119,10 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         every { accelerometerInternalCalibrator.estimatedMyz }.returns(null)
         every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
         every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
-        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+        calibrator.setPrivateProperty(
+            "accelerometerInternalCalibrator",
+            accelerometerInternalCalibrator
+        )
 
         val ex = assertThrows(InvocationTargetException::class.java) {
             assertNull(calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator"))
@@ -19133,7 +19192,10 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
         every { accelerometerInternalCalibrator.estimatedMzx }.returns(null)
         every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
-        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+        calibrator.setPrivateProperty(
+            "accelerometerInternalCalibrator",
+            accelerometerInternalCalibrator
+        )
 
         val ex = assertThrows(InvocationTargetException::class.java) {
             assertNull(calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator"))
@@ -19203,7 +19265,10 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
         every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
         every { accelerometerInternalCalibrator.estimatedMzy }.returns(null)
-        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+        calibrator.setPrivateProperty(
+            "accelerometerInternalCalibrator",
+            accelerometerInternalCalibrator
+        )
 
         val ex = assertThrows(InvocationTargetException::class.java) {
             assertNull(calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator"))
@@ -19279,7 +19344,10 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
         every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
         every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
-        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+        calibrator.setPrivateProperty(
+            "accelerometerInternalCalibrator",
+            accelerometerInternalCalibrator
+        )
 
         val internalCalibrator: GyroscopeNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator")
@@ -19384,7 +19452,10 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
         every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
         every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
-        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+        calibrator.setPrivateProperty(
+            "accelerometerInternalCalibrator",
+            accelerometerInternalCalibrator
+        )
 
         val internalCalibrator: GyroscopeNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator")
@@ -19489,7 +19560,10 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
         every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
         every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
-        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+        calibrator.setPrivateProperty(
+            "accelerometerInternalCalibrator",
+            accelerometerInternalCalibrator
+        )
 
         val internalCalibrator: GyroscopeNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator")
@@ -19595,7 +19669,10 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
         every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
         every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
-        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+        calibrator.setPrivateProperty(
+            "accelerometerInternalCalibrator",
+            accelerometerInternalCalibrator
+        )
 
         assertEquals(RobustEstimatorMethod.RANSAC, calibrator.gyroscopeRobustMethod)
         assertTrue(calibrator.isGyroscopeGroundTruthInitialBias)
@@ -19730,7 +19807,10 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
         every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
         every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
-        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+        calibrator.setPrivateProperty(
+            "accelerometerInternalCalibrator",
+            accelerometerInternalCalibrator
+        )
 
         val internalCalibrator: GyroscopeNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator")
@@ -19853,7 +19933,10 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
         every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
         every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
-        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+        calibrator.setPrivateProperty(
+            "accelerometerInternalCalibrator",
+            accelerometerInternalCalibrator
+        )
 
         val internalCalibrator: GyroscopeNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator")
@@ -19976,7 +20059,10 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
         every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
         every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
-        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+        calibrator.setPrivateProperty(
+            "accelerometerInternalCalibrator",
+            accelerometerInternalCalibrator
+        )
 
         val internalCalibrator: GyroscopeNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator")
@@ -20102,7 +20188,10 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
         every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
         every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
-        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+        calibrator.setPrivateProperty(
+            "accelerometerInternalCalibrator",
+            accelerometerInternalCalibrator
+        )
 
         val internalCalibrator: GyroscopeNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator")
@@ -20225,7 +20314,10 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
         every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
         every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
-        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+        calibrator.setPrivateProperty(
+            "accelerometerInternalCalibrator",
+            accelerometerInternalCalibrator
+        )
 
         val internalCalibrator: GyroscopeNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator")
@@ -20411,7 +20503,10 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
         every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
         every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
-        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+        calibrator.setPrivateProperty(
+            "accelerometerInternalCalibrator",
+            accelerometerInternalCalibrator
+        )
 
         val internalCalibrator: GyroscopeNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator")
@@ -20534,7 +20629,10 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
         every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
         every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
-        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+        calibrator.setPrivateProperty(
+            "accelerometerInternalCalibrator",
+            accelerometerInternalCalibrator
+        )
 
         val internalCalibrator: GyroscopeNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator")
@@ -20657,7 +20755,10 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
         every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
         every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
-        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+        calibrator.setPrivateProperty(
+            "accelerometerInternalCalibrator",
+            accelerometerInternalCalibrator
+        )
 
         val internalCalibrator: GyroscopeNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator")
@@ -20780,7 +20881,10 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
         every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
         every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
-        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+        calibrator.setPrivateProperty(
+            "accelerometerInternalCalibrator",
+            accelerometerInternalCalibrator
+        )
 
         val internalCalibrator: GyroscopeNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator")
@@ -20906,7 +21010,10 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
         every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
         every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
-        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+        calibrator.setPrivateProperty(
+            "accelerometerInternalCalibrator",
+            accelerometerInternalCalibrator
+        )
 
         val internalCalibrator: GyroscopeNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator")
@@ -21029,7 +21136,10 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
         every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
         every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
-        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+        calibrator.setPrivateProperty(
+            "accelerometerInternalCalibrator",
+            accelerometerInternalCalibrator
+        )
 
         val internalCalibrator: GyroscopeNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator")
@@ -21215,7 +21325,10 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
         every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
         every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
-        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+        calibrator.setPrivateProperty(
+            "accelerometerInternalCalibrator",
+            accelerometerInternalCalibrator
+        )
 
         val internalCalibrator: GyroscopeNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator")
@@ -21339,7 +21452,10 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
         every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
         every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
-        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+        calibrator.setPrivateProperty(
+            "accelerometerInternalCalibrator",
+            accelerometerInternalCalibrator
+        )
 
         val internalCalibrator: GyroscopeNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator")
@@ -21463,7 +21579,10 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
         every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
         every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
-        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+        calibrator.setPrivateProperty(
+            "accelerometerInternalCalibrator",
+            accelerometerInternalCalibrator
+        )
 
         val internalCalibrator: GyroscopeNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator")
@@ -21587,7 +21706,10 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
         every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
         every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
-        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+        calibrator.setPrivateProperty(
+            "accelerometerInternalCalibrator",
+            accelerometerInternalCalibrator
+        )
 
         val internalCalibrator: GyroscopeNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator")
@@ -21714,7 +21836,10 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
         every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
         every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
-        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+        calibrator.setPrivateProperty(
+            "accelerometerInternalCalibrator",
+            accelerometerInternalCalibrator
+        )
 
         val internalCalibrator: GyroscopeNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator")
@@ -21838,7 +21963,10 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
         every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
         every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
-        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+        calibrator.setPrivateProperty(
+            "accelerometerInternalCalibrator",
+            accelerometerInternalCalibrator
+        )
 
         val internalCalibrator: GyroscopeNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator")
@@ -21954,7 +22082,10 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
         every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
         every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
-        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+        calibrator.setPrivateProperty(
+            "accelerometerInternalCalibrator",
+            accelerometerInternalCalibrator
+        )
 
         val ex = assertThrows(InvocationTargetException::class.java) {
             assertNull(calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator"))
@@ -22044,7 +22175,10 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
         every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
         every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
-        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+        calibrator.setPrivateProperty(
+            "accelerometerInternalCalibrator",
+            accelerometerInternalCalibrator
+        )
 
         val internalCalibrator: GyroscopeNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator")
@@ -22167,7 +22301,10 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
         every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
         every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
-        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+        calibrator.setPrivateProperty(
+            "accelerometerInternalCalibrator",
+            accelerometerInternalCalibrator
+        )
 
         val internalCalibrator: GyroscopeNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator")
@@ -22290,7 +22427,10 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
         every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
         every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
-        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+        calibrator.setPrivateProperty(
+            "accelerometerInternalCalibrator",
+            accelerometerInternalCalibrator
+        )
 
         val internalCalibrator: GyroscopeNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator")
@@ -22413,7 +22553,10 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
         every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
         every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
-        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+        calibrator.setPrivateProperty(
+            "accelerometerInternalCalibrator",
+            accelerometerInternalCalibrator
+        )
 
         val internalCalibrator: GyroscopeNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator")
@@ -22540,7 +22683,10 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
         every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
         every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
-        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+        calibrator.setPrivateProperty(
+            "accelerometerInternalCalibrator",
+            accelerometerInternalCalibrator
+        )
 
         val internalCalibrator: GyroscopeNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator")
@@ -22668,7 +22814,10 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
         every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
         every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
-        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+        calibrator.setPrivateProperty(
+            "accelerometerInternalCalibrator",
+            accelerometerInternalCalibrator
+        )
 
         val internalCalibrator: GyroscopeNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator")
@@ -22858,7 +23007,10 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
         every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
         every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
-        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+        calibrator.setPrivateProperty(
+            "accelerometerInternalCalibrator",
+            accelerometerInternalCalibrator
+        )
 
         val internalCalibrator: GyroscopeNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator")
@@ -22982,7 +23134,10 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
         every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
         every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
-        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+        calibrator.setPrivateProperty(
+            "accelerometerInternalCalibrator",
+            accelerometerInternalCalibrator
+        )
 
         val internalCalibrator: GyroscopeNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator")
@@ -23106,7 +23261,10 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
         every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
         every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
-        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+        calibrator.setPrivateProperty(
+            "accelerometerInternalCalibrator",
+            accelerometerInternalCalibrator
+        )
 
         val internalCalibrator: GyroscopeNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator")
@@ -23230,7 +23388,10 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
         every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
         every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
-        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+        calibrator.setPrivateProperty(
+            "accelerometerInternalCalibrator",
+            accelerometerInternalCalibrator
+        )
 
         val internalCalibrator: GyroscopeNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator")
@@ -23358,7 +23519,10 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
         every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
         every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
-        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+        calibrator.setPrivateProperty(
+            "accelerometerInternalCalibrator",
+            accelerometerInternalCalibrator
+        )
 
         val internalCalibrator: GyroscopeNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator")
@@ -23487,7 +23651,10 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
         every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
         every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
-        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+        calibrator.setPrivateProperty(
+            "accelerometerInternalCalibrator",
+            accelerometerInternalCalibrator
+        )
 
         val internalCalibrator: GyroscopeNonLinearCalibrator? =
             calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator")
@@ -23607,7 +23774,10 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
         every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
         every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
-        calibrator.setPrivateProperty("accelerometerInternalCalibrator", accelerometerInternalCalibrator)
+        calibrator.setPrivateProperty(
+            "accelerometerInternalCalibrator",
+            accelerometerInternalCalibrator
+        )
 
         val ex = assertThrows(InvocationTargetException::class.java) {
             assertNull(calibrator.callPrivateFuncWithResult("buildGyroscopeInternalCalibrator"))

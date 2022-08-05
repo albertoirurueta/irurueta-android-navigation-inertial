@@ -19,7 +19,7 @@ import android.content.Context
 import com.irurueta.android.navigation.inertial.DisplayOrientationHelper
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
-import com.irurueta.geometry.InvalidRotationMatrixException
+import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.frames.CoordinateTransformation
 import com.irurueta.units.TimeConverter
 
@@ -54,6 +54,11 @@ class RelativeGyroscopeAttitudeEstimator(
     estimateDisplayEulerAngles,
     attitudeAvailableListener
 ) {
+    /**
+     * Instance to be reused which contains variation of attitude between gyroscope samples.
+     */
+    private val deltaAttitude = Quaternion()
+
     /**
      * Internal gyroscope sensor collector.
      */
@@ -100,18 +105,14 @@ class RelativeGyroscopeAttitudeEstimator(
 
             internalAttitude.copyTo(attitude)
             attitude.combine(displayOrientation)
+            attitude.normalize()
             attitude.inverse()
             attitude.normalize()
 
             val c: CoordinateTransformation? =
                 if (estimateCoordinateTransformation) {
-                    attitude.asInhomogeneousMatrix(rotationMatrix)
-                    try {
-                        coordinateTransformation.matrix = rotationMatrix
-                        coordinateTransformation
-                    } catch (ignore: InvalidRotationMatrixException) {
-                        null
-                    }
+                    coordinateTransformation.fromRotation(attitude)
+                    coordinateTransformation
                 } else {
                     null
                 }

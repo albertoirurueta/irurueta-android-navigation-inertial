@@ -9490,7 +9490,12 @@ class StaticIntervalGyroscopeCalibratorTest {
             sequence.setItems(measuredTimedKinematicsList)
 
             val afterQ = Quaternion()
-            QuaternionIntegrator.integrateGyroSequence(trueSequence, beforeQ, afterQ)
+            QuaternionIntegrator.integrateGyroSequence(
+                trueSequence,
+                beforeQ,
+                QuaternionStepIntegratorType.RUNGE_KUTTA,
+                afterQ
+            )
 
             val newNedC = CoordinateTransformation(
                 afterQ.asInhomogeneousMatrix(),
@@ -9789,7 +9794,12 @@ class StaticIntervalGyroscopeCalibratorTest {
             sequence.setItems(measuredTimedKinematicsList)
 
             val afterQ = Quaternion()
-            QuaternionIntegrator.integrateGyroSequence(trueSequence, beforeQ, afterQ)
+            QuaternionIntegrator.integrateGyroSequence(
+                trueSequence,
+                beforeQ,
+                QuaternionStepIntegratorType.RUNGE_KUTTA,
+                afterQ
+            )
 
             val newNedC = CoordinateTransformation(
                 afterQ.asInhomogeneousMatrix(),

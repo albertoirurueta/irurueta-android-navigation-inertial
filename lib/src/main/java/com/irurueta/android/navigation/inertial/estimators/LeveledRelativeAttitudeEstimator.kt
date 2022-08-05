@@ -18,16 +18,13 @@ package com.irurueta.android.navigation.inertial.estimators
 import android.content.Context
 import android.location.Location
 import android.util.Log
-import com.irurueta.algebra.Matrix
 import com.irurueta.android.navigation.inertial.QuaternionHelper
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
-import com.irurueta.geometry.InvalidRotationMatrixException
 import com.irurueta.geometry.Quaternion
-import com.irurueta.geometry.Rotation3D
 import com.irurueta.navigation.frames.CoordinateTransformation
 import com.irurueta.navigation.frames.FrameType
 import kotlin.math.abs
@@ -161,11 +158,6 @@ class LeveledRelativeAttitudeEstimator private constructor(
      * estimator and the relative attitude estimator taking into account display orientation.
      */
     private val fusedAttitude = Quaternion()
-
-    /**
-     * Instance to be reused containing rotation matrix of coordinate transformation.
-     */
-    private val rotationMatrix = Matrix(Rotation3D.INHOM_COORDS, Rotation3D.INHOM_COORDS)
 
     /**
      * Array to be reused containing euler angles of leveling attitude.
@@ -343,6 +335,9 @@ class LeveledRelativeAttitudeEstimator private constructor(
 
         reset()
         running = levelingEstimator.start() && attitudeEstimator.start()
+        if (!running) {
+            stop()
+        }
         return running
     }
 
@@ -519,13 +514,8 @@ class LeveledRelativeAttitudeEstimator private constructor(
 
             val c: CoordinateTransformation? =
                 if (estimateCoordinateTransformation) {
-                    fusedAttitude.asInhomogeneousMatrix(rotationMatrix)
-                    try {
-                        coordinateTransformation.matrix = rotationMatrix
-                        coordinateTransformation
-                    } catch (ignore: InvalidRotationMatrixException) {
-                        null
-                    }
+                    coordinateTransformation.fromRotation(fusedAttitude)
+                    coordinateTransformation
                 } else {
                     null
                 }
@@ -623,13 +613,13 @@ class LeveledRelativeAttitudeEstimator private constructor(
          * @param estimator attitude estimator that raised this event.
          * @param attitude attitude expressed in NED coordinates.
          * @param roll roll angle expressed in radians. Only available if
-         * [estimateDisplayEulerAngles].
+         * [estimateDisplayEulerAngles] is true.
          * @param pitch pitch angle expressed in radians. Only available if
-         * [estimateDisplayEulerAngles].
+         * [estimateDisplayEulerAngles] is true.
          * @param yaw yaw angle expressed in radians. Only available if
-         * [estimateDisplayEulerAngles].
+         * [estimateDisplayEulerAngles] is true.
          * @param coordinateTransformation coordinate transformation containing measured leveling
-         * attitude. Only available if [estimateCoordinateTransformation].
+         * attitude. Only available if [estimateCoordinateTransformation] is true.
          */
         fun onAttitudeAvailable(
             estimator: LeveledRelativeAttitudeEstimator,

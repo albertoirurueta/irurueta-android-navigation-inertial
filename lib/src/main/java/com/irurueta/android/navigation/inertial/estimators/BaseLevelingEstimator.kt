@@ -16,14 +16,11 @@
 package com.irurueta.android.navigation.inertial.estimators
 
 import android.content.Context
-import com.irurueta.algebra.Matrix
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
-import com.irurueta.geometry.InvalidRotationMatrixException
 import com.irurueta.geometry.Quaternion
-import com.irurueta.geometry.Rotation3D
 import com.irurueta.navigation.frames.CoordinateTransformation
 import com.irurueta.navigation.frames.FrameType
 
@@ -70,11 +67,6 @@ abstract class BaseLevelingEstimator<T : BaseLevelingEstimator<T, L>,
      * Instance to be reused containing display rotation as a yaw angle.
      */
     protected val displayOrientation = Quaternion()
-
-    /**
-     * Instance to be reused containing rotation matrix of coordinate transformation.
-     */
-    private val rotationMatrix = Matrix(Rotation3D.INHOM_COORDS, Rotation3D.INHOM_COORDS)
 
     /**
      * Array to be reused containing euler angles of leveling attitude.
@@ -127,13 +119,8 @@ abstract class BaseLevelingEstimator<T : BaseLevelingEstimator<T, L>,
 
         val c: CoordinateTransformation? =
             if (estimateCoordinateTransformation) {
-                attitude.asInhomogeneousMatrix(rotationMatrix)
-                try {
-                    coordinateTransformation.matrix = rotationMatrix
-                    coordinateTransformation
-                } catch (ignore: InvalidRotationMatrixException) {
-                    null
-                }
+                coordinateTransformation.fromRotation(attitude)
+                coordinateTransformation
             } else {
                 null
             }
