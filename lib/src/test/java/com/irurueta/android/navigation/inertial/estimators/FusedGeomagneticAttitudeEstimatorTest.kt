@@ -21,28 +21,31 @@ import androidx.test.core.app.ApplicationProvider
 import com.irurueta.android.navigation.inertial.QuaternionHelper
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
-import com.irurueta.android.navigation.inertial.estimators.filter.MeanAveragingFilter
+import com.irurueta.android.navigation.inertial.estimators.filter.MedianAveragingFilter
 import com.irurueta.android.navigation.inertial.getPrivateProperty
 import com.irurueta.android.navigation.inertial.setPrivateProperty
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.frames.CoordinateTransformation
+import com.irurueta.navigation.inertial.wmm.WorldMagneticModel
 import com.irurueta.statistics.UniformRandomizer
 import io.mockk.*
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import java.util.*
 import kotlin.math.abs
 
 @RunWith(RobolectricTestRunner::class)
-class LeveledRelativeAttitudeEstimatorTest {
+class FusedGeomagneticAttitudeEstimatorTest {
 
     @Test
     fun constructor_whenRequiredProperties_setsDefaultValues() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(context)
+        val estimator = FusedGeomagneticAttitudeEstimator(context)
 
         // check
         assertSame(context, estimator.context)
@@ -53,63 +56,49 @@ class LeveledRelativeAttitudeEstimatorTest {
             AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             estimator.accelerometerSensorType
         )
+        assertEquals(
+            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            estimator.magnetometerSensorType
+        )
         assertNotNull(estimator.accelerometerAveragingFilter)
         assertTrue(estimator.accelerometerAveragingFilter is LowPassAveragingFilter)
         assertEquals(GyroscopeSensorCollector.SensorType.GYROSCOPE, estimator.gyroscopeSensorType)
+        assertNull(estimator.worldMagneticModel)
+        assertNotNull(estimator.timestamp)
+        assertFalse(estimator.useWorldMagneticModel)
         assertFalse(estimator.useAccurateLevelingEstimator)
         assertFalse(estimator.useAccurateRelativeGyroscopeAttitudeEstimator)
         assertFalse(estimator.estimateCoordinateTransformation)
         assertTrue(estimator.estimateDisplayEulerAngles)
-        assertFalse(estimator.ignoreDisplayOrientation)
         assertNull(estimator.attitudeAvailableListener)
-        assertFalse(estimator.running)
-        assertTrue(estimator.useIndirectInterpolation)
-        assertEquals(
-            LeveledRelativeAttitudeEstimator.DEFAULT_INTERPOLATION_VALUE,
-            estimator.interpolationValue,
-            0.0
-        )
-        assertEquals(
-            LeveledRelativeAttitudeEstimator.DEFAULT_INDIRECT_INTERPOLATION_WEIGHT,
-            estimator.indirectInterpolationWeight,
-            0.0
-        )
-        assertEquals(
-            LeveledRelativeAttitudeEstimator.DEFAULT_OUTLIER_THRESHOLD,
-            estimator.outlierThreshold,
-            0.0
-        )
-        assertEquals(
-            LeveledRelativeAttitudeEstimator.DEFAULT_OUTLIER_PANIC_THRESHOLD,
-            estimator.outlierPanicThreshold,
-            0.0
-        )
-        assertEquals(
-            LeveledRelativeAttitudeEstimator.DEFAULT_PANIC_COUNTER_THRESHOLD,
-            estimator.panicCounterThreshold
-        )
     }
 
     @Test
     fun constructor_whenAllProperties_setsExpectedValues() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val location = getLocation()
-        val accelerometerAveragingFilter = MeanAveragingFilter()
-        val listener = mockk<LeveledRelativeAttitudeEstimator.OnAttitudeAvailableListener>()
-        val estimator = LeveledRelativeAttitudeEstimator(
+        val accelerometerAveragingFilter = MedianAveragingFilter()
+        val worldMagneticModel = WorldMagneticModel()
+        val timestamp = Date()
+        val listener = mockk<FusedGeomagneticAttitudeEstimator.OnAttitudeAvailableListener>()
+        val estimator = FusedGeomagneticAttitudeEstimator(
             context,
             location,
             SensorDelay.NORMAL,
             useAccelerometer = true,
             AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
             accelerometerAveragingFilter,
             GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            worldMagneticModel,
+            timestamp,
+            useWorldMagneticModel = true,
             useAccurateLevelingEstimator = true,
             useAccurateRelativeGyroscopeAttitudeEstimator = true,
             estimateCoordinateTransformation = true,
             estimateDisplayEulerAngles = false,
             ignoreDisplayOrientation = true,
-            listener
+            attitudeAvailableListener = listener
         )
 
         // check
@@ -121,49 +110,29 @@ class LeveledRelativeAttitudeEstimatorTest {
             AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             estimator.accelerometerSensorType
         )
+        assertEquals(
+            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            estimator.magnetometerSensorType
+        )
         assertSame(accelerometerAveragingFilter, estimator.accelerometerAveragingFilter)
         assertEquals(
             GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
             estimator.gyroscopeSensorType
         )
+        assertSame(worldMagneticModel, estimator.worldMagneticModel)
+        assertSame(timestamp, estimator.timestamp)
+        assertTrue(estimator.useWorldMagneticModel)
         assertTrue(estimator.useAccurateLevelingEstimator)
         assertTrue(estimator.useAccurateRelativeGyroscopeAttitudeEstimator)
         assertTrue(estimator.estimateCoordinateTransformation)
         assertFalse(estimator.estimateDisplayEulerAngles)
-        assertTrue(estimator.ignoreDisplayOrientation)
         assertSame(listener, estimator.attitudeAvailableListener)
-        assertFalse(estimator.running)
-        assertTrue(estimator.useIndirectInterpolation)
-        assertEquals(
-            LeveledRelativeAttitudeEstimator.DEFAULT_INTERPOLATION_VALUE,
-            estimator.interpolationValue,
-            0.0
-        )
-        assertEquals(
-            LeveledRelativeAttitudeEstimator.DEFAULT_INDIRECT_INTERPOLATION_WEIGHT,
-            estimator.indirectInterpolationWeight,
-            0.0
-        )
-        assertEquals(
-            LeveledRelativeAttitudeEstimator.DEFAULT_OUTLIER_THRESHOLD,
-            estimator.outlierThreshold,
-            0.0
-        )
-        assertEquals(
-            LeveledRelativeAttitudeEstimator.DEFAULT_OUTLIER_PANIC_THRESHOLD,
-            estimator.outlierPanicThreshold,
-            0.0
-        )
-        assertEquals(
-            LeveledRelativeAttitudeEstimator.DEFAULT_PANIC_COUNTER_THRESHOLD,
-            estimator.panicCounterThreshold
-        )
     }
 
     @Test
     fun location_whenNotRunning_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(context)
+        val estimator = FusedGeomagneticAttitudeEstimator(context)
 
         assertFalse(estimator.running)
         assertNull(estimator.location)
@@ -185,7 +154,7 @@ class LeveledRelativeAttitudeEstimatorTest {
     @Test
     fun location_whenRunningAndNotNull_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(context)
+        val estimator = FusedGeomagneticAttitudeEstimator(context)
 
         assertFalse(estimator.running)
         assertNull(estimator.location)
@@ -206,7 +175,7 @@ class LeveledRelativeAttitudeEstimatorTest {
     fun location_whenRunningAndNull_throwsIllegalStateException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val location = getLocation()
-        val estimator = LeveledRelativeAttitudeEstimator(context, location)
+        val estimator = FusedGeomagneticAttitudeEstimator(context, location)
 
         assertFalse(estimator.running)
         assertSame(location, estimator.location)
@@ -220,10 +189,98 @@ class LeveledRelativeAttitudeEstimatorTest {
         estimator.location = null
     }
 
+    @Test
+    fun worldMagneticModel_whenNotRunning_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val estimator = FusedGeomagneticAttitudeEstimator(context)
+
+        // check default value
+        assertFalse(estimator.running)
+        assertNull(estimator.worldMagneticModel)
+        val geomagneticAttitudeEstimator1: GeomagneticAttitudeEstimator? =
+            estimator.getPrivateProperty("geomagneticAttitudeEstimator")
+        requireNotNull(geomagneticAttitudeEstimator1)
+        assertNull(geomagneticAttitudeEstimator1.worldMagneticModel)
+
+        // set new value
+        val worldMagneticModel = WorldMagneticModel()
+        estimator.worldMagneticModel = worldMagneticModel
+
+        // check
+        assertSame(worldMagneticModel, estimator.worldMagneticModel)
+        val geomagneticAttitudeEstimator2: GeomagneticAttitudeEstimator? =
+            estimator.getPrivateProperty("geomagneticAttitudeEstimator")
+        requireNotNull(geomagneticAttitudeEstimator2)
+        assertSame(worldMagneticModel, geomagneticAttitudeEstimator2.worldMagneticModel)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun worldMagneticModel_whenRunning_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val estimator = FusedGeomagneticAttitudeEstimator(context)
+
+        // set as running
+        estimator.setPrivateProperty("running", true)
+
+        estimator.worldMagneticModel = WorldMagneticModel()
+    }
+
+    @Test
+    fun timestamp_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val estimator = FusedGeomagneticAttitudeEstimator(context)
+
+        // check default value
+        assertNotNull(estimator.timestamp)
+
+        // set new value
+        val timestamp = Date()
+        estimator.timestamp = timestamp
+
+        // check
+        assertSame(timestamp, estimator.timestamp)
+    }
+
+    @Test
+    fun useWorldMagneticModel_whenNotRunning_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val estimator = FusedGeomagneticAttitudeEstimator(context)
+
+        // check
+        assertFalse(estimator.running)
+        assertFalse(estimator.useWorldMagneticModel)
+        val geomagneticAttitudeEstimator1: GeomagneticAttitudeEstimator? =
+            estimator.getPrivateProperty("geomagneticAttitudeEstimator")
+        requireNotNull(geomagneticAttitudeEstimator1)
+        assertFalse(geomagneticAttitudeEstimator1.useWorldMagneticModel)
+
+        // set new value
+        estimator.useWorldMagneticModel = true
+
+        // check
+        assertTrue(estimator.useWorldMagneticModel)
+        val geomagneticAttitudeEstimator2: GeomagneticAttitudeEstimator? =
+            estimator.getPrivateProperty("geomagneticAttitudeEstimator")
+        requireNotNull(geomagneticAttitudeEstimator2)
+        assertTrue(geomagneticAttitudeEstimator2.useWorldMagneticModel)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun useWorldMagneticModel_whenRunning_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val estimator = FusedGeomagneticAttitudeEstimator(context)
+
+        // set as running
+        estimator.setPrivateProperty("running", true)
+        assertTrue(estimator.running)
+
+        estimator.useWorldMagneticModel = true
+    }
+
     @Test(expected = IllegalStateException::class)
     fun useAccurateLevelingEstimator_whenRunning_throwsIllegalStateException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(context)
+        val estimator = FusedGeomagneticAttitudeEstimator(context)
 
         assertFalse(estimator.useAccurateLevelingEstimator)
         assertFalse(estimator.running)
@@ -239,22 +296,30 @@ class LeveledRelativeAttitudeEstimatorTest {
     @Test
     fun useAccurateLevelingEstimator_whenNotRunningNoLocationAndSetToFalse_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(context)
+        val estimator = FusedGeomagneticAttitudeEstimator(context)
 
         assertFalse(estimator.useAccurateLevelingEstimator)
         assertNull(estimator.location)
         assertFalse(estimator.running)
+        val geomagneticAttitudeEstimator1: GeomagneticAttitudeEstimator? =
+            estimator.getPrivateProperty("geomagneticAttitudeEstimator")
+        requireNotNull(geomagneticAttitudeEstimator1)
+        assertFalse(geomagneticAttitudeEstimator1.useAccurateLevelingEstimator)
 
         estimator.useAccurateLevelingEstimator = false
 
         // check
         assertFalse(estimator.useAccurateLevelingEstimator)
+        val geomagneticAttitudeEstimator2: GeomagneticAttitudeEstimator? =
+            estimator.getPrivateProperty("geomagneticAttitudeEstimator")
+        requireNotNull(geomagneticAttitudeEstimator2)
+        assertFalse(geomagneticAttitudeEstimator2.useAccurateLevelingEstimator)
     }
 
     @Test(expected = IllegalStateException::class)
     fun useAccurateLevelingEstimator_whenNotRunningNoLocationAndSetToTrue_throwsIllegalStateException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(context)
+        val estimator = FusedGeomagneticAttitudeEstimator(context)
 
         assertFalse(estimator.useAccurateLevelingEstimator)
         assertNull(estimator.location)
@@ -264,74 +329,35 @@ class LeveledRelativeAttitudeEstimatorTest {
     }
 
     @Test
-    fun useAccurateLevelingEstimator_whenNotRunningAndLocationAndSetToTrue_setsExpectedValueAndBuildsEstimator() {
+    fun useAccurateLevelingEstimator_whenNotRunningAndLocationAndSetToTrue_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val location = getLocation()
-        val estimator = LeveledRelativeAttitudeEstimator(context, location)
+        val estimator = FusedGeomagneticAttitudeEstimator(context, location)
 
-        val levelingEstimator1: BaseLevelingEstimator<*, *>? =
-            estimator.getPrivateProperty("levelingEstimator")
-        assertNotNull(levelingEstimator1)
-
-        assertFalse(estimator.useAccurateLevelingEstimator)
+        // check default value
         assertFalse(estimator.running)
         assertSame(location, estimator.location)
+        assertFalse(estimator.useAccurateLevelingEstimator)
+        val geomagneticAttitudeEstimator1: GeomagneticAttitudeEstimator? =
+            estimator.getPrivateProperty("geomagneticAttitudeEstimator")
+        requireNotNull(geomagneticAttitudeEstimator1)
+        assertFalse(geomagneticAttitudeEstimator1.useAccurateLevelingEstimator)
 
-        // set to true
+        // set new value
         estimator.useAccurateLevelingEstimator = true
 
         // check
         assertTrue(estimator.useAccurateLevelingEstimator)
-
-        val levelingEstimator2: BaseLevelingEstimator<*, *>? =
-            estimator.getPrivateProperty("levelingEstimator")
-        requireNotNull(levelingEstimator2)
-        assertTrue(levelingEstimator2 is AccurateLevelingEstimator)
-        val accurateLevelingEstimator = levelingEstimator2 as AccurateLevelingEstimator
-        assertSame(context, accurateLevelingEstimator.context)
-        assertSame(location, accurateLevelingEstimator.location)
-        assertEquals(estimator.sensorDelay, accurateLevelingEstimator.sensorDelay)
-        assertEquals(estimator.useAccelerometer, accurateLevelingEstimator.useAccelerometer)
-        assertEquals(
-            estimator.accelerometerSensorType,
-            accurateLevelingEstimator.accelerometerSensorType
-        )
-        assertSame(
-            estimator.accelerometerAveragingFilter,
-            accurateLevelingEstimator.accelerometerAveragingFilter
-        )
-        assertFalse(accurateLevelingEstimator.estimateCoordinateTransformation)
-        assertFalse(accurateLevelingEstimator.estimateDisplayEulerAngles)
-        assertNotNull(accurateLevelingEstimator.levelingAvailableListener)
-
-        // set to false
-        estimator.useAccurateLevelingEstimator = false
-
-        // check
-        assertFalse(estimator.useAccurateLevelingEstimator)
-
-        val levelingEstimator3: BaseLevelingEstimator<*, *>? =
-            estimator.getPrivateProperty("levelingEstimator")
-        requireNotNull(levelingEstimator3)
-        assertTrue(levelingEstimator3 is LevelingEstimator)
-        val levelingEstimator = levelingEstimator3 as LevelingEstimator
-        assertSame(context, levelingEstimator.context)
-        assertEquals(estimator.sensorDelay, levelingEstimator.sensorDelay)
-        assertEquals(estimator.useAccelerometer, levelingEstimator.useAccelerometer)
-        assertEquals(estimator.accelerometerSensorType, levelingEstimator.accelerometerSensorType)
-        assertSame(
-            estimator.accelerometerAveragingFilter,
-            levelingEstimator.accelerometerAveragingFilter
-        )
-        assertFalse(levelingEstimator.estimateCoordinateTransformation)
-        assertFalse(levelingEstimator.estimateDisplayEulerAngles)
-        assertNotNull(levelingEstimator.levelingAvailableListener)
+        val geomagneticAttitudeEstimator2: GeomagneticAttitudeEstimator? =
+            estimator.getPrivateProperty("geomagneticAttitudeEstimator")
+        requireNotNull(geomagneticAttitudeEstimator2)
+        assertTrue(geomagneticAttitudeEstimator2.useAccurateLevelingEstimator)
     }
 
     @Test(expected = IllegalStateException::class)
     fun useAccurateRelativeGyroscopeAttitudeEstimator_whenRunning_throwsIllegalStateException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(context)
+        val estimator = FusedGeomagneticAttitudeEstimator(context)
 
         assertFalse(estimator.running)
 
@@ -346,7 +372,7 @@ class LeveledRelativeAttitudeEstimatorTest {
     @Test
     fun useAccurateRelativeGyroscopeAttitudeEstimator_whenNotRunning_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(context)
+        val estimator = FusedGeomagneticAttitudeEstimator(context)
 
         assertFalse(estimator.running)
         assertFalse(estimator.useAccurateRelativeGyroscopeAttitudeEstimator)
@@ -361,7 +387,7 @@ class LeveledRelativeAttitudeEstimatorTest {
     @Test
     fun useIndirectInterpolation_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(context)
+        val estimator = FusedGeomagneticAttitudeEstimator(context)
 
         // check default value
         assertTrue(estimator.useIndirectInterpolation)
@@ -376,10 +402,10 @@ class LeveledRelativeAttitudeEstimatorTest {
     @Test
     fun interpolationValue_whenOutOfRange_throwsIllegalArgumentException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(context)
+        val estimator = FusedGeomagneticAttitudeEstimator(context)
 
         assertEquals(
-            LeveledRelativeAttitudeEstimator.DEFAULT_INTERPOLATION_VALUE,
+            FusedGeomagneticAttitudeEstimator.DEFAULT_INTERPOLATION_VALUE,
             estimator.interpolationValue,
             0.0
         )
@@ -395,10 +421,10 @@ class LeveledRelativeAttitudeEstimatorTest {
     @Test
     fun interpolationValue_whenValid_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(context)
+        val estimator = FusedGeomagneticAttitudeEstimator(context)
 
         assertEquals(
-            LeveledRelativeAttitudeEstimator.DEFAULT_INTERPOLATION_VALUE,
+            FusedGeomagneticAttitudeEstimator.DEFAULT_INTERPOLATION_VALUE,
             estimator.interpolationValue,
             0.0
         )
@@ -414,7 +440,7 @@ class LeveledRelativeAttitudeEstimatorTest {
     @Test(expected = IllegalArgumentException::class)
     fun indirectInterpolationWeight_whenInvalid_throwsIllegalArgumentException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(context)
+        val estimator = FusedGeomagneticAttitudeEstimator(context)
 
         estimator.indirectInterpolationWeight = 0.0
     }
@@ -422,11 +448,11 @@ class LeveledRelativeAttitudeEstimatorTest {
     @Test
     fun indirectInterpolationWeight_whenValid_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(context)
+        val estimator = FusedGeomagneticAttitudeEstimator(context)
 
         // check default value
         assertEquals(
-            LeveledRelativeAttitudeEstimator.DEFAULT_INDIRECT_INTERPOLATION_WEIGHT,
+            FusedGeomagneticAttitudeEstimator.DEFAULT_INDIRECT_INTERPOLATION_WEIGHT,
             estimator.indirectInterpolationWeight,
             0.0
         )
@@ -443,7 +469,7 @@ class LeveledRelativeAttitudeEstimatorTest {
     @Test
     fun running_whenInternalEstimatorsAreNotRunning_returnsFalse() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(context)
+        val estimator = FusedGeomagneticAttitudeEstimator(context)
 
         assertFalse(estimator.running)
     }
@@ -451,7 +477,7 @@ class LeveledRelativeAttitudeEstimatorTest {
     @Test
     fun running_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(context)
+        val estimator = FusedGeomagneticAttitudeEstimator(context)
 
         assertFalse(estimator.running)
 
@@ -464,7 +490,7 @@ class LeveledRelativeAttitudeEstimatorTest {
     @Test(expected = IllegalStateException::class)
     fun outlierThreshold_whenRunning_throwsIllegalStateException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(context)
+        val estimator = FusedGeomagneticAttitudeEstimator(context)
 
         // set as running
         estimator.setPrivateProperty("running", true)
@@ -478,11 +504,11 @@ class LeveledRelativeAttitudeEstimatorTest {
     @Test
     fun outlierThreshold_whenOutOfRange_throwsIllegalArgumentException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(context)
+        val estimator = FusedGeomagneticAttitudeEstimator(context)
 
         // check default value
         assertEquals(
-            LeveledRelativeAttitudeEstimator.DEFAULT_OUTLIER_THRESHOLD,
+            FusedGeomagneticAttitudeEstimator.DEFAULT_OUTLIER_THRESHOLD,
             estimator.outlierThreshold,
             0.0
         )
@@ -496,11 +522,11 @@ class LeveledRelativeAttitudeEstimatorTest {
     @Test
     fun outlierThreshold_whenValid_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(context)
+        val estimator = FusedGeomagneticAttitudeEstimator(context)
 
         // check default value
         assertEquals(
-            LeveledRelativeAttitudeEstimator.DEFAULT_OUTLIER_THRESHOLD,
+            FusedGeomagneticAttitudeEstimator.DEFAULT_OUTLIER_THRESHOLD,
             estimator.outlierThreshold,
             0.0
         )
@@ -519,7 +545,7 @@ class LeveledRelativeAttitudeEstimatorTest {
     @Test(expected = IllegalStateException::class)
     fun outlierPanicThreshold_whenRunning_throwsIllegalStateException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(context)
+        val estimator = FusedGeomagneticAttitudeEstimator(context)
 
         // set as running
         estimator.setPrivateProperty("running", true)
@@ -533,11 +559,11 @@ class LeveledRelativeAttitudeEstimatorTest {
     @Test
     fun outlierPanicThreshold_whenOutOfRange_throwsIllegalArgumentException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(context)
+        val estimator = FusedGeomagneticAttitudeEstimator(context)
 
         // check default value
         assertEquals(
-            LeveledRelativeAttitudeEstimator.DEFAULT_OUTLIER_PANIC_THRESHOLD,
+            FusedGeomagneticAttitudeEstimator.DEFAULT_OUTLIER_PANIC_THRESHOLD,
             estimator.outlierPanicThreshold,
             0.0
         )
@@ -553,11 +579,11 @@ class LeveledRelativeAttitudeEstimatorTest {
     @Test
     fun outlierPanicThreshold_whenValid_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(context)
+        val estimator = FusedGeomagneticAttitudeEstimator(context)
 
         // check default value
         assertEquals(
-            LeveledRelativeAttitudeEstimator.DEFAULT_OUTLIER_PANIC_THRESHOLD,
+            FusedGeomagneticAttitudeEstimator.DEFAULT_OUTLIER_PANIC_THRESHOLD,
             estimator.outlierPanicThreshold,
             0.0
         )
@@ -575,7 +601,7 @@ class LeveledRelativeAttitudeEstimatorTest {
     @Test(expected = IllegalStateException::class)
     fun panicCounterThreshold_whenRunning_throwsIllegalStateException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(context)
+        val estimator = FusedGeomagneticAttitudeEstimator(context)
 
         // set as running
         estimator.setPrivateProperty("running", true)
@@ -587,7 +613,7 @@ class LeveledRelativeAttitudeEstimatorTest {
     @Test(expected = IllegalArgumentException::class)
     fun panicCounterThreshold_whenInvalid_throwsIllegalArgumentException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(context)
+        val estimator = FusedGeomagneticAttitudeEstimator(context)
 
         assertFalse(estimator.running)
 
@@ -597,11 +623,11 @@ class LeveledRelativeAttitudeEstimatorTest {
     @Test
     fun panicCounterThreshold_whenValid_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(context)
+        val estimator = FusedGeomagneticAttitudeEstimator(context)
 
         assertFalse(estimator.running)
         assertEquals(
-            LeveledRelativeAttitudeEstimator.DEFAULT_PANIC_COUNTER_THRESHOLD,
+            FusedGeomagneticAttitudeEstimator.DEFAULT_PANIC_COUNTER_THRESHOLD,
             estimator.panicCounterThreshold
         )
 
@@ -614,7 +640,7 @@ class LeveledRelativeAttitudeEstimatorTest {
     @Test(expected = IllegalStateException::class)
     fun start_whenRunning_throwsIllegalStateException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(context)
+        val estimator = FusedGeomagneticAttitudeEstimator(context)
 
         assertFalse(estimator.running)
 
@@ -627,121 +653,137 @@ class LeveledRelativeAttitudeEstimatorTest {
     }
 
     @Test
-    fun start_whenNotRunningAndInternalLevelingEstimatorFails_returnsFalse() {
+    fun start_whenNotRunningAndInternalGeomagneticEstimatorFails_returnsFalse() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(context)
+        val estimator = FusedGeomagneticAttitudeEstimator(context)
 
         assertFalse(estimator.running)
 
-        val levelingEstimator: BaseLevelingEstimator<*, *>? =
-            estimator.getPrivateProperty("levelingEstimator")
-        requireNotNull(levelingEstimator)
-        val levelingEstimatorSpy = spyk(levelingEstimator)
-        every { levelingEstimatorSpy.start() }.returns(false)
-        estimator.setPrivateProperty("levelingEstimator", levelingEstimatorSpy)
+        val geomagneticAttitudeEstimator: GeomagneticAttitudeEstimator? =
+            estimator.getPrivateProperty("geomagneticAttitudeEstimator")
+        requireNotNull(geomagneticAttitudeEstimator)
+        val geomagneticAttitudeEstimatorSpy = spyk(geomagneticAttitudeEstimator)
+        every { geomagneticAttitudeEstimatorSpy.start() }.returns(false)
+        estimator.setPrivateProperty(
+            "geomagneticAttitudeEstimator",
+            geomagneticAttitudeEstimatorSpy
+        )
 
-        val attitudeEstimator: BaseRelativeGyroscopeAttitudeEstimator<*, *>? =
-            estimator.getPrivateProperty("attitudeEstimator")
-        requireNotNull(attitudeEstimator)
-        val attitudeEstimatorSpy = spyk(attitudeEstimator)
-        estimator.setPrivateProperty("attitudeEstimator", attitudeEstimatorSpy)
+        val relativeAttitudeEstimator: BaseRelativeGyroscopeAttitudeEstimator<*, *>? =
+            estimator.getPrivateProperty("relativeAttitudeEstimator")
+        requireNotNull(relativeAttitudeEstimator)
+        val relativeAttitudeEstimatorSpy = spyk(relativeAttitudeEstimator)
+        estimator.setPrivateProperty("relativeAttitudeEstimator", relativeAttitudeEstimatorSpy)
 
         assertFalse(estimator.start())
 
-        verify(exactly = 1) { levelingEstimatorSpy.start() }
-        verify(exactly = 0) { attitudeEstimatorSpy.start() }
-        verify(exactly = 1) { levelingEstimatorSpy.stop() }
-        verify(exactly = 1) { attitudeEstimatorSpy.stop() }
+        verify(exactly = 1) { geomagneticAttitudeEstimatorSpy.start() }
+        verify(exactly = 0) { relativeAttitudeEstimatorSpy.start() }
+        verify(exactly = 1) { geomagneticAttitudeEstimatorSpy.stop() }
+        verify(exactly = 1) { relativeAttitudeEstimatorSpy.stop() }
     }
 
     @Test
-    fun start_whenNotRunningAndInternalAttitudeEstimatorFails_returnsFalse() {
+    fun start_whenNotRunningAndInternalRelativeEstimatorFails_returnsFalse() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(context)
+        val estimator = FusedGeomagneticAttitudeEstimator(context)
 
         assertFalse(estimator.running)
 
-        val levelingEstimator: BaseLevelingEstimator<*, *>? =
-            estimator.getPrivateProperty("levelingEstimator")
-        requireNotNull(levelingEstimator)
-        val levelingEstimatorSpy = spyk(levelingEstimator)
-        every { levelingEstimatorSpy.start() }.returns(true)
-        estimator.setPrivateProperty("levelingEstimator", levelingEstimatorSpy)
+        val geomagneticAttitudeEstimator: GeomagneticAttitudeEstimator? =
+            estimator.getPrivateProperty("geomagneticAttitudeEstimator")
+        requireNotNull(geomagneticAttitudeEstimator)
+        val geomagneticAttitudeEstimatorSpy = spyk(geomagneticAttitudeEstimator)
+        every { geomagneticAttitudeEstimatorSpy.start() }.returns(true)
+        estimator.setPrivateProperty(
+            "geomagneticAttitudeEstimator",
+            geomagneticAttitudeEstimatorSpy
+        )
 
-        val attitudeEstimator: BaseRelativeGyroscopeAttitudeEstimator<*, *>? =
-            estimator.getPrivateProperty("attitudeEstimator")
-        requireNotNull(attitudeEstimator)
-        val attitudeEstimatorSpy = spyk(attitudeEstimator)
-        every { attitudeEstimatorSpy.start() }.returns(false)
-        estimator.setPrivateProperty("attitudeEstimator", attitudeEstimatorSpy)
+        val relativeAttitudeEstimator: BaseRelativeGyroscopeAttitudeEstimator<*, *>? =
+            estimator.getPrivateProperty("relativeAttitudeEstimator")
+        requireNotNull(relativeAttitudeEstimator)
+        val relativeAttitudeEstimatorSpy = spyk(relativeAttitudeEstimator)
+        every { relativeAttitudeEstimatorSpy.start() }.returns(false)
+        estimator.setPrivateProperty("relativeAttitudeEstimator", relativeAttitudeEstimatorSpy)
 
         assertFalse(estimator.start())
 
-        verify(exactly = 1) { levelingEstimatorSpy.start() }
-        verify(exactly = 1) { attitudeEstimatorSpy.start() }
+        verify(exactly = 1) { geomagneticAttitudeEstimatorSpy.start() }
+        verify(exactly = 1) { relativeAttitudeEstimatorSpy.start() }
+        verify(exactly = 1) { geomagneticAttitudeEstimatorSpy.stop() }
+        verify(exactly = 1) { relativeAttitudeEstimatorSpy.stop() }
     }
 
     @Test
     fun start_whenNotRunningAndInternalEstimatorSucceeds_returnsTrue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(context)
+        val estimator = FusedGeomagneticAttitudeEstimator(context)
 
         assertFalse(estimator.running)
 
-        val levelingEstimator: BaseLevelingEstimator<*, *>? =
-            estimator.getPrivateProperty("levelingEstimator")
-        requireNotNull(levelingEstimator)
-        val levelingEstimatorSpy = spyk(levelingEstimator)
-        every { levelingEstimatorSpy.start() }.returns(true)
-        estimator.setPrivateProperty("levelingEstimator", levelingEstimatorSpy)
+        val geomagneticAttitudeEstimator: GeomagneticAttitudeEstimator? =
+            estimator.getPrivateProperty("geomagneticAttitudeEstimator")
+        requireNotNull(geomagneticAttitudeEstimator)
+        val geomagneticAttitudeEstimatorSpy = spyk(geomagneticAttitudeEstimator)
+        every { geomagneticAttitudeEstimatorSpy.start() }.returns(true)
+        estimator.setPrivateProperty(
+            "geomagneticAttitudeEstimator",
+            geomagneticAttitudeEstimatorSpy
+        )
 
-        val attitudeEstimator: BaseRelativeGyroscopeAttitudeEstimator<*, *>? =
-            estimator.getPrivateProperty("attitudeEstimator")
-        requireNotNull(attitudeEstimator)
-        val attitudeEstimatorSpy = spyk(attitudeEstimator)
-        every { attitudeEstimatorSpy.start() }.returns(true)
-        estimator.setPrivateProperty("attitudeEstimator", attitudeEstimatorSpy)
+        val relativeAttitudeEstimator: BaseRelativeGyroscopeAttitudeEstimator<*, *>? =
+            estimator.getPrivateProperty("relativeAttitudeEstimator")
+        requireNotNull(relativeAttitudeEstimator)
+        val relativeAttitudeEstimatorSpy = spyk(relativeAttitudeEstimator)
+        every { relativeAttitudeEstimatorSpy.start() }.returns(true)
+        estimator.setPrivateProperty("relativeAttitudeEstimator", relativeAttitudeEstimatorSpy)
 
         assertTrue(estimator.start())
 
-        verify(exactly = 1) { levelingEstimatorSpy.start() }
-        verify(exactly = 1) { attitudeEstimatorSpy.start() }
+        verify(exactly = 1) { geomagneticAttitudeEstimatorSpy.start() }
+        verify(exactly = 1) { relativeAttitudeEstimatorSpy.start() }
+        verify(exactly = 0) { geomagneticAttitudeEstimatorSpy.stop() }
+        verify(exactly = 0) { relativeAttitudeEstimatorSpy.stop() }
     }
 
     @Test
     fun stop_stopsInternalEstimators() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(context)
+        val estimator = FusedGeomagneticAttitudeEstimator(context)
 
         // set as running
         estimator.setPrivateProperty("running", true)
         assertTrue(estimator.running)
 
-        val levelingEstimator: BaseLevelingEstimator<*, *>? =
-            estimator.getPrivateProperty("levelingEstimator")
-        requireNotNull(levelingEstimator)
-        val levelingEstimatorSpy = spyk(levelingEstimator)
-        justRun { levelingEstimatorSpy.stop() }
-        estimator.setPrivateProperty("levelingEstimator", levelingEstimatorSpy)
+        val geomagneticAttitudeEstimator: GeomagneticAttitudeEstimator? =
+            estimator.getPrivateProperty("geomagneticAttitudeEstimator")
+        requireNotNull(geomagneticAttitudeEstimator)
+        val geomagneticAttitudeEstimatorSpy = spyk(geomagneticAttitudeEstimator)
+        justRun { geomagneticAttitudeEstimatorSpy.stop() }
+        estimator.setPrivateProperty(
+            "geomagneticAttitudeEstimator",
+            geomagneticAttitudeEstimatorSpy
+        )
 
-        val attitudeEstimator: BaseRelativeGyroscopeAttitudeEstimator<*, *>? =
-            estimator.getPrivateProperty("attitudeEstimator")
-        requireNotNull(attitudeEstimator)
-        val attitudeEstimatorSpy = spyk(attitudeEstimator)
-        justRun { attitudeEstimatorSpy.stop() }
-        estimator.setPrivateProperty("attitudeEstimator", attitudeEstimatorSpy)
+        val relativeAttitudeEstimator: BaseRelativeGyroscopeAttitudeEstimator<*, *>? =
+            estimator.getPrivateProperty("relativeAttitudeEstimator")
+        requireNotNull(relativeAttitudeEstimator)
+        val relativeAttitudeEstimatorSpy = spyk(relativeAttitudeEstimator)
+        justRun { relativeAttitudeEstimatorSpy.stop() }
+        estimator.setPrivateProperty("relativeAttitudeEstimator", relativeAttitudeEstimatorSpy)
 
         estimator.stop()
 
-        verify(exactly = 1) { levelingEstimatorSpy.stop() }
-        verify(exactly = 1) { attitudeEstimatorSpy.stop() }
+        verify(exactly = 1) { geomagneticAttitudeEstimatorSpy.stop() }
+        verify(exactly = 1) { relativeAttitudeEstimatorSpy.stop() }
         assertFalse(estimator.running)
     }
 
     @Test
     fun processRelativeAttitude_whenFirstAndNonAccurateRelativeAttitudeEstimator_copiesAttitudeAndSetsPreviousRelativeAttitude() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(
+        val estimator = FusedGeomagneticAttitudeEstimator(
             context,
             useAccurateRelativeGyroscopeAttitudeEstimator = false
         )
@@ -761,14 +803,14 @@ class LeveledRelativeAttitudeEstimatorTest {
             estimator.getPrivateProperty("previousRelativeAttitude")
         assertNull(previousRelativeAttitude1)
 
-        val attitudeEstimator: RelativeGyroscopeAttitudeEstimator? =
-            estimator.getPrivateProperty("attitudeEstimator")
-        requireNotNull(attitudeEstimator)
+        val relativeAttitudeEstimator: RelativeGyroscopeAttitudeEstimator? =
+            estimator.getPrivateProperty("relativeAttitudeEstimator")
+        requireNotNull(relativeAttitudeEstimator)
 
         val internalAttitude = spyk(getAttitude())
-        val listener = attitudeEstimator.attitudeAvailableListener
+        val listener = relativeAttitudeEstimator.attitudeAvailableListener
         requireNotNull(listener)
-        listener.onAttitudeAvailable(attitudeEstimator, internalAttitude, null, null, null, null)
+        listener.onAttitudeAvailable(relativeAttitudeEstimator, internalAttitude, null, null, null, null)
 
         verify(exactly = 1) { internalAttitude.copyTo(relativeAttitude1) }
         assertEquals(internalAttitude, relativeAttitude1)
@@ -788,7 +830,7 @@ class LeveledRelativeAttitudeEstimatorTest {
     @Test
     fun processRelativeAttitude_whenFirstAndAccurateRelativeAttitudeEstimator_copiesAttitudeAndSetsPreviousRelativeAttitude() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(
+        val estimator = FusedGeomagneticAttitudeEstimator(
             context,
             useAccurateRelativeGyroscopeAttitudeEstimator = true
         )
@@ -808,14 +850,14 @@ class LeveledRelativeAttitudeEstimatorTest {
             estimator.getPrivateProperty("previousRelativeAttitude")
         assertNull(previousRelativeAttitude1)
 
-        val attitudeEstimator: AccurateRelativeGyroscopeAttitudeEstimator? =
-            estimator.getPrivateProperty("attitudeEstimator")
-        requireNotNull(attitudeEstimator)
+        val relativeAttitudeEstimator: AccurateRelativeGyroscopeAttitudeEstimator? =
+            estimator.getPrivateProperty("relativeAttitudeEstimator")
+        requireNotNull(relativeAttitudeEstimator)
 
         val internalAttitude = spyk(getAttitude())
-        val listener = attitudeEstimator.attitudeAvailableListener
+        val listener = relativeAttitudeEstimator.attitudeAvailableListener
         requireNotNull(listener)
-        listener.onAttitudeAvailable(attitudeEstimator, internalAttitude, null, null, null, null)
+        listener.onAttitudeAvailable(relativeAttitudeEstimator, internalAttitude, null, null, null, null)
 
         verify(exactly = 1) { internalAttitude.copyTo(relativeAttitude1) }
         assertEquals(internalAttitude, relativeAttitude1)
@@ -835,7 +877,7 @@ class LeveledRelativeAttitudeEstimatorTest {
     @Test
     fun processRelativeAttitude_whenNotFirstAndNonAccurateRelativeAttitudeEstimator_copiesAttitudeAndSetsPreviousRelativeAttitude() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(
+        val estimator = FusedGeomagneticAttitudeEstimator(
             context,
             useAccurateRelativeGyroscopeAttitudeEstimator = false
         )
@@ -855,15 +897,15 @@ class LeveledRelativeAttitudeEstimatorTest {
             estimator.getPrivateProperty("previousRelativeAttitude")
         assertNull(previousRelativeAttitude1)
 
-        val attitudeEstimator: RelativeGyroscopeAttitudeEstimator? =
-            estimator.getPrivateProperty("attitudeEstimator")
-        requireNotNull(attitudeEstimator)
+        val relativeAttitudeEstimator: RelativeGyroscopeAttitudeEstimator? =
+            estimator.getPrivateProperty("relativeAttitudeEstimator")
+        requireNotNull(relativeAttitudeEstimator)
 
         // call listener for the 1st time
         val internalAttitude1 = spyk(getAttitude())
-        val listener = attitudeEstimator.attitudeAvailableListener
+        val listener = relativeAttitudeEstimator.attitudeAvailableListener
         requireNotNull(listener)
-        listener.onAttitudeAvailable(attitudeEstimator, internalAttitude1, null, null, null, null)
+        listener.onAttitudeAvailable(relativeAttitudeEstimator, internalAttitude1, null, null, null, null)
 
         verify(exactly = 1) { internalAttitude1.copyTo(relativeAttitude1) }
         assertEquals(internalAttitude1, relativeAttitude1)
@@ -882,7 +924,7 @@ class LeveledRelativeAttitudeEstimatorTest {
         // call listener a 2nd time
         val deltaRelativeAttitude1 = getAttitude()
         val internalAttitude2 = spyk(deltaRelativeAttitude1.combineAndReturnNew(internalAttitude1))
-        listener.onAttitudeAvailable(attitudeEstimator, internalAttitude2, null, null, null, null)
+        listener.onAttitudeAvailable(relativeAttitudeEstimator, internalAttitude2, null, null, null, null)
 
         verify(exactly = 1) { internalAttitude2.copyTo(relativeAttitude1) }
         assertEquals(internalAttitude2, relativeAttitude1)
@@ -913,7 +955,7 @@ class LeveledRelativeAttitudeEstimatorTest {
     @Test
     fun processRelativeAttitude_whenNotFirstAndAccurateRelativeAttitudeEstimator_copiesAttitudeAndSetsPreviousRelativeAttitude() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(
+        val estimator = FusedGeomagneticAttitudeEstimator(
             context,
             useAccurateRelativeGyroscopeAttitudeEstimator = true
         )
@@ -933,15 +975,15 @@ class LeveledRelativeAttitudeEstimatorTest {
             estimator.getPrivateProperty("previousRelativeAttitude")
         assertNull(previousRelativeAttitude1)
 
-        val attitudeEstimator: AccurateRelativeGyroscopeAttitudeEstimator? =
-            estimator.getPrivateProperty("attitudeEstimator")
-        requireNotNull(attitudeEstimator)
+        val relativeAttitudeEstimator: AccurateRelativeGyroscopeAttitudeEstimator? =
+            estimator.getPrivateProperty("relativeAttitudeEstimator")
+        requireNotNull(relativeAttitudeEstimator)
 
         // call listener for the 1st time
         val internalAttitude1 = spyk(getAttitude())
-        val listener = attitudeEstimator.attitudeAvailableListener
+        val listener = relativeAttitudeEstimator.attitudeAvailableListener
         requireNotNull(listener)
-        listener.onAttitudeAvailable(attitudeEstimator, internalAttitude1, null, null, null, null)
+        listener.onAttitudeAvailable(relativeAttitudeEstimator, internalAttitude1, null, null, null, null)
 
         verify(exactly = 1) { internalAttitude1.copyTo(relativeAttitude1) }
         assertEquals(internalAttitude1, relativeAttitude1)
@@ -960,7 +1002,7 @@ class LeveledRelativeAttitudeEstimatorTest {
         // call listener a 2nd time
         val deltaRelativeAttitude1 = getAttitude()
         val internalAttitude2 = spyk(deltaRelativeAttitude1.combineAndReturnNew(internalAttitude1))
-        listener.onAttitudeAvailable(attitudeEstimator, internalAttitude2, null, null, null, null)
+        listener.onAttitudeAvailable(relativeAttitudeEstimator, internalAttitude2, null, null, null, null)
 
         verify(exactly = 1) { internalAttitude2.copyTo(relativeAttitude1) }
         assertEquals(internalAttitude2, relativeAttitude1)
@@ -989,11 +1031,11 @@ class LeveledRelativeAttitudeEstimatorTest {
     }
 
     @Test
-    fun processLeveling_whenNoRelativeAttitudeAndNonAccurateLeveling_makesNoAction() {
+    fun processGeomagneticAttitude_whenNoRelativeAttitudeAndNonAccurateLeveling_makesNoAction() {
         val attitudeAvailableListener =
-            mockk<LeveledRelativeAttitudeEstimator.OnAttitudeAvailableListener>()
+            mockk<FusedGeomagneticAttitudeEstimator.OnAttitudeAvailableListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(
+        val estimator = FusedGeomagneticAttitudeEstimator(
             context,
             useAccurateLevelingEstimator = false,
             attitudeAvailableListener = attitudeAvailableListener
@@ -1003,39 +1045,39 @@ class LeveledRelativeAttitudeEstimatorTest {
         requireNotNull(hasRelativeAttitude1)
         assertFalse(hasRelativeAttitude1)
 
-        val levelingAttitude1: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-        requireNotNull(levelingAttitude1)
-        assertEquals(Quaternion(), levelingAttitude1)
+        val geomagneticAttitude1: Quaternion? = estimator.getPrivateProperty("geomagneticAttitude")
+        requireNotNull(geomagneticAttitude1)
+        assertEquals(Quaternion(), geomagneticAttitude1)
 
         val hasDeltaRelativeAttitude1: Boolean? =
             estimator.getPrivateProperty("hasDeltaRelativeAttitude")
         requireNotNull(hasDeltaRelativeAttitude1)
         assertFalse(hasDeltaRelativeAttitude1)
 
-        val levelingEstimator: LevelingEstimator? =
-            estimator.getPrivateProperty("levelingEstimator")
-        requireNotNull(levelingEstimator)
+        val geomagneticEstimator: GeomagneticAttitudeEstimator? =
+            estimator.getPrivateProperty("geomagneticAttitudeEstimator")
+        requireNotNull(geomagneticEstimator)
 
         val internalAttitude = spyk(getAttitude())
-        val listener = levelingEstimator.levelingAvailableListener
+        val listener = geomagneticEstimator.attitudeAvailableListener
         requireNotNull(listener)
-        listener.onLevelingAvailable(levelingEstimator, internalAttitude, null, null, null)
+        listener.onAttitudeAvailable(geomagneticEstimator, internalAttitude, null, null, null, null)
 
-        val levelingAttitude2: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-        requireNotNull(levelingAttitude2)
-        assertEquals(Quaternion(), levelingAttitude2)
+        val geomagneticAttitude2: Quaternion? = estimator.getPrivateProperty("geomagneticAttitude")
+        requireNotNull(geomagneticAttitude2)
+        assertEquals(Quaternion(), geomagneticAttitude2)
 
         verify { attitudeAvailableListener wasNot Called }
         verify { internalAttitude wasNot Called }
     }
 
     @Test
-    fun processLeveling_whenNoRelativeAttitudeAndAccurateLeveling_makesNoAction() {
+    fun processGeomagneticAttitude_whenNoRelativeAttitudeAndAccurateLeveling_makesNoAction() {
         val attitudeAvailableListener =
-            mockk<LeveledRelativeAttitudeEstimator.OnAttitudeAvailableListener>()
+            mockk<FusedGeomagneticAttitudeEstimator.OnAttitudeAvailableListener>()
         val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(
+        val estimator = FusedGeomagneticAttitudeEstimator(
             context,
             location,
             useAccurateLevelingEstimator = true,
@@ -1046,38 +1088,38 @@ class LeveledRelativeAttitudeEstimatorTest {
         requireNotNull(hasRelativeAttitude1)
         assertFalse(hasRelativeAttitude1)
 
-        val levelingAttitude1: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-        requireNotNull(levelingAttitude1)
-        assertEquals(Quaternion(), levelingAttitude1)
+        val geomagneticAttitude1: Quaternion? = estimator.getPrivateProperty("geomagneticAttitude")
+        requireNotNull(geomagneticAttitude1)
+        assertEquals(Quaternion(), geomagneticAttitude1)
 
         val hasDeltaRelativeAttitude1: Boolean? =
             estimator.getPrivateProperty("hasDeltaRelativeAttitude")
         requireNotNull(hasDeltaRelativeAttitude1)
         assertFalse(hasDeltaRelativeAttitude1)
 
-        val levelingEstimator: AccurateLevelingEstimator? =
-            estimator.getPrivateProperty("levelingEstimator")
-        requireNotNull(levelingEstimator)
+        val geomagneticEstimator: GeomagneticAttitudeEstimator? =
+            estimator.getPrivateProperty("geomagneticAttitudeEstimator")
+        requireNotNull(geomagneticEstimator)
 
         val internalAttitude = spyk(getAttitude())
-        val listener = levelingEstimator.levelingAvailableListener
+        val listener = geomagneticEstimator.attitudeAvailableListener
         requireNotNull(listener)
-        listener.onLevelingAvailable(levelingEstimator, internalAttitude, null, null, null)
+        listener.onAttitudeAvailable(geomagneticEstimator, internalAttitude, null, null, null, null)
 
-        val levelingAttitude2: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-        requireNotNull(levelingAttitude2)
-        assertEquals(Quaternion(), levelingAttitude2)
+        val geomagneticAttitude2: Quaternion? = estimator.getPrivateProperty("geomagneticAttitude")
+        requireNotNull(geomagneticAttitude2)
+        assertEquals(Quaternion(), geomagneticAttitude2)
 
         verify { attitudeAvailableListener wasNot Called }
         verify { internalAttitude wasNot Called }
     }
 
     @Test
-    fun processLeveling_whenRelativeAttitudeAndNonAccurateLeveling_copiesAttitude() {
+    fun processGeomagneticAttitude_whenRelativeAttitudeAndNonAccurateLeveling_copiesAttitude() {
         val attitudeAvailableListener =
-            mockk<LeveledRelativeAttitudeEstimator.OnAttitudeAvailableListener>()
+            mockk<FusedGeomagneticAttitudeEstimator.OnAttitudeAvailableListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(
+        val estimator = FusedGeomagneticAttitudeEstimator(
             context,
             useAccurateLevelingEstimator = false,
             attitudeAvailableListener = attitudeAvailableListener
@@ -1089,39 +1131,39 @@ class LeveledRelativeAttitudeEstimatorTest {
         requireNotNull(hasRelativeAttitude1)
         assertTrue(hasRelativeAttitude1)
 
-        val levelingAttitude1: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-        requireNotNull(levelingAttitude1)
-        assertEquals(Quaternion(), levelingAttitude1)
+        val geomagneticAttitude1: Quaternion? = estimator.getPrivateProperty("geomagneticAttitude")
+        requireNotNull(geomagneticAttitude1)
+        assertEquals(Quaternion(), geomagneticAttitude1)
 
         val hasDeltaRelativeAttitude1: Boolean? =
             estimator.getPrivateProperty("hasDeltaRelativeAttitude")
         requireNotNull(hasDeltaRelativeAttitude1)
         assertFalse(hasDeltaRelativeAttitude1)
 
-        val levelingEstimator: LevelingEstimator? =
-            estimator.getPrivateProperty("levelingEstimator")
-        requireNotNull(levelingEstimator)
+        val geomagneticEstimator: GeomagneticAttitudeEstimator? =
+            estimator.getPrivateProperty("geomagneticAttitudeEstimator")
+        requireNotNull(geomagneticEstimator)
 
         val internalAttitude = spyk(getAttitude())
-        val listener = levelingEstimator.levelingAvailableListener
+        val listener = geomagneticEstimator.attitudeAvailableListener
         requireNotNull(listener)
-        listener.onLevelingAvailable(levelingEstimator, internalAttitude, null, null, null)
+        listener.onAttitudeAvailable(geomagneticEstimator, internalAttitude, null, null, null, null)
 
-        val levelingAttitude2: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-        requireNotNull(levelingAttitude2)
-        assertEquals(internalAttitude, levelingAttitude2)
+        val geomagneticAttitude2: Quaternion? = estimator.getPrivateProperty("geomagneticAttitude")
+        requireNotNull(geomagneticAttitude2)
+        assertEquals(internalAttitude, geomagneticAttitude2)
 
         verify { attitudeAvailableListener wasNot Called }
-        verify(exactly = 1) { internalAttitude.copyTo(levelingAttitude2) }
+        verify(exactly = 1) { internalAttitude.copyTo(geomagneticAttitude2) }
     }
 
     @Test
-    fun processLeveling_whenRelativeAttitudeAndAccurateLeveling_copiesAttitude() {
+    fun processGeomagneticAttitude_whenRelativeAttitudeAndAccurateLeveling_copiesAttitude() {
         val attitudeAvailableListener =
-            mockk<LeveledRelativeAttitudeEstimator.OnAttitudeAvailableListener>()
+            mockk<FusedGeomagneticAttitudeEstimator.OnAttitudeAvailableListener>()
         val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(
+        val estimator = FusedGeomagneticAttitudeEstimator(
             context,
             location,
             useAccurateLevelingEstimator = true,
@@ -1134,38 +1176,38 @@ class LeveledRelativeAttitudeEstimatorTest {
         requireNotNull(hasRelativeAttitude1)
         assertTrue(hasRelativeAttitude1)
 
-        val levelingAttitude1: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-        requireNotNull(levelingAttitude1)
-        assertEquals(Quaternion(), levelingAttitude1)
+        val geomagneticAttitude1: Quaternion? = estimator.getPrivateProperty("geomagneticAttitude")
+        requireNotNull(geomagneticAttitude1)
+        assertEquals(Quaternion(), geomagneticAttitude1)
 
         val hasDeltaRelativeAttitude1: Boolean? =
             estimator.getPrivateProperty("hasDeltaRelativeAttitude")
         requireNotNull(hasDeltaRelativeAttitude1)
         assertFalse(hasDeltaRelativeAttitude1)
 
-        val levelingEstimator: AccurateLevelingEstimator? =
-            estimator.getPrivateProperty("levelingEstimator")
-        requireNotNull(levelingEstimator)
+        val geomagneticEstimator: GeomagneticAttitudeEstimator? =
+            estimator.getPrivateProperty("geomagneticAttitudeEstimator")
+        requireNotNull(geomagneticEstimator)
 
         val internalAttitude = spyk(getAttitude())
-        val listener = levelingEstimator.levelingAvailableListener
+        val listener = geomagneticEstimator.attitudeAvailableListener
         requireNotNull(listener)
-        listener.onLevelingAvailable(levelingEstimator, internalAttitude, null, null, null)
+        listener.onAttitudeAvailable(geomagneticEstimator, internalAttitude, null, null, null, null)
 
-        val levelingAttitude2: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-        requireNotNull(levelingAttitude2)
-        assertEquals(internalAttitude, levelingAttitude2)
+        val geomagneticAttitude2: Quaternion? = estimator.getPrivateProperty("geomagneticAttitude")
+        requireNotNull(geomagneticAttitude2)
+        assertEquals(internalAttitude, geomagneticAttitude2)
 
         verify { attitudeAvailableListener wasNot Called }
-        verify(exactly = 1) { internalAttitude.copyTo(levelingAttitude2) }
+        verify(exactly = 1) { internalAttitude.copyTo(geomagneticAttitude2) }
     }
 
     @Test
-    fun processLeveling_whenDeltaRelativeAttitudeAndResetLeveling_resets() {
+    fun processGeomagneticAttitude_whenDeltaRelativeAttitudeAndResetLeveling_resets() {
         val attitudeAvailableListener =
-            mockk<LeveledRelativeAttitudeEstimator.OnAttitudeAvailableListener>()
+            mockk<FusedGeomagneticAttitudeEstimator.OnAttitudeAvailableListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(
+        val estimator = FusedGeomagneticAttitudeEstimator(
             context,
             useAccurateLevelingEstimator = false,
             attitudeAvailableListener = attitudeAvailableListener
@@ -1178,19 +1220,19 @@ class LeveledRelativeAttitudeEstimatorTest {
         requireNotNull(hasRelativeAttitude1)
         assertTrue(hasRelativeAttitude1)
 
-        val levelingAttitude1: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-        requireNotNull(levelingAttitude1)
-        assertEquals(Quaternion(), levelingAttitude1)
+        val geomagneticAttitude1: Quaternion? = estimator.getPrivateProperty("geomagneticAttitude")
+        requireNotNull(geomagneticAttitude1)
+        assertEquals(Quaternion(), geomagneticAttitude1)
 
         val hasDeltaRelativeAttitude1: Boolean? =
             estimator.getPrivateProperty("hasDeltaRelativeAttitude")
         requireNotNull(hasDeltaRelativeAttitude1)
         assertTrue(hasDeltaRelativeAttitude1)
 
-        val levelingAttitude: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-        requireNotNull(levelingAttitude)
-        val levelingAttitudeSpy = spyk(levelingAttitude)
-        estimator.setPrivateProperty("levelingAttitude", levelingAttitudeSpy)
+        val geomagneticAttitude: Quaternion? = estimator.getPrivateProperty("geomagneticAttitude")
+        requireNotNull(geomagneticAttitude)
+        val geomagneticAttitudeSpy = spyk(geomagneticAttitude)
+        estimator.setPrivateProperty("geomagneticAttitude", geomagneticAttitudeSpy)
 
         val relativeAttitude: Quaternion? = estimator.getPrivateProperty("relativeAttitude")
         requireNotNull(relativeAttitude)
@@ -1209,21 +1251,21 @@ class LeveledRelativeAttitudeEstimatorTest {
         requireNotNull(panicCounter1)
         assertEquals(estimator.panicCounterThreshold, panicCounter1)
 
-        val resetToLeveling: Boolean? = estimator.getPrivateProperty("resetToLeveling")
-        requireNotNull(resetToLeveling)
-        assertTrue(resetToLeveling)
+        val resetToGeomagnetic: Boolean? = estimator.getPrivateProperty("resetToGeomagnetic")
+        requireNotNull(resetToGeomagnetic)
+        assertTrue(resetToGeomagnetic)
 
-        val levelingEstimator: LevelingEstimator? =
-            estimator.getPrivateProperty("levelingEstimator")
-        requireNotNull(levelingEstimator)
+        val geomagneticEstimator: GeomagneticAttitudeEstimator? =
+            estimator.getPrivateProperty("geomagneticAttitudeEstimator")
+        requireNotNull(geomagneticEstimator)
 
         val internalAttitude = spyk(getAttitude())
-        val listener = levelingEstimator.levelingAvailableListener
+        val listener = geomagneticEstimator.attitudeAvailableListener
         requireNotNull(listener)
-        listener.onLevelingAvailable(levelingEstimator, internalAttitude, null, null, null)
+        listener.onAttitudeAvailable(geomagneticEstimator, internalAttitude, null, null, null, null)
 
-        val levelingAttitude2: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-        requireNotNull(levelingAttitude2)
+        val geomagneticAttitude2: Quaternion? = estimator.getPrivateProperty("geomagneticAttitude")
+        requireNotNull(geomagneticAttitude2)
 
         val angles = DoubleArray(3)
         internalAttitude.toEulerAngles(angles)
@@ -1233,20 +1275,20 @@ class LeveledRelativeAttitudeEstimatorTest {
         val relativeYaw = angles[2]
 
         verify { attitudeAvailableListener wasNot Called }
-        verify(exactly = 1) { internalAttitude.copyTo(levelingAttitude2) }
+        verify(exactly = 1) { internalAttitude.copyTo(geomagneticAttitude2) }
 
         val displayEulerAngles: DoubleArray? = estimator.getPrivateProperty("displayEulerAngles")
         requireNotNull(displayEulerAngles)
-        verify(exactly = 1) { levelingAttitudeSpy.toEulerAngles(displayEulerAngles) }
+        verify(exactly = 1) { geomagneticAttitudeSpy.toEulerAngles(displayEulerAngles) }
         verify(exactly = 1) { relativeAttitudeSpy.toEulerAngles(displayEulerAngles) }
         verify(exactly = 1) {
-            levelingAttitudeSpy.setFromEulerAngles(
+            geomagneticAttitudeSpy.setFromEulerAngles(
                 levelingRoll,
                 levelingPitch,
                 relativeYaw
             )
         }
-        verify { levelingAttitudeSpy.copyTo(fusedAttitudeSpy) }
+        verify { geomagneticAttitudeSpy.copyTo(fusedAttitudeSpy) }
 
         val panicCounter2: Int? = estimator.getPrivateProperty("panicCounter")
         requireNotNull(panicCounter2)
@@ -1258,11 +1300,11 @@ class LeveledRelativeAttitudeEstimatorTest {
     }
 
     @Test
-    fun processLeveling_whenDeltaRelativeAttitudeSmallDivergenceAndDirectInterpolation_updatesFusedAttitudeAndNotifies() {
+    fun processGeomagneticAttitude_whenDeltaRelativeAttitudeSmallDivergenceAndDirectInterpolation_updatesFusedAttitudeAndNotifies() {
         val attitudeAvailableListener =
-            mockk<LeveledRelativeAttitudeEstimator.OnAttitudeAvailableListener>(relaxUnitFun = true)
+            mockk<FusedGeomagneticAttitudeEstimator.OnAttitudeAvailableListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(
+        val estimator = FusedGeomagneticAttitudeEstimator(
             context,
             useAccurateLevelingEstimator = false,
             estimateCoordinateTransformation = false,
@@ -1278,19 +1320,19 @@ class LeveledRelativeAttitudeEstimatorTest {
         requireNotNull(hasRelativeAttitude1)
         assertTrue(hasRelativeAttitude1)
 
-        val levelingAttitude1: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-        requireNotNull(levelingAttitude1)
-        assertEquals(Quaternion(), levelingAttitude1)
+        val geomagneticAttitude1: Quaternion? = estimator.getPrivateProperty("geomagneticAttitude")
+        requireNotNull(geomagneticAttitude1)
+        assertEquals(Quaternion(), geomagneticAttitude1)
 
         val hasDeltaRelativeAttitude1: Boolean? =
             estimator.getPrivateProperty("hasDeltaRelativeAttitude")
         requireNotNull(hasDeltaRelativeAttitude1)
         assertTrue(hasDeltaRelativeAttitude1)
 
-        val levelingAttitude: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-        requireNotNull(levelingAttitude)
-        val levelingAttitudeSpy = spyk(levelingAttitude)
-        estimator.setPrivateProperty("levelingAttitude", levelingAttitudeSpy)
+        val geomagneticAttitude: Quaternion? = estimator.getPrivateProperty("geomagneticAttitude")
+        requireNotNull(geomagneticAttitude)
+        val geomagneticAttitudeSpy = spyk(geomagneticAttitude)
+        estimator.setPrivateProperty("geomagneticAttitude", geomagneticAttitudeSpy)
 
         val relativeAttitude: Quaternion? = estimator.getPrivateProperty("relativeAttitude")
         requireNotNull(relativeAttitude)
@@ -1337,21 +1379,21 @@ class LeveledRelativeAttitudeEstimatorTest {
         requireNotNull(panicCounter1)
         assertEquals(1, panicCounter1)
 
-        val resetToLeveling: Boolean? = estimator.getPrivateProperty("resetToLeveling")
-        requireNotNull(resetToLeveling)
-        assertFalse(resetToLeveling)
+        val resetToGeomagnetic: Boolean? = estimator.getPrivateProperty("resetToGeomagnetic")
+        requireNotNull(resetToGeomagnetic)
+        assertFalse(resetToGeomagnetic)
 
-        val levelingEstimator: LevelingEstimator? =
-            estimator.getPrivateProperty("levelingEstimator")
-        requireNotNull(levelingEstimator)
+        val geomagneticEstimator: GeomagneticAttitudeEstimator? =
+            estimator.getPrivateProperty("geomagneticAttitudeEstimator")
+        requireNotNull(geomagneticEstimator)
 
         val internalAttitude = spyk(getAttitude())
-        val listener = levelingEstimator.levelingAvailableListener
+        val listener = geomagneticEstimator.attitudeAvailableListener
         requireNotNull(listener)
-        listener.onLevelingAvailable(levelingEstimator, internalAttitude, null, null, null)
+        listener.onAttitudeAvailable(geomagneticEstimator, internalAttitude, null, null, null, null)
 
-        val levelingAttitude2: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-        requireNotNull(levelingAttitude2)
+        val geomagneticAttitude2: Quaternion? = estimator.getPrivateProperty("geomagneticAttitude")
+        requireNotNull(geomagneticAttitude2)
 
         val angles = DoubleArray(3)
         internalAttitude.toEulerAngles(angles)
@@ -1360,20 +1402,20 @@ class LeveledRelativeAttitudeEstimatorTest {
         attitude.toEulerAngles(angles)
         val relativeYaw = angles[2]
 
-        verify(exactly = 1) { internalAttitude.copyTo(levelingAttitude2) }
+        verify(exactly = 1) { internalAttitude.copyTo(geomagneticAttitude2) }
 
         val displayEulerAngles: DoubleArray? = estimator.getPrivateProperty("displayEulerAngles")
         requireNotNull(displayEulerAngles)
-        verify(exactly = 1) { levelingAttitudeSpy.toEulerAngles(displayEulerAngles) }
+        verify(exactly = 1) { geomagneticAttitudeSpy.toEulerAngles(displayEulerAngles) }
         verify(exactly = 1) { relativeAttitudeSpy.toEulerAngles(displayEulerAngles) }
         verify(exactly = 1) {
-            levelingAttitudeSpy.setFromEulerAngles(
+            geomagneticAttitudeSpy.setFromEulerAngles(
                 levelingRoll,
                 levelingPitch,
                 relativeYaw
             )
         }
-        verify(exactly = 0) { levelingAttitudeSpy.copyTo(fusedAttitudeSpy) }
+        verify(exactly = 0) { geomagneticAttitudeSpy.copyTo(fusedAttitudeSpy) }
 
         val panicCounter2: Int? = estimator.getPrivateProperty("panicCounter")
         requireNotNull(panicCounter2)
@@ -1386,14 +1428,14 @@ class LeveledRelativeAttitudeEstimatorTest {
         val fusedAttitude4 = Quaternion()
         Quaternion.slerp(
             fusedAttitude3,
-            levelingAttitudeSpy,
+            geomagneticAttitudeSpy,
             estimator.interpolationValue,
             fusedAttitude4
         )
 
         assertEquals(fusedAttitude4, fusedAttitudeSpy)
 
-        val absDot = abs(QuaternionHelper.dotProduct(fusedAttitude3, levelingAttitudeSpy))
+        val absDot = abs(QuaternionHelper.dotProduct(fusedAttitude3, geomagneticAttitudeSpy))
         assertTrue(absDot >= estimator.outlierThreshold)
 
         val previousRelativeAttitude2: Quaternion? =
@@ -1416,11 +1458,11 @@ class LeveledRelativeAttitudeEstimatorTest {
     }
 
     @Test
-    fun processLeveling_whenDeltaRelativeAttitudeMediumDivergenceAndDirectInterpolation_updatesFusedAttitudeAndNotifies() {
+    fun processGeomagneticAttitude_whenDeltaRelativeAttitudeMediumDivergenceAndDirectInterpolation_updatesFusedAttitudeAndNotifies() {
         val attitudeAvailableListener =
-            mockk<LeveledRelativeAttitudeEstimator.OnAttitudeAvailableListener>(relaxUnitFun = true)
+            mockk<FusedGeomagneticAttitudeEstimator.OnAttitudeAvailableListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(
+        val estimator = FusedGeomagneticAttitudeEstimator(
             context,
             useAccurateLevelingEstimator = false,
             estimateCoordinateTransformation = false,
@@ -1436,19 +1478,19 @@ class LeveledRelativeAttitudeEstimatorTest {
         requireNotNull(hasRelativeAttitude1)
         assertTrue(hasRelativeAttitude1)
 
-        val levelingAttitude1: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-        requireNotNull(levelingAttitude1)
-        assertEquals(Quaternion(), levelingAttitude1)
+        val geomagneticAttitude1: Quaternion? = estimator.getPrivateProperty("geomagneticAttitude")
+        requireNotNull(geomagneticAttitude1)
+        assertEquals(Quaternion(), geomagneticAttitude1)
 
         val hasDeltaRelativeAttitude1: Boolean? =
             estimator.getPrivateProperty("hasDeltaRelativeAttitude")
         requireNotNull(hasDeltaRelativeAttitude1)
         assertTrue(hasDeltaRelativeAttitude1)
 
-        val levelingAttitude: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-        requireNotNull(levelingAttitude)
-        val levelingAttitudeSpy = spyk(levelingAttitude)
-        estimator.setPrivateProperty("levelingAttitude", levelingAttitudeSpy)
+        val geomagneticAttitude: Quaternion? = estimator.getPrivateProperty("geomagneticAttitude")
+        requireNotNull(geomagneticAttitude)
+        val geomagneticAttitudeSpy = spyk(geomagneticAttitude)
+        estimator.setPrivateProperty("geomagneticAttitude", geomagneticAttitudeSpy)
 
         val relativeAttitude: Quaternion? = estimator.getPrivateProperty("relativeAttitude")
         requireNotNull(relativeAttitude)
@@ -1495,21 +1537,21 @@ class LeveledRelativeAttitudeEstimatorTest {
         requireNotNull(panicCounter1)
         assertEquals(1, panicCounter1)
 
-        val resetToLeveling: Boolean? = estimator.getPrivateProperty("resetToLeveling")
-        requireNotNull(resetToLeveling)
-        assertFalse(resetToLeveling)
+        val resetToGeomagnetic: Boolean? = estimator.getPrivateProperty("resetToGeomagnetic")
+        requireNotNull(resetToGeomagnetic)
+        assertFalse(resetToGeomagnetic)
 
-        val levelingEstimator: LevelingEstimator? =
-            estimator.getPrivateProperty("levelingEstimator")
-        requireNotNull(levelingEstimator)
+        val geomagneticEstimator: GeomagneticAttitudeEstimator? =
+            estimator.getPrivateProperty("geomagneticAttitudeEstimator")
+        requireNotNull(geomagneticEstimator)
 
         val internalAttitude = spyk(getAttitude())
-        val listener = levelingEstimator.levelingAvailableListener
+        val listener = geomagneticEstimator.attitudeAvailableListener
         requireNotNull(listener)
-        listener.onLevelingAvailable(levelingEstimator, internalAttitude, null, null, null)
+        listener.onAttitudeAvailable(geomagneticEstimator, internalAttitude, null, null, null, null)
 
-        val levelingAttitude2: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-        requireNotNull(levelingAttitude2)
+        val geomagneticAttitude2: Quaternion? = estimator.getPrivateProperty("geomagneticAttitude")
+        requireNotNull(geomagneticAttitude2)
 
         val angles = DoubleArray(3)
         internalAttitude.toEulerAngles(angles)
@@ -1518,20 +1560,20 @@ class LeveledRelativeAttitudeEstimatorTest {
         attitude.toEulerAngles(angles)
         val relativeYaw = angles[2]
 
-        verify(exactly = 1) { internalAttitude.copyTo(levelingAttitude2) }
+        verify(exactly = 1) { internalAttitude.copyTo(geomagneticAttitude2) }
 
         val displayEulerAngles: DoubleArray? = estimator.getPrivateProperty("displayEulerAngles")
         requireNotNull(displayEulerAngles)
-        verify(exactly = 1) { levelingAttitudeSpy.toEulerAngles(displayEulerAngles) }
+        verify(exactly = 1) { geomagneticAttitudeSpy.toEulerAngles(displayEulerAngles) }
         verify(exactly = 1) { relativeAttitudeSpy.toEulerAngles(displayEulerAngles) }
         verify(exactly = 1) {
-            levelingAttitudeSpy.setFromEulerAngles(
+            geomagneticAttitudeSpy.setFromEulerAngles(
                 levelingRoll,
                 levelingPitch,
                 relativeYaw
             )
         }
-        verify(exactly = 0) { levelingAttitudeSpy.copyTo(fusedAttitudeSpy) }
+        verify(exactly = 0) { geomagneticAttitudeSpy.copyTo(fusedAttitudeSpy) }
 
         val panicCounter2: Int? = estimator.getPrivateProperty("panicCounter")
         requireNotNull(panicCounter2)
@@ -1543,7 +1585,7 @@ class LeveledRelativeAttitudeEstimatorTest {
 
         assertEquals(fusedAttitude3, fusedAttitudeSpy)
 
-        val absDot = abs(QuaternionHelper.dotProduct(fusedAttitude3, levelingAttitudeSpy))
+        val absDot = abs(QuaternionHelper.dotProduct(fusedAttitude3, geomagneticAttitudeSpy))
         assertTrue(absDot < estimator.outlierThreshold)
         assertTrue(absDot > estimator.outlierPanicThreshold)
 
@@ -1567,11 +1609,11 @@ class LeveledRelativeAttitudeEstimatorTest {
     }
 
     @Test
-    fun processLeveling_whenDeltaRelativeAttitudeLargeDivergenceAndDirectInterpolation_updatesFusedAttitudeAndNotifies() {
+    fun processGeomagneticAttitude_whenDeltaRelativeAttitudeLargeDivergenceAndDirectInterpolation_updatesFusedAttitudeAndNotifies() {
         val attitudeAvailableListener =
-            mockk<LeveledRelativeAttitudeEstimator.OnAttitudeAvailableListener>(relaxUnitFun = true)
+            mockk<FusedGeomagneticAttitudeEstimator.OnAttitudeAvailableListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(
+        val estimator = FusedGeomagneticAttitudeEstimator(
             context,
             useAccurateLevelingEstimator = false,
             estimateCoordinateTransformation = false,
@@ -1587,19 +1629,19 @@ class LeveledRelativeAttitudeEstimatorTest {
         requireNotNull(hasRelativeAttitude1)
         assertTrue(hasRelativeAttitude1)
 
-        val levelingAttitude1: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-        requireNotNull(levelingAttitude1)
-        assertEquals(Quaternion(), levelingAttitude1)
+        val geomagneticAttitude1: Quaternion? = estimator.getPrivateProperty("geomagneticAttitude")
+        requireNotNull(geomagneticAttitude1)
+        assertEquals(Quaternion(), geomagneticAttitude1)
 
         val hasDeltaRelativeAttitude1: Boolean? =
             estimator.getPrivateProperty("hasDeltaRelativeAttitude")
         requireNotNull(hasDeltaRelativeAttitude1)
         assertTrue(hasDeltaRelativeAttitude1)
 
-        val levelingAttitude: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-        requireNotNull(levelingAttitude)
-        val levelingAttitudeSpy = spyk(levelingAttitude)
-        estimator.setPrivateProperty("levelingAttitude", levelingAttitudeSpy)
+        val geomagneticAttitude: Quaternion? = estimator.getPrivateProperty("geomagneticAttitude")
+        requireNotNull(geomagneticAttitude)
+        val geomagneticAttitudeSpy = spyk(geomagneticAttitude)
+        estimator.setPrivateProperty("geomagneticAttitude", geomagneticAttitudeSpy)
 
         val relativeAttitude: Quaternion? = estimator.getPrivateProperty("relativeAttitude")
         requireNotNull(relativeAttitude)
@@ -1646,21 +1688,21 @@ class LeveledRelativeAttitudeEstimatorTest {
         requireNotNull(panicCounter1)
         assertEquals(1, panicCounter1)
 
-        val resetToLeveling: Boolean? = estimator.getPrivateProperty("resetToLeveling")
-        requireNotNull(resetToLeveling)
-        assertFalse(resetToLeveling)
+        val resetToGeomagnetic: Boolean? = estimator.getPrivateProperty("resetToGeomagnetic")
+        requireNotNull(resetToGeomagnetic)
+        assertFalse(resetToGeomagnetic)
 
-        val levelingEstimator: LevelingEstimator? =
-            estimator.getPrivateProperty("levelingEstimator")
-        requireNotNull(levelingEstimator)
+        val geomagneticEstimator: GeomagneticAttitudeEstimator? =
+            estimator.getPrivateProperty("geomagneticAttitudeEstimator")
+        requireNotNull(geomagneticEstimator)
 
         val internalAttitude = spyk(getAttitude())
-        val listener = levelingEstimator.levelingAvailableListener
+        val listener = geomagneticEstimator.attitudeAvailableListener
         requireNotNull(listener)
-        listener.onLevelingAvailable(levelingEstimator, internalAttitude, null, null, null)
+        listener.onAttitudeAvailable(geomagneticEstimator, internalAttitude, null, null, null, null)
 
-        val levelingAttitude2: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-        requireNotNull(levelingAttitude2)
+        val geomagneticAttitude2: Quaternion? = estimator.getPrivateProperty("geomagneticAttitude")
+        requireNotNull(geomagneticAttitude2)
 
         val angles = DoubleArray(3)
         internalAttitude.toEulerAngles(angles)
@@ -1669,20 +1711,20 @@ class LeveledRelativeAttitudeEstimatorTest {
         attitude.toEulerAngles(angles)
         val relativeYaw = angles[2]
 
-        verify(exactly = 1) { internalAttitude.copyTo(levelingAttitude2) }
+        verify(exactly = 1) { internalAttitude.copyTo(geomagneticAttitude2) }
 
         val displayEulerAngles: DoubleArray? = estimator.getPrivateProperty("displayEulerAngles")
         requireNotNull(displayEulerAngles)
-        verify(exactly = 1) { levelingAttitudeSpy.toEulerAngles(displayEulerAngles) }
+        verify(exactly = 1) { geomagneticAttitudeSpy.toEulerAngles(displayEulerAngles) }
         verify(exactly = 1) { relativeAttitudeSpy.toEulerAngles(displayEulerAngles) }
         verify(exactly = 1) {
-            levelingAttitudeSpy.setFromEulerAngles(
+            geomagneticAttitudeSpy.setFromEulerAngles(
                 levelingRoll,
                 levelingPitch,
                 relativeYaw
             )
         }
-        verify(exactly = 0) { levelingAttitudeSpy.copyTo(fusedAttitudeSpy) }
+        verify(exactly = 0) { geomagneticAttitudeSpy.copyTo(fusedAttitudeSpy) }
 
         val panicCounter2: Int? = estimator.getPrivateProperty("panicCounter")
         requireNotNull(panicCounter2)
@@ -1694,7 +1736,7 @@ class LeveledRelativeAttitudeEstimatorTest {
 
         assertEquals(fusedAttitude3, fusedAttitudeSpy)
 
-        val absDot = abs(QuaternionHelper.dotProduct(fusedAttitude3, levelingAttitudeSpy))
+        val absDot = abs(QuaternionHelper.dotProduct(fusedAttitude3, geomagneticAttitudeSpy))
         assertTrue(absDot < estimator.outlierThreshold)
         assertTrue(absDot < estimator.outlierPanicThreshold)
 
@@ -1718,11 +1760,11 @@ class LeveledRelativeAttitudeEstimatorTest {
     }
 
     @Test
-    fun processLeveling_whenIndirectInterpolation_updatesFusedAttitudeAndNotifies() {
+    fun processGeomagneticAttitude_whenIndirectInterpolation_updatesFusedAttitudeAndNotifies() {
         val attitudeAvailableListener =
-            mockk<LeveledRelativeAttitudeEstimator.OnAttitudeAvailableListener>(relaxUnitFun = true)
+            mockk<FusedGeomagneticAttitudeEstimator.OnAttitudeAvailableListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(
+        val estimator = FusedGeomagneticAttitudeEstimator(
             context,
             useAccurateRelativeGyroscopeAttitudeEstimator = false,
             useAccurateLevelingEstimator = false,
@@ -1739,19 +1781,19 @@ class LeveledRelativeAttitudeEstimatorTest {
         requireNotNull(hasRelativeAttitude1)
         assertTrue(hasRelativeAttitude1)
 
-        val levelingAttitude1: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-        requireNotNull(levelingAttitude1)
-        assertEquals(Quaternion(), levelingAttitude1)
+        val geomagneticAttitude1: Quaternion? = estimator.getPrivateProperty("geomagneticAttitude")
+        requireNotNull(geomagneticAttitude1)
+        assertEquals(Quaternion(), geomagneticAttitude1)
 
         val hasDeltaRelativeAttitude1: Boolean? =
             estimator.getPrivateProperty("hasDeltaRelativeAttitude")
         requireNotNull(hasDeltaRelativeAttitude1)
         assertTrue(hasDeltaRelativeAttitude1)
 
-        val levelingAttitude: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-        requireNotNull(levelingAttitude)
-        val levelingAttitudeSpy = spyk(levelingAttitude)
-        estimator.setPrivateProperty("levelingAttitude", levelingAttitudeSpy)
+        val geomagneticAttitude: Quaternion? = estimator.getPrivateProperty("geomagneticAttitude")
+        requireNotNull(geomagneticAttitude)
+        val geomagneticAttitudeSpy = spyk(geomagneticAttitude)
+        estimator.setPrivateProperty("geomagneticAttitude", geomagneticAttitudeSpy)
 
         val relativeAttitude: Quaternion? = estimator.getPrivateProperty("relativeAttitude")
         requireNotNull(relativeAttitude)
@@ -1798,28 +1840,28 @@ class LeveledRelativeAttitudeEstimatorTest {
         requireNotNull(panicCounter1)
         assertEquals(1, panicCounter1)
 
-        val resetToLeveling: Boolean? = estimator.getPrivateProperty("resetToLeveling")
-        requireNotNull(resetToLeveling)
-        assertFalse(resetToLeveling)
+        val resetToGeomagnetic: Boolean? = estimator.getPrivateProperty("resetToGeomagnetic")
+        requireNotNull(resetToGeomagnetic)
+        assertFalse(resetToGeomagnetic)
 
-        val attitudeEstimator: RelativeGyroscopeAttitudeEstimator? =
-            estimator.getPrivateProperty("attitudeEstimator")
-        requireNotNull(attitudeEstimator)
-        val attitudeEstimatorSpy = spyk(attitudeEstimator)
-        every { attitudeEstimatorSpy.averageTimeInterval }.returns(TIME_INTERVAL)
-        estimator.setPrivateProperty("attitudeEstimator", attitudeEstimatorSpy)
+        val relativeAttitudeEstimator: RelativeGyroscopeAttitudeEstimator? =
+            estimator.getPrivateProperty("relativeAttitudeEstimator")
+        requireNotNull(relativeAttitudeEstimator)
+        val relativeAttitudeEstimatorSpy = spyk(relativeAttitudeEstimator)
+        every { relativeAttitudeEstimatorSpy.averageTimeInterval }.returns(TIME_INTERVAL)
+        estimator.setPrivateProperty("relativeAttitudeEstimator", relativeAttitudeEstimatorSpy)
 
-        val levelingEstimator: LevelingEstimator? =
-            estimator.getPrivateProperty("levelingEstimator")
-        requireNotNull(levelingEstimator)
+        val geomagneticEstimator: GeomagneticAttitudeEstimator? =
+            estimator.getPrivateProperty("geomagneticAttitudeEstimator")
+        requireNotNull(geomagneticEstimator)
 
         val internalAttitude = spyk(getAttitude())
-        val listener = levelingEstimator.levelingAvailableListener
+        val listener = geomagneticEstimator.attitudeAvailableListener
         requireNotNull(listener)
-        listener.onLevelingAvailable(levelingEstimator, internalAttitude, null, null, null)
+        listener.onAttitudeAvailable(geomagneticEstimator, internalAttitude, null, null, null, null)
 
-        val levelingAttitude2: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-        requireNotNull(levelingAttitude2)
+        val geomagneticAttitude2: Quaternion? = estimator.getPrivateProperty("geomagneticAttitude")
+        requireNotNull(geomagneticAttitude2)
 
         val angles = DoubleArray(3)
         internalAttitude.toEulerAngles(angles)
@@ -1828,20 +1870,20 @@ class LeveledRelativeAttitudeEstimatorTest {
         attitude.toEulerAngles(angles)
         val relativeYaw = angles[2]
 
-        verify(exactly = 1) { internalAttitude.copyTo(levelingAttitude2) }
+        verify(exactly = 1) { internalAttitude.copyTo(geomagneticAttitude2) }
 
         val displayEulerAngles: DoubleArray? = estimator.getPrivateProperty("displayEulerAngles")
         requireNotNull(displayEulerAngles)
-        verify(exactly = 1) { levelingAttitudeSpy.toEulerAngles(displayEulerAngles) }
+        verify(exactly = 1) { geomagneticAttitudeSpy.toEulerAngles(displayEulerAngles) }
         verify(exactly = 1) { relativeAttitudeSpy.toEulerAngles(displayEulerAngles) }
         verify(exactly = 1) {
-            levelingAttitudeSpy.setFromEulerAngles(
+            geomagneticAttitudeSpy.setFromEulerAngles(
                 levelingRoll,
                 levelingPitch,
                 relativeYaw
             )
         }
-        verify(exactly = 0) { levelingAttitudeSpy.copyTo(fusedAttitudeSpy) }
+        verify(exactly = 0) { geomagneticAttitudeSpy.copyTo(fusedAttitudeSpy) }
 
         val panicCounter2: Int? = estimator.getPrivateProperty("panicCounter")
         requireNotNull(panicCounter2)
@@ -1856,14 +1898,15 @@ class LeveledRelativeAttitudeEstimatorTest {
                 abs(deltaRelativeAttitude.rotationAngle / TIME_INTERVAL)
         Quaternion.slerp(
             fusedAttitude3,
-            levelingAttitudeSpy,
+            geomagneticAttitudeSpy,
             t,
             fusedAttitude4
         )
 
+
         assertEquals(fusedAttitude4, fusedAttitudeSpy)
 
-        val absDot = abs(QuaternionHelper.dotProduct(fusedAttitude3, levelingAttitudeSpy))
+        val absDot = abs(QuaternionHelper.dotProduct(fusedAttitude3, geomagneticAttitudeSpy))
         assertTrue(absDot >= estimator.outlierThreshold)
 
         val previousRelativeAttitude2: Quaternion? =
@@ -1886,11 +1929,11 @@ class LeveledRelativeAttitudeEstimatorTest {
     }
 
     @Test
-    fun processLeveling_whenEstimateEulerAnglesAndCoordinateTransformationEnabled_notifies() {
+    fun processGeomagneticAttitude_whenEstimateEulerAnglesAndCoordinateTransformationEnabled_notifies() {
         val attitudeAvailableListener =
-            mockk<LeveledRelativeAttitudeEstimator.OnAttitudeAvailableListener>(relaxUnitFun = true)
+            mockk<FusedGeomagneticAttitudeEstimator.OnAttitudeAvailableListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(
+        val estimator = FusedGeomagneticAttitudeEstimator(
             context,
             useAccurateLevelingEstimator = false,
             estimateCoordinateTransformation = true,
@@ -1906,19 +1949,19 @@ class LeveledRelativeAttitudeEstimatorTest {
         requireNotNull(hasRelativeAttitude1)
         assertTrue(hasRelativeAttitude1)
 
-        val levelingAttitude1: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-        requireNotNull(levelingAttitude1)
-        assertEquals(Quaternion(), levelingAttitude1)
+        val geomagneticAttitude1: Quaternion? = estimator.getPrivateProperty("geomagneticAttitude")
+        requireNotNull(geomagneticAttitude1)
+        assertEquals(Quaternion(), geomagneticAttitude1)
 
         val hasDeltaRelativeAttitude1: Boolean? =
             estimator.getPrivateProperty("hasDeltaRelativeAttitude")
         requireNotNull(hasDeltaRelativeAttitude1)
         assertTrue(hasDeltaRelativeAttitude1)
 
-        val levelingAttitude: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-        requireNotNull(levelingAttitude)
-        val levelingAttitudeSpy = spyk(levelingAttitude)
-        estimator.setPrivateProperty("levelingAttitude", levelingAttitudeSpy)
+        val geomagneticAttitude: Quaternion? = estimator.getPrivateProperty("geomagneticAttitude")
+        requireNotNull(geomagneticAttitude)
+        val geomagneticAttitudeSpy = spyk(geomagneticAttitude)
+        estimator.setPrivateProperty("geomagneticAttitude", geomagneticAttitudeSpy)
 
         val relativeAttitude: Quaternion? = estimator.getPrivateProperty("relativeAttitude")
         requireNotNull(relativeAttitude)
@@ -1965,21 +2008,21 @@ class LeveledRelativeAttitudeEstimatorTest {
         requireNotNull(panicCounter1)
         assertEquals(1, panicCounter1)
 
-        val resetToLeveling: Boolean? = estimator.getPrivateProperty("resetToLeveling")
-        requireNotNull(resetToLeveling)
-        assertFalse(resetToLeveling)
+        val resetToGeomagnetic: Boolean? = estimator.getPrivateProperty("resetToGeomagnetic")
+        requireNotNull(resetToGeomagnetic)
+        assertFalse(resetToGeomagnetic)
 
-        val levelingEstimator: LevelingEstimator? =
-            estimator.getPrivateProperty("levelingEstimator")
-        requireNotNull(levelingEstimator)
+        val geomagneticEstimator: GeomagneticAttitudeEstimator? =
+            estimator.getPrivateProperty("geomagneticAttitudeEstimator")
+        requireNotNull(geomagneticEstimator)
 
         val internalAttitude = spyk(getAttitude())
-        val listener = levelingEstimator.levelingAvailableListener
+        val listener = geomagneticEstimator.attitudeAvailableListener
         requireNotNull(listener)
-        listener.onLevelingAvailable(levelingEstimator, internalAttitude, null, null, null)
+        listener.onAttitudeAvailable(geomagneticEstimator, internalAttitude, null, null, null, null)
 
-        val levelingAttitude2: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-        requireNotNull(levelingAttitude2)
+        val geomagneticAttitude2: Quaternion? = estimator.getPrivateProperty("geomagneticAttitude")
+        requireNotNull(geomagneticAttitude2)
 
         val angles = DoubleArray(3)
         internalAttitude.toEulerAngles(angles)
@@ -1988,20 +2031,20 @@ class LeveledRelativeAttitudeEstimatorTest {
         attitude.toEulerAngles(angles)
         val relativeYaw = angles[2]
 
-        verify(exactly = 1) { internalAttitude.copyTo(levelingAttitude2) }
+        verify(exactly = 1) { internalAttitude.copyTo(geomagneticAttitude2) }
 
         val displayEulerAngles: DoubleArray? = estimator.getPrivateProperty("displayEulerAngles")
         requireNotNull(displayEulerAngles)
-        verify(exactly = 1) { levelingAttitudeSpy.toEulerAngles(displayEulerAngles) }
+        verify(exactly = 1) { geomagneticAttitudeSpy.toEulerAngles(displayEulerAngles) }
         verify(exactly = 1) { relativeAttitudeSpy.toEulerAngles(displayEulerAngles) }
         verify(exactly = 1) {
-            levelingAttitudeSpy.setFromEulerAngles(
+            geomagneticAttitudeSpy.setFromEulerAngles(
                 levelingRoll,
                 levelingPitch,
                 relativeYaw
             )
         }
-        verify(exactly = 0) { levelingAttitudeSpy.copyTo(fusedAttitudeSpy) }
+        verify(exactly = 0) { geomagneticAttitudeSpy.copyTo(fusedAttitudeSpy) }
 
         val panicCounter2: Int? = estimator.getPrivateProperty("panicCounter")
         requireNotNull(panicCounter2)
@@ -2014,14 +2057,14 @@ class LeveledRelativeAttitudeEstimatorTest {
         val fusedAttitude4 = Quaternion()
         Quaternion.slerp(
             fusedAttitude3,
-            levelingAttitudeSpy,
+            geomagneticAttitudeSpy,
             estimator.interpolationValue,
             fusedAttitude4
         )
 
         assertEquals(fusedAttitude4, fusedAttitudeSpy)
 
-        val absDot = abs(QuaternionHelper.dotProduct(fusedAttitude3, levelingAttitudeSpy))
+        val absDot = abs(QuaternionHelper.dotProduct(fusedAttitude3, geomagneticAttitudeSpy))
         assertTrue(absDot >= estimator.outlierThreshold)
 
         val previousRelativeAttitude2: Quaternion? =

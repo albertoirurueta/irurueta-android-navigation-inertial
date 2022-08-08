@@ -28,6 +28,7 @@
         <activity android:name=".AccurateRelativeGyroscopeAttitudeEstimatorActivity"/>
         <activity android:name=".LeveledRelativeAttitudeEstimatorActivity"/>
         <activity android:name=".GeomagneticAttitudeEstimatorActivity"/>
+        <activity android:name=".FusedGeomagneticAttitudeEstimatorActivity"/>
     </application>
 
 </manifest>

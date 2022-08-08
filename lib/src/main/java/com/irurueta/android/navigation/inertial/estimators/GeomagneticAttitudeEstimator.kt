@@ -71,7 +71,7 @@ class GeomagneticAttitudeEstimator private constructor(
     var timestamp: Date,
     val estimateCoordinateTransformation: Boolean,
     val estimateDisplayEulerAngles: Boolean,
-    val ignoreDisplayOrientation: Boolean = false,
+    val ignoreDisplayOrientation: Boolean,
     var attitudeAvailableListener: OnAttitudeAvailableListener?
 ) {
 
@@ -92,6 +92,9 @@ class GeomagneticAttitudeEstimator private constructor(
      * when [useWorldMagneticModel] is true. If [useWorldMagneticModel] is false, this is ignored.
      * @param timestamp Timestamp when World Magnetic Model will be evaluated to obtain current.
      * Only taken into account if [useWorldMagneticModel] is tue.
+     * @param useWorldMagneticModel true so that world magnetic model is taken into account to
+     * adjust attitude yaw angle by current magnetic declination based on current World Magnetic
+     * Model, location and timestamp, false to ignore declination.
      * @param useAccurateLevelingEstimator true to use accurate leveling, false to use a normal one.
      * @param estimateCoordinateTransformation true to estimate coordinate transformation, false
      * otherwise. If not needed, it can be disabled to improve performance and decrease cpu load.
@@ -269,7 +272,7 @@ class GeomagneticAttitudeEstimator private constructor(
 
     /**
      * Indicates whether world magnetic model is taken into account to adjust attitude yaw angle by
-     * current magnetic declination based on current Wolrd MAgnetic Model, location and timestamp.
+     * current magnetic declination based on current World Magnetic Model, location and timestamp.
      */
     var useWorldMagneticModel: Boolean = false
         @Throws(IllegalStateException::class)

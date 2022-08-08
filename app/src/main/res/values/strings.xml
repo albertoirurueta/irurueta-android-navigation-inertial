@@ -38,4 +38,6 @@
     <string name="leveled_relative_attitude_estimator_with_accurate_relative_attitude">Leveled relative attitude estimator with accurate relative attitude:</string>
     <string name="geomagnetic_attitude_estimator">Geomagnetic attitude estimator:</string>
     <string name="uncalibrated_magnetometer">Uncalibrated magnetometer</string>
+    <string name="world_magnetic_model">World Magnetic Model</string>
+    <string name="fused_geomagnetic_attitude_estimator">Fused geomagnetic attitude estimator:</string>
 </resources>

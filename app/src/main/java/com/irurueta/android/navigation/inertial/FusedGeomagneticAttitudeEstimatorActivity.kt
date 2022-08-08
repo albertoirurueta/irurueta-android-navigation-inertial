@@ -23,16 +23,17 @@ import androidx.appcompat.widget.AppCompatTextView
 import com.irurueta.android.gl.cube.CubeRenderer
 import com.irurueta.android.gl.cube.CubeTextureView
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
-import com.irurueta.android.navigation.inertial.estimators.GeomagneticAttitudeEstimator
+import com.irurueta.android.navigation.inertial.estimators.FusedGeomagneticAttitudeEstimator
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.MeanAveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.MedianAveragingFilter
 import com.irurueta.geometry.*
 
-class GeomagneticAttitudeEstimatorActivity : AppCompatActivity() {
+class FusedGeomagneticAttitudeEstimatorActivity : AppCompatActivity() {
 
     private var cubeView: CubeTextureView? = null
 
@@ -48,7 +49,7 @@ class GeomagneticAttitudeEstimatorActivity : AppCompatActivity() {
 
     private var camera: PinholeCamera? = null
 
-    private var attitudeEstimator: GeomagneticAttitudeEstimator? = null
+    private var attitudeEstimator: FusedGeomagneticAttitudeEstimator? = null
 
     private var hasLocationPermission = false
 
@@ -69,23 +70,39 @@ class GeomagneticAttitudeEstimatorActivity : AppCompatActivity() {
 
     private var magnetometerSensorType = MagnetometerSensorCollector.SensorType.MAGNETOMETER
 
-    private var averagingFilterType: String? = null
+    private var accelerometerAveragingFilterType: String? = null
+
+    private var gyroscopeSensorType = GyroscopeSensorCollector.SensorType.GYROSCOPE
+
+    private var useAccurateLevelingEstimator = false
+
+    private var useAccurateRelativeGyroscopeAttitudeEstimator = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         val extras = intent.extras
-        useAccelerometer = extras?.getBoolean(USE_ACCELEROMETER, false) ?: false
+        useAccelerometer =
+            extras?.getBoolean(USE_ACCELEROMETER, false)
+                ?: false
         accelerometerSensorType =
             (extras?.getSerializable(ACCELEROMETER_SENSOR_TYPE) as AccelerometerSensorCollector.SensorType?)
                 ?: AccelerometerSensorCollector.SensorType.ACCELEROMETER
         magnetometerSensorType =
-            (extras?.getSerializable(MAGNETOMETER_SENSOR_TYPE) as MagnetometerSensorCollector.SensorType?)
+            (extras?.getSerializable(GeomagneticAttitudeEstimatorActivity.MAGNETOMETER_SENSOR_TYPE) as MagnetometerSensorCollector.SensorType?)
                 ?: MagnetometerSensorCollector.SensorType.MAGNETOMETER
-        averagingFilterType = extras?.getString(ACCELEROMETER_AVERAGING_FILTER_TYPE)
-        useWorldMagneticModel = extras?.getBoolean(USE_WORLD_MAGNETIC_MODEL, false) ?: false
+        accelerometerAveragingFilterType =
+            extras?.getString(ACCELEROMETER_AVERAGING_FILTER_TYPE)
+        gyroscopeSensorType =
+            (extras?.getSerializable(GYROSCOPE_SENSOR_TYPE) as GyroscopeSensorCollector.SensorType?)
+                ?: GyroscopeSensorCollector.SensorType.GYROSCOPE
+        useAccurateLevelingEstimator =
+            extras?.getBoolean(USE_ACCURATE_LEVELING_ESTIMATOR, false) ?: false
+        useAccurateRelativeGyroscopeAttitudeEstimator =
+            extras?.getBoolean(USE_ACCURATE_RELATIVE_GYROSCOPE_ATTITUDE_ESTIMATOR, false) ?: false
+        useWorldMagneticModel = extras?.getBoolean(GeomagneticAttitudeEstimatorActivity.USE_WORLD_MAGNETIC_MODEL, false) ?: false
 
-        setContentView(R.layout.activity_geomagnetic_attitude_estimator)
+        setContentView(R.layout.activity_fused_geomagnetic_attitude_estimator)
         cubeView = findViewById(R.id.cube)
         rollView = findViewById(R.id.roll)
         pitchView = findViewById(R.id.pitch)
@@ -138,7 +155,7 @@ class GeomagneticAttitudeEstimatorActivity : AppCompatActivity() {
                 buildEstimatorAndStart()
             } else {
                 locationService?.getCurrentLocation { currentLocation ->
-                    this@GeomagneticAttitudeEstimatorActivity.location = currentLocation
+                    this@FusedGeomagneticAttitudeEstimatorActivity.location = currentLocation
                     buildEstimatorAndStart()
                 }
             }
@@ -152,15 +169,20 @@ class GeomagneticAttitudeEstimatorActivity : AppCompatActivity() {
         if (attitudeEstimator != null) {
             attitudeEstimator?.location = location
         } else {
-            val averagingFilter = buildAveragingFilter(averagingFilterType)
+            val accelerometerAveragingFilter =
+                buildAveragingFilter(accelerometerAveragingFilterType)
 
-            attitudeEstimator = GeomagneticAttitudeEstimator(
+            attitudeEstimator = FusedGeomagneticAttitudeEstimator(
                 this,
                 location,
                 SensorDelay.GAME,
                 useAccelerometer = useAccelerometer,
                 accelerometerSensorType = accelerometerSensorType,
-                accelerometerAveragingFilter = averagingFilter,
+                accelerometerAveragingFilter = accelerometerAveragingFilter,
+                magnetometerSensorType = magnetometerSensorType,
+                gyroscopeSensorType = gyroscopeSensorType,
+                useAccurateLevelingEstimator = useAccurateLevelingEstimator,
+                useAccurateRelativeGyroscopeAttitudeEstimator = useAccurateRelativeGyroscopeAttitudeEstimator,
                 useWorldMagneticModel = useWorldMagneticModel
             ) { _, attitude, _, _, _, _ ->
                 attitude.toQuaternion(rotation)
@@ -188,6 +210,10 @@ class GeomagneticAttitudeEstimatorActivity : AppCompatActivity() {
         const val ACCELEROMETER_SENSOR_TYPE = "accelerometerSensorType"
         const val MAGNETOMETER_SENSOR_TYPE = "magnetometerSensorType"
         const val ACCELEROMETER_AVERAGING_FILTER_TYPE = "accelerometerAveragingFilterType"
+        const val GYROSCOPE_SENSOR_TYPE = "gyroscopeSensorType"
+        const val USE_ACCURATE_LEVELING_ESTIMATOR = "useAccurateLevelingEstimator"
+        const val USE_ACCURATE_RELATIVE_GYROSCOPE_ATTITUDE_ESTIMATOR =
+            "useAccurateRelativeGyroscopeAttitudeEstimator"
         const val USE_WORLD_MAGNETIC_MODEL = "useWorldMagneticModel"
 
         const val LOW_PASS_AVERAGING_FILTER = "losPassAveragingFilter"
