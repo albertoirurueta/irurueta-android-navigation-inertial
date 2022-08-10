@@ -62,6 +62,7 @@ class LeveledRelativeAttitudeEstimatorTest {
         assertTrue(estimator.estimateDisplayEulerAngles)
         assertFalse(estimator.ignoreDisplayOrientation)
         assertNull(estimator.attitudeAvailableListener)
+        assertEquals(0.0, estimator.gyroscopeAverageTimeInterval, 0.0)
         assertFalse(estimator.running)
         assertTrue(estimator.useIndirectInterpolation)
         assertEquals(
@@ -132,6 +133,7 @@ class LeveledRelativeAttitudeEstimatorTest {
         assertFalse(estimator.estimateDisplayEulerAngles)
         assertTrue(estimator.ignoreDisplayOrientation)
         assertSame(listener, estimator.attitudeAvailableListener)
+        assertEquals(0.0, estimator.gyroscopeAverageTimeInterval, 0.0)
         assertFalse(estimator.running)
         assertTrue(estimator.useIndirectInterpolation)
         assertEquals(
@@ -438,6 +440,22 @@ class LeveledRelativeAttitudeEstimatorTest {
 
         // check
         assertEquals(indirectInterpolationWeight, estimator.indirectInterpolationWeight, 0.0)
+    }
+
+    @Test
+    fun gyroscopeAverageTimeInterval_returnsInternalAttitudeEstimatorAverageTimeInterval() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val estimator = LeveledRelativeAttitudeEstimator(context)
+
+        val attitudeEstimator: BaseRelativeGyroscopeAttitudeEstimator<*, *>? =
+            estimator.getPrivateProperty("attitudeEstimator")
+        requireNotNull(attitudeEstimator)
+        val attitudeEstimatorSpy = spyk(attitudeEstimator)
+        every { attitudeEstimatorSpy.averageTimeInterval }.returns(TIME_INTERVAL)
+        estimator.setPrivateProperty("attitudeEstimator", attitudeEstimatorSpy)
+
+        assertEquals(TIME_INTERVAL, estimator.gyroscopeAverageTimeInterval, 0.0)
+        verify(exactly = 1) { attitudeEstimatorSpy.averageTimeInterval }
     }
 
     @Test

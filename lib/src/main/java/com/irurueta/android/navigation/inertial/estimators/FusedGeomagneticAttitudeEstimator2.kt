@@ -21,19 +21,21 @@ import android.util.Log
 import com.irurueta.android.navigation.inertial.QuaternionHelper
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.frames.CoordinateTransformation
 import com.irurueta.navigation.frames.FrameType
+import com.irurueta.navigation.inertial.wmm.WorldMagneticModel
+import java.util.*
 import kotlin.math.abs
 import kotlin.math.min
 
 /**
- * Estimates a leveled relative attitude, where only yaw Euler angle is relative to the start
- * instant of this estimator.
- * Roll and pitch Euler angles are leveled using accelerometer or gravity sensors.
+ * Estimates a fused absolute attitude, where accelerometer + magnetometer measurements are fused
+ * with relative attitude obtained from gyroscope ones.
  *
  * @property context Android context.
  * @property sensorDelay Delay of sensors between samples.
@@ -41,6 +43,7 @@ import kotlin.math.min
  * for leveling purposes.
  * @property accelerometerSensorType One of the supported accelerometer sensor types.
  * (Only used if [useAccelerometer] is true).
+ * @property magnetometerSensorType One of the supported magnetometer sensor types.
  * @property accelerometerAveragingFilter an averaging filter for accelerometer samples to obtain
  * sensed gravity component of specific force. (Only used if [useAccelerometer] is true).
  * @property gyroscopeSensorType One of the supported gyroscope sensor types.
@@ -52,11 +55,12 @@ import kotlin.math.min
  * @property attitudeAvailableListener listener to notify when a new attitude measurement is
  * available.
  */
-class LeveledRelativeAttitudeEstimator private constructor(
+class FusedGeomagneticAttitudeEstimator2 private constructor(
     val context: Context,
     val sensorDelay: SensorDelay,
     val useAccelerometer: Boolean,
     val accelerometerSensorType: AccelerometerSensorCollector.SensorType,
+    val magnetometerSensorType: MagnetometerSensorCollector.SensorType,
     val accelerometerAveragingFilter: AveragingFilter,
     val gyroscopeSensorType: GyroscopeSensorCollector.SensorType,
     val estimateCoordinateTransformation: Boolean,
@@ -75,12 +79,18 @@ class LeveledRelativeAttitudeEstimator private constructor(
      * for leveling purposes.
      * @param accelerometerSensorType One of the supported accelerometer sensor types.
      * (Only used if [useAccelerometer] is true).
+     * @param magnetometerSensorType One of the supported magnetometer sensor types.
      * @param accelerometerAveragingFilter an averaging filter for accelerometer samples to obtain
      * sensed gravity component of specific force. (Only used if [useAccelerometer] is true).
      * @param gyroscopeSensorType One of the supported gyroscope sensor types.
+     * @param worldMagneticModel Earth's magnetic model. Null to use default model
+     * when [useWorldMagneticModel] is true. If [useWorldMagneticModel] is false, this is ignored.
+     * @param timestamp Timestamp when World Magnetic Model will be evaluated to obtain current.
+     * Only taken into account if [useWorldMagneticModel] is tue.
+     * @param useWorldMagneticModel true so that world magnetic model is taken into account to
+     * adjust attitude yaw angle by current magnetic declination based on current World Magnetic
+     * Model, location and timestamp, false to ignore declination.
      * @param useAccurateLevelingEstimator true to use accurate leveling, false to use a normal one.
-     * @param useAccurateRelativeGyroscopeAttitudeEstimator true to use accurate relative attitude,
-     * false to use a normal one.
      * @param estimateCoordinateTransformation true to estimate coordinate transformation, false
      * otherwise. If not needed, it can be disabled to improve performance and decrease cpu load.
      * @param estimateDisplayEulerAngles true to estimate euler angles, false otherwise. If not
@@ -96,9 +106,14 @@ class LeveledRelativeAttitudeEstimator private constructor(
         useAccelerometer: Boolean = false,
         accelerometerSensorType: AccelerometerSensorCollector.SensorType =
             AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+        magnetometerSensorType: MagnetometerSensorCollector.SensorType =
+            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
         accelerometerAveragingFilter: AveragingFilter = LowPassAveragingFilter(),
         gyroscopeSensorType: GyroscopeSensorCollector.SensorType =
             GyroscopeSensorCollector.SensorType.GYROSCOPE,
+        worldMagneticModel: WorldMagneticModel? = null,
+        timestamp: Date = Date(),
+        useWorldMagneticModel: Boolean = false,
         useAccurateLevelingEstimator: Boolean = false,
         useAccurateRelativeGyroscopeAttitudeEstimator: Boolean = false,
         estimateCoordinateTransformation: Boolean = false,
@@ -110,6 +125,7 @@ class LeveledRelativeAttitudeEstimator private constructor(
         sensorDelay,
         useAccelerometer,
         accelerometerSensorType,
+        magnetometerSensorType,
         accelerometerAveragingFilter,
         gyroscopeSensorType,
         estimateCoordinateTransformation,
@@ -117,26 +133,30 @@ class LeveledRelativeAttitudeEstimator private constructor(
         ignoreDisplayOrientation,
         attitudeAvailableListener
     ) {
+        buildGeomagneticAttitudeEstimator()
         this.location = location
+        this.worldMagneticModel = worldMagneticModel
+        this.timestamp = timestamp
+        this.useWorldMagneticModel = useWorldMagneticModel
         this.useAccurateLevelingEstimator = useAccurateLevelingEstimator
         this.useAccurateRelativeGyroscopeAttitudeEstimator =
             useAccurateRelativeGyroscopeAttitudeEstimator
     }
 
     /**
-     * Internal leveling estimator.
+     * Internal geomagnetic absolute attitude estimator.
      */
-    private lateinit var levelingEstimator: BaseLevelingEstimator<*, *>
+    private lateinit var geomagneticAttitudeEstimator: GeomagneticAttitudeEstimator
 
     /**
      * Internal relative attitude estimator.
      */
-    private lateinit var attitudeEstimator: BaseRelativeGyroscopeAttitudeEstimator<*, *>
+    private lateinit var relativeAttitudeEstimator: LeveledRelativeAttitudeEstimator
 
     /**
-     * Instance to be reused which contains attitude of internal leveling estimator.
+     * Instance to be reused which contains geomagnetic absolute attitude.
      */
-    private val levelingAttitude = Quaternion()
+    private val geomagneticAttitude = Quaternion()
 
     /**
      * Instance to be reused which contains attitude of internal relative attitude estimator.
@@ -186,9 +206,9 @@ class LeveledRelativeAttitudeEstimator private constructor(
     private var hasDeltaRelativeAttitude = false
 
     /**
-     * Indicates whether fused attitude must be reset to leveling one.
+     * Indicates whether fused attitude must be reset to geomagnetic one.
      */
-    private val resetToLeveling
+    private val resetToGeomagnetic
         get() = panicCounter >= panicCounterThreshold
 
     /**
@@ -201,6 +221,43 @@ class LeveledRelativeAttitudeEstimator private constructor(
         set(value) {
             check(value != null || !running)
             field = value
+            geomagneticAttitudeEstimator.location = value
+        }
+
+    /**
+     * Earth's magnetic model. If null, the default model is used if [useWorldMagneticModel] is
+     * true. If [useWorldMagneticModel] is false, this is ignored.
+     *
+     * @throws IllegalStateException if estimator is running.
+     */
+    var worldMagneticModel: WorldMagneticModel? = null
+        @Throws(IllegalStateException::class)
+        set(value) {
+            check(!running)
+            field = value
+            geomagneticAttitudeEstimator.worldMagneticModel = value
+        }
+
+    /**
+     * Timestamp when World Magnetic Model will be evaluated to obtain current.
+     * Only taken into account if [useWorldMagneticModel] is tue.
+     */
+    var timestamp: Date = Date()
+        set(value) {
+            field = value
+            geomagneticAttitudeEstimator.timestamp = value
+        }
+
+    /**
+     * Indicates whether world magnetic model is taken into account to adjust attitude yaw angle by
+     * current magnetic declination based on current Wolrd MAgnetic Model, location and timestamp.
+     */
+    var useWorldMagneticModel: Boolean = false
+        @Throws(IllegalStateException::class)
+        set(value) {
+            check(!running)
+            field = value
+            geomagneticAttitudeEstimator.useWorldMagneticModel = value
         }
 
     /**
@@ -217,7 +274,8 @@ class LeveledRelativeAttitudeEstimator private constructor(
             }
 
             field = value
-            buildLevelingEstimator()
+            geomagneticAttitudeEstimator.useAccurateLevelingEstimator = value
+            buildRelativeAttitudeEstimator()
         }
 
     /**
@@ -231,7 +289,7 @@ class LeveledRelativeAttitudeEstimator private constructor(
             check(!running)
 
             field = value
-            buildAttitudeEstimator()
+            buildRelativeAttitudeEstimator()
         }
 
     /**
@@ -242,12 +300,13 @@ class LeveledRelativeAttitudeEstimator private constructor(
     var useIndirectInterpolation = true
 
     /**
-     * Interpolation value to be used to combine both leveling and relative attitudes.
+     * Interpolation value to be used to combine both geomagnetic and relative attitudes.
      * Must be between 0.0 and 1.0 (both included).
      * The closer to 0.0 this value is, the more resemblance the result will have to a pure
-     * leveling (which feels more jerky when using accelerometer). On the contrary, the closer
+     * geomagnetic (which feels more jerky when using accelerometer). On the contrary, the closer
      * to 1.0 this value is, the more resemblance the result will have to a pure non-leveled
-     * relative attitude (which feels softer but might have arbitrary roll and pitch Euler angles).
+     * relative attitude (which feels softer but might have arbitrary roll pitch and yaw Euler
+     * angles).
      *
      * @throws IllegalArgumentException if value is not between 0.0 and 1.0 (both included).
      */
@@ -274,7 +333,7 @@ class LeveledRelativeAttitudeEstimator private constructor(
      * Gets average time interval between gyroscope samples expressed in seconds.
      */
     val gyroscopeAverageTimeInterval
-        get() = attitudeEstimator.averageTimeInterval
+        get() = relativeAttitudeEstimator.gyroscopeAverageTimeInterval
 
     /**
      * Indicates whether this estimator is running or not.
@@ -283,9 +342,9 @@ class LeveledRelativeAttitudeEstimator private constructor(
         private set
 
     /**
-     * Threshold to determine that current leveling appears to be an outlier respect
+     * Threshold to determine that current geomagnetic attitude appears to be an outlier respect
      * to estimated fused attitude.
-     * When leveling and fused attitudes diverge, fusion is not performed, and instead
+     * When geomagnetic attitude and fused attitudes diverge, fusion is not performed, and instead
      * only gyroscope relative attitude is used for fusion estimation.
      *
      * @throws IllegalStateException if estimator is already running.
@@ -300,8 +359,8 @@ class LeveledRelativeAttitudeEstimator private constructor(
         }
 
     /**
-     * Threshold to determine that leveling has largely diverged and if situation is not
-     * reverted soon, attitude will be reset to leveling
+     * Threshold to determine that geomagnetic attitude has largely diverged and if situation is not
+     * reverted soon, attitude will be reset to geomagnetic one.
      *
      * @throws IllegalStateException if estimator is already running.
      * @throws IllegalArgumentException if value is not between 0.0 and 1.0 (both included).
@@ -345,7 +404,7 @@ class LeveledRelativeAttitudeEstimator private constructor(
         check(!running)
 
         reset()
-        running = levelingEstimator.start() && attitudeEstimator.start()
+        running = geomagneticAttitudeEstimator.start() && relativeAttitudeEstimator.start()
         if (!running) {
             stop()
         }
@@ -356,8 +415,8 @@ class LeveledRelativeAttitudeEstimator private constructor(
      * Stops this estimator.
      */
     fun stop() {
-        levelingEstimator.stop()
-        attitudeEstimator.stop()
+        geomagneticAttitudeEstimator.stop()
+        relativeAttitudeEstimator.stop()
         running = false
     }
 
@@ -371,75 +430,57 @@ class LeveledRelativeAttitudeEstimator private constructor(
     }
 
     /**
-     * Builds the internal leveling estimator.
+     * Builds the internal relative attitude estimator.
      */
-    private fun buildLevelingEstimator() {
-        levelingEstimator = if (useAccurateLevelingEstimator) {
-
-            val location = this.location
-            checkNotNull(location)
-            AccurateLevelingEstimator(
-                context,
-                location,
-                sensorDelay,
-                useAccelerometer,
-                accelerometerSensorType,
-                accelerometerAveragingFilter,
-                estimateCoordinateTransformation = false,
-                estimateDisplayEulerAngles = false,
-                ignoreDisplayOrientation = ignoreDisplayOrientation
-            ) { _, attitude, _, _, _ ->
-                processLeveling(attitude)
-            }
-        } else {
-            LevelingEstimator(
-                context,
-                sensorDelay,
-                useAccelerometer,
-                accelerometerSensorType,
-                accelerometerAveragingFilter,
-                estimateCoordinateTransformation = false,
-                estimateDisplayEulerAngles = false,
-                ignoreDisplayOrientation = ignoreDisplayOrientation
-            ) { _, attitude, _, _, _ ->
-                processLeveling(attitude)
-            }
+    private fun buildRelativeAttitudeEstimator() {
+        relativeAttitudeEstimator = LeveledRelativeAttitudeEstimator(
+            context,
+            location,
+            sensorDelay,
+            useAccelerometer,
+            accelerometerSensorType,
+            accelerometerAveragingFilter,
+            gyroscopeSensorType,
+            useAccurateLevelingEstimator,
+            useAccurateRelativeGyroscopeAttitudeEstimator,
+            estimateCoordinateTransformation = false,
+            estimateDisplayEulerAngles = false,
+            ignoreDisplayOrientation = ignoreDisplayOrientation
+        ) { _, attitude, _, _, _, _ ->
+            processRelativeAttitude(
+                attitude
+            )
         }
     }
 
     /**
-     * Builds the internal attitude estimator.
+     * Builds internal geomagnetic attitude estimator.
      */
-    private fun buildAttitudeEstimator() {
-        attitudeEstimator = if (useAccurateRelativeGyroscopeAttitudeEstimator) {
-            AccurateRelativeGyroscopeAttitudeEstimator(
-                context,
-                gyroscopeSensorType,
-                sensorDelay,
-                estimateCoordinateTransformation = false,
-                estimateDisplayEulerAngles = false,
-                ignoreDisplayOrientation = ignoreDisplayOrientation
-            ) { _, attitude, _, _, _, _ ->
-                processRelativeAttitude(attitude)
-            }
-        } else {
-            RelativeGyroscopeAttitudeEstimator(
-                context,
-                gyroscopeSensorType,
-                sensorDelay,
-                estimateCoordinateTransformation = false,
-                estimateDisplayEulerAngles = false,
-                ignoreDisplayOrientation = ignoreDisplayOrientation
-            ) { _, attitude, _, _, _, _ ->
-                processRelativeAttitude(attitude)
-            }
+    private fun buildGeomagneticAttitudeEstimator() {
+        geomagneticAttitudeEstimator = GeomagneticAttitudeEstimator(
+            context,
+            location,
+            sensorDelay,
+            useAccelerometer,
+            accelerometerSensorType,
+            magnetometerSensorType,
+            accelerometerAveragingFilter,
+            worldMagneticModel,
+            timestamp,
+            useWorldMagneticModel,
+            useAccurateLevelingEstimator,
+            estimateCoordinateTransformation = false,
+            estimateDisplayEulerAngles = false,
+            ignoreDisplayOrientation = ignoreDisplayOrientation
+        ) { _, attitude, _, _, _, _ ->
+            processGeomagneticAttitude(attitude)
         }
     }
 
     /**
      * Computes variation of relative attitude between samples.
      * Relative attitude only depends on gyroscope and is usually smoother and has
-     * less interferences than leveling attitude.
+     * less interferences than geomagnetic attitude.
      *
      * @return true if estimator already has a fully initialized delta relative attitude, false
      * otherwise.
@@ -465,32 +506,33 @@ class LeveledRelativeAttitudeEstimator private constructor(
     }
 
     /**
-     * Processes last received leveling attitude to estimate a fused attitude containing
-     * leveled relative attitude, where only yaw is kept relative to the start of this estimator.
+     * Processes last received internal relative attitude to estimate attitude variation
+     * between samples.
      */
-    private fun processLeveling(attitude: Quaternion) {
+    private fun processRelativeAttitude(attitude: Quaternion) {
+        attitude.copyTo(relativeAttitude)
+        hasRelativeAttitude = true
+        hasDeltaRelativeAttitude = computeDeltaRelativeAttitude()
+    }
+
+    /**
+     * Processes last received geomagnetic attitude to estimate a fused attitude containing
+     * absolute attitude.
+     */
+    private fun processGeomagneticAttitude(attitude: Quaternion) {
         if (!hasRelativeAttitude) {
             return
         }
 
-        attitude.copyTo(levelingAttitude)
+        attitude.copyTo(geomagneticAttitude)
 
         if (hasDeltaRelativeAttitude) {
-            // set yaw angle into leveled attitude
-            levelingAttitude.toEulerAngles(displayEulerAngles)
-            val levelingRoll = displayEulerAngles[0]
-            val levelingPitch = displayEulerAngles[1]
-
-            relativeAttitude.toEulerAngles(displayEulerAngles)
-            val yaw = displayEulerAngles[2]
-            levelingAttitude.setFromEulerAngles(levelingRoll, levelingPitch, yaw)
-
-            if (resetToLeveling) {
-                levelingAttitude.copyTo(fusedAttitude)
+            if (resetToGeomagnetic) {
+                geomagneticAttitude.copyTo(fusedAttitude)
                 panicCounter = 0
                 Log.d(
-                    LeveledRelativeAttitudeEstimator::class.simpleName,
-                    "Attitude reset to leveling"
+                    FusedGeomagneticAttitudeEstimator::class.simpleName,
+                    "Attitude reset to geomagnetic one"
                 )
                 return
             }
@@ -498,19 +540,19 @@ class LeveledRelativeAttitudeEstimator private constructor(
             // change attitude by the delta obtained from relative attitude (gyroscope)
             Quaternion.product(deltaRelativeAttitude, fusedAttitude, fusedAttitude)
 
-            val absDot = abs(QuaternionHelper.dotProduct(fusedAttitude, levelingAttitude))
+            val absDot = abs(QuaternionHelper.dotProduct(fusedAttitude, geomagneticAttitude))
 
             // check if fused attitude and leveling attitude have diverged
             if (absDot < outlierThreshold) {
                 Log.i(
-                    LeveledRelativeAttitudeEstimator::class.simpleName,
+                    FusedGeomagneticAttitudeEstimator::class.simpleName,
                     "Threshold exceeded: $absDot"
                 )
                 // increase panic counter
                 if (absDot < outlierPanicThreshold) {
                     panicCounter++
                     Log.i(
-                        LeveledRelativeAttitudeEstimator::class.simpleName,
+                        FusedGeomagneticAttitudeEstimator::class.simpleName,
                         "Panic counter increased: $panicCounter"
                     )
                 }
@@ -520,7 +562,7 @@ class LeveledRelativeAttitudeEstimator private constructor(
                 // both are nearly the same. Perform normal fusion
                 Quaternion.slerp(
                     fusedAttitude,
-                    levelingAttitude,
+                    geomagneticAttitude,
                     getSlerpFactor(),
                     fusedAttitude
                 )
@@ -553,7 +595,7 @@ class LeveledRelativeAttitudeEstimator private constructor(
             }
 
             attitudeAvailableListener?.onAttitudeAvailable(
-                this,
+                this@FusedGeomagneticAttitudeEstimator2,
                 fusedAttitude,
                 displayRoll,
                 displayPitch,
@@ -564,17 +606,7 @@ class LeveledRelativeAttitudeEstimator private constructor(
     }
 
     /**
-     * Processes last received internal relative attitude to estimate attitude variation
-     * between samples.
-     */
-    private fun processRelativeAttitude(attitude: Quaternion) {
-        attitude.copyTo(relativeAttitude)
-        hasRelativeAttitude = true
-        hasDeltaRelativeAttitude = computeDeltaRelativeAttitude()
-    }
-
-    /**
-     * Computes factor to be used to compute fusion between relative and leveling attitudes.
+     * Computes factor to be used to compute fusion between relative and geomagnetic attitudes.
      */
     private fun getSlerpFactor(): Double {
         return if (useIndirectInterpolation) {
@@ -635,11 +667,11 @@ class LeveledRelativeAttitudeEstimator private constructor(
          * [estimateDisplayEulerAngles] is true.
          * @param yaw yaw angle expressed in radians. Only available if
          * [estimateDisplayEulerAngles] is true.
-         * @param coordinateTransformation coordinate transformation containing measured leveling
-         * attitude. Only available if [estimateCoordinateTransformation] is true.
+         * @param coordinateTransformation coordinate transformation containing measured leveled
+         * geomagnetic attitude. Only available if [estimateCoordinateTransformation] is true.
          */
         fun onAttitudeAvailable(
-            estimator: LeveledRelativeAttitudeEstimator,
+            estimator: FusedGeomagneticAttitudeEstimator2,
             attitude: Quaternion,
             roll: Double?,
             pitch: Double?,

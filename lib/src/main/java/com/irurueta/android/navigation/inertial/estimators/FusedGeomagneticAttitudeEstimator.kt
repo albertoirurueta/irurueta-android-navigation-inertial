@@ -330,6 +330,12 @@ class FusedGeomagneticAttitudeEstimator private constructor(
         }
 
     /**
+     * Gets average time interval between gyroscope samples expressed in seconds.
+     */
+    val gyroscopeAverageTimeInterval
+        get() = relativeAttitudeEstimator.averageTimeInterval
+
+    /**
      * Indicates whether this estimator is running or not.
      */
     var running: Boolean = false
@@ -480,6 +486,9 @@ class FusedGeomagneticAttitudeEstimator private constructor(
      * Computes variation of relative attitude between samples.
      * Relative attitude only depends on gyroscope and is usually smoother and has
      * less interferences than geomagnetic attitude.
+     *
+     * @return true if estimator already has a fully initialized delta relative attitude, false
+     * otherwise.
      */
     private fun computeDeltaRelativeAttitude(): Boolean {
         val previousRelativeAttitude = this.previousRelativeAttitude
@@ -523,15 +532,6 @@ class FusedGeomagneticAttitudeEstimator private constructor(
         attitude.copyTo(geomagneticAttitude)
 
         if (hasDeltaRelativeAttitude) {
-            // set yaw angle into leveled attitude
-            geomagneticAttitude.toEulerAngles(displayEulerAngles)
-            val levelingRoll = displayEulerAngles[0]
-            val levelingPitch = displayEulerAngles[1]
-
-            relativeAttitude.toEulerAngles(displayEulerAngles)
-            val yaw = displayEulerAngles[2]
-            geomagneticAttitude.setFromEulerAngles(levelingRoll, levelingPitch, yaw)
-
             if (resetToGeomagnetic) {
                 geomagneticAttitude.copyTo(fusedAttitude)
                 panicCounter = 0
@@ -616,7 +616,7 @@ class FusedGeomagneticAttitudeEstimator private constructor(
     private fun getSlerpFactor(): Double {
         return if (useIndirectInterpolation) {
             val rotationVelocity =
-                deltaRelativeAttitude.rotationAngle / relativeAttitudeEstimator.averageTimeInterval
+                deltaRelativeAttitude.rotationAngle / gyroscopeAverageTimeInterval
             min(interpolationValue + indirectInterpolationWeight * abs(rotationVelocity), 1.0)
         } else {
             interpolationValue
