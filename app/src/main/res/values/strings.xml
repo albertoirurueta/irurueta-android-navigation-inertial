@@ -40,4 +40,5 @@
     <string name="uncalibrated_magnetometer">Uncalibrated magnetometer</string>
     <string name="world_magnetic_model">World Magnetic Model</string>
     <string name="fused_geomagnetic_attitude_estimator">Fused geomagnetic attitude estimator:</string>
+    <string name="fused_geomagnetic_attitude_estimator2">Fused geomagnetic attitude estimator 2:</string>
 </resources>

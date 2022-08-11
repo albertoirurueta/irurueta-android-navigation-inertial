@@ -56,42 +56,6 @@
             <androidx.appcompat.widget.AppCompatTextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/other_attitude_estimators"
-                android:layout_marginStart="24dp"
-                android:layout_marginEnd="24dp"/>
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center">
-                <androidx.appcompat.widget.AppCompatButton
-                    android:id="@+id/leveling_attitude_button"
-                    android:text="@string/leveling"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="24dp" />
-                <androidx.appcompat.widget.AppCompatButton
-                    android:id="@+id/improved_leveling_attitude_button"
-                    android:text="@string/improved_leveling"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="24dp" />
-            </LinearLayout>
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center">
-                <androidx.appcompat.widget.AppCompatButton
-                    android:id="@+id/geomagnetic_leveling_attitude_button"
-                    android:text="@string/geomagnetic_attitude"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="24dp" />
-            </LinearLayout>
-            <androidx.appcompat.widget.AppCompatTextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
                 android:text="@string/leveling_estimator"
                 android:layout_marginStart="24dp"
                 android:layout_marginEnd="24dp"/>
@@ -568,6 +532,83 @@
                 android:layout_margin="24dp" />
             <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/fused_geomagnetic_attitude_estimator_world_magnetic_model_button"
+                android:text="@string/world_magnetic_model"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_margin="24dp" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/fused_geomagnetic_attitude_estimator2"
+                android:layout_marginStart="24dp"
+                android:layout_marginEnd="24dp"/>
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/fused_geomagnetic_attitude_estimator2_gravity_button"
+                android:text="@string/gravity_leveling"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_margin="24dp" />
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/fused_geomagnetic_attitude_estimator2_accelerometer_low_pass_filter_button"
+                android:text="@string/accelerometer_low_pass_filter_leveling"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_margin="24dp" />
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/fused_geomagnetic_attitude_estimator2_accelerometer_mean_filter_button"
+                android:text="@string/accelerometer_mean_filter_leveling"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_margin="24dp" />
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/fused_geomagnetic_attitude_estimator2_accelerometer_median_filter_button"
+                android:text="@string/accelerometer_median_filter_leveling"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_margin="24dp" />
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/fused_geomagnetic_attitude_estimator2_accelerometer_uncalibrated_low_pass_filter_button"
+                android:text="@string/accelerometer_uncalibrated_low_pass_filter_leveling"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_margin="24dp" />
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/fused_geomagnetic_attitude_estimator2_accelerometer_uncalibrated_mean_filter_button"
+                android:text="@string/accelerometer_uncalibrated_mean_filter_leveling"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_margin="24dp" />
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/fused_geomagnetic_attitude_estimator2_accelerometer_uncalibrated_median_filter_button"
+                android:text="@string/accelerometer_uncalibrated_median_filter_leveling"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_margin="24dp" />
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/fused_geomagnetic_attitude_estimator2_uncalibrated_magnetometer_accurate_attitude_button"
+                android:text="@string/uncalibrated_magnetometer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_margin="24dp" />
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/fused_geomagnetic_attitude_estimator2_uncalibrated_gyroscope_accurate_attitude_button"
+                android:text="@string/relative_gyroscope_attitude_estimator_uncalibrated"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_margin="24dp" />
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/fused_geomagnetic_attitude_estimator2_world_magnetic_model_button"
                 android:text="@string/world_magnetic_model"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

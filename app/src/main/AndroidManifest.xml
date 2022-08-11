@@ -21,7 +21,6 @@
             </intent-filter>
         </activity>
         <activity android:name=".AttitudeSensorCollectorActivity"/>
-        <activity android:name=".AttitudeEstimatorActivity"/>
         <activity android:name=".LevelingEstimatorActivity"/>
         <activity android:name=".AccurateLevelingEstimatorActivity"/>
         <activity android:name=".RelativeGyroscopeAttitudeEstimatorActivity"/>
