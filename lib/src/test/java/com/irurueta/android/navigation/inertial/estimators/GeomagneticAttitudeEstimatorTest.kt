@@ -22,16 +22,14 @@ import android.view.Display
 import android.view.Surface
 import androidx.test.core.app.ApplicationProvider
 import com.irurueta.android.navigation.inertial.callPrivateFunc
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
-import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.MedianAveragingFilter
 import com.irurueta.android.navigation.inertial.getPrivateProperty
 import com.irurueta.android.navigation.inertial.setPrivateProperty
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.frames.CoordinateTransformation
+import com.irurueta.navigation.frames.FrameType
 import com.irurueta.navigation.inertial.wmm.WMMEarthMagneticFluxDensityEstimator
 import com.irurueta.navigation.inertial.wmm.WorldMagneticModel
 import com.irurueta.statistics.UniformRandomizer
@@ -74,17 +72,25 @@ class GeomagneticAttitudeEstimatorTest {
         assertTrue(estimator.estimateDisplayEulerAngles)
         assertFalse(estimator.ignoreDisplayOrientation)
         assertNull(estimator.attitudeAvailableListener)
+        assertNull(estimator.accelerometerMeasurementListener)
+        assertNull(estimator.gravityMeasurementListener)
+        assertNull(estimator.magnetometerMeasurementListener)
         assertFalse(estimator.running)
     }
 
     @Test
-    fun constructor_whenAllProperties_setsEpectedValues() {
+    fun constructor_whenAllProperties_setsExpectedValues() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val location = getLocation()
         val filter = MedianAveragingFilter()
         val worldMagneticModel = WorldMagneticModel()
         val timestamp = Date()
         val listener = mockk<GeomagneticAttitudeEstimator.OnAttitudeAvailableListener>()
+        val accelerometerMeasurementListener =
+            mockk<AccelerometerSensorCollector.OnMeasurementListener>()
+        val gravityMeasurementListener = mockk<GravitySensorCollector.OnMeasurementListener>()
+        val magnetometerMeasurementListener =
+            mockk<MagnetometerSensorCollector.OnMeasurementListener>()
         val estimator = GeomagneticAttitudeEstimator(
             context,
             location,
@@ -100,7 +106,10 @@ class GeomagneticAttitudeEstimatorTest {
             estimateCoordinateTransformation = true,
             estimateDisplayEulerAngles = false,
             ignoreDisplayOrientation = true,
-            listener
+            listener,
+            accelerometerMeasurementListener,
+            gravityMeasurementListener,
+            magnetometerMeasurementListener
         )
 
         // check
@@ -125,6 +134,9 @@ class GeomagneticAttitudeEstimatorTest {
         assertFalse(estimator.estimateDisplayEulerAngles)
         assertTrue(estimator.ignoreDisplayOrientation)
         assertSame(listener, estimator.attitudeAvailableListener)
+        assertSame(accelerometerMeasurementListener, estimator.accelerometerMeasurementListener)
+        assertSame(gravityMeasurementListener, estimator.gravityMeasurementListener)
+        assertSame(magnetometerMeasurementListener, estimator.magnetometerMeasurementListener)
         assertFalse(estimator.running)
     }
 
@@ -163,6 +175,56 @@ class GeomagneticAttitudeEstimatorTest {
 
         // check
         assertSame(listener, estimator.attitudeAvailableListener)
+    }
+
+    @Test
+    fun accelerometerMeasurementListener_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val estimator = GeomagneticAttitudeEstimator(context)
+
+        // check default value
+        assertNull(estimator.accelerometerMeasurementListener)
+
+        // set new value
+        val accelerometerMeasurementListener =
+            mockk<AccelerometerSensorCollector.OnMeasurementListener>()
+        estimator.accelerometerMeasurementListener = accelerometerMeasurementListener
+
+        // check
+        assertSame(accelerometerMeasurementListener, estimator.accelerometerMeasurementListener)
+    }
+
+    @Test
+    fun gravityMeasurementListener_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val estimator = GeomagneticAttitudeEstimator(context)
+
+        // check default value
+        assertNull(estimator.gravityMeasurementListener)
+
+        // set new value
+        val gravityMeasurementListener = mockk<GravitySensorCollector.OnMeasurementListener>()
+        estimator.gravityMeasurementListener = gravityMeasurementListener
+
+        // check
+        assertSame(gravityMeasurementListener, estimator.gravityMeasurementListener)
+    }
+
+    @Test
+    fun magnetometerMeasurementListener_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val estimator = GeomagneticAttitudeEstimator(context)
+
+        // check default value
+        assertNull(estimator.magnetometerMeasurementListener)
+
+        // set new value
+        val magnetometerMeasurementListener =
+            mockk<MagnetometerSensorCollector.OnMeasurementListener>()
+        estimator.magnetometerMeasurementListener = magnetometerMeasurementListener
+
+        // check
+        assertSame(magnetometerMeasurementListener, estimator.magnetometerMeasurementListener)
     }
 
     @Test
@@ -883,6 +945,11 @@ class GeomagneticAttitudeEstimatorTest {
         val coordinateTransformation: CoordinateTransformation? =
             estimator.getPrivateProperty("coordinateTransformation")
         requireNotNull(coordinateTransformation)
+        assertEquals(FrameType.BODY_FRAME, coordinateTransformation.sourceType)
+        assertEquals(
+            FrameType.EARTH_CENTERED_EARTH_FIXED_FRAME,
+            coordinateTransformation.destinationType
+        )
         val coordinateTransformationSpy = spyk(coordinateTransformation)
         estimator.setPrivateProperty("coordinateTransformation", coordinateTransformationSpy)
 
@@ -938,6 +1005,11 @@ class GeomagneticAttitudeEstimatorTest {
         val coordinateTransformation: CoordinateTransformation? =
             estimator.getPrivateProperty("coordinateTransformation")
         requireNotNull(coordinateTransformation)
+        assertEquals(FrameType.BODY_FRAME, coordinateTransformation.sourceType)
+        assertEquals(
+            FrameType.EARTH_CENTERED_EARTH_FIXED_FRAME,
+            coordinateTransformation.destinationType
+        )
         val coordinateTransformationSpy = spyk(coordinateTransformation)
         estimator.setPrivateProperty("coordinateTransformation", coordinateTransformationSpy)
 
@@ -1005,6 +1077,11 @@ class GeomagneticAttitudeEstimatorTest {
         val coordinateTransformation: CoordinateTransformation? =
             estimator.getPrivateProperty("coordinateTransformation")
         requireNotNull(coordinateTransformation)
+        assertEquals(FrameType.BODY_FRAME, coordinateTransformation.sourceType)
+        assertEquals(
+            FrameType.EARTH_CENTERED_EARTH_FIXED_FRAME,
+            coordinateTransformation.destinationType
+        )
         val coordinateTransformationSpy = spyk(coordinateTransformation)
         estimator.setPrivateProperty("coordinateTransformation", coordinateTransformationSpy)
 
@@ -1069,6 +1146,11 @@ class GeomagneticAttitudeEstimatorTest {
         val coordinateTransformation: CoordinateTransformation? =
             estimator.getPrivateProperty("coordinateTransformation")
         requireNotNull(coordinateTransformation)
+        assertEquals(FrameType.BODY_FRAME, coordinateTransformation.sourceType)
+        assertEquals(
+            FrameType.EARTH_CENTERED_EARTH_FIXED_FRAME,
+            coordinateTransformation.destinationType
+        )
         val coordinateTransformationSpy = spyk(coordinateTransformation)
         estimator.setPrivateProperty("coordinateTransformation", coordinateTransformationSpy)
 
@@ -1129,6 +1211,11 @@ class GeomagneticAttitudeEstimatorTest {
         val coordinateTransformation: CoordinateTransformation? =
             estimator.getPrivateProperty("coordinateTransformation")
         requireNotNull(coordinateTransformation)
+        assertEquals(FrameType.BODY_FRAME, coordinateTransformation.sourceType)
+        assertEquals(
+            FrameType.EARTH_CENTERED_EARTH_FIXED_FRAME,
+            coordinateTransformation.destinationType
+        )
         val coordinateTransformationSpy = spyk(coordinateTransformation)
         estimator.setPrivateProperty("coordinateTransformation", coordinateTransformationSpy)
 
@@ -1184,6 +1271,11 @@ class GeomagneticAttitudeEstimatorTest {
         val coordinateTransformation: CoordinateTransformation? =
             estimator.getPrivateProperty("coordinateTransformation")
         requireNotNull(coordinateTransformation)
+        assertEquals(FrameType.BODY_FRAME, coordinateTransformation.sourceType)
+        assertEquals(
+            FrameType.EARTH_CENTERED_EARTH_FIXED_FRAME,
+            coordinateTransformation.destinationType
+        )
         val coordinateTransformationSpy = spyk(coordinateTransformation)
         estimator.setPrivateProperty("coordinateTransformation", coordinateTransformationSpy)
 

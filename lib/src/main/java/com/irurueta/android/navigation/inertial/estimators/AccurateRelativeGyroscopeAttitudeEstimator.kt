@@ -39,6 +39,7 @@ import com.irurueta.units.TimeConverter
  * context is not associated to a display, such as a background service, this must be true.
  * @property attitudeAvailableListener listener to notify when a new attitude measurement is
  * available.
+ * @property gyroscopeMeasurementListener listener to notify new gyroscope measurements.
  */
 class AccurateRelativeGyroscopeAttitudeEstimator(
     context: Context,
@@ -48,7 +49,8 @@ class AccurateRelativeGyroscopeAttitudeEstimator(
     estimateCoordinateTransformation: Boolean = false,
     estimateDisplayEulerAngles: Boolean = true,
     ignoreDisplayOrientation: Boolean = false,
-    attitudeAvailableListener: OnAttitudeAvailableListener? = null
+    attitudeAvailableListener: OnAttitudeAvailableListener? = null,
+    gyroscopeMeasurementListener: GyroscopeSensorCollector.OnMeasurementListener? = null
 ) : BaseRelativeGyroscopeAttitudeEstimator<AccurateRelativeGyroscopeAttitudeEstimator,
         AccurateRelativeGyroscopeAttitudeEstimator.OnAttitudeAvailableListener>(
     context,
@@ -57,9 +59,9 @@ class AccurateRelativeGyroscopeAttitudeEstimator(
     estimateCoordinateTransformation,
     estimateDisplayEulerAngles,
     ignoreDisplayOrientation,
-    attitudeAvailableListener
+    attitudeAvailableListener,
+    gyroscopeMeasurementListener
 ) {
-
     /**
      * Previous x-coordinate angular speed expressed in radians per second (rad/s).
      */
@@ -89,7 +91,9 @@ class AccurateRelativeGyroscopeAttitudeEstimator(
         context,
         sensorType,
         sensorDelay,
-        { wx, wy, wz, bx, by, bz, timestamp, _ ->
+        { wx, wy, wz, bx, by, bz, timestamp, accuracy ->
+            gyroscopeMeasurementListener?.onMeasurement(wx, wy, wz, bx, by, bz, timestamp, accuracy)
+
             val isFirst = timeIntervalEstimator.numberOfProcessedSamples == 0
             if (isFirst) {
                 initialTimestamp = timestamp

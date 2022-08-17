@@ -17,6 +17,7 @@ package com.irurueta.android.navigation.inertial.estimators
 
 import android.content.Context
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.GravitySensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
@@ -47,7 +48,7 @@ import com.irurueta.navigation.frames.FrameType
  * available.
  */
 abstract class BaseLevelingEstimator<T : BaseLevelingEstimator<T, L>,
-        L : BaseLevelingEstimator.OnLevelingAvailableListener<T, L>>(
+        L : BaseLevelingEstimator.OnLevelingAvailableListener<T, L>> constructor(
     val context: Context,
     val sensorDelay: SensorDelay = SensorDelay.GAME,
     val useAccelerometer: Boolean = false,
@@ -59,7 +60,6 @@ abstract class BaseLevelingEstimator<T : BaseLevelingEstimator<T, L>,
     val ignoreDisplayOrientation: Boolean = false,
     var levelingAvailableListener: L? = null
 ) {
-
     /**
      * Instance to be reused containing estimated leveling attitude (roll and pitch angles) in NED
      * coordinates.
@@ -80,12 +80,24 @@ abstract class BaseLevelingEstimator<T : BaseLevelingEstimator<T, L>,
      * Instance to be reused containing coordinate transformation in NED coordinates.
      */
     protected val coordinateTransformation =
-        CoordinateTransformation(FrameType.LOCAL_NAVIGATION_FRAME, FrameType.BODY_FRAME)
+        CoordinateTransformation(FrameType.BODY_FRAME, FrameType.EARTH_CENTERED_EARTH_FIXED_FRAME)
 
     /**
      * Internal gravity estimator sensed as a component of specific force.
      */
     protected abstract val gravityEstimator: GravityEstimator
+
+    /**
+     * Listener to notify new accelerometer measurements.
+     * (Only used if [useAccelerometer] is true).
+     */
+    abstract var accelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener?
+
+    /**
+     * listener to notify new gravity measurements.
+     * (Only used if [useAccelerometer] is false).
+     */
+    abstract var gravityMeasurementListener: GravitySensorCollector.OnMeasurementListener?
 
     /**
      * Indicates whether this estimator is running or not.

@@ -57,11 +57,12 @@ class LeveledRelativeAttitudeEstimatorTest {
             location,
             estimateDisplayEulerAngles = true,
             useAccurateLevelingEstimator = false,
-            useAccurateRelativeGyroscopeAttitudeEstimator = false
-        ) { _, _, roll, pitch, yaw, _ ->
-            logAttitude(roll, pitch, yaw)
-            syncHelper.notifyAll { completed++ }
-        }
+            useAccurateRelativeGyroscopeAttitudeEstimator = false,
+            attitudeAvailableListener = { _, _, roll, pitch, yaw, _ ->
+                logAttitude(roll, pitch, yaw)
+                syncHelper.notifyAll { completed++ }
+            }
+        )
 
         estimator.start()
 
@@ -83,11 +84,12 @@ class LeveledRelativeAttitudeEstimatorTest {
             location,
             estimateDisplayEulerAngles = true,
             useAccurateLevelingEstimator = true,
-            useAccurateRelativeGyroscopeAttitudeEstimator = false
-        ) { _, _, roll, pitch, yaw, _ ->
-            logAttitude(roll, pitch, yaw)
-            syncHelper.notifyAll { completed++ }
-        }
+            useAccurateRelativeGyroscopeAttitudeEstimator = false,
+            attitudeAvailableListener = { _, _, roll, pitch, yaw, _ ->
+                logAttitude(roll, pitch, yaw)
+                syncHelper.notifyAll { completed++ }
+            }
+        )
 
         estimator.start()
 
@@ -109,11 +111,12 @@ class LeveledRelativeAttitudeEstimatorTest {
             location,
             estimateDisplayEulerAngles = true,
             useAccurateLevelingEstimator = false,
-            useAccurateRelativeGyroscopeAttitudeEstimator = true
-        ) { _, _, roll, pitch, yaw, _ ->
-            logAttitude(roll, pitch, yaw)
-            syncHelper.notifyAll { completed++ }
-        }
+            useAccurateRelativeGyroscopeAttitudeEstimator = true,
+            attitudeAvailableListener = { _, _, roll, pitch, yaw, _ ->
+                logAttitude(roll, pitch, yaw)
+                syncHelper.notifyAll { completed++ }
+            }
+        )
 
         estimator.start()
 
@@ -135,11 +138,12 @@ class LeveledRelativeAttitudeEstimatorTest {
             location,
             estimateDisplayEulerAngles = true,
             useAccurateLevelingEstimator = true,
-            useAccurateRelativeGyroscopeAttitudeEstimator = true
-        ) { _, _, roll, pitch, yaw, _ ->
-            logAttitude(roll, pitch, yaw)
-            syncHelper.notifyAll { completed++ }
-        }
+            useAccurateRelativeGyroscopeAttitudeEstimator = true,
+            attitudeAvailableListener = { _, _, roll, pitch, yaw, _ ->
+                logAttitude(roll, pitch, yaw)
+                syncHelper.notifyAll { completed++ }
+            }
+        )
 
         estimator.start()
 

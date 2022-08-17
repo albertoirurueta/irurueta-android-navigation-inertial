@@ -161,16 +161,17 @@ class GeomagneticAttitudeEstimatorActivity : AppCompatActivity() {
                 useAccelerometer = useAccelerometer,
                 accelerometerSensorType = accelerometerSensorType,
                 accelerometerAveragingFilter = averagingFilter,
-                useWorldMagneticModel = useWorldMagneticModel
-            ) { _, attitude, _, _, _, _ ->
-                attitude.toQuaternion(rotation)
-                cubeView?.cubeRotation = rotation
+                useWorldMagneticModel = useWorldMagneticModel,
+                attitudeAvailableListener = { _, attitude, _, _, _, _ ->
+                    attitude.toQuaternion(rotation)
+                    cubeView?.cubeRotation = rotation
 
-                rotation.toEulerAngles(eulerAngles)
-                rollView?.text = getString(R.string.roll_degrees, -Math.toDegrees(eulerAngles[0]))
-                pitchView?.text = getString(R.string.pitch_degrees, -Math.toDegrees(eulerAngles[1]))
-                yawView?.text = getString(R.string.yaw_degrees, -Math.toDegrees(eulerAngles[2]))
-            }
+                    rotation.toEulerAngles(eulerAngles)
+                    rollView?.text = getString(R.string.roll_degrees, -Math.toDegrees(eulerAngles[0]))
+                    pitchView?.text = getString(R.string.pitch_degrees, -Math.toDegrees(eulerAngles[1]))
+                    yawView?.text = getString(R.string.yaw_degrees, -Math.toDegrees(eulerAngles[2]))
+                }
+            )
         }
         attitudeEstimator?.start()
     }

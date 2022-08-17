@@ -19,16 +19,14 @@ import android.content.Context
 import android.location.Location
 import androidx.test.core.app.ApplicationProvider
 import com.irurueta.android.navigation.inertial.QuaternionHelper
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.MedianAveragingFilter
 import com.irurueta.android.navigation.inertial.getPrivateProperty
 import com.irurueta.android.navigation.inertial.setPrivateProperty
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.frames.CoordinateTransformation
+import com.irurueta.navigation.frames.FrameType
 import com.irurueta.navigation.inertial.wmm.WorldMagneticModel
 import com.irurueta.statistics.UniformRandomizer
 import io.mockk.*
@@ -71,6 +69,10 @@ class FusedGeomagneticAttitudeEstimator2Test {
         assertFalse(estimator.estimateCoordinateTransformation)
         assertTrue(estimator.estimateDisplayEulerAngles)
         assertNull(estimator.attitudeAvailableListener)
+        assertNull(estimator.accelerometerMeasurementListener)
+        assertNull(estimator.gravityMeasurementListener)
+        assertNull(estimator.gyroscopeMeasurementListener)
+        assertNull(estimator.magnetometerMeasurementListener)
     }
 
     @Test
@@ -81,6 +83,11 @@ class FusedGeomagneticAttitudeEstimator2Test {
         val worldMagneticModel = WorldMagneticModel()
         val timestamp = Date()
         val listener = mockk<FusedGeomagneticAttitudeEstimator2.OnAttitudeAvailableListener>()
+        val accelerometerMeasurementListener =
+            mockk<AccelerometerSensorCollector.OnMeasurementListener>()
+        val gravityMeasurementListener = mockk<GravitySensorCollector.OnMeasurementListener>()
+        val gyroscopeMeasurementListener = mockk<GyroscopeSensorCollector.OnMeasurementListener>()
+        val magnetometerMeasurementListener = mockk<MagnetometerSensorCollector.OnMeasurementListener>()
         val estimator = FusedGeomagneticAttitudeEstimator2(
             context,
             location,
@@ -98,7 +105,11 @@ class FusedGeomagneticAttitudeEstimator2Test {
             estimateCoordinateTransformation = true,
             estimateDisplayEulerAngles = false,
             ignoreDisplayOrientation = true,
-            attitudeAvailableListener = listener
+            attitudeAvailableListener = listener,
+            accelerometerMeasurementListener = accelerometerMeasurementListener,
+            gravityMeasurementListener = gravityMeasurementListener,
+            gyroscopeMeasurementListener = gyroscopeMeasurementListener,
+            magnetometerMeasurementListener = magnetometerMeasurementListener
         )
 
         // check
@@ -127,6 +138,10 @@ class FusedGeomagneticAttitudeEstimator2Test {
         assertTrue(estimator.estimateCoordinateTransformation)
         assertFalse(estimator.estimateDisplayEulerAngles)
         assertSame(listener, estimator.attitudeAvailableListener)
+        assertSame(accelerometerMeasurementListener, estimator.accelerometerMeasurementListener)
+        assertSame(gravityMeasurementListener, estimator.gravityMeasurementListener)
+        assertSame(gyroscopeMeasurementListener, estimator.gyroscopeMeasurementListener)
+        assertSame(magnetometerMeasurementListener, estimator.magnetometerMeasurementListener)
     }
 
     @Test
@@ -239,6 +254,83 @@ class FusedGeomagneticAttitudeEstimator2Test {
 
         // check
         assertSame(timestamp, estimator.timestamp)
+    }
+
+    @Test
+    fun attitudeAvailableListener_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val estimator = FusedGeomagneticAttitudeEstimator2(context)
+
+        // check default value
+        assertNull(estimator.attitudeAvailableListener)
+
+        // set new value
+        val listener = mockk<FusedGeomagneticAttitudeEstimator2.OnAttitudeAvailableListener>()
+        estimator.attitudeAvailableListener = listener
+
+        // check
+        assertSame(listener, estimator.attitudeAvailableListener)
+    }
+
+    @Test
+    fun accelerometerMeasurementListener_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val estimator = FusedGeomagneticAttitudeEstimator2(context)
+
+        // check default value
+        assertNull(estimator.accelerometerMeasurementListener)
+
+        // set new value
+        val accelerometerMeasurementListener = mockk<AccelerometerSensorCollector.OnMeasurementListener>()
+        estimator.accelerometerMeasurementListener = accelerometerMeasurementListener
+
+        // check
+        assertSame(accelerometerMeasurementListener, estimator.accelerometerMeasurementListener)
+    }
+
+    @Test
+    fun gravityMeasurementListener_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val estimator = FusedGeomagneticAttitudeEstimator2(context)
+
+        // check default value
+        assertNull(estimator.gravityMeasurementListener)
+
+        // set new value
+        val gravityMeasurementListener = mockk<GravitySensorCollector.OnMeasurementListener>()
+        estimator.gravityMeasurementListener = gravityMeasurementListener
+
+        // check
+        assertSame(gravityMeasurementListener, estimator.gravityMeasurementListener)
+    }
+
+    @Test
+    fun gyroscopeMeasurementListener_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val estimator = FusedGeomagneticAttitudeEstimator2(context)
+
+        // check default value
+        assertNull(estimator.gyroscopeMeasurementListener)
+
+        // set new value
+        val gyroscopeMeasurementListener = mockk<GyroscopeSensorCollector.OnMeasurementListener>()
+        estimator.gyroscopeMeasurementListener = gyroscopeMeasurementListener
+
+        // check
+        assertSame(gyroscopeMeasurementListener, estimator.gyroscopeMeasurementListener)
+    }
+
+    @Test
+    fun magnetometerMeasurementListener_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val estimator = FusedGeomagneticAttitudeEstimator2(context)
+
+        // check default value
+        val magnetometerMeasurementListener = mockk<MagnetometerSensorCollector.OnMeasurementListener>()
+        estimator.magnetometerMeasurementListener = magnetometerMeasurementListener
+
+        // check
+        assertSame(magnetometerMeasurementListener, estimator.magnetometerMeasurementListener)
     }
 
     @Test
@@ -2022,7 +2114,10 @@ class FusedGeomagneticAttitudeEstimator2Test {
 
         assertTrue(coordinateTransformationSlot.isCaptured)
         assertFalse(coordinateTransformationSlot.isNull)
-        assertNotNull(coordinateTransformationSlot.captured)
+        val c = coordinateTransformationSlot.captured
+        assertNotNull(c)
+        assertEquals(FrameType.BODY_FRAME, c.sourceType)
+        assertEquals(FrameType.EARTH_CENTERED_EARTH_FIXED_FRAME, c.destinationType)
 
         unmockkObject(QuaternionHelper)
     }

@@ -53,12 +53,17 @@ class GravityEstimatorTest {
         assertNull(estimator.estimationListener)
         assertNotNull(estimator.accelerometerAveragingFilter)
         assertTrue(estimator.accelerometerAveragingFilter is LowPassAveragingFilter)
+        assertNull(estimator.accelerometerMeasurementListener)
+        assertNull(estimator.gravityMeasurementListener)
         assertFalse(estimator.running)
     }
 
     @Test
     fun constructor_whenAllProperties_setsExpectedValues() {
         val estimationListener = mockk<GravityEstimator.OnEstimationListener>()
+        val accelerometerMeasurementListener =
+            mockk<AccelerometerSensorCollector.OnMeasurementListener>()
+        val gravityMeasurementListener = mockk<GravitySensorCollector.OnMeasurementListener>()
         val accelerometerAveragingFilter = MeanAveragingFilter()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = GravityEstimator(
@@ -67,7 +72,9 @@ class GravityEstimatorTest {
             useAccelerometer = true,
             AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             estimationListener,
-            accelerometerAveragingFilter
+            accelerometerAveragingFilter,
+            accelerometerMeasurementListener,
+            gravityMeasurementListener
         )
 
         // check
@@ -80,6 +87,8 @@ class GravityEstimatorTest {
         )
         assertSame(estimationListener, estimator.estimationListener)
         assertSame(accelerometerAveragingFilter, estimator.accelerometerAveragingFilter)
+        assertSame(accelerometerMeasurementListener, estimator.accelerometerMeasurementListener)
+        assertSame(gravityMeasurementListener, estimator.gravityMeasurementListener)
         assertFalse(estimator.running)
     }
 
@@ -97,6 +106,39 @@ class GravityEstimatorTest {
 
         // check
         assertSame(estimationListener, estimator.estimationListener)
+    }
+
+    @Test
+    fun accelerometerMeasurementListener_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val estimator = GravityEstimator(context)
+
+        // check default value
+        assertNull(estimator.accelerometerMeasurementListener)
+
+        // set new value
+        val accelerometerMeasurementListener =
+            mockk<AccelerometerSensorCollector.OnMeasurementListener>()
+        estimator.accelerometerMeasurementListener = accelerometerMeasurementListener
+
+        // check
+        assertSame(accelerometerMeasurementListener, estimator.accelerometerMeasurementListener)
+    }
+
+    @Test
+    fun gravityMeasurementListener_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val estimator = GravityEstimator(context)
+
+        // check default value
+        assertNull(estimator.gravityMeasurementListener)
+
+        // set new value
+        val gravityMeasurementListener = mockk<GravitySensorCollector.OnMeasurementListener>()
+        estimator.gravityMeasurementListener = gravityMeasurementListener
+
+        // check
+        assertSame(gravityMeasurementListener, estimator.gravityMeasurementListener)
     }
 
     @Test(expected = IllegalStateException::class)
@@ -273,6 +315,34 @@ class GravityEstimatorTest {
     }
 
     @Test
+    fun gravitySensorCollector_whenMeasurementAndGravityListener_notifiesGravityMeasurement() {
+        val gravityMeasurementListener =
+            mockk<GravitySensorCollector.OnMeasurementListener>(relaxUnitFun = true)
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val estimator =
+            GravityEstimator(context, gravityMeasurementListener = gravityMeasurementListener)
+
+        val gravitySensorCollector: GravitySensorCollector? =
+            estimator.getPrivateProperty("gravitySensorCollector")
+        requireNotNull(gravitySensorCollector)
+
+        val measurementListener = gravitySensorCollector.measurementListener
+        requireNotNull(measurementListener)
+
+        val randomizer = UniformRandomizer()
+        val gx = randomizer.nextFloat()
+        val gy = randomizer.nextFloat()
+        val gz = randomizer.nextFloat()
+        val g = randomizer.nextDouble()
+        val timestamp = SystemClock.elapsedRealtimeNanos()
+        measurementListener.onMeasurement(gx, gy, gz, g, timestamp, SensorAccuracy.HIGH)
+
+        verify(exactly = 1) {
+            gravityMeasurementListener.onMeasurement(gx, gy, gz, g, timestamp, SensorAccuracy.HIGH)
+        }
+    }
+
+    @Test
     fun accelerometerSensorCollector_whenMeasurementAndNoListener_filters() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = GravityEstimator(context)
@@ -382,6 +452,95 @@ class GravityEstimatorTest {
                 -filterOutput[1],
                 -filterOutput[2],
                 timestamp
+            )
+        }
+    }
+
+    @Test
+    fun accelerometerSensorCollector_whenMeasurementAndMeasurementListener_notifiesEstimation() {
+        val accelerometerMeasurementListener =
+            mockk<AccelerometerSensorCollector.OnMeasurementListener>(relaxUnitFun = true)
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val estimator = GravityEstimator(
+            context,
+            accelerometerMeasurementListener = accelerometerMeasurementListener
+        )
+
+        val accelerometerAveragingFilter: AveragingFilter? =
+            estimator.getPrivateProperty("accelerometerAveragingFilter")
+        requireNotNull(accelerometerAveragingFilter)
+        assertTrue(accelerometerAveragingFilter is LowPassAveragingFilter)
+        val accelerometerAveragingFilterSpy = spyk(accelerometerAveragingFilter)
+        estimator.setPrivateProperty(
+            "accelerometerAveragingFilter",
+            accelerometerAveragingFilterSpy
+        )
+
+        val accelerometerSensorCollector: AccelerometerSensorCollector? =
+            estimator.getPrivateProperty("accelerometerSensorCollector")
+        requireNotNull(accelerometerSensorCollector)
+
+        val measurementListener = accelerometerSensorCollector.measurementListener
+        requireNotNull(measurementListener)
+
+        // receive 1st measurement
+        val randomizer = UniformRandomizer()
+        val ax = randomizer.nextFloat()
+        val ay = randomizer.nextFloat()
+        val az = randomizer.nextFloat()
+        val bx = randomizer.nextFloat()
+        val by = randomizer.nextFloat()
+        val bz = randomizer.nextFloat()
+        val timestamp = SystemClock.elapsedRealtimeNanos()
+        measurementListener.onMeasurement(ax, ay, az, bx, by, bz, timestamp, SensorAccuracy.HIGH)
+
+        verify(exactly = 1) {
+            accelerometerAveragingFilterSpy.filter(
+                ax.toDouble(),
+                ay.toDouble(),
+                az.toDouble(),
+                any(),
+                timestamp
+            )
+        }
+
+        verify(exactly = 1) {
+            accelerometerMeasurementListener.onMeasurement(
+                ax,
+                ay,
+                az,
+                bx,
+                by,
+                bz,
+                timestamp,
+                SensorAccuracy.HIGH
+            )
+        }
+
+        // receive 2nd measurement
+        measurementListener.onMeasurement(ax, ay, az, bx, by, bz, timestamp, SensorAccuracy.HIGH)
+
+        val filterOutputList = mutableListOf<DoubleArray>()
+        verify(exactly = 2) {
+            accelerometerAveragingFilterSpy.filter(
+                ax.toDouble(),
+                ay.toDouble(),
+                az.toDouble(),
+                capture(filterOutputList),
+                timestamp
+            )
+        }
+
+        verify(exactly = 2) {
+            accelerometerMeasurementListener.onMeasurement(
+                ax,
+                ay,
+                az,
+                bx,
+                by,
+                bz,
+                timestamp,
+                SensorAccuracy.HIGH
             )
         }
     }

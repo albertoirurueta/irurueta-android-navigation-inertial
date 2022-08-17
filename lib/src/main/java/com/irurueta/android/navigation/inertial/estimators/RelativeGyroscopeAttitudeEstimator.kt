@@ -37,16 +37,17 @@ import com.irurueta.units.TimeConverter
  * @property ignoreDisplayOrientation true to ignore display orientation, false otherwise.
  * @property attitudeAvailableListener listener to notify when a new attitude measurement is
  * available.
+ * @property gyroscopeMeasurementListener listener to notify new gyroscope measurements.
  */
 class RelativeGyroscopeAttitudeEstimator(
     context: Context,
-    sensorType: GyroscopeSensorCollector.SensorType =
-        GyroscopeSensorCollector.SensorType.GYROSCOPE,
+    sensorType: GyroscopeSensorCollector.SensorType = GyroscopeSensorCollector.SensorType.GYROSCOPE,
     sensorDelay: SensorDelay = SensorDelay.GAME,
     estimateCoordinateTransformation: Boolean = false,
     estimateDisplayEulerAngles: Boolean = true,
     ignoreDisplayOrientation: Boolean = false,
-    attitudeAvailableListener: OnAttitudeAvailableListener? = null
+    attitudeAvailableListener: OnAttitudeAvailableListener? = null,
+    gyroscopeMeasurementListener: GyroscopeSensorCollector.OnMeasurementListener? = null
 ) : BaseRelativeGyroscopeAttitudeEstimator<RelativeGyroscopeAttitudeEstimator,
         RelativeGyroscopeAttitudeEstimator.OnAttitudeAvailableListener>(
     context,
@@ -55,7 +56,8 @@ class RelativeGyroscopeAttitudeEstimator(
     estimateCoordinateTransformation,
     estimateDisplayEulerAngles,
     ignoreDisplayOrientation,
-    attitudeAvailableListener
+    attitudeAvailableListener,
+    gyroscopeMeasurementListener
 ) {
     /**
      * Instance to be reused which contains variation of attitude between gyroscope samples.
@@ -69,7 +71,9 @@ class RelativeGyroscopeAttitudeEstimator(
         context,
         sensorType,
         sensorDelay,
-        { wx, wy, wz, bx, by, bz, timestamp, _ ->
+        { wx, wy, wz, bx, by, bz, timestamp, accuracy ->
+            gyroscopeMeasurementListener?.onMeasurement(wx, wy, wz, bx, by, bz, timestamp, accuracy)
+
             if (timeIntervalEstimator.numberOfProcessedSamples == 0) {
                 initialTimestamp = timestamp
             }

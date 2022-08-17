@@ -20,6 +20,7 @@ import android.location.Location
 import androidx.test.core.app.ApplicationProvider
 import com.irurueta.android.navigation.inertial.QuaternionHelper
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.GravitySensorCollector
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
@@ -28,6 +29,7 @@ import com.irurueta.android.navigation.inertial.getPrivateProperty
 import com.irurueta.android.navigation.inertial.setPrivateProperty
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.frames.CoordinateTransformation
+import com.irurueta.navigation.frames.FrameType
 import com.irurueta.statistics.UniformRandomizer
 import io.mockk.*
 import org.junit.Assert.*
@@ -62,6 +64,9 @@ class LeveledRelativeAttitudeEstimatorTest {
         assertTrue(estimator.estimateDisplayEulerAngles)
         assertFalse(estimator.ignoreDisplayOrientation)
         assertNull(estimator.attitudeAvailableListener)
+        assertNull(estimator.accelerometerMeasurementListener)
+        assertNull(estimator.gravityMeasurementListener)
+        assertNull(estimator.gyroscopeMeasurementListener)
         assertEquals(0.0, estimator.gyroscopeAverageTimeInterval, 0.0)
         assertFalse(estimator.running)
         assertTrue(estimator.useIndirectInterpolation)
@@ -97,6 +102,10 @@ class LeveledRelativeAttitudeEstimatorTest {
         val location = getLocation()
         val accelerometerAveragingFilter = MeanAveragingFilter()
         val listener = mockk<LeveledRelativeAttitudeEstimator.OnAttitudeAvailableListener>()
+        val accelerometerMeasurementListener =
+            mockk<AccelerometerSensorCollector.OnMeasurementListener>()
+        val gravityMeasurementListener = mockk<GravitySensorCollector.OnMeasurementListener>()
+        val gyroscopeMeasurementListener = mockk<GyroscopeSensorCollector.OnMeasurementListener>()
         val estimator = LeveledRelativeAttitudeEstimator(
             context,
             location,
@@ -110,7 +119,10 @@ class LeveledRelativeAttitudeEstimatorTest {
             estimateCoordinateTransformation = true,
             estimateDisplayEulerAngles = false,
             ignoreDisplayOrientation = true,
-            listener
+            listener,
+            accelerometerMeasurementListener,
+            gravityMeasurementListener,
+            gyroscopeMeasurementListener
         )
 
         // check
@@ -133,6 +145,9 @@ class LeveledRelativeAttitudeEstimatorTest {
         assertFalse(estimator.estimateDisplayEulerAngles)
         assertTrue(estimator.ignoreDisplayOrientation)
         assertSame(listener, estimator.attitudeAvailableListener)
+        assertSame(accelerometerMeasurementListener, estimator.accelerometerMeasurementListener)
+        assertSame(gravityMeasurementListener, estimator.gravityMeasurementListener)
+        assertSame(gyroscopeMeasurementListener, estimator.gyroscopeMeasurementListener)
         assertEquals(0.0, estimator.gyroscopeAverageTimeInterval, 0.0)
         assertFalse(estimator.running)
         assertTrue(estimator.useIndirectInterpolation)
@@ -220,6 +235,71 @@ class LeveledRelativeAttitudeEstimatorTest {
 
         // set new value
         estimator.location = null
+    }
+
+    @Test
+    fun attitudeAvailableListener_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val estimator = LeveledRelativeAttitudeEstimator(context)
+
+        // check default value
+        assertNull(estimator.attitudeAvailableListener)
+
+        // set new value
+        val attitudeAvailableListener =
+            mockk<LeveledRelativeAttitudeEstimator.OnAttitudeAvailableListener>()
+        estimator.attitudeAvailableListener = attitudeAvailableListener
+
+        // check
+        assertSame(attitudeAvailableListener, estimator.attitudeAvailableListener)
+    }
+
+    @Test
+    fun accelerometerMeasurementListener_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val estimator = LeveledRelativeAttitudeEstimator(context)
+
+        // check default value
+        assertNull(estimator.accelerometerMeasurementListener)
+
+        // set new value
+        val accelerometerMeasurementListener = mockk<AccelerometerSensorCollector.OnMeasurementListener>()
+        estimator.accelerometerMeasurementListener = accelerometerMeasurementListener
+
+        // check
+        assertSame(accelerometerMeasurementListener, estimator.accelerometerMeasurementListener)
+    }
+
+    @Test
+    fun gravityMeasurementListener_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val estimator = LeveledRelativeAttitudeEstimator(context)
+
+        // check default value
+        assertNull(estimator.gravityMeasurementListener)
+
+        // set new value
+        val gravityMeasurementListener = mockk<GravitySensorCollector.OnMeasurementListener>()
+        estimator.gravityMeasurementListener = gravityMeasurementListener
+
+        // check
+        assertSame(gravityMeasurementListener, estimator.gravityMeasurementListener)
+    }
+
+    @Test
+    fun gyroscopeMeasurementListener_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val estimator = LeveledRelativeAttitudeEstimator(context)
+
+        // check default value
+        assertNull(estimator.gyroscopeMeasurementListener)
+
+        // set new value
+        val gyroscopeMeasurementListener = mockk<GyroscopeSensorCollector.OnMeasurementListener>()
+        estimator.gyroscopeMeasurementListener = gyroscopeMeasurementListener
+
+        // check
+        assertSame(gyroscopeMeasurementListener, estimator.gyroscopeMeasurementListener)
     }
 
     @Test(expected = IllegalStateException::class)
@@ -2077,7 +2157,10 @@ class LeveledRelativeAttitudeEstimatorTest {
 
         assertTrue(coordinateTransformationSlot.isCaptured)
         assertFalse(coordinateTransformationSlot.isNull)
-        assertNotNull(coordinateTransformationSlot.captured)
+        val c = coordinateTransformationSlot.captured
+        assertNotNull(c)
+        assertEquals(FrameType.BODY_FRAME, c.sourceType)
+        assertEquals(FrameType.EARTH_CENTERED_EARTH_FIXED_FRAME, c.destinationType)
 
         unmockkObject(QuaternionHelper)
     }

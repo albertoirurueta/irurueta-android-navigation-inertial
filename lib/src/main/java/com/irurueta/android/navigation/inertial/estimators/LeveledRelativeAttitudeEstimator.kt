@@ -20,6 +20,7 @@ import android.location.Location
 import android.util.Log
 import com.irurueta.android.navigation.inertial.QuaternionHelper
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.GravitySensorCollector
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
@@ -62,7 +63,7 @@ class LeveledRelativeAttitudeEstimator private constructor(
     val estimateCoordinateTransformation: Boolean,
     val estimateDisplayEulerAngles: Boolean,
     val ignoreDisplayOrientation: Boolean,
-    var attitudeAvailableListener: OnAttitudeAvailableListener?
+    var attitudeAvailableListener: OnAttitudeAvailableListener?,
 ) {
 
     /**
@@ -88,6 +89,11 @@ class LeveledRelativeAttitudeEstimator private constructor(
      * @param ignoreDisplayOrientation true to ignore display orientation, false otherwise.
      * @param attitudeAvailableListener listener to notify when a new attitude measurement is
      * available.
+     * @param accelerometerMeasurementListener listener to notify new accelerometer measurements.
+     * (Only used if [useAccelerometer] is true).
+     * @param gravityMeasurementListener listener to notify new gravity measurements.
+     * (Only used if [useAccelerometer] is false).
+     * @property gyroscopeMeasurementListener listener to notify new gyroscope measurements.
      */
     constructor(
         context: Context,
@@ -104,7 +110,10 @@ class LeveledRelativeAttitudeEstimator private constructor(
         estimateCoordinateTransformation: Boolean = false,
         estimateDisplayEulerAngles: Boolean = true,
         ignoreDisplayOrientation: Boolean = false,
-        attitudeAvailableListener: OnAttitudeAvailableListener? = null
+        attitudeAvailableListener: OnAttitudeAvailableListener? = null,
+        accelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? = null,
+        gravityMeasurementListener: GravitySensorCollector.OnMeasurementListener? = null,
+        gyroscopeMeasurementListener: GyroscopeSensorCollector.OnMeasurementListener? = null
     ) : this(
         context,
         sensorDelay,
@@ -121,6 +130,9 @@ class LeveledRelativeAttitudeEstimator private constructor(
         this.useAccurateLevelingEstimator = useAccurateLevelingEstimator
         this.useAccurateRelativeGyroscopeAttitudeEstimator =
             useAccurateRelativeGyroscopeAttitudeEstimator
+        this.accelerometerMeasurementListener = accelerometerMeasurementListener
+        this.gravityMeasurementListener = gravityMeasurementListener
+        this.gyroscopeMeasurementListener = gyroscopeMeasurementListener
     }
 
     /**
@@ -173,7 +185,7 @@ class LeveledRelativeAttitudeEstimator private constructor(
      * Instance to be reused containing coordinate transformation in NED coordinates.
      */
     private val coordinateTransformation =
-        CoordinateTransformation(FrameType.LOCAL_NAVIGATION_FRAME, FrameType.BODY_FRAME)
+        CoordinateTransformation(FrameType.BODY_FRAME, FrameType.EARTH_CENTERED_EARTH_FIXED_FRAME)
 
     /**
      * Indicates whether a relative attitude has been received.
@@ -275,6 +287,35 @@ class LeveledRelativeAttitudeEstimator private constructor(
      */
     val gyroscopeAverageTimeInterval
         get() = attitudeEstimator.averageTimeInterval
+
+    /**
+     * Listener to notify new accelerometer measurements.
+     * (Only used if [useAccelerometer] is true).
+     */
+    var accelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? = null
+        set(value) {
+            field = value
+            levelingEstimator.accelerometerMeasurementListener = value
+        }
+
+    /**
+     * listener to notify new gravity measurements.
+     * (Only used if [useAccelerometer] is false).
+     */
+    var gravityMeasurementListener: GravitySensorCollector.OnMeasurementListener? = null
+        set(value) {
+            field = value
+            levelingEstimator.gravityMeasurementListener = value
+        }
+
+    /**
+     * Listener to notify new gyroscope measurements.
+     */
+    var gyroscopeMeasurementListener: GyroscopeSensorCollector.OnMeasurementListener? = null
+        set(value) {
+            field = value
+            attitudeEstimator.gyroscopeMeasurementListener = value
+        }
 
     /**
      * Indicates whether this estimator is running or not.
@@ -387,10 +428,13 @@ class LeveledRelativeAttitudeEstimator private constructor(
                 accelerometerAveragingFilter,
                 estimateCoordinateTransformation = false,
                 estimateDisplayEulerAngles = false,
-                ignoreDisplayOrientation = ignoreDisplayOrientation
-            ) { _, attitude, _, _, _ ->
-                processLeveling(attitude)
-            }
+                ignoreDisplayOrientation = ignoreDisplayOrientation,
+                { _, attitude, _, _, _ ->
+                    processLeveling(attitude)
+                },
+                accelerometerMeasurementListener,
+                gravityMeasurementListener
+            )
         } else {
             LevelingEstimator(
                 context,
@@ -400,10 +444,13 @@ class LeveledRelativeAttitudeEstimator private constructor(
                 accelerometerAveragingFilter,
                 estimateCoordinateTransformation = false,
                 estimateDisplayEulerAngles = false,
-                ignoreDisplayOrientation = ignoreDisplayOrientation
-            ) { _, attitude, _, _, _ ->
-                processLeveling(attitude)
-            }
+                ignoreDisplayOrientation = ignoreDisplayOrientation,
+                { _, attitude, _, _, _ ->
+                    processLeveling(attitude)
+                },
+                accelerometerMeasurementListener,
+                gravityMeasurementListener
+            )
         }
     }
 
@@ -418,10 +465,12 @@ class LeveledRelativeAttitudeEstimator private constructor(
                 sensorDelay,
                 estimateCoordinateTransformation = false,
                 estimateDisplayEulerAngles = false,
-                ignoreDisplayOrientation = ignoreDisplayOrientation
-            ) { _, attitude, _, _, _, _ ->
-                processRelativeAttitude(attitude)
-            }
+                ignoreDisplayOrientation = ignoreDisplayOrientation,
+                { _, attitude, _, _, _, _ ->
+                    processRelativeAttitude(attitude)
+                },
+                gyroscopeMeasurementListener
+            )
         } else {
             RelativeGyroscopeAttitudeEstimator(
                 context,
@@ -429,10 +478,12 @@ class LeveledRelativeAttitudeEstimator private constructor(
                 sensorDelay,
                 estimateCoordinateTransformation = false,
                 estimateDisplayEulerAngles = false,
-                ignoreDisplayOrientation = ignoreDisplayOrientation
-            ) { _, attitude, _, _, _, _ ->
-                processRelativeAttitude(attitude)
-            }
+                ignoreDisplayOrientation = ignoreDisplayOrientation,
+                { _, attitude, _, _, _, _ ->
+                    processRelativeAttitude(attitude)
+                },
+                gyroscopeMeasurementListener
+            )
         }
     }
 

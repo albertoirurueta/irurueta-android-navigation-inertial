@@ -71,11 +71,12 @@ class GeomagneticAttitudeEstimatorTest {
             activity,
             location,
             useAccelerometer = false,
-            estimateDisplayEulerAngles = true
-        ) { _, _, roll, pitch, yaw, _ ->
-            logLeveling(roll, pitch, yaw)
-            syncHelper.notifyAll { completed++ }
-        }
+            estimateDisplayEulerAngles = true,
+            attitudeAvailableListener = { _, _, roll, pitch, yaw, _ ->
+                logLeveling(roll, pitch, yaw)
+                syncHelper.notifyAll { completed++ }
+            }
+        )
 
         estimator.start()
 
@@ -100,11 +101,12 @@ class GeomagneticAttitudeEstimatorTest {
             accelerometerSensorType = AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             magnetometerSensorType = MagnetometerSensorCollector.SensorType.MAGNETOMETER,
             accelerometerAveragingFilter = LowPassAveragingFilter(),
-            estimateDisplayEulerAngles = true
-        ) { _, _, roll, pitch, yaw, _ ->
-            logLeveling(roll, pitch, yaw)
-            syncHelper.notifyAll { completed++ }
-        }
+            estimateDisplayEulerAngles = true,
+            attitudeAvailableListener = { _, _, roll, pitch, yaw, _ ->
+                logLeveling(roll, pitch, yaw)
+                syncHelper.notifyAll { completed++ }
+            }
+        )
 
         estimator.start()
 
@@ -129,11 +131,12 @@ class GeomagneticAttitudeEstimatorTest {
             accelerometerSensorType = AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             magnetometerSensorType = MagnetometerSensorCollector.SensorType.MAGNETOMETER,
             accelerometerAveragingFilter = MeanAveragingFilter(),
-            estimateDisplayEulerAngles = true
-        ) { _, _, roll, pitch, yaw, _ ->
-            logLeveling(roll, pitch, yaw)
-            syncHelper.notifyAll { completed++ }
-        }
+            estimateDisplayEulerAngles = true,
+            attitudeAvailableListener = { _, _, roll, pitch, yaw, _ ->
+                logLeveling(roll, pitch, yaw)
+                syncHelper.notifyAll { completed++ }
+            }
+        )
 
         estimator.start()
 
@@ -158,11 +161,12 @@ class GeomagneticAttitudeEstimatorTest {
             accelerometerSensorType = AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             magnetometerSensorType = MagnetometerSensorCollector.SensorType.MAGNETOMETER,
             accelerometerAveragingFilter = MedianAveragingFilter(),
-            estimateDisplayEulerAngles = true
-        ) { _, _, roll, pitch, yaw, _ ->
-            logLeveling(roll, pitch, yaw)
-            syncHelper.notifyAll { completed++ }
-        }
+            estimateDisplayEulerAngles = true,
+            attitudeAvailableListener = { _, _, roll, pitch, yaw, _ ->
+                logLeveling(roll, pitch, yaw)
+                syncHelper.notifyAll { completed++ }
+            }
+        )
 
         estimator.start()
 
@@ -187,11 +191,12 @@ class GeomagneticAttitudeEstimatorTest {
             accelerometerSensorType = AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             magnetometerSensorType = MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
             accelerometerAveragingFilter = LowPassAveragingFilter(),
-            estimateDisplayEulerAngles = true
-        ) { _, _, roll, pitch, yaw, _ ->
-            logLeveling(roll, pitch, yaw)
-            syncHelper.notifyAll { completed++ }
-        }
+            estimateDisplayEulerAngles = true,
+            attitudeAvailableListener = { _, _, roll, pitch, yaw, _ ->
+                logLeveling(roll, pitch, yaw)
+                syncHelper.notifyAll { completed++ }
+            }
+        )
 
         estimator.start()
 
@@ -216,11 +221,12 @@ class GeomagneticAttitudeEstimatorTest {
             accelerometerSensorType = AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             magnetometerSensorType = MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
             accelerometerAveragingFilter = MeanAveragingFilter(),
-            estimateDisplayEulerAngles = true
-        ) { _, _, roll, pitch, yaw, _ ->
-            logLeveling(roll, pitch, yaw)
-            syncHelper.notifyAll { completed++ }
-        }
+            estimateDisplayEulerAngles = true,
+            attitudeAvailableListener = { _, _, roll, pitch, yaw, _ ->
+                logLeveling(roll, pitch, yaw)
+                syncHelper.notifyAll { completed++ }
+            }
+        )
 
         estimator.start()
 
@@ -245,11 +251,12 @@ class GeomagneticAttitudeEstimatorTest {
             accelerometerSensorType = AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             magnetometerSensorType = MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
             accelerometerAveragingFilter = MedianAveragingFilter(),
-            estimateDisplayEulerAngles = true
-        ) { _, _, roll, pitch, yaw, _ ->
-            logLeveling(roll, pitch, yaw)
-            syncHelper.notifyAll { completed++ }
-        }
+            estimateDisplayEulerAngles = true,
+            attitudeAvailableListener = { _, _, roll, pitch, yaw, _ ->
+                logLeveling(roll, pitch, yaw)
+                syncHelper.notifyAll { completed++ }
+            }
+        )
 
         estimator.start()
 

@@ -100,7 +100,9 @@ class FusedGeomagneticAttitudeEstimatorActivity : AppCompatActivity() {
             extras?.getBoolean(USE_ACCURATE_LEVELING_ESTIMATOR, false) ?: false
         useAccurateRelativeGyroscopeAttitudeEstimator =
             extras?.getBoolean(USE_ACCURATE_RELATIVE_GYROSCOPE_ATTITUDE_ESTIMATOR, false) ?: false
-        useWorldMagneticModel = extras?.getBoolean(GeomagneticAttitudeEstimatorActivity.USE_WORLD_MAGNETIC_MODEL, false) ?: false
+        useWorldMagneticModel =
+            extras?.getBoolean(GeomagneticAttitudeEstimatorActivity.USE_WORLD_MAGNETIC_MODEL, false)
+                ?: false
 
         setContentView(R.layout.activity_fused_geomagnetic_attitude_estimator)
         cubeView = findViewById(R.id.cube)
@@ -183,16 +185,19 @@ class FusedGeomagneticAttitudeEstimatorActivity : AppCompatActivity() {
                 gyroscopeSensorType = gyroscopeSensorType,
                 useAccurateLevelingEstimator = useAccurateLevelingEstimator,
                 useAccurateRelativeGyroscopeAttitudeEstimator = useAccurateRelativeGyroscopeAttitudeEstimator,
-                useWorldMagneticModel = useWorldMagneticModel
-            ) { _, attitude, _, _, _, _ ->
-                attitude.toQuaternion(rotation)
-                cubeView?.cubeRotation = rotation
+                useWorldMagneticModel = useWorldMagneticModel,
+                attitudeAvailableListener = { _, attitude, _, _, _, _ ->
+                    attitude.toQuaternion(rotation)
+                    cubeView?.cubeRotation = rotation
 
-                rotation.toEulerAngles(eulerAngles)
-                rollView?.text = getString(R.string.roll_degrees, -Math.toDegrees(eulerAngles[0]))
-                pitchView?.text = getString(R.string.pitch_degrees, -Math.toDegrees(eulerAngles[1]))
-                yawView?.text = getString(R.string.yaw_degrees, -Math.toDegrees(eulerAngles[2]))
-            }
+                    rotation.toEulerAngles(eulerAngles)
+                    rollView?.text =
+                        getString(R.string.roll_degrees, -Math.toDegrees(eulerAngles[0]))
+                    pitchView?.text =
+                        getString(R.string.pitch_degrees, -Math.toDegrees(eulerAngles[1]))
+                    yawView?.text = getString(R.string.yaw_degrees, -Math.toDegrees(eulerAngles[2]))
+                }
+            )
         }
         attitudeEstimator?.start()
     }

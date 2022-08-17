@@ -19,6 +19,7 @@ import android.content.Context
 import android.location.Location
 import com.irurueta.android.navigation.inertial.DisplayOrientationHelper
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.GravitySensorCollector
 import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
@@ -60,6 +61,7 @@ import java.util.*
  * context is not associated to a display, such as a background service, this must be true.
  * @property attitudeAvailableListener listener to notify when a new attitude measurement is
  * available.
+ * @property magnetometerMeasurementListener listener to notify new magnetometer measurements.
  */
 class GeomagneticAttitudeEstimator private constructor(
     val context: Context,
@@ -72,7 +74,8 @@ class GeomagneticAttitudeEstimator private constructor(
     val estimateCoordinateTransformation: Boolean,
     val estimateDisplayEulerAngles: Boolean,
     val ignoreDisplayOrientation: Boolean,
-    var attitudeAvailableListener: OnAttitudeAvailableListener?
+    var attitudeAvailableListener: OnAttitudeAvailableListener?,
+    var magnetometerMeasurementListener: MagnetometerSensorCollector.OnMeasurementListener?
 ) {
 
     /**
@@ -104,6 +107,11 @@ class GeomagneticAttitudeEstimator private constructor(
      * context is not associated to a display, such as a background service, this must be true.
      * @param attitudeAvailableListener listener to notify when a new attitude measurement is
      * available.
+     * @param accelerometerMeasurementListener listener to notify new accelerometer measurements.
+     * (Only used if [useAccelerometer] is true).
+     * @param gravityMeasurementListener listener to notify new gravity measurements.
+     * (Only used if [useAccelerometer] is false).
+     * @param magnetometerMeasurementListener listener to notify new magnetometer measurements.
      */
     constructor(
         context: Context,
@@ -122,7 +130,10 @@ class GeomagneticAttitudeEstimator private constructor(
         estimateCoordinateTransformation: Boolean = false,
         estimateDisplayEulerAngles: Boolean = true,
         ignoreDisplayOrientation: Boolean = false,
-        attitudeAvailableListener: OnAttitudeAvailableListener? = null
+        attitudeAvailableListener: OnAttitudeAvailableListener? = null,
+        accelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? = null,
+        gravityMeasurementListener: GravitySensorCollector.OnMeasurementListener? = null,
+        magnetometerMeasurementListener: MagnetometerSensorCollector.OnMeasurementListener? = null
     ) : this(
         context,
         sensorDelay,
@@ -134,12 +145,15 @@ class GeomagneticAttitudeEstimator private constructor(
         estimateCoordinateTransformation,
         estimateDisplayEulerAngles,
         ignoreDisplayOrientation,
-        attitudeAvailableListener
+        attitudeAvailableListener,
+        magnetometerMeasurementListener
     ) {
         this.location = location
         this.useAccurateLevelingEstimator = useAccurateLevelingEstimator
         this.worldMagneticModel = worldMagneticModel
         this.useWorldMagneticModel = useWorldMagneticModel
+        this.accelerometerMeasurementListener = accelerometerMeasurementListener
+        this.gravityMeasurementListener = gravityMeasurementListener
     }
 
 
@@ -197,7 +211,18 @@ class GeomagneticAttitudeEstimator private constructor(
         context,
         magnetometerSensorType,
         sensorDelay,
-        { bx, by, bz, hardIronX, hardIronY, hardIronZ, _, _ ->
+        { bx, by, bz, hardIronX, hardIronY, hardIronZ, timestamp, accuracy ->
+            magnetometerMeasurementListener?.onMeasurement(
+                bx,
+                by,
+                bz,
+                hardIronX,
+                hardIronY,
+                hardIronZ,
+                timestamp,
+                accuracy
+            )
+
             sensorBx = MagneticFluxDensityConverter.microTeslaToTesla(
                 (bx - (hardIronX ?: 0.0f)).toDouble()
             )
@@ -219,7 +244,7 @@ class GeomagneticAttitudeEstimator private constructor(
      * Instance to be reused containing coordinate transformation in NED coordinates.
      */
     private val coordinateTransformation =
-        CoordinateTransformation(FrameType.LOCAL_NAVIGATION_FRAME, FrameType.BODY_FRAME)
+        CoordinateTransformation(FrameType.BODY_FRAME, FrameType.EARTH_CENTERED_EARTH_FIXED_FRAME)
 
     /**
      * Indicates whether magnetometer sensor values have been received or not.
@@ -284,6 +309,26 @@ class GeomagneticAttitudeEstimator private constructor(
         }
 
     /**
+     * Listener to notify new accelerometer measurements.
+     * (Only used if [useAccelerometer] is true).
+     */
+    var accelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? = null
+        set(value) {
+            field = value
+            levelingEstimator.accelerometerMeasurementListener = value
+        }
+
+    /**
+     * listener to notify new gravity measurements.
+     * (Only used if [useAccelerometer] is false).
+     */
+    var gravityMeasurementListener: GravitySensorCollector.OnMeasurementListener? = null
+        set(value) {
+            field = value
+            levelingEstimator.gravityMeasurementListener = value
+        }
+
+    /**
      * Indicates whether this estimator is running or not.
      */
     var running: Boolean = false
@@ -340,10 +385,13 @@ class GeomagneticAttitudeEstimator private constructor(
                 accelerometerAveragingFilter,
                 estimateCoordinateTransformation = false,
                 estimateDisplayEulerAngles = false,
-                ignoreDisplayOrientation = true
-            ) { _, attitude, _, _, _ ->
-                processLeveling(attitude)
-            }
+                ignoreDisplayOrientation = true,
+                { _, attitude, _, _, _ ->
+                    processLeveling(attitude)
+                },
+                accelerometerMeasurementListener,
+                gravityMeasurementListener
+            )
         } else {
             LevelingEstimator(
                 context,
@@ -353,10 +401,13 @@ class GeomagneticAttitudeEstimator private constructor(
                 accelerometerAveragingFilter,
                 estimateCoordinateTransformation = false,
                 estimateDisplayEulerAngles = false,
-                ignoreDisplayOrientation = true
-            ) { _, attitude, _, _, _ ->
-                processLeveling(attitude)
-            }
+                ignoreDisplayOrientation = true,
+                { _, attitude, _, _, _ ->
+                    processLeveling(attitude)
+                },
+                accelerometerMeasurementListener,
+                gravityMeasurementListener
+            )
         }
     }
 
@@ -364,7 +415,7 @@ class GeomagneticAttitudeEstimator private constructor(
      * Builds World Magnetic Model if needed.
      */
     private fun buildWMMEstimator() {
-        wmmEstimator = if(useWorldMagneticModel) {
+        wmmEstimator = if (useWorldMagneticModel) {
             val model = worldMagneticModel
             if (model != null) {
                 WMMEarthMagneticFluxDensityEstimator(model)
@@ -450,7 +501,8 @@ class GeomagneticAttitudeEstimator private constructor(
 
         location.toNEDPosition(position)
         return wmmEstimator.getDeclination(
-            position.latitude, position.longitude, position.height, timestamp)
+            position.latitude, position.longitude, position.height, timestamp
+        )
     }
 
     /**

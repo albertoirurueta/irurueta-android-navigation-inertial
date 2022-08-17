@@ -56,11 +56,12 @@ class AccurateRelativeGyroscopeAttitudeEstimatorTest {
         val estimator = AccurateRelativeGyroscopeAttitudeEstimator(
             activity,
             GyroscopeSensorCollector.SensorType.GYROSCOPE,
-            estimateDisplayEulerAngles = true
-        ) { _, _, roll, pitch, yaw, _ ->
-            logAttitude(roll, pitch, yaw)
-            syncHelper.notifyAll { completed++ }
-        }
+            estimateDisplayEulerAngles = true,
+            attitudeAvailableListener = { _, _, roll, pitch, yaw, _ ->
+                logAttitude(roll, pitch, yaw)
+                syncHelper.notifyAll { completed++ }
+            }
+        )
 
         estimator.start()
 
@@ -85,11 +86,12 @@ class AccurateRelativeGyroscopeAttitudeEstimatorTest {
         val estimator = AccurateRelativeGyroscopeAttitudeEstimator(
             activity,
             GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
-            estimateDisplayEulerAngles = true
-        ) { _, _, roll, pitch, yaw, _ ->
-            logAttitude(roll, pitch, yaw)
-            syncHelper.notifyAll { completed++ }
-        }
+            estimateDisplayEulerAngles = true,
+            attitudeAvailableListener = { _, _, roll, pitch, yaw, _ ->
+                logAttitude(roll, pitch, yaw)
+                syncHelper.notifyAll { completed++ }
+            }
+        )
 
         estimator.start()
 

@@ -70,11 +70,12 @@ class AccurateLevelingEstimatorTest {
             activity,
             location,
             useAccelerometer = false,
-            estimateDisplayEulerAngles = true
-        ) { _, _, roll, pitch, _ ->
-            logLeveling(roll, pitch)
-            syncHelper.notifyAll { completed++ }
-        }
+            estimateDisplayEulerAngles = true,
+            levelingAvailableListener = { _, _, roll, pitch, _ ->
+                logLeveling(roll, pitch)
+                syncHelper.notifyAll { completed++ }
+            }
+        )
 
         estimator.start()
 
@@ -98,11 +99,12 @@ class AccurateLevelingEstimatorTest {
             useAccelerometer = true,
             accelerometerSensorType = AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             accelerometerAveragingFilter = LowPassAveragingFilter(),
-            estimateDisplayEulerAngles = true
-        ) { _, _, roll, pitch, _ ->
-            logLeveling(roll, pitch)
-            syncHelper.notifyAll { completed++ }
-        }
+            estimateDisplayEulerAngles = true,
+            levelingAvailableListener = { _, _, roll, pitch, _ ->
+                logLeveling(roll, pitch)
+                syncHelper.notifyAll { completed++ }
+            }
+        )
 
         estimator.start()
 
@@ -126,11 +128,12 @@ class AccurateLevelingEstimatorTest {
             useAccelerometer = true,
             accelerometerSensorType = AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             accelerometerAveragingFilter = MeanAveragingFilter(),
-            estimateDisplayEulerAngles = true
-        ) { _, _, roll, pitch, _ ->
-            logLeveling(roll, pitch)
-            syncHelper.notifyAll { completed++ }
-        }
+            estimateDisplayEulerAngles = true,
+            levelingAvailableListener = { _, _, roll, pitch, _ ->
+                logLeveling(roll, pitch)
+                syncHelper.notifyAll { completed++ }
+            }
+        )
 
         estimator.start()
 
@@ -154,11 +157,12 @@ class AccurateLevelingEstimatorTest {
             useAccelerometer = true,
             accelerometerSensorType = AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             accelerometerAveragingFilter = MedianAveragingFilter(),
-            estimateDisplayEulerAngles = true
-        ) { _, _, roll, pitch, _ ->
-            logLeveling(roll, pitch)
-            syncHelper.notifyAll { completed++ }
-        }
+            estimateDisplayEulerAngles = true,
+            levelingAvailableListener = { _, _, roll, pitch, _ ->
+                logLeveling(roll, pitch)
+                syncHelper.notifyAll { completed++ }
+            }
+        )
 
         estimator.start()
 
@@ -182,11 +186,12 @@ class AccurateLevelingEstimatorTest {
             useAccelerometer = true,
             accelerometerSensorType = AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             accelerometerAveragingFilter = LowPassAveragingFilter(),
-            estimateDisplayEulerAngles = true
-        ) { _, _, roll, pitch, _ ->
-            logLeveling(roll, pitch)
-            syncHelper.notifyAll { completed++ }
-        }
+            estimateDisplayEulerAngles = true,
+            levelingAvailableListener = { _, _, roll, pitch, _ ->
+                logLeveling(roll, pitch)
+                syncHelper.notifyAll { completed++ }
+            }
+        )
 
         estimator.start()
 
@@ -210,11 +215,12 @@ class AccurateLevelingEstimatorTest {
             useAccelerometer = true,
             accelerometerSensorType = AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             accelerometerAveragingFilter = MeanAveragingFilter(),
-            estimateDisplayEulerAngles = true
-        ) { _, _, roll, pitch, _ ->
-            logLeveling(roll, pitch)
-            syncHelper.notifyAll { completed++ }
-        }
+            estimateDisplayEulerAngles = true,
+            levelingAvailableListener = { _, _, roll, pitch, _ ->
+                logLeveling(roll, pitch)
+                syncHelper.notifyAll { completed++ }
+            }
+        )
 
         estimator.start()
 
@@ -238,11 +244,12 @@ class AccurateLevelingEstimatorTest {
             useAccelerometer = true,
             accelerometerSensorType = AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             accelerometerAveragingFilter = MedianAveragingFilter(),
-            estimateDisplayEulerAngles = true
-        ) { _, _, roll, pitch, _ ->
-            logLeveling(roll, pitch)
-            syncHelper.notifyAll { completed++ }
-        }
+            estimateDisplayEulerAngles = true,
+            levelingAvailableListener = { _, _, roll, pitch, _ ->
+                logLeveling(roll, pitch)
+                syncHelper.notifyAll { completed++ }
+            }
+        )
 
         estimator.start()
 

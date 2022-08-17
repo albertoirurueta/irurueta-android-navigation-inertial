@@ -148,15 +148,16 @@ class AccurateLevelingEstimatorActivity : AppCompatActivity() {
                 SensorDelay.GAME,
                 useAccelerometer = useAccelerometer,
                 accelerometerSensorType = accelerometerSensorType,
-                accelerometerAveragingFilter = averagingFilter
-            ) { _, attitude, _, _, _ ->
-                attitude.toQuaternion(rotation)
-                cubeView?.cubeRotation = rotation
+                accelerometerAveragingFilter = averagingFilter,
+                levelingAvailableListener = { _, attitude, _, _, _ ->
+                    attitude.toQuaternion(rotation)
+                    cubeView?.cubeRotation = rotation
 
-                rotation.toEulerAngles(eulerAngles)
-                rollView?.text = getString(R.string.roll_degrees, -Math.toDegrees(eulerAngles[0]))
-                pitchView?.text = getString(R.string.pitch_degrees, -Math.toDegrees(eulerAngles[1]))
-            }
+                    rotation.toEulerAngles(eulerAngles)
+                    rollView?.text = getString(R.string.roll_degrees, -Math.toDegrees(eulerAngles[0]))
+                    pitchView?.text = getString(R.string.pitch_degrees, -Math.toDegrees(eulerAngles[1]))
+                }
+            )
         }
         levelingEstimator?.start()
     }

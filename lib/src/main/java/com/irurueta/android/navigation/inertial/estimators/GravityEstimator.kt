@@ -30,9 +30,14 @@ import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragi
  * @property sensorDelay Delay of accelerometer or gravity sensor between samples.
  * @property useAccelerometer true to use accelerometer sensor, false to use system gravity sensor.
  * @property accelerometerSensorType One of the supported accelerometer sensor types.
+ * (Only used if [useAccelerometer] is true).
+ * @property estimationListener listener to notify when a new gravity measurement is available.
  * @property accelerometerAveragingFilter an averaging filter for accelerometer samples to obtain
  * sensed gravity component of specific force.
- * @property estimationListener listener to notify when a new gravity measurement is available.
+ * @property accelerometerMeasurementListener listener to notify new accelerometer measurements.
+ * (Only used if [useAccelerometer] is true).
+ * @property gravityMeasurementListener listener to notify new gravity measurements.
+ * (Only used if [useAccelerometer] is false).
  */
 class GravityEstimator(
     val context: Context,
@@ -41,7 +46,9 @@ class GravityEstimator(
     val accelerometerSensorType: AccelerometerSensorCollector.SensorType =
         AccelerometerSensorCollector.SensorType.ACCELEROMETER,
     var estimationListener: OnEstimationListener? = null,
-    val accelerometerAveragingFilter: AveragingFilter = LowPassAveragingFilter()
+    val accelerometerAveragingFilter: AveragingFilter = LowPassAveragingFilter(),
+    var accelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? = null,
+    var gravityMeasurementListener: GravitySensorCollector.OnMeasurementListener? = null
 ) {
     /**
      * Array to be reused containing result of averaging filter for accelerometer measurements.
@@ -54,7 +61,7 @@ class GravityEstimator(
     private val gravitySensorCollector = GravitySensorCollector(
         context,
         sensorDelay,
-        { gx, gy, gz, _, timestamp, _ ->
+        { gx, gy, gz, g, timestamp, accuracy ->
             estimationListener?.onEstimation(
                 this@GravityEstimator,
                 -gx.toDouble(),
@@ -62,6 +69,7 @@ class GravityEstimator(
                 -gz.toDouble(),
                 timestamp
             )
+            gravityMeasurementListener?.onMeasurement(gx, gy, gz, g, timestamp, accuracy)
         })
 
     /**
@@ -71,7 +79,18 @@ class GravityEstimator(
         context,
         accelerometerSensorType,
         sensorDelay,
-        { ax, ay, az, _, _, _, timestamp, _ ->
+        { ax, ay, az, bx, by, bz, timestamp, accuracy ->
+            accelerometerMeasurementListener?.onMeasurement(
+                ax,
+                ay,
+                az,
+                bx,
+                by,
+                bz,
+                timestamp,
+                accuracy
+            )
+
             if (accelerometerAveragingFilter.filter(
                     ax.toDouble(),
                     ay.toDouble(),

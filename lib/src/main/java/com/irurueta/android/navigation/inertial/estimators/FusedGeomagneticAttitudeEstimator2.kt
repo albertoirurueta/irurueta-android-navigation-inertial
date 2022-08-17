@@ -19,10 +19,7 @@ import android.content.Context
 import android.location.Location
 import android.util.Log
 import com.irurueta.android.navigation.inertial.QuaternionHelper
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
 import com.irurueta.geometry.Quaternion
@@ -36,6 +33,8 @@ import kotlin.math.min
 /**
  * Estimates a fused absolute attitude, where accelerometer + magnetometer measurements are fused
  * with relative attitude obtained from gyroscope ones.
+ * This is equivalent to [FusedGeomagneticAttitudeEstimator] with an additional filtering layer,
+ * which requires additional cpu usage.
  *
  * @property context Android context.
  * @property sensorDelay Delay of sensors between samples.
@@ -56,18 +55,18 @@ import kotlin.math.min
  * available.
  */
 class FusedGeomagneticAttitudeEstimator2 private constructor(
-    val context: Context,
-    val sensorDelay: SensorDelay,
-    val useAccelerometer: Boolean,
-    val accelerometerSensorType: AccelerometerSensorCollector.SensorType,
-    val magnetometerSensorType: MagnetometerSensorCollector.SensorType,
-    val accelerometerAveragingFilter: AveragingFilter,
-    val gyroscopeSensorType: GyroscopeSensorCollector.SensorType,
-    val estimateCoordinateTransformation: Boolean,
-    val estimateDisplayEulerAngles: Boolean,
-    val ignoreDisplayOrientation: Boolean,
-    var attitudeAvailableListener: OnAttitudeAvailableListener?
-) {
+    override val context: Context,
+    override val sensorDelay: SensorDelay,
+    override val useAccelerometer: Boolean,
+    override val accelerometerSensorType: AccelerometerSensorCollector.SensorType,
+    override val magnetometerSensorType: MagnetometerSensorCollector.SensorType,
+    override val accelerometerAveragingFilter: AveragingFilter,
+    override val gyroscopeSensorType: GyroscopeSensorCollector.SensorType,
+    override val estimateCoordinateTransformation: Boolean,
+    override val estimateDisplayEulerAngles: Boolean,
+    override val ignoreDisplayOrientation: Boolean,
+    override var attitudeAvailableListener: OnAttitudeAvailableListener?
+) : AbsoluteAttitudeEstimator<FusedGeomagneticAttitudeEstimator2, FusedGeomagneticAttitudeEstimator2.OnAttitudeAvailableListener> {
 
     /**
      * Constructor.
@@ -98,6 +97,12 @@ class FusedGeomagneticAttitudeEstimator2 private constructor(
      * @param ignoreDisplayOrientation true to ignore display orientation, false otherwise.
      * @param attitudeAvailableListener listener to notify when a new attitude measurement is
      * available.
+     * @param accelerometerMeasurementListener listener to notify new accelerometer measurements.
+     * (Only used if [useAccelerometer] is true).
+     * @param gravityMeasurementListener listener to notify new gravity measurements.
+     * (Only used if [useAccelerometer] is false).
+     * @param gyroscopeMeasurementListener listener to notify new gyroscope measurements.
+     * @param magnetometerMeasurementListener listener to notify new magnetometer measurements.
      */
     constructor(
         context: Context,
@@ -119,7 +124,11 @@ class FusedGeomagneticAttitudeEstimator2 private constructor(
         estimateCoordinateTransformation: Boolean = false,
         estimateDisplayEulerAngles: Boolean = true,
         ignoreDisplayOrientation: Boolean = false,
-        attitudeAvailableListener: OnAttitudeAvailableListener? = null
+        attitudeAvailableListener: OnAttitudeAvailableListener? = null,
+        accelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? = null,
+        gravityMeasurementListener: GravitySensorCollector.OnMeasurementListener? = null,
+        gyroscopeMeasurementListener: GyroscopeSensorCollector.OnMeasurementListener? = null,
+        magnetometerMeasurementListener: MagnetometerSensorCollector.OnMeasurementListener? = null
     ) : this(
         context,
         sensorDelay,
@@ -141,6 +150,10 @@ class FusedGeomagneticAttitudeEstimator2 private constructor(
         this.useAccurateLevelingEstimator = useAccurateLevelingEstimator
         this.useAccurateRelativeGyroscopeAttitudeEstimator =
             useAccurateRelativeGyroscopeAttitudeEstimator
+        this.accelerometerMeasurementListener = accelerometerMeasurementListener
+        this.gravityMeasurementListener = gravityMeasurementListener
+        this.gyroscopeMeasurementListener = gyroscopeMeasurementListener
+        this.magnetometerMeasurementListener = magnetometerMeasurementListener
     }
 
     /**
@@ -193,7 +206,7 @@ class FusedGeomagneticAttitudeEstimator2 private constructor(
      * Instance to be reused containing coordinate transformation in NED coordinates.
      */
     private val coordinateTransformation =
-        CoordinateTransformation(FrameType.LOCAL_NAVIGATION_FRAME, FrameType.BODY_FRAME)
+        CoordinateTransformation(FrameType.BODY_FRAME, FrameType.EARTH_CENTERED_EARTH_FIXED_FRAME)
 
     /**
      * Indicates whether a relative attitude has been received.
@@ -216,7 +229,7 @@ class FusedGeomagneticAttitudeEstimator2 private constructor(
      *
      * @throws IllegalStateException if estimator is running and a null value is set.
      */
-    var location: Location? = null
+    override var location: Location? = null
         @Throws(IllegalStateException::class)
         set(value) {
             check(value != null || !running)
@@ -230,7 +243,7 @@ class FusedGeomagneticAttitudeEstimator2 private constructor(
      *
      * @throws IllegalStateException if estimator is running.
      */
-    var worldMagneticModel: WorldMagneticModel? = null
+    override var worldMagneticModel: WorldMagneticModel? = null
         @Throws(IllegalStateException::class)
         set(value) {
             check(!running)
@@ -242,7 +255,7 @@ class FusedGeomagneticAttitudeEstimator2 private constructor(
      * Timestamp when World Magnetic Model will be evaluated to obtain current.
      * Only taken into account if [useWorldMagneticModel] is tue.
      */
-    var timestamp: Date = Date()
+    override var timestamp: Date = Date()
         set(value) {
             field = value
             geomagneticAttitudeEstimator.timestamp = value
@@ -252,7 +265,7 @@ class FusedGeomagneticAttitudeEstimator2 private constructor(
      * Indicates whether world magnetic model is taken into account to adjust attitude yaw angle by
      * current magnetic declination based on current Wolrd MAgnetic Model, location and timestamp.
      */
-    var useWorldMagneticModel: Boolean = false
+    override var useWorldMagneticModel: Boolean = false
         @Throws(IllegalStateException::class)
         set(value) {
             check(!running)
@@ -265,7 +278,7 @@ class FusedGeomagneticAttitudeEstimator2 private constructor(
      *
      * @throws IllegalStateException if estimator is running.
      */
-    var useAccurateLevelingEstimator: Boolean = false
+    override var useAccurateLevelingEstimator: Boolean = false
         @Throws(IllegalStateException::class)
         set(value) {
             check(!running)
@@ -283,7 +296,7 @@ class FusedGeomagneticAttitudeEstimator2 private constructor(
      *
      * @throws IllegalStateException if estimator is running.
      */
-    var useAccurateRelativeGyroscopeAttitudeEstimator: Boolean = false
+    override var useAccurateRelativeGyroscopeAttitudeEstimator: Boolean = false
         @Throws(IllegalStateException::class)
         set(value) {
             check(!running)
@@ -297,7 +310,7 @@ class FusedGeomagneticAttitudeEstimator2 private constructor(
      * on changing interpolation value that depends on actual relative attitude rotation
      * velocity.
      */
-    var useIndirectInterpolation = true
+    override var useIndirectInterpolation = true
 
     /**
      * Interpolation value to be used to combine both geomagnetic and relative attitudes.
@@ -310,7 +323,7 @@ class FusedGeomagneticAttitudeEstimator2 private constructor(
      *
      * @throws IllegalArgumentException if value is not between 0.0 and 1.0 (both included).
      */
-    var interpolationValue = DEFAULT_INTERPOLATION_VALUE
+    override var interpolationValue = DEFAULT_INTERPOLATION_VALUE
         set(value) {
             require(value in 0.0..1.0)
             field = value
@@ -323,7 +336,7 @@ class FusedGeomagneticAttitudeEstimator2 private constructor(
      *
      * @throws IllegalArgumentException if value is zero or negative.
      */
-    var indirectInterpolationWeight = DEFAULT_INDIRECT_INTERPOLATION_WEIGHT
+    override var indirectInterpolationWeight = DEFAULT_INDIRECT_INTERPOLATION_WEIGHT
         set(value) {
             require(value > 0.0)
             field = value
@@ -332,13 +345,53 @@ class FusedGeomagneticAttitudeEstimator2 private constructor(
     /**
      * Gets average time interval between gyroscope samples expressed in seconds.
      */
-    val gyroscopeAverageTimeInterval
+    override val gyroscopeAverageTimeInterval
         get() = relativeAttitudeEstimator.gyroscopeAverageTimeInterval
+
+    /**
+     * Listener to notify new accelerometer measurements.
+     * (Only used if [useAccelerometer] is true).
+     */
+    override var accelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? = null
+        set(value) {
+            field = value
+            geomagneticAttitudeEstimator.accelerometerMeasurementListener = value
+        }
+
+    /**
+     * listener to notify new gravity measurements.
+     * (Only used if [useAccelerometer] is false).
+     */
+    override var gravityMeasurementListener: GravitySensorCollector.OnMeasurementListener? = null
+        set(value) {
+            field = value
+            geomagneticAttitudeEstimator.gravityMeasurementListener = value
+        }
+
+    /**
+     * Listener to notify new gyroscope measurements.
+     */
+    override var gyroscopeMeasurementListener: GyroscopeSensorCollector.OnMeasurementListener? =
+        null
+        set(value) {
+            field = value
+            relativeAttitudeEstimator.gyroscopeMeasurementListener = value
+        }
+
+    /**
+     * Listener to notify new magnetometer measurements.
+     */
+    override var magnetometerMeasurementListener: MagnetometerSensorCollector.OnMeasurementListener? =
+        null
+        set(value) {
+            field = value
+            geomagneticAttitudeEstimator.magnetometerMeasurementListener = value
+        }
 
     /**
      * Indicates whether this estimator is running or not.
      */
-    var running: Boolean = false
+    override var running: Boolean = false
         private set
 
     /**
@@ -350,7 +403,7 @@ class FusedGeomagneticAttitudeEstimator2 private constructor(
      * @throws IllegalStateException if estimator is already running.
      * @throws IllegalArgumentException if value is not between 0.0 and 1.0 (both included).
      */
-    var outlierThreshold = DEFAULT_OUTLIER_THRESHOLD
+    override var outlierThreshold = DEFAULT_OUTLIER_THRESHOLD
         set(value) {
             check(!running)
             require(value in 0.0..1.0)
@@ -365,7 +418,7 @@ class FusedGeomagneticAttitudeEstimator2 private constructor(
      * @throws IllegalStateException if estimator is already running.
      * @throws IllegalArgumentException if value is not between 0.0 and 1.0 (both included).
      */
-    var outlierPanicThreshold = DEFAULT_OUTLIER_PANIC_THRESHOLD
+    override var outlierPanicThreshold = DEFAULT_OUTLIER_PANIC_THRESHOLD
         set(value) {
             check(!running)
             require(value in 0.0..1.0)
@@ -379,7 +432,7 @@ class FusedGeomagneticAttitudeEstimator2 private constructor(
      *
      * @throws IllegalStateException if estimator is already running.
      */
-    var panicCounterThreshold = DEFAULT_PANIC_COUNTER_THRESHOLD
+    override var panicCounterThreshold = DEFAULT_PANIC_COUNTER_THRESHOLD
         set(value) {
             check(!running)
             require(value > 0)
@@ -400,7 +453,7 @@ class FusedGeomagneticAttitudeEstimator2 private constructor(
      * @throws IllegalStateException if estimator is already running.
      */
     @Throws(IllegalStateException::class)
-    fun start(): Boolean {
+    override fun start(): Boolean {
         check(!running)
 
         reset()
@@ -414,7 +467,7 @@ class FusedGeomagneticAttitudeEstimator2 private constructor(
     /**
      * Stops this estimator.
      */
-    fun stop() {
+    override fun stop() {
         geomagneticAttitudeEstimator.stop()
         relativeAttitudeEstimator.stop()
         running = false
@@ -445,12 +498,16 @@ class FusedGeomagneticAttitudeEstimator2 private constructor(
             useAccurateRelativeGyroscopeAttitudeEstimator,
             estimateCoordinateTransformation = false,
             estimateDisplayEulerAngles = false,
-            ignoreDisplayOrientation = ignoreDisplayOrientation
-        ) { _, attitude, _, _, _, _ ->
-            processRelativeAttitude(
-                attitude
-            )
-        }
+            ignoreDisplayOrientation = ignoreDisplayOrientation,
+            { _, attitude, _, _, _, _ ->
+                processRelativeAttitude(
+                    attitude
+                )
+            },
+            accelerometerMeasurementListener,
+            gravityMeasurementListener,
+            gyroscopeMeasurementListener
+        )
     }
 
     /**
@@ -471,10 +528,12 @@ class FusedGeomagneticAttitudeEstimator2 private constructor(
             useAccurateLevelingEstimator,
             estimateCoordinateTransformation = false,
             estimateDisplayEulerAngles = false,
-            ignoreDisplayOrientation = ignoreDisplayOrientation
-        ) { _, attitude, _, _, _, _ ->
-            processGeomagneticAttitude(attitude)
-        }
+            ignoreDisplayOrientation = ignoreDisplayOrientation,
+            { _, attitude, _, _, _, _ ->
+                processGeomagneticAttitude(attitude)
+            },
+            magnetometerMeasurementListener = magnetometerMeasurementListener
+        )
     }
 
     /**
@@ -654,29 +713,6 @@ class FusedGeomagneticAttitudeEstimator2 private constructor(
     /**
      * Interface to notify when a new attitude measurement is available.
      */
-    fun interface OnAttitudeAvailableListener {
-
-        /**
-         * Called when a new attitude measurement is available.
-         *
-         * @param estimator attitude estimator that raised this event.
-         * @param attitude attitude expressed in NED coordinates.
-         * @param roll roll angle expressed in radians. Only available if
-         * [estimateDisplayEulerAngles] is true.
-         * @param pitch pitch angle expressed in radians. Only available if
-         * [estimateDisplayEulerAngles] is true.
-         * @param yaw yaw angle expressed in radians. Only available if
-         * [estimateDisplayEulerAngles] is true.
-         * @param coordinateTransformation coordinate transformation containing measured leveled
-         * geomagnetic attitude. Only available if [estimateCoordinateTransformation] is true.
-         */
-        fun onAttitudeAvailable(
-            estimator: FusedGeomagneticAttitudeEstimator2,
-            attitude: Quaternion,
-            roll: Double?,
-            pitch: Double?,
-            yaw: Double?,
-            coordinateTransformation: CoordinateTransformation?
-        )
-    }
+    fun interface OnAttitudeAvailableListener :
+        AbsoluteAttitudeEstimator.OnAttitudeAvailableListener<FusedGeomagneticAttitudeEstimator2>
 }

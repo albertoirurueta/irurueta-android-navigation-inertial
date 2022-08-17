@@ -38,6 +38,7 @@ import com.irurueta.navigation.inertial.calibration.TimeIntervalEstimator
  * context is not associated to a display, such as a background service, this must be true.
  * @property attitudeAvailableListener listener to notify when a new attitude measurement is
  * available.
+ * @property gyroscopeMeasurementListener listener to notify new gyroscope measurements.
  */
 abstract class BaseRelativeGyroscopeAttitudeEstimator<T : BaseRelativeGyroscopeAttitudeEstimator<T, L>,
         L : BaseRelativeGyroscopeAttitudeEstimator.OnAttitudeAvailableListener<T, L>>(
@@ -48,7 +49,8 @@ abstract class BaseRelativeGyroscopeAttitudeEstimator<T : BaseRelativeGyroscopeA
     val estimateCoordinateTransformation: Boolean = false,
     val estimateDisplayEulerAngles: Boolean = true,
     val ignoreDisplayOrientation: Boolean = false,
-    var attitudeAvailableListener: L? = null
+    var attitudeAvailableListener: L? = null,
+    var gyroscopeMeasurementListener: GyroscopeSensorCollector.OnMeasurementListener?
 ) {
     /**
      * Instance to be reused which contains integrated attitude of all gyroscope samples taking
@@ -76,7 +78,7 @@ abstract class BaseRelativeGyroscopeAttitudeEstimator<T : BaseRelativeGyroscopeA
      * Instance to be reused containing coordinate transformation in NED coordinates.
      */
     protected val coordinateTransformation =
-        CoordinateTransformation(FrameType.LOCAL_NAVIGATION_FRAME, FrameType.BODY_FRAME)
+        CoordinateTransformation(FrameType.BODY_FRAME, FrameType.EARTH_CENTERED_EARTH_FIXED_FRAME)
 
     /**
      * Estimates average time interval between gyroscope measurements.

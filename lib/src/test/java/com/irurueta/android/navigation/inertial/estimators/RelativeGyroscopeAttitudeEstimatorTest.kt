@@ -27,6 +27,7 @@ import com.irurueta.android.navigation.inertial.getPrivateProperty
 import com.irurueta.android.navigation.inertial.setPrivateProperty
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.frames.CoordinateTransformation
+import com.irurueta.navigation.frames.FrameType
 import com.irurueta.navigation.inertial.calibration.TimeIntervalEstimator
 import com.irurueta.statistics.UniformRandomizer
 import io.mockk.*
@@ -51,6 +52,7 @@ class RelativeGyroscopeAttitudeEstimatorTest {
         assertTrue(estimator.estimateDisplayEulerAngles)
         assertFalse(estimator.ignoreDisplayOrientation)
         assertNull(estimator.attitudeAvailableListener)
+        assertNull(estimator.gyroscopeMeasurementListener)
         assertFalse(estimator.running)
         assertEquals(0.0, estimator.averageTimeInterval, 0.0)
     }
@@ -59,6 +61,7 @@ class RelativeGyroscopeAttitudeEstimatorTest {
     fun constructor_whenAllProperties_setsExpectedValues() {
         val attitudeAvailableListener =
             mockk<RelativeGyroscopeAttitudeEstimator.OnAttitudeAvailableListener>()
+        val gyroscopeMeasurementListener = mockk<GyroscopeSensorCollector.OnMeasurementListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = RelativeGyroscopeAttitudeEstimator(
             context,
@@ -67,7 +70,8 @@ class RelativeGyroscopeAttitudeEstimatorTest {
             estimateCoordinateTransformation = true,
             estimateDisplayEulerAngles = false,
             ignoreDisplayOrientation = true,
-            attitudeAvailableListener
+            attitudeAvailableListener,
+            gyroscopeMeasurementListener
         )
 
         // check
@@ -81,6 +85,7 @@ class RelativeGyroscopeAttitudeEstimatorTest {
         assertFalse(estimator.estimateDisplayEulerAngles)
         assertTrue(estimator.ignoreDisplayOrientation)
         assertSame(attitudeAvailableListener, estimator.attitudeAvailableListener)
+        assertSame(gyroscopeMeasurementListener, estimator.gyroscopeMeasurementListener)
         assertFalse(estimator.running)
         assertEquals(0.0, estimator.averageTimeInterval, 0.0)
     }
@@ -100,6 +105,22 @@ class RelativeGyroscopeAttitudeEstimatorTest {
 
         // check
         assertSame(attitudeAvailableListener, estimator.attitudeAvailableListener)
+    }
+
+    @Test
+    fun gyroscopeMeasurementListener_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val estimator = RelativeGyroscopeAttitudeEstimator(context)
+
+        // check default value
+        assertNull(estimator.gyroscopeMeasurementListener)
+
+        // set new value
+        val gyroscopeMeasurementListener = mockk<GyroscopeSensorCollector.OnMeasurementListener>()
+        estimator.gyroscopeMeasurementListener = gyroscopeMeasurementListener
+
+        // check
+        assertSame(gyroscopeMeasurementListener, estimator.gyroscopeMeasurementListener)
     }
 
     @Test
@@ -339,6 +360,11 @@ class RelativeGyroscopeAttitudeEstimatorTest {
                 "coordinateTransformation"
             )
         requireNotNull(coordinateTransformation)
+        assertEquals(FrameType.BODY_FRAME, coordinateTransformation.sourceType)
+        assertEquals(
+            FrameType.EARTH_CENTERED_EARTH_FIXED_FRAME,
+            coordinateTransformation.destinationType
+        )
         val coordinateTransformationSpy = spyk(coordinateTransformation)
         setPrivateProperty(
             BaseRelativeGyroscopeAttitudeEstimator::class,
@@ -488,6 +514,11 @@ class RelativeGyroscopeAttitudeEstimatorTest {
                 "coordinateTransformation"
             )
         requireNotNull(coordinateTransformation)
+        assertEquals(FrameType.BODY_FRAME, coordinateTransformation.sourceType)
+        assertEquals(
+            FrameType.EARTH_CENTERED_EARTH_FIXED_FRAME,
+            coordinateTransformation.destinationType
+        )
         val coordinateTransformationSpy = spyk(coordinateTransformation)
         setPrivateProperty(
             BaseRelativeGyroscopeAttitudeEstimator::class,
@@ -634,6 +665,11 @@ class RelativeGyroscopeAttitudeEstimatorTest {
                 "coordinateTransformation"
             )
         requireNotNull(coordinateTransformation)
+        assertEquals(FrameType.BODY_FRAME, coordinateTransformation.sourceType)
+        assertEquals(
+            FrameType.EARTH_CENTERED_EARTH_FIXED_FRAME,
+            coordinateTransformation.destinationType
+        )
         val coordinateTransformationSpy = spyk(coordinateTransformation)
         setPrivateProperty(
             BaseRelativeGyroscopeAttitudeEstimator::class,
@@ -791,6 +827,11 @@ class RelativeGyroscopeAttitudeEstimatorTest {
                 "coordinateTransformation"
             )
         requireNotNull(coordinateTransformation)
+        assertEquals(FrameType.BODY_FRAME, coordinateTransformation.sourceType)
+        assertEquals(
+            FrameType.EARTH_CENTERED_EARTH_FIXED_FRAME,
+            coordinateTransformation.destinationType
+        )
         val coordinateTransformationSpy = spyk(coordinateTransformation)
         setPrivateProperty(
             BaseRelativeGyroscopeAttitudeEstimator::class,
@@ -952,6 +993,11 @@ class RelativeGyroscopeAttitudeEstimatorTest {
                 "coordinateTransformation"
             )
         requireNotNull(coordinateTransformation)
+        assertEquals(FrameType.BODY_FRAME, coordinateTransformation.sourceType)
+        assertEquals(
+            FrameType.EARTH_CENTERED_EARTH_FIXED_FRAME,
+            coordinateTransformation.destinationType
+        )
         val coordinateTransformationSpy = spyk(coordinateTransformation)
         setPrivateProperty(
             BaseRelativeGyroscopeAttitudeEstimator::class,
@@ -1113,6 +1159,11 @@ class RelativeGyroscopeAttitudeEstimatorTest {
                 "coordinateTransformation"
             )
         requireNotNull(coordinateTransformation)
+        assertEquals(FrameType.BODY_FRAME, coordinateTransformation.sourceType)
+        assertEquals(
+            FrameType.EARTH_CENTERED_EARTH_FIXED_FRAME,
+            coordinateTransformation.destinationType
+        )
         val coordinateTransformationSpy = spyk(coordinateTransformation)
         setPrivateProperty(
             BaseRelativeGyroscopeAttitudeEstimator::class,
