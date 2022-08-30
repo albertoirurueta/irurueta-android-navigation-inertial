@@ -21,6 +21,7 @@ import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.frames.CoordinateTransformation
 import com.irurueta.navigation.frames.FrameType
+import com.irurueta.navigation.inertial.calibration.AngularSpeedTriad
 import com.irurueta.navigation.inertial.calibration.TimeIntervalEstimator
 
 /**
@@ -34,8 +35,6 @@ import com.irurueta.navigation.inertial.calibration.TimeIntervalEstimator
  * otherwise. If not needed, it can be disabled to improve performance and decrease cpu load.
  * @property estimateDisplayEulerAngles true to estimate euler angles, false otherwise. If not
  * needed, it can be disabled to improve performance and decrease cpu load.
- * @property ignoreDisplayOrientation true to ignore display orientation, false otherwise. When
- * context is not associated to a display, such as a background service, this must be true.
  * @property attitudeAvailableListener listener to notify when a new attitude measurement is
  * available.
  * @property gyroscopeMeasurementListener listener to notify new gyroscope measurements.
@@ -48,7 +47,6 @@ abstract class BaseRelativeGyroscopeAttitudeEstimator<T : BaseRelativeGyroscopeA
     val sensorDelay: SensorDelay = SensorDelay.GAME,
     val estimateCoordinateTransformation: Boolean = false,
     val estimateDisplayEulerAngles: Boolean = true,
-    val ignoreDisplayOrientation: Boolean = false,
     var attitudeAvailableListener: L? = null,
     var gyroscopeMeasurementListener: GyroscopeSensorCollector.OnMeasurementListener?
 ) {
@@ -65,11 +63,6 @@ abstract class BaseRelativeGyroscopeAttitudeEstimator<T : BaseRelativeGyroscopeA
     protected val internalAttitude = Quaternion()
 
     /**
-     * Instance to be reused containing display rotation as a yaw angle.
-     */
-    protected val displayOrientation = Quaternion()
-
-    /**
      * Array to be reused containing euler angles of leveling attitude.
      */
     protected val displayEulerAngles = DoubleArray(Quaternion.N_ANGLES)
@@ -78,7 +71,7 @@ abstract class BaseRelativeGyroscopeAttitudeEstimator<T : BaseRelativeGyroscopeA
      * Instance to be reused containing coordinate transformation in NED coordinates.
      */
     protected val coordinateTransformation =
-        CoordinateTransformation(FrameType.BODY_FRAME, FrameType.EARTH_CENTERED_EARTH_FIXED_FRAME)
+        CoordinateTransformation(FrameType.BODY_FRAME, FrameType.LOCAL_NAVIGATION_FRAME)
 
     /**
      * Estimates average time interval between gyroscope measurements.
@@ -89,6 +82,11 @@ abstract class BaseRelativeGyroscopeAttitudeEstimator<T : BaseRelativeGyroscopeA
      * Timestamp of first sample expressed in nanoseconds.
      */
     protected var initialTimestamp: Long = 0L
+
+    /**
+     * Triad to be reused for ENU to NED coordinates conversion.
+     */
+    protected val triad = AngularSpeedTriad()
 
     /**
      * Internal gyroscope sensor collector.

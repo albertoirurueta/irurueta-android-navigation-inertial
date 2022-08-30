@@ -50,7 +50,6 @@ class RelativeGyroscopeAttitudeEstimatorTest {
         assertEquals(SensorDelay.GAME, estimator.sensorDelay)
         assertFalse(estimator.estimateCoordinateTransformation)
         assertTrue(estimator.estimateDisplayEulerAngles)
-        assertFalse(estimator.ignoreDisplayOrientation)
         assertNull(estimator.attitudeAvailableListener)
         assertNull(estimator.gyroscopeMeasurementListener)
         assertFalse(estimator.running)
@@ -69,7 +68,6 @@ class RelativeGyroscopeAttitudeEstimatorTest {
             SensorDelay.NORMAL,
             estimateCoordinateTransformation = true,
             estimateDisplayEulerAngles = false,
-            ignoreDisplayOrientation = true,
             attitudeAvailableListener,
             gyroscopeMeasurementListener
         )
@@ -83,7 +81,6 @@ class RelativeGyroscopeAttitudeEstimatorTest {
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
         assertTrue(estimator.estimateCoordinateTransformation)
         assertFalse(estimator.estimateDisplayEulerAngles)
-        assertTrue(estimator.ignoreDisplayOrientation)
         assertSame(attitudeAvailableListener, estimator.attitudeAvailableListener)
         assertSame(gyroscopeMeasurementListener, estimator.gyroscopeMeasurementListener)
         assertFalse(estimator.running)
@@ -362,7 +359,7 @@ class RelativeGyroscopeAttitudeEstimatorTest {
         requireNotNull(coordinateTransformation)
         assertEquals(FrameType.BODY_FRAME, coordinateTransformation.sourceType)
         assertEquals(
-            FrameType.EARTH_CENTERED_EARTH_FIXED_FRAME,
+            FrameType.LOCAL_NAVIGATION_FRAME,
             coordinateTransformation.destinationType
         )
         val coordinateTransformationSpy = spyk(coordinateTransformation)
@@ -516,7 +513,7 @@ class RelativeGyroscopeAttitudeEstimatorTest {
         requireNotNull(coordinateTransformation)
         assertEquals(FrameType.BODY_FRAME, coordinateTransformation.sourceType)
         assertEquals(
-            FrameType.EARTH_CENTERED_EARTH_FIXED_FRAME,
+            FrameType.LOCAL_NAVIGATION_FRAME,
             coordinateTransformation.destinationType
         )
         val coordinateTransformationSpy = spyk(coordinateTransformation)
@@ -667,7 +664,7 @@ class RelativeGyroscopeAttitudeEstimatorTest {
         requireNotNull(coordinateTransformation)
         assertEquals(FrameType.BODY_FRAME, coordinateTransformation.sourceType)
         assertEquals(
-            FrameType.EARTH_CENTERED_EARTH_FIXED_FRAME,
+            FrameType.LOCAL_NAVIGATION_FRAME,
             coordinateTransformation.destinationType
         )
         val coordinateTransformationSpy = spyk(coordinateTransformation)
@@ -829,7 +826,7 @@ class RelativeGyroscopeAttitudeEstimatorTest {
         requireNotNull(coordinateTransformation)
         assertEquals(FrameType.BODY_FRAME, coordinateTransformation.sourceType)
         assertEquals(
-            FrameType.EARTH_CENTERED_EARTH_FIXED_FRAME,
+            FrameType.LOCAL_NAVIGATION_FRAME,
             coordinateTransformation.destinationType
         )
         val coordinateTransformationSpy = spyk(coordinateTransformation)
@@ -995,7 +992,7 @@ class RelativeGyroscopeAttitudeEstimatorTest {
         requireNotNull(coordinateTransformation)
         assertEquals(FrameType.BODY_FRAME, coordinateTransformation.sourceType)
         assertEquals(
-            FrameType.EARTH_CENTERED_EARTH_FIXED_FRAME,
+            FrameType.LOCAL_NAVIGATION_FRAME,
             coordinateTransformation.destinationType
         )
         val coordinateTransformationSpy = spyk(coordinateTransformation)
@@ -1070,7 +1067,6 @@ class RelativeGyroscopeAttitudeEstimatorTest {
             context,
             estimateCoordinateTransformation = false,
             estimateDisplayEulerAngles = false,
-            ignoreDisplayOrientation = true,
             attitudeAvailableListener = attitudeAvailableListener
         )
 
@@ -1161,7 +1157,7 @@ class RelativeGyroscopeAttitudeEstimatorTest {
         requireNotNull(coordinateTransformation)
         assertEquals(FrameType.BODY_FRAME, coordinateTransformation.sourceType)
         assertEquals(
-            FrameType.EARTH_CENTERED_EARTH_FIXED_FRAME,
+            FrameType.LOCAL_NAVIGATION_FRAME,
             coordinateTransformation.destinationType
         )
         val coordinateTransformationSpy = spyk(coordinateTransformation)

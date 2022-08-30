@@ -16,11 +16,13 @@
 package com.irurueta.android.navigation.inertial.estimators
 
 import android.content.Context
+import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.GravitySensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
+import com.irurueta.navigation.inertial.calibration.AccelerationTriad
 
 /**
  * Estimates sensed specific force component associated to gravity by either using the OS gravity
@@ -56,17 +58,23 @@ class GravityEstimator(
     private val accelerometerAveragingFilterOutput = DoubleArray(AveragingFilter.OUTPUT_LENGTH)
 
     /**
+     * Triad to be reused for ENU to NED coordinates conversion.
+     */
+    private val triad = AccelerationTriad()
+
+    /**
      * Internal gravity sensor collector.
      */
     private val gravitySensorCollector = GravitySensorCollector(
         context,
         sensorDelay,
         { gx, gy, gz, g, timestamp, accuracy ->
+            ENUtoNEDTriadConverter.convert(gx.toDouble(), gy.toDouble(), gz.toDouble(), triad)
             estimationListener?.onEstimation(
                 this@GravityEstimator,
-                -gx.toDouble(),
-                -gy.toDouble(),
-                -gz.toDouble(),
+                triad.valueX,
+                triad.valueY,
+                triad.valueZ,
                 timestamp
             )
             gravityMeasurementListener?.onMeasurement(gx, gy, gz, g, timestamp, accuracy)
@@ -91,19 +99,39 @@ class GravityEstimator(
                 accuracy
             )
 
+            val currentAx = if (bx != null)
+                ax.toDouble() - bx.toDouble()
+            else
+                ax.toDouble()
+            val currentAy = if (by != null)
+                ay.toDouble() - by.toDouble()
+            else
+                ay.toDouble()
+            val currentAz = if (bz != null)
+                az.toDouble() - bz.toDouble()
+            else
+                az.toDouble()
+
             if (accelerometerAveragingFilter.filter(
-                    ax.toDouble(),
-                    ay.toDouble(),
-                    az.toDouble(),
+                    currentAx,
+                    currentAy,
+                    currentAz,
                     accelerometerAveragingFilterOutput,
                     timestamp
                 )
             ) {
+                ENUtoNEDTriadConverter.convert(
+                    accelerometerAveragingFilterOutput[0],
+                    accelerometerAveragingFilterOutput[1],
+                    accelerometerAveragingFilterOutput[2],
+                    triad
+                )
+
                 estimationListener?.onEstimation(
                     this@GravityEstimator,
-                    -accelerometerAveragingFilterOutput[0],
-                    -accelerometerAveragingFilterOutput[1],
-                    -accelerometerAveragingFilterOutput[2],
+                    triad.valueX,
+                    triad.valueY,
+                    triad.valueZ,
                     timestamp
                 )
             }
@@ -158,9 +186,12 @@ class GravityEstimator(
          * Called when a new gravity measurement is available.
          *
          * @param estimator gravity estimator that raised this event.
-         * @param fx x-coordinate of sensed specific force containing gravity component.
-         * @param fy y-coordinate of sensed specific force containing gravity component.
-         * @param fz z-coordinate of sensed specific force containing gravity component.
+         * @param fx x-coordinate of sensed specific force containing gravity component expressed
+         * in NED coordinates.
+         * @param fy y-coordinate of sensed specific force containing gravity component expressed
+         * in NED coordinates.
+         * @param fz z-coordinate of sensed specific force containing gravity component expressed
+         * in NED coordinates.
          * @param timestamp time in nanoseconds at which the measurement was made. Each measurement
          * will be monotonically increasing using the same time base as
          * [android.os.SystemClock.elapsedRealtimeNanos].

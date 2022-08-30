@@ -17,7 +17,7 @@ package com.irurueta.android.navigation.inertial.estimators
 
 import android.content.Context
 import android.location.Location
-import com.irurueta.android.navigation.inertial.DisplayOrientationHelper
+import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.GravitySensorCollector
 import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
@@ -29,6 +29,7 @@ import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.frames.CoordinateTransformation
 import com.irurueta.navigation.frames.FrameType
 import com.irurueta.navigation.frames.NEDPosition
+import com.irurueta.navigation.inertial.calibration.MagneticFluxDensityTriad
 import com.irurueta.navigation.inertial.estimators.AttitudeEstimator
 import com.irurueta.navigation.inertial.wmm.WMMEarthMagneticFluxDensityEstimator
 import com.irurueta.navigation.inertial.wmm.WorldMagneticModel
@@ -57,8 +58,6 @@ import java.util.*
  * otherwise. If not needed, it can be disabled to improve performance and decrease cpu load.
  * @property estimateDisplayEulerAngles true to estimate euler angles, false otherwise. If not
  * needed, it can be disabled to improve performance and decrease cpu load.
- * @property ignoreDisplayOrientation true to ignore display orientation, false otherwise. When
- * context is not associated to a display, such as a background service, this must be true.
  * @property attitudeAvailableListener listener to notify when a new attitude measurement is
  * available.
  * @property magnetometerMeasurementListener listener to notify new magnetometer measurements.
@@ -73,7 +72,6 @@ class GeomagneticAttitudeEstimator private constructor(
     var timestamp: Date,
     val estimateCoordinateTransformation: Boolean,
     val estimateDisplayEulerAngles: Boolean,
-    val ignoreDisplayOrientation: Boolean,
     var attitudeAvailableListener: OnAttitudeAvailableListener?,
     var magnetometerMeasurementListener: MagnetometerSensorCollector.OnMeasurementListener?
 ) {
@@ -103,8 +101,6 @@ class GeomagneticAttitudeEstimator private constructor(
      * otherwise. If not needed, it can be disabled to improve performance and decrease cpu load.
      * @param estimateDisplayEulerAngles true to estimate euler angles, false otherwise. If not
      * needed, it can be disabled to improve performance and decrease cpu load.
-     * @param ignoreDisplayOrientation true to ignore display orientation, false otherwise. When
-     * context is not associated to a display, such as a background service, this must be true.
      * @param attitudeAvailableListener listener to notify when a new attitude measurement is
      * available.
      * @param accelerometerMeasurementListener listener to notify new accelerometer measurements.
@@ -112,6 +108,8 @@ class GeomagneticAttitudeEstimator private constructor(
      * @param gravityMeasurementListener listener to notify new gravity measurements.
      * (Only used if [useAccelerometer] is false).
      * @param magnetometerMeasurementListener listener to notify new magnetometer measurements.
+     * @param gravityEstimationListener listener to notify when a new gravity estimation is
+     * available.
      */
     constructor(
         context: Context,
@@ -129,11 +127,11 @@ class GeomagneticAttitudeEstimator private constructor(
         useAccurateLevelingEstimator: Boolean = false,
         estimateCoordinateTransformation: Boolean = false,
         estimateDisplayEulerAngles: Boolean = true,
-        ignoreDisplayOrientation: Boolean = false,
         attitudeAvailableListener: OnAttitudeAvailableListener? = null,
         accelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? = null,
         gravityMeasurementListener: GravitySensorCollector.OnMeasurementListener? = null,
-        magnetometerMeasurementListener: MagnetometerSensorCollector.OnMeasurementListener? = null
+        magnetometerMeasurementListener: MagnetometerSensorCollector.OnMeasurementListener? = null,
+        gravityEstimationListener: GravityEstimator.OnEstimationListener? = null
     ) : this(
         context,
         sensorDelay,
@@ -144,7 +142,6 @@ class GeomagneticAttitudeEstimator private constructor(
         timestamp,
         estimateCoordinateTransformation,
         estimateDisplayEulerAngles,
-        ignoreDisplayOrientation,
         attitudeAvailableListener,
         magnetometerMeasurementListener
     ) {
@@ -154,6 +151,7 @@ class GeomagneticAttitudeEstimator private constructor(
         this.useWorldMagneticModel = useWorldMagneticModel
         this.accelerometerMeasurementListener = accelerometerMeasurementListener
         this.gravityMeasurementListener = gravityMeasurementListener
+        this.gravityEstimationListener = gravityEstimationListener
     }
 
 
@@ -185,24 +183,9 @@ class GeomagneticAttitudeEstimator private constructor(
     private val fusedAttitude = Quaternion()
 
     /**
-     * Instance to be reused containing display orientation.
+     * Triad to be reused for ENU to NED coordinates conversion.
      */
-    private val displayOrientation = Quaternion()
-
-    /**
-     * Last magnetometer x-coordinate measurement expressed in Teslas (T).
-     */
-    private var sensorBx = 0.0
-
-    /**
-     * Last magnetometer y-coordinate measurement expressed in Teslas (T).
-     */
-    private var sensorBy = 0.0
-
-    /**
-     * Last magnetometer z-coordinate measurement expressed in Teslas (T).
-     */
-    private var sensorBz = 0.0
+    private val triad = MagneticFluxDensityTriad()
 
     /**
      * Internal magnetometer sensor collector.
@@ -223,15 +206,18 @@ class GeomagneticAttitudeEstimator private constructor(
                 accuracy
             )
 
-            sensorBx = MagneticFluxDensityConverter.microTeslaToTesla(
+            val sensorBx = MagneticFluxDensityConverter.microTeslaToTesla(
                 (bx - (hardIronX ?: 0.0f)).toDouble()
             )
-            sensorBy = MagneticFluxDensityConverter.microTeslaToTesla(
+            val sensorBy = MagneticFluxDensityConverter.microTeslaToTesla(
                 (by - (hardIronY ?: 0.0f)).toDouble()
             )
-            sensorBz = MagneticFluxDensityConverter.microTeslaToTesla(
+            val sensorBz = MagneticFluxDensityConverter.microTeslaToTesla(
                 (bz - (hardIronZ ?: 0.0f)).toDouble()
             )
+
+            ENUtoNEDTriadConverter.convert(sensorBx, sensorBy, sensorBz, triad)
+
             hasMagnetometerValues = true
         })
 
@@ -244,7 +230,7 @@ class GeomagneticAttitudeEstimator private constructor(
      * Instance to be reused containing coordinate transformation in NED coordinates.
      */
     private val coordinateTransformation =
-        CoordinateTransformation(FrameType.BODY_FRAME, FrameType.EARTH_CENTERED_EARTH_FIXED_FRAME)
+        CoordinateTransformation(FrameType.BODY_FRAME, FrameType.LOCAL_NAVIGATION_FRAME)
 
     /**
      * Indicates whether magnetometer sensor values have been received or not.
@@ -319,13 +305,23 @@ class GeomagneticAttitudeEstimator private constructor(
         }
 
     /**
-     * listener to notify new gravity measurements.
+     * Listener to notify new gravity measurements.
      * (Only used if [useAccelerometer] is false).
      */
     var gravityMeasurementListener: GravitySensorCollector.OnMeasurementListener? = null
         set(value) {
             field = value
             levelingEstimator.gravityMeasurementListener = value
+        }
+
+    /**
+     * Listener to notify when a new gravity estimation is
+     * available.
+     */
+    var gravityEstimationListener: GravityEstimator.OnEstimationListener? = null
+        set(value) {
+            field = value
+            levelingEstimator.gravityEstimationListener = value
         }
 
     /**
@@ -385,12 +381,12 @@ class GeomagneticAttitudeEstimator private constructor(
                 accelerometerAveragingFilter,
                 estimateCoordinateTransformation = false,
                 estimateDisplayEulerAngles = false,
-                ignoreDisplayOrientation = true,
-                { _, attitude, _, _, _ ->
+                levelingAvailableListener = { _, attitude, _, _, _ ->
                     processLeveling(attitude)
                 },
-                accelerometerMeasurementListener,
-                gravityMeasurementListener
+                gravityEstimationListener = gravityEstimationListener,
+                accelerometerMeasurementListener = accelerometerMeasurementListener,
+                gravityMeasurementListener = gravityMeasurementListener
             )
         } else {
             LevelingEstimator(
@@ -401,12 +397,12 @@ class GeomagneticAttitudeEstimator private constructor(
                 accelerometerAveragingFilter,
                 estimateCoordinateTransformation = false,
                 estimateDisplayEulerAngles = false,
-                ignoreDisplayOrientation = true,
-                { _, attitude, _, _, _ ->
+                levelingAvailableListener = { _, attitude, _, _, _ ->
                     processLeveling(attitude)
                 },
-                accelerometerMeasurementListener,
-                gravityMeasurementListener
+                gravityEstimationListener = gravityEstimationListener,
+                accelerometerMeasurementListener = accelerometerMeasurementListener,
+                gravityMeasurementListener = gravityMeasurementListener
             )
         }
     }
@@ -436,27 +432,16 @@ class GeomagneticAttitudeEstimator private constructor(
             return
         }
 
-        if (!ignoreDisplayOrientation) {
-            val displayRotationRadians = DisplayOrientationHelper.getDisplayRotationRadians(context)
-            displayOrientation.setFromEulerAngles(0.0, 0.0, displayRotationRadians)
-        }
-
-        attitude.inverse(levelingAttitude)
+        attitude.copyTo(levelingAttitude)
 
         // obtain roll and pitch euler angles from leveling
         levelingAttitude.toEulerAngles(displayEulerAngles)
         val roll = displayEulerAngles[0]
         val pitch = displayEulerAngles[1]
         val declination = getDeclination()
-        val yaw = AttitudeEstimator.getYaw(sensorBx, sensorBy, sensorBz, declination, roll, pitch)
+        val yaw = AttitudeEstimator.getYaw(triad.valueX, triad.valueY, triad.valueZ, declination, roll, pitch)
 
         fusedAttitude.setFromEulerAngles(roll, pitch, yaw)
-        if (!ignoreDisplayOrientation) {
-            fusedAttitude.combine(displayOrientation)
-        }
-        fusedAttitude.normalize()
-        fusedAttitude.inverse()
-        fusedAttitude.normalize()
 
         val c: CoordinateTransformation? =
             if (estimateCoordinateTransformation) {

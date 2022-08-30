@@ -37,7 +37,7 @@ import org.robolectric.RobolectricTestRunner
 class AttitudeHelperTest {
 
     @Test
-    fun convertToNEU_whenAccuracyAvailable_returnsExpectedValue() {
+    fun convertToENU_whenAccuracyAvailable_returnsExpectedValue() {
         val display = mockk<Display>()
         every { display.rotation }.returns(Surface.ROTATION_0)
         val context = spyk(ApplicationProvider.getApplicationContext())
@@ -54,7 +54,7 @@ class AttitudeHelperTest {
         val values = floatArrayOf(b, c, d, a, accuracy)
 
         val quaternionResult = Quaternion()
-        val result = AttitudeHelper.convertToNEU(context, values, quaternionResult)
+        val result = AttitudeHelper.convertToENU(context, values, quaternionResult)
         requireNotNull(result)
         assertEquals(accuracy.toDouble(), result, ABSOLUTE_ERROR)
         assertTrue(quaternionResult.equals(attitude, ABSOLUTE_ERROR))
@@ -76,7 +76,7 @@ class AttitudeHelperTest {
         val values = floatArrayOf(b, c, d, a, AttitudeHelper.UNAVAILABLE_HEADING_ACCURACY)
 
         val quaternionResult = Quaternion()
-        assertNull(AttitudeHelper.convertToNEU(context, values, quaternionResult))
+        assertNull(AttitudeHelper.convertToENU(context, values, quaternionResult))
         assertTrue(quaternionResult.equals(attitude, ABSOLUTE_ERROR))
     }
 
@@ -85,7 +85,7 @@ class AttitudeHelperTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val values = FloatArray(3)
         val quaternionResult = Quaternion()
-        AttitudeHelper.convertToNEU(context, values, quaternionResult)
+        AttitudeHelper.convertToENU(context, values, quaternionResult)
     }
 
     @Test
@@ -250,6 +250,12 @@ class AttitudeHelperTest {
         )
         quaternionResult1.toMatrixRotation(matrix2)
         assertEquals(matrix1, matrix2)
+
+        assertEquals(FrameType.BODY_FRAME, transformationResult.sourceType)
+        assertEquals(
+            FrameType.EARTH_CENTERED_EARTH_FIXED_FRAME,
+            transformationResult.destinationType
+        )
     }
 
     @Test

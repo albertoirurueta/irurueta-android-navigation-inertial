@@ -33,11 +33,13 @@ import com.irurueta.navigation.inertial.wmm.WorldMagneticModel
 import com.irurueta.statistics.UniformRandomizer
 import io.mockk.*
 import org.junit.Assert.*
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.util.*
 
+@Ignore
 @RunWith(RobolectricTestRunner::class)
 class PoseEstimatorTest {
 
@@ -50,6 +52,7 @@ class PoseEstimatorTest {
         // check
         assertSame(context, estimator.context)
         assertSame(location, estimator.location)
+        assertEquals(NEDVelocity(), estimator.initialVelocity)
         assertEquals(SensorDelay.GAME, estimator.sensorDelay)
         assertEquals(
             AccelerometerSensorCollector.SensorType.ACCELEROMETER,
@@ -81,6 +84,7 @@ class PoseEstimatorTest {
     @Test
     fun constructor_whenAllProperties_setsExpectedValues() {
         val location = getLocation()
+        val initialVelocity = NEDVelocity()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val accelerometerAveragingFilter = MeanAveragingFilter()
         val worldMagneticModel = WorldMagneticModel()
@@ -94,6 +98,7 @@ class PoseEstimatorTest {
         val estimator = PoseEstimator(
             context,
             location,
+            initialVelocity,
             SensorDelay.NORMAL,
             AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
@@ -116,6 +121,7 @@ class PoseEstimatorTest {
         // check
         assertSame(context, estimator.context)
         assertSame(location, estimator.location)
+        assertSame(initialVelocity, estimator.initialVelocity)
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
         assertEquals(
             AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,

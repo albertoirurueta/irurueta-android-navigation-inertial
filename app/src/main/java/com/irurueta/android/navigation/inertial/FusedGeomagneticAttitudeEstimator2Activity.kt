@@ -45,11 +45,13 @@ class FusedGeomagneticAttitudeEstimator2Activity : AppCompatActivity() {
 
     private var rotation = Quaternion()
 
-    private var eulerAngles = DoubleArray(3)
-
     private var camera: PinholeCamera? = null
 
     private var attitudeEstimator: FusedGeomagneticAttitudeEstimator2? = null
+
+    private val conversionRotation = ENUtoNEDTriadConverter.conversionRotation
+
+    private val displayOrientation = Quaternion()
 
     private var hasLocationPermission = false
 
@@ -100,7 +102,9 @@ class FusedGeomagneticAttitudeEstimator2Activity : AppCompatActivity() {
             extras?.getBoolean(USE_ACCURATE_LEVELING_ESTIMATOR, false) ?: false
         useAccurateRelativeGyroscopeAttitudeEstimator =
             extras?.getBoolean(USE_ACCURATE_RELATIVE_GYROSCOPE_ATTITUDE_ESTIMATOR, false) ?: false
-        useWorldMagneticModel = extras?.getBoolean(GeomagneticAttitudeEstimatorActivity.USE_WORLD_MAGNETIC_MODEL, false) ?: false
+        useWorldMagneticModel =
+            extras?.getBoolean(GeomagneticAttitudeEstimatorActivity.USE_WORLD_MAGNETIC_MODEL, false)
+                ?: false
 
         setContentView(R.layout.activity_fused_geomagnetic_attitude_estimator2)
         cubeView = findViewById(R.id.cube)
@@ -184,14 +188,28 @@ class FusedGeomagneticAttitudeEstimator2Activity : AppCompatActivity() {
                 useAccurateLevelingEstimator = useAccurateLevelingEstimator,
                 useAccurateRelativeGyroscopeAttitudeEstimator = useAccurateRelativeGyroscopeAttitudeEstimator,
                 useWorldMagneticModel = useWorldMagneticModel,
-                attitudeAvailableListener = { _, attitude, _, _, _, _ ->
+                attitudeAvailableListener = { _, attitude, roll, pitch, yaw, _ ->
                     attitude.toQuaternion(rotation)
-                    cubeView?.cubeRotation = rotation
 
-                    rotation.toEulerAngles(eulerAngles)
-                    rollView?.text = getString(R.string.roll_degrees, -Math.toDegrees(eulerAngles[0]))
-                    pitchView?.text = getString(R.string.pitch_degrees, -Math.toDegrees(eulerAngles[1]))
-                    yawView?.text = getString(R.string.yaw_degrees, -Math.toDegrees(eulerAngles[2]))
+                    rollView?.text = getString(R.string.roll_degrees, Math.toDegrees(roll ?: 0.0))
+                    pitchView?.text =
+                        getString(R.string.pitch_degrees, Math.toDegrees(pitch ?: 0.0))
+                    yawView?.text = getString(R.string.yaw_degrees, Math.toDegrees(yaw ?: 0.0))
+
+                    // rotation refers to pinhole camera point of view, to apply rotation to the cube
+                    // its inverse must be used.
+                    rotation.inverse()
+
+                    // convert attitude from NED to ENU coordinate system to be displayed using OpenGL
+                    Quaternion.product(conversionRotation, rotation, rotation)
+
+                    // take into account display orientation
+                    val displayRotationRadians =
+                        DisplayOrientationHelper.getDisplayRotationRadians(this)
+                    displayOrientation.setFromEulerAngles(0.0, 0.0, displayRotationRadians)
+                    Quaternion.product(displayOrientation, rotation, rotation)
+
+                    cubeView?.cubeRotation = rotation
                 }
             )
         }

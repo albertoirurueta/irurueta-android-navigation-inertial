@@ -84,12 +84,6 @@ interface AbsoluteAttitudeEstimator<T : AbsoluteAttitudeEstimator<T, L>,
     val estimateDisplayEulerAngles: Boolean
 
     /**
-     * Indicates whether display orientation must be ignored or not.
-     * True to ignore display orientation, false otherwise.
-     */
-    val ignoreDisplayOrientation: Boolean
-
-    /**
      * Gets or sets listener to notify when a new attitude measurement is available.
      */
     var attitudeAvailableListener: L?
@@ -115,6 +109,12 @@ interface AbsoluteAttitudeEstimator<T : AbsoluteAttitudeEstimator<T, L>,
      * Listener to notify new magnetometer measurements.
      */
     var magnetometerMeasurementListener: MagnetometerSensorCollector.OnMeasurementListener?
+
+    /**
+     * Listener to notify when a new gravity estimation is
+     * available.
+     */
+    var gravityEstimationListener: GravityEstimator.OnEstimationListener?
 
     /**
      * Gets or sets device location

@@ -67,6 +67,7 @@ class LeveledRelativeAttitudeEstimatorTest {
         assertNull(estimator.accelerometerMeasurementListener)
         assertNull(estimator.gravityMeasurementListener)
         assertNull(estimator.gyroscopeMeasurementListener)
+        assertNull(estimator.gravityEstimationListener)
         assertEquals(0.0, estimator.gyroscopeAverageTimeInterval, 0.0)
         assertFalse(estimator.running)
         assertTrue(estimator.useIndirectInterpolation)
@@ -106,6 +107,7 @@ class LeveledRelativeAttitudeEstimatorTest {
             mockk<AccelerometerSensorCollector.OnMeasurementListener>()
         val gravityMeasurementListener = mockk<GravitySensorCollector.OnMeasurementListener>()
         val gyroscopeMeasurementListener = mockk<GyroscopeSensorCollector.OnMeasurementListener>()
+        val gravityEstimationListener = mockk<GravityEstimator.OnEstimationListener>()
         val estimator = LeveledRelativeAttitudeEstimator(
             context,
             location,
@@ -122,7 +124,8 @@ class LeveledRelativeAttitudeEstimatorTest {
             listener,
             accelerometerMeasurementListener,
             gravityMeasurementListener,
-            gyroscopeMeasurementListener
+            gyroscopeMeasurementListener,
+            gravityEstimationListener
         )
 
         // check
@@ -148,6 +151,7 @@ class LeveledRelativeAttitudeEstimatorTest {
         assertSame(accelerometerMeasurementListener, estimator.accelerometerMeasurementListener)
         assertSame(gravityMeasurementListener, estimator.gravityMeasurementListener)
         assertSame(gyroscopeMeasurementListener, estimator.gyroscopeMeasurementListener)
+        assertSame(gravityEstimationListener, estimator.gravityEstimationListener)
         assertEquals(0.0, estimator.gyroscopeAverageTimeInterval, 0.0)
         assertFalse(estimator.running)
         assertTrue(estimator.useIndirectInterpolation)
@@ -268,6 +272,14 @@ class LeveledRelativeAttitudeEstimatorTest {
 
         // check
         assertSame(accelerometerMeasurementListener, estimator.accelerometerMeasurementListener)
+
+        val levelingEstimator: BaseLevelingEstimator<*, *>? =
+            estimator.getPrivateProperty("levelingEstimator")
+        requireNotNull(levelingEstimator)
+        assertSame(
+            levelingEstimator.accelerometerMeasurementListener,
+            accelerometerMeasurementListener
+        )
     }
 
     @Test
@@ -284,6 +296,11 @@ class LeveledRelativeAttitudeEstimatorTest {
 
         // check
         assertSame(gravityMeasurementListener, estimator.gravityMeasurementListener)
+
+        val levelingEstimator: BaseLevelingEstimator<*, *>? =
+            estimator.getPrivateProperty("levelingEstimator")
+        requireNotNull(levelingEstimator)
+        assertSame(levelingEstimator.gravityMeasurementListener, gravityMeasurementListener)
     }
 
     @Test
@@ -300,6 +317,27 @@ class LeveledRelativeAttitudeEstimatorTest {
 
         // check
         assertSame(gyroscopeMeasurementListener, estimator.gyroscopeMeasurementListener)
+    }
+
+    @Test
+    fun gravityEstimationListener_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val estimator = LeveledRelativeAttitudeEstimator(context)
+
+        // check default value
+        assertNull(estimator.gravityEstimationListener)
+
+        // set new value
+        val gravityEstimationListener = mockk<GravityEstimator.OnEstimationListener>()
+        estimator.gravityEstimationListener = gravityEstimationListener
+
+        // check
+        assertSame(gravityEstimationListener, estimator.gravityEstimationListener)
+
+        val levelingEstimator: BaseLevelingEstimator<*, *>? =
+            estimator.getPrivateProperty("levelingEstimator")
+        requireNotNull(levelingEstimator)
+        assertEquals(levelingEstimator.gravityEstimationListener, gravityEstimationListener)
     }
 
     @Test(expected = IllegalStateException::class)
@@ -2160,7 +2198,7 @@ class LeveledRelativeAttitudeEstimatorTest {
         val c = coordinateTransformationSlot.captured
         assertNotNull(c)
         assertEquals(FrameType.BODY_FRAME, c.sourceType)
-        assertEquals(FrameType.EARTH_CENTERED_EARTH_FIXED_FRAME, c.destinationType)
+        assertEquals(FrameType.LOCAL_NAVIGATION_FRAME, c.destinationType)
 
         unmockkObject(QuaternionHelper)
     }

@@ -21,10 +21,11 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.filters.RequiresDevice
 import com.irurueta.android.navigation.inertial.LocationService
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
+import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.android.navigation.inertial.estimators.PoseEstimator
 import com.irurueta.android.navigation.inertial.test.LocationActivity
-import com.irurueta.geometry.EuclideanTransformation3D
 import com.irurueta.geometry.Point3D
+import com.irurueta.navigation.frames.ECEFFrame
 import io.mockk.spyk
 import org.junit.Assert
 import org.junit.Before
@@ -60,20 +61,22 @@ class PoseEstimatorTest {
         val estimator = PoseEstimator(
             activity,
             location,
+            sensorDelay = SensorDelay.GAME,
             useWorldMagneticModel = true,
             useAccurateLevelingEstimator = true,
             useAccurateRelativeGyroscopeAttitudeEstimator = true,
             estimateInitialTransformation = true,
             ignoreDisplayOrientation = true,
-            poseAvailableListener = { _, _, _, _, initialTransformation, _ ->
-                logInitialTransformation(initialTransformation)
+            poseAvailableListener = { _, currentEcefFrame, _, initialEcefFrame, initialTransformation, _ ->
+                logTranslation(currentEcefFrame, initialEcefFrame)
+                //logInitialTransformation(initialTransformation)
                 syncHelper.notifyAll { completed++ }
             }
         )
 
         estimator.start()
 
-        syncHelper.waitOnCondition({ completed < 100 }, maxRetries = 100)
+        syncHelper.waitOnCondition({ completed < 100000 }, maxRetries = 100000)
 
         estimator.stop()
 
@@ -113,14 +116,21 @@ class PoseEstimatorTest {
         return currentLocation
     }
 
-    private fun logInitialTransformation(initialTransformation: EuclideanTransformation3D?) {
+    private fun logTranslation(currentEcefFrame: ECEFFrame, initialEcefFrame: ECEFFrame) {
+        currentEcefFrame.getPosition(translation)
+        initialEcefFrame.getPosition(origin)
+        val distance = translation.distanceTo(origin)
+        Log.d("PoseEstimatorTest", "Translation: $distance meters")
+    }
+
+    /*private fun logInitialTransformation(initialTransformation: EuclideanTransformation3D?) {
         if (initialTransformation == null) {
             return
         }
 
         initialTransformation.getTranslationPoint(translation)
-
+        origin.setInhomogeneousCoordinates(0.0, 0.0, 0.0)
         val distance = translation.distanceTo(origin)
         Log.d("PoseEstimatorTest", "Distance: $distance meters")
-    }
+    }*/
 }

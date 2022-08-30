@@ -98,6 +98,7 @@ class AttitudeSensorCollector(
                     matrix
                 )
             } else {
+                // TODO: update helper to fix NED conversion
                 AttitudeHelper.convertToNED(context, event.values, attitude, displayOrientation)
             }
 

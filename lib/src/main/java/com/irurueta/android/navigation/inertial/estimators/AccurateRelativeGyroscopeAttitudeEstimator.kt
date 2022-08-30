@@ -16,7 +16,7 @@
 package com.irurueta.android.navigation.inertial.estimators
 
 import android.content.Context
-import com.irurueta.android.navigation.inertial.DisplayOrientationHelper
+import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.navigation.frames.CoordinateTransformation
@@ -35,8 +35,6 @@ import com.irurueta.units.TimeConverter
  * otherwise. If not needed, it can be disabled to improve performance and decrease cpu load.
  * @property estimateDisplayEulerAngles true to estimate euler angles, false otherwise. If not
  * needed, it can be disabled to improve performance and decrease cpu load.
- * @property ignoreDisplayOrientation true to ignore display orientation, false otherwise. When
- * context is not associated to a display, such as a background service, this must be true.
  * @property attitudeAvailableListener listener to notify when a new attitude measurement is
  * available.
  * @property gyroscopeMeasurementListener listener to notify new gyroscope measurements.
@@ -48,7 +46,6 @@ class AccurateRelativeGyroscopeAttitudeEstimator(
     sensorDelay: SensorDelay = SensorDelay.GAME,
     estimateCoordinateTransformation: Boolean = false,
     estimateDisplayEulerAngles: Boolean = true,
-    ignoreDisplayOrientation: Boolean = false,
     attitudeAvailableListener: OnAttitudeAvailableListener? = null,
     gyroscopeMeasurementListener: GyroscopeSensorCollector.OnMeasurementListener? = null
 ) : BaseRelativeGyroscopeAttitudeEstimator<AccurateRelativeGyroscopeAttitudeEstimator,
@@ -58,7 +55,6 @@ class AccurateRelativeGyroscopeAttitudeEstimator(
     sensorDelay,
     estimateCoordinateTransformation,
     estimateDisplayEulerAngles,
-    ignoreDisplayOrientation,
     attitudeAvailableListener,
     gyroscopeMeasurementListener
 ) {
@@ -117,34 +113,24 @@ class AccurateRelativeGyroscopeAttitudeEstimator(
             else
                 wz.toDouble()
 
+            ENUtoNEDTriadConverter.convert(currentWx, currentWy, currentWz, triad)
+
             if (!isFirst) {
                 val dt = timeIntervalEstimator.averageTimeInterval
-
-                if (!ignoreDisplayOrientation) {
-                    val displayRotationRadians =
-                        DisplayOrientationHelper.getDisplayRotationRadians(context)
-                    displayOrientation.setFromEulerAngles(0.0, 0.0, -displayRotationRadians)
-                }
 
                 quaternionStepIntegrator.integrate(
                     internalAttitude,
                     previousWx,
                     previousWy,
                     previousWz,
-                    currentWx,
-                    currentWy,
-                    currentWz,
+                    triad.valueX,
+                    triad.valueY,
+                    triad.valueZ,
                     dt,
                     internalAttitude
                 )
 
                 internalAttitude.copyTo(attitude)
-                if (!ignoreDisplayOrientation) {
-                    attitude.combine(displayOrientation)
-                }
-                attitude.normalize()
-                attitude.inverse()
-                attitude.normalize()
 
                 val c: CoordinateTransformation? =
                     if (estimateCoordinateTransformation) {
@@ -179,9 +165,9 @@ class AccurateRelativeGyroscopeAttitudeEstimator(
                 )
             }
 
-            previousWx = currentWx
-            previousWy = currentWy
-            previousWz = currentWz
+            previousWx = triad.valueX
+            previousWy = triad.valueY
+            previousWz = triad.valueZ
         }
     )
 

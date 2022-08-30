@@ -16,7 +16,6 @@
 package com.irurueta.android.navigation.inertial.estimators
 
 import android.content.Context
-import com.irurueta.android.navigation.inertial.DisplayOrientationHelper
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.GravitySensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
@@ -39,8 +38,9 @@ import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragi
  * otherwise. If not needed, it can be disabled to improve performance and decrease cpu load.
  * @property estimateDisplayEulerAngles true to estimate euler angles, false otherwise. If not
  * needed, it can be disabled to improve performance and decrease cpu load.
- * @property ignoreDisplayOrientation true to ignore display orientation, false otherwise.
  * @property levelingAvailableListener listener to notify when a new leveling measurement is
+ * available.
+ * @property gravityEstimationListener listener to notify when a new gravity estimation is
  * available.
  */
 class LevelingEstimator private constructor(
@@ -51,8 +51,8 @@ class LevelingEstimator private constructor(
     accelerometerAveragingFilter: AveragingFilter,
     estimateCoordinateTransformation: Boolean,
     estimateDisplayEulerAngles: Boolean,
-    ignoreDisplayOrientation: Boolean,
     levelingAvailableListener: OnLevelingAvailableListener?,
+    gravityEstimationListener: GravityEstimator.OnEstimationListener?
 ) : BaseLevelingEstimator<LevelingEstimator, LevelingEstimator.OnLevelingAvailableListener>(
     context,
     sensorDelay,
@@ -61,8 +61,8 @@ class LevelingEstimator private constructor(
     accelerometerAveragingFilter,
     estimateCoordinateTransformation,
     estimateDisplayEulerAngles,
-    ignoreDisplayOrientation,
-    levelingAvailableListener
+    levelingAvailableListener,
+    gravityEstimationListener
 ) {
 
     /**
@@ -78,8 +78,9 @@ class LevelingEstimator private constructor(
      * otherwise. If not needed, it can be disabled to improve performance and decrease cpu load.
      * @param estimateDisplayEulerAngles true to estimate euler angles, false otherwise. If not
      * needed, it can be disabled to improve performance and decrease cpu load.
-     * @param ignoreDisplayOrientation true to ignore display orientation, false otherwise.
      * @param levelingAvailableListener listener to notify when a new leveling measurement is
+     * available.
+     * @param gravityEstimationListener listener to notify when a new gravity estimation is
      * available.
      * @param accelerometerMeasurementListener listener to notify new accelerometer measurements.
      * (Only used if [useAccelerometer] is true).
@@ -95,8 +96,8 @@ class LevelingEstimator private constructor(
         accelerometerAveragingFilter: AveragingFilter = LowPassAveragingFilter(),
         estimateCoordinateTransformation: Boolean = false,
         estimateDisplayEulerAngles: Boolean = true,
-        ignoreDisplayOrientation: Boolean = false,
         levelingAvailableListener: OnLevelingAvailableListener? = null,
+        gravityEstimationListener: GravityEstimator.OnEstimationListener? = null,
         accelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? = null,
         gravityMeasurementListener: GravitySensorCollector.OnMeasurementListener? = null
     ) : this(
@@ -107,24 +108,25 @@ class LevelingEstimator private constructor(
         accelerometerAveragingFilter,
         estimateCoordinateTransformation,
         estimateDisplayEulerAngles,
-        ignoreDisplayOrientation,
-        levelingAvailableListener
+        levelingAvailableListener,
+        gravityEstimationListener
     ) {
         gravityEstimator = GravityEstimator(
             context,
             sensorDelay,
             useAccelerometer,
             accelerometerSensorType,
-            { _, fx, fy, fz, _ ->
-                if (!ignoreDisplayOrientation) {
-                    val displayRotationRadians =
-                        DisplayOrientationHelper.getDisplayRotationRadians(context)
-                    displayOrientation.setFromEulerAngles(0.0, 0.0, -displayRotationRadians)
-                }
+            estimationListener = { estimator, fx, fy, fz, timestamp ->
+                this.gravityEstimationListener?.onEstimation(estimator, fx, fy, fz, timestamp)
 
-                val roll = com.irurueta.navigation.inertial.estimators.LevelingEstimator.getRoll(fy, fz)
+                val roll =
+                    com.irurueta.navigation.inertial.estimators.LevelingEstimator.getRoll(fy, fz)
                 val pitch =
-                    com.irurueta.navigation.inertial.estimators.LevelingEstimator.getPitch(fx, fy, fz)
+                    com.irurueta.navigation.inertial.estimators.LevelingEstimator.getPitch(
+                        fx,
+                        fy,
+                        fz
+                    )
 
                 attitude.setFromEulerAngles(roll, pitch, 0.0)
 

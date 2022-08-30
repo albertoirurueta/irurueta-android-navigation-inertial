@@ -134,18 +134,21 @@ class MagnetometerSensorCollector(
         /**
          * Called when a new magnetometer measurement is available.
          *
-         * @param bx magnetic field on device x-axis expressed in micro-Teslas (µT).
-         * @param by magnetic field on device y-axis expressed in micro-Teslas (µT).
-         * @param bz magnetic field on device z-axis expressed in micro-Teslas (µT).
-         * @param hardIronX hard iron on device x-axis expressed in micro-Teslas (µT). Only
-         * available when using [SensorType.MAGNETOMETER_UNCALIBRATED]. If available, this value
-         * remains constant with calibrated bias value.
-         * @param hardIronY hard iron on device y-axis expressed in micro-Teslas (µT). Only
-         * available when using [SensorType.MAGNETOMETER_UNCALIBRATED]. If available, this value
-         * remains constant with calibrated bias value.
-         * @param hardIronZ hard iron on device y-axis expressed in micro-Teslas (µT). Only
-         * available when using [SensorType.MAGNETOMETER_UNCALIBRATED]. If available, this value
-         * remains constant with calibrated bias value.
+         * @param bx magnetic field on device x-axis expressed in micro-Teslas (µT) and in ENU
+         * coordinates system.
+         * @param by magnetic field on device y-axis expressed in micro-Teslas (µT) and in ENU
+         * coordinates system.
+         * @param bz magnetic field on device z-axis expressed in micro-Teslas (µT) and in ENU
+         * coordinates system.
+         * @param hardIronX hard iron on device x-axis expressed in micro-Teslas (µT) and in ENU
+         * coordinates system. Only available when using [SensorType.MAGNETOMETER_UNCALIBRATED].
+         * If available, this value remains constant with calibrated bias value.
+         * @param hardIronY hard iron on device y-axis expressed in micro-Teslas (µT) and in ENU
+         * coordinates system. Only available when using [SensorType.MAGNETOMETER_UNCALIBRATED].
+         * If available, this value remains constant with calibrated bias value.
+         * @param hardIronZ hard iron on device y-axis expressed in micro-Teslas (µT) and in ENU
+         * coordinates system. Only available when using [SensorType.MAGNETOMETER_UNCALIBRATED].
+         * If available, this value remains constant with calibrated bias value.
          * @param timestamp time in nanoseconds at which the measurement was made. Each measurement
          * will be monotonically increasing using the same time base as
          * [android.os.SystemClock.elapsedRealtimeNanos].

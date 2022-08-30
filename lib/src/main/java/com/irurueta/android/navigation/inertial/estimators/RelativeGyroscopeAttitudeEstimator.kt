@@ -16,7 +16,7 @@
 package com.irurueta.android.navigation.inertial.estimators
 
 import android.content.Context
-import com.irurueta.android.navigation.inertial.DisplayOrientationHelper
+import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.geometry.Quaternion
@@ -34,7 +34,6 @@ import com.irurueta.units.TimeConverter
  * otherwise. If not needed, it can be disabled to improve performance and decrease cpu load.
  * @property estimateDisplayEulerAngles true to estimate euler angles, false otherwise. If not
  * needed, it can be disabled to improve performance and decrease cpu load.
- * @property ignoreDisplayOrientation true to ignore display orientation, false otherwise.
  * @property attitudeAvailableListener listener to notify when a new attitude measurement is
  * available.
  * @property gyroscopeMeasurementListener listener to notify new gyroscope measurements.
@@ -45,7 +44,6 @@ class RelativeGyroscopeAttitudeEstimator(
     sensorDelay: SensorDelay = SensorDelay.GAME,
     estimateCoordinateTransformation: Boolean = false,
     estimateDisplayEulerAngles: Boolean = true,
-    ignoreDisplayOrientation: Boolean = false,
     attitudeAvailableListener: OnAttitudeAvailableListener? = null,
     gyroscopeMeasurementListener: GyroscopeSensorCollector.OnMeasurementListener? = null
 ) : BaseRelativeGyroscopeAttitudeEstimator<RelativeGyroscopeAttitudeEstimator,
@@ -55,7 +53,6 @@ class RelativeGyroscopeAttitudeEstimator(
     sensorDelay,
     estimateCoordinateTransformation,
     estimateDisplayEulerAngles,
-    ignoreDisplayOrientation,
     attitudeAvailableListener,
     gyroscopeMeasurementListener
 ) {
@@ -98,27 +95,17 @@ class RelativeGyroscopeAttitudeEstimator(
             else
                 wz.toDouble()
 
-            if (!ignoreDisplayOrientation) {
-                val displayRotationRadians =
-                    DisplayOrientationHelper.getDisplayRotationRadians(context)
-                displayOrientation.setFromEulerAngles(0.0, 0.0, -displayRotationRadians)
-            }
+            ENUtoNEDTriadConverter.convert(currentWx, currentWy, currentWz, triad)
 
-            val roll = currentWx * dt
-            val pitch = currentWy * dt
-            val yaw = currentWz * dt
+            val roll = triad.valueX * dt
+            val pitch = triad.valueY * dt
+            val yaw = triad.valueZ * dt
             deltaAttitude.setFromEulerAngles(roll, pitch, yaw)
 
             internalAttitude.combine(deltaAttitude)
             internalAttitude.normalize()
 
             internalAttitude.copyTo(attitude)
-            if (!ignoreDisplayOrientation) {
-                attitude.combine(displayOrientation)
-            }
-            attitude.normalize()
-            attitude.inverse()
-            attitude.normalize()
 
             val c: CoordinateTransformation? =
                 if (estimateCoordinateTransformation) {

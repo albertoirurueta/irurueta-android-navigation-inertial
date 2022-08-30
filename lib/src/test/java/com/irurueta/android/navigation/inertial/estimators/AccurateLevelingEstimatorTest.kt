@@ -60,8 +60,8 @@ class AccurateLevelingEstimatorTest {
         assertNotNull(estimator.accelerometerAveragingFilter)
         assertFalse(estimator.estimateCoordinateTransformation)
         assertTrue(estimator.estimateDisplayEulerAngles)
-        assertFalse(estimator.ignoreDisplayOrientation)
         assertNull(estimator.levelingAvailableListener)
+        assertNull(estimator.gravityEstimationListener)
         assertFalse(estimator.running)
     }
 
@@ -70,6 +70,10 @@ class AccurateLevelingEstimatorTest {
         val levelingAvailableListener =
             mockk<AccurateLevelingEstimator.OnLevelingAvailableListener>()
         val accelerometerAveragingFilter = MeanAveragingFilter()
+        val accelerometerMeasurementListener =
+            mockk<AccelerometerSensorCollector.OnMeasurementListener>()
+        val gravityMeasurementListener = mockk<GravitySensorCollector.OnMeasurementListener>()
+        val gravityEstimationListener = mockk<GravityEstimator.OnEstimationListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val location = getLocation()
         val estimator = AccurateLevelingEstimator(
@@ -81,8 +85,10 @@ class AccurateLevelingEstimatorTest {
             accelerometerAveragingFilter,
             estimateCoordinateTransformation = true,
             estimateDisplayEulerAngles = false,
-            ignoreDisplayOrientation = true,
-            levelingAvailableListener
+            levelingAvailableListener,
+            gravityEstimationListener,
+            accelerometerMeasurementListener,
+            gravityMeasurementListener
         )
 
         // check
@@ -97,8 +103,10 @@ class AccurateLevelingEstimatorTest {
         assertSame(accelerometerAveragingFilter, estimator.accelerometerAveragingFilter)
         assertTrue(estimator.estimateCoordinateTransformation)
         assertFalse(estimator.estimateDisplayEulerAngles)
-        assertTrue(estimator.ignoreDisplayOrientation)
         assertSame(levelingAvailableListener, estimator.levelingAvailableListener)
+        assertSame(gravityEstimationListener, estimator.gravityEstimationListener)
+        assertSame(accelerometerMeasurementListener, estimator.accelerometerMeasurementListener)
+        assertSame(gravityMeasurementListener, estimator.gravityMeasurementListener)
         assertFalse(estimator.running)
     }
 
@@ -117,6 +125,20 @@ class AccurateLevelingEstimatorTest {
 
         // check
         assertSame(listener, estimator.levelingAvailableListener)
+    }
+
+    @Test
+    fun gravityEstimationListener_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val location = getLocation()
+        val estimator = AccurateLevelingEstimator(context, location)
+
+        // check default value
+        assertNull(estimator.gravityEstimationListener)
+
+        // set new value
+        val listener = mockk<GravityEstimator.OnEstimationListener>()
+        estimator.gravityEstimationListener = listener
     }
 
     @Test
@@ -267,7 +289,7 @@ class AccurateLevelingEstimatorTest {
             pitch1,
             yaw1,
             FrameType.BODY_FRAME,
-            FrameType.EARTH_CENTERED_EARTH_FIXED_FRAME
+            FrameType.LOCAL_NAVIGATION_FRAME
         )
 
         // obtain specific force neglecting north component of gravity
@@ -319,14 +341,16 @@ class AccurateLevelingEstimatorTest {
 
         val levelingAvailableListener =
             mockk<AccurateLevelingEstimator.OnLevelingAvailableListener>(relaxUnitFun = true)
-
+        val gravityEstimationListener =
+            mockk<GravityEstimator.OnEstimationListener>(relaxUnitFun = true)
         val location = getLocation()
         val estimator = AccurateLevelingEstimator(
             context,
             location,
             estimateCoordinateTransformation = false,
             estimateDisplayEulerAngles = false,
-            levelingAvailableListener = levelingAvailableListener
+            levelingAvailableListener = levelingAvailableListener,
+            gravityEstimationListener = gravityEstimationListener
         )
 
         val attitude: Quaternion? =
@@ -377,7 +401,7 @@ class AccurateLevelingEstimatorTest {
             pitch1,
             yaw1,
             FrameType.BODY_FRAME,
-            FrameType.EARTH_CENTERED_EARTH_FIXED_FRAME
+            FrameType.LOCAL_NAVIGATION_FRAME
         )
 
         // obtain specific force neglecting north component of gravity
@@ -412,6 +436,15 @@ class AccurateLevelingEstimatorTest {
 
         assertArrayEquals(displayEulerAngles, doubleArrayOf(0.0, 0.0, 0.0), 0.0)
 
+        verify(exactly = 1) {
+            gravityEstimationListener.onEstimation(
+                gravityEstimator,
+                fx,
+                fy,
+                fz,
+                timestamp
+            )
+        }
         verify(exactly = 1) {
             levelingAvailableListener.onLevelingAvailable(
                 estimator,
@@ -468,7 +501,7 @@ class AccurateLevelingEstimatorTest {
         requireNotNull(coordinateTransformation)
         assertEquals(FrameType.BODY_FRAME, coordinateTransformation.sourceType)
         assertEquals(
-            FrameType.EARTH_CENTERED_EARTH_FIXED_FRAME,
+            FrameType.LOCAL_NAVIGATION_FRAME,
             coordinateTransformation.destinationType
         )
         val coordinateTransformationSpy = spyk(coordinateTransformation)
@@ -495,7 +528,7 @@ class AccurateLevelingEstimatorTest {
             pitch1,
             yaw1,
             FrameType.BODY_FRAME,
-            FrameType.EARTH_CENTERED_EARTH_FIXED_FRAME
+            FrameType.LOCAL_NAVIGATION_FRAME
         )
 
         // obtain specific force neglecting north component of gravity
@@ -558,7 +591,6 @@ class AccurateLevelingEstimatorTest {
             location,
             estimateCoordinateTransformation = false,
             estimateDisplayEulerAngles = false,
-            ignoreDisplayOrientation = true,
             levelingAvailableListener = levelingAvailableListener
         )
 
@@ -588,7 +620,7 @@ class AccurateLevelingEstimatorTest {
         requireNotNull(coordinateTransformation)
         assertEquals(FrameType.BODY_FRAME, coordinateTransformation.sourceType)
         assertEquals(
-            FrameType.EARTH_CENTERED_EARTH_FIXED_FRAME,
+            FrameType.LOCAL_NAVIGATION_FRAME,
             coordinateTransformation.destinationType
         )
         val coordinateTransformationSpy = spyk(coordinateTransformation)

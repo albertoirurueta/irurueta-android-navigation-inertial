@@ -42,9 +42,9 @@ import com.irurueta.navigation.frames.FrameType
  * otherwise. If not needed, it can be disabled to improve performance and decrease cpu load.
  * @property estimateDisplayEulerAngles true to estimate euler angles, false otherwise. If not
  * needed, it can be disabled to improve performance and decrease cpu load.
- * @property ignoreDisplayOrientation true to ignore display orientation, false otherwise. When
- * context is not associated to a display, such as a background service, this must be true.
  * @property levelingAvailableListener listener to notify when a new leveling measurement is
+ * available.
+ * @property gravityEstimationListener listener to notify when a new gravity estimation is
  * available.
  */
 abstract class BaseLevelingEstimator<T : BaseLevelingEstimator<T, L>,
@@ -57,19 +57,14 @@ abstract class BaseLevelingEstimator<T : BaseLevelingEstimator<T, L>,
     val accelerometerAveragingFilter: AveragingFilter = LowPassAveragingFilter(),
     val estimateCoordinateTransformation: Boolean = false,
     val estimateDisplayEulerAngles: Boolean = true,
-    val ignoreDisplayOrientation: Boolean = false,
-    var levelingAvailableListener: L? = null
+    var levelingAvailableListener: L? = null,
+    var gravityEstimationListener: GravityEstimator.OnEstimationListener? = null
 ) {
     /**
      * Instance to be reused containing estimated leveling attitude (roll and pitch angles) in NED
      * coordinates.
      */
     protected val attitude = Quaternion()
-
-    /**
-     * Instance to be reused containing display rotation as a yaw angle.
-     */
-    protected val displayOrientation = Quaternion()
 
     /**
      * Array to be reused containing euler angles of leveling attitude.
@@ -80,7 +75,7 @@ abstract class BaseLevelingEstimator<T : BaseLevelingEstimator<T, L>,
      * Instance to be reused containing coordinate transformation in NED coordinates.
      */
     protected val coordinateTransformation =
-        CoordinateTransformation(FrameType.BODY_FRAME, FrameType.EARTH_CENTERED_EARTH_FIXED_FRAME)
+        CoordinateTransformation(FrameType.BODY_FRAME, FrameType.LOCAL_NAVIGATION_FRAME)
 
     /**
      * Internal gravity estimator sensed as a component of specific force.
@@ -128,12 +123,6 @@ abstract class BaseLevelingEstimator<T : BaseLevelingEstimator<T, L>,
      * (if needed) a coordinate transformation or display Euler angles.
      */
     protected fun postProcessAttitudeAndNotify() {
-        if (!ignoreDisplayOrientation) {
-            attitude.combine(displayOrientation)
-        }
-        attitude.inverse()
-        attitude.normalize()
-
         val c: CoordinateTransformation? =
             if (estimateCoordinateTransformation) {
                 coordinateTransformation.fromRotation(attitude)

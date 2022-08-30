@@ -20,7 +20,6 @@ import android.location.Location
 import com.irurueta.algebra.ArrayUtils
 import com.irurueta.algebra.Matrix
 import com.irurueta.algebra.Utils
-import com.irurueta.android.navigation.inertial.DisplayOrientationHelper
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.GravitySensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
@@ -49,9 +48,9 @@ import kotlin.math.atan2
  * otherwise. If not needed, it can be disabled to improve performance and decrease cpu load.
  * @property estimateDisplayEulerAngles true to estimate euler angles, false otherwise. If not
  * needed, it can be disabled to improve performance and decrease cpu load.
- * @property ignoreDisplayOrientation true to ignore display orientation, false otherwise. When
- * context is not associated to a display, such as a background service, this must be true.
  * @property levelingAvailableListener listener to notify when a new leveling measurement is
+ * available.
+ * @property gravityEstimationListener listener to notify when a new gravity estimation is
  * available.
  */
 class AccurateLevelingEstimator private constructor(
@@ -63,8 +62,8 @@ class AccurateLevelingEstimator private constructor(
     accelerometerAveragingFilter: AveragingFilter,
     estimateCoordinateTransformation: Boolean,
     estimateDisplayEulerAngles: Boolean,
-    ignoreDisplayOrientation: Boolean,
     levelingAvailableListener: OnLevelingAvailableListener?,
+    gravityEstimationListener: GravityEstimator.OnEstimationListener?
 ) : BaseLevelingEstimator<AccurateLevelingEstimator, AccurateLevelingEstimator.OnLevelingAvailableListener>(
     context,
     sensorDelay,
@@ -73,8 +72,8 @@ class AccurateLevelingEstimator private constructor(
     accelerometerAveragingFilter,
     estimateCoordinateTransformation,
     estimateDisplayEulerAngles,
-    ignoreDisplayOrientation,
-    levelingAvailableListener
+    levelingAvailableListener,
+    gravityEstimationListener
 ) {
 
     /**
@@ -91,9 +90,9 @@ class AccurateLevelingEstimator private constructor(
      * otherwise. If not needed, it can be disabled to improve performance and decrease cpu load.
      * @param estimateDisplayEulerAngles true to estimate euler angles, false otherwise. If not
      * needed, it can be disabled to improve performance and decrease cpu load.
-     * @param ignoreDisplayOrientation true to ignore display orientation, false otherwise. When
-     * context is not associated to a display, such as a background service, this must be true.
      * @param levelingAvailableListener listener to notify when a new leveling measurement is
+     * available.
+     * @param gravityEstimationListener listener to notify when a new gravity estimation is
      * available.
      * @param accelerometerMeasurementListener listener to notify new accelerometer measurements.
      * (Only used if [useAccelerometer] is true).
@@ -110,8 +109,8 @@ class AccurateLevelingEstimator private constructor(
         accelerometerAveragingFilter: AveragingFilter = LowPassAveragingFilter(),
         estimateCoordinateTransformation: Boolean = false,
         estimateDisplayEulerAngles: Boolean = true,
-        ignoreDisplayOrientation: Boolean = false,
         levelingAvailableListener: OnLevelingAvailableListener? = null,
+        gravityEstimationListener: GravityEstimator.OnEstimationListener? = null,
         accelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? = null,
         gravityMeasurementListener: GravitySensorCollector.OnMeasurementListener? = null
     ) : this(
@@ -123,20 +122,16 @@ class AccurateLevelingEstimator private constructor(
         accelerometerAveragingFilter,
         estimateCoordinateTransformation,
         estimateDisplayEulerAngles,
-        ignoreDisplayOrientation,
-        levelingAvailableListener
+        levelingAvailableListener,
+        gravityEstimationListener
     ) {
         gravityEstimator = GravityEstimator(
             context,
             sensorDelay,
             useAccelerometer,
             accelerometerSensorType,
-            { _, fx, fy, fz, _ ->
-                if (!ignoreDisplayOrientation) {
-                    val displayRotationRadians =
-                        DisplayOrientationHelper.getDisplayRotationRadians(context)
-                    displayOrientation.setFromEulerAngles(0.0, 0.0, displayRotationRadians)
-                }
+            estimationListener = { estimator, fx, fy, fz, timestamp ->
+                this.gravityEstimationListener?.onEstimation(estimator, fx, fy, fz, timestamp)
 
                 computeLevelingAttitude(
                     Math.toRadians(location.latitude),

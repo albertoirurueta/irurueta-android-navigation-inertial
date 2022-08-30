@@ -48,7 +48,6 @@ import kotlin.math.min
  * otherwise. If not needed, it can be disabled to improve performance and decrease cpu load.
  * @property estimateDisplayEulerAngles true to estimate euler angles, false otherwise. If not
  * needed, it can be disabled to improve performance and decrease cpu load.
- * @property ignoreDisplayOrientation true to ignore display orientation, false otherwise.
  * @property attitudeAvailableListener listener to notify when a new attitude measurement is
  * available.
  */
@@ -62,7 +61,6 @@ class FusedGeomagneticAttitudeEstimator private constructor(
     override val gyroscopeSensorType: GyroscopeSensorCollector.SensorType,
     override val estimateCoordinateTransformation: Boolean,
     override val estimateDisplayEulerAngles: Boolean,
-    override val ignoreDisplayOrientation: Boolean,
     override var attitudeAvailableListener: OnAttitudeAvailableListener?
 ) : AbsoluteAttitudeEstimator<FusedGeomagneticAttitudeEstimator, FusedGeomagneticAttitudeEstimator.OnAttitudeAvailableListener> {
 
@@ -95,7 +93,6 @@ class FusedGeomagneticAttitudeEstimator private constructor(
      * otherwise. If not needed, it can be disabled to improve performance and decrease cpu load.
      * @param estimateDisplayEulerAngles true to estimate euler angles, false otherwise. If not
      * needed, it can be disabled to improve performance and decrease cpu load.
-     * @param ignoreDisplayOrientation true to ignore display orientation, false otherwise.
      * @param attitudeAvailableListener listener to notify when a new attitude measurement is
      * available.
      * @param accelerometerMeasurementListener listener to notify new accelerometer measurements.
@@ -104,6 +101,8 @@ class FusedGeomagneticAttitudeEstimator private constructor(
      * (Only used if [useAccelerometer] is false).
      * @param gyroscopeMeasurementListener listener to notify new gyroscope measurements.
      * @param magnetometerMeasurementListener listener to notify new magnetometer measurements.
+     * @param gravityEstimationListener listener to notify when a new gravity estimation is
+     * available.
      */
     constructor(
         context: Context,
@@ -120,16 +119,16 @@ class FusedGeomagneticAttitudeEstimator private constructor(
         worldMagneticModel: WorldMagneticModel? = null,
         timestamp: Date = Date(),
         useWorldMagneticModel: Boolean = false,
-        useAccurateLevelingEstimator: Boolean = true,
-        useAccurateRelativeGyroscopeAttitudeEstimator: Boolean = true,
+        useAccurateLevelingEstimator: Boolean = false,
+        useAccurateRelativeGyroscopeAttitudeEstimator: Boolean = false,
         estimateCoordinateTransformation: Boolean = false,
         estimateDisplayEulerAngles: Boolean = true,
-        ignoreDisplayOrientation: Boolean = false,
         attitudeAvailableListener: OnAttitudeAvailableListener? = null,
         accelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? = null,
         gravityMeasurementListener: GravitySensorCollector.OnMeasurementListener? = null,
         gyroscopeMeasurementListener: GyroscopeSensorCollector.OnMeasurementListener? = null,
-        magnetometerMeasurementListener: MagnetometerSensorCollector.OnMeasurementListener? = null
+        magnetometerMeasurementListener: MagnetometerSensorCollector.OnMeasurementListener? = null,
+        gravityEstimationListener: GravityEstimator.OnEstimationListener? = null
     ) : this(
         context,
         sensorDelay,
@@ -140,7 +139,6 @@ class FusedGeomagneticAttitudeEstimator private constructor(
         gyroscopeSensorType,
         estimateCoordinateTransformation,
         estimateDisplayEulerAngles,
-        ignoreDisplayOrientation,
         attitudeAvailableListener
     ) {
         buildGeomagneticAttitudeEstimator()
@@ -155,6 +153,7 @@ class FusedGeomagneticAttitudeEstimator private constructor(
         this.gravityMeasurementListener = gravityMeasurementListener
         this.gyroscopeMeasurementListener = gyroscopeMeasurementListener
         this.magnetometerMeasurementListener = magnetometerMeasurementListener
+        this.gravityEstimationListener = gravityEstimationListener
     }
 
     /**
@@ -207,7 +206,7 @@ class FusedGeomagneticAttitudeEstimator private constructor(
      * Instance to be reused containing coordinate transformation in NED coordinates.
      */
     private val coordinateTransformation =
-        CoordinateTransformation(FrameType.BODY_FRAME, FrameType.EARTH_CENTERED_EARTH_FIXED_FRAME)
+        CoordinateTransformation(FrameType.BODY_FRAME, FrameType.LOCAL_NAVIGATION_FRAME)
 
     /**
      * Indicates whether a relative attitude has been received.
@@ -391,6 +390,16 @@ class FusedGeomagneticAttitudeEstimator private constructor(
         }
 
     /**
+     * Listener to notify when a new gravity estimation is
+     * available.
+     */
+    override var gravityEstimationListener: GravityEstimator.OnEstimationListener? = null
+        set(value) {
+            field = value
+            geomagneticAttitudeEstimator.gravityEstimationListener = value
+        }
+
+    /**
      * Indicates whether this estimator is running or not.
      */
     override var running: Boolean = false
@@ -495,7 +504,6 @@ class FusedGeomagneticAttitudeEstimator private constructor(
                 sensorDelay,
                 estimateCoordinateTransformation = false,
                 estimateDisplayEulerAngles = false,
-                ignoreDisplayOrientation = ignoreDisplayOrientation,
                 { _, attitude, _, _, _, _ ->
                     processRelativeAttitude(attitude)
                 },
@@ -508,11 +516,10 @@ class FusedGeomagneticAttitudeEstimator private constructor(
                 sensorDelay,
                 estimateCoordinateTransformation = false,
                 estimateDisplayEulerAngles = false,
-                ignoreDisplayOrientation = ignoreDisplayOrientation,
-                { _, attitude, _, _, _, _ ->
+                attitudeAvailableListener = { _, attitude, _, _, _, _ ->
                     processRelativeAttitude(attitude)
                 },
-                gyroscopeMeasurementListener
+                gyroscopeMeasurementListener = gyroscopeMeasurementListener
             )
         }
     }
@@ -535,13 +542,13 @@ class FusedGeomagneticAttitudeEstimator private constructor(
             useAccurateLevelingEstimator,
             estimateCoordinateTransformation = false,
             estimateDisplayEulerAngles = false,
-            ignoreDisplayOrientation = ignoreDisplayOrientation,
-            { _, attitude, _, _, _, _ ->
+            attitudeAvailableListener = { _, attitude, _, _, _, _ ->
                 processGeomagneticAttitude(attitude)
             },
-            accelerometerMeasurementListener,
-            gravityMeasurementListener,
-            magnetometerMeasurementListener
+            accelerometerMeasurementListener = accelerometerMeasurementListener,
+            gravityMeasurementListener = gravityMeasurementListener,
+            magnetometerMeasurementListener = magnetometerMeasurementListener,
+            gravityEstimationListener = gravityEstimationListener
         )
     }
 

@@ -73,6 +73,8 @@ class FusedGeomagneticAttitudeEstimatorTest {
         assertNull(estimator.gravityMeasurementListener)
         assertNull(estimator.gyroscopeMeasurementListener)
         assertNull(estimator.magnetometerMeasurementListener)
+        assertNull(estimator.gravityEstimationListener)
+        assertFalse(estimator.running)
     }
 
     @Test
@@ -87,7 +89,9 @@ class FusedGeomagneticAttitudeEstimatorTest {
             mockk<AccelerometerSensorCollector.OnMeasurementListener>()
         val gravityMeasurementListener = mockk<GravitySensorCollector.OnMeasurementListener>()
         val gyroscopeMeasurementListener = mockk<GyroscopeSensorCollector.OnMeasurementListener>()
-        val magnetometerMeasurementListener = mockk<MagnetometerSensorCollector.OnMeasurementListener>()
+        val magnetometerMeasurementListener =
+            mockk<MagnetometerSensorCollector.OnMeasurementListener>()
+        val gravityEstimationListener = mockk<GravityEstimator.OnEstimationListener>()
         val estimator = FusedGeomagneticAttitudeEstimator(
             context,
             location,
@@ -104,12 +108,12 @@ class FusedGeomagneticAttitudeEstimatorTest {
             useAccurateRelativeGyroscopeAttitudeEstimator = true,
             estimateCoordinateTransformation = true,
             estimateDisplayEulerAngles = false,
-            ignoreDisplayOrientation = true,
             attitudeAvailableListener = listener,
             accelerometerMeasurementListener = accelerometerMeasurementListener,
             gravityMeasurementListener = gravityMeasurementListener,
             gyroscopeMeasurementListener = gyroscopeMeasurementListener,
-            magnetometerMeasurementListener = magnetometerMeasurementListener
+            magnetometerMeasurementListener = magnetometerMeasurementListener,
+            gravityEstimationListener = gravityEstimationListener
         )
 
         // check
@@ -142,6 +146,8 @@ class FusedGeomagneticAttitudeEstimatorTest {
         assertSame(gravityMeasurementListener, estimator.gravityMeasurementListener)
         assertSame(gyroscopeMeasurementListener, estimator.gyroscopeMeasurementListener)
         assertSame(magnetometerMeasurementListener, estimator.magnetometerMeasurementListener)
+        assertSame(gravityEstimationListener, estimator.gravityEstimationListener)
+        assertFalse(estimator.running)
     }
 
     @Test
@@ -281,11 +287,20 @@ class FusedGeomagneticAttitudeEstimatorTest {
         assertNull(estimator.accelerometerMeasurementListener)
 
         // set new value
-        val accelerometerMeasurementListener = mockk<AccelerometerSensorCollector.OnMeasurementListener>()
+        val accelerometerMeasurementListener =
+            mockk<AccelerometerSensorCollector.OnMeasurementListener>()
         estimator.accelerometerMeasurementListener = accelerometerMeasurementListener
 
         // check
         assertSame(accelerometerMeasurementListener, estimator.accelerometerMeasurementListener)
+
+        val geomagneticAttitudeEstimator: GeomagneticAttitudeEstimator? =
+            estimator.getPrivateProperty("geomagneticAttitudeEstimator")
+        requireNotNull(geomagneticAttitudeEstimator)
+        assertSame(
+            accelerometerMeasurementListener,
+            geomagneticAttitudeEstimator.accelerometerMeasurementListener
+        )
     }
 
     @Test
@@ -302,6 +317,14 @@ class FusedGeomagneticAttitudeEstimatorTest {
 
         // check
         assertSame(gravityMeasurementListener, estimator.gravityMeasurementListener)
+
+        val geomagneticAttitudeEstimator: GeomagneticAttitudeEstimator? =
+            estimator.getPrivateProperty("geomagneticAttitudeEstimator")
+        requireNotNull(geomagneticAttitudeEstimator)
+        assertSame(
+            gravityMeasurementListener,
+            geomagneticAttitudeEstimator.gravityMeasurementListener
+        )
     }
 
     @Test
@@ -318,6 +341,14 @@ class FusedGeomagneticAttitudeEstimatorTest {
 
         // check
         assertSame(gyroscopeMeasurementListener, estimator.gyroscopeMeasurementListener)
+
+        val relativeAttitudeEstimator: BaseRelativeGyroscopeAttitudeEstimator<*, *>? =
+            estimator.getPrivateProperty("relativeAttitudeEstimator")
+        requireNotNull(relativeAttitudeEstimator)
+        assertSame(
+            gyroscopeMeasurementListener,
+            relativeAttitudeEstimator.gyroscopeMeasurementListener
+        )
     }
 
     @Test
@@ -329,11 +360,41 @@ class FusedGeomagneticAttitudeEstimatorTest {
         assertNull(estimator.magnetometerMeasurementListener)
 
         // set new value
-        val magnetometerMeasurementListener = mockk<MagnetometerSensorCollector.OnMeasurementListener>()
+        val magnetometerMeasurementListener =
+            mockk<MagnetometerSensorCollector.OnMeasurementListener>()
         estimator.magnetometerMeasurementListener = magnetometerMeasurementListener
 
         // check
         assertSame(magnetometerMeasurementListener, estimator.magnetometerMeasurementListener)
+
+        val geomagneticAttitudeEstimator: GeomagneticAttitudeEstimator? =
+            estimator.getPrivateProperty("geomagneticAttitudeEstimator")
+        requireNotNull(geomagneticAttitudeEstimator)
+        assertSame(
+            magnetometerMeasurementListener,
+            geomagneticAttitudeEstimator.magnetometerMeasurementListener
+        )
+    }
+
+    @Test
+    fun gravityEstimationListener_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val estimator = FusedGeomagneticAttitudeEstimator(context)
+
+        // check default value
+        assertNull(estimator.gravityEstimationListener)
+
+        // set new value
+        val gravityEstimationListener = mockk<GravityEstimator.OnEstimationListener>()
+        estimator.gravityEstimationListener = gravityEstimationListener
+
+        // check
+        assertSame(gravityEstimationListener, estimator.gravityEstimationListener)
+
+        val geomagneticAttitudeEstimator: GeomagneticAttitudeEstimator? =
+            estimator.getPrivateProperty("geomagneticAttitudeEstimator")
+        requireNotNull(geomagneticAttitudeEstimator)
+        assertSame(gravityEstimationListener, estimator.gravityEstimationListener)
     }
 
     @Test
@@ -923,7 +984,14 @@ class FusedGeomagneticAttitudeEstimatorTest {
         val internalAttitude = spyk(getAttitude())
         val listener = relativeAttitudeEstimator.attitudeAvailableListener
         requireNotNull(listener)
-        listener.onAttitudeAvailable(relativeAttitudeEstimator, internalAttitude, null, null, null, null)
+        listener.onAttitudeAvailable(
+            relativeAttitudeEstimator,
+            internalAttitude,
+            null,
+            null,
+            null,
+            null
+        )
 
         verify(exactly = 1) { internalAttitude.copyTo(relativeAttitude1) }
         assertEquals(internalAttitude, relativeAttitude1)
@@ -970,7 +1038,14 @@ class FusedGeomagneticAttitudeEstimatorTest {
         val internalAttitude = spyk(getAttitude())
         val listener = relativeAttitudeEstimator.attitudeAvailableListener
         requireNotNull(listener)
-        listener.onAttitudeAvailable(relativeAttitudeEstimator, internalAttitude, null, null, null, null)
+        listener.onAttitudeAvailable(
+            relativeAttitudeEstimator,
+            internalAttitude,
+            null,
+            null,
+            null,
+            null
+        )
 
         verify(exactly = 1) { internalAttitude.copyTo(relativeAttitude1) }
         assertEquals(internalAttitude, relativeAttitude1)
@@ -1018,7 +1093,14 @@ class FusedGeomagneticAttitudeEstimatorTest {
         val internalAttitude1 = spyk(getAttitude())
         val listener = relativeAttitudeEstimator.attitudeAvailableListener
         requireNotNull(listener)
-        listener.onAttitudeAvailable(relativeAttitudeEstimator, internalAttitude1, null, null, null, null)
+        listener.onAttitudeAvailable(
+            relativeAttitudeEstimator,
+            internalAttitude1,
+            null,
+            null,
+            null,
+            null
+        )
 
         verify(exactly = 1) { internalAttitude1.copyTo(relativeAttitude1) }
         assertEquals(internalAttitude1, relativeAttitude1)
@@ -1037,7 +1119,14 @@ class FusedGeomagneticAttitudeEstimatorTest {
         // call listener a 2nd time
         val deltaRelativeAttitude1 = getAttitude()
         val internalAttitude2 = spyk(deltaRelativeAttitude1.combineAndReturnNew(internalAttitude1))
-        listener.onAttitudeAvailable(relativeAttitudeEstimator, internalAttitude2, null, null, null, null)
+        listener.onAttitudeAvailable(
+            relativeAttitudeEstimator,
+            internalAttitude2,
+            null,
+            null,
+            null,
+            null
+        )
 
         verify(exactly = 1) { internalAttitude2.copyTo(relativeAttitude1) }
         assertEquals(internalAttitude2, relativeAttitude1)
@@ -1096,7 +1185,14 @@ class FusedGeomagneticAttitudeEstimatorTest {
         val internalAttitude1 = spyk(getAttitude())
         val listener = relativeAttitudeEstimator.attitudeAvailableListener
         requireNotNull(listener)
-        listener.onAttitudeAvailable(relativeAttitudeEstimator, internalAttitude1, null, null, null, null)
+        listener.onAttitudeAvailable(
+            relativeAttitudeEstimator,
+            internalAttitude1,
+            null,
+            null,
+            null,
+            null
+        )
 
         verify(exactly = 1) { internalAttitude1.copyTo(relativeAttitude1) }
         assertEquals(internalAttitude1, relativeAttitude1)
@@ -1115,7 +1211,14 @@ class FusedGeomagneticAttitudeEstimatorTest {
         // call listener a 2nd time
         val deltaRelativeAttitude1 = getAttitude()
         val internalAttitude2 = spyk(deltaRelativeAttitude1.combineAndReturnNew(internalAttitude1))
-        listener.onAttitudeAvailable(relativeAttitudeEstimator, internalAttitude2, null, null, null, null)
+        listener.onAttitudeAvailable(
+            relativeAttitudeEstimator,
+            internalAttitude2,
+            null,
+            null,
+            null,
+            null
+        )
 
         verify(exactly = 1) { internalAttitude2.copyTo(relativeAttitude1) }
         assertEquals(internalAttitude2, relativeAttitude1)
@@ -2122,7 +2225,7 @@ class FusedGeomagneticAttitudeEstimatorTest {
         val c = coordinateTransformationSlot.captured
         assertNotNull(c)
         assertEquals(FrameType.BODY_FRAME, c.sourceType)
-        assertEquals(FrameType.EARTH_CENTERED_EARTH_FIXED_FRAME, c.destinationType)
+        assertEquals(FrameType.LOCAL_NAVIGATION_FRAME, c.destinationType)
 
         unmockkObject(QuaternionHelper)
     }

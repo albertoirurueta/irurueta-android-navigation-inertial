@@ -26,8 +26,8 @@ import com.irurueta.navigation.frames.FrameType
 /**
  * Converts [SensorEvent] values into a Quaternion representing a 3D rotation that represents
  * the device attitude.
- * Depending on the sensor being used, attitude will be absolute or relative and might more or less
- * accurate, have drift and use more or less power. following the system coordinates
+ * Depending on the sensor being used, attitude will be absolute or relative and might be more or
+ * less accurate, have drift and use more or less power. following the system coordinates
  * Android uses NEU (North, East Up) system coordinates as indicated here:
  * https://developer.android.com/reference/android/hardware/SensorEvent#sensor.type_rotation_vector,
  * where:
@@ -51,8 +51,8 @@ object AttitudeHelper {
     const val UNAVAILABLE_HEADING_ACCURACY = -1.0f
 
     /**
-     * Converts array of values contained in a [SensorEvent] into a 3D rotation expressed in NEU
-     * (North, East, Up) system coordinates.
+     * Converts array of values contained in a [SensorEvent] into a 3D rotation expressed in ENU
+     * (East, North, Up) system coordinates.
      *
      * @param context Android context.
      * @param values array of values to be converted.
@@ -64,7 +64,7 @@ object AttitudeHelper {
      * elements.
      */
     @Throws(IllegalArgumentException::class)
-    fun convertToNEU(
+    fun convertToENU(
         context: Context,
         values: FloatArray,
         result: Quaternion,
@@ -80,7 +80,7 @@ object AttitudeHelper {
 
         require(values.size >= MIN_LENGTH)
 
-        convertQuaternion(context, values, 0, result, displayOrientationResult)
+        convertQuaternion(context, values, result, displayOrientationResult)
 
         val headingAccuracy =
             if (values.size > MIN_LENGTH && values[4] != UNAVAILABLE_HEADING_ACCURACY) {
@@ -112,7 +112,7 @@ object AttitudeHelper {
         result: Quaternion,
         displayOrientationResult: Quaternion? = null
     ): Double? {
-        val headingAccuracy = convertToNEU(context, values, result, displayOrientationResult)
+        val headingAccuracy = convertToENU(context, values, result, displayOrientationResult)
         result.conjugate(result)
         return headingAccuracy
     }
@@ -162,7 +162,7 @@ object AttitudeHelper {
         q.toMatrixRotation(transformationMatrix)
 
         resultC.sourceType = FrameType.BODY_FRAME
-        resultC.destinationType = FrameType.LOCAL_NAVIGATION_FRAME
+        resultC.destinationType = FrameType.EARTH_CENTERED_EARTH_FIXED_FRAME
         resultC.matrix = transformationMatrix
         return headingAccuracy
     }
@@ -172,15 +172,13 @@ object AttitudeHelper {
      *
      * @param context Android context.
      * @param values values array to be converted.
-     * @param offset starting position where array conversion starts.
      * @param result instance where result is stored as a rotation.
      * @param displayOrientationResult instance containing a quaternion indicating display
      * orientation. If provided, this is meant to be reused.
      */
-    internal fun convertQuaternion(
+    private fun convertQuaternion(
         context: Context,
         values: FloatArray,
-        offset: Int,
         result: Quaternion,
         displayOrientationResult: Quaternion? = null
     ) {
@@ -190,14 +188,14 @@ object AttitudeHelper {
         // c = y*sin(θ/2)
         // d = z*sin(θ/2)
         // It is assumed that array starting at provided offset has the following expression:
-        // values[offset]: x*sin(θ/2)
-        // values[offset + 1]: y*sin(θ/2)
-        // values[offset + 2]: z*sin(θ/2) (pointing towards the sky)
-        // values[offset + 3]: cos(θ/2) (only for SDK 18 or later)
-        result.b = values[offset].toDouble()
-        result.c = values[offset + 1].toDouble()
-        result.d = values[offset + 2].toDouble()
-        result.a = values[offset + 3].toDouble()
+        // values[0]: x*sin(θ/2)
+        // values[1]: y*sin(θ/2)
+        // values[2]: z*sin(θ/2) (pointing towards the sky)
+        // values[3]: cos(θ/2) (only for SDK 18 or later)
+        result.b = values[0].toDouble()
+        result.c = values[1].toDouble()
+        result.d = values[2].toDouble()
+        result.a = values[3].toDouble()
 
         result.normalize()
 
