@@ -72,7 +72,6 @@ class PoseEstimatorTest {
         assertTrue(estimator.useAccurateRelativeGyroscopeAttitudeEstimator)
         assertFalse(estimator.estimateInitialTransformation)
         assertFalse(estimator.estimatePreviousTransformation)
-        assertFalse(estimator.ignoreDisplayOrientation)
         assertNull(estimator.poseAvailableListener)
         assertNull(estimator.accelerometerMeasurementListener)
         assertNull(estimator.gyroscopeMeasurementListener)
@@ -111,7 +110,6 @@ class PoseEstimatorTest {
             useAccurateRelativeGyroscopeAttitudeEstimator = false,
             estimateInitialTransformation = true,
             estimatePreviousTransformation = true,
-            ignoreDisplayOrientation = true,
             poseAvailableListener,
             accelerometerMeasurementListener,
             gyroscopeMeasurementListener,
@@ -143,7 +141,6 @@ class PoseEstimatorTest {
         assertFalse(estimator.useAccurateRelativeGyroscopeAttitudeEstimator)
         assertTrue(estimator.estimateInitialTransformation)
         assertTrue(estimator.estimatePreviousTransformation)
-        assertTrue(estimator.ignoreDisplayOrientation)
         assertSame(poseAvailableListener, estimator.poseAvailableListener)
         assertSame(accelerometerMeasurementListener, estimator.accelerometerMeasurementListener)
         assertSame(gyroscopeMeasurementListener, estimator.gyroscopeMeasurementListener)
@@ -1141,6 +1138,7 @@ class PoseEstimatorTest {
         attitudeAvailableListener.onAttitudeAvailable(
             absoluteAttitudeEstimatorSpy,
             attitude,
+            0L,
             null,
             null,
             null,
@@ -1208,6 +1206,7 @@ class PoseEstimatorTest {
         attitudeAvailableListener.onAttitudeAvailable(
             absoluteAttitudeEstimatorSpy,
             attitude,
+            0L,
             null,
             null,
             null,
@@ -1318,6 +1317,7 @@ class PoseEstimatorTest {
         attitudeAvailableListener.onAttitudeAvailable(
             absoluteAttitudeEstimatorSpy,
             attitude,
+            0L,
             null,
             null,
             null,
@@ -1344,6 +1344,10 @@ class PoseEstimatorTest {
                 currentFrame2,
                 previousFrame,
                 initialFrame,
+                Quaternion(),
+                Quaternion(),
+                Quaternion(),
+                0L,
                 null,
                 null
             )
@@ -1425,6 +1429,7 @@ class PoseEstimatorTest {
         attitudeAvailableListener.onAttitudeAvailable(
             absoluteAttitudeEstimatorSpy,
             attitude,
+            0L,
             null,
             null,
             null,
@@ -1453,6 +1458,10 @@ class PoseEstimatorTest {
                 currentFrame,
                 previousFrame,
                 initialFrame,
+                Quaternion(),
+                Quaternion(),
+                Quaternion(),
+                0L,
                 capture(initialTransformationSlot1),
                 capture(previousTransformationSlot1)
             )
@@ -1473,6 +1482,7 @@ class PoseEstimatorTest {
         attitudeAvailableListener.onAttitudeAvailable(
             absoluteAttitudeEstimatorSpy,
             attitude,
+            0L,
             null,
             null,
             null,
@@ -1499,6 +1509,10 @@ class PoseEstimatorTest {
                 currentFrame2,
                 previousFrame,
                 initialFrame,
+                Quaternion(),
+                Quaternion(),
+                Quaternion(),
+                0L,
                 capture(initialTransformationSlot2),
                 capture(previousTransformationSlot2)
             )

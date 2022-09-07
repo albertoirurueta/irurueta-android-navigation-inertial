@@ -33,7 +33,7 @@ import com.irurueta.units.TimeConverter
  * @property sensorDelay Delay of gyroscope between samples.
  * @property estimateCoordinateTransformation true to estimate coordinate transformation, false
  * otherwise. If not needed, it can be disabled to improve performance and decrease cpu load.
- * @property estimateDisplayEulerAngles true to estimate euler angles, false otherwise. If not
+ * @property estimateEulerAngles true to estimate euler angles, false otherwise. If not
  * needed, it can be disabled to improve performance and decrease cpu load.
  * @property attitudeAvailableListener listener to notify when a new attitude measurement is
  * available.
@@ -45,7 +45,7 @@ class AccurateRelativeGyroscopeAttitudeEstimator(
         GyroscopeSensorCollector.SensorType.GYROSCOPE,
     sensorDelay: SensorDelay = SensorDelay.GAME,
     estimateCoordinateTransformation: Boolean = false,
-    estimateDisplayEulerAngles: Boolean = true,
+    estimateEulerAngles: Boolean = true,
     attitudeAvailableListener: OnAttitudeAvailableListener? = null,
     gyroscopeMeasurementListener: GyroscopeSensorCollector.OnMeasurementListener? = null
 ) : BaseRelativeGyroscopeAttitudeEstimator<AccurateRelativeGyroscopeAttitudeEstimator,
@@ -54,7 +54,7 @@ class AccurateRelativeGyroscopeAttitudeEstimator(
     sensorType,
     sensorDelay,
     estimateCoordinateTransformation,
-    estimateDisplayEulerAngles,
+    estimateEulerAngles,
     attitudeAvailableListener,
     gyroscopeMeasurementListener
 ) {
@@ -143,11 +143,11 @@ class AccurateRelativeGyroscopeAttitudeEstimator(
                 val displayRoll: Double?
                 val displayPitch: Double?
                 val displayYaw: Double?
-                if (estimateDisplayEulerAngles) {
-                    attitude.toEulerAngles(displayEulerAngles)
-                    displayRoll = displayEulerAngles[0]
-                    displayPitch = displayEulerAngles[1]
-                    displayYaw = displayEulerAngles[2]
+                if (estimateEulerAngles) {
+                    attitude.toEulerAngles(eulerAngles)
+                    displayRoll = eulerAngles[0]
+                    displayPitch = eulerAngles[1]
+                    displayYaw = eulerAngles[2]
                 } else {
                     displayRoll = null
                     displayPitch = null
@@ -158,6 +158,7 @@ class AccurateRelativeGyroscopeAttitudeEstimator(
                 attitudeAvailableListener?.onAttitudeAvailable(
                     this@AccurateRelativeGyroscopeAttitudeEstimator,
                     attitude,
+                    timestamp,
                     displayRoll,
                     displayPitch,
                     displayYaw,

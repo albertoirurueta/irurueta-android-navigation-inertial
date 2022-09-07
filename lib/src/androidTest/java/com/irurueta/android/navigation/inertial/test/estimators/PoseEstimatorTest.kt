@@ -17,6 +17,7 @@ package com.irurueta.android.navigation.inertial.test.estimators
 
 import android.location.Location
 import android.util.Log
+import android.view.Display
 import androidx.test.core.app.ActivityScenario
 import androidx.test.filters.RequiresDevice
 import com.irurueta.android.navigation.inertial.LocationService
@@ -47,6 +48,8 @@ class PoseEstimatorTest {
 
     val translation: Point3D = Point3D.create()
 
+    private var previousTimestamp = -1L;
+
     @Before
     fun setUp() {
         completed = 0
@@ -58,19 +61,31 @@ class PoseEstimatorTest {
         val activity = this.activity
         requireNotNull(activity)
 
+        val refreshRate = activity.display?.mode?.refreshRate ?: 60.0f
+        val refreshIntervalNanos = (1.0f / refreshRate * 1e9).toLong()
+
         val estimator = PoseEstimator(
             activity,
             location,
-            sensorDelay = SensorDelay.GAME,
+            sensorDelay = SensorDelay.FASTEST,
             useWorldMagneticModel = true,
             useAccurateLevelingEstimator = true,
             useAccurateRelativeGyroscopeAttitudeEstimator = true,
             estimateInitialTransformation = true,
-            ignoreDisplayOrientation = true,
-            poseAvailableListener = { _, currentEcefFrame, _, initialEcefFrame, initialTransformation, _ ->
-                logTranslation(currentEcefFrame, initialEcefFrame)
-                //logInitialTransformation(initialTransformation)
-                syncHelper.notifyAll { completed++ }
+            poseAvailableListener = { _, currentEcefFrame, _, initialEcefFrame, _, _, _, timestamp, initialTransformation, _ ->
+                if (previousTimestamp < 0) {
+                    previousTimestamp = timestamp
+                    return@PoseEstimator
+                }
+
+                // refresh only as much as display allows even though sensors might run at higher refresh rates
+                if (timestamp - previousTimestamp >= refreshIntervalNanos) {
+                    logTranslation(currentEcefFrame, initialEcefFrame)
+                    previousTimestamp = timestamp
+
+                    //logInitialTransformation(initialTransformation)
+                    syncHelper.notifyAll { completed++ }
+                }
             }
         )
 

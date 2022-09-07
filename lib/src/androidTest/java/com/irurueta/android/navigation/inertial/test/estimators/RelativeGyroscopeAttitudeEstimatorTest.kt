@@ -57,7 +57,7 @@ class RelativeGyroscopeAttitudeEstimatorTest {
             activity,
             GyroscopeSensorCollector.SensorType.GYROSCOPE,
             estimateDisplayEulerAngles = true,
-            attitudeAvailableListener = { _, _, roll, pitch, yaw, _ ->
+            attitudeAvailableListener = { _, _, _, roll, pitch, yaw, _ ->
                 logAttitude(roll, pitch, yaw)
                 syncHelper.notifyAll { completed++ }
             }
@@ -87,7 +87,7 @@ class RelativeGyroscopeAttitudeEstimatorTest {
             activity,
             GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
             estimateDisplayEulerAngles = true,
-            attitudeAvailableListener = { _, _, roll, pitch, yaw, _ ->
+            attitudeAvailableListener = { _, _, _, roll, pitch, yaw, _ ->
                 logAttitude(roll, pitch, yaw)
                 syncHelper.notifyAll { completed++ }
             }

@@ -202,6 +202,8 @@ class MainActivity : AppCompatActivity() {
 
     private var fusedGeomagneticAttitudeEstimator2WorldMagneticModelButton: AppCompatButton? = null
 
+    private var poseEstimatorButton: AppCompatButton? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -1793,6 +1795,12 @@ class MainActivity : AppCompatActivity() {
                 FusedGeomagneticAttitudeEstimator2Activity.USE_WORLD_MAGNETIC_MODEL,
                 true
             )
+            startActivity(intent)
+        }
+
+        poseEstimatorButton = findViewById(R.id.pose_estimator_button)
+        poseEstimatorButton?.setOnClickListener {
+            val intent = Intent(this@MainActivity, PoseEstimatorActivity::class.java)
             startActivity(intent)
         }
     }

@@ -67,8 +67,8 @@ class LevelingEstimatorTest {
         val estimator = LevelingEstimator(
             activity,
             useAccelerometer = false,
-            estimateDisplayEulerAngles = true,
-            levelingAvailableListener = { _, _, roll, pitch, _ ->
+            estimateEulerAngles = true,
+            levelingAvailableListener = { _, _, _, roll, pitch, _ ->
                 logLeveling(roll, pitch)
                 syncHelper.notifyAll { completed++ }
             }
@@ -100,8 +100,8 @@ class LevelingEstimatorTest {
             useAccelerometer = true,
             accelerometerSensorType = AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             accelerometerAveragingFilter = LowPassAveragingFilter(),
-            estimateDisplayEulerAngles = true,
-            levelingAvailableListener = { _, _, roll, pitch, _ ->
+            estimateEulerAngles = true,
+            levelingAvailableListener = { _, _, _, roll, pitch, _ ->
                 logLeveling(roll, pitch)
                 syncHelper.notifyAll { completed++ }
             }
@@ -133,8 +133,8 @@ class LevelingEstimatorTest {
             useAccelerometer = true,
             accelerometerSensorType = AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             accelerometerAveragingFilter = MeanAveragingFilter(),
-            estimateDisplayEulerAngles = true,
-            levelingAvailableListener = { _, _, roll, pitch, _ ->
+            estimateEulerAngles = true,
+            levelingAvailableListener = { _, _, _, roll, pitch, _ ->
                 logLeveling(roll, pitch)
                 syncHelper.notifyAll { completed++ }
             }
@@ -166,8 +166,8 @@ class LevelingEstimatorTest {
             useAccelerometer = true,
             accelerometerSensorType = AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             accelerometerAveragingFilter = MedianAveragingFilter(),
-            estimateDisplayEulerAngles = true,
-            levelingAvailableListener = { _, _, roll, pitch, _ ->
+            estimateEulerAngles = true,
+            levelingAvailableListener = { _, _, _, roll, pitch, _ ->
                 logLeveling(roll, pitch)
                 syncHelper.notifyAll { completed++ }
             }
@@ -199,8 +199,8 @@ class LevelingEstimatorTest {
             useAccelerometer = true,
             accelerometerSensorType = AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             accelerometerAveragingFilter = LowPassAveragingFilter(),
-            estimateDisplayEulerAngles = true,
-            levelingAvailableListener = { _, _, roll, pitch, _ ->
+            estimateEulerAngles = true,
+            levelingAvailableListener = { _, _, _, roll, pitch, _ ->
                 logLeveling(roll, pitch)
                 syncHelper.notifyAll { completed++ }
             }
@@ -232,8 +232,8 @@ class LevelingEstimatorTest {
             useAccelerometer = true,
             accelerometerSensorType = AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             accelerometerAveragingFilter = MeanAveragingFilter(),
-            estimateDisplayEulerAngles = true,
-            levelingAvailableListener = { _, _, roll, pitch, _ ->
+            estimateEulerAngles = true,
+            levelingAvailableListener = { _, _, _, roll, pitch, _ ->
                 logLeveling(roll, pitch)
                 syncHelper.notifyAll { completed++ }
             }
@@ -265,8 +265,8 @@ class LevelingEstimatorTest {
             useAccelerometer = true,
             accelerometerSensorType = AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             accelerometerAveragingFilter = MedianAveragingFilter(),
-            estimateDisplayEulerAngles = true,
-            levelingAvailableListener = { _, _, roll, pitch, _ ->
+            estimateEulerAngles = true,
+            levelingAvailableListener = { _, _, _, roll, pitch, _ ->
                 logLeveling(roll, pitch)
                 syncHelper.notifyAll { completed++ }
             }

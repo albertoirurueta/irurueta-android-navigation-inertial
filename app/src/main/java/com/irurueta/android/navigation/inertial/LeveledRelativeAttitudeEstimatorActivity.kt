@@ -175,8 +175,8 @@ class LeveledRelativeAttitudeEstimatorActivity : AppCompatActivity() {
                 useAccurateLevelingEstimator = useAccurateLevelingEstimator,
                 useAccurateRelativeGyroscopeAttitudeEstimator = useAccurateRelativeGyroscopeAttitudeEstimator,
                 estimateCoordinateTransformation = false,
-                estimateDisplayEulerAngles = true,
-                attitudeAvailableListener = { _, attitude, roll, pitch, yaw, _ ->
+                estimateEulerAngles = true,
+                attitudeAvailableListener = { _, attitude, _, roll, pitch, yaw, _ ->
                     attitude.toQuaternion(rotation)
 
                     rollView?.text = getString(R.string.roll_degrees, Math.toDegrees(roll ?: 0.0))

@@ -77,11 +77,11 @@ interface AbsoluteAttitudeEstimator<T : AbsoluteAttitudeEstimator<T, L>,
     val estimateCoordinateTransformation: Boolean
 
     /**
-     * Indicates whether display Euler angles must be estimated or not.
+     * Indicates whether Euler angles must be estimated or not.
      * True to estimate euler angles, false otherwise. If not needed, it can be disabled to
      * improve performance and decrease cpu load.
      */
-    val estimateDisplayEulerAngles: Boolean
+    val estimateEulerAngles: Boolean
 
     /**
      * Gets or sets listener to notify when a new attitude measurement is available.
@@ -248,18 +248,22 @@ interface AbsoluteAttitudeEstimator<T : AbsoluteAttitudeEstimator<T, L>,
          *
          * @param estimator attitude estimator that raised this event.
          * @param attitude attitude expressed in NED coordinates.
-         * @param roll roll angle expressed in radians. Only available if
-         * [estimateDisplayEulerAngles] is true.
-         * @param pitch pitch angle expressed in radians. Only available if
-         * [estimateDisplayEulerAngles] is true.
-         * @param yaw yaw angle expressed in radians. Only available if
-         * [estimateDisplayEulerAngles] is true.
+         * @param timestamp time in nanoseconds at which the measurement was made. Each measurement
+         * wil be monotonically increasing using the same time base as
+         * [android.os.SystemClock.elapsedRealtimeNanos].
+         * @param roll roll angle expressed in radians respect to NED coordinate system. Only
+         * available if [estimateEulerAngles] is true.
+         * @param pitch pitch angle expressed in radians respect to NED coordinate system. Only
+         * available if [estimateEulerAngles] is true.
+         * @param yaw yaw angle expressed in radians respect to NED coordinate system. Only
+         * available if [estimateEulerAngles] is true.
          * @param coordinateTransformation coordinate transformation containing measured leveled
          * geomagnetic attitude. Only available if [estimateCoordinateTransformation] is true.
          */
         fun onAttitudeAvailable(
             estimator: T,
             attitude: Quaternion,
+            timestamp: Long,
             roll: Double?,
             pitch: Double?,
             yaw: Double?,

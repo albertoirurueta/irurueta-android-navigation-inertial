@@ -1,22 +1,8 @@
-/*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *         http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.irurueta.android.navigation.inertial
 
 import android.annotation.SuppressLint
 import android.location.Location
+import android.os.Build
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatTextView
@@ -26,14 +12,14 @@ import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCo
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
-import com.irurueta.android.navigation.inertial.estimators.FusedGeomagneticAttitudeEstimator
+import com.irurueta.android.navigation.inertial.estimators.PoseEstimator
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.MeanAveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.MedianAveragingFilter
 import com.irurueta.geometry.*
 
-class FusedGeomagneticAttitudeEstimatorActivity : AppCompatActivity() {
+class PoseEstimatorActivity : AppCompatActivity() {
 
     private var cubeView: CubeTextureView? = null
 
@@ -43,15 +29,23 @@ class FusedGeomagneticAttitudeEstimatorActivity : AppCompatActivity() {
 
     private var yawView: AppCompatTextView? = null
 
-    private var rotation = Quaternion()
+    private var xPosView: AppCompatTextView? = null
+
+    private var yPosView: AppCompatTextView? = null
+
+    private var zPosView: AppCompatTextView? = null
+
+    private var initialAttitudeAvailable = false
+
+    private var previousTimestamp = -1L
+
+    private var initialCamera = PinholeCamera()
 
     private var camera: PinholeCamera? = null
 
-    private var attitudeEstimator: FusedGeomagneticAttitudeEstimator? = null
+    private var poseEstimator: PoseEstimator? = null
 
     private val conversionRotation = ENUtoNEDTriadConverter.conversionRotation
-
-    private val displayOrientation = Quaternion()
 
     private var hasLocationPermission = false
 
@@ -63,8 +57,6 @@ class FusedGeomagneticAttitudeEstimatorActivity : AppCompatActivity() {
     }
 
     private var locationService: LocationService? = null
-
-    private var useAccelerometer = false
 
     private var useWorldMagneticModel = false
 
@@ -84,14 +76,11 @@ class FusedGeomagneticAttitudeEstimatorActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         val extras = intent.extras
-        useAccelerometer =
-            extras?.getBoolean(USE_ACCELEROMETER, false)
-                ?: false
         accelerometerSensorType =
             (extras?.getSerializable(ACCELEROMETER_SENSOR_TYPE) as AccelerometerSensorCollector.SensorType?)
                 ?: AccelerometerSensorCollector.SensorType.ACCELEROMETER
         magnetometerSensorType =
-            (extras?.getSerializable(GeomagneticAttitudeEstimatorActivity.MAGNETOMETER_SENSOR_TYPE) as MagnetometerSensorCollector.SensorType?)
+            (extras?.getSerializable(MAGNETOMETER_SENSOR_TYPE) as MagnetometerSensorCollector.SensorType?)
                 ?: MagnetometerSensorCollector.SensorType.MAGNETOMETER
         accelerometerAveragingFilterType =
             extras?.getString(ACCELEROMETER_AVERAGING_FILTER_TYPE)
@@ -103,22 +92,27 @@ class FusedGeomagneticAttitudeEstimatorActivity : AppCompatActivity() {
         useAccurateRelativeGyroscopeAttitudeEstimator =
             extras?.getBoolean(USE_ACCURATE_RELATIVE_GYROSCOPE_ATTITUDE_ESTIMATOR, false) ?: false
         useWorldMagneticModel =
-            extras?.getBoolean(GeomagneticAttitudeEstimatorActivity.USE_WORLD_MAGNETIC_MODEL, false)
+            extras?.getBoolean(USE_WORLD_MAGNETIC_MODEL, false)
                 ?: false
 
-        setContentView(R.layout.activity_fused_geomagnetic_attitude_estimator)
+        setContentView(R.layout.activity_pose_estimator)
         cubeView = findViewById(R.id.cube)
         rollView = findViewById(R.id.roll)
         pitchView = findViewById(R.id.pitch)
         yawView = findViewById(R.id.yaw)
+        xPosView = findViewById(R.id.x_pos)
+        yPosView = findViewById(R.id.y_pos)
+        zPosView = findViewById(R.id.z_pos)
 
         val cubeView = cubeView ?: return
         cubeView.onSurfaceChangedListener = object : CubeTextureView.OnSurfaceChangedListener {
             override fun onSurfaceChanged(width: Int, height: Int) {
                 cubeView.cubeSize = 0.5f * CubeRenderer.DEFAULT_CUBE_SIZE
-                cubeView.cubeRotation = rotation
-                camera = createCamera(cubeView)
+                initialCamera = createCamera(cubeView, Quaternion())
+                camera = createCamera(cubeView, Quaternion())
                 cubeView.camera = camera
+                cubeView.cubePosition =
+                    InhomogeneousPoint3D(-CubeRenderer.DEFAULT_CUBE_DISTANCE, 0.0, 0.0)
             }
         }
 
@@ -137,8 +131,10 @@ class FusedGeomagneticAttitudeEstimatorActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
-        attitudeEstimator?.stop()
+        poseEstimator?.stop()
         cubeView?.onPause()
+        initialAttitudeAvailable = false
+        previousTimestamp = -1L
     }
 
     @SuppressLint("MissingPermission")
@@ -159,7 +155,7 @@ class FusedGeomagneticAttitudeEstimatorActivity : AppCompatActivity() {
                 buildEstimatorAndStart()
             } else {
                 locationService?.getCurrentLocation { currentLocation ->
-                    this@FusedGeomagneticAttitudeEstimatorActivity.location = currentLocation
+                    this@PoseEstimatorActivity.location = currentLocation
                     buildEstimatorAndStart()
                 }
             }
@@ -168,52 +164,54 @@ class FusedGeomagneticAttitudeEstimatorActivity : AppCompatActivity() {
 
     private fun buildEstimatorAndStart() {
         val location = this.location ?: return
-        if (attitudeEstimator?.running == true) return
+        if (poseEstimator?.running == true) return
 
-        if (attitudeEstimator != null) {
-            attitudeEstimator?.location = location
+        if (poseEstimator != null) {
+            poseEstimator?.location = location
         } else {
             val accelerometerAveragingFilter =
                 buildAveragingFilter(accelerometerAveragingFilterType)
 
-            attitudeEstimator = FusedGeomagneticAttitudeEstimator(
+            val refreshRate = if (Build.VERSION.SDK_INT > Build.VERSION_CODES.Q) {
+                this.display?.mode?.refreshRate ?: FALLBACK_REFRESH_RATE
+            } else {
+                FALLBACK_REFRESH_RATE
+            }
+            val refreshIntervalNanos = (1.0f / refreshRate * 1e9).toLong()
+
+            poseEstimator = PoseEstimator(
                 this,
                 location,
-                SensorDelay.GAME,
-                useAccelerometer = useAccelerometer,
+                sensorDelay = SensorDelay.FASTEST,
                 accelerometerSensorType = accelerometerSensorType,
-                accelerometerAveragingFilter = accelerometerAveragingFilter,
                 magnetometerSensorType = magnetometerSensorType,
+                accelerometerAveragingFilter = accelerometerAveragingFilter,
                 gyroscopeSensorType = gyroscopeSensorType,
-                useAccurateLevelingEstimator = useAccurateLevelingEstimator,
-                useAccurateRelativeGyroscopeAttitudeEstimator = useAccurateRelativeGyroscopeAttitudeEstimator,
                 useWorldMagneticModel = useWorldMagneticModel,
-                attitudeAvailableListener = { _, attitude, _, roll, pitch, yaw, _ ->
-                    attitude.toQuaternion(rotation)
+                estimateInitialTransformation = true,
+                poseAvailableListener = { estimator, currentFrame, previousFrame, initialFrame, currentAttitude, previousAttitude, initialAttitude, timestamp, initialTransformation, previousTransformation ->
 
-                    rollView?.text = getString(R.string.roll_degrees, Math.toDegrees(roll ?: 0.0))
-                    pitchView?.text =
-                        getString(R.string.pitch_degrees, Math.toDegrees(pitch ?: 0.0))
-                    yawView?.text = getString(R.string.yaw_degrees, Math.toDegrees(yaw ?: 0.0))
+                    if (!initialAttitudeAvailable) {
+                        previousTimestamp = timestamp
 
-                    // rotation refers to pinhole camera point of view, to apply rotation to the cube
-                    // its inverse must be used.
-                    rotation.inverse()
+                        initialAttitudeAvailable = true
 
-                    // convert attitude from NED to ENU coordinate system to be displayed using OpenGL
-                    Quaternion.product(conversionRotation, rotation, rotation)
+                        // copy camera
+                        //initialCamera.internalMatrix = Matrix(camera?.internalMatrix)
+                    }
 
-                    // take into account display orientation
-                    val displayRotationRadians =
-                        DisplayOrientationHelper.getDisplayRotationRadians(this)
-                    displayOrientation.setFromEulerAngles(0.0, 0.0, displayRotationRadians)
-                    Quaternion.product(displayOrientation, rotation, rotation)
+                    // refresh only as much as display allows even though sensors might run at higher refresh rates
+                    if (timestamp - previousTimestamp >= refreshIntervalNanos) {
+                        previousTimestamp = timestamp
 
-                    cubeView?.cubeRotation = rotation
+                        updateCamera(initialAttitude, currentAttitude)
+
+                        cubeView?.camera = camera
+                    }
                 }
             )
+            poseEstimator?.start()
         }
-        attitudeEstimator?.start()
     }
 
     private fun buildAveragingFilter(averagingFilterType: String?): AveragingFilter {
@@ -224,8 +222,58 @@ class FusedGeomagneticAttitudeEstimatorActivity : AppCompatActivity() {
         }
     }
 
+    private fun updateCamera(initialAttitude: Quaternion, currentAttitude: Quaternion) {
+        // P0 = [K*R0    t] = [K*R0 -R0*C], where R0 is camera rotation and C is camera center
+
+        // T1 = [R1   t1]
+        //      [0     1]
+
+        // x0 = P0 * X0
+
+        // X1 = T * X0
+
+        // x1 = P0 * X1 = P0 * T * X0 -> P1 = P0 * T
+
+        // P1 = [K*R0   -R0*C] * [R1 t1] = [K*R9*R1     K*R0*t1 - R0*C]
+        //                       [0   1]
+
+
+        // set rotation
+        val initRotation = Quaternion(initialAttitude)
+        initRotation.toEulerAngles(eulerAngles)
+        val initYaw = eulerAngles[2]
+
+        val currentRotation = Quaternion(currentAttitude)
+        currentRotation.toEulerAngles(eulerAngles)
+        val currentRoll = eulerAngles[0]
+        val currentPitch = eulerAngles[1]
+        val currentYaw = eulerAngles[2]
+
+        val deltaYaw = currentYaw - initYaw
+
+        val rotation = Quaternion()
+        rotation.setFromEulerAngles(currentRoll, currentPitch, deltaYaw)
+        Quaternion.product(rotation, conversionRotation, rotation)
+
+        rotation.toEulerAngles(eulerAngles)
+        rollView?.text = getString(R.string.roll_degrees, Math.toDegrees(eulerAngles[0]))
+        pitchView?.text =
+            getString(R.string.pitch_degrees, Math.toDegrees(eulerAngles[1]))
+        yawView?.text = getString(R.string.yaw_degrees, Math.toDegrees(eulerAngles[2]))
+
+        val transformation = EuclideanTransformation3D(rotation)
+        // transformation needs to be inverted because when camera is transformed, the inverse
+        // transformation is used
+        transformation.inverse()
+        transformation.transform(initialCamera, camera)
+
+        // Lines above are equivalent to:
+        // camera?.cameraRotation = rotation
+    }
+
+    private val eulerAngles = DoubleArray(Quaternion.N_ANGLES)
+
     companion object {
-        const val USE_ACCELEROMETER = "useAccelerometer"
         const val ACCELEROMETER_SENSOR_TYPE = "accelerometerSensorType"
         const val MAGNETOMETER_SENSOR_TYPE = "magnetometerSensorType"
         const val ACCELEROMETER_AVERAGING_FILTER_TYPE = "accelerometerAveragingFilterType"
@@ -243,7 +291,9 @@ class FusedGeomagneticAttitudeEstimatorActivity : AppCompatActivity() {
 
         private const val VERTICAL_FOCAL_LENGTH = 2125.98623752594
 
-        private fun createCamera(view: CubeTextureView): PinholeCamera {
+        private const val FALLBACK_REFRESH_RATE = 60.0f
+
+        private fun createCamera(view: CubeTextureView, attitude: Rotation3D): PinholeCamera {
             val px = view.width / 2.0
             val py = view.height / 2.0
 
@@ -255,7 +305,7 @@ class FusedGeomagneticAttitudeEstimatorActivity : AppCompatActivity() {
                 0.0
             )
 
-            return PinholeCamera(intrinsics, Rotation3D.create(), Point3D.create())
+            return PinholeCamera(intrinsics, attitude, Point3D.create())
         }
     }
 }

@@ -49,7 +49,7 @@ class RelativeGyroscopeAttitudeEstimatorTest {
         assertEquals(GyroscopeSensorCollector.SensorType.GYROSCOPE, estimator.sensorType)
         assertEquals(SensorDelay.GAME, estimator.sensorDelay)
         assertFalse(estimator.estimateCoordinateTransformation)
-        assertTrue(estimator.estimateDisplayEulerAngles)
+        assertTrue(estimator.estimateEulerAngles)
         assertNull(estimator.attitudeAvailableListener)
         assertNull(estimator.gyroscopeMeasurementListener)
         assertFalse(estimator.running)
@@ -80,7 +80,7 @@ class RelativeGyroscopeAttitudeEstimatorTest {
         )
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
         assertTrue(estimator.estimateCoordinateTransformation)
-        assertFalse(estimator.estimateDisplayEulerAngles)
+        assertFalse(estimator.estimateEulerAngles)
         assertSame(attitudeAvailableListener, estimator.attitudeAvailableListener)
         assertSame(gyroscopeMeasurementListener, estimator.gyroscopeMeasurementListener)
         assertFalse(estimator.running)
@@ -273,7 +273,7 @@ class RelativeGyroscopeAttitudeEstimatorTest {
         val estimator = RelativeGyroscopeAttitudeEstimator(context)
 
         assertFalse(estimator.estimateCoordinateTransformation)
-        assertTrue(estimator.estimateDisplayEulerAngles)
+        assertTrue(estimator.estimateEulerAngles)
         assertNull(estimator.attitudeAvailableListener)
 
         val initialTimestamp1: Long? = getPrivateProperty(
@@ -305,20 +305,6 @@ class RelativeGyroscopeAttitudeEstimatorTest {
         requireNotNull(gyroscopeSensorCollector)
         val listener = gyroscopeSensorCollector.measurementListener
         requireNotNull(listener)
-
-        val displayOrientation: Quaternion? = getPrivateProperty(
-            BaseRelativeGyroscopeAttitudeEstimator::class,
-            estimator,
-            "displayOrientation"
-        )
-        requireNotNull(displayOrientation)
-        val displayOrientationSpy = spyk(displayOrientation)
-        setPrivateProperty(
-            BaseRelativeGyroscopeAttitudeEstimator::class,
-            estimator,
-            "displayOrientation",
-            displayOrientationSpy
-        )
 
         val deltaAttitude: Quaternion? = estimator.getPrivateProperty("deltaAttitude")
         requireNotNull(deltaAttitude)
@@ -370,12 +356,12 @@ class RelativeGyroscopeAttitudeEstimatorTest {
             coordinateTransformationSpy
         )
 
-        val displayEulerAngles: DoubleArray? = getPrivateProperty(
+        val eulerAngles: DoubleArray? = getPrivateProperty(
             BaseRelativeGyroscopeAttitudeEstimator::class,
             estimator,
-            "displayEulerAngles"
+            "eulerAngles"
         )
-        requireNotNull(displayEulerAngles)
+        requireNotNull(eulerAngles)
 
         val randomizer = UniformRandomizer()
         val wx = randomizer.nextFloat()
@@ -396,16 +382,12 @@ class RelativeGyroscopeAttitudeEstimatorTest {
         verify(exactly = 1) { timeIntervalEstimatorSpy.numberOfProcessedSamples }
         verify(exactly = 1) { timeIntervalEstimatorSpy.addTimestamp(any<Double>()) }
         verify(exactly = 1) { timeIntervalEstimatorSpy.averageTimeInterval }
-        verify(exactly = 1) { displayOrientationSpy.setFromEulerAngles(0.0, 0.0, -0.0) }
         verify(exactly = 1) { deltaAttitudeSpy.setFromEulerAngles(any(), any(), any()) }
         verify(exactly = 1) { internalAttitudeSpy.combine(deltaAttitudeSpy) }
         verify(exactly = 1) { internalAttitudeSpy.normalize() }
         verify(exactly = 1) { internalAttitudeSpy.copyTo(attitudeSpy) }
-        verify(exactly = 1) { attitudeSpy.combine(displayOrientationSpy) }
-        verify(exactly = 1) { attitudeSpy.inverse() }
-        verify(exactly = 2) { attitudeSpy.normalize() }
         verify { coordinateTransformationSpy wasNot Called }
-        verify(exactly = 1) { attitudeSpy.toEulerAngles(displayEulerAngles) }
+        verify(exactly = 1) { attitudeSpy.toEulerAngles(eulerAngles) }
     }
 
     @Test
@@ -417,7 +399,7 @@ class RelativeGyroscopeAttitudeEstimatorTest {
         val estimator = RelativeGyroscopeAttitudeEstimator(context)
 
         assertFalse(estimator.estimateCoordinateTransformation)
-        assertTrue(estimator.estimateDisplayEulerAngles)
+        assertTrue(estimator.estimateEulerAngles)
         assertNull(estimator.attitudeAvailableListener)
 
         setPrivateProperty(
@@ -460,20 +442,6 @@ class RelativeGyroscopeAttitudeEstimatorTest {
         val listener = gyroscopeSensorCollector.measurementListener
         requireNotNull(listener)
 
-        val displayOrientation: Quaternion? = getPrivateProperty(
-            BaseRelativeGyroscopeAttitudeEstimator::class,
-            estimator,
-            "displayOrientation"
-        )
-        requireNotNull(displayOrientation)
-        val displayOrientationSpy = spyk(displayOrientation)
-        setPrivateProperty(
-            BaseRelativeGyroscopeAttitudeEstimator::class,
-            estimator,
-            "displayOrientation",
-            displayOrientationSpy
-        )
-
         val deltaAttitude: Quaternion? = estimator.getPrivateProperty("deltaAttitude")
         requireNotNull(deltaAttitude)
         val deltaAttitudeSpy = spyk(deltaAttitude)
@@ -524,12 +492,12 @@ class RelativeGyroscopeAttitudeEstimatorTest {
             coordinateTransformationSpy
         )
 
-        val displayEulerAngles: DoubleArray? = getPrivateProperty(
+        val eulerAngles: DoubleArray? = getPrivateProperty(
             BaseRelativeGyroscopeAttitudeEstimator::class,
             estimator,
-            "displayEulerAngles"
+            "eulerAngles"
         )
-        requireNotNull(displayEulerAngles)
+        requireNotNull(eulerAngles)
 
         val randomizer = UniformRandomizer()
         val wx = randomizer.nextFloat()
@@ -550,16 +518,12 @@ class RelativeGyroscopeAttitudeEstimatorTest {
         verify(exactly = 1) { timeIntervalEstimatorSpy.numberOfProcessedSamples }
         verify(exactly = 1) { timeIntervalEstimatorSpy.addTimestamp(any<Double>()) }
         verify(exactly = 1) { timeIntervalEstimatorSpy.averageTimeInterval }
-        verify(exactly = 1) { displayOrientationSpy.setFromEulerAngles(0.0, 0.0, -0.0) }
         verify(exactly = 1) { deltaAttitudeSpy.setFromEulerAngles(any(), any(), any()) }
         verify(exactly = 1) { internalAttitudeSpy.combine(deltaAttitudeSpy) }
         verify(exactly = 1) { internalAttitudeSpy.normalize() }
         verify(exactly = 1) { internalAttitudeSpy.copyTo(attitudeSpy) }
-        verify(exactly = 1) { attitudeSpy.combine(displayOrientationSpy) }
-        verify(exactly = 1) { attitudeSpy.inverse() }
-        verify(exactly = 2) { attitudeSpy.normalize() }
         verify { coordinateTransformationSpy wasNot Called }
-        verify(exactly = 1) { attitudeSpy.toEulerAngles(displayEulerAngles) }
+        verify(exactly = 1) { attitudeSpy.toEulerAngles(eulerAngles) }
     }
 
     @Test
@@ -578,7 +542,7 @@ class RelativeGyroscopeAttitudeEstimatorTest {
         )
 
         assertFalse(estimator.estimateCoordinateTransformation)
-        assertFalse(estimator.estimateDisplayEulerAngles)
+        assertFalse(estimator.estimateEulerAngles)
         assertSame(attitudeAvailableListener, estimator.attitudeAvailableListener)
 
         val initialTimestamp1: Long? = getPrivateProperty(
@@ -611,20 +575,6 @@ class RelativeGyroscopeAttitudeEstimatorTest {
         val listener = gyroscopeSensorCollector.measurementListener
         requireNotNull(listener)
 
-        val displayOrientation: Quaternion? = getPrivateProperty(
-            BaseRelativeGyroscopeAttitudeEstimator::class,
-            estimator,
-            "displayOrientation"
-        )
-        requireNotNull(displayOrientation)
-        val displayOrientationSpy = spyk(displayOrientation)
-        setPrivateProperty(
-            BaseRelativeGyroscopeAttitudeEstimator::class,
-            estimator,
-            "displayOrientation",
-            displayOrientationSpy
-        )
-
         val deltaAttitude: Quaternion? = estimator.getPrivateProperty("deltaAttitude")
         requireNotNull(deltaAttitude)
         val deltaAttitudeSpy = spyk(deltaAttitude)
@@ -675,12 +625,12 @@ class RelativeGyroscopeAttitudeEstimatorTest {
             coordinateTransformationSpy
         )
 
-        val displayEulerAngles: DoubleArray? = getPrivateProperty(
+        val eulerAngles: DoubleArray? = getPrivateProperty(
             BaseRelativeGyroscopeAttitudeEstimator::class,
             estimator,
-            "displayEulerAngles"
+            "eulerAngles"
         )
-        requireNotNull(displayEulerAngles)
+        requireNotNull(eulerAngles)
 
         val randomizer = UniformRandomizer()
         val wx = randomizer.nextFloat()
@@ -701,21 +651,18 @@ class RelativeGyroscopeAttitudeEstimatorTest {
         verify(exactly = 1) { timeIntervalEstimatorSpy.numberOfProcessedSamples }
         verify(exactly = 1) { timeIntervalEstimatorSpy.addTimestamp(any<Double>()) }
         verify(exactly = 1) { timeIntervalEstimatorSpy.averageTimeInterval }
-        verify(exactly = 1) { displayOrientationSpy.setFromEulerAngles(0.0, 0.0, -0.0) }
         verify(exactly = 1) { deltaAttitudeSpy.setFromEulerAngles(any(), any(), any()) }
         verify(exactly = 1) { internalAttitudeSpy.combine(deltaAttitudeSpy) }
         verify(exactly = 1) { internalAttitudeSpy.normalize() }
         verify(exactly = 1) { internalAttitudeSpy.copyTo(attitudeSpy) }
-        verify(exactly = 1) { attitudeSpy.combine(displayOrientationSpy) }
-        verify(exactly = 1) { attitudeSpy.inverse() }
-        verify(exactly = 2) { attitudeSpy.normalize() }
         verify { coordinateTransformationSpy wasNot Called }
-        verify(exactly = 0) { attitudeSpy.toEulerAngles(displayEulerAngles) }
+        verify(exactly = 0) { attitudeSpy.toEulerAngles(eulerAngles) }
 
         verify(exactly = 1) {
             attitudeAvailableListener.onAttitudeAvailable(
                 estimator,
                 attitudeSpy,
+                timestamp,
                 null,
                 null,
                 null,
@@ -740,7 +687,7 @@ class RelativeGyroscopeAttitudeEstimatorTest {
         )
 
         assertTrue(estimator.estimateCoordinateTransformation)
-        assertTrue(estimator.estimateDisplayEulerAngles)
+        assertTrue(estimator.estimateEulerAngles)
         assertSame(attitudeAvailableListener, estimator.attitudeAvailableListener)
 
         val initialTimestamp1: Long? = getPrivateProperty(
@@ -772,20 +719,6 @@ class RelativeGyroscopeAttitudeEstimatorTest {
         requireNotNull(gyroscopeSensorCollector)
         val listener = gyroscopeSensorCollector.measurementListener
         requireNotNull(listener)
-
-        val displayOrientation: Quaternion? = getPrivateProperty(
-            BaseRelativeGyroscopeAttitudeEstimator::class,
-            estimator,
-            "displayOrientation"
-        )
-        requireNotNull(displayOrientation)
-        val displayOrientationSpy = spyk(displayOrientation)
-        setPrivateProperty(
-            BaseRelativeGyroscopeAttitudeEstimator::class,
-            estimator,
-            "displayOrientation",
-            displayOrientationSpy
-        )
 
         val deltaAttitude: Quaternion? = estimator.getPrivateProperty("deltaAttitude")
         requireNotNull(deltaAttitude)
@@ -837,12 +770,12 @@ class RelativeGyroscopeAttitudeEstimatorTest {
             coordinateTransformationSpy
         )
 
-        val displayEulerAngles: DoubleArray? = getPrivateProperty(
+        val eulerAngles: DoubleArray? = getPrivateProperty(
             BaseRelativeGyroscopeAttitudeEstimator::class,
             estimator,
-            "displayEulerAngles"
+            "eulerAngles"
         )
-        requireNotNull(displayEulerAngles)
+        requireNotNull(eulerAngles)
 
         val randomizer = UniformRandomizer()
         val wx = randomizer.nextFloat()
@@ -863,24 +796,21 @@ class RelativeGyroscopeAttitudeEstimatorTest {
         verify(exactly = 1) { timeIntervalEstimatorSpy.numberOfProcessedSamples }
         verify(exactly = 1) { timeIntervalEstimatorSpy.addTimestamp(any<Double>()) }
         verify(exactly = 1) { timeIntervalEstimatorSpy.averageTimeInterval }
-        verify(exactly = 1) { displayOrientationSpy.setFromEulerAngles(0.0, 0.0, -0.0) }
         verify(exactly = 1) { deltaAttitudeSpy.setFromEulerAngles(any(), any(), any()) }
         verify(exactly = 1) { internalAttitudeSpy.combine(deltaAttitudeSpy) }
         verify(exactly = 1) { internalAttitudeSpy.normalize() }
         verify(exactly = 1) { internalAttitudeSpy.copyTo(attitudeSpy) }
-        verify(exactly = 1) { attitudeSpy.combine(displayOrientationSpy) }
-        verify(exactly = 1) { attitudeSpy.inverse() }
-        verify(exactly = 2) { attitudeSpy.normalize() }
         verify(exactly = 1) { coordinateTransformationSpy.fromRotation(attitudeSpy) }
-        verify(exactly = 1) { attitudeSpy.toEulerAngles(displayEulerAngles) }
+        verify(exactly = 1) { attitudeSpy.toEulerAngles(eulerAngles) }
 
         verify(exactly = 1) {
             attitudeAvailableListener.onAttitudeAvailable(
                 estimator,
                 attitudeSpy,
-                displayEulerAngles[0],
-                displayEulerAngles[1],
-                displayEulerAngles[2],
+                timestamp,
+                eulerAngles[0],
+                eulerAngles[1],
+                eulerAngles[2],
                 coordinateTransformationSpy
             )
         }
@@ -902,7 +832,7 @@ class RelativeGyroscopeAttitudeEstimatorTest {
         )
 
         assertTrue(estimator.estimateCoordinateTransformation)
-        assertTrue(estimator.estimateDisplayEulerAngles)
+        assertTrue(estimator.estimateEulerAngles)
         assertSame(attitudeAvailableListener, estimator.attitudeAvailableListener)
 
         val initialTimestamp1: Long? = getPrivateProperty(
@@ -939,20 +869,6 @@ class RelativeGyroscopeAttitudeEstimatorTest {
         val listener = gyroscopeSensorCollector.measurementListener
         requireNotNull(listener)
 
-        val displayOrientation: Quaternion? = getPrivateProperty(
-            BaseRelativeGyroscopeAttitudeEstimator::class,
-            estimator,
-            "displayOrientation"
-        )
-        requireNotNull(displayOrientation)
-        val displayOrientationSpy = spyk(displayOrientation)
-        setPrivateProperty(
-            BaseRelativeGyroscopeAttitudeEstimator::class,
-            estimator,
-            "displayOrientation",
-            displayOrientationSpy
-        )
-
         val deltaAttitude: Quaternion? = estimator.getPrivateProperty("deltaAttitude")
         requireNotNull(deltaAttitude)
         val deltaAttitudeSpy = spyk(deltaAttitude)
@@ -1003,12 +919,12 @@ class RelativeGyroscopeAttitudeEstimatorTest {
             coordinateTransformationSpy
         )
 
-        val displayEulerAngles: DoubleArray? = getPrivateProperty(
+        val eulerAngles: DoubleArray? = getPrivateProperty(
             BaseRelativeGyroscopeAttitudeEstimator::class,
             estimator,
-            "displayEulerAngles"
+            "eulerAngles"
         )
-        requireNotNull(displayEulerAngles)
+        requireNotNull(eulerAngles)
 
         val randomizer = UniformRandomizer()
         val wx = randomizer.nextFloat()
@@ -1032,24 +948,21 @@ class RelativeGyroscopeAttitudeEstimatorTest {
         verify(exactly = 1) { timeIntervalEstimatorSpy.numberOfProcessedSamples }
         verify(exactly = 1) { timeIntervalEstimatorSpy.addTimestamp(any<Double>()) }
         verify(exactly = 1) { timeIntervalEstimatorSpy.averageTimeInterval }
-        verify(exactly = 1) { displayOrientationSpy.setFromEulerAngles(0.0, 0.0, -0.0) }
         verify(exactly = 1) { deltaAttitudeSpy.setFromEulerAngles(any(), any(), any()) }
         verify(exactly = 1) { internalAttitudeSpy.combine(deltaAttitudeSpy) }
         verify(exactly = 1) { internalAttitudeSpy.normalize() }
         verify(exactly = 1) { internalAttitudeSpy.copyTo(attitudeSpy) }
-        verify(exactly = 1) { attitudeSpy.combine(displayOrientationSpy) }
-        verify(exactly = 1) { attitudeSpy.inverse() }
-        verify(exactly = 2) { attitudeSpy.normalize() }
         verify(exactly = 1) { coordinateTransformationSpy.fromRotation(attitudeSpy) }
-        verify(exactly = 1) { attitudeSpy.toEulerAngles(displayEulerAngles) }
+        verify(exactly = 1) { attitudeSpy.toEulerAngles(eulerAngles) }
 
         verify(exactly = 1) {
             attitudeAvailableListener.onAttitudeAvailable(
                 estimator,
                 attitudeSpy,
-                displayEulerAngles[0],
-                displayEulerAngles[1],
-                displayEulerAngles[2],
+                timestamp,
+                eulerAngles[0],
+                eulerAngles[1],
+                eulerAngles[2],
                 coordinateTransformationSpy
             )
         }
@@ -1071,7 +984,7 @@ class RelativeGyroscopeAttitudeEstimatorTest {
         )
 
         assertFalse(estimator.estimateCoordinateTransformation)
-        assertFalse(estimator.estimateDisplayEulerAngles)
+        assertFalse(estimator.estimateEulerAngles)
         assertSame(attitudeAvailableListener, estimator.attitudeAvailableListener)
 
         val initialTimestamp1: Long? = getPrivateProperty(
@@ -1104,20 +1017,6 @@ class RelativeGyroscopeAttitudeEstimatorTest {
         val listener = gyroscopeSensorCollector.measurementListener
         requireNotNull(listener)
 
-        val displayOrientation: Quaternion? = getPrivateProperty(
-            BaseRelativeGyroscopeAttitudeEstimator::class,
-            estimator,
-            "displayOrientation"
-        )
-        requireNotNull(displayOrientation)
-        val displayOrientationSpy = spyk(displayOrientation)
-        setPrivateProperty(
-            BaseRelativeGyroscopeAttitudeEstimator::class,
-            estimator,
-            "displayOrientation",
-            displayOrientationSpy
-        )
-
         val deltaAttitude: Quaternion? = estimator.getPrivateProperty("deltaAttitude")
         requireNotNull(deltaAttitude)
         val deltaAttitudeSpy = spyk(deltaAttitude)
@@ -1168,12 +1067,12 @@ class RelativeGyroscopeAttitudeEstimatorTest {
             coordinateTransformationSpy
         )
 
-        val displayEulerAngles: DoubleArray? = getPrivateProperty(
+        val eulerAngles: DoubleArray? = getPrivateProperty(
             BaseRelativeGyroscopeAttitudeEstimator::class,
             estimator,
-            "displayEulerAngles"
+            "eulerAngles"
         )
-        requireNotNull(displayEulerAngles)
+        requireNotNull(eulerAngles)
 
         val randomizer = UniformRandomizer()
         val wx = randomizer.nextFloat()
@@ -1194,21 +1093,18 @@ class RelativeGyroscopeAttitudeEstimatorTest {
         verify(exactly = 1) { timeIntervalEstimatorSpy.numberOfProcessedSamples }
         verify(exactly = 1) { timeIntervalEstimatorSpy.addTimestamp(any<Double>()) }
         verify(exactly = 1) { timeIntervalEstimatorSpy.averageTimeInterval }
-        verify(exactly = 0) { displayOrientationSpy.setFromEulerAngles(0.0, 0.0, -0.0) }
         verify(exactly = 1) { deltaAttitudeSpy.setFromEulerAngles(any(), any(), any()) }
         verify(exactly = 1) { internalAttitudeSpy.combine(deltaAttitudeSpy) }
         verify(exactly = 1) { internalAttitudeSpy.normalize() }
         verify(exactly = 1) { internalAttitudeSpy.copyTo(attitudeSpy) }
-        verify(exactly = 0) { attitudeSpy.combine(displayOrientationSpy) }
-        verify(exactly = 1) { attitudeSpy.inverse() }
-        verify(exactly = 2) { attitudeSpy.normalize() }
         verify { coordinateTransformationSpy wasNot Called }
-        verify(exactly = 0) { attitudeSpy.toEulerAngles(displayEulerAngles) }
+        verify(exactly = 0) { attitudeSpy.toEulerAngles(eulerAngles) }
 
         verify(exactly = 1) {
             attitudeAvailableListener.onAttitudeAvailable(
                 estimator,
                 attitudeSpy,
+                timestamp,
                 null,
                 null,
                 null,

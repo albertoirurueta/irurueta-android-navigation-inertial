@@ -33,7 +33,7 @@ import com.irurueta.navigation.inertial.calibration.TimeIntervalEstimator
  * @property sensorDelay Delay of gyroscope between samples.
  * @property estimateCoordinateTransformation true to estimate coordinate transformation, false
  * otherwise. If not needed, it can be disabled to improve performance and decrease cpu load.
- * @property estimateDisplayEulerAngles true to estimate euler angles, false otherwise. If not
+ * @property estimateEulerAngles true to estimate euler angles, false otherwise. If not
  * needed, it can be disabled to improve performance and decrease cpu load.
  * @property attitudeAvailableListener listener to notify when a new attitude measurement is
  * available.
@@ -46,7 +46,7 @@ abstract class BaseRelativeGyroscopeAttitudeEstimator<T : BaseRelativeGyroscopeA
         GyroscopeSensorCollector.SensorType.GYROSCOPE,
     val sensorDelay: SensorDelay = SensorDelay.GAME,
     val estimateCoordinateTransformation: Boolean = false,
-    val estimateDisplayEulerAngles: Boolean = true,
+    val estimateEulerAngles: Boolean = true,
     var attitudeAvailableListener: L? = null,
     var gyroscopeMeasurementListener: GyroscopeSensorCollector.OnMeasurementListener?
 ) {
@@ -65,7 +65,7 @@ abstract class BaseRelativeGyroscopeAttitudeEstimator<T : BaseRelativeGyroscopeA
     /**
      * Array to be reused containing euler angles of leveling attitude.
      */
-    protected val displayEulerAngles = DoubleArray(Quaternion.N_ANGLES)
+    protected val eulerAngles = DoubleArray(Quaternion.N_ANGLES)
 
     /**
      * Instance to be reused containing coordinate transformation in NED coordinates.
@@ -162,18 +162,22 @@ abstract class BaseRelativeGyroscopeAttitudeEstimator<T : BaseRelativeGyroscopeA
          *
          * @param estimator attitude estimator that raised this event.
          * @param attitude attitude expressed in NED coordinates.
-         * @param roll roll angle expressed in radians. Only available if
-         * [estimateDisplayEulerAngles].
-         * @param pitch pitch angle expressed in radians. Only available if
-         * [estimateDisplayEulerAngles].
-         * @param yaw yaw angle expressed in radians. Only available if
-         * [estimateDisplayEulerAngles].
+         * @param timestamp time in nanoseconds at which the measurement was made. Each measurement
+         * wil be monotonically increasing using the same time base as
+         * [android.os.SystemClock.elapsedRealtimeNanos].
+         * @param roll roll angle expressed in radians respect to NED coordinate system. Only
+         * available if [estimateEulerAngles].
+         * @param pitch pitch angle expressed in radians respect to NED coordinate system. Only
+         * available if [estimateEulerAngles].
+         * @param yaw yaw angle expressed in radians respect to NED coordinate system. Only
+         * available if [estimateEulerAngles].
          * @param coordinateTransformation coordinate transformation containing measured leveling
          * attitude. Only available if [estimateCoordinateTransformation].
          */
         fun onAttitudeAvailable(
             estimator: T,
             attitude: Quaternion,
+            timestamp: Long,
             roll: Double?,
             pitch: Double?,
             yaw: Double?,

@@ -56,7 +56,7 @@ import java.util.*
  * magnetic declination. Only taken into account if [useWorldMagneticModel] is true.
  * @property estimateCoordinateTransformation true to estimate coordinate transformation, false
  * otherwise. If not needed, it can be disabled to improve performance and decrease cpu load.
- * @property estimateDisplayEulerAngles true to estimate euler angles, false otherwise. If not
+ * @property estimateEulerAngles true to estimate euler angles, false otherwise. If not
  * needed, it can be disabled to improve performance and decrease cpu load.
  * @property attitudeAvailableListener listener to notify when a new attitude measurement is
  * available.
@@ -71,7 +71,7 @@ class GeomagneticAttitudeEstimator private constructor(
     val accelerometerAveragingFilter: AveragingFilter,
     var timestamp: Date,
     val estimateCoordinateTransformation: Boolean,
-    val estimateDisplayEulerAngles: Boolean,
+    val estimateEulerAngles: Boolean,
     var attitudeAvailableListener: OnAttitudeAvailableListener?,
     var magnetometerMeasurementListener: MagnetometerSensorCollector.OnMeasurementListener?
 ) {
@@ -99,7 +99,7 @@ class GeomagneticAttitudeEstimator private constructor(
      * @param useAccurateLevelingEstimator true to use accurate leveling, false to use a normal one.
      * @param estimateCoordinateTransformation true to estimate coordinate transformation, false
      * otherwise. If not needed, it can be disabled to improve performance and decrease cpu load.
-     * @param estimateDisplayEulerAngles true to estimate euler angles, false otherwise. If not
+     * @param estimateEulerAngles true to estimate euler angles, false otherwise. If not
      * needed, it can be disabled to improve performance and decrease cpu load.
      * @param attitudeAvailableListener listener to notify when a new attitude measurement is
      * available.
@@ -126,7 +126,7 @@ class GeomagneticAttitudeEstimator private constructor(
         useWorldMagneticModel: Boolean = false,
         useAccurateLevelingEstimator: Boolean = false,
         estimateCoordinateTransformation: Boolean = false,
-        estimateDisplayEulerAngles: Boolean = true,
+        estimateEulerAngles: Boolean = true,
         attitudeAvailableListener: OnAttitudeAvailableListener? = null,
         accelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? = null,
         gravityMeasurementListener: GravitySensorCollector.OnMeasurementListener? = null,
@@ -141,7 +141,7 @@ class GeomagneticAttitudeEstimator private constructor(
         accelerometerAveragingFilter,
         timestamp,
         estimateCoordinateTransformation,
-        estimateDisplayEulerAngles,
+        estimateEulerAngles,
         attitudeAvailableListener,
         magnetometerMeasurementListener
     ) {
@@ -224,7 +224,7 @@ class GeomagneticAttitudeEstimator private constructor(
     /**
      * Array to be reused containing euler angles of leveling attitude.
      */
-    private val displayEulerAngles = DoubleArray(Quaternion.N_ANGLES)
+    private val eulerAngles = DoubleArray(Quaternion.N_ANGLES)
 
     /**
      * Instance to be reused containing coordinate transformation in NED coordinates.
@@ -380,9 +380,9 @@ class GeomagneticAttitudeEstimator private constructor(
                 accelerometerSensorType,
                 accelerometerAveragingFilter,
                 estimateCoordinateTransformation = false,
-                estimateDisplayEulerAngles = false,
-                levelingAvailableListener = { _, attitude, _, _, _ ->
-                    processLeveling(attitude)
+                estimateEulerAngles = false,
+                levelingAvailableListener = { _, attitude, timestamp, _, _, _ ->
+                    processLeveling(attitude, timestamp)
                 },
                 gravityEstimationListener = gravityEstimationListener,
                 accelerometerMeasurementListener = accelerometerMeasurementListener,
@@ -396,9 +396,9 @@ class GeomagneticAttitudeEstimator private constructor(
                 accelerometerSensorType,
                 accelerometerAveragingFilter,
                 estimateCoordinateTransformation = false,
-                estimateDisplayEulerAngles = false,
-                levelingAvailableListener = { _, attitude, _, _, _ ->
-                    processLeveling(attitude)
+                estimateEulerAngles = false,
+                levelingAvailableListener = { _, attitude, timestamp, _, _, _ ->
+                    processLeveling(attitude, timestamp)
                 },
                 gravityEstimationListener = gravityEstimationListener,
                 accelerometerMeasurementListener = accelerometerMeasurementListener,
@@ -426,8 +426,13 @@ class GeomagneticAttitudeEstimator private constructor(
     /**
      * Processes last received leveling attitude to obtain an updated absolute attitude taking
      * into account last magnetometer measurement.
+     *
+     * @param attitude estimated absolute attitude respect NED coordinate system.
+     * @param timestamp time in nanoseconds at which the measurement was made. Each measurement
+     * wil be monotonically increasing using the same time base as
+     * [android.os.SystemClock.elapsedRealtimeNanos].
      */
-    private fun processLeveling(attitude: Quaternion) {
+    private fun processLeveling(attitude: Quaternion, timestamp: Long) {
         if (!hasMagnetometerValues) {
             return
         }
@@ -435,9 +440,9 @@ class GeomagneticAttitudeEstimator private constructor(
         attitude.copyTo(levelingAttitude)
 
         // obtain roll and pitch euler angles from leveling
-        levelingAttitude.toEulerAngles(displayEulerAngles)
-        val roll = displayEulerAngles[0]
-        val pitch = displayEulerAngles[1]
+        levelingAttitude.toEulerAngles(eulerAngles)
+        val roll = eulerAngles[0]
+        val pitch = eulerAngles[1]
         val declination = getDeclination()
         val yaw = AttitudeEstimator.getYaw(triad.valueX, triad.valueY, triad.valueZ, declination, roll, pitch)
 
@@ -454,11 +459,11 @@ class GeomagneticAttitudeEstimator private constructor(
         val displayRoll: Double?
         val displayPitch: Double?
         val displayYaw: Double?
-        if (estimateDisplayEulerAngles) {
-            fusedAttitude.toEulerAngles(displayEulerAngles)
-            displayRoll = displayEulerAngles[0]
-            displayPitch = displayEulerAngles[1]
-            displayYaw = displayEulerAngles[2]
+        if (estimateEulerAngles) {
+            fusedAttitude.toEulerAngles(eulerAngles)
+            displayRoll = eulerAngles[0]
+            displayPitch = eulerAngles[1]
+            displayYaw = eulerAngles[2]
         } else {
             displayRoll = null
             displayPitch = null
@@ -469,6 +474,7 @@ class GeomagneticAttitudeEstimator private constructor(
         attitudeAvailableListener?.onAttitudeAvailable(
             this@GeomagneticAttitudeEstimator,
             fusedAttitude,
+            timestamp,
             displayRoll,
             displayPitch,
             displayYaw,
@@ -500,18 +506,22 @@ class GeomagneticAttitudeEstimator private constructor(
          *
          * @param estimator attitude estimator that raised this event.
          * @param attitude attitude expressed in NED coordinates.
-         * @param roll roll angle expressed in radians. Only available if
-         * [estimateDisplayEulerAngles] is true.
-         * @param pitch pitch angle expressed in radians. Only available if
-         * [estimateDisplayEulerAngles] is true.
-         * @param yaw yaw angle expressed in radians. Only available if
-         * [estimateDisplayEulerAngles] is true.
+         * @param timestamp time in nanoseconds at which the measurement was made. Each measurement
+         * wil be monotonically increasing using the same time base as
+         * [android.os.SystemClock.elapsedRealtimeNanos].
+         * @param roll roll angle expressed in radians respect to NED coordinate system. Only
+         * available if [estimateEulerAngles] is true.
+         * @param pitch pitch angle expressed in radians respect to NED coordinate system. Only
+         * available if [estimateEulerAngles] is true.
+         * @param yaw yaw angle expressed in radians respect to NED coordinate system. Only
+         * available if [estimateEulerAngles] is true.
          * @param coordinateTransformation coordinate transformation containing measured leveled
          * geomagnetic attitude. Only available if [estimateCoordinateTransformation] is true.
          */
         fun onAttitudeAvailable(
             estimator: GeomagneticAttitudeEstimator,
             attitude: Quaternion,
+            timestamp: Long,
             roll: Double?,
             pitch: Double?,
             yaw: Double?,

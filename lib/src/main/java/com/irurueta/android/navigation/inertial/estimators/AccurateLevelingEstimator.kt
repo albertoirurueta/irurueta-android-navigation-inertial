@@ -46,7 +46,7 @@ import kotlin.math.atan2
  * sensed gravity component of specific force.
  * @property estimateCoordinateTransformation true to estimate coordinate transformation, false
  * otherwise. If not needed, it can be disabled to improve performance and decrease cpu load.
- * @property estimateDisplayEulerAngles true to estimate euler angles, false otherwise. If not
+ * @property estimateEulerAngles true to estimate euler angles, false otherwise. If not
  * needed, it can be disabled to improve performance and decrease cpu load.
  * @property levelingAvailableListener listener to notify when a new leveling measurement is
  * available.
@@ -61,7 +61,7 @@ class AccurateLevelingEstimator private constructor(
     accelerometerSensorType: AccelerometerSensorCollector.SensorType,
     accelerometerAveragingFilter: AveragingFilter,
     estimateCoordinateTransformation: Boolean,
-    estimateDisplayEulerAngles: Boolean,
+    estimateEulerAngles: Boolean,
     levelingAvailableListener: OnLevelingAvailableListener?,
     gravityEstimationListener: GravityEstimator.OnEstimationListener?
 ) : BaseLevelingEstimator<AccurateLevelingEstimator, AccurateLevelingEstimator.OnLevelingAvailableListener>(
@@ -71,7 +71,7 @@ class AccurateLevelingEstimator private constructor(
     accelerometerSensorType,
     accelerometerAveragingFilter,
     estimateCoordinateTransformation,
-    estimateDisplayEulerAngles,
+    estimateEulerAngles,
     levelingAvailableListener,
     gravityEstimationListener
 ) {
@@ -88,7 +88,7 @@ class AccurateLevelingEstimator private constructor(
      * sensed gravity component of specific force.
      * @param estimateCoordinateTransformation true to estimate coordinate transformation, false
      * otherwise. If not needed, it can be disabled to improve performance and decrease cpu load.
-     * @param estimateDisplayEulerAngles true to estimate euler angles, false otherwise. If not
+     * @param estimateEulerAngles true to estimate euler angles, false otherwise. If not
      * needed, it can be disabled to improve performance and decrease cpu load.
      * @param levelingAvailableListener listener to notify when a new leveling measurement is
      * available.
@@ -108,7 +108,7 @@ class AccurateLevelingEstimator private constructor(
             AccelerometerSensorCollector.SensorType.ACCELEROMETER,
         accelerometerAveragingFilter: AveragingFilter = LowPassAveragingFilter(),
         estimateCoordinateTransformation: Boolean = false,
-        estimateDisplayEulerAngles: Boolean = true,
+        estimateEulerAngles: Boolean = true,
         levelingAvailableListener: OnLevelingAvailableListener? = null,
         gravityEstimationListener: GravityEstimator.OnEstimationListener? = null,
         accelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? = null,
@@ -121,7 +121,7 @@ class AccurateLevelingEstimator private constructor(
         accelerometerSensorType,
         accelerometerAveragingFilter,
         estimateCoordinateTransformation,
-        estimateDisplayEulerAngles,
+        estimateEulerAngles,
         levelingAvailableListener,
         gravityEstimationListener
     ) {
@@ -142,7 +142,7 @@ class AccurateLevelingEstimator private constructor(
                     attitude
                 )
 
-                postProcessAttitudeAndNotify()
+                postProcessAttitudeAndNotify(timestamp)
             },
             accelerometerAveragingFilter,
             accelerometerMeasurementListener,

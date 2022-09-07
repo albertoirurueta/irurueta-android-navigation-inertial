@@ -55,10 +55,10 @@ class LeveledRelativeAttitudeEstimatorTest {
         val estimator = LeveledRelativeAttitudeEstimator(
             activity,
             location,
-            estimateDisplayEulerAngles = true,
+            estimateEulerAngles = true,
             useAccurateLevelingEstimator = false,
             useAccurateRelativeGyroscopeAttitudeEstimator = false,
-            attitudeAvailableListener = { _, _, roll, pitch, yaw, _ ->
+            attitudeAvailableListener = { _, _, _, roll, pitch, yaw, _ ->
                 logAttitude(roll, pitch, yaw)
                 syncHelper.notifyAll { completed++ }
             }
@@ -82,10 +82,10 @@ class LeveledRelativeAttitudeEstimatorTest {
         val estimator = LeveledRelativeAttitudeEstimator(
             activity,
             location,
-            estimateDisplayEulerAngles = true,
+            estimateEulerAngles = true,
             useAccurateLevelingEstimator = true,
             useAccurateRelativeGyroscopeAttitudeEstimator = false,
-            attitudeAvailableListener = { _, _, roll, pitch, yaw, _ ->
+            attitudeAvailableListener = { _, _, _, roll, pitch, yaw, _ ->
                 logAttitude(roll, pitch, yaw)
                 syncHelper.notifyAll { completed++ }
             }
@@ -109,10 +109,10 @@ class LeveledRelativeAttitudeEstimatorTest {
         val estimator = LeveledRelativeAttitudeEstimator(
             activity,
             location,
-            estimateDisplayEulerAngles = true,
+            estimateEulerAngles = true,
             useAccurateLevelingEstimator = false,
             useAccurateRelativeGyroscopeAttitudeEstimator = true,
-            attitudeAvailableListener = { _, _, roll, pitch, yaw, _ ->
+            attitudeAvailableListener = { _, _, _, roll, pitch, yaw, _ ->
                 logAttitude(roll, pitch, yaw)
                 syncHelper.notifyAll { completed++ }
             }
@@ -136,10 +136,10 @@ class LeveledRelativeAttitudeEstimatorTest {
         val estimator = LeveledRelativeAttitudeEstimator(
             activity,
             location,
-            estimateDisplayEulerAngles = true,
+            estimateEulerAngles = true,
             useAccurateLevelingEstimator = true,
             useAccurateRelativeGyroscopeAttitudeEstimator = true,
-            attitudeAvailableListener = { _, _, roll, pitch, yaw, _ ->
+            attitudeAvailableListener = { _, _, _, roll, pitch, yaw, _ ->
                 logAttitude(roll, pitch, yaw)
                 syncHelper.notifyAll { completed++ }
             }

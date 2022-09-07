@@ -10,6 +10,9 @@
     <string name="roll_degrees">Roll: %1$.2f º</string>
     <string name="pitch_degrees">Pitch: %1$.2f º</string>
     <string name="yaw_degrees">Yaw: %1$.2f º</string>
+    <string name="x_pos_meters">X: %1$.2f m</string>
+    <string name="y_pos_meters">Y: %1$.2f m</string>
+    <string name="z_pos_meters">Z: %1$.2f m</string>
     <string name="yaw_standard_deviation_degrees">Yaw standard deviation: %1$.2f º</string>
     <string name="leveling_estimator">Leveling estimator:</string>
     <string name="gravity_leveling">Gravity leveling</string>
@@ -41,4 +44,6 @@
     <string name="world_magnetic_model">World Magnetic Model</string>
     <string name="fused_geomagnetic_attitude_estimator">Fused geomagnetic attitude estimator:</string>
     <string name="fused_geomagnetic_attitude_estimator2">Fused geomagnetic attitude estimator 2:</string>
+    <string name="pose_estimator_label">Pose Estimator:</string>
+    <string name="pose_estimator_button">Pose Estimator</string>
 </resources>

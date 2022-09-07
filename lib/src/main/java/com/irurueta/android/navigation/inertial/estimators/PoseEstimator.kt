@@ -18,6 +18,7 @@ package com.irurueta.android.navigation.inertial.estimators
 import android.content.Context
 import android.location.Location
 import com.irurueta.algebra.ArrayUtils
+import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
@@ -56,7 +57,6 @@ import java.util.*
  * current frame and initial frame, false to skip transformation computation.
  * @property estimatePreviousTransformation true to estimate 3D metric transformation between
  * current and previous frames, false to skip transformation computation.
- * @property ignoreDisplayOrientation true to ignore display orientation, false otherwise.
  * @property poseAvailableListener notifies when a new estimated pose is available.
  * @property accelerometerMeasurementListener listener to notify new accelerometer measurements.
  * @property gyroscopeMeasurementListener listener to notify new gyroscope measurements.
@@ -74,7 +74,6 @@ class PoseEstimator private constructor(
     val gyroscopeSensorType: GyroscopeSensorCollector.SensorType,
     val estimateInitialTransformation: Boolean,
     val estimatePreviousTransformation: Boolean,
-    val ignoreDisplayOrientation: Boolean,
     var poseAvailableListener: OnPoseAvailableListener?,
     var accelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener?,
     var gyroscopeMeasurementListener: GyroscopeSensorCollector.OnMeasurementListener?,
@@ -97,8 +96,6 @@ class PoseEstimator private constructor(
      * sensed gravity component of specific force.
      * @param gyroscopeSensorType One of the supported gyroscope sensor types. It is suggested to
      * avoid using non-calibrated gyroscopes.
-     * @property gyroscopeAveragingFilter a low-pass averaging filter for gyroscope samples to obtain
-     * sensed Earth rotation.
      * @param worldMagneticModel Earth's magnetic model. Null to use default model
      * when [useWorldMagneticModel] is true. If [useWorldMagneticModel] is false, this is ignored.
      * @param timestamp Timestamp when World Magnetic Model will be evaluated to obtain current.
@@ -114,7 +111,6 @@ class PoseEstimator private constructor(
      * current frame and initial frame, false to skip transformation computation.
      * @param estimatePreviousTransformation true to estimate 3D metric transformation between
      * current and previous frames, false to skip transformation computation.
-     * @param ignoreDisplayOrientation true to ignore display orientation, false otherwise.
      * @param poseAvailableListener notifies when a new estimated pose is available.
      * @param accelerometerMeasurementListener listener to notify new accelerometer measurements.
      * @param gyroscopeMeasurementListener listener to notify new gyroscope measurements.
@@ -141,7 +137,6 @@ class PoseEstimator private constructor(
         useAccurateRelativeGyroscopeAttitudeEstimator: Boolean = true,
         estimateInitialTransformation: Boolean = false,
         estimatePreviousTransformation: Boolean = false,
-        ignoreDisplayOrientation: Boolean = false,
         poseAvailableListener: OnPoseAvailableListener? = null,
         accelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? = null,
         gyroscopeMeasurementListener: GyroscopeSensorCollector.OnMeasurementListener? = null,
@@ -156,7 +151,6 @@ class PoseEstimator private constructor(
         gyroscopeSensorType,
         estimateInitialTransformation,
         estimatePreviousTransformation,
-        ignoreDisplayOrientation,
         poseAvailableListener,
         accelerometerMeasurementListener,
         gyroscopeMeasurementListener,
@@ -363,6 +357,8 @@ class PoseEstimator private constructor(
 
     private val inverseEulerAngles = DoubleArray(Quaternion.N_ANGLES)
 
+    private val initialAttitude = Quaternion()
+
     /**
      * Estimates device absolute attitude using accelerometer, gyroscope and magnetometer sensors.
      */
@@ -381,8 +377,8 @@ class PoseEstimator private constructor(
         useAccurateLevelingEstimator,
         useAccurateRelativeGyroscopeAttitudeEstimator,
         estimateCoordinateTransformation = true,
-        estimateDisplayEulerAngles = false,
-        attitudeAvailableListener = { estimator, attitude, _, _, _, coordinateTransformation ->
+        estimateEulerAngles = false,
+        attitudeAvailableListener = { estimator, attitude, timestamp, _, _, _, coordinateTransformation ->
 
             val timeInterval = estimator.gyroscopeAverageTimeInterval
 
@@ -396,12 +392,14 @@ class PoseEstimator private constructor(
 
             inverseDeltaAttitude.toEulerAngles(inverseEulerAngles)
 
-            previousAttitude.fromQuaternion(attitude)
-
             val invTimeInterval = 1.0 / timeInterval
             ArrayUtils.multiplyByScalar(inverseEulerAngles, invTimeInterval, inverseEulerAngles)
 
-            angularSpeed.setValueCoordinates(inverseEulerAngles[0], inverseEulerAngles[1], inverseEulerAngles[2])
+            angularSpeed.setValueCoordinates(
+                inverseEulerAngles[0],
+                inverseEulerAngles[1],
+                inverseEulerAngles[2]
+            )
 
             ECEFKinematicsEstimator.estimateKinematics(
                 timeInterval,
@@ -446,19 +444,39 @@ class PoseEstimator private constructor(
                 currentEcefFrame,
                 previousEcefFrame,
                 initialEcefFrame,
+                attitude,
+                previousAttitude,
+                initialAttitude,
+                timestamp,
                 initialTransformation,
                 previousTransformation
             )
 
             // update previous frame
             previousEcefFrame.copyFrom(currentEcefFrame)
+            previousAttitude.fromQuaternion(attitude)
         },
         accelerometerMeasurementListener = { ax, ay, az, bx, by, bz, timestamp, accuracy ->
 
-            val fx = -(ax - (bx ?: 0.0f)).toDouble()
+            val currentAx = if (bx != null)
+                ax.toDouble() - bx.toDouble()
+            else
+                ax.toDouble()
+            val currentAy = if (by != null)
+                ay.toDouble() - by.toDouble()
+            else
+                ay.toDouble()
+            val currentAz = if (bz != null)
+                az.toDouble() - bz.toDouble()
+            else
+                az.toDouble()
+
+            ENUtoNEDTriadConverter.convert(currentAx, currentAy, currentAz, acceleration)
+
+            /*val fx = -(ax - (bx ?: 0.0f)).toDouble()
             val fy = -(ay - (by ?: 0.0f)).toDouble()
             val fz = -(az - (bz ?: 0.0f)).toDouble()
-            acceleration.setValueCoordinates(fx, fy, fz)
+            acceleration.setValueCoordinates(fx, fy, fz)*/
 
             accelerometerMeasurementListener?.onMeasurement(
                 ax,
@@ -472,10 +490,27 @@ class PoseEstimator private constructor(
             )
         },
         gyroscopeMeasurementListener = { wx, wy, wz, bx, by, bz, timestamp, accuracy ->
-            val angularRateX = -(wx - (bx ?: 0.0f)).toDouble()
+            val currentWx = if (bx != null)
+                wx.toDouble() - bx.toDouble()
+            else
+                wx.toDouble()
+
+            val currentWy = if (by != null)
+                wy.toDouble() - by.toDouble()
+            else
+                wy.toDouble()
+
+            val currentWz = if (bz != null)
+                wz.toDouble() - bz.toDouble()
+            else
+                wz.toDouble()
+
+            ENUtoNEDTriadConverter.convert(currentWx, currentWy, currentWz, angularSpeed)
+
+            /*val angularRateX = -(wx - (bx ?: 0.0f)).toDouble()
             val angularRateY = -(wy - (by ?: 0.0f)).toDouble()
             val angularRateZ = -(wz - (bz ?: 0.0f)).toDouble()
-            angularSpeed.setValueCoordinates(angularRateX, angularRateY, angularRateZ)
+            angularSpeed.setValueCoordinates(angularRateX, angularRateY, angularRateZ)*/
 
             gyroscopeMeasurementListener?.onMeasurement(
                 wx,
@@ -552,17 +587,14 @@ class PoseEstimator private constructor(
      * absolute attitude.
      * @return true if this estimator was already initialized, false if it wasn't.
      */
-    private fun initialize(attitude: Quaternion, coordinateTransformation: CoordinateTransformation?): Boolean {
+    private fun initialize(
+        attitude: Quaternion,
+        coordinateTransformation: CoordinateTransformation?
+    ): Boolean {
         val result = initializedFrame
         if (!initializedFrame && coordinateTransformation != null) {
 
-            val c = CoordinateTransformation(coordinateTransformation)
-            val q = Quaternion()
-            c.asRotation(q)
-            q.inverse()
-            c.fromRotation(q)
-
-            initialNedFrame.coordinateTransformation = c // coordinateTransformation
+            initialNedFrame.coordinateTransformation = coordinateTransformation
             initialNedFrame.position = location.toNEDPosition()
             initialNedFrame.velocity = initialVelocity
 
@@ -570,6 +602,7 @@ class PoseEstimator private constructor(
 
             initialEcefFrame.copyTo(previousEcefFrame)
 
+            initialAttitude.fromQuaternion(attitude)
             previousAttitude.fromQuaternion(attitude)
 
             initializedFrame = true
@@ -601,7 +634,7 @@ class PoseEstimator private constructor(
         // [1 ]
 
         // transformedPoint = [deltaR      -deltaR * startPoint + endPoint] * point
-        //                    [0^T          1                                     ]
+        //                    [0^T          1                             ]
 
         // T = [deltaR      -deltaR * startPoint + endPoint]
         //     [0^T          1                             ]
@@ -646,6 +679,9 @@ class PoseEstimator private constructor(
          * @param currentFrame current ECEF frame containing device position, velocity and attitude.
          * @param previousFrame ECEF frame of previous measurement.
          * @param initialFrame initial ECEF frame when estimator was started.
+         * @param timestamp time in nanoseconds at which the measurement was made. Each measurement
+         * wil be monotonically increasing using the same time base as
+         * [android.os.SystemClock.elapsedRealtimeNanos].
          * @param initialTransformation 3D metric transformation relating initial and current
          * ECEF frames.
          * @param previousTransformation 3D metric transformation relating previous and current
@@ -656,6 +692,10 @@ class PoseEstimator private constructor(
             currentFrame: ECEFFrame,
             previousFrame: ECEFFrame,
             initialFrame: ECEFFrame,
+            currentAttitude: Quaternion,
+            previousAttitude: Quaternion,
+            initialAttitude: Quaternion,
+            timestamp: Long,
             initialTransformation: EuclideanTransformation3D?,
             previousTransformation: EuclideanTransformation3D?
         )

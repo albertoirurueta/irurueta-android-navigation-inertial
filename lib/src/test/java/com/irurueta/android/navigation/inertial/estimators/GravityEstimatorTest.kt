@@ -306,8 +306,8 @@ class GravityEstimatorTest {
         verify(exactly = 1) {
             estimationListener.onEstimation(
                 estimator,
-                -gx.toDouble(),
-                -gy.toDouble(),
+                gy.toDouble(),
+                gx.toDouble(),
                 -gz.toDouble(),
                 timestamp
             )
@@ -375,9 +375,9 @@ class GravityEstimatorTest {
 
         verify(exactly = 1) {
             accelerometerAveragingFilterSpy.filter(
-                ax.toDouble(),
-                ay.toDouble(),
-                az.toDouble(),
+                ax.toDouble() - bx.toDouble(),
+                ay.toDouble() - by.toDouble(),
+                az.toDouble() - bz.toDouble(),
                 any(),
                 timestamp
             )
@@ -420,9 +420,9 @@ class GravityEstimatorTest {
 
         verify(exactly = 1) {
             accelerometerAveragingFilterSpy.filter(
-                ax.toDouble(),
-                ay.toDouble(),
-                az.toDouble(),
+                ax.toDouble() - bx.toDouble(),
+                ay.toDouble() - by.toDouble(),
+                az.toDouble() - bz.toDouble(),
                 any(),
                 timestamp
             )
@@ -436,9 +436,9 @@ class GravityEstimatorTest {
         val filterOutputList = mutableListOf<DoubleArray>()
         verify(exactly = 2) {
             accelerometerAveragingFilterSpy.filter(
-                ax.toDouble(),
-                ay.toDouble(),
-                az.toDouble(),
+                ax.toDouble() - bx.toDouble(),
+                ay.toDouble() - by.toDouble(),
+                az.toDouble() - bz.toDouble(),
                 capture(filterOutputList),
                 timestamp
             )
@@ -448,8 +448,8 @@ class GravityEstimatorTest {
         verify(exactly = 1) {
             estimationListener.onEstimation(
                 estimator,
-                -filterOutput[0],
-                -filterOutput[1],
+                filterOutput[1],
+                filterOutput[0],
                 -filterOutput[2],
                 timestamp
             )
@@ -496,9 +496,9 @@ class GravityEstimatorTest {
 
         verify(exactly = 1) {
             accelerometerAveragingFilterSpy.filter(
-                ax.toDouble(),
-                ay.toDouble(),
-                az.toDouble(),
+                ax.toDouble() - bx.toDouble(),
+                ay.toDouble() - by.toDouble(),
+                az.toDouble() - bz.toDouble(),
                 any(),
                 timestamp
             )
@@ -523,9 +523,9 @@ class GravityEstimatorTest {
         val filterOutputList = mutableListOf<DoubleArray>()
         verify(exactly = 2) {
             accelerometerAveragingFilterSpy.filter(
-                ax.toDouble(),
-                ay.toDouble(),
-                az.toDouble(),
+                ax.toDouble() - bx.toDouble(),
+                ay.toDouble() - by.toDouble(),
+                az.toDouble() - bz.toDouble(),
                 capture(filterOutputList),
                 timestamp
             )

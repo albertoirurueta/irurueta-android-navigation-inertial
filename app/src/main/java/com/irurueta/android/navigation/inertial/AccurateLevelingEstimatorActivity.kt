@@ -152,8 +152,8 @@ class AccurateLevelingEstimatorActivity : AppCompatActivity() {
                 accelerometerSensorType = accelerometerSensorType,
                 accelerometerAveragingFilter = averagingFilter,
                 estimateCoordinateTransformation = false,
-                estimateDisplayEulerAngles = true,
-                levelingAvailableListener = { _, attitude, roll, pitch, _ ->
+                estimateEulerAngles = true,
+                levelingAvailableListener = { _, attitude, _, roll, pitch, _ ->
                     attitude.toQuaternion(rotation)
 
                     rollView?.text = getString(R.string.roll_degrees, Math.toDegrees(roll ?: 0.0))

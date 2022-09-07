@@ -40,7 +40,7 @@ import com.irurueta.navigation.frames.FrameType
  * sensed gravity component of specific force. (Only used if [useAccelerometer] is true).
  * @property estimateCoordinateTransformation true to estimate coordinate transformation, false
  * otherwise. If not needed, it can be disabled to improve performance and decrease cpu load.
- * @property estimateDisplayEulerAngles true to estimate euler angles, false otherwise. If not
+ * @property estimateEulerAngles true to estimate euler angles, false otherwise. If not
  * needed, it can be disabled to improve performance and decrease cpu load.
  * @property levelingAvailableListener listener to notify when a new leveling measurement is
  * available.
@@ -56,7 +56,7 @@ abstract class BaseLevelingEstimator<T : BaseLevelingEstimator<T, L>,
         AccelerometerSensorCollector.SensorType.ACCELEROMETER,
     val accelerometerAveragingFilter: AveragingFilter = LowPassAveragingFilter(),
     val estimateCoordinateTransformation: Boolean = false,
-    val estimateDisplayEulerAngles: Boolean = true,
+    val estimateEulerAngles: Boolean = true,
     var levelingAvailableListener: L? = null,
     var gravityEstimationListener: GravityEstimator.OnEstimationListener? = null
 ) {
@@ -69,7 +69,7 @@ abstract class BaseLevelingEstimator<T : BaseLevelingEstimator<T, L>,
     /**
      * Array to be reused containing euler angles of leveling attitude.
      */
-    private val displayEulerAngles = DoubleArray(Quaternion.N_ANGLES)
+    private val eulerAngles = DoubleArray(Quaternion.N_ANGLES)
 
     /**
      * Instance to be reused containing coordinate transformation in NED coordinates.
@@ -121,8 +121,12 @@ abstract class BaseLevelingEstimator<T : BaseLevelingEstimator<T, L>,
     /**
      * Processes current attitude to take into account display orientation and compute
      * (if needed) a coordinate transformation or display Euler angles.
+     *
+     * @param timestamp time in nanoseconds at which the measurement was made. Each measurement
+     * wil be monotonically increasing using the same time base as
+     * [android.os.SystemClock.elapsedRealtimeNanos].
      */
-    protected fun postProcessAttitudeAndNotify() {
+    protected fun postProcessAttitudeAndNotify(timestamp: Long) {
         val c: CoordinateTransformation? =
             if (estimateCoordinateTransformation) {
                 coordinateTransformation.fromRotation(attitude)
@@ -133,10 +137,10 @@ abstract class BaseLevelingEstimator<T : BaseLevelingEstimator<T, L>,
 
         val displayRoll: Double?
         val displayPitch: Double?
-        if (estimateDisplayEulerAngles) {
-            attitude.toEulerAngles(displayEulerAngles)
-            displayRoll = displayEulerAngles[0]
-            displayPitch = displayEulerAngles[1]
+        if (estimateEulerAngles) {
+            attitude.toEulerAngles(eulerAngles)
+            displayRoll = eulerAngles[0]
+            displayPitch = eulerAngles[1]
         } else {
             displayRoll = null
             displayPitch = null
@@ -147,6 +151,7 @@ abstract class BaseLevelingEstimator<T : BaseLevelingEstimator<T, L>,
         levelingAvailableListener?.onLevelingAvailable(
             this as T,
             attitude,
+            timestamp,
             displayRoll,
             displayPitch,
             c
@@ -163,16 +168,20 @@ abstract class BaseLevelingEstimator<T : BaseLevelingEstimator<T, L>,
          *
          * @param estimator leveling estimator that raised this event.
          * @param attitude leveling attitude (roll and pitch angles) expressed in NED coordinates.
-         * @param roll roll angle expressed in radians. Only available if
-         * [estimateDisplayEulerAngles].
-         * @param pitch pitch angle expressed in radians. Only available if
-         * [estimateDisplayEulerAngles].
+         * @param timestamp time in nanoseconds at which the measurement was made. Each measurement
+         * wil be monotonically increasing using the same time base as
+         * [android.os.SystemClock.elapsedRealtimeNanos].
+         * @param roll roll angle expressed in radians respect to NED coordinate system. Only
+         * available if [estimateEulerAngles].
+         * @param pitch pitch angle expressed in radians respect to NED coordinate system. Only
+         * available if [estimateEulerAngles].
          * @param coordinateTransformation coordinate transformation containing measured leveling
          * attitude. Only available if [estimateCoordinateTransformation].
          */
         fun onLevelingAvailable(
             estimator: T,
             attitude: Quaternion,
+            timestamp: Long,
             roll: Double?,
             pitch: Double?,
             coordinateTransformation: CoordinateTransformation?

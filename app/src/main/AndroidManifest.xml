@@ -29,6 +29,7 @@
         <activity android:name=".GeomagneticAttitudeEstimatorActivity"/>
         <activity android:name=".FusedGeomagneticAttitudeEstimatorActivity"/>
         <activity android:name=".FusedGeomagneticAttitudeEstimator2Activity"/>
+        <activity android:name=".PoseEstimatorActivity"/>
     </application>
 
 </manifest>

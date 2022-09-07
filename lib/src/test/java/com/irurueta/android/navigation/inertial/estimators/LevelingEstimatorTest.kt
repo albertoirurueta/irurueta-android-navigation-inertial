@@ -56,7 +56,7 @@ class LevelingEstimatorTest {
         )
         assertNotNull(estimator.accelerometerAveragingFilter)
         assertFalse(estimator.estimateCoordinateTransformation)
-        assertTrue(estimator.estimateDisplayEulerAngles)
+        assertTrue(estimator.estimateEulerAngles)
         assertNull(estimator.levelingAvailableListener)
         assertNull(estimator.gravityEstimationListener)
         assertNull(estimator.accelerometerMeasurementListener)
@@ -80,7 +80,7 @@ class LevelingEstimatorTest {
             AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             accelerometerAveragingFilter,
             estimateCoordinateTransformation = true,
-            estimateDisplayEulerAngles = false,
+            estimateEulerAngles = false,
             levelingAvailableListener,
             gravityEstimationListener,
             accelerometerMeasurementListener,
@@ -97,7 +97,7 @@ class LevelingEstimatorTest {
         )
         assertSame(accelerometerAveragingFilter, estimator.accelerometerAveragingFilter)
         assertTrue(estimator.estimateCoordinateTransformation)
-        assertFalse(estimator.estimateDisplayEulerAngles)
+        assertFalse(estimator.estimateEulerAngles)
         assertSame(levelingAvailableListener, estimator.levelingAvailableListener)
         assertSame(gravityEstimationListener, estimator.gravityEstimationListener)
         assertSame(accelerometerMeasurementListener, estimator.accelerometerMeasurementListener)
@@ -224,7 +224,7 @@ class LevelingEstimatorTest {
         val estimator = LevelingEstimator(
             context,
             estimateCoordinateTransformation = false,
-            estimateDisplayEulerAngles = false
+            estimateEulerAngles = false
         )
 
         val attitude: Quaternion? =
@@ -233,20 +233,9 @@ class LevelingEstimatorTest {
         val attitudeSpy = spyk(attitude)
         setPrivateProperty(BaseLevelingEstimator::class, estimator, "attitude", attitudeSpy)
 
-        val displayOrientation: Quaternion? =
-            getPrivateProperty(BaseLevelingEstimator::class, estimator, "displayOrientation")
-        requireNotNull(displayOrientation)
-        val displayOrientationSpy = spyk(displayOrientation)
-        setPrivateProperty(
-            BaseLevelingEstimator::class,
-            estimator,
-            "displayOrientation",
-            displayOrientationSpy
-        )
-
-        val displayEulerAngles: DoubleArray? =
-            getPrivateProperty(BaseLevelingEstimator::class, estimator, "displayEulerAngles")
-        requireNotNull(displayEulerAngles)
+        val eulerAngles: DoubleArray? =
+            getPrivateProperty(BaseLevelingEstimator::class, estimator, "eulerAngles")
+        requireNotNull(eulerAngles)
 
         val coordinateTransformation: CoordinateTransformation? =
             getPrivateProperty(BaseLevelingEstimator::class, estimator, "coordinateTransformation")
@@ -304,13 +293,7 @@ class LevelingEstimatorTest {
         val expectedPitch =
             com.irurueta.navigation.inertial.estimators.LevelingEstimator.getPitch(fx, fy, fz)
 
-        assertEquals(displayOrientation, Quaternion())
-        verify(exactly = 1) { displayOrientationSpy.setFromEulerAngles(0.0, 0.0, -0.0) }
-
         verify(exactly = 1) { attitudeSpy.setFromEulerAngles(expectedRoll, expectedPitch, 0.0) }
-        verify(exactly = 1) { attitudeSpy.combine(displayOrientationSpy) }
-        verify(exactly = 1) { attitudeSpy.inverse() }
-        verify(exactly = 2) { attitudeSpy.normalize() }
 
         val attitude2 = Quaternion()
         bodyC.asRotation(attitude2)
@@ -321,7 +304,7 @@ class LevelingEstimatorTest {
 
         verify { coordinateTransformationSpy wasNot Called }
 
-        assertArrayEquals(displayEulerAngles, doubleArrayOf(0.0, 0.0, 0.0), 0.0)
+        assertArrayEquals(eulerAngles, doubleArrayOf(0.0, 0.0, 0.0), 0.0)
     }
 
     @Test
@@ -338,7 +321,7 @@ class LevelingEstimatorTest {
         val estimator = LevelingEstimator(
             context,
             estimateCoordinateTransformation = false,
-            estimateDisplayEulerAngles = false,
+            estimateEulerAngles = false,
             levelingAvailableListener = levelingAvailableListener,
             gravityEstimationListener = gravityEstimationListener
         )
@@ -349,20 +332,9 @@ class LevelingEstimatorTest {
         val attitudeSpy = spyk(attitude)
         setPrivateProperty(BaseLevelingEstimator::class, estimator, "attitude", attitudeSpy)
 
-        val displayOrientation: Quaternion? =
-            getPrivateProperty(BaseLevelingEstimator::class, estimator, "displayOrientation")
-        requireNotNull(displayOrientation)
-        val displayOrientationSpy = spyk(displayOrientation)
-        setPrivateProperty(
-            BaseLevelingEstimator::class,
-            estimator,
-            "displayOrientation",
-            displayOrientationSpy
-        )
-
-        val displayEulerAngles: DoubleArray? =
-            getPrivateProperty(BaseLevelingEstimator::class, estimator, "displayEulerAngles")
-        requireNotNull(displayEulerAngles)
+        val eulerAngles: DoubleArray? =
+            getPrivateProperty(BaseLevelingEstimator::class, estimator, "eulerAngles")
+        requireNotNull(eulerAngles)
 
         val coordinateTransformation: CoordinateTransformation? =
             getPrivateProperty(BaseLevelingEstimator::class, estimator, "coordinateTransformation")
@@ -425,17 +397,11 @@ class LevelingEstimatorTest {
         val expectedPitch =
             com.irurueta.navigation.inertial.estimators.LevelingEstimator.getPitch(fx, fy, fz)
 
-        assertEquals(displayOrientation, Quaternion())
-        verify(exactly = 1) { displayOrientationSpy.setFromEulerAngles(0.0, 0.0, -0.0) }
-
         verify(exactly = 1) { attitudeSpy.setFromEulerAngles(expectedRoll, expectedPitch, 0.0) }
-        verify(exactly = 1) { attitudeSpy.combine(displayOrientationSpy) }
-        verify(exactly = 1) { attitudeSpy.inverse() }
-        verify(exactly = 2) { attitudeSpy.normalize() }
 
         verify { coordinateTransformationSpy wasNot Called }
 
-        assertArrayEquals(displayEulerAngles, doubleArrayOf(0.0, 0.0, 0.0), 0.0)
+        assertArrayEquals(eulerAngles, doubleArrayOf(0.0, 0.0, 0.0), 0.0)
 
         verify(exactly = 1) {
             gravityEstimationListener.onEstimation(
@@ -450,6 +416,7 @@ class LevelingEstimatorTest {
             levelingAvailableListener.onLevelingAvailable(
                 estimator,
                 attitudeSpy,
+                timestamp,
                 null,
                 null,
                 null
@@ -470,7 +437,7 @@ class LevelingEstimatorTest {
         val estimator = LevelingEstimator(
             context,
             estimateCoordinateTransformation = true,
-            estimateDisplayEulerAngles = true,
+            estimateEulerAngles = true,
             levelingAvailableListener = levelingAvailableListener
         )
 
@@ -480,20 +447,9 @@ class LevelingEstimatorTest {
         val attitudeSpy = spyk(attitude)
         setPrivateProperty(BaseLevelingEstimator::class, estimator, "attitude", attitudeSpy)
 
-        val displayOrientation: Quaternion? =
-            getPrivateProperty(BaseLevelingEstimator::class, estimator, "displayOrientation")
-        requireNotNull(displayOrientation)
-        val displayOrientationSpy = spyk(displayOrientation)
-        setPrivateProperty(
-            BaseLevelingEstimator::class,
-            estimator,
-            "displayOrientation",
-            displayOrientationSpy
-        )
-
-        val displayEulerAngles: DoubleArray? =
-            getPrivateProperty(BaseLevelingEstimator::class, estimator, "displayEulerAngles")
-        requireNotNull(displayEulerAngles)
+        val eulerAngles: DoubleArray? =
+            getPrivateProperty(BaseLevelingEstimator::class, estimator, "eulerAngles")
+        requireNotNull(eulerAngles)
 
         val coordinateTransformation: CoordinateTransformation? =
             getPrivateProperty(BaseLevelingEstimator::class, estimator, "coordinateTransformation")
@@ -556,23 +512,18 @@ class LevelingEstimatorTest {
         val expectedPitch =
             com.irurueta.navigation.inertial.estimators.LevelingEstimator.getPitch(fx, fy, fz)
 
-        assertEquals(displayOrientation, Quaternion())
-        verify(exactly = 1) { displayOrientationSpy.setFromEulerAngles(0.0, 0.0, -0.0) }
-
         verify(exactly = 1) { attitudeSpy.setFromEulerAngles(expectedRoll, expectedPitch, 0.0) }
-        verify(exactly = 1) { attitudeSpy.combine(displayOrientationSpy) }
-        verify(exactly = 1) { attitudeSpy.inverse() }
-        verify(exactly = 2) { attitudeSpy.normalize() }
         verify(exactly = 1) { coordinateTransformationSpy.fromRotation(attitudeSpy) }
-        verify(exactly = 1) { attitudeSpy.toEulerAngles(displayEulerAngles) }
+        verify(exactly = 1) { attitudeSpy.toEulerAngles(eulerAngles) }
 
-        val displayRoll = displayEulerAngles[0]
-        val displayPitch = displayEulerAngles[1]
+        val displayRoll = eulerAngles[0]
+        val displayPitch = eulerAngles[1]
 
         verify(exactly = 1) {
             levelingAvailableListener.onLevelingAvailable(
                 estimator,
                 attitudeSpy,
+                timestamp,
                 displayRoll,
                 displayPitch,
                 coordinateTransformationSpy
@@ -593,7 +544,7 @@ class LevelingEstimatorTest {
         val estimator = LevelingEstimator(
             context,
             estimateCoordinateTransformation = false,
-            estimateDisplayEulerAngles = false,
+            estimateEulerAngles = false,
             levelingAvailableListener = levelingAvailableListener
         )
 
@@ -603,20 +554,9 @@ class LevelingEstimatorTest {
         val attitudeSpy = spyk(attitude)
         setPrivateProperty(BaseLevelingEstimator::class, estimator, "attitude", attitudeSpy)
 
-        val displayOrientation: Quaternion? =
-            getPrivateProperty(BaseLevelingEstimator::class, estimator, "displayOrientation")
-        requireNotNull(displayOrientation)
-        val displayOrientationSpy = spyk(displayOrientation)
-        setPrivateProperty(
-            BaseLevelingEstimator::class,
-            estimator,
-            "displayOrientation",
-            displayOrientationSpy
-        )
-
-        val displayEulerAngles: DoubleArray? =
-            getPrivateProperty(BaseLevelingEstimator::class, estimator, "displayEulerAngles")
-        requireNotNull(displayEulerAngles)
+        val eulerAngles: DoubleArray? =
+            getPrivateProperty(BaseLevelingEstimator::class, estimator, "eulerAngles")
+        requireNotNull(eulerAngles)
 
         val coordinateTransformation: CoordinateTransformation? =
             getPrivateProperty(BaseLevelingEstimator::class, estimator, "coordinateTransformation")
@@ -679,22 +619,17 @@ class LevelingEstimatorTest {
         val expectedPitch =
             com.irurueta.navigation.inertial.estimators.LevelingEstimator.getPitch(fx, fy, fz)
 
-        assertEquals(displayOrientation, Quaternion())
-        verify(exactly = 0) { displayOrientationSpy.setFromEulerAngles(0.0, 0.0, -0.0) }
-
         verify(exactly = 1) { attitudeSpy.setFromEulerAngles(expectedRoll, expectedPitch, 0.0) }
-        verify(exactly = 0) { attitudeSpy.combine(displayOrientationSpy) }
-        verify(exactly = 1) { attitudeSpy.inverse() }
-        verify(exactly = 2) { attitudeSpy.normalize() }
 
         verify { coordinateTransformationSpy wasNot Called }
 
-        assertArrayEquals(displayEulerAngles, doubleArrayOf(0.0, 0.0, 0.0), 0.0)
+        assertArrayEquals(eulerAngles, doubleArrayOf(0.0, 0.0, 0.0), 0.0)
 
         verify(exactly = 1) {
             levelingAvailableListener.onLevelingAvailable(
                 estimator,
                 attitudeSpy,
+                timestamp,
                 null,
                 null,
                 null

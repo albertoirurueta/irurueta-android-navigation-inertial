@@ -48,7 +48,7 @@ import kotlin.math.min
  * @property gyroscopeSensorType One of the supported gyroscope sensor types.
  * @property estimateCoordinateTransformation true to estimate coordinate transformation, false
  * otherwise. If not needed, it can be disabled to improve performance and decrease cpu load.
- * @property estimateDisplayEulerAngles true to estimate euler angles, false otherwise. If not
+ * @property estimateEulerAngles true to estimate euler angles, false otherwise. If not
  * needed, it can be disabled to improve performance and decrease cpu load.
  * @property attitudeAvailableListener listener to notify when a new attitude measurement is
  * available.
@@ -62,7 +62,7 @@ class FusedGeomagneticAttitudeEstimator2 private constructor(
     override val accelerometerAveragingFilter: AveragingFilter,
     override val gyroscopeSensorType: GyroscopeSensorCollector.SensorType,
     override val estimateCoordinateTransformation: Boolean,
-    override val estimateDisplayEulerAngles: Boolean,
+    override val estimateEulerAngles: Boolean,
     override var attitudeAvailableListener: OnAttitudeAvailableListener?
 ) : AbsoluteAttitudeEstimator<FusedGeomagneticAttitudeEstimator2, FusedGeomagneticAttitudeEstimator2.OnAttitudeAvailableListener> {
 
@@ -90,7 +90,7 @@ class FusedGeomagneticAttitudeEstimator2 private constructor(
      * @param useAccurateLevelingEstimator true to use accurate leveling, false to use a normal one.
      * @param estimateCoordinateTransformation true to estimate coordinate transformation, false
      * otherwise. If not needed, it can be disabled to improve performance and decrease cpu load.
-     * @param estimateDisplayEulerAngles true to estimate euler angles, false otherwise. If not
+     * @param estimateEulerAngles true to estimate euler angles, false otherwise. If not
      * needed, it can be disabled to improve performance and decrease cpu load.
      * @param attitudeAvailableListener listener to notify when a new attitude measurement is
      * available.
@@ -121,7 +121,7 @@ class FusedGeomagneticAttitudeEstimator2 private constructor(
         useAccurateLevelingEstimator: Boolean = false,
         useAccurateRelativeGyroscopeAttitudeEstimator: Boolean = false,
         estimateCoordinateTransformation: Boolean = false,
-        estimateDisplayEulerAngles: Boolean = true,
+        estimateEulerAngles: Boolean = true,
         attitudeAvailableListener: OnAttitudeAvailableListener? = null,
         accelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? = null,
         gravityMeasurementListener: GravitySensorCollector.OnMeasurementListener? = null,
@@ -137,7 +137,7 @@ class FusedGeomagneticAttitudeEstimator2 private constructor(
         accelerometerAveragingFilter,
         gyroscopeSensorType,
         estimateCoordinateTransformation,
-        estimateDisplayEulerAngles,
+        estimateEulerAngles,
         attitudeAvailableListener
     ) {
         buildGeomagneticAttitudeEstimator()
@@ -164,6 +164,11 @@ class FusedGeomagneticAttitudeEstimator2 private constructor(
      * Internal relative attitude estimator.
      */
     private lateinit var relativeAttitudeEstimator: LeveledRelativeAttitudeEstimator
+
+    /**
+     * Timestamp of last attitude estimation.
+     */
+    private var relativeAttitudeTimestamp = 0L
 
     /**
      * Instance to be reused which contains geomagnetic absolute attitude.
@@ -199,7 +204,7 @@ class FusedGeomagneticAttitudeEstimator2 private constructor(
     /**
      * Array to be reused containing euler angles of leveling attitude.
      */
-    private val displayEulerAngles = DoubleArray(Quaternion.N_ANGLES)
+    private val eulerAngles = DoubleArray(Quaternion.N_ANGLES)
 
     /**
      * Instance to be reused containing coordinate transformation in NED coordinates.
@@ -506,11 +511,9 @@ class FusedGeomagneticAttitudeEstimator2 private constructor(
             useAccurateLevelingEstimator,
             useAccurateRelativeGyroscopeAttitudeEstimator,
             estimateCoordinateTransformation = false,
-            estimateDisplayEulerAngles = false,
-            attitudeAvailableListener = { _, attitude, _, _, _, _ ->
-                processRelativeAttitude(
-                    attitude
-                )
+            estimateEulerAngles = false,
+            attitudeAvailableListener = { _, attitude, timestamp, _, _, _, _ ->
+                processRelativeAttitude(attitude, timestamp)
             },
             accelerometerMeasurementListener = accelerometerMeasurementListener,
             gravityMeasurementListener = gravityMeasurementListener,
@@ -536,8 +539,8 @@ class FusedGeomagneticAttitudeEstimator2 private constructor(
             useWorldMagneticModel,
             useAccurateLevelingEstimator,
             estimateCoordinateTransformation = false,
-            estimateDisplayEulerAngles = false,
-            attitudeAvailableListener = { _, attitude, _, _, _, _ ->
+            estimateEulerAngles = false,
+            attitudeAvailableListener = { _, attitude, _, _, _, _, _ ->
                 processGeomagneticAttitude(attitude)
             },
             magnetometerMeasurementListener = magnetometerMeasurementListener
@@ -575,16 +578,25 @@ class FusedGeomagneticAttitudeEstimator2 private constructor(
     /**
      * Processes last received internal relative attitude to estimate attitude variation
      * between samples.
+     *
+     * @param attitude estimated absolute attitude respect NED coordinate system.
+     * @param timestamp time in nanoseconds at which the measurement was made. Each measurement
+     * wil be monotonically increasing using the same time base as
+     * [android.os.SystemClock.elapsedRealtimeNanos].
      */
-    private fun processRelativeAttitude(attitude: Quaternion) {
+    private fun processRelativeAttitude(attitude: Quaternion, timestamp: Long) {
         attitude.copyTo(relativeAttitude)
         hasRelativeAttitude = true
         hasDeltaRelativeAttitude = computeDeltaRelativeAttitude()
+
+        this.relativeAttitudeTimestamp = timestamp
     }
 
     /**
      * Processes last received geomagnetic attitude to estimate a fused attitude containing
      * absolute attitude.
+     *
+     * @param attitude estimated absolute attitude respect NED coordinate system.
      */
     private fun processGeomagneticAttitude(attitude: Quaternion) {
         if (!hasRelativeAttitude) {
@@ -650,11 +662,11 @@ class FusedGeomagneticAttitudeEstimator2 private constructor(
             val displayRoll: Double?
             val displayPitch: Double?
             val displayYaw: Double?
-            if (estimateDisplayEulerAngles) {
-                fusedAttitude.toEulerAngles(displayEulerAngles)
-                displayRoll = displayEulerAngles[0]
-                displayPitch = displayEulerAngles[1]
-                displayYaw = displayEulerAngles[2]
+            if (estimateEulerAngles) {
+                fusedAttitude.toEulerAngles(eulerAngles)
+                displayRoll = eulerAngles[0]
+                displayPitch = eulerAngles[1]
+                displayYaw = eulerAngles[2]
             } else {
                 displayRoll = null
                 displayPitch = null
@@ -664,6 +676,7 @@ class FusedGeomagneticAttitudeEstimator2 private constructor(
             attitudeAvailableListener?.onAttitudeAvailable(
                 this@FusedGeomagneticAttitudeEstimator2,
                 fusedAttitude,
+                relativeAttitudeTimestamp,
                 displayRoll,
                 displayPitch,
                 displayYaw,
