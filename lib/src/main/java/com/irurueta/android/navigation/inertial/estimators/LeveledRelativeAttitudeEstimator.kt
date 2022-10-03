@@ -178,6 +178,12 @@ class LeveledRelativeAttitudeEstimator private constructor(
      * Instance to be reused which contains merged attitudes of both the internal leveling
      * estimator and the relative attitude estimator taking into account display orientation.
      */
+    private val internalFusedAttitude = Quaternion()
+
+    /**
+     * Instance being reused to externally notify attitudes so that it does not have additional
+     * effects if it is modified.
+     */
     private val fusedAttitude = Quaternion()
 
     /**
@@ -268,6 +274,7 @@ class LeveledRelativeAttitudeEstimator private constructor(
      * @throws IllegalArgumentException if value is not between 0.0 and 1.0 (both included).
      */
     var interpolationValue = DEFAULT_INTERPOLATION_VALUE
+        @Throws(IllegalArgumentException::class)
         set(value) {
             require(value in 0.0..1.0)
             field = value
@@ -281,6 +288,7 @@ class LeveledRelativeAttitudeEstimator private constructor(
      * @throws IllegalArgumentException if value is zero or negative.
      */
     var indirectInterpolationWeight = DEFAULT_INDIRECT_INTERPOLATION_WEIGHT
+        @Throws(IllegalArgumentException::class)
         set(value) {
             require(value > 0.0)
             field = value
@@ -347,6 +355,7 @@ class LeveledRelativeAttitudeEstimator private constructor(
      * @throws IllegalArgumentException if value is not between 0.0 and 1.0 (both included).
      */
     var outlierThreshold = DEFAULT_OUTLIER_THRESHOLD
+        @Throws(IllegalStateException::class, IllegalArgumentException::class)
         set(value) {
             check(!running)
             require(value in 0.0..1.0)
@@ -362,6 +371,7 @@ class LeveledRelativeAttitudeEstimator private constructor(
      * @throws IllegalArgumentException if value is not between 0.0 and 1.0 (both included).
      */
     var outlierPanicThreshold = DEFAULT_OUTLIER_PANIC_THRESHOLD
+        @Throws(IllegalStateException::class, IllegalArgumentException::class)
         set(value) {
             check(!running)
             require(value in 0.0..1.0)
@@ -374,8 +384,10 @@ class LeveledRelativeAttitudeEstimator private constructor(
      * number of samples and must be reset.
      *
      * @throws IllegalStateException if estimator is already running.
+     * @throws IllegalArgumentException if provided is zero or negative.
      */
     var panicCounterThreshold = DEFAULT_PANIC_COUNTER_THRESHOLD
+        @Throws(IllegalStateException::class, IllegalArgumentException::class)
         set(value) {
             check(!running)
             require(value > 0)
@@ -549,7 +561,7 @@ class LeveledRelativeAttitudeEstimator private constructor(
             levelingAttitude.setFromEulerAngles(levelingRoll, levelingPitch, yaw)
 
             if (resetToLeveling) {
-                levelingAttitude.copyTo(fusedAttitude)
+                levelingAttitude.copyTo(internalFusedAttitude)
                 panicCounter = 0
                 Log.d(
                     LeveledRelativeAttitudeEstimator::class.simpleName,
@@ -559,9 +571,9 @@ class LeveledRelativeAttitudeEstimator private constructor(
             }
 
             // change attitude by the delta obtained from relative attitude (gyroscope)
-            Quaternion.product(deltaRelativeAttitude, fusedAttitude, fusedAttitude)
+            Quaternion.product(deltaRelativeAttitude, internalFusedAttitude, internalFusedAttitude)
 
-            val absDot = abs(QuaternionHelper.dotProduct(fusedAttitude, levelingAttitude))
+            val absDot = abs(QuaternionHelper.dotProduct(internalFusedAttitude, levelingAttitude))
 
             // check if fused attitude and leveling attitude have diverged
             if (absDot < outlierThreshold) {
@@ -582,20 +594,19 @@ class LeveledRelativeAttitudeEstimator private constructor(
             } else {
                 // both are nearly the same. Perform normal fusion
                 Quaternion.slerp(
-                    fusedAttitude,
+                    internalFusedAttitude,
                     levelingAttitude,
                     getSlerpFactor(),
-                    fusedAttitude
+                    internalFusedAttitude
                 )
                 panicCounter = 0
             }
 
             relativeAttitude.copyTo(previousRelativeAttitude)
-            hasRelativeAttitude = false
 
             val c: CoordinateTransformation? =
                 if (estimateCoordinateTransformation) {
-                    coordinateTransformation.fromRotation(fusedAttitude)
+                    coordinateTransformation.fromRotation(internalFusedAttitude)
                     coordinateTransformation
                 } else {
                     null
@@ -605,7 +616,7 @@ class LeveledRelativeAttitudeEstimator private constructor(
             val displayPitch: Double?
             val displayYaw: Double?
             if (estimateEulerAngles) {
-                fusedAttitude.toEulerAngles(eulerAngles)
+                internalFusedAttitude.toEulerAngles(eulerAngles)
                 displayRoll = eulerAngles[0]
                 displayPitch = eulerAngles[1]
                 displayYaw = eulerAngles[2]
@@ -615,6 +626,7 @@ class LeveledRelativeAttitudeEstimator private constructor(
                 displayYaw = null
             }
 
+            internalFusedAttitude.copyTo(fusedAttitude)
             attitudeAvailableListener?.onAttitudeAvailable(
                 this,
                 fusedAttitude,

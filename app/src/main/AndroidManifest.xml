@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.irurueta.android.navigation.inertial">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
 
@@ -30,6 +29,8 @@
         <activity android:name=".FusedGeomagneticAttitudeEstimatorActivity"/>
         <activity android:name=".FusedGeomagneticAttitudeEstimator2Activity"/>
         <activity android:name=".PoseEstimatorActivity"/>
+        <activity android:name=".LocalPoseEstimatorActivity"/>
+        <activity android:name=".RelativePoseEstimatorActivity"/>
     </application>
 
 </manifest>

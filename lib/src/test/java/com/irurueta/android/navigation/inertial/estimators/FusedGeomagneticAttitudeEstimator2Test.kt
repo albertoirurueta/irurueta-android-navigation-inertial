@@ -1496,10 +1496,10 @@ class FusedGeomagneticAttitudeEstimator2Test {
         val relativeAttitudeSpy = spyk(relativeAttitude)
         estimator.setPrivateProperty("relativeAttitude", relativeAttitudeSpy)
 
-        val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
-        requireNotNull(fusedAttitude)
-        val fusedAttitudeSpy = spyk(fusedAttitude)
-        estimator.setPrivateProperty("fusedAttitude", fusedAttitudeSpy)
+        val internalFusedAttitude: Quaternion? = estimator.getPrivateProperty("internalFusedAttitude")
+        requireNotNull(internalFusedAttitude)
+        val internalFusedAttitudeSpy = spyk(internalFusedAttitude)
+        estimator.setPrivateProperty("internalFusedAttitude", internalFusedAttitudeSpy)
 
         estimator.setPrivateProperty("panicCounter", estimator.panicCounterThreshold)
         val panicCounter1: Int? = estimator.getPrivateProperty("panicCounter")
@@ -1536,7 +1536,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
 
         val eulerAngles: DoubleArray? = estimator.getPrivateProperty("eulerAngles")
         requireNotNull(eulerAngles)
-        verify { geomagneticAttitudeSpy.copyTo(fusedAttitudeSpy) }
+        verify { geomagneticAttitudeSpy.copyTo(internalFusedAttitudeSpy) }
 
         val panicCounter2: Int? = estimator.getPrivateProperty("panicCounter")
         requireNotNull(panicCounter2)
@@ -1589,11 +1589,12 @@ class FusedGeomagneticAttitudeEstimator2Test {
         val relativeAttitudeSpy = spyk(relativeAttitude)
         estimator.setPrivateProperty("relativeAttitude", relativeAttitudeSpy)
 
-        val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
-        requireNotNull(fusedAttitude)
-        getAttitude().copyTo(fusedAttitude)
-        val fusedAttitudeSpy = spyk(fusedAttitude)
-        estimator.setPrivateProperty("fusedAttitude", fusedAttitudeSpy)
+        val internalFusedAttitude: Quaternion? =
+            estimator.getPrivateProperty("internalFusedAttitude")
+        requireNotNull(internalFusedAttitude)
+        getAttitude().copyTo(internalFusedAttitude)
+        val internalFusedAttitudeSpy = spyk(internalFusedAttitude)
+        estimator.setPrivateProperty("internalFusedAttitude", internalFusedAttitudeSpy)
 
         val previousRelativeAttitude1 = Quaternion()
         estimator.setPrivateProperty("previousRelativeAttitude", previousRelativeAttitude1)
@@ -1619,7 +1620,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
             )
         }.returns(estimator.outlierThreshold)
 
-        val fusedAttitude2 = Quaternion(fusedAttitude)
+        val fusedAttitude2 = Quaternion(internalFusedAttitude)
         val fusedAttitude3 = deltaRelativeAttitude.multiplyAndReturnNew(fusedAttitude2)
 
         estimator.setPrivateProperty("panicCounter", 1)
@@ -1657,7 +1658,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
 
         val eulerAngles: DoubleArray? = estimator.getPrivateProperty("eulerAngles")
         requireNotNull(eulerAngles)
-        verify(exactly = 0) { geomagneticAttitudeSpy.copyTo(fusedAttitudeSpy) }
+        verify(exactly = 0) { geomagneticAttitudeSpy.copyTo(internalFusedAttitudeSpy) }
 
         val panicCounter2: Int? = estimator.getPrivateProperty("panicCounter")
         requireNotNull(panicCounter2)
@@ -1675,7 +1676,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
             fusedAttitude4
         )
 
-        assertEquals(fusedAttitude4, fusedAttitudeSpy)
+        assertEquals(fusedAttitude4, internalFusedAttitudeSpy)
 
         val absDot = abs(QuaternionHelper.dotProduct(fusedAttitude3, geomagneticAttitudeSpy))
         assertTrue(absDot >= estimator.outlierThreshold)
@@ -1685,10 +1686,13 @@ class FusedGeomagneticAttitudeEstimator2Test {
         requireNotNull(previousRelativeAttitude2)
         assertEquals(relativeAttitudeSpy, previousRelativeAttitude2)
 
+        val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
+        requireNotNull(fusedAttitude)
+
         verify(exactly = 1) {
             attitudeAvailableListener.onAttitudeAvailable(
                 estimator,
-                fusedAttitudeSpy,
+                fusedAttitude,
                 timestamp,
                 null,
                 null,
@@ -1742,11 +1746,11 @@ class FusedGeomagneticAttitudeEstimator2Test {
         val relativeAttitudeSpy = spyk(relativeAttitude)
         estimator.setPrivateProperty("relativeAttitude", relativeAttitudeSpy)
 
-        val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
-        requireNotNull(fusedAttitude)
-        getAttitude().copyTo(fusedAttitude)
-        val fusedAttitudeSpy = spyk(fusedAttitude)
-        estimator.setPrivateProperty("fusedAttitude", fusedAttitudeSpy)
+        val internalFusedAttitude: Quaternion? = estimator.getPrivateProperty("internalFusedAttitude")
+        requireNotNull(internalFusedAttitude)
+        getAttitude().copyTo(internalFusedAttitude)
+        val internalFusedAttitudeSpy = spyk(internalFusedAttitude)
+        estimator.setPrivateProperty("internalFusedAttitude", internalFusedAttitudeSpy)
 
         val previousRelativeAttitude1 = Quaternion()
         estimator.setPrivateProperty("previousRelativeAttitude", previousRelativeAttitude1)
@@ -1772,7 +1776,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
             )
         }.returns(0.5 * (estimator.outlierThreshold + estimator.outlierPanicThreshold))
 
-        val fusedAttitude2 = Quaternion(fusedAttitude)
+        val fusedAttitude2 = Quaternion(internalFusedAttitude)
         val fusedAttitude3 = deltaRelativeAttitude.multiplyAndReturnNew(fusedAttitude2)
 
         estimator.setPrivateProperty("panicCounter", 1)
@@ -1810,7 +1814,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
 
         val eulerAngles: DoubleArray? = estimator.getPrivateProperty("eulerAngles")
         requireNotNull(eulerAngles)
-        verify(exactly = 0) { geomagneticAttitudeSpy.copyTo(fusedAttitudeSpy) }
+        verify(exactly = 0) { geomagneticAttitudeSpy.copyTo(internalFusedAttitudeSpy) }
 
         val panicCounter2: Int? = estimator.getPrivateProperty("panicCounter")
         requireNotNull(panicCounter2)
@@ -1820,7 +1824,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
         requireNotNull(hasRelativeAttitude2)
         assertFalse(hasRelativeAttitude2)
 
-        assertEquals(fusedAttitude3, fusedAttitudeSpy)
+        assertEquals(fusedAttitude3, internalFusedAttitudeSpy)
 
         val absDot = abs(QuaternionHelper.dotProduct(fusedAttitude3, geomagneticAttitudeSpy))
         assertTrue(absDot < estimator.outlierThreshold)
@@ -1831,10 +1835,13 @@ class FusedGeomagneticAttitudeEstimator2Test {
         requireNotNull(previousRelativeAttitude2)
         assertEquals(relativeAttitudeSpy, previousRelativeAttitude2)
 
+        val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
+        requireNotNull(fusedAttitude)
+
         verify(exactly = 1) {
             attitudeAvailableListener.onAttitudeAvailable(
                 estimator,
-                fusedAttitudeSpy,
+                fusedAttitude,
                 timestamp,
                 null,
                 null,
@@ -1888,11 +1895,11 @@ class FusedGeomagneticAttitudeEstimator2Test {
         val relativeAttitudeSpy = spyk(relativeAttitude)
         estimator.setPrivateProperty("relativeAttitude", relativeAttitudeSpy)
 
-        val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
-        requireNotNull(fusedAttitude)
-        getAttitude().copyTo(fusedAttitude)
-        val fusedAttitudeSpy = spyk(fusedAttitude)
-        estimator.setPrivateProperty("fusedAttitude", fusedAttitudeSpy)
+        val internalFusedAttitude: Quaternion? = estimator.getPrivateProperty("internalFusedAttitude")
+        requireNotNull(internalFusedAttitude)
+        getAttitude().copyTo(internalFusedAttitude)
+        val internalFusedAttitudeSpy = spyk(internalFusedAttitude)
+        estimator.setPrivateProperty("internalFusedAttitude", internalFusedAttitudeSpy)
 
         val previousRelativeAttitude1 = Quaternion()
         estimator.setPrivateProperty("previousRelativeAttitude", previousRelativeAttitude1)
@@ -1918,7 +1925,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
             )
         }.returns(0.0)
 
-        val fusedAttitude2 = Quaternion(fusedAttitude)
+        val fusedAttitude2 = Quaternion(internalFusedAttitude)
         val fusedAttitude3 = deltaRelativeAttitude.multiplyAndReturnNew(fusedAttitude2)
 
         estimator.setPrivateProperty("panicCounter", 1)
@@ -1956,7 +1963,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
 
         val eulerAngles: DoubleArray? = estimator.getPrivateProperty("eulerAngles")
         requireNotNull(eulerAngles)
-        verify(exactly = 0) { geomagneticAttitudeSpy.copyTo(fusedAttitudeSpy) }
+        verify(exactly = 0) { geomagneticAttitudeSpy.copyTo(internalFusedAttitudeSpy) }
 
         val panicCounter2: Int? = estimator.getPrivateProperty("panicCounter")
         requireNotNull(panicCounter2)
@@ -1966,7 +1973,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
         requireNotNull(hasRelativeAttitude2)
         assertFalse(hasRelativeAttitude2)
 
-        assertEquals(fusedAttitude3, fusedAttitudeSpy)
+        assertEquals(fusedAttitude3, internalFusedAttitudeSpy)
 
         val absDot = abs(QuaternionHelper.dotProduct(fusedAttitude3, geomagneticAttitudeSpy))
         assertTrue(absDot < estimator.outlierThreshold)
@@ -1977,10 +1984,13 @@ class FusedGeomagneticAttitudeEstimator2Test {
         requireNotNull(previousRelativeAttitude2)
         assertEquals(relativeAttitudeSpy, previousRelativeAttitude2)
 
+        val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
+        requireNotNull(fusedAttitude)
+
         verify(exactly = 1) {
             attitudeAvailableListener.onAttitudeAvailable(
                 estimator,
-                fusedAttitudeSpy,
+                fusedAttitude,
                 timestamp,
                 null,
                 null,
@@ -2035,11 +2045,11 @@ class FusedGeomagneticAttitudeEstimator2Test {
         val relativeAttitudeSpy = spyk(relativeAttitude)
         estimator.setPrivateProperty("relativeAttitude", relativeAttitudeSpy)
 
-        val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
-        requireNotNull(fusedAttitude)
-        getAttitude().copyTo(fusedAttitude)
-        val fusedAttitudeSpy = spyk(fusedAttitude)
-        estimator.setPrivateProperty("fusedAttitude", fusedAttitudeSpy)
+        val internalFusedAttitude: Quaternion? = estimator.getPrivateProperty("internalFusedAttitude")
+        requireNotNull(internalFusedAttitude)
+        getAttitude().copyTo(internalFusedAttitude)
+        val internalFusedAttitudeSpy = spyk(internalFusedAttitude)
+        estimator.setPrivateProperty("internalFusedAttitude", internalFusedAttitudeSpy)
 
         val previousRelativeAttitude1 = Quaternion()
         estimator.setPrivateProperty("previousRelativeAttitude", previousRelativeAttitude1)
@@ -2065,7 +2075,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
             )
         }.returns(estimator.outlierThreshold)
 
-        val fusedAttitude2 = Quaternion(fusedAttitude)
+        val fusedAttitude2 = Quaternion(internalFusedAttitude)
         val fusedAttitude3 = deltaRelativeAttitude.multiplyAndReturnNew(fusedAttitude2)
 
         estimator.setPrivateProperty("panicCounter", 1)
@@ -2110,7 +2120,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
 
         val eulerAngles: DoubleArray? = estimator.getPrivateProperty("eulerAngles")
         requireNotNull(eulerAngles)
-        verify(exactly = 0) { geomagneticAttitudeSpy.copyTo(fusedAttitudeSpy) }
+        verify(exactly = 0) { geomagneticAttitudeSpy.copyTo(internalFusedAttitudeSpy) }
 
         val panicCounter2: Int? = estimator.getPrivateProperty("panicCounter")
         requireNotNull(panicCounter2)
@@ -2131,7 +2141,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
         )
 
 
-        assertEquals(fusedAttitude4, fusedAttitudeSpy)
+        assertEquals(fusedAttitude4, internalFusedAttitudeSpy)
 
         val absDot = abs(QuaternionHelper.dotProduct(fusedAttitude3, geomagneticAttitudeSpy))
         assertTrue(absDot >= estimator.outlierThreshold)
@@ -2141,10 +2151,13 @@ class FusedGeomagneticAttitudeEstimator2Test {
         requireNotNull(previousRelativeAttitude2)
         assertEquals(relativeAttitudeSpy, previousRelativeAttitude2)
 
+        val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
+        requireNotNull(fusedAttitude)
+
         verify(exactly = 1) {
             attitudeAvailableListener.onAttitudeAvailable(
                 estimator,
-                fusedAttitudeSpy,
+                fusedAttitude,
                 timestamp,
                 null,
                 null,
@@ -2198,11 +2211,12 @@ class FusedGeomagneticAttitudeEstimator2Test {
         val relativeAttitudeSpy = spyk(relativeAttitude)
         estimator.setPrivateProperty("relativeAttitude", relativeAttitudeSpy)
 
-        val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
-        requireNotNull(fusedAttitude)
-        getAttitude().copyTo(fusedAttitude)
-        val fusedAttitudeSpy = spyk(fusedAttitude)
-        estimator.setPrivateProperty("fusedAttitude", fusedAttitudeSpy)
+        val internalFusedAttitude: Quaternion? =
+            estimator.getPrivateProperty("internalFusedAttitude")
+        requireNotNull(internalFusedAttitude)
+        getAttitude().copyTo(internalFusedAttitude)
+        val internalFusedAttitudeSpy = spyk(internalFusedAttitude)
+        estimator.setPrivateProperty("internalFusedAttitude", internalFusedAttitudeSpy)
 
         val previousRelativeAttitude1 = Quaternion()
         estimator.setPrivateProperty("previousRelativeAttitude", previousRelativeAttitude1)
@@ -2228,7 +2242,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
             )
         }.returns(estimator.outlierThreshold)
 
-        val fusedAttitude2 = Quaternion(fusedAttitude)
+        val fusedAttitude2 = Quaternion(internalFusedAttitude)
         val fusedAttitude3 = deltaRelativeAttitude.multiplyAndReturnNew(fusedAttitude2)
 
         estimator.setPrivateProperty("panicCounter", 1)
@@ -2266,7 +2280,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
 
         val eulerAngles: DoubleArray? = estimator.getPrivateProperty("eulerAngles")
         requireNotNull(eulerAngles)
-        verify(exactly = 0) { geomagneticAttitudeSpy.copyTo(fusedAttitudeSpy) }
+        verify(exactly = 0) { geomagneticAttitudeSpy.copyTo(internalFusedAttitudeSpy) }
 
         val panicCounter2: Int? = estimator.getPrivateProperty("panicCounter")
         requireNotNull(panicCounter2)
@@ -2284,7 +2298,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
             fusedAttitude4
         )
 
-        assertEquals(fusedAttitude4, fusedAttitudeSpy)
+        assertEquals(fusedAttitude4, internalFusedAttitudeSpy)
 
         val absDot = abs(QuaternionHelper.dotProduct(fusedAttitude3, geomagneticAttitudeSpy))
         assertTrue(absDot >= estimator.outlierThreshold)
@@ -2299,10 +2313,13 @@ class FusedGeomagneticAttitudeEstimator2Test {
         val yawSlot = slot<Double>()
         val coordinateTransformationSlot = slot<CoordinateTransformation>()
 
+        val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
+        requireNotNull(fusedAttitude)
+
         verify(exactly = 1) {
             attitudeAvailableListener.onAttitudeAvailable(
                 estimator,
-                fusedAttitudeSpy,
+                fusedAttitude,
                 timestamp,
                 capture(rollSlot),
                 capture(pitchSlot),

@@ -200,6 +200,12 @@ class FusedGeomagneticAttitudeEstimator private constructor(
      * Instance to be reused which contains merged attitudes of both the internal leveling
      * estimator and the relative attitude estimator taking into account display orientation.
      */
+    private val internalFusedAttitude = Quaternion()
+
+    /**
+     * Instance being reused to externally notify attitudes so that it does not have additional
+     * effects if it is modified.
+     */
     private val fusedAttitude = Quaternion()
 
     /**
@@ -217,6 +223,11 @@ class FusedGeomagneticAttitudeEstimator private constructor(
      * Indicates whether a relative attitude has been received.
      */
     private var hasRelativeAttitude = false
+
+    /**
+     * Indicates whether a geomagnetic attitude has been received.
+     */
+    private var hasGeomagneticAttitude = false
 
     /**
      * Indicates whether a delta relative attitude has been computed.
@@ -494,6 +505,7 @@ class FusedGeomagneticAttitudeEstimator private constructor(
      */
     private fun reset() {
         hasRelativeAttitude = false
+        hasGeomagneticAttitude = false
         hasDeltaRelativeAttitude = false
         panicCounter = panicCounterThreshold
     }
@@ -587,7 +599,7 @@ class FusedGeomagneticAttitudeEstimator private constructor(
 
     /**
      * Processes last received internal relative attitude to estimate attitude variation
-     * between samples.
+     * between samples and fuse it with geomagnetic absolute attitude.
      *
      * @param attitude estimated absolute attitude respect NED coordinate system.
      * @param timestamp time in nanoseconds at which the measurement was made. Each measurement
@@ -600,99 +612,98 @@ class FusedGeomagneticAttitudeEstimator private constructor(
         hasDeltaRelativeAttitude = computeDeltaRelativeAttitude()
 
         relativeAttitudeTimestamp = timestamp
-    }
 
-    /**
-     * Processes last received geomagnetic attitude to estimate a fused attitude containing
-     * absolute attitude.
-     *
-     * @param attitude estimated absolute attitude respect NED coordinate system.
-     */
-    private fun processGeomagneticAttitude(attitude: Quaternion) {
-        if (!hasRelativeAttitude) {
+        if (!hasDeltaRelativeAttitude || !hasGeomagneticAttitude) {
             return
         }
 
-        attitude.copyTo(geomagneticAttitude)
+        if (resetToGeomagnetic) {
+            geomagneticAttitude.copyTo(internalFusedAttitude)
+            panicCounter = 0
+            Log.d(
+                FusedGeomagneticAttitudeEstimator::class.simpleName,
+                "Attitude reset to geomagnetic one"
+            )
+            return
+        }
 
-        if (hasDeltaRelativeAttitude) {
-            if (resetToGeomagnetic) {
-                geomagneticAttitude.copyTo(fusedAttitude)
-                panicCounter = 0
-                Log.d(
-                    FusedGeomagneticAttitudeEstimator::class.simpleName,
-                    "Attitude reset to geomagnetic one"
-                )
-                return
-            }
+        // change attitude by the delta obtained from relative attitude (gyroscope)
+        Quaternion.product(deltaRelativeAttitude, internalFusedAttitude, internalFusedAttitude)
 
-            // change attitude by the delta obtained from relative attitude (gyroscope)
-            Quaternion.product(deltaRelativeAttitude, fusedAttitude, fusedAttitude)
+        val absDot =
+            abs(QuaternionHelper.dotProduct(internalFusedAttitude, geomagneticAttitude))
 
-            val absDot = abs(QuaternionHelper.dotProduct(fusedAttitude, geomagneticAttitude))
-
-            // check if fused attitude and leveling attitude have diverged
-            if (absDot < outlierThreshold) {
+        // check if fused attitude and leveling attitude have diverged
+        if (absDot < outlierThreshold) {
+            Log.i(
+                FusedGeomagneticAttitudeEstimator::class.simpleName,
+                "Threshold exceeded: $absDot"
+            )
+            // increase panic counter
+            if (absDot < outlierPanicThreshold) {
+                panicCounter++
                 Log.i(
                     FusedGeomagneticAttitudeEstimator::class.simpleName,
-                    "Threshold exceeded: $absDot"
+                    "Panic counter increased: $panicCounter"
                 )
-                // increase panic counter
-                if (absDot < outlierPanicThreshold) {
-                    panicCounter++
-                    Log.i(
-                        FusedGeomagneticAttitudeEstimator::class.simpleName,
-                        "Panic counter increased: $panicCounter"
-                    )
-                }
-
-                // directly use attitude which has combined only delta gyroscope data
-            } else {
-                // both are nearly the same. Perform normal fusion
-                Quaternion.slerp(
-                    fusedAttitude,
-                    geomagneticAttitude,
-                    getSlerpFactor(),
-                    fusedAttitude
-                )
-                panicCounter = 0
             }
 
-            relativeAttitude.copyTo(previousRelativeAttitude)
-            hasRelativeAttitude = false
-
-            val c: CoordinateTransformation? =
-                if (estimateCoordinateTransformation) {
-                    coordinateTransformation.fromRotation(fusedAttitude)
-                    coordinateTransformation
-                } else {
-                    null
-                }
-
-            val displayRoll: Double?
-            val displayPitch: Double?
-            val displayYaw: Double?
-            if (estimateEulerAngles) {
-                fusedAttitude.toEulerAngles(eulerAngles)
-                displayRoll = eulerAngles[0]
-                displayPitch = eulerAngles[1]
-                displayYaw = eulerAngles[2]
-            } else {
-                displayRoll = null
-                displayPitch = null
-                displayYaw = null
-            }
-
-            attitudeAvailableListener?.onAttitudeAvailable(
-                this,
-                fusedAttitude,
-                relativeAttitudeTimestamp,
-                displayRoll,
-                displayPitch,
-                displayYaw,
-                c
+            // directly use attitude which has combined only delta gyroscope data
+        } else {
+            // both are nearly the same. Perform normal fusion
+            Quaternion.slerp(
+                internalFusedAttitude,
+                geomagneticAttitude,
+                getSlerpFactor(),
+                internalFusedAttitude
             )
+            panicCounter = 0
         }
+
+        relativeAttitude.copyTo(previousRelativeAttitude)
+
+        val c: CoordinateTransformation? =
+            if (estimateCoordinateTransformation) {
+                coordinateTransformation.fromRotation(internalFusedAttitude)
+                coordinateTransformation
+            } else {
+                null
+            }
+
+        val displayRoll: Double?
+        val displayPitch: Double?
+        val displayYaw: Double?
+        if (estimateEulerAngles) {
+            internalFusedAttitude.toEulerAngles(eulerAngles)
+            displayRoll = eulerAngles[0]
+            displayPitch = eulerAngles[1]
+            displayYaw = eulerAngles[2]
+        } else {
+            displayRoll = null
+            displayPitch = null
+            displayYaw = null
+        }
+
+        internalFusedAttitude.copyTo(fusedAttitude)
+        attitudeAvailableListener?.onAttitudeAvailable(
+            this,
+            fusedAttitude,
+            relativeAttitudeTimestamp,
+            displayRoll,
+            displayPitch,
+            displayYaw,
+            c
+        )
+    }
+
+    /**
+     * Processes and stores last received geomagnetic attitude.
+     *
+     * @param attitude estimated absolute attitude respect NED coordinates system.
+     */
+    private fun processGeomagneticAttitude(attitude: Quaternion) {
+        attitude.copyTo(geomagneticAttitude)
+        hasGeomagneticAttitude = true
     }
 
     /**

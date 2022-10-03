@@ -17,23 +17,22 @@ package com.irurueta.android.navigation.inertial.test.estimators
 
 import android.location.Location
 import android.util.Log
-import android.view.Display
 import androidx.test.core.app.ActivityScenario
 import androidx.test.filters.RequiresDevice
 import com.irurueta.android.navigation.inertial.LocationService
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
-import com.irurueta.android.navigation.inertial.estimators.PoseEstimator
+import com.irurueta.android.navigation.inertial.estimators.EcefAbsolutePoseEstimator
 import com.irurueta.android.navigation.inertial.test.LocationActivity
 import com.irurueta.geometry.Point3D
 import com.irurueta.navigation.frames.ECEFFrame
 import io.mockk.spyk
-import org.junit.Assert
+import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 
 @RequiresDevice
-class PoseEstimatorTest {
+class EcefAbsolutePoseEstimatorTest {
 
     private val syncHelper = ThreadSyncHelper()
 
@@ -44,11 +43,11 @@ class PoseEstimatorTest {
 
     private var activity: LocationActivity? = null
 
-    val origin: Point3D = Point3D.create()
+    private val origin: Point3D = Point3D.create()
 
-    val translation: Point3D = Point3D.create()
+    private val translation: Point3D = Point3D.create()
 
-    private var previousTimestamp = -1L;
+    private var previousTimestamp = -1L
 
     @Before
     fun setUp() {
@@ -64,18 +63,18 @@ class PoseEstimatorTest {
         val refreshRate = activity.display?.mode?.refreshRate ?: 60.0f
         val refreshIntervalNanos = (1.0f / refreshRate * 1e9).toLong()
 
-        val estimator = PoseEstimator(
+        val estimator = EcefAbsolutePoseEstimator(
             activity,
             location,
             sensorDelay = SensorDelay.FASTEST,
             useWorldMagneticModel = true,
             useAccurateLevelingEstimator = true,
             useAccurateRelativeGyroscopeAttitudeEstimator = true,
-            estimateInitialTransformation = true,
-            poseAvailableListener = { _, currentEcefFrame, _, initialEcefFrame, _, _, _, timestamp, initialTransformation, _ ->
+            estimatePoseTransformation = true,
+            poseAvailableListener = { _, currentEcefFrame, _, initialEcefFrame, timestamp, _ ->
                 if (previousTimestamp < 0) {
                     previousTimestamp = timestamp
-                    return@PoseEstimator
+                    return@EcefAbsolutePoseEstimator
                 }
 
                 // refresh only as much as display allows even though sensors might run at higher refresh rates
@@ -83,7 +82,6 @@ class PoseEstimatorTest {
                     logTranslation(currentEcefFrame, initialEcefFrame)
                     previousTimestamp = timestamp
 
-                    //logInitialTransformation(initialTransformation)
                     syncHelper.notifyAll { completed++ }
                 }
             }
@@ -91,22 +89,22 @@ class PoseEstimatorTest {
 
         estimator.start()
 
-        syncHelper.waitOnCondition({ completed < 100000 }, maxRetries = 100000)
+        syncHelper.waitOnCondition({ completed < 1 })
 
         estimator.stop()
 
-        Assert.assertTrue(completed > 0)
+        assertTrue(completed > 0)
     }
 
     private fun getCurrentLocation(): Location {
         val scenario = ActivityScenario.launch(LocationActivity::class.java).use {
             it.onActivity { activity ->
-                this@PoseEstimatorTest.activity = activity
+                this@EcefAbsolutePoseEstimatorTest.activity = activity
                 val service = LocationService(activity)
 
                 val enabled = service.locationEnabled
                 requireNotNull(enabled)
-                Assert.assertTrue(enabled)
+                assertTrue(enabled)
 
                 val currentLocationListener =
                     spyk(object : LocationService.OnCurrentLocationListener {
@@ -120,10 +118,10 @@ class PoseEstimatorTest {
                 service.getCurrentLocation(currentLocationListener)
             }
         }
-        Assert.assertNotNull(scenario)
+        assertNotNull(scenario)
 
         syncHelper.waitOnCondition({ completed < 1 })
-        Assert.assertEquals(1, completed)
+        assertEquals(1, completed)
         completed = 0
 
         val currentLocation = this.currentLocation
@@ -137,15 +135,4 @@ class PoseEstimatorTest {
         val distance = translation.distanceTo(origin)
         Log.d("PoseEstimatorTest", "Translation: $distance meters")
     }
-
-    /*private fun logInitialTransformation(initialTransformation: EuclideanTransformation3D?) {
-        if (initialTransformation == null) {
-            return
-        }
-
-        initialTransformation.getTranslationPoint(translation)
-        origin.setInhomogeneousCoordinates(0.0, 0.0, 0.0)
-        val distance = translation.distanceTo(origin)
-        Log.d("PoseEstimatorTest", "Distance: $distance meters")
-    }*/
 }

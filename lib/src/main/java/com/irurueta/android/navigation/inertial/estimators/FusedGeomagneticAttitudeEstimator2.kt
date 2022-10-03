@@ -199,6 +199,12 @@ class FusedGeomagneticAttitudeEstimator2 private constructor(
      * Instance to be reused which contains merged attitudes of both the internal leveling
      * estimator and the relative attitude estimator taking into account display orientation.
      */
+    private val internalFusedAttitude = Quaternion()
+
+    /**
+     * Instance being reused to externally notify attitudes so that it does not have additional
+     * effects if it is modified.
+     */
     private val fusedAttitude = Quaternion()
 
     /**
@@ -607,7 +613,7 @@ class FusedGeomagneticAttitudeEstimator2 private constructor(
 
         if (hasDeltaRelativeAttitude) {
             if (resetToGeomagnetic) {
-                geomagneticAttitude.copyTo(fusedAttitude)
+                geomagneticAttitude.copyTo(internalFusedAttitude)
                 panicCounter = 0
                 Log.d(
                     FusedGeomagneticAttitudeEstimator::class.simpleName,
@@ -617,9 +623,9 @@ class FusedGeomagneticAttitudeEstimator2 private constructor(
             }
 
             // change attitude by the delta obtained from relative attitude (gyroscope)
-            Quaternion.product(deltaRelativeAttitude, fusedAttitude, fusedAttitude)
+            Quaternion.product(deltaRelativeAttitude, internalFusedAttitude, internalFusedAttitude)
 
-            val absDot = abs(QuaternionHelper.dotProduct(fusedAttitude, geomagneticAttitude))
+            val absDot = abs(QuaternionHelper.dotProduct(internalFusedAttitude, geomagneticAttitude))
 
             // check if fused attitude and leveling attitude have diverged
             if (absDot < outlierThreshold) {
@@ -640,20 +646,19 @@ class FusedGeomagneticAttitudeEstimator2 private constructor(
             } else {
                 // both are nearly the same. Perform normal fusion
                 Quaternion.slerp(
-                    fusedAttitude,
+                    internalFusedAttitude,
                     geomagneticAttitude,
                     getSlerpFactor(),
-                    fusedAttitude
+                    internalFusedAttitude
                 )
                 panicCounter = 0
             }
 
             relativeAttitude.copyTo(previousRelativeAttitude)
-            hasRelativeAttitude = false
 
             val c: CoordinateTransformation? =
                 if (estimateCoordinateTransformation) {
-                    coordinateTransformation.fromRotation(fusedAttitude)
+                    coordinateTransformation.fromRotation(internalFusedAttitude)
                     coordinateTransformation
                 } else {
                     null
@@ -663,7 +668,7 @@ class FusedGeomagneticAttitudeEstimator2 private constructor(
             val displayPitch: Double?
             val displayYaw: Double?
             if (estimateEulerAngles) {
-                fusedAttitude.toEulerAngles(eulerAngles)
+                internalFusedAttitude.toEulerAngles(eulerAngles)
                 displayRoll = eulerAngles[0]
                 displayPitch = eulerAngles[1]
                 displayYaw = eulerAngles[2]
@@ -673,6 +678,7 @@ class FusedGeomagneticAttitudeEstimator2 private constructor(
                 displayYaw = null
             }
 
+            internalFusedAttitude.copyTo(fusedAttitude)
             attitudeAvailableListener?.onAttitudeAvailable(
                 this@FusedGeomagneticAttitudeEstimator2,
                 fusedAttitude,

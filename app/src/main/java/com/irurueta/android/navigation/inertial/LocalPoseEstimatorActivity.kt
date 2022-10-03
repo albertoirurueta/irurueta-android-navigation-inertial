@@ -27,14 +27,14 @@ import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCo
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
-import com.irurueta.android.navigation.inertial.estimators.EcefAbsolutePoseEstimator
+import com.irurueta.android.navigation.inertial.estimators.LocalPoseEstimator
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.MeanAveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.MedianAveragingFilter
 import com.irurueta.geometry.*
 
-class PoseEstimatorActivity : AppCompatActivity() {
+class LocalPoseEstimatorActivity : AppCompatActivity() {
 
     private var cubeView: CubeTextureView? = null
 
@@ -58,7 +58,7 @@ class PoseEstimatorActivity : AppCompatActivity() {
 
     private var camera: PinholeCamera? = null
 
-    private var poseEstimator: EcefAbsolutePoseEstimator? = null
+    private var poseEstimator: LocalPoseEstimator? = null
 
     private val conversionRotation = ENUtoNEDTriadConverter.conversionRotation
 
@@ -110,7 +110,7 @@ class PoseEstimatorActivity : AppCompatActivity() {
             extras?.getBoolean(USE_WORLD_MAGNETIC_MODEL, false)
                 ?: false
 
-        setContentView(R.layout.activity_pose_estimator)
+        setContentView(R.layout.activity_local_pose_estimator)
         cubeView = findViewById(R.id.cube)
         rollView = findViewById(R.id.roll)
         pitchView = findViewById(R.id.pitch)
@@ -170,7 +170,7 @@ class PoseEstimatorActivity : AppCompatActivity() {
                 buildEstimatorAndStart()
             } else {
                 locationService?.getCurrentLocation { currentLocation ->
-                    this@PoseEstimatorActivity.location = currentLocation
+                    this@LocalPoseEstimatorActivity.location = currentLocation
                     buildEstimatorAndStart()
                 }
             }
@@ -194,7 +194,7 @@ class PoseEstimatorActivity : AppCompatActivity() {
             }
             val refreshIntervalNanos = (1.0f / refreshRate * 1e9).toLong()
 
-            poseEstimator = EcefAbsolutePoseEstimator(
+            poseEstimator = LocalPoseEstimator(
                 this,
                 location,
                 sensorDelay = SensorDelay.FASTEST,
@@ -204,7 +204,7 @@ class PoseEstimatorActivity : AppCompatActivity() {
                 accelerometerAveragingFilter = accelerometerAveragingFilter,
                 useWorldMagneticModel = useWorldMagneticModel,
                 estimatePoseTransformation = true,
-                poseAvailableListener = { _, _, _, _, timestamp, initialTransformation ->
+                poseAvailableListener = { estimator, currentFrame, previousFrame, initialFrame, timestamp, initialTransformation ->
 
                     if (!initialAttitudeAvailable) {
                         previousTimestamp = timestamp

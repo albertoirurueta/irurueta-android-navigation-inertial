@@ -1418,10 +1418,11 @@ class LeveledRelativeAttitudeEstimatorTest {
         val relativeAttitudeSpy = spyk(relativeAttitude)
         estimator.setPrivateProperty("relativeAttitude", relativeAttitudeSpy)
 
-        val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
-        requireNotNull(fusedAttitude)
-        val fusedAttitudeSpy = spyk(fusedAttitude)
-        estimator.setPrivateProperty("fusedAttitude", fusedAttitudeSpy)
+        val internalFusedAttitude: Quaternion? =
+            estimator.getPrivateProperty("internalFusedAttitude")
+        requireNotNull(internalFusedAttitude)
+        val internalFusedAttitudeSpy = spyk(internalFusedAttitude)
+        estimator.setPrivateProperty("internalFusedAttitude", internalFusedAttitudeSpy)
 
         estimator.setPrivateProperty("panicCounter", estimator.panicCounterThreshold)
         val panicCounter1: Int? = estimator.getPrivateProperty("panicCounter")
@@ -1473,7 +1474,7 @@ class LeveledRelativeAttitudeEstimatorTest {
                 relativeYaw
             )
         }
-        verify { levelingAttitudeSpy.copyTo(fusedAttitudeSpy) }
+        verify { levelingAttitudeSpy.copyTo(internalFusedAttitudeSpy) }
 
         val panicCounter2: Int? = estimator.getPrivateProperty("panicCounter")
         requireNotNull(panicCounter2)
@@ -1526,11 +1527,12 @@ class LeveledRelativeAttitudeEstimatorTest {
         val relativeAttitudeSpy = spyk(relativeAttitude)
         estimator.setPrivateProperty("relativeAttitude", relativeAttitudeSpy)
 
-        val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
-        requireNotNull(fusedAttitude)
-        getAttitude().copyTo(fusedAttitude)
-        val fusedAttitudeSpy = spyk(fusedAttitude)
-        estimator.setPrivateProperty("fusedAttitude", fusedAttitudeSpy)
+        val internalFusedAttitude: Quaternion? =
+            estimator.getPrivateProperty("internalFusedAttitude")
+        requireNotNull(internalFusedAttitude)
+        getAttitude().copyTo(internalFusedAttitude)
+        val internalFusedAttitudeSpy = spyk(internalFusedAttitude)
+        estimator.setPrivateProperty("internalFusedAttitude", internalFusedAttitudeSpy)
 
         val previousRelativeAttitude1 = Quaternion()
         estimator.setPrivateProperty("previousRelativeAttitude", previousRelativeAttitude1)
@@ -1556,7 +1558,7 @@ class LeveledRelativeAttitudeEstimatorTest {
             )
         }.returns(estimator.outlierThreshold)
 
-        val fusedAttitude2 = Quaternion(fusedAttitude)
+        val fusedAttitude2 = Quaternion(internalFusedAttitude)
         val fusedAttitude3 = deltaRelativeAttitude.multiplyAndReturnNew(fusedAttitude2)
 
         estimator.setPrivateProperty("panicCounter", 1)
@@ -1609,7 +1611,7 @@ class LeveledRelativeAttitudeEstimatorTest {
                 relativeYaw
             )
         }
-        verify(exactly = 0) { levelingAttitudeSpy.copyTo(fusedAttitudeSpy) }
+        verify(exactly = 0) { levelingAttitudeSpy.copyTo(internalFusedAttitudeSpy) }
 
         val panicCounter2: Int? = estimator.getPrivateProperty("panicCounter")
         requireNotNull(panicCounter2)
@@ -1617,7 +1619,7 @@ class LeveledRelativeAttitudeEstimatorTest {
 
         val hasRelativeAttitude2: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
         requireNotNull(hasRelativeAttitude2)
-        assertFalse(hasRelativeAttitude2)
+        assertTrue(hasRelativeAttitude2)
 
         val fusedAttitude4 = Quaternion()
         Quaternion.slerp(
@@ -1627,7 +1629,7 @@ class LeveledRelativeAttitudeEstimatorTest {
             fusedAttitude4
         )
 
-        assertEquals(fusedAttitude4, fusedAttitudeSpy)
+        assertEquals(fusedAttitude4, internalFusedAttitudeSpy)
 
         val absDot = abs(QuaternionHelper.dotProduct(fusedAttitude3, levelingAttitudeSpy))
         assertTrue(absDot >= estimator.outlierThreshold)
@@ -1637,10 +1639,13 @@ class LeveledRelativeAttitudeEstimatorTest {
         requireNotNull(previousRelativeAttitude2)
         assertEquals(relativeAttitudeSpy, previousRelativeAttitude2)
 
+        val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
+        requireNotNull(fusedAttitude)
+
         verify(exactly = 1) {
             attitudeAvailableListener.onAttitudeAvailable(
                 estimator,
-                fusedAttitudeSpy,
+                fusedAttitude,
                 timestamp,
                 null,
                 null,
@@ -1694,11 +1699,12 @@ class LeveledRelativeAttitudeEstimatorTest {
         val relativeAttitudeSpy = spyk(relativeAttitude)
         estimator.setPrivateProperty("relativeAttitude", relativeAttitudeSpy)
 
-        val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
-        requireNotNull(fusedAttitude)
-        getAttitude().copyTo(fusedAttitude)
-        val fusedAttitudeSpy = spyk(fusedAttitude)
-        estimator.setPrivateProperty("fusedAttitude", fusedAttitudeSpy)
+        val internalFusedAttitude: Quaternion? =
+            estimator.getPrivateProperty("internalFusedAttitude")
+        requireNotNull(internalFusedAttitude)
+        getAttitude().copyTo(internalFusedAttitude)
+        val internalFusedAttitudeSpy = spyk(internalFusedAttitude)
+        estimator.setPrivateProperty("internalFusedAttitude", internalFusedAttitudeSpy)
 
         val previousRelativeAttitude1 = Quaternion()
         estimator.setPrivateProperty("previousRelativeAttitude", previousRelativeAttitude1)
@@ -1724,7 +1730,7 @@ class LeveledRelativeAttitudeEstimatorTest {
             )
         }.returns(0.5 * (estimator.outlierThreshold + estimator.outlierPanicThreshold))
 
-        val fusedAttitude2 = Quaternion(fusedAttitude)
+        val fusedAttitude2 = Quaternion(internalFusedAttitude)
         val fusedAttitude3 = deltaRelativeAttitude.multiplyAndReturnNew(fusedAttitude2)
 
         estimator.setPrivateProperty("panicCounter", 1)
@@ -1777,7 +1783,7 @@ class LeveledRelativeAttitudeEstimatorTest {
                 relativeYaw
             )
         }
-        verify(exactly = 0) { levelingAttitudeSpy.copyTo(fusedAttitudeSpy) }
+        verify(exactly = 0) { levelingAttitudeSpy.copyTo(internalFusedAttitudeSpy) }
 
         val panicCounter2: Int? = estimator.getPrivateProperty("panicCounter")
         requireNotNull(panicCounter2)
@@ -1785,9 +1791,9 @@ class LeveledRelativeAttitudeEstimatorTest {
 
         val hasRelativeAttitude2: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
         requireNotNull(hasRelativeAttitude2)
-        assertFalse(hasRelativeAttitude2)
+        assertTrue(hasRelativeAttitude2)
 
-        assertEquals(fusedAttitude3, fusedAttitudeSpy)
+        assertEquals(fusedAttitude3, internalFusedAttitudeSpy)
 
         val absDot = abs(QuaternionHelper.dotProduct(fusedAttitude3, levelingAttitudeSpy))
         assertTrue(absDot < estimator.outlierThreshold)
@@ -1798,10 +1804,13 @@ class LeveledRelativeAttitudeEstimatorTest {
         requireNotNull(previousRelativeAttitude2)
         assertEquals(relativeAttitudeSpy, previousRelativeAttitude2)
 
+        val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
+        requireNotNull(fusedAttitude)
+
         verify(exactly = 1) {
             attitudeAvailableListener.onAttitudeAvailable(
                 estimator,
-                fusedAttitudeSpy,
+                fusedAttitude,
                 timestamp,
                 null,
                 null,
@@ -1855,11 +1864,12 @@ class LeveledRelativeAttitudeEstimatorTest {
         val relativeAttitudeSpy = spyk(relativeAttitude)
         estimator.setPrivateProperty("relativeAttitude", relativeAttitudeSpy)
 
-        val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
-        requireNotNull(fusedAttitude)
-        getAttitude().copyTo(fusedAttitude)
-        val fusedAttitudeSpy = spyk(fusedAttitude)
-        estimator.setPrivateProperty("fusedAttitude", fusedAttitudeSpy)
+        val internalFusedAttitude: Quaternion? =
+            estimator.getPrivateProperty("internalFusedAttitude")
+        requireNotNull(internalFusedAttitude)
+        getAttitude().copyTo(internalFusedAttitude)
+        val internalFusedAttitudeSpy = spyk(internalFusedAttitude)
+        estimator.setPrivateProperty("internalFusedAttitude", internalFusedAttitudeSpy)
 
         val previousRelativeAttitude1 = Quaternion()
         estimator.setPrivateProperty("previousRelativeAttitude", previousRelativeAttitude1)
@@ -1885,7 +1895,7 @@ class LeveledRelativeAttitudeEstimatorTest {
             )
         }.returns(0.0)
 
-        val fusedAttitude2 = Quaternion(fusedAttitude)
+        val fusedAttitude2 = Quaternion(internalFusedAttitude)
         val fusedAttitude3 = deltaRelativeAttitude.multiplyAndReturnNew(fusedAttitude2)
 
         estimator.setPrivateProperty("panicCounter", 1)
@@ -1938,7 +1948,7 @@ class LeveledRelativeAttitudeEstimatorTest {
                 relativeYaw
             )
         }
-        verify(exactly = 0) { levelingAttitudeSpy.copyTo(fusedAttitudeSpy) }
+        verify(exactly = 0) { levelingAttitudeSpy.copyTo(internalFusedAttitudeSpy) }
 
         val panicCounter2: Int? = estimator.getPrivateProperty("panicCounter")
         requireNotNull(panicCounter2)
@@ -1946,9 +1956,9 @@ class LeveledRelativeAttitudeEstimatorTest {
 
         val hasRelativeAttitude2: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
         requireNotNull(hasRelativeAttitude2)
-        assertFalse(hasRelativeAttitude2)
+        assertTrue(hasRelativeAttitude2)
 
-        assertEquals(fusedAttitude3, fusedAttitudeSpy)
+        assertEquals(fusedAttitude3, internalFusedAttitudeSpy)
 
         val absDot = abs(QuaternionHelper.dotProduct(fusedAttitude3, levelingAttitudeSpy))
         assertTrue(absDot < estimator.outlierThreshold)
@@ -1959,10 +1969,13 @@ class LeveledRelativeAttitudeEstimatorTest {
         requireNotNull(previousRelativeAttitude2)
         assertEquals(relativeAttitudeSpy, previousRelativeAttitude2)
 
+        val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
+        requireNotNull(fusedAttitude)
+
         verify(exactly = 1) {
             attitudeAvailableListener.onAttitudeAvailable(
                 estimator,
-                fusedAttitudeSpy,
+                fusedAttitude,
                 timestamp,
                 null,
                 null,
@@ -2017,11 +2030,12 @@ class LeveledRelativeAttitudeEstimatorTest {
         val relativeAttitudeSpy = spyk(relativeAttitude)
         estimator.setPrivateProperty("relativeAttitude", relativeAttitudeSpy)
 
-        val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
-        requireNotNull(fusedAttitude)
-        getAttitude().copyTo(fusedAttitude)
-        val fusedAttitudeSpy = spyk(fusedAttitude)
-        estimator.setPrivateProperty("fusedAttitude", fusedAttitudeSpy)
+        val internalFusedAttitude: Quaternion? =
+            estimator.getPrivateProperty("internalFusedAttitude")
+        requireNotNull(internalFusedAttitude)
+        getAttitude().copyTo(internalFusedAttitude)
+        val internalFusedAttitudeSpy = spyk(internalFusedAttitude)
+        estimator.setPrivateProperty("internalFusedAttitude", internalFusedAttitudeSpy)
 
         val previousRelativeAttitude1 = Quaternion()
         estimator.setPrivateProperty("previousRelativeAttitude", previousRelativeAttitude1)
@@ -2047,7 +2061,7 @@ class LeveledRelativeAttitudeEstimatorTest {
             )
         }.returns(estimator.outlierThreshold)
 
-        val fusedAttitude2 = Quaternion(fusedAttitude)
+        val fusedAttitude2 = Quaternion(internalFusedAttitude)
         val fusedAttitude3 = deltaRelativeAttitude.multiplyAndReturnNew(fusedAttitude2)
 
         estimator.setPrivateProperty("panicCounter", 1)
@@ -2107,7 +2121,7 @@ class LeveledRelativeAttitudeEstimatorTest {
                 relativeYaw
             )
         }
-        verify(exactly = 0) { levelingAttitudeSpy.copyTo(fusedAttitudeSpy) }
+        verify(exactly = 0) { levelingAttitudeSpy.copyTo(internalFusedAttitudeSpy) }
 
         val panicCounter2: Int? = estimator.getPrivateProperty("panicCounter")
         requireNotNull(panicCounter2)
@@ -2115,7 +2129,7 @@ class LeveledRelativeAttitudeEstimatorTest {
 
         val hasRelativeAttitude2: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
         requireNotNull(hasRelativeAttitude2)
-        assertFalse(hasRelativeAttitude2)
+        assertTrue(hasRelativeAttitude2)
 
         val fusedAttitude4 = Quaternion()
         val t = estimator.interpolationValue + estimator.indirectInterpolationWeight *
@@ -2127,7 +2141,7 @@ class LeveledRelativeAttitudeEstimatorTest {
             fusedAttitude4
         )
 
-        assertEquals(fusedAttitude4, fusedAttitudeSpy)
+        assertEquals(fusedAttitude4, internalFusedAttitudeSpy)
 
         val absDot = abs(QuaternionHelper.dotProduct(fusedAttitude3, levelingAttitudeSpy))
         assertTrue(absDot >= estimator.outlierThreshold)
@@ -2137,10 +2151,13 @@ class LeveledRelativeAttitudeEstimatorTest {
         requireNotNull(previousRelativeAttitude2)
         assertEquals(relativeAttitudeSpy, previousRelativeAttitude2)
 
+        val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
+        requireNotNull(fusedAttitude)
+
         verify(exactly = 1) {
             attitudeAvailableListener.onAttitudeAvailable(
                 estimator,
-                fusedAttitudeSpy,
+                fusedAttitude,
                 timestamp,
                 null,
                 null,
@@ -2194,11 +2211,12 @@ class LeveledRelativeAttitudeEstimatorTest {
         val relativeAttitudeSpy = spyk(relativeAttitude)
         estimator.setPrivateProperty("relativeAttitude", relativeAttitudeSpy)
 
-        val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
-        requireNotNull(fusedAttitude)
-        getAttitude().copyTo(fusedAttitude)
-        val fusedAttitudeSpy = spyk(fusedAttitude)
-        estimator.setPrivateProperty("fusedAttitude", fusedAttitudeSpy)
+        val internalFusedAttitude: Quaternion? =
+            estimator.getPrivateProperty("internalFusedAttitude")
+        requireNotNull(internalFusedAttitude)
+        getAttitude().copyTo(internalFusedAttitude)
+        val internalFusedAttitudeSpy = spyk(internalFusedAttitude)
+        estimator.setPrivateProperty("internalFusedAttitude", internalFusedAttitudeSpy)
 
         val previousRelativeAttitude1 = Quaternion()
         estimator.setPrivateProperty("previousRelativeAttitude", previousRelativeAttitude1)
@@ -2224,7 +2242,7 @@ class LeveledRelativeAttitudeEstimatorTest {
             )
         }.returns(estimator.outlierThreshold)
 
-        val fusedAttitude2 = Quaternion(fusedAttitude)
+        val fusedAttitude2 = Quaternion(internalFusedAttitude)
         val fusedAttitude3 = deltaRelativeAttitude.multiplyAndReturnNew(fusedAttitude2)
 
         estimator.setPrivateProperty("panicCounter", 1)
@@ -2277,7 +2295,7 @@ class LeveledRelativeAttitudeEstimatorTest {
                 relativeYaw
             )
         }
-        verify(exactly = 0) { levelingAttitudeSpy.copyTo(fusedAttitudeSpy) }
+        verify(exactly = 0) { levelingAttitudeSpy.copyTo(internalFusedAttitudeSpy) }
 
         val panicCounter2: Int? = estimator.getPrivateProperty("panicCounter")
         requireNotNull(panicCounter2)
@@ -2285,7 +2303,7 @@ class LeveledRelativeAttitudeEstimatorTest {
 
         val hasRelativeAttitude2: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
         requireNotNull(hasRelativeAttitude2)
-        assertFalse(hasRelativeAttitude2)
+        assertTrue(hasRelativeAttitude2)
 
         val fusedAttitude4 = Quaternion()
         Quaternion.slerp(
@@ -2295,7 +2313,7 @@ class LeveledRelativeAttitudeEstimatorTest {
             fusedAttitude4
         )
 
-        assertEquals(fusedAttitude4, fusedAttitudeSpy)
+        assertEquals(fusedAttitude4, internalFusedAttitudeSpy)
 
         val absDot = abs(QuaternionHelper.dotProduct(fusedAttitude3, levelingAttitudeSpy))
         assertTrue(absDot >= estimator.outlierThreshold)
@@ -2310,10 +2328,13 @@ class LeveledRelativeAttitudeEstimatorTest {
         val yawSlot = slot<Double>()
         val coordinateTransformationSlot = slot<CoordinateTransformation>()
 
+        val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
+        requireNotNull(fusedAttitude)
+
         verify(exactly = 1) {
             attitudeAvailableListener.onAttitudeAvailable(
                 estimator,
-                fusedAttitudeSpy,
+                fusedAttitude,
                 timestamp,
                 capture(rollSlot),
                 capture(pitchSlot),

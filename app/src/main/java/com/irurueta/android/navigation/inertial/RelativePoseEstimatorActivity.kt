@@ -25,16 +25,15 @@ import com.irurueta.android.gl.cube.CubeRenderer
 import com.irurueta.android.gl.cube.CubeTextureView
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
-import com.irurueta.android.navigation.inertial.estimators.EcefAbsolutePoseEstimator
+import com.irurueta.android.navigation.inertial.estimators.RelativePoseEstimator
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.MeanAveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.MedianAveragingFilter
 import com.irurueta.geometry.*
 
-class PoseEstimatorActivity : AppCompatActivity() {
+class RelativePoseEstimatorActivity : AppCompatActivity() {
 
     private var cubeView: CubeTextureView? = null
 
@@ -58,7 +57,7 @@ class PoseEstimatorActivity : AppCompatActivity() {
 
     private var camera: PinholeCamera? = null
 
-    private var poseEstimator: EcefAbsolutePoseEstimator? = null
+    private var poseEstimator: RelativePoseEstimator? = null
 
     private val conversionRotation = ENUtoNEDTriadConverter.conversionRotation
 
@@ -73,11 +72,7 @@ class PoseEstimatorActivity : AppCompatActivity() {
 
     private var locationService: LocationService? = null
 
-    private var useWorldMagneticModel = false
-
     private var accelerometerSensorType = AccelerometerSensorCollector.SensorType.ACCELEROMETER
-
-    private var magnetometerSensorType = MagnetometerSensorCollector.SensorType.MAGNETOMETER
 
     private var accelerometerAveragingFilterType: String? = null
 
@@ -94,9 +89,6 @@ class PoseEstimatorActivity : AppCompatActivity() {
         accelerometerSensorType =
             (extras?.getSerializable(ACCELEROMETER_SENSOR_TYPE) as AccelerometerSensorCollector.SensorType?)
                 ?: AccelerometerSensorCollector.SensorType.ACCELEROMETER
-        magnetometerSensorType =
-            (extras?.getSerializable(MAGNETOMETER_SENSOR_TYPE) as MagnetometerSensorCollector.SensorType?)
-                ?: MagnetometerSensorCollector.SensorType.MAGNETOMETER
         accelerometerAveragingFilterType =
             extras?.getString(ACCELEROMETER_AVERAGING_FILTER_TYPE)
         gyroscopeSensorType =
@@ -106,11 +98,8 @@ class PoseEstimatorActivity : AppCompatActivity() {
             extras?.getBoolean(USE_ACCURATE_LEVELING_ESTIMATOR, false) ?: false
         useAccurateRelativeGyroscopeAttitudeEstimator =
             extras?.getBoolean(USE_ACCURATE_RELATIVE_GYROSCOPE_ATTITUDE_ESTIMATOR, false) ?: false
-        useWorldMagneticModel =
-            extras?.getBoolean(USE_WORLD_MAGNETIC_MODEL, false)
-                ?: false
 
-        setContentView(R.layout.activity_pose_estimator)
+        setContentView(R.layout.activity_local_pose_estimator)
         cubeView = findViewById(R.id.cube)
         rollView = findViewById(R.id.roll)
         pitchView = findViewById(R.id.pitch)
@@ -170,7 +159,7 @@ class PoseEstimatorActivity : AppCompatActivity() {
                 buildEstimatorAndStart()
             } else {
                 locationService?.getCurrentLocation { currentLocation ->
-                    this@PoseEstimatorActivity.location = currentLocation
+                    this@RelativePoseEstimatorActivity.location = currentLocation
                     buildEstimatorAndStart()
                 }
             }
@@ -194,17 +183,16 @@ class PoseEstimatorActivity : AppCompatActivity() {
             }
             val refreshIntervalNanos = (1.0f / refreshRate * 1e9).toLong()
 
-            poseEstimator = EcefAbsolutePoseEstimator(
+            poseEstimator = RelativePoseEstimator(
                 this,
-                location,
                 sensorDelay = SensorDelay.FASTEST,
                 accelerometerSensorType = accelerometerSensorType,
                 gyroscopeSensorType = gyroscopeSensorType,
-                magnetometerSensorType = magnetometerSensorType,
                 accelerometerAveragingFilter = accelerometerAveragingFilter,
-                useWorldMagneticModel = useWorldMagneticModel,
-                estimatePoseTransformation = true,
-                poseAvailableListener = { _, _, _, _, timestamp, initialTransformation ->
+                useAccurateLevelingEstimator = true,
+                useAccurateRelativeGyroscopeAttitudeEstimator = true,
+                initialLocation = location,
+                poseAvailableListener = { _, timestamp, poseTransformation ->
 
                     if (!initialAttitudeAvailable) {
                         previousTimestamp = timestamp
@@ -217,7 +205,7 @@ class PoseEstimatorActivity : AppCompatActivity() {
                         previousTimestamp = timestamp
 
                         val enuRotation = Quaternion()
-                        initialTransformation?.rotation?.toQuaternion(enuRotation)
+                        poseTransformation.rotation.toQuaternion(enuRotation)
                         val nedRotation = Quaternion()
                         Quaternion.product(enuRotation, conversionRotation, nedRotation)
                         nedRotation.toEulerAngles(eulerAngles)
@@ -226,8 +214,8 @@ class PoseEstimatorActivity : AppCompatActivity() {
                             getString(R.string.pitch_degrees, Math.toDegrees(eulerAngles[1]))
                         yawView?.text = getString(R.string.yaw_degrees, Math.toDegrees(eulerAngles[2]))
 
-                        initialTransformation?.inverse()
-                        initialTransformation?.transform(initialCamera, camera)
+                        poseTransformation.inverse()
+                        poseTransformation.transform(initialCamera, camera)
 
                         cubeView?.camera = camera
                     }
@@ -239,8 +227,8 @@ class PoseEstimatorActivity : AppCompatActivity() {
 
     private fun buildAveragingFilter(averagingFilterType: String?): AveragingFilter {
         return when (averagingFilterType) {
-            MEAN_AVERAGING_FILTER -> MeanAveragingFilter()
-            MEDIAN_AVERAGING_FILTER -> MedianAveragingFilter()
+            LocalPoseEstimatorActivity.MEAN_AVERAGING_FILTER -> MeanAveragingFilter()
+            LocalPoseEstimatorActivity.MEDIAN_AVERAGING_FILTER -> MedianAveragingFilter()
             else -> LowPassAveragingFilter()
         }
     }
@@ -249,13 +237,11 @@ class PoseEstimatorActivity : AppCompatActivity() {
 
     companion object {
         const val ACCELEROMETER_SENSOR_TYPE = "accelerometerSensorType"
-        const val MAGNETOMETER_SENSOR_TYPE = "magnetometerSensorType"
         const val ACCELEROMETER_AVERAGING_FILTER_TYPE = "accelerometerAveragingFilterType"
         const val GYROSCOPE_SENSOR_TYPE = "gyroscopeSensorType"
         const val USE_ACCURATE_LEVELING_ESTIMATOR = "useAccurateLevelingEstimator"
         const val USE_ACCURATE_RELATIVE_GYROSCOPE_ATTITUDE_ESTIMATOR =
             "useAccurateRelativeGyroscopeAttitudeEstimator"
-        const val USE_WORLD_MAGNETIC_MODEL = "useWorldMagneticModel"
 
         const val LOW_PASS_AVERAGING_FILTER = "losPassAveragingFilter"
         const val MEAN_AVERAGING_FILTER = "meanAveragingFilter"

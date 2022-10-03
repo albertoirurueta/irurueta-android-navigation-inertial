@@ -46,4 +46,6 @@
     <string name="fused_geomagnetic_attitude_estimator2">Fused geomagnetic attitude estimator 2:</string>
     <string name="pose_estimator_label">Pose Estimator:</string>
     <string name="pose_estimator_button">Pose Estimator</string>
+    <string name="local_pose_estimator_button">Local Pose Estimator</string>
+    <string name="relative_pose_estimator_button">Relative Pose Estimator</string>
 </resources>

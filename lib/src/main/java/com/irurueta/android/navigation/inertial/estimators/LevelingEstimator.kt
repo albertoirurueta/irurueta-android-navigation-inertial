@@ -27,6 +27,9 @@ import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragi
  * accelerometer measurements only.
  * This estimator does not estimate attitude yaw angle, as either a magnetometer or gyroscope would
  * be needed.
+ * When device is placed vertically (pitch values close to 90 degrees), this estimator might become
+ * unreliable. If device is expected to be in this orientation, avoid using this estimator and use
+ * [AccurateLevelingEstimator] instead.
  *
  * @property context Android context.
  * @property sensorDelay Delay of accelerometer or gravity sensor between samples.
