@@ -858,6 +858,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     }
 
     private companion object {
-        const val TIMEOUT = 500000L
+        const val TIMEOUT = 5000L
     }
 }

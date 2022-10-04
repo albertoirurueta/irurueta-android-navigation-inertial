@@ -167,11 +167,6 @@ class FusedGeomagneticAttitudeEstimator private constructor(
     private lateinit var relativeAttitudeEstimator: BaseRelativeGyroscopeAttitudeEstimator<*, *>
 
     /**
-     * Timestamp of last attitude estimation.
-     */
-    private var relativeAttitudeTimestamp = 0L
-
-    /**
      * Instance to be reused which contains geomagnetic absolute attitude.
      */
     private val geomagneticAttitude = Quaternion()
@@ -611,8 +606,6 @@ class FusedGeomagneticAttitudeEstimator private constructor(
         hasRelativeAttitude = true
         hasDeltaRelativeAttitude = computeDeltaRelativeAttitude()
 
-        relativeAttitudeTimestamp = timestamp
-
         if (!hasDeltaRelativeAttitude || !hasGeomagneticAttitude) {
             return
         }
@@ -688,7 +681,7 @@ class FusedGeomagneticAttitudeEstimator private constructor(
         attitudeAvailableListener?.onAttitudeAvailable(
             this,
             fusedAttitude,
-            relativeAttitudeTimestamp,
+            timestamp,
             displayRoll,
             displayPitch,
             displayYaw,

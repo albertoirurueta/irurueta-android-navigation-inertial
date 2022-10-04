@@ -81,6 +81,6 @@ class AccelerometerIntervalDetectorTest {
     }
 
     private companion object {
-        const val TIMEOUT = 100000L
+        const val TIMEOUT = 1000L
     }
 }

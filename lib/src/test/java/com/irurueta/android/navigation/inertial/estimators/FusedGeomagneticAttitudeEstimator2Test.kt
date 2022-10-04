@@ -1666,7 +1666,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
 
         val hasRelativeAttitude2: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
         requireNotNull(hasRelativeAttitude2)
-        assertFalse(hasRelativeAttitude2)
+        assertTrue(hasRelativeAttitude2)
 
         val fusedAttitude4 = Quaternion()
         Quaternion.slerp(
@@ -1822,7 +1822,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
 
         val hasRelativeAttitude2: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
         requireNotNull(hasRelativeAttitude2)
-        assertFalse(hasRelativeAttitude2)
+        assertTrue(hasRelativeAttitude2)
 
         assertEquals(fusedAttitude3, internalFusedAttitudeSpy)
 
@@ -1971,7 +1971,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
 
         val hasRelativeAttitude2: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
         requireNotNull(hasRelativeAttitude2)
-        assertFalse(hasRelativeAttitude2)
+        assertTrue(hasRelativeAttitude2)
 
         assertEquals(fusedAttitude3, internalFusedAttitudeSpy)
 
@@ -2128,7 +2128,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
 
         val hasRelativeAttitude2: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
         requireNotNull(hasRelativeAttitude2)
-        assertFalse(hasRelativeAttitude2)
+        assertTrue(hasRelativeAttitude2)
 
         val fusedAttitude4 = Quaternion()
         val t = estimator.interpolationValue + estimator.indirectInterpolationWeight *
@@ -2288,7 +2288,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
 
         val hasRelativeAttitude2: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
         requireNotNull(hasRelativeAttitude2)
-        assertFalse(hasRelativeAttitude2)
+        assertTrue(hasRelativeAttitude2)
 
         val fusedAttitude4 = Quaternion()
         Quaternion.slerp(

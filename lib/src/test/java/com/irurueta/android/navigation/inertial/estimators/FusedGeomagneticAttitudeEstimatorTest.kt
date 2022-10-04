@@ -956,647 +956,283 @@ class FusedGeomagneticAttitudeEstimatorTest {
     }
 
     @Test
-    fun processRelativeAttitude_whenFirstAndNonAccurateRelativeAttitudeEstimator_copiesAttitudeAndSetsPreviousRelativeAttitude() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator(
-            context,
-            useAccurateRelativeGyroscopeAttitudeEstimator = false
-        )
-
-        // check initial values
-        val relativeAttitude1: Quaternion? = estimator.getPrivateProperty("relativeAttitude")
-        requireNotNull(relativeAttitude1)
-        assertEquals(Quaternion(), relativeAttitude1)
-        val hasRelativeAttitude1: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
-        requireNotNull(hasRelativeAttitude1)
-        assertFalse(hasRelativeAttitude1)
-        val hasDeltaRelativeAttitude1: Boolean? =
-            estimator.getPrivateProperty("hasDeltaRelativeAttitude")
-        requireNotNull(hasDeltaRelativeAttitude1)
-        assertFalse(hasDeltaRelativeAttitude1)
-        val previousRelativeAttitude1: Quaternion? =
-            estimator.getPrivateProperty("previousRelativeAttitude")
-        assertNull(previousRelativeAttitude1)
-
-        val relativeAttitudeEstimator: RelativeGyroscopeAttitudeEstimator? =
-            estimator.getPrivateProperty("relativeAttitudeEstimator")
-        requireNotNull(relativeAttitudeEstimator)
-
-        val internalAttitude = spyk(getAttitude())
-        val listener = relativeAttitudeEstimator.attitudeAvailableListener
-        requireNotNull(listener)
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        listener.onAttitudeAvailable(
-            relativeAttitudeEstimator,
-            internalAttitude,
-            timestamp,
-            null,
-            null,
-            null,
-            null
-        )
-
-        verify(exactly = 1) { internalAttitude.copyTo(relativeAttitude1) }
-        assertEquals(internalAttitude, relativeAttitude1)
-        val hasRelativeAttitude2: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
-        requireNotNull(hasRelativeAttitude2)
-        assertTrue(hasRelativeAttitude2)
-        val hasDeltaRelativeAttitude2: Boolean? =
-            estimator.getPrivateProperty("hasDeltaRelativeAttitude")
-        requireNotNull(hasDeltaRelativeAttitude2)
-        assertFalse(hasDeltaRelativeAttitude2)
-        val previousRelativeAttitude2: Quaternion? =
-            estimator.getPrivateProperty("previousRelativeAttitude")
-        requireNotNull(previousRelativeAttitude2)
-        assertEquals(internalAttitude, previousRelativeAttitude2)
-    }
-
-    @Test
-    fun processRelativeAttitude_whenFirstAndAccurateRelativeAttitudeEstimator_copiesAttitudeAndSetsPreviousRelativeAttitude() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator(
-            context,
-            useAccurateRelativeGyroscopeAttitudeEstimator = true
-        )
-
-        // check initial values
-        val relativeAttitude1: Quaternion? = estimator.getPrivateProperty("relativeAttitude")
-        requireNotNull(relativeAttitude1)
-        assertEquals(Quaternion(), relativeAttitude1)
-        val hasRelativeAttitude1: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
-        requireNotNull(hasRelativeAttitude1)
-        assertFalse(hasRelativeAttitude1)
-        val hasDeltaRelativeAttitude1: Boolean? =
-            estimator.getPrivateProperty("hasDeltaRelativeAttitude")
-        requireNotNull(hasDeltaRelativeAttitude1)
-        assertFalse(hasDeltaRelativeAttitude1)
-        val previousRelativeAttitude1: Quaternion? =
-            estimator.getPrivateProperty("previousRelativeAttitude")
-        assertNull(previousRelativeAttitude1)
-
-        val relativeAttitudeEstimator: AccurateRelativeGyroscopeAttitudeEstimator? =
-            estimator.getPrivateProperty("relativeAttitudeEstimator")
-        requireNotNull(relativeAttitudeEstimator)
-
-        val internalAttitude = spyk(getAttitude())
-        val listener = relativeAttitudeEstimator.attitudeAvailableListener
-        requireNotNull(listener)
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        listener.onAttitudeAvailable(
-            relativeAttitudeEstimator,
-            internalAttitude,
-            timestamp,
-            null,
-            null,
-            null,
-            null
-        )
-
-        verify(exactly = 1) { internalAttitude.copyTo(relativeAttitude1) }
-        assertEquals(internalAttitude, relativeAttitude1)
-        val hasRelativeAttitude2: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
-        requireNotNull(hasRelativeAttitude2)
-        assertTrue(hasRelativeAttitude2)
-        val hasDeltaRelativeAttitude2: Boolean? =
-            estimator.getPrivateProperty("hasDeltaRelativeAttitude")
-        requireNotNull(hasDeltaRelativeAttitude2)
-        assertFalse(hasDeltaRelativeAttitude2)
-        val previousRelativeAttitude2: Quaternion? =
-            estimator.getPrivateProperty("previousRelativeAttitude")
-        requireNotNull(previousRelativeAttitude2)
-        assertEquals(internalAttitude, previousRelativeAttitude2)
-    }
-
-    @Test
-    fun processRelativeAttitude_whenNotFirstAndNonAccurateRelativeAttitudeEstimator_copiesAttitudeAndSetsPreviousRelativeAttitude() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator(
-            context,
-            useAccurateRelativeGyroscopeAttitudeEstimator = false
-        )
-
-        // check initial values
-        val relativeAttitude1: Quaternion? = estimator.getPrivateProperty("relativeAttitude")
-        requireNotNull(relativeAttitude1)
-        assertEquals(Quaternion(), relativeAttitude1)
-        val hasRelativeAttitude1: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
-        requireNotNull(hasRelativeAttitude1)
-        assertFalse(hasRelativeAttitude1)
-        val hasDeltaRelativeAttitude1: Boolean? =
-            estimator.getPrivateProperty("hasDeltaRelativeAttitude")
-        requireNotNull(hasDeltaRelativeAttitude1)
-        assertFalse(hasDeltaRelativeAttitude1)
-        val previousRelativeAttitude1: Quaternion? =
-            estimator.getPrivateProperty("previousRelativeAttitude")
-        assertNull(previousRelativeAttitude1)
-
-        val relativeAttitudeEstimator: RelativeGyroscopeAttitudeEstimator? =
-            estimator.getPrivateProperty("relativeAttitudeEstimator")
-        requireNotNull(relativeAttitudeEstimator)
-
-        // call listener for the 1st time
-        val internalAttitude1 = spyk(getAttitude())
-        val listener = relativeAttitudeEstimator.attitudeAvailableListener
-        requireNotNull(listener)
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        listener.onAttitudeAvailable(
-            relativeAttitudeEstimator,
-            internalAttitude1,
-            timestamp,
-            null,
-            null,
-            null,
-            null
-        )
-
-        verify(exactly = 1) { internalAttitude1.copyTo(relativeAttitude1) }
-        assertEquals(internalAttitude1, relativeAttitude1)
-        val hasRelativeAttitude2: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
-        requireNotNull(hasRelativeAttitude2)
-        assertTrue(hasRelativeAttitude2)
-        val hasDeltaRelativeAttitude2: Boolean? =
-            estimator.getPrivateProperty("hasDeltaRelativeAttitude")
-        requireNotNull(hasDeltaRelativeAttitude2)
-        assertFalse(hasDeltaRelativeAttitude2)
-        val previousRelativeAttitude2: Quaternion? =
-            estimator.getPrivateProperty("previousRelativeAttitude")
-        requireNotNull(previousRelativeAttitude2)
-        assertEquals(internalAttitude1, previousRelativeAttitude2)
-
-        // call listener a 2nd time
-        val deltaRelativeAttitude1 = getAttitude()
-        val internalAttitude2 = spyk(deltaRelativeAttitude1.combineAndReturnNew(internalAttitude1))
-        listener.onAttitudeAvailable(
-            relativeAttitudeEstimator,
-            internalAttitude2,
-            timestamp,
-            null,
-            null,
-            null,
-            null
-        )
-
-        verify(exactly = 1) { internalAttitude2.copyTo(relativeAttitude1) }
-        assertEquals(internalAttitude2, relativeAttitude1)
-        val hasRelativeAttitude3: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
-        requireNotNull(hasRelativeAttitude3)
-        assertTrue(hasRelativeAttitude3)
-        val hasDeltaRelativeAttitude3: Boolean? =
-            estimator.getPrivateProperty("hasDeltaRelativeAttitude")
-        requireNotNull(hasDeltaRelativeAttitude3)
-        assertTrue(hasDeltaRelativeAttitude3)
-        val previousRelativeAttitude3: Quaternion? =
-            estimator.getPrivateProperty("previousRelativeAttitude")
-        requireNotNull(previousRelativeAttitude3)
-        assertEquals(internalAttitude1, previousRelativeAttitude3)
-        val inversePreviousRelativeAttitude: Quaternion? =
-            estimator.getPrivateProperty("inversePreviousRelativeAttitude")
-        requireNotNull(inversePreviousRelativeAttitude)
-        assertEquals(
-            previousRelativeAttitude2.inverseAndReturnNew(),
-            inversePreviousRelativeAttitude
-        )
-        val deltaRelativeAttitude2: Quaternion? =
-            estimator.getPrivateProperty("deltaRelativeAttitude")
-        requireNotNull(deltaRelativeAttitude2)
-        assertEquals(deltaRelativeAttitude1, deltaRelativeAttitude2)
-    }
-
-    @Test
-    fun processRelativeAttitude_whenNotFirstAndAccurateRelativeAttitudeEstimator_copiesAttitudeAndSetsPreviousRelativeAttitude() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator(
-            context,
-            useAccurateRelativeGyroscopeAttitudeEstimator = true
-        )
-
-        // check initial values
-        val relativeAttitude1: Quaternion? = estimator.getPrivateProperty("relativeAttitude")
-        requireNotNull(relativeAttitude1)
-        assertEquals(Quaternion(), relativeAttitude1)
-        val hasRelativeAttitude1: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
-        requireNotNull(hasRelativeAttitude1)
-        assertFalse(hasRelativeAttitude1)
-        val hasDeltaRelativeAttitude1: Boolean? =
-            estimator.getPrivateProperty("hasDeltaRelativeAttitude")
-        requireNotNull(hasDeltaRelativeAttitude1)
-        assertFalse(hasDeltaRelativeAttitude1)
-        val previousRelativeAttitude1: Quaternion? =
-            estimator.getPrivateProperty("previousRelativeAttitude")
-        assertNull(previousRelativeAttitude1)
-
-        val relativeAttitudeEstimator: AccurateRelativeGyroscopeAttitudeEstimator? =
-            estimator.getPrivateProperty("relativeAttitudeEstimator")
-        requireNotNull(relativeAttitudeEstimator)
-
-        // call listener for the 1st time
-        val internalAttitude1 = spyk(getAttitude())
-        val listener = relativeAttitudeEstimator.attitudeAvailableListener
-        requireNotNull(listener)
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        listener.onAttitudeAvailable(
-            relativeAttitudeEstimator,
-            internalAttitude1,
-            timestamp,
-            null,
-            null,
-            null,
-            null
-        )
-
-        verify(exactly = 1) { internalAttitude1.copyTo(relativeAttitude1) }
-        assertEquals(internalAttitude1, relativeAttitude1)
-        val hasRelativeAttitude2: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
-        requireNotNull(hasRelativeAttitude2)
-        assertTrue(hasRelativeAttitude2)
-        val hasDeltaRelativeAttitude2: Boolean? =
-            estimator.getPrivateProperty("hasDeltaRelativeAttitude")
-        requireNotNull(hasDeltaRelativeAttitude2)
-        assertFalse(hasDeltaRelativeAttitude2)
-        val previousRelativeAttitude2: Quaternion? =
-            estimator.getPrivateProperty("previousRelativeAttitude")
-        requireNotNull(previousRelativeAttitude2)
-        assertEquals(internalAttitude1, previousRelativeAttitude2)
-
-        // call listener a 2nd time
-        val deltaRelativeAttitude1 = getAttitude()
-        val internalAttitude2 = spyk(deltaRelativeAttitude1.combineAndReturnNew(internalAttitude1))
-        listener.onAttitudeAvailable(
-            relativeAttitudeEstimator,
-            internalAttitude2,
-            timestamp,
-            null,
-            null,
-            null,
-            null
-        )
-
-        verify(exactly = 1) { internalAttitude2.copyTo(relativeAttitude1) }
-        assertEquals(internalAttitude2, relativeAttitude1)
-        val hasRelativeAttitude3: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
-        requireNotNull(hasRelativeAttitude3)
-        assertTrue(hasRelativeAttitude3)
-        val hasDeltaRelativeAttitude3: Boolean? =
-            estimator.getPrivateProperty("hasDeltaRelativeAttitude")
-        requireNotNull(hasDeltaRelativeAttitude3)
-        assertTrue(hasDeltaRelativeAttitude3)
-        val previousRelativeAttitude3: Quaternion? =
-            estimator.getPrivateProperty("previousRelativeAttitude")
-        requireNotNull(previousRelativeAttitude3)
-        assertEquals(internalAttitude1, previousRelativeAttitude3)
-        val inversePreviousRelativeAttitude: Quaternion? =
-            estimator.getPrivateProperty("inversePreviousRelativeAttitude")
-        requireNotNull(inversePreviousRelativeAttitude)
-        assertEquals(
-            previousRelativeAttitude2.inverseAndReturnNew(),
-            inversePreviousRelativeAttitude
-        )
-        val deltaRelativeAttitude2: Quaternion? =
-            estimator.getPrivateProperty("deltaRelativeAttitude")
-        requireNotNull(deltaRelativeAttitude2)
-        assertEquals(deltaRelativeAttitude1, deltaRelativeAttitude2)
-    }
-
-    @Test
-    fun processGeomagneticAttitude_whenNoRelativeAttitudeAndNonAccurateLeveling_makesNoAction() {
+    fun processRelativeAttitude_whenNoPreviousRelativeAttitudeAndNonAccurateRelativeGyroscopeAttitude_copiesAttitude() {
         val attitudeAvailableListener =
             mockk<FusedGeomagneticAttitudeEstimator.OnAttitudeAvailableListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = FusedGeomagneticAttitudeEstimator(
             context,
-            useAccurateLevelingEstimator = false,
+            useAccurateRelativeGyroscopeAttitudeEstimator = false,
             attitudeAvailableListener = attitudeAvailableListener
         )
 
-        val hasRelativeAttitude1: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
-        requireNotNull(hasRelativeAttitude1)
-        assertFalse(hasRelativeAttitude1)
-
-        val geomagneticAttitude1: Quaternion? = estimator.getPrivateProperty("geomagneticAttitude")
-        requireNotNull(geomagneticAttitude1)
-        assertEquals(Quaternion(), geomagneticAttitude1)
-
-        val hasDeltaRelativeAttitude1: Boolean? =
-            estimator.getPrivateProperty("hasDeltaRelativeAttitude")
-        requireNotNull(hasDeltaRelativeAttitude1)
-        assertFalse(hasDeltaRelativeAttitude1)
-
-        val geomagneticEstimator: GeomagneticAttitudeEstimator? =
-            estimator.getPrivateProperty("geomagneticAttitudeEstimator")
-        requireNotNull(geomagneticEstimator)
-
-        val internalAttitude = spyk(getAttitude())
-        val listener = geomagneticEstimator.attitudeAvailableListener
-        requireNotNull(listener)
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        listener.onAttitudeAvailable(
-            geomagneticEstimator,
-            internalAttitude,
-            timestamp,
-            null,
-            null,
-            null,
-            null
-        )
-
-        val geomagneticAttitude2: Quaternion? = estimator.getPrivateProperty("geomagneticAttitude")
-        requireNotNull(geomagneticAttitude2)
-        assertEquals(Quaternion(), geomagneticAttitude2)
-
-        verify { attitudeAvailableListener wasNot Called }
-        verify { internalAttitude wasNot Called }
-    }
-
-    @Test
-    fun processGeomagneticAttitude_whenNoRelativeAttitudeAndAccurateLeveling_makesNoAction() {
-        val attitudeAvailableListener =
-            mockk<FusedGeomagneticAttitudeEstimator.OnAttitudeAvailableListener>()
-        val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator(
-            context,
-            location,
-            useAccurateLevelingEstimator = true,
-            attitudeAvailableListener = attitudeAvailableListener
-        )
-
-        val hasRelativeAttitude1: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
-        requireNotNull(hasRelativeAttitude1)
-        assertFalse(hasRelativeAttitude1)
-
-        val geomagneticAttitude1: Quaternion? = estimator.getPrivateProperty("geomagneticAttitude")
-        requireNotNull(geomagneticAttitude1)
-        assertEquals(Quaternion(), geomagneticAttitude1)
-
-        val hasDeltaRelativeAttitude1: Boolean? =
-            estimator.getPrivateProperty("hasDeltaRelativeAttitude")
-        requireNotNull(hasDeltaRelativeAttitude1)
-        assertFalse(hasDeltaRelativeAttitude1)
-
-        val geomagneticEstimator: GeomagneticAttitudeEstimator? =
-            estimator.getPrivateProperty("geomagneticAttitudeEstimator")
-        requireNotNull(geomagneticEstimator)
-
-        val internalAttitude = spyk(getAttitude())
-        val listener = geomagneticEstimator.attitudeAvailableListener
-        requireNotNull(listener)
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        listener.onAttitudeAvailable(
-            geomagneticEstimator,
-            internalAttitude,
-            timestamp,
-            null,
-            null,
-            null,
-            null
-        )
-
-        val geomagneticAttitude2: Quaternion? = estimator.getPrivateProperty("geomagneticAttitude")
-        requireNotNull(geomagneticAttitude2)
-        assertEquals(Quaternion(), geomagneticAttitude2)
-
-        verify { attitudeAvailableListener wasNot Called }
-        verify { internalAttitude wasNot Called }
-    }
-
-    @Test
-    fun processGeomagneticAttitude_whenRelativeAttitudeAndNonAccurateLeveling_copiesAttitude() {
-        val attitudeAvailableListener =
-            mockk<FusedGeomagneticAttitudeEstimator.OnAttitudeAvailableListener>()
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator(
-            context,
-            useAccurateLevelingEstimator = false,
-            attitudeAvailableListener = attitudeAvailableListener
-        )
-
-        estimator.setPrivateProperty("hasRelativeAttitude", true)
-
-        val hasRelativeAttitude1: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
-        requireNotNull(hasRelativeAttitude1)
-        assertTrue(hasRelativeAttitude1)
-
-        val geomagneticAttitude1: Quaternion? = estimator.getPrivateProperty("geomagneticAttitude")
-        requireNotNull(geomagneticAttitude1)
-        assertEquals(Quaternion(), geomagneticAttitude1)
-
-        val hasDeltaRelativeAttitude1: Boolean? =
-            estimator.getPrivateProperty("hasDeltaRelativeAttitude")
-        requireNotNull(hasDeltaRelativeAttitude1)
-        assertFalse(hasDeltaRelativeAttitude1)
-
-        val geomagneticEstimator: GeomagneticAttitudeEstimator? =
-            estimator.getPrivateProperty("geomagneticAttitudeEstimator")
-        requireNotNull(geomagneticEstimator)
-
-        val internalAttitude = spyk(getAttitude())
-        val listener = geomagneticEstimator.attitudeAvailableListener
-        requireNotNull(listener)
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        listener.onAttitudeAvailable(
-            geomagneticEstimator,
-            internalAttitude,
-            timestamp,
-            null,
-            null,
-            null,
-            null
-        )
-
-        val geomagneticAttitude2: Quaternion? = estimator.getPrivateProperty("geomagneticAttitude")
-        requireNotNull(geomagneticAttitude2)
-        assertEquals(internalAttitude, geomagneticAttitude2)
-
-        verify { attitudeAvailableListener wasNot Called }
-        verify(exactly = 1) { internalAttitude.copyTo(geomagneticAttitude2) }
-    }
-
-    @Test
-    fun processGeomagneticAttitude_whenRelativeAttitudeAndAccurateLeveling_copiesAttitude() {
-        val attitudeAvailableListener =
-            mockk<FusedGeomagneticAttitudeEstimator.OnAttitudeAvailableListener>()
-        val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator(
-            context,
-            location,
-            useAccurateLevelingEstimator = true,
-            attitudeAvailableListener = attitudeAvailableListener
-        )
-
-        estimator.setPrivateProperty("hasRelativeAttitude", true)
-
-        val hasRelativeAttitude1: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
-        requireNotNull(hasRelativeAttitude1)
-        assertTrue(hasRelativeAttitude1)
-
-        val geomagneticAttitude1: Quaternion? = estimator.getPrivateProperty("geomagneticAttitude")
-        requireNotNull(geomagneticAttitude1)
-        assertEquals(Quaternion(), geomagneticAttitude1)
-
-        val hasDeltaRelativeAttitude1: Boolean? =
-            estimator.getPrivateProperty("hasDeltaRelativeAttitude")
-        requireNotNull(hasDeltaRelativeAttitude1)
-        assertFalse(hasDeltaRelativeAttitude1)
-
-        val geomagneticEstimator: GeomagneticAttitudeEstimator? =
-            estimator.getPrivateProperty("geomagneticAttitudeEstimator")
-        requireNotNull(geomagneticEstimator)
-
-        val internalAttitude = spyk(getAttitude())
-        val listener = geomagneticEstimator.attitudeAvailableListener
-        requireNotNull(listener)
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        listener.onAttitudeAvailable(
-            geomagneticEstimator,
-            internalAttitude,
-            timestamp,
-            null,
-            null,
-            null,
-            null
-        )
-
-        val geomagneticAttitude2: Quaternion? = estimator.getPrivateProperty("geomagneticAttitude")
-        requireNotNull(geomagneticAttitude2)
-        assertEquals(internalAttitude, geomagneticAttitude2)
-
-        verify { attitudeAvailableListener wasNot Called }
-        verify(exactly = 1) { internalAttitude.copyTo(geomagneticAttitude2) }
-    }
-
-    @Test
-    fun processGeomagneticAttitude_whenDeltaRelativeAttitudeAndResetLeveling_resets() {
-        val attitudeAvailableListener =
-            mockk<FusedGeomagneticAttitudeEstimator.OnAttitudeAvailableListener>()
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator(
-            context,
-            useAccurateLevelingEstimator = false,
-            attitudeAvailableListener = attitudeAvailableListener
-        )
-
-        estimator.setPrivateProperty("hasRelativeAttitude", true)
-        estimator.setPrivateProperty("hasDeltaRelativeAttitude", true)
-
-        val hasRelativeAttitude1: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
-        requireNotNull(hasRelativeAttitude1)
-        assertTrue(hasRelativeAttitude1)
-
-        val geomagneticAttitude1: Quaternion? = estimator.getPrivateProperty("geomagneticAttitude")
-        requireNotNull(geomagneticAttitude1)
-        assertEquals(Quaternion(), geomagneticAttitude1)
-
-        val hasDeltaRelativeAttitude1: Boolean? =
-            estimator.getPrivateProperty("hasDeltaRelativeAttitude")
-        requireNotNull(hasDeltaRelativeAttitude1)
-        assertTrue(hasDeltaRelativeAttitude1)
-
-        val geomagneticAttitude: Quaternion? = estimator.getPrivateProperty("geomagneticAttitude")
-        requireNotNull(geomagneticAttitude)
-        val geomagneticAttitudeSpy = spyk(geomagneticAttitude)
-        estimator.setPrivateProperty("geomagneticAttitude", geomagneticAttitudeSpy)
-
+        // check default values
         val relativeAttitude: Quaternion? = estimator.getPrivateProperty("relativeAttitude")
         requireNotNull(relativeAttitude)
-        val attitude = getAttitude()
-        attitude.copyTo(relativeAttitude)
-        val relativeAttitudeSpy = spyk(relativeAttitude)
-        estimator.setPrivateProperty("relativeAttitude", relativeAttitudeSpy)
+        assertEquals(Quaternion(), relativeAttitude)
+
+        val hasRelativeAttitude1: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
+        requireNotNull(hasRelativeAttitude1)
+        assertFalse(hasRelativeAttitude1)
+
+        val hasDeltaRelativeAttitude1: Boolean? =
+            estimator.getPrivateProperty("hasDeltaRelativeAttitude")
+        requireNotNull(hasDeltaRelativeAttitude1)
+        assertFalse(hasDeltaRelativeAttitude1)
+
+        // execute
+        val relativeAttitudeEstimator: RelativeGyroscopeAttitudeEstimator? =
+            estimator.getPrivateProperty("relativeAttitudeEstimator")
+        requireNotNull(relativeAttitudeEstimator)
+
+        val listener = relativeAttitudeEstimator.attitudeAvailableListener
+        requireNotNull(listener)
+        val attitude = spyk(getAttitude())
+        val timestamp = SystemClock.elapsedRealtimeNanos()
+        listener.onAttitudeAvailable(
+            relativeAttitudeEstimator,
+            attitude,
+            timestamp,
+            null,
+            null,
+            null,
+            null
+        )
+
+        verify(exactly = 1) { attitude.copyTo(relativeAttitude) }
+
+        val hasRelativeAttitude2: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
+        requireNotNull(hasRelativeAttitude2)
+        assertTrue(hasRelativeAttitude2)
+
+        val hasDeltaRelativeAttitude2: Boolean? =
+            estimator.getPrivateProperty("hasDeltaRelativeAttitude")
+        requireNotNull(hasDeltaRelativeAttitude2)
+        assertFalse(hasDeltaRelativeAttitude2)
+
+        val hasGeomagneticAttitude: Boolean? =
+            estimator.getPrivateProperty("hasGeomagneticAttitude")
+        requireNotNull(hasGeomagneticAttitude)
+        assertFalse(hasGeomagneticAttitude)
+
+        verify { attitudeAvailableListener wasNot Called }
+    }
+
+    @Test
+    fun processRelativeAttitude_whenNoPreviousRelativeAttitudeAndAccurateRelativeGyroscopeAttitude_copiesAttitude() {
+        val attitudeAvailableListener =
+            mockk<FusedGeomagneticAttitudeEstimator.OnAttitudeAvailableListener>()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val estimator = FusedGeomagneticAttitudeEstimator(
+            context,
+            useAccurateRelativeGyroscopeAttitudeEstimator = true,
+            attitudeAvailableListener = attitudeAvailableListener
+        )
+
+        // check default values
+        val relativeAttitude: Quaternion? = estimator.getPrivateProperty("relativeAttitude")
+        requireNotNull(relativeAttitude)
+        assertEquals(Quaternion(), relativeAttitude)
+
+        val hasRelativeAttitude1: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
+        requireNotNull(hasRelativeAttitude1)
+        assertFalse(hasRelativeAttitude1)
+
+        val hasDeltaRelativeAttitude1: Boolean? =
+            estimator.getPrivateProperty("hasDeltaRelativeAttitude")
+        requireNotNull(hasDeltaRelativeAttitude1)
+        assertFalse(hasDeltaRelativeAttitude1)
+
+        // execute
+        val relativeAttitudeEstimator: AccurateRelativeGyroscopeAttitudeEstimator? =
+            estimator.getPrivateProperty("relativeAttitudeEstimator")
+        requireNotNull(relativeAttitudeEstimator)
+
+        val listener = relativeAttitudeEstimator.attitudeAvailableListener
+        requireNotNull(listener)
+        val attitude = spyk(getAttitude())
+        val timestamp = SystemClock.elapsedRealtimeNanos()
+        listener.onAttitudeAvailable(
+            relativeAttitudeEstimator,
+            attitude,
+            timestamp,
+            null,
+            null,
+            null,
+            null
+        )
+
+        verify(exactly = 1) { attitude.copyTo(relativeAttitude) }
+
+        val hasRelativeAttitude2: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
+        requireNotNull(hasRelativeAttitude2)
+        assertTrue(hasRelativeAttitude2)
+
+        val hasDeltaRelativeAttitude2: Boolean? =
+            estimator.getPrivateProperty("hasDeltaRelativeAttitude")
+        requireNotNull(hasDeltaRelativeAttitude2)
+        assertFalse(hasDeltaRelativeAttitude2)
+
+        verify { attitudeAvailableListener wasNot Called }
+    }
+
+    @Test
+    fun processRelativeAttitude_whenPreviousRelativeAttitudeAndNoGeomagneticAttitude_copiesAttitude() {
+        val attitudeAvailableListener =
+            mockk<FusedGeomagneticAttitudeEstimator.OnAttitudeAvailableListener>()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val estimator = FusedGeomagneticAttitudeEstimator(
+            context,
+            attitudeAvailableListener = attitudeAvailableListener
+        )
+
+        // check default values
+        val relativeAttitude: Quaternion? = estimator.getPrivateProperty("relativeAttitude")
+        requireNotNull(relativeAttitude)
+        assertEquals(Quaternion(), relativeAttitude)
+
+        val hasRelativeAttitude1: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
+        requireNotNull(hasRelativeAttitude1)
+        assertFalse(hasRelativeAttitude1)
+
+        // set previous relative attitude
+        val previousRelativeAttitude = getAttitude()
+        estimator.setPrivateProperty("previousRelativeAttitude", previousRelativeAttitude)
+
+        // execute
+        val relativeAttitudeEstimator: RelativeGyroscopeAttitudeEstimator? =
+            estimator.getPrivateProperty("relativeAttitudeEstimator")
+        requireNotNull(relativeAttitudeEstimator)
+
+        val listener = relativeAttitudeEstimator.attitudeAvailableListener
+        requireNotNull(listener)
+        val attitude = spyk(getAttitude())
+        val timestamp = SystemClock.elapsedRealtimeNanos()
+        listener.onAttitudeAvailable(
+            relativeAttitudeEstimator,
+            attitude,
+            timestamp,
+            null,
+            null,
+            null,
+            null
+        )
+
+        verify(exactly = 1) { attitude.copyTo(relativeAttitude) }
+
+        val hasRelativeAttitude2: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
+        requireNotNull(hasRelativeAttitude2)
+        assertTrue(hasRelativeAttitude2)
+
+        val hasDeltaRelativeAttitude2: Boolean? =
+            estimator.getPrivateProperty("hasDeltaRelativeAttitude")
+        requireNotNull(hasDeltaRelativeAttitude2)
+        assertTrue(hasDeltaRelativeAttitude2)
+
+        val hasGeomagneticAttitude: Boolean? =
+            estimator.getPrivateProperty("hasGeomagneticAttitude")
+        requireNotNull(hasGeomagneticAttitude)
+        assertFalse(hasGeomagneticAttitude)
+
+        verify { attitudeAvailableListener wasNot Called }
+    }
+
+    @Test
+    fun processRelativeAttitude_whenPreviousRelativeAttitudeAndGeomagneticAttitude_resetsPanicCounter() {
+        val attitudeAvailableListener =
+            mockk<FusedGeomagneticAttitudeEstimator.OnAttitudeAvailableListener>()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val estimator = FusedGeomagneticAttitudeEstimator(
+            context,
+            attitudeAvailableListener = attitudeAvailableListener
+        )
+
+        // check default values
+        val relativeAttitude: Quaternion? = estimator.getPrivateProperty("relativeAttitude")
+        requireNotNull(relativeAttitude)
+        assertEquals(Quaternion(), relativeAttitude)
+
+        // set previous relative attitude
+        val previousRelativeAttitude = getAttitude()
+        estimator.setPrivateProperty("previousRelativeAttitude", previousRelativeAttitude)
+
+        // set geomagnetic attitude
+        val geomagneticAttitudeSpy = spyk(getAttitude())
+        estimator.setPrivateProperty("geomagneticAttitude", geomagneticAttitudeSpy)
+        estimator.setPrivateProperty("hasGeomagneticAttitude", true)
+
+        // execute
+        val relativeAttitudeEstimator: RelativeGyroscopeAttitudeEstimator? =
+            estimator.getPrivateProperty("relativeAttitudeEstimator")
+        requireNotNull(relativeAttitudeEstimator)
+
+        val listener = relativeAttitudeEstimator.attitudeAvailableListener
+        requireNotNull(listener)
+        val attitude = spyk(getAttitude())
+        val timestamp = SystemClock.elapsedRealtimeNanos()
+        listener.onAttitudeAvailable(
+            relativeAttitudeEstimator,
+            attitude,
+            timestamp,
+            null,
+            null,
+            null,
+            null
+        )
+
+        verify(exactly = 1) { attitude.copyTo(relativeAttitude) }
+
+        val hasRelativeAttitude2: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
+        requireNotNull(hasRelativeAttitude2)
+        assertTrue(hasRelativeAttitude2)
+
+        val hasDeltaRelativeAttitude2: Boolean? =
+            estimator.getPrivateProperty("hasDeltaRelativeAttitude")
+        requireNotNull(hasDeltaRelativeAttitude2)
+        assertTrue(hasDeltaRelativeAttitude2)
 
         val internalFusedAttitude: Quaternion? =
             estimator.getPrivateProperty("internalFusedAttitude")
         requireNotNull(internalFusedAttitude)
-        val internalFusedAttitudeSpy = spyk(internalFusedAttitude)
-        estimator.setPrivateProperty("internalFusedAttitude", internalFusedAttitudeSpy)
+        assertEquals(geomagneticAttitudeSpy, internalFusedAttitude)
 
-        estimator.setPrivateProperty("panicCounter", estimator.panicCounterThreshold)
-        val panicCounter1: Int? = estimator.getPrivateProperty("panicCounter")
-        requireNotNull(panicCounter1)
-        assertEquals(estimator.panicCounterThreshold, panicCounter1)
+        verify(exactly = 1) { geomagneticAttitudeSpy.copyTo(internalFusedAttitude) }
 
-        val resetToGeomagnetic: Boolean? = estimator.getPrivateProperty("resetToGeomagnetic")
-        requireNotNull(resetToGeomagnetic)
-        assertTrue(resetToGeomagnetic)
-
-        val geomagneticEstimator: GeomagneticAttitudeEstimator? =
-            estimator.getPrivateProperty("geomagneticAttitudeEstimator")
-        requireNotNull(geomagneticEstimator)
-
-        val internalAttitude = spyk(getAttitude())
-        val listener = geomagneticEstimator.attitudeAvailableListener
-        requireNotNull(listener)
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        listener.onAttitudeAvailable(
-            geomagneticEstimator,
-            internalAttitude,
-            timestamp,
-            null,
-            null,
-            null,
-            null
-        )
-
-        val geomagneticAttitude2: Quaternion? = estimator.getPrivateProperty("geomagneticAttitude")
-        requireNotNull(geomagneticAttitude2)
+        val panicCounter: Int? = estimator.getPrivateProperty("panicCounter")
+        requireNotNull(panicCounter)
+        assertEquals(0, panicCounter)
 
         verify { attitudeAvailableListener wasNot Called }
-        verify(exactly = 1) { internalAttitude.copyTo(geomagneticAttitude2) }
-
-        val eulerAngles: DoubleArray? = estimator.getPrivateProperty("eulerAngles")
-        requireNotNull(eulerAngles)
-        verify { geomagneticAttitudeSpy.copyTo(internalFusedAttitudeSpy) }
-
-        val panicCounter2: Int? = estimator.getPrivateProperty("panicCounter")
-        requireNotNull(panicCounter2)
-        assertEquals(0, panicCounter2)
-
-        val hasRelativeAttitude2: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
-        requireNotNull(hasRelativeAttitude2)
-        assertTrue(hasRelativeAttitude2)
     }
 
     @Test
-    fun processGeomagneticAttitude_whenDeltaRelativeAttitudeSmallDivergenceAndDirectInterpolation_updatesFusedAttitudeAndNotifies() {
+    fun processRelativeAttitude_whenDeltaRelativeAttitudeSmallDivergenceAndDirectInterpolation_updatesFusedAttitudeAndNotifies() {
         val attitudeAvailableListener =
             mockk<FusedGeomagneticAttitudeEstimator.OnAttitudeAvailableListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = FusedGeomagneticAttitudeEstimator(
             context,
             useAccurateLevelingEstimator = false,
-            estimateCoordinateTransformation = false,
             estimateEulerAngles = false,
             attitudeAvailableListener = attitudeAvailableListener
         )
         estimator.useIndirectInterpolation = false
 
-        estimator.setPrivateProperty("hasRelativeAttitude", true)
-        estimator.setPrivateProperty("hasDeltaRelativeAttitude", true)
-
-        val hasRelativeAttitude1: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
-        requireNotNull(hasRelativeAttitude1)
-        assertTrue(hasRelativeAttitude1)
-
-        val geomagneticAttitude1: Quaternion? = estimator.getPrivateProperty("geomagneticAttitude")
-        requireNotNull(geomagneticAttitude1)
-        assertEquals(Quaternion(), geomagneticAttitude1)
-
-        val hasDeltaRelativeAttitude1: Boolean? =
-            estimator.getPrivateProperty("hasDeltaRelativeAttitude")
-        requireNotNull(hasDeltaRelativeAttitude1)
-        assertTrue(hasDeltaRelativeAttitude1)
-
-        val geomagneticAttitude: Quaternion? = estimator.getPrivateProperty("geomagneticAttitude")
-        requireNotNull(geomagneticAttitude)
-        val geomagneticAttitudeSpy = spyk(geomagneticAttitude)
-        estimator.setPrivateProperty("geomagneticAttitude", geomagneticAttitudeSpy)
-
+        // check default values
         val relativeAttitude: Quaternion? = estimator.getPrivateProperty("relativeAttitude")
         requireNotNull(relativeAttitude)
-        val attitude = getAttitude()
-        attitude.copyTo(relativeAttitude)
+        getAttitude().copyTo(relativeAttitude)
         val relativeAttitudeSpy = spyk(relativeAttitude)
         estimator.setPrivateProperty("relativeAttitude", relativeAttitudeSpy)
+
+        // set previous relative attitude
+        val previousRelativeAttitude = getAttitude()
+        estimator.setPrivateProperty("previousRelativeAttitude", previousRelativeAttitude)
+
+        // set geomagnetic attitude
+        val geomagneticAttitudeSpy = spyk(getAttitude())
+        estimator.setPrivateProperty("geomagneticAttitude", geomagneticAttitudeSpy)
+        estimator.setPrivateProperty("hasGeomagneticAttitude", true)
 
         val internalFusedAttitude: Quaternion? =
             estimator.getPrivateProperty("internalFusedAttitude")
@@ -1629,9 +1265,7 @@ class FusedGeomagneticAttitudeEstimatorTest {
             )
         }.returns(estimator.outlierThreshold)
 
-        val fusedAttitude2 = Quaternion(internalFusedAttitude)
-        val fusedAttitude3 = deltaRelativeAttitude.multiplyAndReturnNew(fusedAttitude2)
-
+        // set panic counter
         estimator.setPrivateProperty("panicCounter", 1)
         val panicCounter1: Int? = estimator.getPrivateProperty("panicCounter")
         requireNotNull(panicCounter1)
@@ -1641,18 +1275,18 @@ class FusedGeomagneticAttitudeEstimatorTest {
         requireNotNull(resetToGeomagnetic)
         assertFalse(resetToGeomagnetic)
 
-        val geomagneticEstimator: GeomagneticAttitudeEstimator? =
-            estimator.getPrivateProperty("geomagneticAttitudeEstimator")
-        requireNotNull(geomagneticEstimator)
+        // execute
+        val relativeAttitudeEstimator: RelativeGyroscopeAttitudeEstimator? =
+            estimator.getPrivateProperty("relativeAttitudeEstimator")
+        requireNotNull(relativeAttitudeEstimator)
 
-        val internalAttitude = spyk(getAttitude())
-        val listener = geomagneticEstimator.attitudeAvailableListener
+        val listener = relativeAttitudeEstimator.attitudeAvailableListener
         requireNotNull(listener)
+        val attitude = spyk(getAttitude())
         val timestamp = SystemClock.elapsedRealtimeNanos()
-        estimator.setPrivateProperty("relativeAttitudeTimestamp", timestamp)
         listener.onAttitudeAvailable(
-            geomagneticEstimator,
-            internalAttitude,
+            relativeAttitudeEstimator,
+            attitude,
             timestamp,
             null,
             null,
@@ -1663,7 +1297,7 @@ class FusedGeomagneticAttitudeEstimatorTest {
         val geomagneticAttitude2: Quaternion? = estimator.getPrivateProperty("geomagneticAttitude")
         requireNotNull(geomagneticAttitude2)
 
-        verify(exactly = 1) { internalAttitude.copyTo(geomagneticAttitude2) }
+        verify(exactly = 1) { attitude.copyTo(relativeAttitudeSpy) }
 
         val eulerAngles: DoubleArray? = estimator.getPrivateProperty("eulerAngles")
         requireNotNull(eulerAngles)
@@ -1675,7 +1309,15 @@ class FusedGeomagneticAttitudeEstimatorTest {
 
         val hasRelativeAttitude2: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
         requireNotNull(hasRelativeAttitude2)
-        assertFalse(hasRelativeAttitude2)
+        assertTrue(hasRelativeAttitude2)
+
+        val hasDeltaRelativeAttitude2: Boolean? =
+            estimator.getPrivateProperty("hasDeltaRelativeAttitude")
+        requireNotNull(hasDeltaRelativeAttitude2)
+        assertTrue(hasDeltaRelativeAttitude2)
+
+        val fusedAttitude2 = Quaternion(internalFusedAttitude)
+        val fusedAttitude3 = deltaRelativeAttitude.multiplyAndReturnNew(fusedAttitude2)
 
         val fusedAttitude4 = Quaternion()
         Quaternion.slerp(
@@ -1714,46 +1356,33 @@ class FusedGeomagneticAttitudeEstimatorTest {
     }
 
     @Test
-    fun processGeomagneticAttitude_whenDeltaRelativeAttitudeMediumDivergenceAndDirectInterpolation_updatesFusedAttitudeAndNotifies() {
+    fun processRelativeAttitude_whenDeltaRelativeAttitudeMediumDivergenceAndDirectInterpolation_updatesFusedAttitudeAndNotifies() {
         val attitudeAvailableListener =
             mockk<FusedGeomagneticAttitudeEstimator.OnAttitudeAvailableListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = FusedGeomagneticAttitudeEstimator(
             context,
             useAccurateLevelingEstimator = false,
-            estimateCoordinateTransformation = false,
             estimateEulerAngles = false,
             attitudeAvailableListener = attitudeAvailableListener
         )
         estimator.useIndirectInterpolation = false
 
-        estimator.setPrivateProperty("hasRelativeAttitude", true)
-        estimator.setPrivateProperty("hasDeltaRelativeAttitude", true)
-
-        val hasRelativeAttitude1: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
-        requireNotNull(hasRelativeAttitude1)
-        assertTrue(hasRelativeAttitude1)
-
-        val geomagneticAttitude1: Quaternion? = estimator.getPrivateProperty("geomagneticAttitude")
-        requireNotNull(geomagneticAttitude1)
-        assertEquals(Quaternion(), geomagneticAttitude1)
-
-        val hasDeltaRelativeAttitude1: Boolean? =
-            estimator.getPrivateProperty("hasDeltaRelativeAttitude")
-        requireNotNull(hasDeltaRelativeAttitude1)
-        assertTrue(hasDeltaRelativeAttitude1)
-
-        val geomagneticAttitude: Quaternion? = estimator.getPrivateProperty("geomagneticAttitude")
-        requireNotNull(geomagneticAttitude)
-        val geomagneticAttitudeSpy = spyk(geomagneticAttitude)
-        estimator.setPrivateProperty("geomagneticAttitude", geomagneticAttitudeSpy)
-
+        // check default values
         val relativeAttitude: Quaternion? = estimator.getPrivateProperty("relativeAttitude")
         requireNotNull(relativeAttitude)
-        val attitude = getAttitude()
-        attitude.copyTo(relativeAttitude)
+        getAttitude().copyTo(relativeAttitude)
         val relativeAttitudeSpy = spyk(relativeAttitude)
         estimator.setPrivateProperty("relativeAttitude", relativeAttitudeSpy)
+
+        // set previous relative attitude
+        val previousRelativeAttitude = getAttitude()
+        estimator.setPrivateProperty("previousRelativeAttitude", previousRelativeAttitude)
+
+        // set geomagnetic attitude
+        val geomagneticAttitudeSpy = spyk(getAttitude())
+        estimator.setPrivateProperty("geomagneticAttitude", geomagneticAttitudeSpy)
+        estimator.setPrivateProperty("hasGeomagneticAttitude", true)
 
         val internalFusedAttitude: Quaternion? =
             estimator.getPrivateProperty("internalFusedAttitude")
@@ -1786,9 +1415,7 @@ class FusedGeomagneticAttitudeEstimatorTest {
             )
         }.returns(0.5 * (estimator.outlierThreshold + estimator.outlierPanicThreshold))
 
-        val fusedAttitude2 = Quaternion(internalFusedAttitude)
-        val fusedAttitude3 = deltaRelativeAttitude.multiplyAndReturnNew(fusedAttitude2)
-
+        // set panic counter
         estimator.setPrivateProperty("panicCounter", 1)
         val panicCounter1: Int? = estimator.getPrivateProperty("panicCounter")
         requireNotNull(panicCounter1)
@@ -1798,18 +1425,18 @@ class FusedGeomagneticAttitudeEstimatorTest {
         requireNotNull(resetToGeomagnetic)
         assertFalse(resetToGeomagnetic)
 
-        val geomagneticEstimator: GeomagneticAttitudeEstimator? =
-            estimator.getPrivateProperty("geomagneticAttitudeEstimator")
-        requireNotNull(geomagneticEstimator)
+        // execute
+        val relativeAttitudeEstimator: RelativeGyroscopeAttitudeEstimator? =
+            estimator.getPrivateProperty("relativeAttitudeEstimator")
+        requireNotNull(relativeAttitudeEstimator)
 
-        val internalAttitude = spyk(getAttitude())
-        val listener = geomagneticEstimator.attitudeAvailableListener
+        val listener = relativeAttitudeEstimator.attitudeAvailableListener
         requireNotNull(listener)
+        val attitude = spyk(getAttitude())
         val timestamp = SystemClock.elapsedRealtimeNanos()
-        estimator.setPrivateProperty("relativeAttitudeTimestamp", timestamp)
         listener.onAttitudeAvailable(
-            geomagneticEstimator,
-            internalAttitude,
+            relativeAttitudeEstimator,
+            attitude,
             timestamp,
             null,
             null,
@@ -1820,7 +1447,7 @@ class FusedGeomagneticAttitudeEstimatorTest {
         val geomagneticAttitude2: Quaternion? = estimator.getPrivateProperty("geomagneticAttitude")
         requireNotNull(geomagneticAttitude2)
 
-        verify(exactly = 1) { internalAttitude.copyTo(geomagneticAttitude2) }
+        verify(exactly = 1) { attitude.copyTo(relativeAttitudeSpy) }
 
         val eulerAngles: DoubleArray? = estimator.getPrivateProperty("eulerAngles")
         requireNotNull(eulerAngles)
@@ -1832,13 +1459,21 @@ class FusedGeomagneticAttitudeEstimatorTest {
 
         val hasRelativeAttitude2: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
         requireNotNull(hasRelativeAttitude2)
-        assertFalse(hasRelativeAttitude2)
+        assertTrue(hasRelativeAttitude2)
+
+        val hasDeltaRelativeAttitude2: Boolean? =
+            estimator.getPrivateProperty("hasDeltaRelativeAttitude")
+        requireNotNull(hasDeltaRelativeAttitude2)
+        assertTrue(hasDeltaRelativeAttitude2)
+
+        val fusedAttitude2 = Quaternion(internalFusedAttitude)
+        val fusedAttitude3 = deltaRelativeAttitude.multiplyAndReturnNew(fusedAttitude2)
 
         assertEquals(fusedAttitude3, internalFusedAttitudeSpy)
 
         val absDot = abs(QuaternionHelper.dotProduct(fusedAttitude3, geomagneticAttitudeSpy))
         assertTrue(absDot < estimator.outlierThreshold)
-        assertTrue(absDot > estimator.outlierPanicThreshold)
+        assertTrue(absDot >= estimator.outlierPanicThreshold)
 
         val previousRelativeAttitude2: Quaternion? =
             estimator.getPrivateProperty("previousRelativeAttitude")
@@ -1864,46 +1499,33 @@ class FusedGeomagneticAttitudeEstimatorTest {
     }
 
     @Test
-    fun processGeomagneticAttitude_whenDeltaRelativeAttitudeLargeDivergenceAndDirectInterpolation_updatesFusedAttitudeAndNotifies() {
+    fun processRelativeAttitude_whenDeltaRelativeAttitudeLargeDivergenceAndDirectInterpolation_updatesFusedAttitudeAndNotifies() {
         val attitudeAvailableListener =
             mockk<FusedGeomagneticAttitudeEstimator.OnAttitudeAvailableListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = FusedGeomagneticAttitudeEstimator(
             context,
             useAccurateLevelingEstimator = false,
-            estimateCoordinateTransformation = false,
             estimateEulerAngles = false,
             attitudeAvailableListener = attitudeAvailableListener
         )
         estimator.useIndirectInterpolation = false
 
-        estimator.setPrivateProperty("hasRelativeAttitude", true)
-        estimator.setPrivateProperty("hasDeltaRelativeAttitude", true)
-
-        val hasRelativeAttitude1: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
-        requireNotNull(hasRelativeAttitude1)
-        assertTrue(hasRelativeAttitude1)
-
-        val geomagneticAttitude1: Quaternion? = estimator.getPrivateProperty("geomagneticAttitude")
-        requireNotNull(geomagneticAttitude1)
-        assertEquals(Quaternion(), geomagneticAttitude1)
-
-        val hasDeltaRelativeAttitude1: Boolean? =
-            estimator.getPrivateProperty("hasDeltaRelativeAttitude")
-        requireNotNull(hasDeltaRelativeAttitude1)
-        assertTrue(hasDeltaRelativeAttitude1)
-
-        val geomagneticAttitude: Quaternion? = estimator.getPrivateProperty("geomagneticAttitude")
-        requireNotNull(geomagneticAttitude)
-        val geomagneticAttitudeSpy = spyk(geomagneticAttitude)
-        estimator.setPrivateProperty("geomagneticAttitude", geomagneticAttitudeSpy)
-
+        // check default values
         val relativeAttitude: Quaternion? = estimator.getPrivateProperty("relativeAttitude")
         requireNotNull(relativeAttitude)
-        val attitude = getAttitude()
-        attitude.copyTo(relativeAttitude)
+        getAttitude().copyTo(relativeAttitude)
         val relativeAttitudeSpy = spyk(relativeAttitude)
         estimator.setPrivateProperty("relativeAttitude", relativeAttitudeSpy)
+
+        // set previous relative attitude
+        val previousRelativeAttitude = getAttitude()
+        estimator.setPrivateProperty("previousRelativeAttitude", previousRelativeAttitude)
+
+        // set geomagnetic attitude
+        val geomagneticAttitudeSpy = spyk(getAttitude())
+        estimator.setPrivateProperty("geomagneticAttitude", geomagneticAttitudeSpy)
+        estimator.setPrivateProperty("hasGeomagneticAttitude", true)
 
         val internalFusedAttitude: Quaternion? =
             estimator.getPrivateProperty("internalFusedAttitude")
@@ -1936,9 +1558,7 @@ class FusedGeomagneticAttitudeEstimatorTest {
             )
         }.returns(0.0)
 
-        val fusedAttitude2 = Quaternion(internalFusedAttitude)
-        val fusedAttitude3 = deltaRelativeAttitude.multiplyAndReturnNew(fusedAttitude2)
-
+        // set panic counter
         estimator.setPrivateProperty("panicCounter", 1)
         val panicCounter1: Int? = estimator.getPrivateProperty("panicCounter")
         requireNotNull(panicCounter1)
@@ -1948,18 +1568,18 @@ class FusedGeomagneticAttitudeEstimatorTest {
         requireNotNull(resetToGeomagnetic)
         assertFalse(resetToGeomagnetic)
 
-        val geomagneticEstimator: GeomagneticAttitudeEstimator? =
-            estimator.getPrivateProperty("geomagneticAttitudeEstimator")
-        requireNotNull(geomagneticEstimator)
+        // execute
+        val relativeAttitudeEstimator: RelativeGyroscopeAttitudeEstimator? =
+            estimator.getPrivateProperty("relativeAttitudeEstimator")
+        requireNotNull(relativeAttitudeEstimator)
 
-        val internalAttitude = spyk(getAttitude())
-        val listener = geomagneticEstimator.attitudeAvailableListener
+        val listener = relativeAttitudeEstimator.attitudeAvailableListener
         requireNotNull(listener)
+        val attitude = spyk(getAttitude())
         val timestamp = SystemClock.elapsedRealtimeNanos()
-        estimator.setPrivateProperty("relativeAttitudeTimestamp", timestamp)
         listener.onAttitudeAvailable(
-            geomagneticEstimator,
-            internalAttitude,
+            relativeAttitudeEstimator,
+            attitude,
             timestamp,
             null,
             null,
@@ -1970,7 +1590,7 @@ class FusedGeomagneticAttitudeEstimatorTest {
         val geomagneticAttitude2: Quaternion? = estimator.getPrivateProperty("geomagneticAttitude")
         requireNotNull(geomagneticAttitude2)
 
-        verify(exactly = 1) { internalAttitude.copyTo(geomagneticAttitude2) }
+        verify(exactly = 1) { attitude.copyTo(relativeAttitudeSpy) }
 
         val eulerAngles: DoubleArray? = estimator.getPrivateProperty("eulerAngles")
         requireNotNull(eulerAngles)
@@ -1982,13 +1602,20 @@ class FusedGeomagneticAttitudeEstimatorTest {
 
         val hasRelativeAttitude2: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
         requireNotNull(hasRelativeAttitude2)
-        assertFalse(hasRelativeAttitude2)
+        assertTrue(hasRelativeAttitude2)
+
+        val hasDeltaRelativeAttitude2: Boolean? =
+            estimator.getPrivateProperty("hasDeltaRelativeAttitude")
+        requireNotNull(hasDeltaRelativeAttitude2)
+        assertTrue(hasDeltaRelativeAttitude2)
+
+        val fusedAttitude2 = Quaternion(internalFusedAttitude)
+        val fusedAttitude3 = deltaRelativeAttitude.multiplyAndReturnNew(fusedAttitude2)
 
         assertEquals(fusedAttitude3, internalFusedAttitudeSpy)
 
         val absDot = abs(QuaternionHelper.dotProduct(fusedAttitude3, geomagneticAttitudeSpy))
-        assertTrue(absDot < estimator.outlierThreshold)
-        assertTrue(absDot < estimator.outlierPanicThreshold)
+        assertEquals(0.0, absDot, 0.0)
 
         val previousRelativeAttitude2: Quaternion? =
             estimator.getPrivateProperty("previousRelativeAttitude")
@@ -2014,47 +1641,33 @@ class FusedGeomagneticAttitudeEstimatorTest {
     }
 
     @Test
-    fun processGeomagneticAttitude_whenIndirectInterpolation_updatesFusedAttitudeAndNotifies() {
+    fun processRelativeAttitude_whenIndirectInterpolation_updatesFusedAttitudeAndNotifies() {
         val attitudeAvailableListener =
             mockk<FusedGeomagneticAttitudeEstimator.OnAttitudeAvailableListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = FusedGeomagneticAttitudeEstimator(
             context,
-            useAccurateRelativeGyroscopeAttitudeEstimator = false,
             useAccurateLevelingEstimator = false,
-            estimateCoordinateTransformation = false,
             estimateEulerAngles = false,
             attitudeAvailableListener = attitudeAvailableListener
         )
         estimator.useIndirectInterpolation = true
 
-        estimator.setPrivateProperty("hasRelativeAttitude", true)
-        estimator.setPrivateProperty("hasDeltaRelativeAttitude", true)
-
-        val hasRelativeAttitude1: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
-        requireNotNull(hasRelativeAttitude1)
-        assertTrue(hasRelativeAttitude1)
-
-        val geomagneticAttitude1: Quaternion? = estimator.getPrivateProperty("geomagneticAttitude")
-        requireNotNull(geomagneticAttitude1)
-        assertEquals(Quaternion(), geomagneticAttitude1)
-
-        val hasDeltaRelativeAttitude1: Boolean? =
-            estimator.getPrivateProperty("hasDeltaRelativeAttitude")
-        requireNotNull(hasDeltaRelativeAttitude1)
-        assertTrue(hasDeltaRelativeAttitude1)
-
-        val geomagneticAttitude: Quaternion? = estimator.getPrivateProperty("geomagneticAttitude")
-        requireNotNull(geomagneticAttitude)
-        val geomagneticAttitudeSpy = spyk(geomagneticAttitude)
-        estimator.setPrivateProperty("geomagneticAttitude", geomagneticAttitudeSpy)
-
+        // check default values
         val relativeAttitude: Quaternion? = estimator.getPrivateProperty("relativeAttitude")
         requireNotNull(relativeAttitude)
-        val attitude = getAttitude()
-        attitude.copyTo(relativeAttitude)
+        getAttitude().copyTo(relativeAttitude)
         val relativeAttitudeSpy = spyk(relativeAttitude)
         estimator.setPrivateProperty("relativeAttitude", relativeAttitudeSpy)
+
+        // set previous relative attitude
+        val previousRelativeAttitude = getAttitude()
+        estimator.setPrivateProperty("previousRelativeAttitude", previousRelativeAttitude)
+
+        // set geomagnetic attitude
+        val geomagneticAttitudeSpy = spyk(getAttitude())
+        estimator.setPrivateProperty("geomagneticAttitude", geomagneticAttitudeSpy)
+        estimator.setPrivateProperty("hasGeomagneticAttitude", true)
 
         val internalFusedAttitude: Quaternion? =
             estimator.getPrivateProperty("internalFusedAttitude")
@@ -2087,9 +1700,7 @@ class FusedGeomagneticAttitudeEstimatorTest {
             )
         }.returns(estimator.outlierThreshold)
 
-        val fusedAttitude2 = Quaternion(internalFusedAttitude)
-        val fusedAttitude3 = deltaRelativeAttitude.multiplyAndReturnNew(fusedAttitude2)
-
+        // set panic counter
         estimator.setPrivateProperty("panicCounter", 1)
         val panicCounter1: Int? = estimator.getPrivateProperty("panicCounter")
         requireNotNull(panicCounter1)
@@ -2099,6 +1710,7 @@ class FusedGeomagneticAttitudeEstimatorTest {
         requireNotNull(resetToGeomagnetic)
         assertFalse(resetToGeomagnetic)
 
+        // execute
         val relativeAttitudeEstimator: RelativeGyroscopeAttitudeEstimator? =
             estimator.getPrivateProperty("relativeAttitudeEstimator")
         requireNotNull(relativeAttitudeEstimator)
@@ -2106,18 +1718,13 @@ class FusedGeomagneticAttitudeEstimatorTest {
         every { relativeAttitudeEstimatorSpy.averageTimeInterval }.returns(TIME_INTERVAL)
         estimator.setPrivateProperty("relativeAttitudeEstimator", relativeAttitudeEstimatorSpy)
 
-        val geomagneticEstimator: GeomagneticAttitudeEstimator? =
-            estimator.getPrivateProperty("geomagneticAttitudeEstimator")
-        requireNotNull(geomagneticEstimator)
-
-        val internalAttitude = spyk(getAttitude())
-        val listener = geomagneticEstimator.attitudeAvailableListener
+        val listener = relativeAttitudeEstimator.attitudeAvailableListener
         requireNotNull(listener)
+        val attitude = spyk(getAttitude())
         val timestamp = SystemClock.elapsedRealtimeNanos()
-        estimator.setPrivateProperty("relativeAttitudeTimestamp", timestamp)
         listener.onAttitudeAvailable(
-            geomagneticEstimator,
-            internalAttitude,
+            relativeAttitudeEstimator,
+            attitude,
             timestamp,
             null,
             null,
@@ -2128,7 +1735,7 @@ class FusedGeomagneticAttitudeEstimatorTest {
         val geomagneticAttitude2: Quaternion? = estimator.getPrivateProperty("geomagneticAttitude")
         requireNotNull(geomagneticAttitude2)
 
-        verify(exactly = 1) { internalAttitude.copyTo(geomagneticAttitude2) }
+        verify(exactly = 1) { attitude.copyTo(relativeAttitudeSpy) }
 
         val eulerAngles: DoubleArray? = estimator.getPrivateProperty("eulerAngles")
         requireNotNull(eulerAngles)
@@ -2140,7 +1747,15 @@ class FusedGeomagneticAttitudeEstimatorTest {
 
         val hasRelativeAttitude2: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
         requireNotNull(hasRelativeAttitude2)
-        assertFalse(hasRelativeAttitude2)
+        assertTrue(hasRelativeAttitude2)
+
+        val hasDeltaRelativeAttitude2: Boolean? =
+            estimator.getPrivateProperty("hasDeltaRelativeAttitude")
+        requireNotNull(hasDeltaRelativeAttitude2)
+        assertTrue(hasDeltaRelativeAttitude2)
+
+        val fusedAttitude2 = Quaternion(internalFusedAttitude)
+        val fusedAttitude3 = deltaRelativeAttitude.multiplyAndReturnNew(fusedAttitude2)
 
         val fusedAttitude4 = Quaternion()
         val t = estimator.interpolationValue + estimator.indirectInterpolationWeight *
@@ -2151,7 +1766,6 @@ class FusedGeomagneticAttitudeEstimatorTest {
             t,
             fusedAttitude4
         )
-
 
         assertEquals(fusedAttitude4, internalFusedAttitudeSpy)
 
@@ -2182,7 +1796,7 @@ class FusedGeomagneticAttitudeEstimatorTest {
     }
 
     @Test
-    fun processGeomagneticAttitude_whenEstimateEulerAnglesAndCoordinateTransformationEnabled_notifies() {
+    fun processRelativeAttitude_whenEstimateEulerAnglesAndCoordinateTransformationEnabled_notifies() {
         val attitudeAvailableListener =
             mockk<FusedGeomagneticAttitudeEstimator.OnAttitudeAvailableListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
@@ -2195,33 +1809,21 @@ class FusedGeomagneticAttitudeEstimatorTest {
         )
         estimator.useIndirectInterpolation = false
 
-        estimator.setPrivateProperty("hasRelativeAttitude", true)
-        estimator.setPrivateProperty("hasDeltaRelativeAttitude", true)
-
-        val hasRelativeAttitude1: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
-        requireNotNull(hasRelativeAttitude1)
-        assertTrue(hasRelativeAttitude1)
-
-        val geomagneticAttitude1: Quaternion? = estimator.getPrivateProperty("geomagneticAttitude")
-        requireNotNull(geomagneticAttitude1)
-        assertEquals(Quaternion(), geomagneticAttitude1)
-
-        val hasDeltaRelativeAttitude1: Boolean? =
-            estimator.getPrivateProperty("hasDeltaRelativeAttitude")
-        requireNotNull(hasDeltaRelativeAttitude1)
-        assertTrue(hasDeltaRelativeAttitude1)
-
-        val geomagneticAttitude: Quaternion? = estimator.getPrivateProperty("geomagneticAttitude")
-        requireNotNull(geomagneticAttitude)
-        val geomagneticAttitudeSpy = spyk(geomagneticAttitude)
-        estimator.setPrivateProperty("geomagneticAttitude", geomagneticAttitudeSpy)
-
+        // check default values
         val relativeAttitude: Quaternion? = estimator.getPrivateProperty("relativeAttitude")
         requireNotNull(relativeAttitude)
-        val attitude = getAttitude()
-        attitude.copyTo(relativeAttitude)
+        getAttitude().copyTo(relativeAttitude)
         val relativeAttitudeSpy = spyk(relativeAttitude)
         estimator.setPrivateProperty("relativeAttitude", relativeAttitudeSpy)
+
+        // set previous relative attitude
+        val previousRelativeAttitude = getAttitude()
+        estimator.setPrivateProperty("previousRelativeAttitude", previousRelativeAttitude)
+
+        // set geomagnetic attitude
+        val geomagneticAttitudeSpy = spyk(getAttitude())
+        estimator.setPrivateProperty("geomagneticAttitude", geomagneticAttitudeSpy)
+        estimator.setPrivateProperty("hasGeomagneticAttitude", true)
 
         val internalFusedAttitude: Quaternion? =
             estimator.getPrivateProperty("internalFusedAttitude")
@@ -2254,9 +1856,7 @@ class FusedGeomagneticAttitudeEstimatorTest {
             )
         }.returns(estimator.outlierThreshold)
 
-        val fusedAttitude2 = Quaternion(internalFusedAttitude)
-        val fusedAttitude3 = deltaRelativeAttitude.multiplyAndReturnNew(fusedAttitude2)
-
+        // set panic counter
         estimator.setPrivateProperty("panicCounter", 1)
         val panicCounter1: Int? = estimator.getPrivateProperty("panicCounter")
         requireNotNull(panicCounter1)
@@ -2266,18 +1866,18 @@ class FusedGeomagneticAttitudeEstimatorTest {
         requireNotNull(resetToGeomagnetic)
         assertFalse(resetToGeomagnetic)
 
-        val geomagneticEstimator: GeomagneticAttitudeEstimator? =
-            estimator.getPrivateProperty("geomagneticAttitudeEstimator")
-        requireNotNull(geomagneticEstimator)
+        // execute
+        val relativeAttitudeEstimator: RelativeGyroscopeAttitudeEstimator? =
+            estimator.getPrivateProperty("relativeAttitudeEstimator")
+        requireNotNull(relativeAttitudeEstimator)
 
-        val internalAttitude = spyk(getAttitude())
-        val listener = geomagneticEstimator.attitudeAvailableListener
+        val listener = relativeAttitudeEstimator.attitudeAvailableListener
         requireNotNull(listener)
+        val attitude = spyk(getAttitude())
         val timestamp = SystemClock.elapsedRealtimeNanos()
-        estimator.setPrivateProperty("relativeAttitudeTimestamp", timestamp)
         listener.onAttitudeAvailable(
-            geomagneticEstimator,
-            internalAttitude,
+            relativeAttitudeEstimator,
+            attitude,
             timestamp,
             null,
             null,
@@ -2288,7 +1888,7 @@ class FusedGeomagneticAttitudeEstimatorTest {
         val geomagneticAttitude2: Quaternion? = estimator.getPrivateProperty("geomagneticAttitude")
         requireNotNull(geomagneticAttitude2)
 
-        verify(exactly = 1) { internalAttitude.copyTo(geomagneticAttitude2) }
+        verify(exactly = 1) { attitude.copyTo(relativeAttitudeSpy) }
 
         val eulerAngles: DoubleArray? = estimator.getPrivateProperty("eulerAngles")
         requireNotNull(eulerAngles)
@@ -2300,7 +1900,15 @@ class FusedGeomagneticAttitudeEstimatorTest {
 
         val hasRelativeAttitude2: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
         requireNotNull(hasRelativeAttitude2)
-        assertFalse(hasRelativeAttitude2)
+        assertTrue(hasRelativeAttitude2)
+
+        val hasDeltaRelativeAttitude2: Boolean? =
+            estimator.getPrivateProperty("hasDeltaRelativeAttitude")
+        requireNotNull(hasDeltaRelativeAttitude2)
+        assertTrue(hasDeltaRelativeAttitude2)
+
+        val fusedAttitude2 = Quaternion(internalFusedAttitude)
+        val fusedAttitude3 = deltaRelativeAttitude.multiplyAndReturnNew(fusedAttitude2)
 
         val fusedAttitude4 = Quaternion()
         Quaternion.slerp(
@@ -2360,6 +1968,49 @@ class FusedGeomagneticAttitudeEstimatorTest {
         assertEquals(FrameType.LOCAL_NAVIGATION_FRAME, c.destinationType)
 
         unmockkObject(QuaternionHelper)
+    }
+
+    @Test
+    fun processGeomagneticAttitude_copiesAttitude() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val estimator = FusedGeomagneticAttitudeEstimator(context)
+
+        // check default values
+        val geomagneticAttitude: Quaternion? = estimator.getPrivateProperty("geomagneticAttitude")
+        requireNotNull(geomagneticAttitude)
+        assertEquals(Quaternion(), geomagneticAttitude)
+
+        val hasGeomagneticAttitude1: Boolean? =
+            estimator.getPrivateProperty("hasGeomagneticAttitude")
+        requireNotNull(hasGeomagneticAttitude1)
+        assertFalse(hasGeomagneticAttitude1)
+
+        val geomagneticEstimator: GeomagneticAttitudeEstimator? =
+            estimator.getPrivateProperty("geomagneticAttitudeEstimator")
+        requireNotNull(geomagneticEstimator)
+        val listener = geomagneticEstimator.attitudeAvailableListener
+        requireNotNull(listener)
+        val attitude = spyk(getAttitude())
+        val timestamp = SystemClock.elapsedRealtimeNanos()
+        listener.onAttitudeAvailable(
+            geomagneticEstimator,
+            attitude,
+            timestamp,
+            null,
+            null,
+            null,
+            null
+        )
+
+        // check
+        assertEquals(attitude, geomagneticAttitude)
+
+        val hasGeomagneticAttitude2: Boolean? =
+            estimator.getPrivateProperty("hasGeomagneticAttitude")
+        requireNotNull(hasGeomagneticAttitude2)
+        assertTrue(hasGeomagneticAttitude2)
+
+        verify(exactly = 1) { attitude.copyTo(geomagneticAttitude) }
     }
 
     private companion object {

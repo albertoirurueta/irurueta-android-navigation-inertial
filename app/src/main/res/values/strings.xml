@@ -1,9 +1,5 @@
 <resources>
     <string name="app_name">Inertial Navigation</string>
-    <string name="system_attitude_sensors">System attitude sensors:</string>
-    <string name="absolute_attitude">Absolute attitude</string>
-    <string name="relative_attitude">Relative attitude</string>
-    <string name="geomagnetic_attitude">Geomagnetic attitude</string>
     <string name="other_attitude_estimators">Other attitude estimators:</string>
     <string name="leveling">Leveling</string>
     <string name="improved_leveling">Improved leveling</string>

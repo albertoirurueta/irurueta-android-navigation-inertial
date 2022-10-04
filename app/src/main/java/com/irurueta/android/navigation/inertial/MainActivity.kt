@@ -24,11 +24,6 @@ import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollec
 import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
 
 class MainActivity : AppCompatActivity() {
-    private var absoluteAttitudeButton: AppCompatButton? = null
-
-    private var relativeAttitudeButton: AppCompatButton? = null
-
-    private var geomagneticAttitudeButton: AppCompatButton? = null
 
     private var gravityLevelingButton: AppCompatButton? = null
 
@@ -226,35 +221,6 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        absoluteAttitudeButton = findViewById(R.id.absolute_attitude_button)
-        absoluteAttitudeButton?.setOnClickListener {
-            val intent = Intent(this@MainActivity, AttitudeSensorCollectorActivity::class.java)
-            intent.putExtra(
-                AttitudeSensorCollectorActivity.SENSOR_TYPE,
-                AttitudeSensorCollectorActivity.ABSOLUTE_ATTITUDE
-            )
-            startActivity(intent)
-        }
-
-        relativeAttitudeButton = findViewById(R.id.relative_attitude_button)
-        relativeAttitudeButton?.setOnClickListener {
-            val intent = Intent(this@MainActivity, AttitudeSensorCollectorActivity::class.java)
-            intent.putExtra(
-                AttitudeSensorCollectorActivity.SENSOR_TYPE,
-                AttitudeSensorCollectorActivity.RELATIVE_ATTITUDE
-            )
-            startActivity(intent)
-        }
-
-        geomagneticAttitudeButton = findViewById(R.id.geomagnetic_attitude_button)
-        geomagneticAttitudeButton?.setOnClickListener {
-            val intent = Intent(this@MainActivity, AttitudeSensorCollectorActivity::class.java)
-            intent.putExtra(
-                AttitudeSensorCollectorActivity.SENSOR_TYPE,
-                AttitudeSensorCollectorActivity.GEOMAGNETIC_ABSOLUTE_ATTITUDE
-            )
-            startActivity(intent)
-        }
 
         gravityLevelingButton = findViewById(R.id.gravity_leveling_button)
         gravityLevelingButton?.setOnClickListener {

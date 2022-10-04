@@ -19,7 +19,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".AttitudeSensorCollectorActivity"/>
         <activity android:name=".LevelingEstimatorActivity"/>
         <activity android:name=".AccurateLevelingEstimatorActivity"/>
         <activity android:name=".RelativeGyroscopeAttitudeEstimatorActivity"/>

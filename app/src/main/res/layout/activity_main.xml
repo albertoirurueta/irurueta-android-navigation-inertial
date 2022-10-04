@@ -20,42 +20,6 @@
             <androidx.appcompat.widget.AppCompatTextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/system_attitude_sensors"
-                android:layout_marginStart="24dp"
-                android:layout_marginEnd="24dp"/>
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center">
-                <androidx.appcompat.widget.AppCompatButton
-                    android:id="@+id/absolute_attitude_button"
-                    android:text="@string/absolute_attitude"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="24dp" />
-                <androidx.appcompat.widget.AppCompatButton
-                    android:id="@+id/relative_attitude_button"
-                    android:text="@string/relative_attitude"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="24dp" />
-            </LinearLayout>
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center">
-                <androidx.appcompat.widget.AppCompatButton
-                    android:id="@+id/geomagnetic_attitude_button"
-                    android:text="@string/geomagnetic_attitude"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="24dp" />
-            </LinearLayout>
-            <androidx.appcompat.widget.AppCompatTextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
                 android:text="@string/leveling_estimator"
                 android:layout_marginStart="24dp"
                 android:layout_marginEnd="24dp"/>
