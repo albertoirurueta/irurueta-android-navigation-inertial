@@ -547,6 +547,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
         estimator.useIndirectInterpolation = false
 
         // check
+        @Suppress("KotlinConstantConditions")
         assertFalse(estimator.useIndirectInterpolation)
     }
 
