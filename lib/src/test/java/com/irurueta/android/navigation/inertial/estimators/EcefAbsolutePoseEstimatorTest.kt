@@ -1133,7 +1133,7 @@ class EcefAbsolutePoseEstimatorTest {
         val translation =
             ENUtoNEDTriadConverter.conversionRotation.combineAndReturnNew(inverseInitialEcefRotation)
                 .rotate(InhomogeneousPoint3D(deltaEcefX, deltaEcefY, deltaEcefZ))
-        assertEquals(translation, result.translationPoint)
+        assertTrue(translation.equals(result.translationPoint, ABSOLUTE_ERROR))
     }
 
     @Test
