@@ -1656,7 +1656,7 @@ class EcefAbsolutePoseEstimatorTest {
         assertEquals(wy, bodyKinematics.angularRateY, 0.0)
         assertEquals(wz, bodyKinematics.angularRateZ, 0.0)
 
-        val currentEcefFrame1 = ECEFInertialNavigator.navigateECEFAndReturnNew(
+        val currentEcefFrame1 = com.irurueta.navigation.inertial.navigators.ECEFInertialNavigator.navigateECEFAndReturnNew(
             TIME_INTERVAL,
             previousEcefFrame2,
             bodyKinematics
@@ -1790,7 +1790,7 @@ class EcefAbsolutePoseEstimatorTest {
         assertEquals(wy, bodyKinematics.angularRateY, 0.0)
         assertEquals(wz, bodyKinematics.angularRateZ, 0.0)
 
-        val currentEcefFrame1 = ECEFInertialNavigator.navigateECEFAndReturnNew(
+        val currentEcefFrame1 = com.irurueta.navigation.inertial.navigators.ECEFInertialNavigator.navigateECEFAndReturnNew(
             TIME_INTERVAL,
             previousEcefFrame2,
             bodyKinematics

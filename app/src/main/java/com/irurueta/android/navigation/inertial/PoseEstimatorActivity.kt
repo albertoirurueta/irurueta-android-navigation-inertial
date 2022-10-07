@@ -213,7 +213,8 @@ class PoseEstimatorActivity : AppCompatActivity() {
                     }
 
                     // refresh only as much as display allows even though sensors might run at higher refresh rates
-                    if (timestamp - previousTimestamp >= refreshIntervalNanos) {
+                    val camera = this.camera
+                    if (timestamp - previousTimestamp >= refreshIntervalNanos && camera != null) {
                         previousTimestamp = timestamp
 
                         val enuRotation = Quaternion()
@@ -221,10 +222,12 @@ class PoseEstimatorActivity : AppCompatActivity() {
                         val nedRotation = Quaternion()
                         Quaternion.product(enuRotation, conversionRotation, nedRotation)
                         nedRotation.toEulerAngles(eulerAngles)
-                        rollView?.text = getString(R.string.roll_degrees, Math.toDegrees(eulerAngles[0]))
+                        rollView?.text =
+                            getString(R.string.roll_degrees, Math.toDegrees(eulerAngles[0]))
                         pitchView?.text =
                             getString(R.string.pitch_degrees, Math.toDegrees(eulerAngles[1]))
-                        yawView?.text = getString(R.string.yaw_degrees, Math.toDegrees(eulerAngles[2]))
+                        yawView?.text =
+                            getString(R.string.yaw_degrees, Math.toDegrees(eulerAngles[2]))
 
                         initialTransformation?.inverse()
                         initialTransformation?.transform(initialCamera, camera)

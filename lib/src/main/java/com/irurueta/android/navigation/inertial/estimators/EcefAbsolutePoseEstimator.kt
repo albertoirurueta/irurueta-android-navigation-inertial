@@ -35,6 +35,7 @@ import com.irurueta.navigation.frames.converters.NEDtoECEFFrameConverter
 import com.irurueta.navigation.inertial.BodyKinematics
 import com.irurueta.navigation.inertial.calibration.AccelerationTriad
 import com.irurueta.navigation.inertial.calibration.AngularSpeedTriad
+import com.irurueta.navigation.inertial.navigators.ECEFInertialNavigator
 import com.irurueta.navigation.inertial.wmm.WorldMagneticModel
 import java.util.*
 
@@ -554,11 +555,7 @@ class EcefAbsolutePoseEstimator private constructor(
             // Ensure that attitude does not drift by resetting current local attitude in NED
             // coordinates and converting back to ECEF coordinates
             ECEFtoNEDFrameConverter.convertECEFtoNED(currentEcefFrame, currentNedFrame)
-            currentNedFrame.coordinateTransformation = CoordinateTransformation(
-                currentAttitude,
-                FrameType.BODY_FRAME,
-                FrameType.LOCAL_NAVIGATION_FRAME
-            )
+            currentNedFrame.coordinateTransformationRotation = currentAttitude
             NEDtoECEFFrameConverter.convertNEDtoECEF(currentNedFrame, currentEcefFrame)
 
             // compute transformation between initial and current frame and previous and current frame

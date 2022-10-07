@@ -37,6 +37,7 @@ import com.irurueta.navigation.inertial.calibration.AccelerationTriad
 import com.irurueta.navigation.inertial.calibration.AngularSpeedTriad
 import com.irurueta.navigation.inertial.estimators.NEDGravityEstimator
 import com.irurueta.navigation.inertial.estimators.RadiiOfCurvatureEstimator
+import com.irurueta.navigation.inertial.navigators.NEDInertialNavigator
 import com.irurueta.navigation.inertial.wmm.WorldMagneticModel
 import java.util.*
 import kotlin.math.cos
@@ -570,11 +571,11 @@ class LocalPoseEstimator private constructor(
             val omegaIen = Matrix(ROWS, 1)
             omegaIen.setElementAtIndex(
                 0,
-                cos(oldLatitude) * NEDInertialNavigator2.EARTH_ROTATION_RATE
+                cos(oldLatitude) * NEDInertialNavigator.EARTH_ROTATION_RATE
             )
             omegaIen.setElementAtIndex(
                 2,
-                -sin(oldLatitude) * NEDInertialNavigator2.EARTH_ROTATION_RATE
+                -sin(oldLatitude) * NEDInertialNavigator.EARTH_ROTATION_RATE
             )
 
             // From (5.44), determine the angular rate of the NED frame with respect
@@ -631,11 +632,7 @@ class LocalPoseEstimator private constructor(
 
             currentNedFrame.setPosition(latitude, longitude, height)
             currentNedFrame.setVelocityCoordinates(vn, ve, vd)
-            currentNedFrame.coordinateTransformation = CoordinateTransformation(
-                currentAttitude,
-                FrameType.BODY_FRAME,
-                FrameType.LOCAL_NAVIGATION_FRAME
-            )
+            currentNedFrame.coordinateTransformationRotation = currentAttitude
 
             NEDtoECEFFrameConverter.convertNEDtoECEF(currentNedFrame, currentEcefFrame)
 
