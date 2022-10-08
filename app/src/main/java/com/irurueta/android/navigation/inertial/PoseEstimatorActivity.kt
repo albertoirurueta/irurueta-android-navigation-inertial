@@ -27,7 +27,7 @@ import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCo
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
-import com.irurueta.android.navigation.inertial.estimators.EcefAbsolutePoseEstimator
+import com.irurueta.android.navigation.inertial.estimators.pose.EcefAbsolutePoseEstimator
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.MeanAveragingFilter

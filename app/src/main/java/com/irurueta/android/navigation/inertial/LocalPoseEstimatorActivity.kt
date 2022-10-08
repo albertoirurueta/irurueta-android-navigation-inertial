@@ -27,7 +27,7 @@ import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCo
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
-import com.irurueta.android.navigation.inertial.estimators.LocalPoseEstimator
+import com.irurueta.android.navigation.inertial.estimators.pose.LocalPoseEstimator
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.MeanAveragingFilter
@@ -204,7 +204,7 @@ class LocalPoseEstimatorActivity : AppCompatActivity() {
                 accelerometerAveragingFilter = accelerometerAveragingFilter,
                 useWorldMagneticModel = useWorldMagneticModel,
                 estimatePoseTransformation = true,
-                poseAvailableListener = { estimator, currentFrame, previousFrame, initialFrame, timestamp, initialTransformation ->
+                poseAvailableListener = { _, _, _, _, timestamp, initialTransformation ->
 
                     if (!initialAttitudeAvailable) {
                         previousTimestamp = timestamp
