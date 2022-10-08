@@ -1,3 +1,18 @@
+/*
+ * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.irurueta.android.navigation.inertial
 
 import android.content.Intent
@@ -9,11 +24,6 @@ import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollec
 import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
 
 class MainActivity : AppCompatActivity() {
-    private var absoluteAttitudeButton: AppCompatButton? = null
-
-    private var relativeAttitudeButton: AppCompatButton? = null
-
-    private var geomagneticAttitudeButton: AppCompatButton? = null
 
     private var gravityLevelingButton: AppCompatButton? = null
 
@@ -202,38 +212,15 @@ class MainActivity : AppCompatActivity() {
 
     private var fusedGeomagneticAttitudeEstimator2WorldMagneticModelButton: AppCompatButton? = null
 
+    private var poseEstimatorButton: AppCompatButton? = null
+
+    private var localPoseEstimatorButton: AppCompatButton? = null
+
+    private var relativePoseEstimatorButton: AppCompatButton? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        absoluteAttitudeButton = findViewById(R.id.absolute_attitude_button)
-        absoluteAttitudeButton?.setOnClickListener {
-            val intent = Intent(this@MainActivity, AttitudeSensorCollectorActivity::class.java)
-            intent.putExtra(
-                AttitudeSensorCollectorActivity.SENSOR_TYPE,
-                AttitudeSensorCollectorActivity.ABSOLUTE_ATTITUDE
-            )
-            startActivity(intent)
-        }
-
-        relativeAttitudeButton = findViewById(R.id.relative_attitude_button)
-        relativeAttitudeButton?.setOnClickListener {
-            val intent = Intent(this@MainActivity, AttitudeSensorCollectorActivity::class.java)
-            intent.putExtra(
-                AttitudeSensorCollectorActivity.SENSOR_TYPE,
-                AttitudeSensorCollectorActivity.RELATIVE_ATTITUDE
-            )
-            startActivity(intent)
-        }
-
-        geomagneticAttitudeButton = findViewById(R.id.geomagnetic_attitude_button)
-        geomagneticAttitudeButton?.setOnClickListener {
-            val intent = Intent(this@MainActivity, AttitudeSensorCollectorActivity::class.java)
-            intent.putExtra(
-                AttitudeSensorCollectorActivity.SENSOR_TYPE,
-                AttitudeSensorCollectorActivity.GEOMAGNETIC_ABSOLUTE_ATTITUDE
-            )
-            startActivity(intent)
-        }
 
         gravityLevelingButton = findViewById(R.id.gravity_leveling_button)
         gravityLevelingButton?.setOnClickListener {
@@ -1793,6 +1780,24 @@ class MainActivity : AppCompatActivity() {
                 FusedGeomagneticAttitudeEstimator2Activity.USE_WORLD_MAGNETIC_MODEL,
                 true
             )
+            startActivity(intent)
+        }
+
+        poseEstimatorButton = findViewById(R.id.pose_estimator_button)
+        poseEstimatorButton?.setOnClickListener {
+            val intent = Intent(this@MainActivity, PoseEstimatorActivity::class.java)
+            startActivity(intent)
+        }
+
+        localPoseEstimatorButton = findViewById(R.id.local_pose_estimator_button)
+        localPoseEstimatorButton?.setOnClickListener {
+            val intent = Intent(this@MainActivity, LocalPoseEstimatorActivity::class.java)
+            startActivity(intent)
+        }
+
+        relativePoseEstimatorButton = findViewById(R.id.relative_pose_estimator_button)
+        relativePoseEstimatorButton?.setOnClickListener {
+            val intent = Intent(this@MainActivity, RelativePoseEstimatorActivity::class.java)
             startActivity(intent)
         }
     }

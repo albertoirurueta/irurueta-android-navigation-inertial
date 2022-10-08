@@ -1,15 +1,14 @@
 <resources>
     <string name="app_name">Inertial Navigation</string>
-    <string name="system_attitude_sensors">System attitude sensors:</string>
-    <string name="absolute_attitude">Absolute attitude</string>
-    <string name="relative_attitude">Relative attitude</string>
-    <string name="geomagnetic_attitude">Geomagnetic attitude</string>
     <string name="other_attitude_estimators">Other attitude estimators:</string>
     <string name="leveling">Leveling</string>
     <string name="improved_leveling">Improved leveling</string>
     <string name="roll_degrees">Roll: %1$.2f º</string>
     <string name="pitch_degrees">Pitch: %1$.2f º</string>
     <string name="yaw_degrees">Yaw: %1$.2f º</string>
+    <string name="x_pos_meters">X: %1$.2f m</string>
+    <string name="y_pos_meters">Y: %1$.2f m</string>
+    <string name="z_pos_meters">Z: %1$.2f m</string>
     <string name="yaw_standard_deviation_degrees">Yaw standard deviation: %1$.2f º</string>
     <string name="leveling_estimator">Leveling estimator:</string>
     <string name="gravity_leveling">Gravity leveling</string>
@@ -41,4 +40,8 @@
     <string name="world_magnetic_model">World Magnetic Model</string>
     <string name="fused_geomagnetic_attitude_estimator">Fused geomagnetic attitude estimator:</string>
     <string name="fused_geomagnetic_attitude_estimator2">Fused geomagnetic attitude estimator 2:</string>
+    <string name="pose_estimator_label">Pose Estimator:</string>
+    <string name="pose_estimator_button">Pose Estimator</string>
+    <string name="local_pose_estimator_button">Local Pose Estimator</string>
+    <string name="relative_pose_estimator_button">Relative Pose Estimator</string>
 </resources>

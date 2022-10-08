@@ -130,16 +130,22 @@ class GyroscopeSensorCollector(
         /**
          * Called when a new gyroscope measurement is available.
          *
-         * @param wx angular speed around device x-axis expressed in radians per second (rad/s).
-         * @param wy angular speed around device y-axis expressed in radians per second (rad/s).
-         * @param wz angular speed around device z-axis expressed in radians per second (rad/s).
-         * @param bx estimated drift around device x-axis expressed in radians per second (rad/s).
+         * @param wx angular speed around device x-axis expressed in radians per second (rad/s) and
+         * in ENU coordinates system.
+         * @param wy angular speed around device y-axis expressed in radians per second (rad/s) and
+         * in ENU coordinates system.
+         * @param wz angular speed around device z-axis expressed in radians per second (rad/s) and
+         * in ENU coordinates system.
+         * @param bx estimated drift around device x-axis expressed in radians per second (rad/s)
+         * and in ENU coordinates system.
          * Only available when using [SensorType.GYROSCOPE_UNCALIBRATED]. If available, this value
          * remains constant with calibrated bias value.
-         * @param by estimated drift around device y-axis expressed in radians per second (rad/s).
+         * @param by estimated drift around device y-axis expressed in radians per second (rad/s)
+         * and in ENU coordinates system.
          * Only available when using [SensorType.GYROSCOPE_UNCALIBRATED]. If available, this value
          * remains constant with calibrated bias value.
-         * @param bz estimated drift around device z-axis expressed in radians per second (rad/s).
+         * @param bz estimated drift around device z-axis expressed in radians per second (rad/s)
+         * and in ENU coordinates system.
          * Only available when using [SensorType.GYROSCOPE_UNCALIBRATED]. If available, this value
          * remains constant with calibrated bias value.
          * @param timestamp time in nanoseconds at which the measurement was made. Each measurement

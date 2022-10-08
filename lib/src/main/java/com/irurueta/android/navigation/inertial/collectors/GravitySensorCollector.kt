@@ -98,11 +98,11 @@ class GravitySensorCollector(
          * Called when a new gravity measurement is available.
          *
          * @param gx gravity acceleration on device x-axis expressed in meters per squared second
-         * (m/s^2).
+         * (m/s^2) and in ENU coordinates system.
          * @param gy gravity acceleration on device y-axis expressed in meters per squared second
-         * (m/s^2).
+         * (m/s^2) and in ENU coordinates system.
          * @param gz gravity acceleration on device z-axis expressed in meters per squared second
-         * (m/s^2).
+         * (m/s^2) and in ENU coordinates system.
          * @param g magnitude of gravity acceleration expressed in meters per squared second
          * (m/s^2).
          * @param timestamp time in nanoseconds at which the measurement was made. Each measurement

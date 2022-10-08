@@ -7,11 +7,11 @@ plugins {
 }
 
 android {
-    compileSdk 31
+    compileSdk 32
 
     defaultConfig {
         minSdk 21
-        targetSdk 30
+        targetSdk 32
         versionName "1.0.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -46,6 +46,7 @@ android {
             jvmArgs '-noverify'
         }
     }
+    namespace 'com.irurueta.android.navigation.inertial'
 }
 
 jacoco {

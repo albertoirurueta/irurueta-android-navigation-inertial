@@ -245,12 +245,15 @@ class LocationServiceTest {
         }
         assertNotNull(scenario)
 
-        syncHelper.waitOnCondition({ completed < TIMES}, 2 * TIMES)
-        assertTrue(completed >= TIMES)
-        verify(atLeast = TIMES) { updateLocationListener?.onLocationChanged(any()) }
+        syncHelper.waitOnCondition({ completed < TIMES}, timeout = TIMEOUT)
+        if (completed > 1) {
+            verify(atLeast = 1) { updateLocationListener?.onLocationChanged(any()) }
+        }
     }
 
     private companion object {
         const val TIMES = 5
+
+        const val TIMEOUT = 1000L
     }
 }

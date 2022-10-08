@@ -833,6 +833,15 @@ class LocationServiceTest {
         val locationManager: LocationManager? = service.getPrivateProperty("locationManager")
         requireNotNull(locationManager)
         val locationManagerSpy = spyk(locationManager)
+        justRun {
+            locationManagerSpy.requestLocationUpdates(
+                "fused",
+                service.updateInterval,
+                service.smallestDisplacement,
+                any<LocationListener>(),
+                any()
+            )
+        }
         service.setPrivateProperty("locationManager", locationManagerSpy)
 
         service.requestLocationUpdates()
@@ -1055,6 +1064,15 @@ class LocationServiceTest {
         val locationManager: LocationManager? = service.getPrivateProperty("locationManager")
         requireNotNull(locationManager)
         val locationManagerSpy = spyk(locationManager)
+        justRun {
+            locationManagerSpy.requestLocationUpdates(
+                "fused",
+                service.updateInterval,
+                service.smallestDisplacement,
+                any<LocationListener>(),
+                any()
+            )
+        }
         service.setPrivateProperty("locationManager", locationManagerSpy)
 
         service.requestLocationUpdates()
