@@ -18,6 +18,7 @@ package com.irurueta.android.navigation.inertial.test.collectors
 import android.hardware.Sensor
 import android.hardware.SensorDirectChannel
 import android.util.Log
+import androidx.test.filters.RequiresDevice
 import androidx.test.platform.app.InstrumentationRegistry
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
 import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
@@ -26,6 +27,7 @@ import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 
+@RequiresDevice
 class MagnetometerSensorCollectorTest {
 
     private val syncHelper = ThreadSyncHelper()
