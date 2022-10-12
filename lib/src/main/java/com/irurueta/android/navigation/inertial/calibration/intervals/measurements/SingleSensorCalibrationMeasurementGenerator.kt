@@ -34,6 +34,8 @@ import com.irurueta.units.Acceleration
  * where the device is kept static (e.g. motionless), or where some force is applied to the device
  * changing its position or orientation.
  * Static and dynamic intervals are measured using the only sensor used by the generator.
+ * Measurement generator converts device ENU measurements into measurements expressed in local
+ * tangent plane NED coordinates.
  *
  * @property context Android context.
  * @property accelerometerSensorType One of the supported accelerometer sensor types.

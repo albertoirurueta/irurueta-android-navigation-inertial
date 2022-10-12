@@ -2967,9 +2967,9 @@ class GyroscopeIntervalDetectorTest {
         // check
         verify(exactly = 1) {
             internalDetectorSpy.process(
-                wx.toDouble(),
                 wy.toDouble(),
-                wz.toDouble()
+                wx.toDouble(),
+                -wz.toDouble()
             )
         }
         assertEquals(1, detector.numberOfProcessedMeasurements)
@@ -3014,9 +3014,9 @@ class GyroscopeIntervalDetectorTest {
         // check
         verify(exactly = 1) {
             internalDetectorSpy.process(
-                wx.toDouble(),
                 wy.toDouble(),
-                wz.toDouble()
+                wx.toDouble(),
+                -wz.toDouble()
             )
         }
         assertEquals(1, detector.numberOfProcessedMeasurements)
@@ -3081,9 +3081,9 @@ class GyroscopeIntervalDetectorTest {
         verify(exactly = 1) { timeIntervalEstimatorSpy.addTimestamp(TIME_INTERVAL_SECONDS) }
         verify(exactly = 1) {
             internalDetectorSpy.process(
-                wx.toDouble(),
                 wy.toDouble(),
-                wz.toDouble()
+                wx.toDouble(),
+                -wz.toDouble()
             )
         }
         assertEquals(2, detector.numberOfProcessedMeasurements)
@@ -3156,9 +3156,9 @@ class GyroscopeIntervalDetectorTest {
         verify(exactly = 1) { timeIntervalEstimatorSpy.addTimestamp(TIME_INTERVAL_SECONDS) }
         verify(exactly = 1) {
             internalDetectorSpy.process(
-                wx.toDouble(),
                 wy.toDouble(),
-                wz.toDouble()
+                wx.toDouble(),
+                -wz.toDouble()
             )
         }
         assertEquals(2, detector.numberOfProcessedMeasurements)

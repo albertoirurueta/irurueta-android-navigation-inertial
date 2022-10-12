@@ -3060,20 +3060,20 @@ class StaticIntervalMagnetometerCalibratorTest {
         requireNotNull(initialHardIronZ)
         assertEquals(
             MagneticFluxDensityConverter.convert(
-                hardIronX.toDouble(),
+                hardIronY.toDouble(),
                 MagneticFluxDensityUnit.MICROTESLA,
                 MagneticFluxDensityUnit.TESLA
             ), initialHardIronX, 0.0
         )
         assertEquals(
             MagneticFluxDensityConverter.convert(
-                hardIronY.toDouble(),
+                hardIronX.toDouble(),
                 MagneticFluxDensityUnit.MICROTESLA,
                 MagneticFluxDensityUnit.TESLA
             ), initialHardIronY, 0.0
         )
         assertEquals(
-            MagneticFluxDensityConverter.convert(
+            -MagneticFluxDensityConverter.convert(
                 hardIronZ.toDouble(),
                 MagneticFluxDensityUnit.MICROTESLA,
                 MagneticFluxDensityUnit.TESLA
@@ -3289,21 +3289,21 @@ class StaticIntervalMagnetometerCalibratorTest {
         requireNotNull(initialHardIronZ)
         assertEquals(
             MagneticFluxDensityConverter.convert(
-                hardIronX.toDouble(),
+                hardIronY.toDouble(),
                 MagneticFluxDensityUnit.MICROTESLA,
                 MagneticFluxDensityUnit.TESLA
             ), initialHardIronX, 0.0
         )
         assertEquals(
             MagneticFluxDensityConverter.convert(
-                hardIronY.toDouble(),
+                hardIronX.toDouble(),
                 MagneticFluxDensityUnit.MICROTESLA,
                 MagneticFluxDensityUnit.TESLA
             ), initialHardIronY, 0.0
         )
         assertEquals(
             MagneticFluxDensityConverter.convert(
-                hardIronZ.toDouble(),
+                -hardIronZ.toDouble(),
                 MagneticFluxDensityUnit.MICROTESLA,
                 MagneticFluxDensityUnit.TESLA
             ), initialHardIronZ, 0.0
@@ -3313,17 +3313,17 @@ class StaticIntervalMagnetometerCalibratorTest {
             initialMagnetometerHardIronAvailableListener.onInitialHardIronAvailable(
                 calibrator,
                 MagneticFluxDensityConverter.convert(
-                    hardIronX.toDouble(),
-                    MagneticFluxDensityUnit.MICROTESLA,
-                    MagneticFluxDensityUnit.TESLA
-                ),
-                MagneticFluxDensityConverter.convert(
                     hardIronY.toDouble(),
                     MagneticFluxDensityUnit.MICROTESLA,
                     MagneticFluxDensityUnit.TESLA
                 ),
                 MagneticFluxDensityConverter.convert(
-                    hardIronZ.toDouble(),
+                    hardIronX.toDouble(),
+                    MagneticFluxDensityUnit.MICROTESLA,
+                    MagneticFluxDensityUnit.TESLA
+                ),
+                MagneticFluxDensityConverter.convert(
+                    -hardIronZ.toDouble(),
                     MagneticFluxDensityUnit.MICROTESLA,
                     MagneticFluxDensityUnit.TESLA
                 )

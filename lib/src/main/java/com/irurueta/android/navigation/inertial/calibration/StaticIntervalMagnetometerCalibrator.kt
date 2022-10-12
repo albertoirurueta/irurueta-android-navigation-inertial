@@ -19,6 +19,7 @@ import android.content.Context
 import android.location.Location
 import android.util.Log
 import com.irurueta.algebra.Matrix
+import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
 import com.irurueta.android.navigation.inertial.calibration.builder.MagnetometerInternalCalibratorBuilder
 import com.irurueta.android.navigation.inertial.calibration.intervals.measurements.MagnetometerMeasurementGenerator
 import com.irurueta.android.navigation.inertial.calibration.intervals.measurements.SingleSensorCalibrationMeasurementGenerator
@@ -32,7 +33,9 @@ import com.irurueta.navigation.inertial.calibration.MagneticFluxDensityTriad
 import com.irurueta.navigation.inertial.calibration.StandardDeviationBodyMagneticFluxDensity
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.DefaultMagnetometerQualityScoreMapper
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.QualityScoreMapper
-import com.irurueta.navigation.inertial.calibration.magnetometer.*
+import com.irurueta.navigation.inertial.calibration.magnetometer.KnownHardIronMagnetometerCalibrator
+import com.irurueta.navigation.inertial.calibration.magnetometer.MagnetometerNonLinearCalibrator
+import com.irurueta.navigation.inertial.calibration.magnetometer.UnknownHardIronMagnetometerCalibrator
 import com.irurueta.navigation.inertial.wmm.WorldMagneticModel
 import com.irurueta.numerical.robust.RobustEstimatorMethod
 import com.irurueta.units.MagneticFluxDensity
@@ -44,6 +47,9 @@ import java.util.*
  * Collects accelerometer and magnetometer measurements by detecting periods when device remains
  * static using the accelerometer, and using such static periods to collect magnetometer
  * measurements to solve calibration parameters.
+ * This calibrator converts sensor measurements from device ENU coordinates to local plane NED
+ * coordinates. Thus, all values referring to a given x-y-z coordinates refers to local plane
+ * NED system of coordinates.
  *
  * @property context Android context.
  * @property accelerometerSensorType One of the supported accelerometer sensor types.
@@ -216,8 +222,15 @@ class StaticIntervalMagnetometerCalibrator private constructor(
         this.isMagnetometerGroundTruthInitialHardIron = isMagnetometerGroundTruthInitialHardIron
         requiredMeasurements = minimumRequiredMeasurements
         magnetometerRobustPreliminarySubsetSize = minimumRequiredMeasurements
-
     }
+
+    /**
+     * Triad containing samples converted from device ENU coordinates to local plane NED
+     * coordinates.
+     * This is reused for performance reasons.
+     */
+    private val biasTriad = MagneticFluxDensityTriad()
+
 
     /**
      * Listener used by internal generator to handle events when initialization is started.
@@ -1616,13 +1629,13 @@ class StaticIntervalMagnetometerCalibrator private constructor(
      * that hardware calibrated biases are retrieved if
      * [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED] is used.
      *
-     * @param hardIronX hard iron on device x-axis expressed in micro-Teslas (µT). Only
+     * @param hardIronX hard iron on device x-axis expressed in Teslas (T). Only
      * available when using [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED].
      * If available, this value remains constant with calibrated bias value.
-     * @param hardIronY hard iron on device y-axis expressed in micro-Teslas (µT). Only
+     * @param hardIronY hard iron on device y-axis expressed in Teslas (T). Only
      * available when using [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED].
      * If available, this value remains constant with calibrated bias value.
-     * @param hardIronZ hard iron on device y-axis expressed in micro-Teslas (µT). Only
+     * @param hardIronZ hard iron on device y-axis expressed in Teslas (T). Only
      * available when using [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED].
      * If available, this value remains constant with calibrated bias value.
      */
@@ -1644,15 +1657,23 @@ class StaticIntervalMagnetometerCalibrator private constructor(
             initialHardIronZ = 0.0
         }
 
-        magnetometerInitialHardIronX = initialHardIronX
-        magnetometerInitialHardIronY = initialHardIronY
-        magnetometerInitialHardIronZ = initialHardIronZ
+        // convert from device ENU coordinates to local plane NED coordinates
+        ENUtoNEDTriadConverter.convert(
+            initialHardIronX,
+            initialHardIronY,
+            initialHardIronZ,
+            biasTriad
+        )
+
+        magnetometerInitialHardIronX = biasTriad.valueX
+        magnetometerInitialHardIronY = biasTriad.valueY
+        magnetometerInitialHardIronZ = biasTriad.valueZ
 
         initialMagnetometerHardIronAvailableListener?.onInitialHardIronAvailable(
             this,
-            initialHardIronX,
-            initialHardIronY,
-            initialHardIronZ
+            biasTriad.valueX,
+            biasTriad.valueY,
+            biasTriad.valueZ
         )
     }
 

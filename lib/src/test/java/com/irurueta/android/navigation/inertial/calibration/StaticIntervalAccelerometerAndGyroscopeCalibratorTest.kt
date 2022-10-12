@@ -6158,9 +6158,9 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         requireNotNull(initialBiasY)
         val initialBiasZ = calibrator.accelerometerInitialBiasZ
         requireNotNull(initialBiasZ)
-        assertEquals(bx.toDouble(), initialBiasX, 0.0)
-        assertEquals(by.toDouble(), initialBiasY, 0.0)
-        assertEquals(bz.toDouble(), initialBiasZ, 0.0)
+        assertEquals(by.toDouble(), initialBiasX, 0.0)
+        assertEquals(bx.toDouble(), initialBiasY, 0.0)
+        assertEquals(-bz.toDouble(), initialBiasZ, 0.0)
     }
 
     @Test
@@ -6366,16 +6366,16 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         requireNotNull(initialBiasY)
         val initialBiasZ = calibrator.accelerometerInitialBiasZ
         requireNotNull(initialBiasZ)
-        assertEquals(bx.toDouble(), initialBiasX, 0.0)
-        assertEquals(by.toDouble(), initialBiasY, 0.0)
-        assertEquals(bz.toDouble(), initialBiasZ, 0.0)
+        assertEquals(by.toDouble(), initialBiasX, 0.0)
+        assertEquals(bx.toDouble(), initialBiasY, 0.0)
+        assertEquals(-bz.toDouble(), initialBiasZ, 0.0)
 
         verify(exactly = 1) {
             initialAccelerometerBiasAvailableListener.onInitialBiasAvailable(
                 calibrator,
-                bx.toDouble(),
                 by.toDouble(),
-                bz.toDouble()
+                bx.toDouble(),
+                -bz.toDouble()
             )
         }
     }
@@ -6480,9 +6480,9 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         requireNotNull(initialBiasY)
         val initialBiasZ = calibrator.gyroscopeInitialBiasZ
         requireNotNull(initialBiasZ)
-        assertEquals(bx.toDouble(), initialBiasX, 0.0)
-        assertEquals(by.toDouble(), initialBiasY, 0.0)
-        assertEquals(bz.toDouble(), initialBiasZ, 0.0)
+        assertEquals(by.toDouble(), initialBiasX, 0.0)
+        assertEquals(bx.toDouble(), initialBiasY, 0.0)
+        assertEquals(-bz.toDouble(), initialBiasZ, 0.0)
     }
 
     @Test
@@ -6688,9 +6688,9 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         requireNotNull(initialBiasY)
         val initialBiasZ = calibrator.gyroscopeInitialBiasZ
         requireNotNull(initialBiasZ)
-        assertEquals(bx.toDouble(), initialBiasX, 0.0)
-        assertEquals(by.toDouble(), initialBiasY, 0.0)
-        assertEquals(bz.toDouble(), initialBiasZ, 0.0)
+        assertEquals(by.toDouble(), initialBiasX, 0.0)
+        assertEquals(bx.toDouble(), initialBiasY, 0.0)
+        assertEquals(-bz.toDouble(), initialBiasZ, 0.0)
 
         verify(exactly = 1) {
             initialGyroscopeBiasAvailableListener.onInitialBiasAvailable(

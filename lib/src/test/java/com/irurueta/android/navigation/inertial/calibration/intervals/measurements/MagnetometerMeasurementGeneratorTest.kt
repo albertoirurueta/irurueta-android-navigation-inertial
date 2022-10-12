@@ -3823,9 +3823,9 @@ class MagnetometerMeasurementGeneratorTest {
         verify(exactly = 1) { measurementsGeneratorSpy.process(capture(slot)) }
 
         val captured = slot.captured
-        assertEquals(ax.toDouble(), captured.kinematics.fx, 0.0)
-        assertEquals(ay.toDouble(), captured.kinematics.fy, 0.0)
-        assertEquals(az.toDouble(), captured.kinematics.fz, 0.0)
+        assertEquals(ay.toDouble(), captured.kinematics.fx, 0.0)
+        assertEquals(ax.toDouble(), captured.kinematics.fy, 0.0)
+        assertEquals(-az.toDouble(), captured.kinematics.fz, 0.0)
         assertEquals(0.0, captured.kinematics.angularRateX, 0.0)
         assertEquals(0.0, captured.kinematics.angularRateY, 0.0)
         assertEquals(0.0, captured.kinematics.angularRateZ, 0.0)
@@ -3908,9 +3908,9 @@ class MagnetometerMeasurementGeneratorTest {
         verify(exactly = 1) { measurementsGeneratorSpy.process(capture(slot)) }
 
         val captured = slot.captured
-        assertEquals(ax.toDouble(), captured.kinematics.fx, 0.0)
-        assertEquals(ay.toDouble(), captured.kinematics.fy, 0.0)
-        assertEquals(az.toDouble(), captured.kinematics.fz, 0.0)
+        assertEquals(ay.toDouble(), captured.kinematics.fx, 0.0)
+        assertEquals(ax.toDouble(), captured.kinematics.fy, 0.0)
+        assertEquals(-az.toDouble(), captured.kinematics.fz, 0.0)
         assertEquals(0.0, captured.kinematics.angularRateX, 0.0)
         assertEquals(0.0, captured.kinematics.angularRateY, 0.0)
         assertEquals(0.0, captured.kinematics.angularRateZ, 0.0)
@@ -3983,9 +3983,9 @@ class MagnetometerMeasurementGeneratorTest {
         verify(exactly = 1) { measurementsGeneratorSpy.process(capture(slot)) }
 
         val captured = slot.captured
-        assertEquals(ax.toDouble(), captured.kinematics.fx, 0.0)
-        assertEquals(ay.toDouble(), captured.kinematics.fy, 0.0)
-        assertEquals(az.toDouble(), captured.kinematics.fz, 0.0)
+        assertEquals(ay.toDouble(), captured.kinematics.fx, 0.0)
+        assertEquals(ax.toDouble(), captured.kinematics.fy, 0.0)
+        assertEquals(-az.toDouble(), captured.kinematics.fz, 0.0)
         assertEquals(0.0, captured.kinematics.angularRateX, 0.0)
         assertEquals(0.0, captured.kinematics.angularRateY, 0.0)
         assertEquals(0.0, captured.kinematics.angularRateZ, 0.0)
@@ -4075,9 +4075,9 @@ class MagnetometerMeasurementGeneratorTest {
         verify(exactly = 1) { measurementsGeneratorSpy.process(capture(slot)) }
 
         val captured = slot.captured
-        assertEquals(ax.toDouble(), captured.kinematics.fx, 0.0)
-        assertEquals(ay.toDouble(), captured.kinematics.fy, 0.0)
-        assertEquals(az.toDouble(), captured.kinematics.fz, 0.0)
+        assertEquals(ay.toDouble(), captured.kinematics.fx, 0.0)
+        assertEquals(ax.toDouble(), captured.kinematics.fy, 0.0)
+        assertEquals(-az.toDouble(), captured.kinematics.fz, 0.0)
         assertEquals(0.0, captured.kinematics.angularRateX, 0.0)
         assertEquals(0.0, captured.kinematics.angularRateY, 0.0)
         assertEquals(0.0, captured.kinematics.angularRateZ, 0.0)
@@ -5043,9 +5043,9 @@ class MagnetometerMeasurementGeneratorTest {
         val bxTesla = MagneticFluxDensityConverter.microTeslaToTesla(bx.toDouble())
         val byTesla = MagneticFluxDensityConverter.microTeslaToTesla(by.toDouble())
         val bzTesla = MagneticFluxDensityConverter.microTeslaToTesla(bz.toDouble())
-        assertEquals(bxTesla, magneticFluxDensity.bx, 0.0)
-        assertEquals(byTesla, magneticFluxDensity.by, 0.0)
-        assertEquals(bzTesla, magneticFluxDensity.bz, 0.0)
+        assertEquals(byTesla, magneticFluxDensity.bx, 0.0)
+        assertEquals(bxTesla, magneticFluxDensity.by, 0.0)
+        assertEquals(-bzTesla, magneticFluxDensity.bz, 0.0)
         assertEquals(1, generator.numberOfProcessedMagnetometerMeasurements)
     }
 
@@ -5097,9 +5097,9 @@ class MagnetometerMeasurementGeneratorTest {
         val bxTesla = MagneticFluxDensityConverter.microTeslaToTesla(bx.toDouble())
         val byTesla = MagneticFluxDensityConverter.microTeslaToTesla(by.toDouble())
         val bzTesla = MagneticFluxDensityConverter.microTeslaToTesla(bz.toDouble())
-        assertEquals(bxTesla, magneticFluxDensity.bx, 0.0)
-        assertEquals(byTesla, magneticFluxDensity.by, 0.0)
-        assertEquals(bzTesla, magneticFluxDensity.bz, 0.0)
+        assertEquals(byTesla, magneticFluxDensity.bx, 0.0)
+        assertEquals(bxTesla, magneticFluxDensity.by, 0.0)
+        assertEquals(-bzTesla, magneticFluxDensity.bz, 0.0)
         assertEquals(1, generator.numberOfProcessedMagnetometerMeasurements)
 
         verify(exactly = 1) {
@@ -5174,9 +5174,9 @@ class MagnetometerMeasurementGeneratorTest {
         val bxTesla = MagneticFluxDensityConverter.microTeslaToTesla(bx.toDouble())
         val byTesla = MagneticFluxDensityConverter.microTeslaToTesla(by.toDouble())
         val bzTesla = MagneticFluxDensityConverter.microTeslaToTesla(bz.toDouble())
-        assertEquals(bxTesla, magneticFluxDensity.bx, 0.0)
-        assertEquals(byTesla, magneticFluxDensity.by, 0.0)
-        assertEquals(bzTesla, magneticFluxDensity.bz, 0.0)
+        assertEquals(byTesla, magneticFluxDensity.bx, 0.0)
+        assertEquals(bxTesla, magneticFluxDensity.by, 0.0)
+        assertEquals(-bzTesla, magneticFluxDensity.bz, 0.0)
         assertEquals(1, generator.numberOfProcessedMagnetometerMeasurements)
 
         verify(exactly = 1) {
@@ -5260,9 +5260,9 @@ class MagnetometerMeasurementGeneratorTest {
         val bxTesla = MagneticFluxDensityConverter.microTeslaToTesla(bx.toDouble())
         val byTesla = MagneticFluxDensityConverter.microTeslaToTesla(by.toDouble())
         val bzTesla = MagneticFluxDensityConverter.microTeslaToTesla(bz.toDouble())
-        assertEquals(bxTesla, magneticFluxDensity.bx, 0.0)
-        assertEquals(byTesla, magneticFluxDensity.by, 0.0)
-        assertEquals(bzTesla, magneticFluxDensity.bz, 0.0)
+        assertEquals(byTesla, magneticFluxDensity.bx, 0.0)
+        assertEquals(bxTesla, magneticFluxDensity.by, 0.0)
+        assertEquals(-bzTesla, magneticFluxDensity.bz, 0.0)
         assertEquals(1, generator.numberOfProcessedMagnetometerMeasurements)
 
         verify(exactly = 1) {

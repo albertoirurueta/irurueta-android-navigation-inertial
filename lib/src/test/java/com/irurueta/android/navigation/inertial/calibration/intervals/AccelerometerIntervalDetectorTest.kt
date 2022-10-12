@@ -3002,9 +3002,9 @@ class AccelerometerIntervalDetectorTest {
         // check
         verify(exactly = 1) {
             internalDetectorSpy.process(
-                ax.toDouble(),
                 ay.toDouble(),
-                az.toDouble()
+                ax.toDouble(),
+                -az.toDouble()
             )
         }
         assertEquals(1, detector.numberOfProcessedMeasurements)
@@ -3049,9 +3049,9 @@ class AccelerometerIntervalDetectorTest {
         // check
         verify(exactly = 1) {
             internalDetectorSpy.process(
-                ax.toDouble(),
                 ay.toDouble(),
-                az.toDouble()
+                ax.toDouble(),
+                -az.toDouble()
             )
         }
         assertEquals(1, detector.numberOfProcessedMeasurements)
@@ -3116,9 +3116,9 @@ class AccelerometerIntervalDetectorTest {
         verify(exactly = 1) { timeIntervalEstimatorSpy.addTimestamp(TIME_INTERVAL_SECONDS) }
         verify(exactly = 1) {
             internalDetectorSpy.process(
-                ax.toDouble(),
                 ay.toDouble(),
-                az.toDouble()
+                ax.toDouble(),
+                -az.toDouble()
             )
         }
         assertEquals(2, detector.numberOfProcessedMeasurements)
@@ -3191,9 +3191,9 @@ class AccelerometerIntervalDetectorTest {
         verify(exactly = 1) { timeIntervalEstimatorSpy.addTimestamp(TIME_INTERVAL_SECONDS) }
         verify(exactly = 1) {
             internalDetectorSpy.process(
-                ax.toDouble(),
                 ay.toDouble(),
-                az.toDouble()
+                ax.toDouble(),
+                -az.toDouble()
             )
         }
         assertEquals(2, detector.numberOfProcessedMeasurements)

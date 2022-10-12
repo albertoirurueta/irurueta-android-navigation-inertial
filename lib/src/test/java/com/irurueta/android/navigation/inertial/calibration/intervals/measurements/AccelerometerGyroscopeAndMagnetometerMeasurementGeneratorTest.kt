@@ -4982,15 +4982,15 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         val wy = randomizer.nextDouble()
         val wz = randomizer.nextDouble()
         val kinematics = BodyKinematics()
-        kinematics.angularRateX = wx
-        kinematics.angularRateY = wy
-        kinematics.angularRateZ = wz
+        kinematics.angularRateX = wy
+        kinematics.angularRateY = wx
+        kinematics.angularRateZ = -wz
         generator.setPrivateProperty("kinematics", kinematics)
 
         val bx = randomizer.nextDouble()
         val by = randomizer.nextDouble()
         val bz = randomizer.nextDouble()
-        val magneticFluxDensity = BodyMagneticFluxDensity(bx, by, bz)
+        val magneticFluxDensity = BodyMagneticFluxDensity(by, bx, -bz)
         generator.setPrivateProperty("magneticFluxDensity", magneticFluxDensity)
 
         val ax = randomizer.nextFloat()
@@ -5015,16 +5015,16 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         verify(exactly = 1) { measurementsGeneratorSpy.process(capture(slot)) }
 
         val timedBodyKinematicsAndMagneticFluxDensity = slot.captured
-        assertEquals(ax.toDouble(), timedBodyKinematicsAndMagneticFluxDensity.kinematics.fx, 0.0)
-        assertEquals(ay.toDouble(), timedBodyKinematicsAndMagneticFluxDensity.kinematics.fy, 0.0)
-        assertEquals(az.toDouble(), timedBodyKinematicsAndMagneticFluxDensity.kinematics.fz, 0.0)
-        assertEquals(wx, timedBodyKinematicsAndMagneticFluxDensity.kinematics.angularRateX, 0.0)
-        assertEquals(wy, timedBodyKinematicsAndMagneticFluxDensity.kinematics.angularRateY, 0.0)
-        assertEquals(wz, timedBodyKinematicsAndMagneticFluxDensity.kinematics.angularRateZ, 0.0)
+        assertEquals(ay.toDouble(), timedBodyKinematicsAndMagneticFluxDensity.kinematics.fx, 0.0)
+        assertEquals(ax.toDouble(), timedBodyKinematicsAndMagneticFluxDensity.kinematics.fy, 0.0)
+        assertEquals(-az.toDouble(), timedBodyKinematicsAndMagneticFluxDensity.kinematics.fz, 0.0)
+        assertEquals(wy, timedBodyKinematicsAndMagneticFluxDensity.kinematics.angularRateX, 0.0)
+        assertEquals(wx, timedBodyKinematicsAndMagneticFluxDensity.kinematics.angularRateY, 0.0)
+        assertEquals(-wz, timedBodyKinematicsAndMagneticFluxDensity.kinematics.angularRateZ, 0.0)
         assertSame(kinematics, timedBodyKinematicsAndMagneticFluxDensity.kinematics)
-        assertEquals(bx, timedBodyKinematicsAndMagneticFluxDensity.magneticFluxDensity.bx, 0.0)
-        assertEquals(by, timedBodyKinematicsAndMagneticFluxDensity.magneticFluxDensity.by, 0.0)
-        assertEquals(bz, timedBodyKinematicsAndMagneticFluxDensity.magneticFluxDensity.bz, 0.0)
+        assertEquals(by, timedBodyKinematicsAndMagneticFluxDensity.magneticFluxDensity.bx, 0.0)
+        assertEquals(bx, timedBodyKinematicsAndMagneticFluxDensity.magneticFluxDensity.by, 0.0)
+        assertEquals(-bz, timedBodyKinematicsAndMagneticFluxDensity.magneticFluxDensity.bz, 0.0)
         assertEquals(
             magneticFluxDensity,
             timedBodyKinematicsAndMagneticFluxDensity.magneticFluxDensity
@@ -5089,15 +5089,15 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         val wy = randomizer.nextDouble()
         val wz = randomizer.nextDouble()
         val kinematics = BodyKinematics()
-        kinematics.angularRateX = wx
-        kinematics.angularRateY = wy
-        kinematics.angularRateZ = wz
+        kinematics.angularRateX = wy
+        kinematics.angularRateY = wx
+        kinematics.angularRateZ = -wz
         generator.setPrivateProperty("kinematics", kinematics)
 
         val bx = randomizer.nextDouble()
         val by = randomizer.nextDouble()
         val bz = randomizer.nextDouble()
-        val magneticFluxDensity = BodyMagneticFluxDensity(bx, by, bz)
+        val magneticFluxDensity = BodyMagneticFluxDensity(by, bx, -bz)
         generator.setPrivateProperty("magneticFluxDensity", magneticFluxDensity)
 
         val ax = randomizer.nextFloat()
@@ -5119,16 +5119,16 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         verify(exactly = 1) { measurementsGeneratorSpy.process(capture(slot)) }
 
         val timedBodyKinematicsAndMagneticFluxDensity = slot.captured
-        assertEquals(ax.toDouble(), timedBodyKinematicsAndMagneticFluxDensity.kinematics.fx, 0.0)
-        assertEquals(ay.toDouble(), timedBodyKinematicsAndMagneticFluxDensity.kinematics.fy, 0.0)
-        assertEquals(az.toDouble(), timedBodyKinematicsAndMagneticFluxDensity.kinematics.fz, 0.0)
-        assertEquals(wx, timedBodyKinematicsAndMagneticFluxDensity.kinematics.angularRateX, 0.0)
-        assertEquals(wy, timedBodyKinematicsAndMagneticFluxDensity.kinematics.angularRateY, 0.0)
-        assertEquals(wz, timedBodyKinematicsAndMagneticFluxDensity.kinematics.angularRateZ, 0.0)
+        assertEquals(ay.toDouble(), timedBodyKinematicsAndMagneticFluxDensity.kinematics.fx, 0.0)
+        assertEquals(ax.toDouble(), timedBodyKinematicsAndMagneticFluxDensity.kinematics.fy, 0.0)
+        assertEquals(-az.toDouble(), timedBodyKinematicsAndMagneticFluxDensity.kinematics.fz, 0.0)
+        assertEquals(wy, timedBodyKinematicsAndMagneticFluxDensity.kinematics.angularRateX, 0.0)
+        assertEquals(wx, timedBodyKinematicsAndMagneticFluxDensity.kinematics.angularRateY, 0.0)
+        assertEquals(-wz, timedBodyKinematicsAndMagneticFluxDensity.kinematics.angularRateZ, 0.0)
         assertSame(kinematics, timedBodyKinematicsAndMagneticFluxDensity.kinematics)
-        assertEquals(bx, timedBodyKinematicsAndMagneticFluxDensity.magneticFluxDensity.bx, 0.0)
-        assertEquals(by, timedBodyKinematicsAndMagneticFluxDensity.magneticFluxDensity.by, 0.0)
-        assertEquals(bz, timedBodyKinematicsAndMagneticFluxDensity.magneticFluxDensity.bz, 0.0)
+        assertEquals(by, timedBodyKinematicsAndMagneticFluxDensity.magneticFluxDensity.bx, 0.0)
+        assertEquals(bx, timedBodyKinematicsAndMagneticFluxDensity.magneticFluxDensity.by, 0.0)
+        assertEquals(-bz, timedBodyKinematicsAndMagneticFluxDensity.magneticFluxDensity.bz, 0.0)
         assertEquals(
             magneticFluxDensity,
             timedBodyKinematicsAndMagneticFluxDensity.magneticFluxDensity
@@ -5188,15 +5188,15 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         val wy = randomizer.nextDouble()
         val wz = randomizer.nextDouble()
         val kinematics = BodyKinematics()
-        kinematics.angularRateX = wx
-        kinematics.angularRateY = wy
-        kinematics.angularRateZ = wz
+        kinematics.angularRateX = wy
+        kinematics.angularRateY = wx
+        kinematics.angularRateZ = -wz
         generator.setPrivateProperty("kinematics", kinematics)
 
         val bx = randomizer.nextDouble()
         val by = randomizer.nextDouble()
         val bz = randomizer.nextDouble()
-        val magneticFluxDensity = BodyMagneticFluxDensity(bx, by, bz)
+        val magneticFluxDensity = BodyMagneticFluxDensity(by, bx, -bz)
         generator.setPrivateProperty("magneticFluxDensity", magneticFluxDensity)
 
         val ax = randomizer.nextFloat()
@@ -5213,16 +5213,16 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         verify(exactly = 1) { measurementsGeneratorSpy.process(capture(slot)) }
 
         val timedBodyKinematicsAndMagneticFluxDensity = slot.captured
-        assertEquals(ax.toDouble(), timedBodyKinematicsAndMagneticFluxDensity.kinematics.fx, 0.0)
-        assertEquals(ay.toDouble(), timedBodyKinematicsAndMagneticFluxDensity.kinematics.fy, 0.0)
-        assertEquals(az.toDouble(), timedBodyKinematicsAndMagneticFluxDensity.kinematics.fz, 0.0)
-        assertEquals(wx, timedBodyKinematicsAndMagneticFluxDensity.kinematics.angularRateX, 0.0)
-        assertEquals(wy, timedBodyKinematicsAndMagneticFluxDensity.kinematics.angularRateY, 0.0)
-        assertEquals(wz, timedBodyKinematicsAndMagneticFluxDensity.kinematics.angularRateZ, 0.0)
+        assertEquals(ay.toDouble(), timedBodyKinematicsAndMagneticFluxDensity.kinematics.fx, 0.0)
+        assertEquals(ax.toDouble(), timedBodyKinematicsAndMagneticFluxDensity.kinematics.fy, 0.0)
+        assertEquals(-az.toDouble(), timedBodyKinematicsAndMagneticFluxDensity.kinematics.fz, 0.0)
+        assertEquals(wy, timedBodyKinematicsAndMagneticFluxDensity.kinematics.angularRateX, 0.0)
+        assertEquals(wx, timedBodyKinematicsAndMagneticFluxDensity.kinematics.angularRateY, 0.0)
+        assertEquals(-wz, timedBodyKinematicsAndMagneticFluxDensity.kinematics.angularRateZ, 0.0)
         assertSame(kinematics, timedBodyKinematicsAndMagneticFluxDensity.kinematics)
-        assertEquals(bx, timedBodyKinematicsAndMagneticFluxDensity.magneticFluxDensity.bx, 0.0)
-        assertEquals(by, timedBodyKinematicsAndMagneticFluxDensity.magneticFluxDensity.by, 0.0)
-        assertEquals(bz, timedBodyKinematicsAndMagneticFluxDensity.magneticFluxDensity.bz, 0.0)
+        assertEquals(by, timedBodyKinematicsAndMagneticFluxDensity.magneticFluxDensity.bx, 0.0)
+        assertEquals(bx, timedBodyKinematicsAndMagneticFluxDensity.magneticFluxDensity.by, 0.0)
+        assertEquals(-bz, timedBodyKinematicsAndMagneticFluxDensity.magneticFluxDensity.bz, 0.0)
         assertEquals(
             magneticFluxDensity,
             timedBodyKinematicsAndMagneticFluxDensity.magneticFluxDensity
@@ -5295,15 +5295,15 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         val wy = randomizer.nextDouble()
         val wz = randomizer.nextDouble()
         val kinematics = BodyKinematics()
-        kinematics.angularRateX = wx
-        kinematics.angularRateY = wy
-        kinematics.angularRateZ = wz
+        kinematics.angularRateX = wy
+        kinematics.angularRateY = wx
+        kinematics.angularRateZ = -wz
         generator.setPrivateProperty("kinematics", kinematics)
 
         val bx = randomizer.nextDouble()
         val by = randomizer.nextDouble()
         val bz = randomizer.nextDouble()
-        val magneticFluxDensity = BodyMagneticFluxDensity(bx, by, bz)
+        val magneticFluxDensity = BodyMagneticFluxDensity(by, bx, -bz)
         generator.setPrivateProperty("magneticFluxDensity", magneticFluxDensity)
 
         val ax = randomizer.nextFloat()
@@ -5328,16 +5328,16 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         verify(exactly = 1) { measurementsGeneratorSpy.process(capture(slot)) }
 
         val timedBodyKinematicsAndMagneticFluxDensity = slot.captured
-        assertEquals(ax.toDouble(), timedBodyKinematicsAndMagneticFluxDensity.kinematics.fx, 0.0)
-        assertEquals(ay.toDouble(), timedBodyKinematicsAndMagneticFluxDensity.kinematics.fy, 0.0)
-        assertEquals(az.toDouble(), timedBodyKinematicsAndMagneticFluxDensity.kinematics.fz, 0.0)
-        assertEquals(wx, timedBodyKinematicsAndMagneticFluxDensity.kinematics.angularRateX, 0.0)
-        assertEquals(wy, timedBodyKinematicsAndMagneticFluxDensity.kinematics.angularRateY, 0.0)
-        assertEquals(wz, timedBodyKinematicsAndMagneticFluxDensity.kinematics.angularRateZ, 0.0)
+        assertEquals(ay.toDouble(), timedBodyKinematicsAndMagneticFluxDensity.kinematics.fx, 0.0)
+        assertEquals(ax.toDouble(), timedBodyKinematicsAndMagneticFluxDensity.kinematics.fy, 0.0)
+        assertEquals(-az.toDouble(), timedBodyKinematicsAndMagneticFluxDensity.kinematics.fz, 0.0)
+        assertEquals(wy, timedBodyKinematicsAndMagneticFluxDensity.kinematics.angularRateX, 0.0)
+        assertEquals(wx, timedBodyKinematicsAndMagneticFluxDensity.kinematics.angularRateY, 0.0)
+        assertEquals(-wz, timedBodyKinematicsAndMagneticFluxDensity.kinematics.angularRateZ, 0.0)
         assertSame(kinematics, timedBodyKinematicsAndMagneticFluxDensity.kinematics)
-        assertEquals(bx, timedBodyKinematicsAndMagneticFluxDensity.magneticFluxDensity.bx, 0.0)
-        assertEquals(by, timedBodyKinematicsAndMagneticFluxDensity.magneticFluxDensity.by, 0.0)
-        assertEquals(bz, timedBodyKinematicsAndMagneticFluxDensity.magneticFluxDensity.bz, 0.0)
+        assertEquals(by, timedBodyKinematicsAndMagneticFluxDensity.magneticFluxDensity.bx, 0.0)
+        assertEquals(bx, timedBodyKinematicsAndMagneticFluxDensity.magneticFluxDensity.by, 0.0)
+        assertEquals(-bz, timedBodyKinematicsAndMagneticFluxDensity.magneticFluxDensity.bz, 0.0)
         assertEquals(
             magneticFluxDensity,
             timedBodyKinematicsAndMagneticFluxDensity.magneticFluxDensity
@@ -6552,9 +6552,9 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         )
 
         // check
-        assertEquals(wx.toDouble(), kinematics.angularRateX, 0.0)
-        assertEquals(wy.toDouble(), kinematics.angularRateY, 0.0)
-        assertEquals(wz.toDouble(), kinematics.angularRateZ, 0.0)
+        assertEquals(wy.toDouble(), kinematics.angularRateX, 0.0)
+        assertEquals(wx.toDouble(), kinematics.angularRateY, 0.0)
+        assertEquals(-wz.toDouble(), kinematics.angularRateZ, 0.0)
         assertEquals(1, generator.numberOfProcessedGyroscopeMeasurements)
     }
 
@@ -6602,9 +6602,9 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         )
 
         // check
-        assertEquals(wx.toDouble(), kinematics.angularRateX, 0.0)
-        assertEquals(wy.toDouble(), kinematics.angularRateY, 0.0)
-        assertEquals(wz.toDouble(), kinematics.angularRateZ, 0.0)
+        assertEquals(wy.toDouble(), kinematics.angularRateX, 0.0)
+        assertEquals(wx.toDouble(), kinematics.angularRateY, 0.0)
+        assertEquals(-wz.toDouble(), kinematics.angularRateZ, 0.0)
         assertEquals(1, generator.numberOfProcessedGyroscopeMeasurements)
 
         verify(exactly = 1) {
@@ -6675,16 +6675,16 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         )
 
         // check
-        assertEquals(wx.toDouble(), kinematics.angularRateX, 0.0)
-        assertEquals(wy.toDouble(), kinematics.angularRateY, 0.0)
-        assertEquals(wz.toDouble(), kinematics.angularRateZ, 0.0)
+        assertEquals(wy.toDouble(), kinematics.angularRateX, 0.0)
+        assertEquals(wx.toDouble(), kinematics.angularRateY, 0.0)
+        assertEquals(-wz.toDouble(), kinematics.angularRateZ, 0.0)
         assertEquals(1, generator.numberOfProcessedGyroscopeMeasurements)
 
         verify(exactly = 1) {
             gyroscopeAccumulatedNoiseEstimatorSpy.addTriad(
-                wx.toDouble(),
                 wy.toDouble(),
-                wz.toDouble()
+                wx.toDouble(),
+                -wz.toDouble()
             )
         }
     }
@@ -6749,9 +6749,9 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         )
 
         // check
-        assertEquals(wx.toDouble(), kinematics.angularRateX, 0.0)
-        assertEquals(wy.toDouble(), kinematics.angularRateY, 0.0)
-        assertEquals(wz.toDouble(), kinematics.angularRateZ, 0.0)
+        assertEquals(wy.toDouble(), kinematics.angularRateX, 0.0)
+        assertEquals(wx.toDouble(), kinematics.angularRateY, 0.0)
+        assertEquals(-wz.toDouble(), kinematics.angularRateZ, 0.0)
         assertEquals(1, generator.numberOfProcessedGyroscopeMeasurements)
 
         verify(exactly = 1) {
@@ -6810,9 +6810,9 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         val bxTesla = MagneticFluxDensityConverter.microTeslaToTesla(bx.toDouble())
         val byTesla = MagneticFluxDensityConverter.microTeslaToTesla(by.toDouble())
         val bzTesla = MagneticFluxDensityConverter.microTeslaToTesla(bz.toDouble())
-        assertEquals(bxTesla, magneticFluxDensity.bx, 0.0)
-        assertEquals(byTesla, magneticFluxDensity.by, 0.0)
-        assertEquals(bzTesla, magneticFluxDensity.bz, 0.0)
+        assertEquals(byTesla, magneticFluxDensity.bx, 0.0)
+        assertEquals(bxTesla, magneticFluxDensity.by, 0.0)
+        assertEquals(-bzTesla, magneticFluxDensity.bz, 0.0)
         assertEquals(1, generator.numberOfProcessedMagnetometerMeasurements)
     }
 
@@ -6864,9 +6864,9 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         val bxTesla = MagneticFluxDensityConverter.microTeslaToTesla(bx.toDouble())
         val byTesla = MagneticFluxDensityConverter.microTeslaToTesla(by.toDouble())
         val bzTesla = MagneticFluxDensityConverter.microTeslaToTesla(bz.toDouble())
-        assertEquals(bxTesla, magneticFluxDensity.bx, 0.0)
-        assertEquals(byTesla, magneticFluxDensity.by, 0.0)
-        assertEquals(bzTesla, magneticFluxDensity.bz, 0.0)
+        assertEquals(byTesla, magneticFluxDensity.bx, 0.0)
+        assertEquals(bxTesla, magneticFluxDensity.by, 0.0)
+        assertEquals(-bzTesla, magneticFluxDensity.bz, 0.0)
         assertEquals(1, generator.numberOfProcessedMagnetometerMeasurements)
 
         verify(exactly = 1) {
@@ -6941,9 +6941,9 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         val bxTesla = MagneticFluxDensityConverter.microTeslaToTesla(bx.toDouble())
         val byTesla = MagneticFluxDensityConverter.microTeslaToTesla(by.toDouble())
         val bzTesla = MagneticFluxDensityConverter.microTeslaToTesla(bz.toDouble())
-        assertEquals(bxTesla, magneticFluxDensity.bx, 0.0)
-        assertEquals(byTesla, magneticFluxDensity.by, 0.0)
-        assertEquals(bzTesla, magneticFluxDensity.bz, 0.0)
+        assertEquals(byTesla, magneticFluxDensity.bx, 0.0)
+        assertEquals(bxTesla, magneticFluxDensity.by, 0.0)
+        assertEquals(-bzTesla, magneticFluxDensity.bz, 0.0)
         assertEquals(1, generator.numberOfProcessedMagnetometerMeasurements)
 
         verify(exactly = 1) {
@@ -7027,9 +7027,9 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         val bxTesla = MagneticFluxDensityConverter.microTeslaToTesla(bx.toDouble())
         val byTesla = MagneticFluxDensityConverter.microTeslaToTesla(by.toDouble())
         val bzTesla = MagneticFluxDensityConverter.microTeslaToTesla(bz.toDouble())
-        assertEquals(bxTesla, magneticFluxDensity.bx, 0.0)
-        assertEquals(byTesla, magneticFluxDensity.by, 0.0)
-        assertEquals(bzTesla, magneticFluxDensity.bz, 0.0)
+        assertEquals(byTesla, magneticFluxDensity.bx, 0.0)
+        assertEquals(bxTesla, magneticFluxDensity.by, 0.0)
+        assertEquals(-bzTesla, magneticFluxDensity.bz, 0.0)
         assertEquals(1, generator.numberOfProcessedMagnetometerMeasurements)
 
         verify(exactly = 1) {

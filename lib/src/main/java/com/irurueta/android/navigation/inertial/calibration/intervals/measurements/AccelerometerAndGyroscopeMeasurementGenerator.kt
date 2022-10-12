@@ -16,14 +16,12 @@
 package com.irurueta.android.navigation.inertial.calibration.intervals.measurements
 
 import android.content.Context
+import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
 import com.irurueta.android.navigation.inertial.calibration.intervals.ErrorReason
 import com.irurueta.android.navigation.inertial.calibration.intervals.Status
 import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.navigation.inertial.BodyKinematics
-import com.irurueta.navigation.inertial.calibration.BodyKinematicsSequence
-import com.irurueta.navigation.inertial.calibration.StandardDeviationBodyKinematics
-import com.irurueta.navigation.inertial.calibration.StandardDeviationTimedBodyKinematics
-import com.irurueta.navigation.inertial.calibration.TimedBodyKinematics
+import com.irurueta.navigation.inertial.calibration.*
 import com.irurueta.navigation.inertial.calibration.generators.AccelerometerAndGyroscopeMeasurementsGenerator
 import com.irurueta.navigation.inertial.calibration.generators.AccelerometerAndGyroscopeMeasurementsGeneratorListener
 import com.irurueta.navigation.inertial.calibration.intervals.TriadStaticIntervalDetector
@@ -40,6 +38,8 @@ import com.irurueta.units.AngularSpeedUnit
  * Static and dynamic intervals are always measured using the accelerometer.
  * Additionally, the gyroscope is also used, and measurements are generated to calibrate both
  * accelerometers and gyroscopes.
+ * Measurement generator converts device ENU measurements into measurements expressed in local
+ * tangent plane NED coordinates.
  *
  * @property context Android context.
  * @property accelerometerSensorType One of the supported accelerometer sensor types.
@@ -94,6 +94,20 @@ class AccelerometerAndGyroscopeMeasurementGenerator(
     accelerometerSensorDelay,
     accuracyChangedListener
 ) {
+    /**
+     * Triad containing acceleration samples converted from device ENU coordinates to local plane
+     * NED coordinates.
+     * This is reused for performance reasons.
+     */
+    private val acceleration = AccelerationTriad()
+
+    /**
+     * Triad containing angular speed samples converted from device ENU coordinates to local plane
+     * NED coordinates.
+     * This is reused for performance reasons.
+     */
+    private val angularSpeed = AngularSpeedTriad()
+
     /**
      * Listener for internal measurement generator.
      */
@@ -246,10 +260,18 @@ class AccelerometerAndGyroscopeMeasurementGenerator(
      */
     private val gyroscopeCollectorMeasurementListener =
         GyroscopeSensorCollector.OnMeasurementListener { wx, wy, wz, bx, by, bz, timestamp, accuracy ->
+            // convert from device ENU coordinates to local plane NED coordinates
+            ENUtoNEDTriadConverter.convert(
+                wx.toDouble(),
+                wy.toDouble(),
+                wz.toDouble(),
+                angularSpeed
+            )
+
             // set gyroscope information
-            kinematics.angularRateX = wx.toDouble()
-            kinematics.angularRateY = wy.toDouble()
-            kinematics.angularRateZ = wz.toDouble()
+            kinematics.angularRateX = angularSpeed.valueX
+            kinematics.angularRateY = angularSpeed.valueY
+            kinematics.angularRateZ = angularSpeed.valueZ
 
             if (status == Status.INITIALIZING) {
                 gyroscopeAccumulatedNoiseEstimator.addTriad(
@@ -684,11 +706,14 @@ class AccelerometerAndGyroscopeMeasurementGenerator(
         diffSeconds: Double,
         result: TimedBodyKinematics
     ) {
+        // convert from device ENU coordinates to local plane NED coordinates
+        ENUtoNEDTriadConverter.convert(ax.toDouble(), ay.toDouble(), az.toDouble(), acceleration)
+
         // set accelerometer information (gyroscope information is filled on the corresponding
         // gyroscope listener)
-        kinematics.fx = ax.toDouble()
-        kinematics.fy = ay.toDouble()
-        kinematics.fz = az.toDouble()
+        kinematics.fx = acceleration.valueX
+        kinematics.fy = acceleration.valueY
+        kinematics.fz = acceleration.valueZ
         result.kinematics = kinematics
         result.timestampSeconds = diffSeconds
     }

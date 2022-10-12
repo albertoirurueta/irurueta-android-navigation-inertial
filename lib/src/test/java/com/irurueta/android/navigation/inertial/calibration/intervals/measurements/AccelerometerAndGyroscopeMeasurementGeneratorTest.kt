@@ -3849,9 +3849,9 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         val wy = randomizer.nextDouble()
         val wz = randomizer.nextDouble()
         val kinematics = BodyKinematics()
-        kinematics.angularRateX = wx
-        kinematics.angularRateY = wy
-        kinematics.angularRateZ = wz
+        kinematics.angularRateX = wy
+        kinematics.angularRateY = wx
+        kinematics.angularRateZ = -wz
         generator.setPrivateProperty("kinematics", kinematics)
 
         val ax = randomizer.nextFloat()
@@ -3876,12 +3876,12 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         verify(exactly = 1) { measurementsGeneratorSpy.process(capture(slot)) }
 
         val timedBodyKinematics = slot.captured
-        assertEquals(ax.toDouble(), timedBodyKinematics.kinematics.fx, 0.0)
-        assertEquals(ay.toDouble(), timedBodyKinematics.kinematics.fy, 0.0)
-        assertEquals(az.toDouble(), timedBodyKinematics.kinematics.fz, 0.0)
-        assertEquals(wx, timedBodyKinematics.kinematics.angularRateX, 0.0)
-        assertEquals(wy, timedBodyKinematics.kinematics.angularRateY, 0.0)
-        assertEquals(wz, timedBodyKinematics.kinematics.angularRateZ, 0.0)
+        assertEquals(ay.toDouble(), timedBodyKinematics.kinematics.fx, 0.0)
+        assertEquals(ax.toDouble(), timedBodyKinematics.kinematics.fy, 0.0)
+        assertEquals(-az.toDouble(), timedBodyKinematics.kinematics.fz, 0.0)
+        assertEquals(wy, timedBodyKinematics.kinematics.angularRateX, 0.0)
+        assertEquals(wx, timedBodyKinematics.kinematics.angularRateY, 0.0)
+        assertEquals(-wz, timedBodyKinematics.kinematics.angularRateZ, 0.0)
         assertSame(kinematics, timedBodyKinematics.kinematics)
         assertEquals(0.0, timedBodyKinematics.timestampSeconds, 0.0)
 
@@ -3942,9 +3942,9 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         val wy = randomizer.nextDouble()
         val wz = randomizer.nextDouble()
         val kinematics = BodyKinematics()
-        kinematics.angularRateX = wx
-        kinematics.angularRateY = wy
-        kinematics.angularRateZ = wz
+        kinematics.angularRateX = wy
+        kinematics.angularRateY = wx
+        kinematics.angularRateZ = -wz
         generator.setPrivateProperty("kinematics", kinematics)
 
         val ax = randomizer.nextFloat()
@@ -3966,12 +3966,12 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         verify(exactly = 1) { measurementsGeneratorSpy.process(capture(slot)) }
 
         val timedBodyKinematics = slot.captured
-        assertEquals(ax.toDouble(), timedBodyKinematics.kinematics.fx, 0.0)
-        assertEquals(ay.toDouble(), timedBodyKinematics.kinematics.fy, 0.0)
-        assertEquals(az.toDouble(), timedBodyKinematics.kinematics.fz, 0.0)
-        assertEquals(wx, timedBodyKinematics.kinematics.angularRateX, 0.0)
-        assertEquals(wy, timedBodyKinematics.kinematics.angularRateY, 0.0)
-        assertEquals(wz, timedBodyKinematics.kinematics.angularRateZ, 0.0)
+        assertEquals(ay.toDouble(), timedBodyKinematics.kinematics.fx, 0.0)
+        assertEquals(ax.toDouble(), timedBodyKinematics.kinematics.fy, 0.0)
+        assertEquals(-az.toDouble(), timedBodyKinematics.kinematics.fz, 0.0)
+        assertEquals(wy, timedBodyKinematics.kinematics.angularRateX, 0.0)
+        assertEquals(wx, timedBodyKinematics.kinematics.angularRateY, 0.0)
+        assertEquals(-wz, timedBodyKinematics.kinematics.angularRateZ, 0.0)
         assertSame(kinematics, timedBodyKinematics.kinematics)
         assertEquals(seconds, timedBodyKinematics.timestampSeconds, 0.0)
     }
@@ -4028,9 +4028,9 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         val wy = randomizer.nextDouble()
         val wz = randomizer.nextDouble()
         val kinematics = BodyKinematics()
-        kinematics.angularRateX = wx
-        kinematics.angularRateY = wy
-        kinematics.angularRateZ = wz
+        kinematics.angularRateX = wy
+        kinematics.angularRateY = wx
+        kinematics.angularRateZ = -wz
         generator.setPrivateProperty("kinematics", kinematics)
 
         val ax = randomizer.nextFloat()
@@ -4047,12 +4047,12 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         verify(exactly = 1) { measurementsGeneratorSpy.process(capture(slot)) }
 
         val timedBodyKinematics = slot.captured
-        assertEquals(ax.toDouble(), timedBodyKinematics.kinematics.fx, 0.0)
-        assertEquals(ay.toDouble(), timedBodyKinematics.kinematics.fy, 0.0)
-        assertEquals(az.toDouble(), timedBodyKinematics.kinematics.fz, 0.0)
-        assertEquals(wx, timedBodyKinematics.kinematics.angularRateX, 0.0)
-        assertEquals(wy, timedBodyKinematics.kinematics.angularRateY, 0.0)
-        assertEquals(wz, timedBodyKinematics.kinematics.angularRateZ, 0.0)
+        assertEquals(ay.toDouble(), timedBodyKinematics.kinematics.fx, 0.0)
+        assertEquals(ax.toDouble(), timedBodyKinematics.kinematics.fy, 0.0)
+        assertEquals(-az.toDouble(), timedBodyKinematics.kinematics.fz, 0.0)
+        assertEquals(wy, timedBodyKinematics.kinematics.angularRateX, 0.0)
+        assertEquals(wx, timedBodyKinematics.kinematics.angularRateY, 0.0)
+        assertEquals(-wz, timedBodyKinematics.kinematics.angularRateZ, 0.0)
         assertSame(kinematics, timedBodyKinematics.kinematics)
         assertEquals(
             TimeConverter.nanosecondToSecond(timestamp.toDouble()),
@@ -4122,9 +4122,9 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         val wy = randomizer.nextDouble()
         val wz = randomizer.nextDouble()
         val kinematics = BodyKinematics()
-        kinematics.angularRateX = wx
-        kinematics.angularRateY = wy
-        kinematics.angularRateZ = wz
+        kinematics.angularRateX = wy
+        kinematics.angularRateY = wx
+        kinematics.angularRateZ = -wz
         generator.setPrivateProperty("kinematics", kinematics)
 
         val ax = randomizer.nextFloat()
@@ -4149,12 +4149,12 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         verify(exactly = 1) { measurementsGeneratorSpy.process(capture(slot)) }
 
         val timedBodyKinematics = slot.captured
-        assertEquals(ax.toDouble(), timedBodyKinematics.kinematics.fx, 0.0)
-        assertEquals(ay.toDouble(), timedBodyKinematics.kinematics.fy, 0.0)
-        assertEquals(az.toDouble(), timedBodyKinematics.kinematics.fz, 0.0)
-        assertEquals(wx, timedBodyKinematics.kinematics.angularRateX, 0.0)
-        assertEquals(wy, timedBodyKinematics.kinematics.angularRateY, 0.0)
-        assertEquals(wz, timedBodyKinematics.kinematics.angularRateZ, 0.0)
+        assertEquals(ay.toDouble(), timedBodyKinematics.kinematics.fx, 0.0)
+        assertEquals(ax.toDouble(), timedBodyKinematics.kinematics.fy, 0.0)
+        assertEquals(-az.toDouble(), timedBodyKinematics.kinematics.fz, 0.0)
+        assertEquals(wy, timedBodyKinematics.kinematics.angularRateX, 0.0)
+        assertEquals(wx, timedBodyKinematics.kinematics.angularRateY, 0.0)
+        assertEquals(-wz, timedBodyKinematics.kinematics.angularRateZ, 0.0)
         assertSame(kinematics, timedBodyKinematics.kinematics)
         assertEquals(0.0, timedBodyKinematics.timestampSeconds, 0.0)
 
@@ -5174,9 +5174,9 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         )
 
         // check
-        assertEquals(wx.toDouble(), kinematics.angularRateX, 0.0)
-        assertEquals(wy.toDouble(), kinematics.angularRateY, 0.0)
-        assertEquals(wz.toDouble(), kinematics.angularRateZ, 0.0)
+        assertEquals(wy.toDouble(), kinematics.angularRateX, 0.0)
+        assertEquals(wx.toDouble(), kinematics.angularRateY, 0.0)
+        assertEquals(-wz.toDouble(), kinematics.angularRateZ, 0.0)
         assertEquals(1, generator.numberOfProcessedGyroscopeMeasurements)
     }
 
@@ -5224,9 +5224,9 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         )
 
         // check
-        assertEquals(wx.toDouble(), kinematics.angularRateX, 0.0)
-        assertEquals(wy.toDouble(), kinematics.angularRateY, 0.0)
-        assertEquals(wz.toDouble(), kinematics.angularRateZ, 0.0)
+        assertEquals(wy.toDouble(), kinematics.angularRateX, 0.0)
+        assertEquals(wx.toDouble(), kinematics.angularRateY, 0.0)
+        assertEquals(-wz.toDouble(), kinematics.angularRateZ, 0.0)
         assertEquals(1, generator.numberOfProcessedGyroscopeMeasurements)
 
         verify(exactly = 1) {
@@ -5297,16 +5297,16 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         )
 
         // check
-        assertEquals(wx.toDouble(), kinematics.angularRateX, 0.0)
-        assertEquals(wy.toDouble(), kinematics.angularRateY, 0.0)
-        assertEquals(wz.toDouble(), kinematics.angularRateZ, 0.0)
+        assertEquals(wy.toDouble(), kinematics.angularRateX, 0.0)
+        assertEquals(wx.toDouble(), kinematics.angularRateY, 0.0)
+        assertEquals(-wz.toDouble(), kinematics.angularRateZ, 0.0)
         assertEquals(1, generator.numberOfProcessedGyroscopeMeasurements)
 
         verify(exactly = 1) {
             gyroscopeAccumulatedNoiseEstimatorSpy.addTriad(
-                wx.toDouble(),
                 wy.toDouble(),
-                wz.toDouble()
+                wx.toDouble(),
+                -wz.toDouble()
             )
         }
     }
@@ -5371,9 +5371,9 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         )
 
         // check
-        assertEquals(wx.toDouble(), kinematics.angularRateX, 0.0)
-        assertEquals(wy.toDouble(), kinematics.angularRateY, 0.0)
-        assertEquals(wz.toDouble(), kinematics.angularRateZ, 0.0)
+        assertEquals(wy.toDouble(), kinematics.angularRateX, 0.0)
+        assertEquals(wx.toDouble(), kinematics.angularRateY, 0.0)
+        assertEquals(-wz.toDouble(), kinematics.angularRateZ, 0.0)
         assertEquals(1, generator.numberOfProcessedGyroscopeMeasurements)
 
         verify(exactly = 1) {

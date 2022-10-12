@@ -2698,9 +2698,9 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
         requireNotNull(initialHardIronY)
         val initialHardIronZ = calibrator.initialHardIronZ
         requireNotNull(initialHardIronZ)
-        assertEquals(4.0e-6, initialHardIronX, SMALL_ABSOLUTE_ERROR)
-        assertEquals(5.0e-6, initialHardIronY, SMALL_ABSOLUTE_ERROR)
-        assertEquals(6.0e-6, initialHardIronZ, SMALL_ABSOLUTE_ERROR)
+        assertEquals(5.0e-6, initialHardIronX, SMALL_ABSOLUTE_ERROR)
+        assertEquals(4.0e-6, initialHardIronY, SMALL_ABSOLUTE_ERROR)
+        assertEquals(-6.0e-6, initialHardIronZ, SMALL_ABSOLUTE_ERROR)
     }
 
     @Test
@@ -2886,7 +2886,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
                 calibrator,
                 0.0,
                 0.0,
-                0.0
+                -0.0
             )
         }
     }

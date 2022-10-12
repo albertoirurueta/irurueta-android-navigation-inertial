@@ -19,11 +19,12 @@ import android.content.Context
 import android.location.Location
 import android.util.Log
 import com.irurueta.algebra.Matrix
+import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
 import com.irurueta.android.navigation.inertial.GravityHelper
 import com.irurueta.android.navigation.inertial.calibration.builder.AccelerometerInternalCalibratorBuilder
 import com.irurueta.android.navigation.inertial.calibration.builder.GyroscopeInternalCalibratorBuilder
 import com.irurueta.android.navigation.inertial.calibration.builder.MagnetometerInternalCalibratorBuilder
-import com.irurueta.android.navigation.inertial.calibration.intervals.measurements.*
+import com.irurueta.android.navigation.inertial.calibration.intervals.measurements.AccelerometerGyroscopeAndMagnetometerMeasurementGenerator
 import com.irurueta.android.navigation.inertial.calibration.noise.AccumulatedMeasurementEstimator
 import com.irurueta.android.navigation.inertial.calibration.noise.GravityNormEstimator
 import com.irurueta.android.navigation.inertial.calibration.noise.StopMode
@@ -56,6 +57,9 @@ import kotlin.math.max
  * based on gravity vector at the end of static intervals, and integrating values of gyroscope
  * measurements during dynamic ones, and using static periods to obtain averaged accelerometer and
  * magnetometer values.
+ * This calibrator converts sensor measurements from device ENU coordinates to local plane NED
+ * coordinates. Thus, all values referring to a given x-y-z coordinates refers to local plane
+ * NED system of coordinates.
  *
  * @property context Android context.
  * @property accelerometerSensorType One of the supported accelerometer sensor types.
@@ -318,6 +322,27 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
 
         requiredMeasurements = minimumRequiredMeasurements
     }
+
+    /**
+     * Triad containing samples converted from device ENU coordinates to local plane NED
+     * coordinates.
+     * This is reused for performance reasons.
+     */
+    private val accelerometerBiasTriad = AccelerationTriad()
+
+    /**
+     * Triad containing samples converted from device ENU coordinates to local plane NED
+     * coordinates.
+     * This is reused for performance reasons.
+     */
+    private val gyroscopeBiasTriad = AngularSpeedTriad()
+
+    /**
+     * Triad containing samples converted from device ENU coordinates to local plane NED
+     * coordinates.
+     * This is reused for performance reasons.
+     */
+    private val magnetometerBiasTriad = MagneticFluxDensityTriad()
 
     /**
      * Listener used by internal generator to handle events when initialization is started.
@@ -4387,15 +4412,23 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
             initialBiasZ = 0.0
         }
 
-        accelerometerInitialBiasX = initialBiasX
-        accelerometerInitialBiasY = initialBiasY
-        accelerometerInitialBiasZ = initialBiasZ
+        // convert from device ENU coordinates to local plane NED coordinates
+        ENUtoNEDTriadConverter.convert(
+            initialBiasX,
+            initialBiasY,
+            initialBiasZ,
+            accelerometerBiasTriad
+        )
+
+        accelerometerInitialBiasX = accelerometerBiasTriad.valueX
+        accelerometerInitialBiasY = accelerometerBiasTriad.valueY
+        accelerometerInitialBiasZ = accelerometerBiasTriad.valueZ
 
         initialAccelerometerBiasAvailableListener?.onInitialBiasAvailable(
             this,
-            initialBiasX,
-            initialBiasY,
-            initialBiasZ
+            accelerometerBiasTriad.valueX,
+            accelerometerBiasTriad.valueY,
+            accelerometerBiasTriad.valueZ
         )
     }
 
@@ -4422,15 +4455,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
             initialBiasZ = 0.0
         }
 
-        gyroscopeInitialBiasX = initialBiasX
-        gyroscopeInitialBiasY = initialBiasY
-        gyroscopeInitialBiasZ = initialBiasZ
+        // convert from device ENU coordinates to local plane NED coordinates
+        ENUtoNEDTriadConverter.convert(initialBiasX, initialBiasY, initialBiasZ, gyroscopeBiasTriad)
+
+        gyroscopeInitialBiasX = gyroscopeBiasTriad.valueX
+        gyroscopeInitialBiasY = gyroscopeBiasTriad.valueY
+        gyroscopeInitialBiasZ = gyroscopeBiasTriad.valueZ
 
         initialGyroscopeBiasAvailableListener?.onInitialBiasAvailable(
             this,
-            initialBiasX,
-            initialBiasY,
-            initialBiasZ
+            gyroscopeBiasTriad.valueX,
+            gyroscopeBiasTriad.valueY,
+            gyroscopeBiasTriad.valueZ
         )
     }
 
@@ -4439,13 +4475,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * that hardware calibrated biases are retrieved if
      * [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED] is used.
      *
-     * @param hardIronX hard iron on device x-axis expressed in micro-Teslas (µT). Only
+     * @param hardIronX hard iron on device x-axis expressed in Teslas (T). Only
      * available when using [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED].
      * If available, this value remains constant with calibrated bias value.
-     * @param hardIronY hard iron on device y-axis expressed in micro-Teslas (µT). Only
+     * @param hardIronY hard iron on device y-axis expressed in Teslas (T). Only
      * available when using [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED].
      * If available, this value remains constant with calibrated bias value.
-     * @param hardIronZ hard iron on device y-axis expressed in micro-Teslas (µT). Only
+     * @param hardIronZ hard iron on device y-axis expressed in Teslas (T). Only
      * available when using [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED].
      * If available, this value remains constant with calibrated bias value.
      */
@@ -4467,15 +4503,23 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
             initialHardIronZ = 0.0
         }
 
-        magnetometerInitialHardIronX = initialHardIronX
-        magnetometerInitialHardIronY = initialHardIronY
-        magnetometerInitialHardIronZ = initialHardIronZ
+        // convert from device ENU coordinates to local plane NED coordinates
+        ENUtoNEDTriadConverter.convert(
+            initialHardIronX,
+            initialHardIronY,
+            initialHardIronZ,
+            magnetometerBiasTriad
+        )
+
+        magnetometerInitialHardIronX = magnetometerBiasTriad.valueX
+        magnetometerInitialHardIronY = magnetometerBiasTriad.valueY
+        magnetometerInitialHardIronZ = magnetometerBiasTriad.valueZ
 
         initialMagnetometerHardIronAvailableListener?.onInitialHardIronAvailable(
             this,
-            initialHardIronX,
-            initialHardIronY,
-            initialHardIronZ
+            magnetometerBiasTriad.valueX,
+            magnetometerBiasTriad.valueY,
+            magnetometerBiasTriad.valueZ
         )
     }
 

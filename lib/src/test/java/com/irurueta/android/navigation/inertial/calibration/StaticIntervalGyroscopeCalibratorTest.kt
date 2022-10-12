@@ -9955,13 +9955,13 @@ class StaticIntervalGyroscopeCalibratorTest {
         assertEquals(0.0, calibrator.accelerometerInitialBiasZ, 0.0)
         val estimatedBiasX = calibrator.estimatedAccelerometerBiasX
         requireNotNull(estimatedBiasX)
-        assertEquals(bx.toDouble(), estimatedBiasX, 0.0)
+        assertEquals(by.toDouble(), estimatedBiasX, 0.0)
         val estimatedBiasY = calibrator.estimatedAccelerometerBiasY
         requireNotNull(estimatedBiasY)
-        assertEquals(by.toDouble(), estimatedBiasY, 0.0)
+        assertEquals(bx.toDouble(), estimatedBiasY, 0.0)
         val estimatedBiasZ = calibrator.estimatedAccelerometerBiasZ
         requireNotNull(estimatedBiasZ)
-        assertEquals(bz.toDouble(), estimatedBiasZ, 0.0)
+        assertEquals(-bz.toDouble(), estimatedBiasZ, 0.0)
         var acceleration2 = calibrator.estimatedAccelerometerBiasXAsMeasurement
         requireNotNull(acceleration2)
         assertEquals(estimatedBiasX, acceleration2.value.toDouble(), 0.0)
@@ -10508,9 +10508,9 @@ class StaticIntervalGyroscopeCalibratorTest {
         requireNotNull(initialBiasY)
         val initialBiasZ = calibrator.gyroscopeInitialBiasZ
         requireNotNull(initialBiasZ)
-        assertEquals(bx.toDouble(), initialBiasX, 0.0)
-        assertEquals(by.toDouble(), initialBiasY, 0.0)
-        assertEquals(bz.toDouble(), initialBiasZ, 0.0)
+        assertEquals(by.toDouble(), initialBiasX, 0.0)
+        assertEquals(bx.toDouble(), initialBiasY, 0.0)
+        assertEquals(-bz.toDouble(), initialBiasZ, 0.0)
     }
 
     @Test
@@ -10716,9 +10716,9 @@ class StaticIntervalGyroscopeCalibratorTest {
         requireNotNull(initialBiasY)
         val initialBiasZ = calibrator.gyroscopeInitialBiasZ
         requireNotNull(initialBiasZ)
-        assertEquals(bx.toDouble(), initialBiasX, 0.0)
-        assertEquals(by.toDouble(), initialBiasY, 0.0)
-        assertEquals(bz.toDouble(), initialBiasZ, 0.0)
+        assertEquals(by.toDouble(), initialBiasX, 0.0)
+        assertEquals(bx.toDouble(), initialBiasY, 0.0)
+        assertEquals(-bz.toDouble(), initialBiasZ, 0.0)
 
         verify(exactly = 1) {
             initialGyroscopeBiasAvailableListener.onInitialBiasAvailable(

@@ -16,6 +16,7 @@
 package com.irurueta.android.navigation.inertial.calibration.intervals.measurements
 
 import android.content.Context
+import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
 import com.irurueta.android.navigation.inertial.calibration.intervals.ErrorReason
 import com.irurueta.android.navigation.inertial.calibration.intervals.Status
 import com.irurueta.android.navigation.inertial.collectors.*
@@ -39,6 +40,8 @@ import com.irurueta.units.*
  * Static and dynamic intervals are always measured using the accelerometer.
  * Additionally, the gyroscope and magnetometer are also used, and measurements are generated to
  * calibrate either accelerometers, gyroscopes or magnetometers.
+ * Measurement generator converts device ENU measurements into measurements expressed in local
+ * tangent plane NED coordinates.
  *
  * @property context Android context.
  * @property accelerometerSensorType One of the supported accelerometer sensor types.
@@ -104,6 +107,27 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
     accelerometerSensorDelay,
     accuracyChangedListener
 ) {
+    /**
+     * Triad containing acceleration samples converted from device ENU coordinates to local plane
+     * NED coordinates.
+     * This is reused for performance reasons.
+     */
+    private val acceleration = AccelerationTriad()
+
+    /**
+     * Triad containing angular speed samples converted from device ENU coordinates to local plane
+     * NED coordinates.
+     * This is reused for performance reasons.
+     */
+    private val angularSpeed = AngularSpeedTriad()
+
+    /**
+     * Triad containing magnetic flux density samples converted from device ENU coordinates to local
+     * plane NED coordinates.
+     * This is reused for performance reasons.
+     */
+    private val b = MagneticFluxDensityTriad()
+
     /**
      * Listener for internal measurement generator.
      */
@@ -264,10 +288,18 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
      */
     private val gyroscopeCollectorMeasurementListener =
         GyroscopeSensorCollector.OnMeasurementListener { wx, wy, wz, bx, by, bz, timestamp, accuracy ->
+            // convert from device ENU coordinates to local plane NED coordinates
+            ENUtoNEDTriadConverter.convert(
+                wx.toDouble(),
+                wy.toDouble(),
+                wz.toDouble(),
+                angularSpeed
+            )
+
             // set gyroscope information
-            kinematics.angularRateX = wx.toDouble()
-            kinematics.angularRateY = wy.toDouble()
-            kinematics.angularRateZ = wz.toDouble()
+            kinematics.angularRateX = angularSpeed.valueX
+            kinematics.angularRateY = angularSpeed.valueY
+            kinematics.angularRateZ = angularSpeed.valueZ
 
             if (status == Status.INITIALIZING) {
                 gyroscopeAccumulatedNoiseEstimator.addTriad(
@@ -298,9 +330,12 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
             val byTesla = MagneticFluxDensityConverter.microTeslaToTesla(by.toDouble())
             val bzTesla = MagneticFluxDensityConverter.microTeslaToTesla(bz.toDouble())
 
-            magneticFluxDensity.bx = bxTesla
-            magneticFluxDensity.by = byTesla
-            magneticFluxDensity.bz = bzTesla
+            // convert from device ENU coordinates to local plane NED coordinates
+            ENUtoNEDTriadConverter.convert(bxTesla, byTesla, bzTesla, b)
+
+            magneticFluxDensity.bx = b.valueX
+            magneticFluxDensity.by = b.valueY
+            magneticFluxDensity.bz = b.valueZ
 
             if (status == Status.INITIALIZING) {
                 magnetometerAccumulatedNoiseEstimator.addTriad(bxTesla, byTesla, bzTesla)
@@ -849,11 +884,14 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
         diffSeconds: Double,
         result: TimedBodyKinematicsAndMagneticFluxDensity
     ) {
+        // convert from device ENU coordinates to local plane NED coordinates
+        ENUtoNEDTriadConverter.convert(ax.toDouble(), ay.toDouble(), az.toDouble(), acceleration)
+
         // set accelerometer information (gyroscope information is filled on the corresponding
         // gyroscope listener)
-        kinematics.fx = ax.toDouble()
-        kinematics.fy = ay.toDouble()
-        kinematics.fz = az.toDouble()
+        kinematics.fx = acceleration.valueX
+        kinematics.fy = acceleration.valueY
+        kinematics.fz = acceleration.valueZ
         result.kinematics = kinematics
         result.magneticFluxDensity = magneticFluxDensity
         result.timestampSeconds = diffSeconds

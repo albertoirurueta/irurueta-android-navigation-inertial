@@ -18,6 +18,7 @@ package com.irurueta.android.navigation.inertial.calibration
 import android.content.Context
 import android.util.Log
 import com.irurueta.algebra.Matrix
+import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
 import com.irurueta.android.navigation.inertial.calibration.builder.GyroscopeInternalCalibratorBuilder
 import com.irurueta.android.navigation.inertial.calibration.intervals.measurements.GyroscopeMeasurementGenerator
 import com.irurueta.android.navigation.inertial.calibration.intervals.measurements.SingleSensorCalibrationMeasurementGenerator
@@ -28,7 +29,9 @@ import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.navigation.NavigationException
 import com.irurueta.navigation.inertial.BodyKinematics
 import com.irurueta.navigation.inertial.calibration.*
-import com.irurueta.navigation.inertial.calibration.gyroscope.*
+import com.irurueta.navigation.inertial.calibration.gyroscope.GyroscopeNonLinearCalibrator
+import com.irurueta.navigation.inertial.calibration.gyroscope.KnownBiasGyroscopeCalibrator
+import com.irurueta.navigation.inertial.calibration.gyroscope.UnknownBiasGyroscopeCalibrator
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.DefaultGyroscopeQualityScoreMapper
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.QualityScoreMapper
 import com.irurueta.numerical.robust.RobustEstimatorMethod
@@ -39,6 +42,9 @@ import com.irurueta.units.*
  * static or dynamic using the accelerometer, using such periods to determine orientation based
  * on gravity vector at the end of static intervals, and integrating values of gyroscope
  * measurements during dynamic ones.
+ * This calibrator converts sensor measurements from device ENU coordinates to local plane NED
+ * coordinates. Thus, all values referring to a given x-y-z coordinates refers to local plane
+ * NED system of coordinates.
  *
  * @property context Android context.
  * @property accelerometerSensorType One of the supported accelerometer sensor types.
@@ -200,6 +206,20 @@ class StaticIntervalGyroscopeCalibrator private constructor(
         requiredMeasurements = minimumRequiredMeasurements
         gyroscopeRobustPreliminarySubsetSize = minimumRequiredMeasurements
     }
+
+    /**
+     * Triad containing samples converted from device ENU coordinates to local plane NED
+     * coordinates.
+     * This is reused for performance reasons.
+     */
+    private val accelerometerBiasTriad = AccelerationTriad()
+
+    /**
+     * Triad containing samples converted from device ENU coordinates to local plane NED
+     * coordinates.
+     * This is reused for performance reasons.
+     */
+    private val gyroscopeBiasTriad = AngularSpeedTriad()
 
     /**
      * Listener used by internal generator to handle events when initialization is started.
@@ -2408,6 +2428,8 @@ class StaticIntervalGyroscopeCalibrator private constructor(
      */
     private fun updateAccelerometerBiases(bx: Float?, by: Float?, bz: Float?) {
         if (isAccelerometerGroundTruthInitialBias) {
+            // no need to make conversion since provided initial value already uses local plane NED
+            // coordinates system
             estimatedAccelerometerBiasX = accelerometerInitialBiasX
             estimatedAccelerometerBiasY = accelerometerInitialBiasY
             estimatedAccelerometerBiasZ = accelerometerInitialBiasZ
@@ -2425,9 +2447,12 @@ class StaticIntervalGyroscopeCalibrator private constructor(
                 biasZ = 0.0
             }
 
-            estimatedAccelerometerBiasX = biasX
-            estimatedAccelerometerBiasY = biasY
-            estimatedAccelerometerBiasZ = biasZ
+            // convert from device ENU coordinate to local plane NED coordinates
+            ENUtoNEDTriadConverter.convert(biasX, biasY, biasZ, accelerometerBiasTriad)
+
+            estimatedAccelerometerBiasX = accelerometerBiasTriad.valueX
+            estimatedAccelerometerBiasY = accelerometerBiasTriad.valueY
+            estimatedAccelerometerBiasZ = accelerometerBiasTriad.valueZ
         }
     }
 
@@ -2454,15 +2479,18 @@ class StaticIntervalGyroscopeCalibrator private constructor(
             initialBiasZ = 0.0
         }
 
-        gyroscopeInitialBiasX = initialBiasX
-        gyroscopeInitialBiasY = initialBiasY
-        gyroscopeInitialBiasZ = initialBiasZ
+        // convert from device ENU coordinate to local plane NED coordinates
+        ENUtoNEDTriadConverter.convert(initialBiasX, initialBiasY, initialBiasZ, gyroscopeBiasTriad)
+
+        gyroscopeInitialBiasX = gyroscopeBiasTriad.valueX
+        gyroscopeInitialBiasY = gyroscopeBiasTriad.valueY
+        gyroscopeInitialBiasZ = gyroscopeBiasTriad.valueZ
 
         initialGyroscopeBiasAvailableListener?.onInitialBiasAvailable(
             this,
-            initialBiasX,
-            initialBiasY,
-            initialBiasZ
+            gyroscopeBiasTriad.valueX,
+            gyroscopeBiasTriad.valueY,
+            gyroscopeBiasTriad.valueZ
         )
     }
 

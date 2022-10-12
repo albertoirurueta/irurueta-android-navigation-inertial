@@ -31,6 +31,9 @@ import com.irurueta.units.AccelerationUnit
  * To be able to measure accelerometer noise, device should remain static so that average
  * accelerometer measurements are constant and their standard deviations reflect actual sensor
  * noise.
+ * This estimator converts sensor measurements from device ENU coordinates to local plane NED
+ * coordinates. Thus, all values referring to a given x-y-z coordinates refers to local plane
+ * NED system of coordinates.
  *
  * @param context Android context.
  * @property sensorType One of the supported accelerometer sensor types.
@@ -65,6 +68,13 @@ class AccelerometerNoiseEstimator(
     context, sensorDelay, maxSamples, maxDurationMillis,
     stopMode, completedListener, unreliableListener
 ) {
+    /**
+     * Triad containing samples converted from device ENU coordinates to local plane NED
+     * coordinates.
+     * This is reused for performance reasons.
+     */
+    override val triad = AccelerationTriad()
+
     /**
      * Internal noise estimator of accelerometer measurements.
      * This can be used to estimate statistics about accelerometer noise measurements.

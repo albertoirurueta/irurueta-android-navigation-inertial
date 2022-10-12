@@ -3081,9 +3081,9 @@ class AccelerometerMeasurementGeneratorTest {
         verify(exactly = 1) { measurementsGeneratorSpy.process(capture(slot)) }
 
         val bodyKinematics = slot.captured
-        assertEquals(ax.toDouble(), bodyKinematics.fx, 0.0)
-        assertEquals(ay.toDouble(), bodyKinematics.fy, 0.0)
-        assertEquals(az.toDouble(), bodyKinematics.fz, 0.0)
+        assertEquals(ay.toDouble(), bodyKinematics.fx, 0.0)
+        assertEquals(ax.toDouble(), bodyKinematics.fy, 0.0)
+        assertEquals(-az.toDouble(), bodyKinematics.fz, 0.0)
         assertEquals(0.0, bodyKinematics.angularRateX, 0.0)
         assertEquals(0.0, bodyKinematics.angularRateY, 0.0)
         assertEquals(0.0, bodyKinematics.angularRateZ, 0.0)
@@ -3159,9 +3159,9 @@ class AccelerometerMeasurementGeneratorTest {
         verify(exactly = 1) { measurementsGeneratorSpy.process(capture(slot)) }
 
         val bodyKinematics = slot.captured
-        assertEquals(ax.toDouble(), bodyKinematics.fx, 0.0)
-        assertEquals(ay.toDouble(), bodyKinematics.fy, 0.0)
-        assertEquals(az.toDouble(), bodyKinematics.fz, 0.0)
+        assertEquals(ay.toDouble(), bodyKinematics.fx, 0.0)
+        assertEquals(ax.toDouble(), bodyKinematics.fy, 0.0)
+        assertEquals(-az.toDouble(), bodyKinematics.fz, 0.0)
         assertEquals(0.0, bodyKinematics.angularRateX, 0.0)
         assertEquals(0.0, bodyKinematics.angularRateY, 0.0)
         assertEquals(0.0, bodyKinematics.angularRateZ, 0.0)
@@ -3227,9 +3227,9 @@ class AccelerometerMeasurementGeneratorTest {
         verify(exactly = 1) { measurementsGeneratorSpy.process(capture(slot)) }
 
         val bodyKinematics = slot.captured
-        assertEquals(ax.toDouble(), bodyKinematics.fx, 0.0)
-        assertEquals(ay.toDouble(), bodyKinematics.fy, 0.0)
-        assertEquals(az.toDouble(), bodyKinematics.fz, 0.0)
+        assertEquals(ay.toDouble(), bodyKinematics.fx, 0.0)
+        assertEquals(ax.toDouble(), bodyKinematics.fy, 0.0)
+        assertEquals(-az.toDouble(), bodyKinematics.fz, 0.0)
         assertEquals(0.0, bodyKinematics.angularRateX, 0.0)
         assertEquals(0.0, bodyKinematics.angularRateY, 0.0)
         assertEquals(0.0, bodyKinematics.angularRateZ, 0.0)
@@ -3312,9 +3312,9 @@ class AccelerometerMeasurementGeneratorTest {
         verify(exactly = 1) { measurementsGeneratorSpy.process(capture(slot)) }
 
         val bodyKinematics = slot.captured
-        assertEquals(ax.toDouble(), bodyKinematics.fx, 0.0)
-        assertEquals(ay.toDouble(), bodyKinematics.fy, 0.0)
-        assertEquals(az.toDouble(), bodyKinematics.fz, 0.0)
+        assertEquals(ay.toDouble(), bodyKinematics.fx, 0.0)
+        assertEquals(ax.toDouble(), bodyKinematics.fy, 0.0)
+        assertEquals(-az.toDouble(), bodyKinematics.fz, 0.0)
         assertEquals(0.0, bodyKinematics.angularRateX, 0.0)
         assertEquals(0.0, bodyKinematics.angularRateY, 0.0)
         assertEquals(0.0, bodyKinematics.angularRateZ, 0.0)

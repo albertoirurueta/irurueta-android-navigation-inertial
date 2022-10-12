@@ -1313,9 +1313,9 @@ class AccelerometerNoiseEstimatorTest {
 
         verify(exactly = 1) {
             noiseEstimatorSpy.addTriad(
-                ax.toDouble(),
                 ay.toDouble(),
-                az.toDouble()
+                ax.toDouble(),
+                -az.toDouble()
             )
         }
         verify(exactly = 0) { timeIntervalEstimatorSpy.addTimestamp(any<Double>()) }
@@ -1326,9 +1326,9 @@ class AccelerometerNoiseEstimatorTest {
 
         verify(exactly = 2) {
             noiseEstimatorSpy.addTriad(
-                ax.toDouble(),
                 ay.toDouble(),
-                az.toDouble()
+                ax.toDouble(),
+                -az.toDouble()
             )
         }
         verify(exactly = 1) { timeIntervalEstimatorSpy.addTimestamp(any<Double>()) }
@@ -1822,7 +1822,7 @@ class AccelerometerNoiseEstimatorTest {
 
         val averageX = estimator.averageX
         requireNotNull(averageX)
-        assertEquals(gravity.gx, averageX, ABSOLUTE_ERROR)
+        assertEquals(gravity.gy, averageX, ABSOLUTE_ERROR)
 
         val averageX1 = estimator.averageXAsMeasurement
         requireNotNull(averageX1)
@@ -1834,7 +1834,7 @@ class AccelerometerNoiseEstimatorTest {
 
         val averageY = estimator.averageY
         requireNotNull(averageY)
-        assertEquals(gravity.gy, averageY, ABSOLUTE_ERROR)
+        assertEquals(gravity.gx, averageY, ABSOLUTE_ERROR)
 
         val averageY1 = estimator.averageYAsMeasurement
         requireNotNull(averageY1)
@@ -1846,7 +1846,7 @@ class AccelerometerNoiseEstimatorTest {
 
         val averageZ = estimator.averageZ
         requireNotNull(averageZ)
-        assertEquals(gravity.gz, averageZ, ABSOLUTE_ERROR)
+        assertEquals(-gravity.gz, averageZ, ABSOLUTE_ERROR)
 
         val averageZ1 = estimator.averageZAsMeasurement
         requireNotNull(averageZ1)
@@ -2038,7 +2038,7 @@ class AccelerometerNoiseEstimatorTest {
 
         val averageX = estimator.averageX
         requireNotNull(averageX)
-        assertEquals(gravity.gx, averageX, ABSOLUTE_ERROR)
+        assertEquals(gravity.gy, averageX, ABSOLUTE_ERROR)
 
         val averageX1 = estimator.averageXAsMeasurement
         requireNotNull(averageX1)
@@ -2050,7 +2050,7 @@ class AccelerometerNoiseEstimatorTest {
 
         val averageY = estimator.averageY
         requireNotNull(averageY)
-        assertEquals(gravity.gy, averageY, ABSOLUTE_ERROR)
+        assertEquals(gravity.gx, averageY, ABSOLUTE_ERROR)
 
         val averageY1 = estimator.averageYAsMeasurement
         requireNotNull(averageY1)
@@ -2062,7 +2062,7 @@ class AccelerometerNoiseEstimatorTest {
 
         val averageZ = estimator.averageZ
         requireNotNull(averageZ)
-        assertEquals(gravity.gz, averageZ, ABSOLUTE_ERROR)
+        assertEquals(-gravity.gz, averageZ, ABSOLUTE_ERROR)
 
         val averageZ1 = estimator.averageZAsMeasurement
         requireNotNull(averageZ1)

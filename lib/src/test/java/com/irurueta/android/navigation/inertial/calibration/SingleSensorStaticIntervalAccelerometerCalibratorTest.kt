@@ -5734,9 +5734,9 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
         requireNotNull(initialBiasY)
         val initialBiasZ = calibrator.initialBiasZ
         requireNotNull(initialBiasZ)
-        assertEquals(4.0, initialBiasX, 0.0)
-        assertEquals(5.0, initialBiasY, 0.0)
-        assertEquals(6.0, initialBiasZ, 0.0)
+        assertEquals(5.0, initialBiasX, 0.0)
+        assertEquals(4.0, initialBiasY, 0.0)
+        assertEquals(-6.0, initialBiasZ, 0.0)
     }
 
     @Test
@@ -5922,7 +5922,7 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
                 calibrator,
                 0.0,
                 0.0,
-                0.0
+                -0.0
             )
         }
     }

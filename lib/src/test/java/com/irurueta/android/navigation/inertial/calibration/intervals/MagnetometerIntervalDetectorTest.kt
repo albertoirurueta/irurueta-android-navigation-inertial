@@ -2999,7 +2999,7 @@ class MagnetometerIntervalDetectorTest {
             MagneticFluxDensityUnit.MICROTESLA,
             MagneticFluxDensityUnit.TESLA
         )
-        verify(exactly = 1) { internalDetectorSpy.process(bxT, byT, bzT) }
+        verify(exactly = 1) { internalDetectorSpy.process(byT, bxT, -bzT) }
         assertEquals(1, detector.numberOfProcessedMeasurements)
         assertEquals(Status.INITIALIZING, detector.status)
     }
@@ -3055,7 +3055,7 @@ class MagnetometerIntervalDetectorTest {
             MagneticFluxDensityUnit.MICROTESLA,
             MagneticFluxDensityUnit.TESLA
         )
-        verify(exactly = 1) { internalDetectorSpy.process(bxT, byT, bzT) }
+        verify(exactly = 1) { internalDetectorSpy.process(byT, bxT, -bzT) }
         assertEquals(1, detector.numberOfProcessedMeasurements)
         assertEquals(Status.INITIALIZING, detector.status)
 
@@ -3131,7 +3131,7 @@ class MagnetometerIntervalDetectorTest {
             MagneticFluxDensityUnit.MICROTESLA,
             MagneticFluxDensityUnit.TESLA
         )
-        verify(exactly = 1) { internalDetectorSpy.process(bxT, byT, bzT) }
+        verify(exactly = 1) { internalDetectorSpy.process(byT, bxT, -bzT) }
         assertEquals(2, detector.numberOfProcessedMeasurements)
         assertEquals(Status.INITIALIZING, detector.status)
 
@@ -3214,7 +3214,7 @@ class MagnetometerIntervalDetectorTest {
             MagneticFluxDensityUnit.MICROTESLA,
             MagneticFluxDensityUnit.TESLA
         )
-        verify(exactly = 1) { internalDetectorSpy.process(bxT, byT, bzT) }
+        verify(exactly = 1) { internalDetectorSpy.process(byT, bxT, -bzT) }
         assertEquals(2, detector.numberOfProcessedMeasurements)
         assertEquals(Status.INITIALIZING, detector.status)
 

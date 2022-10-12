@@ -31,6 +31,9 @@ import com.irurueta.units.AngularSpeedUnit
  * To be able to measure gyroscope noise, device should remain static so that average gyroscope
  * measurements are constant and their standard deviations reflect actual sensor noise, otherwise
  * only norm values will be reliable.
+ * This estimator converts sensor measurements from device ENU coordinates to local plane NED
+ * coordinates. Thus, all values referring to a given x-y-z coordinates refers to local plane
+ * NED system of coordinates.
  *
  * @param context Android context.
  * @property sensorType One of the supported gyroscope sensor types.
@@ -69,6 +72,13 @@ class GyroscopeNoiseEstimator(
     completedListener,
     unreliableListener
 ) {
+    /**
+     * Triad containing samples converted from device ENU coordinates to local plane NED
+     * coordinates.
+     * This is reused for performance reasons.
+     */
+    override val triad = AngularSpeedTriad()
+
     /**
      * Internal noise estimator of gyroscope measurements.
      * This can be used to estimate statistics about gyroscope noise measurements.
