@@ -92,17 +92,29 @@ class BatteryTemperatureService(
     }
 
     /**
+     * Indicates whether this service is running or not.
+     */
+    var running = false
+        private set
+
+    /**
      * Starts notifying current battery temperature each time that temperature changes.
      */
     fun start() {
-        context.registerReceiver(receiver, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
+        if (!running) {
+            context.registerReceiver(receiver, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
+            running = true
+        }
     }
 
     /**
      * Stops notifying current battery temperature each time that temperature changes.
      */
     fun stop() {
-        context.unregisterReceiver(receiver)
+        if (running) {
+            context.unregisterReceiver(receiver)
+            running = false
+        }
     }
 
     /**
