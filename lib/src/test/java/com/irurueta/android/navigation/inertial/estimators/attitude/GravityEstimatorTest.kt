@@ -47,7 +47,7 @@ class GravityEstimatorTest {
         assertEquals(SensorDelay.FASTEST, estimator.sensorDelay)
         assertFalse(estimator.useAccelerometer)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             estimator.accelerometerSensorType
         )
         assertNull(estimator.estimationListener)
@@ -70,7 +70,7 @@ class GravityEstimatorTest {
             context,
             SensorDelay.NORMAL,
             useAccelerometer = true,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             estimationListener,
             accelerometerAveragingFilter,
             accelerometerMeasurementListener,
@@ -82,7 +82,7 @@ class GravityEstimatorTest {
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
         assertTrue(estimator.useAccelerometer)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             estimator.accelerometerSensorType
         )
         assertSame(estimationListener, estimator.estimationListener)

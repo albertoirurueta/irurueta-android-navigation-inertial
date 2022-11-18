@@ -164,7 +164,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
     constructor(
         context: Context,
         accelerometerSensorType: AccelerometerSensorCollector.SensorType =
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
         accelerometerSensorDelay: SensorDelay = SensorDelay.FASTEST,
         solveCalibrationWhenEnoughMeasurements: Boolean = true,
         isAccelerometerGroundTruthInitialBias: Boolean = false,

@@ -56,13 +56,17 @@ class LocalPoseEstimatorTest {
         assertSame(location, estimator.initialLocation)
         assertEquals(NEDVelocity(), estimator.initialVelocity)
         assertEquals(SensorDelay.GAME, estimator.sensorDelay)
+        assertFalse(estimator.useAccelerometerForAttitudeEstimation)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             estimator.accelerometerSensorType
         )
-        assertEquals(GyroscopeSensorCollector.SensorType.GYROSCOPE, estimator.gyroscopeSensorType)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            estimator.gyroscopeSensorType
+        )
+        assertEquals(
+            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
             estimator.magnetometerSensorType
         )
         assertNotNull(estimator.accelerometerAveragingFilter)
@@ -72,6 +76,7 @@ class LocalPoseEstimatorTest {
         assertFalse(estimator.useWorldMagneticModel)
         assertTrue(estimator.useAccurateLevelingEstimator)
         assertTrue(estimator.useAccurateRelativeGyroscopeAttitudeEstimator)
+        assertTrue(estimator.useAccurateAttitudeEstimator)
         assertTrue(estimator.useIndirectAttitudeInterpolation)
         assertEquals(
             FusedGeomagneticAttitudeEstimator.DEFAULT_INTERPOLATION_VALUE,
@@ -128,15 +133,17 @@ class LocalPoseEstimatorTest {
             location,
             initialVelocity,
             SensorDelay.NORMAL,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            useAccelerometerForAttitudeEstimation = true,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
             accelerometerAveragingFilter,
             worldMagneticModel,
             timestamp,
             useWorldMagneticModel = true,
             useAccurateLevelingEstimator = false,
             useAccurateRelativeGyroscopeAttitudeEstimator = false,
+            useAccurateAttitudeEstimator = false,
             estimatePoseTransformation = true,
             poseAvailableListener,
             accelerometerMeasurementListener,
@@ -150,16 +157,17 @@ class LocalPoseEstimatorTest {
         assertSame(location, estimator.initialLocation)
         assertEquals(initialVelocity, estimator.initialVelocity)
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
+        assertTrue(estimator.useAccelerometerForAttitudeEstimation)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             estimator.accelerometerSensorType
         )
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             estimator.gyroscopeSensorType
         )
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
             estimator.magnetometerSensorType
         )
         assertSame(accelerometerAveragingFilter, estimator.accelerometerAveragingFilter)
@@ -168,6 +176,7 @@ class LocalPoseEstimatorTest {
         assertTrue(estimator.useWorldMagneticModel)
         assertFalse(estimator.useAccurateLevelingEstimator)
         assertFalse(estimator.useAccurateRelativeGyroscopeAttitudeEstimator)
+        assertFalse(estimator.useAccurateAttitudeEstimator)
         assertTrue(estimator.useIndirectAttitudeInterpolation)
         assertEquals(
             FusedGeomagneticAttitudeEstimator.DEFAULT_INTERPOLATION_VALUE,
@@ -793,7 +802,7 @@ class LocalPoseEstimatorTest {
     }
 
     @Test
-    fun start_whenNotRunningAndInternalEstimatorFails_stopsAndReturnsFalse() {
+    fun start_whenNotRunningAndInternalEstimatorFailsAndUseAccurateAttitudeEstimatorEnabled_stopsAndReturnsFalse() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val location = getLocation()
         val estimator = LocalPoseEstimator(context, location)
@@ -805,6 +814,60 @@ class LocalPoseEstimatorTest {
         every { absoluteAttitudeEstimatorSpy.start() }.returns(false)
         estimator.setPrivateProperty("absoluteAttitudeEstimator", absoluteAttitudeEstimatorSpy)
 
+        val absoluteAttitudeEstimator2: AbsoluteAttitudeEstimator<*, *>? =
+            estimator.getPrivateProperty("absoluteAttitudeEstimator2")
+        requireNotNull(absoluteAttitudeEstimator2)
+        val absoluteAttitudeEstimator2Spy = spyk(absoluteAttitudeEstimator2)
+        every { absoluteAttitudeEstimator2Spy.start() }.returns(false)
+        estimator.setPrivateProperty("absoluteAttitudeEstimator2", absoluteAttitudeEstimator2Spy)
+
+        val accelerometerSensorCollector: AccelerometerSensorCollector? =
+            estimator.getPrivateProperty("accelerometerSensorCollector")
+        requireNotNull(accelerometerSensorCollector)
+        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
+        estimator.setPrivateProperty("accelerometerSensorCollector", accelerometerSensorCollectorSpy)
+
+        assertFalse(estimator.running)
+
+        // start
+        assertFalse(estimator.start())
+        assertFalse(estimator.running)
+
+        verify(exactly = 0) { absoluteAttitudeEstimatorSpy.start() }
+        verify(exactly = 0) { absoluteAttitudeEstimatorSpy.stop() }
+
+        verify(exactly = 1) { absoluteAttitudeEstimator2Spy.start() }
+        verify(exactly = 1) { absoluteAttitudeEstimator2Spy.stop() }
+
+        verify(exactly = 1) { accelerometerSensorCollectorSpy.stop() }
+    }
+
+    @Test
+    fun start_whenNotRunningAndInternalEstimatorFailsAndUseAccurateAttitudeEstimatorDisabled_stopsAndReturnsFalse() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val location = getLocation()
+        val estimator = LocalPoseEstimator(context, location, useAccurateAttitudeEstimator = false)
+
+        val absoluteAttitudeEstimator: AbsoluteAttitudeEstimator<*, *>? =
+            estimator.getPrivateProperty("absoluteAttitudeEstimator")
+        requireNotNull(absoluteAttitudeEstimator)
+        val absoluteAttitudeEstimatorSpy = spyk(absoluteAttitudeEstimator)
+        every { absoluteAttitudeEstimatorSpy.start() }.returns(false)
+        estimator.setPrivateProperty("absoluteAttitudeEstimator", absoluteAttitudeEstimatorSpy)
+
+        val absoluteAttitudeEstimator2: AbsoluteAttitudeEstimator<*, *>? =
+            estimator.getPrivateProperty("absoluteAttitudeEstimator2")
+        requireNotNull(absoluteAttitudeEstimator2)
+        val absoluteAttitudeEstimator2Spy = spyk(absoluteAttitudeEstimator2)
+        every { absoluteAttitudeEstimator2Spy.start() }.returns(false)
+        estimator.setPrivateProperty("absoluteAttitudeEstimator2", absoluteAttitudeEstimator2Spy)
+
+        val accelerometerSensorCollector: AccelerometerSensorCollector? =
+            estimator.getPrivateProperty("accelerometerSensorCollector")
+        requireNotNull(accelerometerSensorCollector)
+        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
+        estimator.setPrivateProperty("accelerometerSensorCollector", accelerometerSensorCollectorSpy)
+
         assertFalse(estimator.running)
 
         // start
@@ -813,13 +876,21 @@ class LocalPoseEstimatorTest {
 
         verify(exactly = 1) { absoluteAttitudeEstimatorSpy.start() }
         verify(exactly = 1) { absoluteAttitudeEstimatorSpy.stop() }
+
+        verify(exactly = 0) { absoluteAttitudeEstimator2Spy.start() }
+        verify(exactly = 0) { absoluteAttitudeEstimator2Spy.stop() }
+
+        verify(exactly = 1) { accelerometerSensorCollectorSpy.stop() }
     }
 
     @Test
-    fun start_whenNotRunningAndInternalEstimatorSucceeds_returnsTrue() {
+    fun start_whenAccelerometerSensorCollectorFails_stopsAndReturnsFalse() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val location = getLocation()
         val estimator = LocalPoseEstimator(context, location)
+
+        assertTrue(estimator.useAccurateAttitudeEstimator)
+        assertFalse(estimator.useAccelerometerForAttitudeEstimation)
 
         val absoluteAttitudeEstimator: AbsoluteAttitudeEstimator<*, *>? =
             estimator.getPrivateProperty("absoluteAttitudeEstimator")
@@ -828,18 +899,82 @@ class LocalPoseEstimatorTest {
         every { absoluteAttitudeEstimatorSpy.start() }.returns(true)
         estimator.setPrivateProperty("absoluteAttitudeEstimator", absoluteAttitudeEstimatorSpy)
 
+        val absoluteAttitudeEstimator2: AbsoluteAttitudeEstimator<*, *>? =
+            estimator.getPrivateProperty("absoluteAttitudeEstimator2")
+        requireNotNull(absoluteAttitudeEstimator2)
+        val absoluteAttitudeEstimator2Spy = spyk(absoluteAttitudeEstimator2)
+        every { absoluteAttitudeEstimator2Spy.start() }.returns(true)
+        estimator.setPrivateProperty("absoluteAttitudeEstimator2", absoluteAttitudeEstimator2Spy)
+
+        val accelerometerSensorCollector: AccelerometerSensorCollector? =
+            estimator.getPrivateProperty("accelerometerSensorCollector")
+        requireNotNull(accelerometerSensorCollector)
+        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
+        every { accelerometerSensorCollectorSpy.start() }.returns(false)
+        estimator.setPrivateProperty("accelerometerSensorCollector", accelerometerSensorCollectorSpy)
+
+        assertFalse(estimator.running)
+
+        // start
+        assertFalse(estimator.start())
+        assertFalse(estimator.running)
+
+        verify(exactly = 0) { absoluteAttitudeEstimatorSpy.start() }
+        verify(exactly = 0) { absoluteAttitudeEstimatorSpy.stop() }
+
+        verify(exactly = 1) { absoluteAttitudeEstimator2Spy.start() }
+
+        verify(exactly = 1) { absoluteAttitudeEstimator2Spy.stop() }
+        verify(exactly = 1) { accelerometerSensorCollectorSpy.stop() }
+    }
+
+    @Test
+    fun start_whenUseAccurateAttitudeEstimatorEnabledNotRunningAndInternalEstimatorSucceeds_returnsTrue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val location = getLocation()
+        val estimator = LocalPoseEstimator(context, location)
+
+        assertTrue(estimator.useAccurateAttitudeEstimator)
+        assertFalse(estimator.useAccelerometerForAttitudeEstimation)
+
+        val absoluteAttitudeEstimator: AbsoluteAttitudeEstimator<*, *>? =
+            estimator.getPrivateProperty("absoluteAttitudeEstimator")
+        requireNotNull(absoluteAttitudeEstimator)
+        val absoluteAttitudeEstimatorSpy = spyk(absoluteAttitudeEstimator)
+        every { absoluteAttitudeEstimatorSpy.start() }.returns(true)
+        estimator.setPrivateProperty("absoluteAttitudeEstimator", absoluteAttitudeEstimatorSpy)
+
+        val absoluteAttitudeEstimator2: AbsoluteAttitudeEstimator<*, *>? =
+            estimator.getPrivateProperty("absoluteAttitudeEstimator2")
+        requireNotNull(absoluteAttitudeEstimator2)
+        val absoluteAttitudeEstimator2Spy = spyk(absoluteAttitudeEstimator2)
+        every { absoluteAttitudeEstimator2Spy.start() }.returns(true)
+        estimator.setPrivateProperty("absoluteAttitudeEstimator2", absoluteAttitudeEstimator2Spy)
+
+        val accelerometerSensorCollector: AccelerometerSensorCollector? =
+            estimator.getPrivateProperty("accelerometerSensorCollector")
+        requireNotNull(accelerometerSensorCollector)
+        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
+        every { accelerometerSensorCollectorSpy.start() }.returns(true)
+        estimator.setPrivateProperty("accelerometerSensorCollector", accelerometerSensorCollectorSpy)
+
         assertFalse(estimator.running)
 
         // start
         assertTrue(estimator.start())
         assertTrue(estimator.running)
 
-        verify(exactly = 1) { absoluteAttitudeEstimatorSpy.start() }
+        verify(exactly = 0) { absoluteAttitudeEstimatorSpy.start() }
         verify(exactly = 0) { absoluteAttitudeEstimatorSpy.stop() }
+
+        verify(exactly = 1) { absoluteAttitudeEstimator2Spy.start() }
+        verify(exactly = 0) { absoluteAttitudeEstimator2Spy.stop() }
+
+        verify(exactly = 1) { accelerometerSensorCollectorSpy.start() }
     }
 
     @Test
-    fun start_whenNotRunning_resetsInitialized() {
+    fun start_whenNotRunningAndUseAccurateAttitudeEstimatorEnabled_resetsInitialized() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val location = getLocation()
         val estimator = LocalPoseEstimator(context, location)
@@ -857,7 +992,59 @@ class LocalPoseEstimatorTest {
         every { absoluteAttitudeEstimatorSpy.start() }.returns(false)
         estimator.setPrivateProperty("absoluteAttitudeEstimator", absoluteAttitudeEstimatorSpy)
 
+        val absoluteAttitudeEstimator2: AbsoluteAttitudeEstimator<*, *>? =
+            estimator.getPrivateProperty("absoluteAttitudeEstimator2")
+        requireNotNull(absoluteAttitudeEstimator2)
+        val absoluteAttitudeEstimator2Spy = spyk(absoluteAttitudeEstimator2)
+        every { absoluteAttitudeEstimator2Spy.start() }.returns(false)
+        estimator.setPrivateProperty("absoluteAttitudeEstimator2", absoluteAttitudeEstimator2Spy)
+
         assertFalse(estimator.running)
+        assertTrue(estimator.useAccurateAttitudeEstimator)
+
+        // start
+        assertFalse(estimator.start())
+        assertFalse(estimator.running)
+
+        verify(exactly = 0) { absoluteAttitudeEstimatorSpy.start() }
+        verify(exactly = 0) { absoluteAttitudeEstimatorSpy.stop() }
+
+        verify(exactly = 1) { absoluteAttitudeEstimator2Spy.start() }
+        verify(exactly = 1) { absoluteAttitudeEstimator2Spy.stop() }
+
+        val initializedFrame2: Boolean? = estimator.getPrivateProperty("initializedFrame")
+        requireNotNull(initializedFrame2)
+        assertFalse(initializedFrame2)
+    }
+
+    @Test
+    fun start_whenNotRunningAndUseAccurateAttitudeEstimatorDisabled_resetsInitialized() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val location = getLocation()
+        val estimator = LocalPoseEstimator(context, location, useAccurateAttitudeEstimator = false)
+
+        // set as initialized
+        estimator.setPrivateProperty("initializedFrame", true)
+        val initializedFrame1: Boolean? = estimator.getPrivateProperty("initializedFrame")
+        requireNotNull(initializedFrame1)
+        assertTrue(initializedFrame1)
+
+        val absoluteAttitudeEstimator: AbsoluteAttitudeEstimator<*, *>? =
+            estimator.getPrivateProperty("absoluteAttitudeEstimator")
+        requireNotNull(absoluteAttitudeEstimator)
+        val absoluteAttitudeEstimatorSpy = spyk(absoluteAttitudeEstimator)
+        every { absoluteAttitudeEstimatorSpy.start() }.returns(false)
+        estimator.setPrivateProperty("absoluteAttitudeEstimator", absoluteAttitudeEstimatorSpy)
+
+        val absoluteAttitudeEstimator2: AbsoluteAttitudeEstimator<*, *>? =
+            estimator.getPrivateProperty("absoluteAttitudeEstimator2")
+        requireNotNull(absoluteAttitudeEstimator2)
+        val absoluteAttitudeEstimator2Spy = spyk(absoluteAttitudeEstimator2)
+        every { absoluteAttitudeEstimator2Spy.start() }.returns(false)
+        estimator.setPrivateProperty("absoluteAttitudeEstimator2", absoluteAttitudeEstimator2Spy)
+
+        assertFalse(estimator.running)
+        assertFalse(estimator.useAccurateAttitudeEstimator)
 
         // start
         assertFalse(estimator.start())
@@ -866,13 +1053,16 @@ class LocalPoseEstimatorTest {
         verify(exactly = 1) { absoluteAttitudeEstimatorSpy.start() }
         verify(exactly = 1) { absoluteAttitudeEstimatorSpy.stop() }
 
+        verify(exactly = 0) { absoluteAttitudeEstimator2Spy.start() }
+        verify(exactly = 0) { absoluteAttitudeEstimator2Spy.stop() }
+
         val initializedFrame2: Boolean? = estimator.getPrivateProperty("initializedFrame")
         requireNotNull(initializedFrame2)
         assertFalse(initializedFrame2)
     }
 
     @Test
-    fun stop_callsInternalEstimatorAndSetsAsNotRunning() {
+    fun stop_whenUseAccurateAttitudeEnabled_callsInternalEstimatorAndSetsAsNotRunning() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val location = getLocation()
         val estimator = LocalPoseEstimator(context, location)
@@ -887,11 +1077,50 @@ class LocalPoseEstimatorTest {
         val absoluteAttitudeEstimatorSpy = spyk(absoluteAttitudeEstimator)
         estimator.setPrivateProperty("absoluteAttitudeEstimator", absoluteAttitudeEstimatorSpy)
 
+        val absoluteAttitudeEstimator2: AbsoluteAttitudeEstimator<*, *>? =
+            estimator.getPrivateProperty("absoluteAttitudeEstimator2")
+        requireNotNull(absoluteAttitudeEstimator2)
+        val absoluteAttitudeEstimator2Spy = spyk(absoluteAttitudeEstimator2)
+        every { absoluteAttitudeEstimator2Spy.start() }.returns(false)
+        estimator.setPrivateProperty("absoluteAttitudeEstimator2", absoluteAttitudeEstimator2Spy)
+
+        estimator.stop()
+
+        // check
+        assertFalse(estimator.running)
+        verify(exactly = 0) { absoluteAttitudeEstimatorSpy.stop() }
+        verify(exactly = 1) { absoluteAttitudeEstimator2Spy.stop() }
+    }
+
+    @Test
+    fun stop_whenUseAccurateAttitudeDisabled_callsInternalEstimatorAndSetsAsNotRunning() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val location = getLocation()
+        val estimator = LocalPoseEstimator(context, location, useAccurateAttitudeEstimator = false)
+
+        // set as running
+        estimator.setPrivateProperty("running", true)
+        assertTrue(estimator.running)
+
+        val absoluteAttitudeEstimator: AbsoluteAttitudeEstimator<*, *>? =
+            estimator.getPrivateProperty("absoluteAttitudeEstimator")
+        requireNotNull(absoluteAttitudeEstimator)
+        val absoluteAttitudeEstimatorSpy = spyk(absoluteAttitudeEstimator)
+        estimator.setPrivateProperty("absoluteAttitudeEstimator", absoluteAttitudeEstimatorSpy)
+
+        val absoluteAttitudeEstimator2: AbsoluteAttitudeEstimator<*, *>? =
+            estimator.getPrivateProperty("absoluteAttitudeEstimator2")
+        requireNotNull(absoluteAttitudeEstimator2)
+        val absoluteAttitudeEstimator2Spy = spyk(absoluteAttitudeEstimator2)
+        every { absoluteAttitudeEstimator2Spy.start() }.returns(false)
+        estimator.setPrivateProperty("absoluteAttitudeEstimator2", absoluteAttitudeEstimator2Spy)
+
         estimator.stop()
 
         // check
         assertFalse(estimator.running)
         verify(exactly = 1) { absoluteAttitudeEstimatorSpy.stop() }
+        verify(exactly = 0) { absoluteAttitudeEstimator2Spy.stop() }
     }
 
     @Test
@@ -1144,11 +1373,11 @@ class LocalPoseEstimatorTest {
         val estimator = LocalPoseEstimator(context, location)
 
         // check initial value
-        val acceleration: AccelerationTriad? = estimator.getPrivateProperty("acceleration")
-        requireNotNull(acceleration)
-        assertEquals(0.0, acceleration.valueX, 0.0)
-        assertEquals(0.0, acceleration.valueY, 0.0)
-        assertEquals(0.0, acceleration.valueZ, 0.0)
+        val specificForce: AccelerationTriad? = estimator.getPrivateProperty("specificForce")
+        requireNotNull(specificForce)
+        assertEquals(0.0, specificForce.valueX, 0.0)
+        assertEquals(0.0, specificForce.valueY, 0.0)
+        assertEquals(0.0, specificForce.valueZ, 0.0)
 
         val absoluteAttitudeEstimator: AbsoluteAttitudeEstimator<*, *>? =
             estimator.getPrivateProperty("absoluteAttitudeEstimator")
@@ -1175,9 +1404,9 @@ class LocalPoseEstimatorTest {
         )
 
         // check
-        assertEquals(ax.toDouble(), acceleration.valueY, 0.0)
-        assertEquals(ay.toDouble(), acceleration.valueX, 0.0)
-        assertEquals(az.toDouble(), -acceleration.valueZ, 0.0)
+        assertEquals(ax.toDouble(), specificForce.valueY, 0.0)
+        assertEquals(ay.toDouble(), specificForce.valueX, 0.0)
+        assertEquals(az.toDouble(), -specificForce.valueZ, 0.0)
     }
 
     @Test
@@ -1187,11 +1416,11 @@ class LocalPoseEstimatorTest {
         val estimator = LocalPoseEstimator(context, location)
 
         // check initial value
-        val acceleration: AccelerationTriad? = estimator.getPrivateProperty("acceleration")
-        requireNotNull(acceleration)
-        assertEquals(0.0, acceleration.valueX, 0.0)
-        assertEquals(0.0, acceleration.valueY, 0.0)
-        assertEquals(0.0, acceleration.valueZ, 0.0)
+        val specificForce: AccelerationTriad? = estimator.getPrivateProperty("specificForce")
+        requireNotNull(specificForce)
+        assertEquals(0.0, specificForce.valueX, 0.0)
+        assertEquals(0.0, specificForce.valueY, 0.0)
+        assertEquals(0.0, specificForce.valueZ, 0.0)
 
         val absoluteAttitudeEstimator: AbsoluteAttitudeEstimator<*, *>? =
             estimator.getPrivateProperty("absoluteAttitudeEstimator")
@@ -1221,9 +1450,9 @@ class LocalPoseEstimatorTest {
         )
 
         // check
-        assertEquals((ax - bx).toDouble(), acceleration.valueY, 0.0)
-        assertEquals((ay - by).toDouble(), acceleration.valueX, 0.0)
-        assertEquals((az - bz).toDouble(), -acceleration.valueZ, 0.0)
+        assertEquals((ax - bx).toDouble(), specificForce.valueY, 0.0)
+        assertEquals((ay - by).toDouble(), specificForce.valueX, 0.0)
+        assertEquals((az - bz).toDouble(), -specificForce.valueZ, 0.0)
     }
 
     @Test
@@ -1236,11 +1465,11 @@ class LocalPoseEstimatorTest {
             LocalPoseEstimator(context, location, accelerometerMeasurementListener = listener)
 
         // check initial value
-        val acceleration: AccelerationTriad? = estimator.getPrivateProperty("acceleration")
-        requireNotNull(acceleration)
-        assertEquals(0.0, acceleration.valueX, 0.0)
-        assertEquals(0.0, acceleration.valueY, 0.0)
-        assertEquals(0.0, acceleration.valueZ, 0.0)
+        val specificForce: AccelerationTriad? = estimator.getPrivateProperty("specificForce")
+        requireNotNull(specificForce)
+        assertEquals(0.0, specificForce.valueX, 0.0)
+        assertEquals(0.0, specificForce.valueY, 0.0)
+        assertEquals(0.0, specificForce.valueZ, 0.0)
 
         val absoluteAttitudeEstimator: AbsoluteAttitudeEstimator<*, *>? =
             estimator.getPrivateProperty("absoluteAttitudeEstimator")
@@ -1270,9 +1499,9 @@ class LocalPoseEstimatorTest {
         )
 
         // check
-        assertEquals((ax - bx).toDouble(), acceleration.valueY, 0.0)
-        assertEquals((ay - by).toDouble(), acceleration.valueX, 0.0)
-        assertEquals((az - bz).toDouble(), -acceleration.valueZ, 0.0)
+        assertEquals((ax - bx).toDouble(), specificForce.valueY, 0.0)
+        assertEquals((ay - by).toDouble(), specificForce.valueX, 0.0)
+        assertEquals((az - bz).toDouble(), -specificForce.valueZ, 0.0)
 
         verify(exactly = 1) { listener.onMeasurement(ax, ay, az, bx, by, bz, timestamp, accuracy) }
     }
@@ -1414,56 +1643,19 @@ class LocalPoseEstimatorTest {
     }
 
     @Test
-    fun absoluteAttitudeEstimator_whenGravityMeasurementAndNoListener_updatesGravity() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val location = getLocation()
-        val estimator = LocalPoseEstimator(context, location)
-
-        // check initial value
-        val gravity: AccelerationTriad? = estimator.getPrivateProperty("gravity")
-        requireNotNull(gravity)
-        assertEquals(0.0, gravity.valueX, 0.0)
-        assertEquals(0.0, gravity.valueY, 0.0)
-        assertEquals(0.0, gravity.valueZ, 0.0)
-
-        val absoluteAttitudeEstimator: AbsoluteAttitudeEstimator<*, *>? =
-            estimator.getPrivateProperty("absoluteAttitudeEstimator")
-        requireNotNull(absoluteAttitudeEstimator)
-        val gravityEstimationListener = absoluteAttitudeEstimator.gravityEstimationListener
-        requireNotNull(gravityEstimationListener)
-
-        val randomizer = UniformRandomizer()
-        val fx = randomizer.nextDouble()
-        val fy = randomizer.nextDouble()
-        val fz = randomizer.nextDouble()
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        gravityEstimationListener.onEstimation(mockk(), fx, fy, fz, timestamp)
-
-        // check
-        assertEquals(fx, gravity.valueX, 0.0)
-        assertEquals(fy, gravity.valueY, 0.0)
-        assertEquals(fz, gravity.valueZ, 0.0)
-    }
-
-    @Test
     fun absoluteAttitudeEstimator_whenGravityMeasurementAndListener_notifies() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val location = getLocation()
         val listener = mockk<GravityEstimator.OnEstimationListener>(relaxUnitFun = true)
         val estimator = LocalPoseEstimator(context, location, gravityEstimationListener = listener)
 
-        // check initial value
-        val gravity: AccelerationTriad? = estimator.getPrivateProperty("gravity")
-        requireNotNull(gravity)
-        assertEquals(0.0, gravity.valueX, 0.0)
-        assertEquals(0.0, gravity.valueY, 0.0)
-        assertEquals(0.0, gravity.valueZ, 0.0)
-
         val absoluteAttitudeEstimator: AbsoluteAttitudeEstimator<*, *>? =
             estimator.getPrivateProperty("absoluteAttitudeEstimator")
         requireNotNull(absoluteAttitudeEstimator)
         val gravityEstimationListener = absoluteAttitudeEstimator.gravityEstimationListener
         requireNotNull(gravityEstimationListener)
+
+        assertSame(listener, gravityEstimationListener)
 
         val randomizer = UniformRandomizer()
         val fx = randomizer.nextDouble()
@@ -1471,11 +1663,6 @@ class LocalPoseEstimatorTest {
         val fz = randomizer.nextDouble()
         val timestamp = SystemClock.elapsedRealtimeNanos()
         gravityEstimationListener.onEstimation(mockk(), fx, fy, fz, timestamp)
-
-        // check
-        assertEquals(fx, gravity.valueX, 0.0)
-        assertEquals(fy, gravity.valueY, 0.0)
-        assertEquals(fz, gravity.valueZ, 0.0)
 
         verify(exactly = 1) { listener.onEstimation(any(), fx, fy, fz, timestamp) }
     }

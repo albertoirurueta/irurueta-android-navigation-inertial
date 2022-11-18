@@ -103,9 +103,9 @@ class AccurateLevelingEstimator private constructor(
         context: Context,
         location: Location,
         sensorDelay: SensorDelay = SensorDelay.GAME,
-        useAccelerometer: Boolean = false,
+        useAccelerometer: Boolean = true,
         accelerometerSensorType: AccelerometerSensorCollector.SensorType =
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
         accelerometerAveragingFilter: AveragingFilter = LowPassAveragingFilter(),
         estimateCoordinateTransformation: Boolean = false,
         estimateEulerAngles: Boolean = true,

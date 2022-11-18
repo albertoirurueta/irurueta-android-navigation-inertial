@@ -57,7 +57,10 @@ class GyroscopeIntervalDetectorTest {
 
         // check default values
         assertSame(context, detector.context)
-        assertEquals(GyroscopeSensorCollector.SensorType.GYROSCOPE, detector.sensorType)
+        assertEquals(
+            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            detector.sensorType
+        )
         assertEquals(SensorDelay.FASTEST, detector.sensorDelay)
         assertNull(detector.initializationStartedListener)
         assertNull(detector.initializationCompletedListener)
@@ -244,13 +247,13 @@ class GyroscopeIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(
             context,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED
+            GyroscopeSensorCollector.SensorType.GYROSCOPE
         )
 
         // check default values
         assertSame(context, detector.context)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             detector.sensorType
         )
         assertEquals(SensorDelay.FASTEST, detector.sensorDelay)
@@ -439,14 +442,14 @@ class GyroscopeIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(
             context,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             SensorDelay.NORMAL
         )
 
         // check default values
         assertSame(context, detector.context)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             detector.sensorType
         )
         assertEquals(SensorDelay.NORMAL, detector.sensorDelay)
@@ -637,7 +640,7 @@ class GyroscopeIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(
             context,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             SensorDelay.NORMAL,
             initializationStartedListener
         )
@@ -645,7 +648,7 @@ class GyroscopeIntervalDetectorTest {
         // check default values
         assertSame(context, detector.context)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             detector.sensorType
         )
         assertEquals(SensorDelay.NORMAL, detector.sensorDelay)
@@ -838,7 +841,7 @@ class GyroscopeIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(
             context,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener
@@ -847,7 +850,7 @@ class GyroscopeIntervalDetectorTest {
         // check default values
         assertSame(context, detector.context)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             detector.sensorType
         )
         assertEquals(SensorDelay.NORMAL, detector.sensorDelay)
@@ -1041,7 +1044,7 @@ class GyroscopeIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(
             context,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -1051,7 +1054,7 @@ class GyroscopeIntervalDetectorTest {
         // check default values
         assertSame(context, detector.context)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             detector.sensorType
         )
         assertEquals(SensorDelay.NORMAL, detector.sensorDelay)
@@ -1247,7 +1250,7 @@ class GyroscopeIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(
             context,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -1258,7 +1261,7 @@ class GyroscopeIntervalDetectorTest {
         // check default values
         assertSame(context, detector.context)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             detector.sensorType
         )
         assertEquals(SensorDelay.NORMAL, detector.sensorDelay)
@@ -1456,7 +1459,7 @@ class GyroscopeIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(
             context,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -1468,7 +1471,7 @@ class GyroscopeIntervalDetectorTest {
         // check default values
         assertSame(context, detector.context)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             detector.sensorType
         )
         assertEquals(SensorDelay.NORMAL, detector.sensorDelay)
@@ -1667,7 +1670,7 @@ class GyroscopeIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(
             context,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -1680,7 +1683,7 @@ class GyroscopeIntervalDetectorTest {
         // check default values
         assertSame(context, detector.context)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             detector.sensorType
         )
         assertEquals(SensorDelay.NORMAL, detector.sensorDelay)
@@ -1880,7 +1883,7 @@ class GyroscopeIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(
             context,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -1894,7 +1897,7 @@ class GyroscopeIntervalDetectorTest {
         // check default values
         assertSame(context, detector.context)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             detector.sensorType
         )
         assertEquals(SensorDelay.NORMAL, detector.sensorDelay)
@@ -2095,7 +2098,7 @@ class GyroscopeIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(
             context,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -2110,7 +2113,7 @@ class GyroscopeIntervalDetectorTest {
         // check default values
         assertSame(context, detector.context)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             detector.sensorType
         )
         assertEquals(SensorDelay.NORMAL, detector.sensorDelay)

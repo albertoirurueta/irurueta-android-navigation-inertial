@@ -70,10 +70,10 @@ import com.irurueta.units.MagneticFluxDensityUnit
  */
 class MagnetometerMeasurementGenerator(
     context: Context,
-    accelerometerSensorType: AccelerometerSensorCollector.SensorType = AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+    accelerometerSensorType: AccelerometerSensorCollector.SensorType = AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
     accelerometerSensorDelay: SensorDelay = SensorDelay.FASTEST,
     val magnetometerSensorType: MagnetometerSensorCollector.SensorType =
-        MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+        MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
     val magnetometerSensorDelay: SensorDelay = SensorDelay.FASTEST,
     initializationStartedListener: OnInitializationStartedListener<MagnetometerMeasurementGenerator>? = null,
     initializationCompletedListener: OnInitializationCompletedListener<MagnetometerMeasurementGenerator>? = null,

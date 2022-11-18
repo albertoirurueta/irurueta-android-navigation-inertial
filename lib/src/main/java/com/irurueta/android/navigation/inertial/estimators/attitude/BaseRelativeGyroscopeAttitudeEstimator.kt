@@ -43,7 +43,7 @@ abstract class BaseRelativeGyroscopeAttitudeEstimator<T : BaseRelativeGyroscopeA
         L : BaseRelativeGyroscopeAttitudeEstimator.OnAttitudeAvailableListener<T, L>>(
     val context: Context,
     val sensorType: GyroscopeSensorCollector.SensorType =
-        GyroscopeSensorCollector.SensorType.GYROSCOPE,
+        GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
     val sensorDelay: SensorDelay = SensorDelay.GAME,
     val estimateCoordinateTransformation: Boolean = false,
     val estimateEulerAngles: Boolean = true,

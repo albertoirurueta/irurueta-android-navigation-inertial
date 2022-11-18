@@ -77,12 +77,15 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertTrue(calibrator.isInitialMagneticFluxDensityNormMeasured)
         assertTrue(calibrator.isGravityNormEstimated)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             calibrator.accelerometerSensorType
         )
-        assertEquals(GyroscopeSensorCollector.SensorType.GYROSCOPE, calibrator.gyroscopeSensorType)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            calibrator.gyroscopeSensorType
+        )
+        assertEquals(
+            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
             calibrator.magnetometerSensorType
         )
         assertEquals(SensorDelay.FASTEST, calibrator.accelerometerSensorDelay)
@@ -528,9 +531,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             location,
             timestamp,
             worldMagneticModel,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
             SensorDelay.NORMAL,
             SensorDelay.NORMAL,
             SensorDelay.NORMAL,
@@ -570,15 +573,15 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertFalse(calibrator.isInitialMagneticFluxDensityNormMeasured)
         assertFalse(calibrator.isGravityNormEstimated)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             calibrator.accelerometerSensorType
         )
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             calibrator.gyroscopeSensorType
         )
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
             calibrator.magnetometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, calibrator.accelerometerSensorDelay)

@@ -65,7 +65,7 @@ abstract class SingleSensorCalibrationMeasurementGenerator<C : SingleSensorCalib
         T, G : MeasurementsGenerator<T, G, L, I>, L : MeasurementsGeneratorListener<T, G, L, I>,
         I>(
     context: Context,
-    accelerometerSensorType: AccelerometerSensorCollector.SensorType = AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+    accelerometerSensorType: AccelerometerSensorCollector.SensorType = AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
     accelerometerSensorDelay: SensorDelay = SensorDelay.FASTEST,
     var initializationStartedListener: OnInitializationStartedListener<C>? = null,
     var initializationCompletedListener: OnInitializationCompletedListener<C>? = null,
@@ -78,7 +78,12 @@ abstract class SingleSensorCalibrationMeasurementGenerator<C : SingleSensorCalib
     var resetListener: OnResetListener<C>? = null,
     var accelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? = null,
     accuracyChangedListener: SensorCollector.OnAccuracyChangedListener? = null
-) : CalibrationMeasurementGenerator<I>(context, accelerometerSensorType, accelerometerSensorDelay, accuracyChangedListener) {
+) : CalibrationMeasurementGenerator<I>(
+    context,
+    accelerometerSensorType,
+    accelerometerSensorDelay,
+    accuracyChangedListener
+) {
     /**
      * Listener for internal measurement generator.
      */

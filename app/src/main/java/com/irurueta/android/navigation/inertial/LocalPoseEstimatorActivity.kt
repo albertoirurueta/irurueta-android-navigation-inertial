@@ -27,11 +27,11 @@ import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCo
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
-import com.irurueta.android.navigation.inertial.estimators.pose.LocalPoseEstimator
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.MeanAveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.MedianAveragingFilter
+import com.irurueta.android.navigation.inertial.estimators.pose.LocalPoseEstimator
 import com.irurueta.geometry.*
 
 class LocalPoseEstimatorActivity : AppCompatActivity() {
@@ -75,13 +75,15 @@ class LocalPoseEstimatorActivity : AppCompatActivity() {
 
     private var useWorldMagneticModel = false
 
-    private var accelerometerSensorType = AccelerometerSensorCollector.SensorType.ACCELEROMETER
+    private var accelerometerSensorType =
+        AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
 
-    private var magnetometerSensorType = MagnetometerSensorCollector.SensorType.MAGNETOMETER
+    private var magnetometerSensorType =
+        MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED
 
     private var accelerometerAveragingFilterType: String? = null
 
-    private var gyroscopeSensorType = GyroscopeSensorCollector.SensorType.GYROSCOPE
+    private var gyroscopeSensorType = GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED
 
     private var useAccurateLevelingEstimator = false
 
@@ -93,15 +95,15 @@ class LocalPoseEstimatorActivity : AppCompatActivity() {
         val extras = intent.extras
         accelerometerSensorType =
             (extras?.getSerializable(ACCELEROMETER_SENSOR_TYPE) as AccelerometerSensorCollector.SensorType?)
-                ?: AccelerometerSensorCollector.SensorType.ACCELEROMETER
+                ?: AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
         magnetometerSensorType =
             (extras?.getSerializable(MAGNETOMETER_SENSOR_TYPE) as MagnetometerSensorCollector.SensorType?)
-                ?: MagnetometerSensorCollector.SensorType.MAGNETOMETER
+                ?: MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED
         accelerometerAveragingFilterType =
             extras?.getString(ACCELEROMETER_AVERAGING_FILTER_TYPE)
         gyroscopeSensorType =
             (extras?.getSerializable(GYROSCOPE_SENSOR_TYPE) as GyroscopeSensorCollector.SensorType?)
-                ?: GyroscopeSensorCollector.SensorType.GYROSCOPE
+                ?: GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED
         useAccurateLevelingEstimator =
             extras?.getBoolean(USE_ACCURATE_LEVELING_ESTIMATOR, false) ?: false
         useAccurateRelativeGyroscopeAttitudeEstimator =
@@ -119,6 +121,8 @@ class LocalPoseEstimatorActivity : AppCompatActivity() {
         yPosView = findViewById(R.id.y_pos)
         zPosView = findViewById(R.id.z_pos)
 
+        val cubeSize = 0.25f
+        val cubeDistance = 0.5
         val cubeView = cubeView ?: return
         cubeView.onSurfaceChangedListener = object : CubeTextureView.OnSurfaceChangedListener {
             override fun onSurfaceChanged(width: Int, height: Int) {
@@ -126,8 +130,11 @@ class LocalPoseEstimatorActivity : AppCompatActivity() {
                 initialCamera = createCamera(cubeView, Quaternion())
                 camera = createCamera(cubeView, Quaternion())
                 cubeView.camera = camera
+                cubeView.cubeSize = cubeSize
                 cubeView.cubePosition =
-                    InhomogeneousPoint3D(-CubeRenderer.DEFAULT_CUBE_DISTANCE, 0.0, 0.0)
+                    InhomogeneousPoint3D(-cubeDistance, 0.0, 0.0)
+                //cubeView.cubePosition =
+                //    InhomogeneousPoint3D(-CubeRenderer.DEFAULT_CUBE_DISTANCE, 0.0, 0.0)
             }
         }
 
@@ -203,6 +210,8 @@ class LocalPoseEstimatorActivity : AppCompatActivity() {
                 magnetometerSensorType = magnetometerSensorType,
                 accelerometerAveragingFilter = accelerometerAveragingFilter,
                 useWorldMagneticModel = useWorldMagneticModel,
+                useAccurateLevelingEstimator = true,
+                useAccurateRelativeGyroscopeAttitudeEstimator = true,
                 estimatePoseTransformation = true,
                 poseAvailableListener = { _, _, _, _, timestamp, initialTransformation ->
 
@@ -221,10 +230,12 @@ class LocalPoseEstimatorActivity : AppCompatActivity() {
                         val nedRotation = Quaternion()
                         Quaternion.product(enuRotation, conversionRotation, nedRotation)
                         nedRotation.toEulerAngles(eulerAngles)
-                        rollView?.text = getString(R.string.roll_degrees, Math.toDegrees(eulerAngles[0]))
+                        rollView?.text =
+                            getString(R.string.roll_degrees, Math.toDegrees(eulerAngles[0]))
                         pitchView?.text =
                             getString(R.string.pitch_degrees, Math.toDegrees(eulerAngles[1]))
-                        yawView?.text = getString(R.string.yaw_degrees, Math.toDegrees(eulerAngles[2]))
+                        yawView?.text =
+                            getString(R.string.yaw_degrees, Math.toDegrees(eulerAngles[2]))
 
                         initialTransformation?.inverse()
                         initialTransformation?.transform(initialCamera, camera)

@@ -47,7 +47,10 @@ class AccurateRelativeGyroscopeAttitudeEstimatorTest {
 
         // check
         assertSame(context, estimator.context)
-        assertEquals(GyroscopeSensorCollector.SensorType.GYROSCOPE, estimator.sensorType)
+        assertEquals(
+            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            estimator.sensorType
+        )
         assertEquals(SensorDelay.GAME, estimator.sensorDelay)
         assertFalse(estimator.estimateCoordinateTransformation)
         assertTrue(estimator.estimateEulerAngles)
@@ -65,7 +68,7 @@ class AccurateRelativeGyroscopeAttitudeEstimatorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = AccurateRelativeGyroscopeAttitudeEstimator(
             context,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             SensorDelay.NORMAL,
             estimateCoordinateTransformation = true,
             estimateEulerAngles = false,
@@ -76,7 +79,7 @@ class AccurateRelativeGyroscopeAttitudeEstimatorTest {
         // check
         assertSame(context, estimator.context)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             estimator.sensorType
         )
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)

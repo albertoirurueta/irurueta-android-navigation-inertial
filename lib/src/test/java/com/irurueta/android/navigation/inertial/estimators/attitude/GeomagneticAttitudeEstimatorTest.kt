@@ -54,13 +54,13 @@ class GeomagneticAttitudeEstimatorTest {
         assertSame(context, estimator.context)
         assertNull(estimator.location)
         assertEquals(SensorDelay.GAME, estimator.sensorDelay)
-        assertFalse(estimator.useAccelerometer)
+        assertTrue(estimator.useAccelerometer)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             estimator.accelerometerSensorType
         )
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
             estimator.magnetometerSensorType
         )
         assertNotNull(estimator.accelerometerAveragingFilter)
@@ -97,9 +97,9 @@ class GeomagneticAttitudeEstimatorTest {
             context,
             location,
             SensorDelay.NORMAL,
-            useAccelerometer = true,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            useAccelerometer = false,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
             filter,
             worldMagneticModel,
             timestamp,
@@ -118,13 +118,13 @@ class GeomagneticAttitudeEstimatorTest {
         assertSame(context, estimator.context)
         assertSame(location, estimator.location)
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
-        assertTrue(estimator.useAccelerometer)
+        assertFalse(estimator.useAccelerometer)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             estimator.accelerometerSensorType
         )
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
             estimator.magnetometerSensorType
         )
         assertSame(filter, estimator.accelerometerAveragingFilter)

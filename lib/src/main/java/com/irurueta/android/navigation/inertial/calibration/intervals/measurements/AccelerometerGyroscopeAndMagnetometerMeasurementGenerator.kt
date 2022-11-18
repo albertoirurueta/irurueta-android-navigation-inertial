@@ -78,13 +78,13 @@ import com.irurueta.units.*
 class AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
     context: Context,
     accelerometerSensorType: AccelerometerSensorCollector.SensorType =
-        AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+        AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
     accelerometerSensorDelay: SensorDelay = SensorDelay.FASTEST,
     val gyroscopeSensorType: GyroscopeSensorCollector.SensorType =
-        GyroscopeSensorCollector.SensorType.GYROSCOPE,
+        GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
     val gyroscopeSensorDelay: SensorDelay = SensorDelay.FASTEST,
     val magnetometerSensorType: MagnetometerSensorCollector.SensorType =
-        MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+        MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
     val magnetometerSensorDelay: SensorDelay = SensorDelay.FASTEST,
     var initializationStartedListener: OnInitializationStartedListener? = null,
     var initializationCompletedListener: OnInitializationCompletedListener? = null,

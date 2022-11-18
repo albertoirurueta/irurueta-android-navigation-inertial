@@ -45,7 +45,7 @@ import com.irurueta.units.TimeConverter
 class GyroscopeIntervalDetector(
     context: Context,
     val sensorType: GyroscopeSensorCollector.SensorType =
-        GyroscopeSensorCollector.SensorType.GYROSCOPE,
+        GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
     sensorDelay: SensorDelay = SensorDelay.FASTEST,
     initializationStartedListener: OnInitializationStartedListener<GyroscopeIntervalDetector>? = null,
     initializationCompletedListener: OnInitializationCompletedListener<GyroscopeIntervalDetector>? = null,

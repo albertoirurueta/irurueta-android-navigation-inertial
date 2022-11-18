@@ -27,6 +27,11 @@ import com.irurueta.navigation.inertial.calibration.AccelerationTriad
 /**
  * Estimates sensed specific force component associated to gravity by either using the OS gravity
  * sensor or by low-pass filtering accelerometer measurements.
+ * It must be noticed that usage of [AccelerometerSensorCollector.SensorType.ACCELEROMETER] is
+ * discouraged for posing purposes if [useAccelerometer] is enabled, as it will yield poor gravity
+ * estimation values.
+ * Instead either [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED] must be used
+ * or [useAccelerometer] must be disabled to use gravity sensor.
  *
  * @property context Android context.
  * @property sensorDelay Delay of accelerometer or gravity sensor between samples.
@@ -46,7 +51,7 @@ class GravityEstimator(
     val sensorDelay: SensorDelay = SensorDelay.FASTEST,
     val useAccelerometer: Boolean = false,
     val accelerometerSensorType: AccelerometerSensorCollector.SensorType =
-        AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+        AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
     var estimationListener: OnEstimationListener? = null,
     val accelerometerAveragingFilter: AveragingFilter = LowPassAveragingFilter(),
     var accelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? = null,
@@ -186,11 +191,11 @@ class GravityEstimator(
          * Called when a new gravity measurement is available.
          *
          * @param estimator gravity estimator that raised this event.
-         * @param fx x-coordinate of sensed specific force containing gravity component expressed
+         * @param gx x-coordinate of sensed specific force containing gravity component expressed
          * in NED coordinates.
-         * @param fy y-coordinate of sensed specific force containing gravity component expressed
+         * @param gy y-coordinate of sensed specific force containing gravity component expressed
          * in NED coordinates.
-         * @param fz z-coordinate of sensed specific force containing gravity component expressed
+         * @param gz z-coordinate of sensed specific force containing gravity component expressed
          * in NED coordinates.
          * @param timestamp time in nanoseconds at which the measurement was made. Each measurement
          * will be monotonically increasing using the same time base as
@@ -198,9 +203,9 @@ class GravityEstimator(
          */
         fun onEstimation(
             estimator: GravityEstimator,
-            fx: Double,
-            fy: Double,
-            fz: Double,
+            gx: Double,
+            gy: Double,
+            gz: Double,
             timestamp: Long
         )
     }

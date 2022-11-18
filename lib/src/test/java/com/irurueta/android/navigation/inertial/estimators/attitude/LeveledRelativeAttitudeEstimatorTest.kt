@@ -51,16 +51,19 @@ class LeveledRelativeAttitudeEstimatorTest {
         assertSame(context, estimator.context)
         assertNull(estimator.location)
         assertEquals(SensorDelay.GAME, estimator.sensorDelay)
-        assertFalse(estimator.useAccelerometer)
+        assertTrue(estimator.useAccelerometer)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             estimator.accelerometerSensorType
         )
         assertNotNull(estimator.accelerometerAveragingFilter)
         assertTrue(estimator.accelerometerAveragingFilter is LowPassAveragingFilter)
-        assertEquals(GyroscopeSensorCollector.SensorType.GYROSCOPE, estimator.gyroscopeSensorType)
+        assertEquals(
+            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            estimator.gyroscopeSensorType
+        )
         assertFalse(estimator.useAccurateLevelingEstimator)
-        assertFalse(estimator.useAccurateRelativeGyroscopeAttitudeEstimator)
+        assertTrue(estimator.useAccurateRelativeGyroscopeAttitudeEstimator)
         assertFalse(estimator.estimateCoordinateTransformation)
         assertTrue(estimator.estimateEulerAngles)
         assertNull(estimator.attitudeAvailableListener)
@@ -112,12 +115,12 @@ class LeveledRelativeAttitudeEstimatorTest {
             context,
             location,
             SensorDelay.NORMAL,
-            useAccelerometer = true,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            useAccelerometer = false,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             accelerometerAveragingFilter,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             useAccurateLevelingEstimator = true,
-            useAccurateRelativeGyroscopeAttitudeEstimator = true,
+            useAccurateRelativeGyroscopeAttitudeEstimator = false,
             estimateCoordinateTransformation = true,
             estimateEulerAngles = false,
             listener,
@@ -131,18 +134,18 @@ class LeveledRelativeAttitudeEstimatorTest {
         assertSame(context, estimator.context)
         assertSame(location, estimator.location)
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
-        assertTrue(estimator.useAccelerometer)
+        assertFalse(estimator.useAccelerometer)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             estimator.accelerometerSensorType
         )
         assertSame(accelerometerAveragingFilter, estimator.accelerometerAveragingFilter)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             estimator.gyroscopeSensorType
         )
         assertTrue(estimator.useAccurateLevelingEstimator)
-        assertTrue(estimator.useAccurateRelativeGyroscopeAttitudeEstimator)
+        assertFalse(estimator.useAccurateRelativeGyroscopeAttitudeEstimator)
         assertTrue(estimator.estimateCoordinateTransformation)
         assertFalse(estimator.estimateEulerAngles)
         assertSame(listener, estimator.attitudeAvailableListener)
@@ -468,13 +471,13 @@ class LeveledRelativeAttitudeEstimatorTest {
         val estimator = LeveledRelativeAttitudeEstimator(context)
 
         assertFalse(estimator.running)
-        assertFalse(estimator.useAccurateRelativeGyroscopeAttitudeEstimator)
+        assertTrue(estimator.useAccurateRelativeGyroscopeAttitudeEstimator)
 
         // set new value
-        estimator.useAccurateRelativeGyroscopeAttitudeEstimator = true
+        estimator.useAccurateRelativeGyroscopeAttitudeEstimator = false
 
         // check
-        assertTrue(estimator.useAccurateRelativeGyroscopeAttitudeEstimator)
+        assertFalse(estimator.useAccurateRelativeGyroscopeAttitudeEstimator)
     }
 
     @Test

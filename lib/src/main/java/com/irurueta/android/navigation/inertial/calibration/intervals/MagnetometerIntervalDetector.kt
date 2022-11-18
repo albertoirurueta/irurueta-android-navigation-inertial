@@ -63,7 +63,7 @@ import com.irurueta.units.TimeConverter
 class MagnetometerIntervalDetector(
     context: Context,
     val sensorType: MagnetometerSensorCollector.SensorType =
-        MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+        MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
     sensorDelay: SensorDelay = SensorDelay.FASTEST,
     initializationStartedListener: OnInitializationStartedListener<MagnetometerIntervalDetector>? = null,
     initializationCompletedListener: OnInitializationCompletedListener<MagnetometerIntervalDetector>? = null,

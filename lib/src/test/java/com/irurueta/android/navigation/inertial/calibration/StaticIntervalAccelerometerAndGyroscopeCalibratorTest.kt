@@ -65,10 +65,13 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         // check default values
         assertSame(context, calibrator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             calibrator.accelerometerSensorType
         )
-        assertEquals(GyroscopeSensorCollector.SensorType.GYROSCOPE, calibrator.gyroscopeSensorType)
+        assertEquals(
+            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            calibrator.gyroscopeSensorType
+        )
         assertEquals(SensorDelay.FASTEST, calibrator.accelerometerSensorDelay)
         assertEquals(SensorDelay.FASTEST, calibrator.gyroscopeSensorDelay)
         assertTrue(calibrator.solveCalibrationWhenEnoughMeasurements)
@@ -405,8 +408,8 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             SensorDelay.NORMAL,
             SensorDelay.NORMAL,
             solveCalibrationWhenEnoughMeasurements = false,
@@ -437,11 +440,11 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         // check default values
         assertSame(context, calibrator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             calibrator.accelerometerSensorType
         )
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             calibrator.gyroscopeSensorType
         )
         assertEquals(SensorDelay.NORMAL, calibrator.accelerometerSensorDelay)

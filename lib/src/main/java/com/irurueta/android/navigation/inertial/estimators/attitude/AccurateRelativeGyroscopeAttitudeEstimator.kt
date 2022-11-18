@@ -42,7 +42,7 @@ import com.irurueta.units.TimeConverter
 class AccurateRelativeGyroscopeAttitudeEstimator(
     context: Context,
     sensorType: GyroscopeSensorCollector.SensorType =
-        GyroscopeSensorCollector.SensorType.GYROSCOPE,
+        GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
     sensorDelay: SensorDelay = SensorDelay.GAME,
     estimateCoordinateTransformation: Boolean = false,
     estimateEulerAngles: Boolean = true,

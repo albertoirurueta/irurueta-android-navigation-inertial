@@ -58,7 +58,7 @@ import com.irurueta.navigation.inertial.calibration.intervals.TriadStaticInterva
 class AccelerometerMeasurementGenerator(
     context: Context,
     accelerometerSensorType: AccelerometerSensorCollector.SensorType =
-        AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+        AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
     accelerometerSensorDelay: SensorDelay = SensorDelay.FASTEST,
     initializationStartedListener: OnInitializationStartedListener<AccelerometerMeasurementGenerator>? = null,
     initializationCompletedListener: OnInitializationCompletedListener<AccelerometerMeasurementGenerator>? = null,

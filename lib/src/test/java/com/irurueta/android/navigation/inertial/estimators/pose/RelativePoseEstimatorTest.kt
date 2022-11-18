@@ -54,11 +54,15 @@ class RelativePoseEstimatorTest {
         // check
         assertSame(context, estimator.context)
         assertEquals(SensorDelay.GAME, estimator.sensorDelay)
+        assertFalse(estimator.useAccelerometerForAttitudeEstimation)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             estimator.accelerometerSensorType
         )
-        assertEquals(GyroscopeSensorCollector.SensorType.GYROSCOPE, estimator.gyroscopeSensorType)
+        assertEquals(
+            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            estimator.gyroscopeSensorType
+        )
         assertNotNull(estimator.accelerometerAveragingFilter)
         assertTrue(estimator.accelerometerAveragingFilter is LowPassAveragingFilter)
         assertFalse(estimator.useAccurateLevelingEstimator)
@@ -112,8 +116,9 @@ class RelativePoseEstimatorTest {
         val estimator = RelativePoseEstimator(
             context,
             SensorDelay.NORMAL,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            useAccelerometerForAttitudeEstimation = true,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             accelerometerAveragingFilter,
             useAccurateLevelingEstimator = true,
             useAccurateRelativeGyroscopeAttitudeEstimator = false,
@@ -128,12 +133,13 @@ class RelativePoseEstimatorTest {
         // check
         assertSame(context, estimator.context)
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
+        assertTrue(estimator.useAccelerometerForAttitudeEstimation)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             estimator.accelerometerSensorType
         )
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             estimator.gyroscopeSensorType
         )
         assertSame(accelerometerAveragingFilter, estimator.accelerometerAveragingFilter)
@@ -687,7 +693,7 @@ class RelativePoseEstimatorTest {
     }
 
     @Test
-    fun start_whenNotRunningAndInternalEstimatorSucceeds_returnsTrue() {
+    fun start_whenAccelerometerSensorCollectorFails_stopsAndReturnsFalse() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = RelativePoseEstimator(context)
 
@@ -698,7 +704,48 @@ class RelativePoseEstimatorTest {
         every { attitudeEstimatorSpy.start() }.returns(true)
         estimator.setPrivateProperty("attitudeEstimator", attitudeEstimatorSpy)
 
+        val accelerometerSensorCollector: AccelerometerSensorCollector? =
+            estimator.getPrivateProperty("accelerometerSensorCollector")
+        requireNotNull(accelerometerSensorCollector)
+        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
+        every { accelerometerSensorCollectorSpy.start() }.returns(false)
+        estimator.setPrivateProperty("accelerometerSensorCollector", accelerometerSensorCollectorSpy)
+
         assertFalse(estimator.running)
+        assertFalse(estimator.useAccelerometerForAttitudeEstimation)
+
+        // start
+        assertFalse(estimator.start())
+        assertFalse(estimator.running)
+
+        verify(exactly = 1) { attitudeEstimatorSpy.start() }
+        verify(exactly = 1) { attitudeEstimatorSpy.stop() }
+
+        verify(exactly = 1) { accelerometerSensorCollectorSpy.start() }
+        verify(exactly = 1) { accelerometerSensorCollectorSpy.stop() }
+    }
+
+    @Test
+    fun start_whenUseAccelerometerForAttitudeEstimationDisabledNotRunningAndInternalEstimatorSucceeds_returnsTrue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val estimator = RelativePoseEstimator(context)
+
+        val attitudeEstimator: LeveledRelativeAttitudeEstimator? =
+            estimator.getPrivateProperty("attitudeEstimator")
+        requireNotNull(attitudeEstimator)
+        val attitudeEstimatorSpy = spyk(attitudeEstimator)
+        every { attitudeEstimatorSpy.start() }.returns(true)
+        estimator.setPrivateProperty("attitudeEstimator", attitudeEstimatorSpy)
+
+        val accelerometerSensorCollector: AccelerometerSensorCollector? =
+            estimator.getPrivateProperty("accelerometerSensorCollector")
+        requireNotNull(accelerometerSensorCollector)
+        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
+        every { accelerometerSensorCollectorSpy.start() }.returns(true)
+        estimator.setPrivateProperty("accelerometerSensorCollector", accelerometerSensorCollectorSpy)
+
+        assertFalse(estimator.running)
+        assertFalse(estimator.useAccelerometerForAttitudeEstimation)
 
         // start
         assertTrue(estimator.start())
@@ -706,6 +753,40 @@ class RelativePoseEstimatorTest {
 
         verify(exactly = 1) { attitudeEstimatorSpy.start() }
         verify(exactly = 0) { attitudeEstimatorSpy.stop() }
+
+        verify(exactly = 1) { accelerometerSensorCollectorSpy.start() }
+    }
+
+    @Test
+    fun start_whenUseAccelerometerForAttitudeEstimationEnabledNotRunningAndInternalEstimatorSucceeds_returnsTrue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val estimator = RelativePoseEstimator(context, useAccelerometerForAttitudeEstimation = true)
+
+        val attitudeEstimator: LeveledRelativeAttitudeEstimator? =
+            estimator.getPrivateProperty("attitudeEstimator")
+        requireNotNull(attitudeEstimator)
+        val attitudeEstimatorSpy = spyk(attitudeEstimator)
+        every { attitudeEstimatorSpy.start() }.returns(true)
+        estimator.setPrivateProperty("attitudeEstimator", attitudeEstimatorSpy)
+
+        val accelerometerSensorCollector: AccelerometerSensorCollector? =
+            estimator.getPrivateProperty("accelerometerSensorCollector")
+        requireNotNull(accelerometerSensorCollector)
+        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
+        every { accelerometerSensorCollectorSpy.start() }.returns(true)
+        estimator.setPrivateProperty("accelerometerSensorCollector", accelerometerSensorCollectorSpy)
+
+        assertFalse(estimator.running)
+        assertTrue(estimator.useAccelerometerForAttitudeEstimation)
+
+        // start
+        assertTrue(estimator.start())
+        assertTrue(estimator.running)
+
+        verify(exactly = 1) { attitudeEstimatorSpy.start() }
+        verify(exactly = 0) { attitudeEstimatorSpy.stop() }
+
+        verify(exactly = 0) { accelerometerSensorCollectorSpy.start() }
     }
 
     @Test
@@ -903,11 +984,11 @@ class RelativePoseEstimatorTest {
         val estimator = RelativePoseEstimator(context)
 
         // check initial value
-        val acceleration: AccelerationTriad? = estimator.getPrivateProperty("acceleration")
-        requireNotNull(acceleration)
-        assertEquals(0.0, acceleration.valueX, 0.0)
-        assertEquals(0.0, acceleration.valueY, 0.0)
-        assertEquals(0.0, acceleration.valueZ, 0.0)
+        val specificForce: AccelerationTriad? = estimator.getPrivateProperty("specificForce")
+        requireNotNull(specificForce)
+        assertEquals(0.0, specificForce.valueX, 0.0)
+        assertEquals(0.0, specificForce.valueY, 0.0)
+        assertEquals(0.0, specificForce.valueZ, 0.0)
 
         val attitudeEstimator: LeveledRelativeAttitudeEstimator? =
             estimator.getPrivateProperty("attitudeEstimator")
@@ -933,9 +1014,9 @@ class RelativePoseEstimatorTest {
         )
 
         // check
-        assertEquals(ax.toDouble(), acceleration.valueY, 0.0)
-        assertEquals(ay.toDouble(), acceleration.valueX, 0.0)
-        assertEquals(az.toDouble(), -acceleration.valueZ, 0.0)
+        assertEquals(ax.toDouble(), specificForce.valueY, 0.0)
+        assertEquals(ay.toDouble(), specificForce.valueX, 0.0)
+        assertEquals(az.toDouble(), -specificForce.valueZ, 0.0)
     }
 
     @Test
@@ -944,11 +1025,11 @@ class RelativePoseEstimatorTest {
         val estimator = RelativePoseEstimator(context)
 
         // check initial value
-        val acceleration: AccelerationTriad? = estimator.getPrivateProperty("acceleration")
-        requireNotNull(acceleration)
-        assertEquals(0.0, acceleration.valueX, 0.0)
-        assertEquals(0.0, acceleration.valueY, 0.0)
-        assertEquals(0.0, acceleration.valueZ, 0.0)
+        val specificForce: AccelerationTriad? = estimator.getPrivateProperty("specificForce")
+        requireNotNull(specificForce)
+        assertEquals(0.0, specificForce.valueX, 0.0)
+        assertEquals(0.0, specificForce.valueY, 0.0)
+        assertEquals(0.0, specificForce.valueZ, 0.0)
 
         val attitudeEstimator: LeveledRelativeAttitudeEstimator? =
             estimator.getPrivateProperty("attitudeEstimator")
@@ -977,9 +1058,9 @@ class RelativePoseEstimatorTest {
         )
 
         // check
-        assertEquals((ax - bx).toDouble(), acceleration.valueY, 0.0)
-        assertEquals((ay - by).toDouble(), acceleration.valueX, 0.0)
-        assertEquals((az - bz).toDouble(), -acceleration.valueZ, 0.0)
+        assertEquals((ax - bx).toDouble(), specificForce.valueY, 0.0)
+        assertEquals((ay - by).toDouble(), specificForce.valueX, 0.0)
+        assertEquals((az - bz).toDouble(), -specificForce.valueZ, 0.0)
     }
 
     @Test
@@ -990,11 +1071,11 @@ class RelativePoseEstimatorTest {
         val estimator = RelativePoseEstimator(context, accelerometerMeasurementListener = listener)
 
         // check initial value
-        val acceleration: AccelerationTriad? = estimator.getPrivateProperty("acceleration")
-        requireNotNull(acceleration)
-        assertEquals(0.0, acceleration.valueX, 0.0)
-        assertEquals(0.0, acceleration.valueY, 0.0)
-        assertEquals(0.0, acceleration.valueZ, 0.0)
+        val specificForce: AccelerationTriad? = estimator.getPrivateProperty("specificForce")
+        requireNotNull(specificForce)
+        assertEquals(0.0, specificForce.valueX, 0.0)
+        assertEquals(0.0, specificForce.valueY, 0.0)
+        assertEquals(0.0, specificForce.valueZ, 0.0)
 
         val attitudeEstimator: LeveledRelativeAttitudeEstimator? =
             estimator.getPrivateProperty("attitudeEstimator")
@@ -1023,9 +1104,9 @@ class RelativePoseEstimatorTest {
         )
 
         // check
-        assertEquals((ax - bx).toDouble(), acceleration.valueY, 0.0)
-        assertEquals((ay - by).toDouble(), acceleration.valueX, 0.0)
-        assertEquals((az - bz).toDouble(), -acceleration.valueZ, 0.0)
+        assertEquals((ax - bx).toDouble(), specificForce.valueY, 0.0)
+        assertEquals((ay - by).toDouble(), specificForce.valueX, 0.0)
+        assertEquals((az - bz).toDouble(), -specificForce.valueZ, 0.0)
 
         verify(exactly = 1) { listener.onMeasurement(ax, ay, az, bx, by, bz, timestamp, accuracy) }
     }
@@ -1343,12 +1424,12 @@ class RelativePoseEstimatorTest {
         assertEquals(InhomogeneousPoint3D(), previousPosition)
 
         val randomizer = UniformRandomizer()
-        // set acceleration
-        val ax = randomizer.nextDouble()
-        val ay = randomizer.nextDouble()
-        val az = randomizer.nextDouble()
-        val acceleration = AccelerationTriad(ax, ay, az)
-        estimator.setPrivateProperty("acceleration", acceleration)
+        // set specific force
+        val fx = randomizer.nextDouble()
+        val fy = randomizer.nextDouble()
+        val fz = randomizer.nextDouble()
+        val specificForce = AccelerationTriad(fx, fy, fz)
+        estimator.setPrivateProperty("specificForce", specificForce)
 
         // set angular speed
         val wx = randomizer.nextDouble()
@@ -1396,33 +1477,33 @@ class RelativePoseEstimatorTest {
         val averageAttitude2 = Quaternion.slerpAndReturnNew(previousAttitude2, currentAttitude, 0.5)
         assertEquals(averageAttitude1, averageAttitude2)
 
-        val fibb: Matrix? = estimator.getPrivateProperty("fibb")
-        requireNotNull(fibb)
-        assertEquals(3, fibb.rows)
-        assertEquals(1, fibb.columns)
-        assertEquals(acceleration.valueX, fibb.getElementAtIndex(0), 0.0)
-        assertEquals(acceleration.valueY, fibb.getElementAtIndex(1), 0.0)
-        assertEquals(acceleration.valueZ, fibb.getElementAtIndex(2), 0.0)
+        val abb: Matrix? = estimator.getPrivateProperty("abb")
+        requireNotNull(abb)
+        assertEquals(3, abb.rows)
+        assertEquals(1, abb.columns)
+        assertEquals(specificForce.valueX - gx, abb.getElementAtIndex(0), 0.0)
+        assertEquals(specificForce.valueY - gy, abb.getElementAtIndex(1), 0.0)
+        assertEquals(specificForce.valueZ - gz, abb.getElementAtIndex(2), 0.0)
 
         val avgAttitudeMatrix: Matrix? = estimator.getPrivateProperty("avgAttitudeMatrix")
         requireNotNull(avgAttitudeMatrix)
         assertEquals(averageAttitude2.asInhomogeneousMatrix(), avgAttitudeMatrix)
 
-        val fibn: Matrix? = estimator.getPrivateProperty("fibn")
-        requireNotNull(fibn)
-        assertEquals(avgAttitudeMatrix.multiplyAndReturnNew(fibb), fibn)
+        val abn: Matrix? = estimator.getPrivateProperty("abn")
+        requireNotNull(abn)
+        assertEquals(avgAttitudeMatrix.multiplyAndReturnNew(abb), abn)
 
-        val fx = fibn.getElementAtIndex(0) - gx
-        val fy = fibn.getElementAtIndex(1) - gy
-        val fz = fibn.getElementAtIndex(2) - gz
+        val ax = abn.getElementAtIndex(0)
+        val ay = abn.getElementAtIndex(1)
+        val az = abn.getElementAtIndex(2)
 
         val oldVx = initialSpeed.valueX
         val oldVy = initialSpeed.valueY
         val oldVz = initialSpeed.valueZ
 
-        val newVx = oldVx + fx * TIME_INTERVAL
-        val newVy = oldVy + fy * TIME_INTERVAL
-        val newVz = oldVz + fz * TIME_INTERVAL
+        val newVx = oldVx + ax * TIME_INTERVAL
+        val newVy = oldVy + ay * TIME_INTERVAL
+        val newVz = oldVz + az * TIME_INTERVAL
         val currentSpeed1 = SpeedTriad(newVx, newVy, newVz)
         val currentSpeed2: SpeedTriad? = estimator.getPrivateProperty("currentSpeed")
         requireNotNull(currentSpeed2)

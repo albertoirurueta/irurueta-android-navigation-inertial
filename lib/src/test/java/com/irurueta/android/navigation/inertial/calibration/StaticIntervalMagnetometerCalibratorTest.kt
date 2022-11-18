@@ -68,11 +68,11 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertNull(calibrator.worldMagneticModel)
         assertTrue(calibrator.isInitialMagneticFluxDensityNormMeasured)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             calibrator.accelerometerSensorType
         )
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
             calibrator.magnetometerSensorType
         )
         assertEquals(SensorDelay.FASTEST, calibrator.accelerometerSensorDelay)
@@ -288,8 +288,8 @@ class StaticIntervalMagnetometerCalibratorTest {
                 location,
                 timestamp,
                 worldMagneticModel,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
-                MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+                AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+                MagnetometerSensorCollector.SensorType.MAGNETOMETER,
                 SensorDelay.NORMAL,
                 SensorDelay.NORMAL,
                 solveCalibrationWhenEnoughMeasurements = false,
@@ -318,11 +318,11 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertSame(worldMagneticModel, calibrator.worldMagneticModel)
         assertFalse(calibrator.isInitialMagneticFluxDensityNormMeasured)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             calibrator.accelerometerSensorType
         )
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
             calibrator.magnetometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, calibrator.accelerometerSensorDelay)

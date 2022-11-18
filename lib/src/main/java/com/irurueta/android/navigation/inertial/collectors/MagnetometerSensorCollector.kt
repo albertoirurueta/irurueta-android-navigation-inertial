@@ -32,7 +32,7 @@ import android.hardware.SensorEventListener
  */
 class MagnetometerSensorCollector(
     context: Context,
-    val sensorType: SensorType = SensorType.MAGNETOMETER,
+    val sensorType: SensorType = SensorType.MAGNETOMETER_UNCALIBRATED,
     sensorDelay: SensorDelay = SensorDelay.FASTEST,
     var measurementListener: OnMeasurementListener? = null,
     accuracyChangedListener: OnAccuracyChangedListener? = null

@@ -66,10 +66,10 @@ import com.irurueta.units.AngularSpeedUnit
 class GyroscopeMeasurementGenerator(
     context: Context,
     accelerometerSensorType: AccelerometerSensorCollector.SensorType =
-        AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+        AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
     accelerometerSensorDelay: SensorDelay = SensorDelay.FASTEST,
     val gyroscopeSensorType: GyroscopeSensorCollector.SensorType =
-        GyroscopeSensorCollector.SensorType.GYROSCOPE,
+        GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
     val gyroscopeSensorDelay: SensorDelay = SensorDelay.FASTEST,
     initializationStartedListener: OnInitializationStartedListener<GyroscopeMeasurementGenerator>? = null,
     initializationCompletedListener: OnInitializationCompletedListener<GyroscopeMeasurementGenerator>? = null,

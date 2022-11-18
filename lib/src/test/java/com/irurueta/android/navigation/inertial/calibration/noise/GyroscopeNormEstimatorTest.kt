@@ -57,7 +57,10 @@ class GyroscopeNormEstimatorTest {
 
         // check default values
         assertSame(context, estimator.context)
-        assertEquals(GyroscopeSensorCollector.SensorType.GYROSCOPE, estimator.sensorType)
+        assertEquals(
+            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            estimator.sensorType
+        )
         assertEquals(SensorDelay.FASTEST, estimator.sensorDelay)
         assertEquals(BaseAccumulatedEstimator.DEFAULT_MAX_SAMPLES, estimator.maxSamples)
         assertEquals(
@@ -104,13 +107,13 @@ class GyroscopeNormEstimatorTest {
         val estimator =
             GyroscopeNormEstimator(
                 context,
-                GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED
+                GyroscopeSensorCollector.SensorType.GYROSCOPE
             )
 
         // check values
         assertSame(context, estimator.context)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             estimator.sensorType
         )
         assertEquals(SensorDelay.FASTEST, estimator.sensorDelay)
@@ -159,14 +162,14 @@ class GyroscopeNormEstimatorTest {
         val estimator =
             GyroscopeNormEstimator(
                 context,
-                GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+                GyroscopeSensorCollector.SensorType.GYROSCOPE,
                 SensorDelay.NORMAL
             )
 
         // check values
         assertSame(context, estimator.context)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             estimator.sensorType
         )
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
@@ -214,7 +217,7 @@ class GyroscopeNormEstimatorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         GyroscopeNormEstimator(
             context,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
             SensorDelay.NORMAL,
             -1
         )
@@ -226,7 +229,7 @@ class GyroscopeNormEstimatorTest {
         val estimator =
             GyroscopeNormEstimator(
                 context,
-                GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+                GyroscopeSensorCollector.SensorType.GYROSCOPE,
                 SensorDelay.NORMAL,
                 MAX_SAMPLES
             )
@@ -234,7 +237,7 @@ class GyroscopeNormEstimatorTest {
         // check values
         assertSame(context, estimator.context)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             estimator.sensorType
         )
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
@@ -282,7 +285,7 @@ class GyroscopeNormEstimatorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         GyroscopeNormEstimator(
             context,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
             SensorDelay.NORMAL,
             MAX_SAMPLES,
             -1L
@@ -294,7 +297,7 @@ class GyroscopeNormEstimatorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = GyroscopeNormEstimator(
             context,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             SensorDelay.NORMAL,
             MAX_SAMPLES,
             MAX_DURATION_MILLIS
@@ -303,7 +306,7 @@ class GyroscopeNormEstimatorTest {
         // check values
         assertSame(context, estimator.context)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             estimator.sensorType
         )
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
@@ -348,7 +351,7 @@ class GyroscopeNormEstimatorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = GyroscopeNormEstimator(
             context,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             SensorDelay.NORMAL,
             MAX_SAMPLES,
             MAX_DURATION_MILLIS,
@@ -358,7 +361,7 @@ class GyroscopeNormEstimatorTest {
         // check values
         assertSame(context, estimator.context)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             estimator.sensorType
         )
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
@@ -405,7 +408,7 @@ class GyroscopeNormEstimatorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = GyroscopeNormEstimator(
             context,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             SensorDelay.NORMAL,
             MAX_SAMPLES,
             MAX_DURATION_MILLIS,
@@ -416,7 +419,7 @@ class GyroscopeNormEstimatorTest {
         // check values
         assertSame(context, estimator.context)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             estimator.sensorType
         )
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
@@ -465,7 +468,7 @@ class GyroscopeNormEstimatorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = GyroscopeNormEstimator(
             context,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             SensorDelay.NORMAL,
             MAX_SAMPLES,
             MAX_DURATION_MILLIS,
@@ -477,7 +480,7 @@ class GyroscopeNormEstimatorTest {
         // check values
         assertSame(context, estimator.context)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             estimator.sensorType
         )
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
@@ -527,7 +530,7 @@ class GyroscopeNormEstimatorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = GyroscopeNormEstimator(
             context,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             SensorDelay.NORMAL,
             MAX_SAMPLES,
             MAX_DURATION_MILLIS,
@@ -540,7 +543,7 @@ class GyroscopeNormEstimatorTest {
         // check values
         assertSame(context, estimator.context)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             estimator.sensorType
         )
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)

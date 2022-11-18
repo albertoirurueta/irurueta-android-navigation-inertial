@@ -52,9 +52,9 @@ class AccurateLevelingEstimatorTest {
         assertSame(context, estimator.context)
         assertSame(location, estimator.location)
         assertEquals(SensorDelay.GAME, estimator.sensorDelay)
-        assertFalse(estimator.useAccelerometer)
+        assertTrue(estimator.useAccelerometer)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             estimator.accelerometerSensorType
         )
         assertNotNull(estimator.accelerometerAveragingFilter)
@@ -80,8 +80,8 @@ class AccurateLevelingEstimatorTest {
             context,
             location,
             SensorDelay.NORMAL,
-            useAccelerometer = true,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            useAccelerometer = false,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             accelerometerAveragingFilter,
             estimateCoordinateTransformation = true,
             estimateEulerAngles = false,
@@ -95,9 +95,9 @@ class AccurateLevelingEstimatorTest {
         assertSame(context, estimator.context)
         assertSame(location, estimator.location)
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
-        assertTrue(estimator.useAccelerometer)
+        assertFalse(estimator.useAccelerometer)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             estimator.accelerometerSensorType
         )
         assertSame(accelerometerAveragingFilter, estimator.accelerometerAveragingFilter)
@@ -147,8 +147,13 @@ class AccurateLevelingEstimatorTest {
         val location = getLocation()
         val estimator = AccurateLevelingEstimator(context, location)
 
+        val gravityEstimator: GravityEstimator? =
+            getPrivateProperty(BaseLevelingEstimator::class, estimator, "gravityEstimator")
+        requireNotNull(gravityEstimator)
+
         // check default value
         assertNull(estimator.accelerometerMeasurementListener)
+        assertNull(gravityEstimator.accelerometerMeasurementListener)
 
         // set new value
         val listener = mockk<AccelerometerSensorCollector.OnMeasurementListener>()
@@ -156,6 +161,7 @@ class AccurateLevelingEstimatorTest {
 
         // check
         assertSame(listener, estimator.accelerometerMeasurementListener)
+        assertSame(listener, gravityEstimator.accelerometerMeasurementListener)
     }
 
     @Test

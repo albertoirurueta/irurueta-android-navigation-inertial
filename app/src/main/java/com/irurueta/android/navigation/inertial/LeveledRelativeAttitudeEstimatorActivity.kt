@@ -65,11 +65,12 @@ class LeveledRelativeAttitudeEstimatorActivity : AppCompatActivity() {
 
     private var useAccelerometer = false
 
-    private var accelerometerSensorType = AccelerometerSensorCollector.SensorType.ACCELEROMETER
+    private var accelerometerSensorType =
+        AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
 
     private var accelerometerAveragingFilterType: String? = null
 
-    private var gyroscopeSensorType = GyroscopeSensorCollector.SensorType.GYROSCOPE
+    private var gyroscopeSensorType = GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED
 
     private var useAccurateLevelingEstimator = false
 
@@ -83,12 +84,12 @@ class LeveledRelativeAttitudeEstimatorActivity : AppCompatActivity() {
             extras?.getBoolean(USE_ACCELEROMETER, false) ?: false
         accelerometerSensorType =
             (extras?.getSerializable(ACCELEROMETER_SENSOR_TYPE) as AccelerometerSensorCollector.SensorType?)
-                ?: AccelerometerSensorCollector.SensorType.ACCELEROMETER
+                ?: AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
         accelerometerAveragingFilterType =
             extras?.getString(ACCELEROMETER_AVERAGING_FILTER_TYPE)
         gyroscopeSensorType =
             (extras?.getSerializable(GYROSCOPE_SENSOR_TYPE) as GyroscopeSensorCollector.SensorType?)
-                ?: GyroscopeSensorCollector.SensorType.GYROSCOPE
+                ?: GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED
         useAccurateLevelingEstimator =
             extras?.getBoolean(USE_ACCURATE_LEVELING_ESTIMATOR, false) ?: false
         useAccurateRelativeGyroscopeAttitudeEstimator =

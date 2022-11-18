@@ -62,7 +62,7 @@ import com.irurueta.units.TimeConverter
 class AccelerometerIntervalDetector(
     context: Context,
     val sensorType: AccelerometerSensorCollector.SensorType =
-        AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+        AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
     sensorDelay: SensorDelay = SensorDelay.FASTEST,
     initializationStartedListener: OnInitializationStartedListener<AccelerometerIntervalDetector>? = null,
     initializationCompletedListener: OnInitializationCompletedListener<AccelerometerIntervalDetector>? = null,

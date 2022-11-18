@@ -52,12 +52,12 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         // check default values
         assertSame(context, generator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.FASTEST, generator.accelerometerSensorDelay)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
             generator.gyroscopeSensorType
         )
         assertEquals(SensorDelay.FASTEST, generator.gyroscopeSensorDelay)
@@ -150,18 +150,18 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerAndGyroscopeMeasurementGenerator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER
         )
 
         // check default values
         assertSame(context, generator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.FASTEST, generator.accelerometerSensorDelay)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
             generator.gyroscopeSensorType
         )
         assertEquals(SensorDelay.FASTEST, generator.gyroscopeSensorDelay)
@@ -254,14 +254,120 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerAndGyroscopeMeasurementGenerator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             SensorDelay.NORMAL
         )
 
         // check default values
         assertSame(context, generator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            generator.accelerometerSensorType
+        )
+        assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
+        assertEquals(
+            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            generator.gyroscopeSensorType
+        )
+        assertEquals(SensorDelay.FASTEST, generator.gyroscopeSensorDelay)
+        assertNull(generator.initializationStartedListener)
+        assertNull(generator.initializationCompletedListener)
+        assertNull(generator.errorListener)
+        assertNull(generator.staticIntervalDetectedListener)
+        assertNull(generator.dynamicIntervalDetectedListener)
+        assertNull(generator.staticIntervalSkippedListener)
+        assertNull(generator.dynamicIntervalSkippedListener)
+        assertNull(generator.generatedAccelerometerMeasurementListener)
+        assertNull(generator.generatedGyroscopeMeasurementListener)
+        assertNull(generator.resetListener)
+        assertNull(generator.accelerometerMeasurementListener)
+        assertNull(generator.gyroscopeMeasurementListener)
+        assertNull(generator.accuracyChangedListener)
+        assertNull(generator.accelerometerSensor)
+        assertNull(generator.gyroscopeSensor)
+        assertEquals(MeasurementsGenerator.DEFAULT_MIN_STATIC_SAMPLES, generator.minStaticSamples)
+        assertEquals(MeasurementsGenerator.DEFAULT_MAX_DYNAMIC_SAMPLES, generator.maxDynamicSamples)
+        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, generator.windowSize)
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
+            generator.initialStaticSamples
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
+            generator.thresholdFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
+            generator.instantaneousNoiseLevelFactor,
+            0.0
+        )
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
+            generator.baseNoiseLevelAbsoluteThreshold,
+            0.0
+        )
+        val baseNoiseLevelAbsoluteThreshold1 =
+            generator.baseNoiseLevelAbsoluteThresholdAsMeasurement
+        assertEquals(
+            generator.baseNoiseLevelAbsoluteThreshold,
+            baseNoiseLevelAbsoluteThreshold1.value.toDouble(),
+            0.0
+        )
+        assertEquals(
+            AccelerationUnit.METERS_PER_SQUARED_SECOND,
+            baseNoiseLevelAbsoluteThreshold1.unit
+        )
+        val baseNoiseLevelAbsoluteThreshold2 =
+            Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        generator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevelAbsoluteThreshold2)
+        assertEquals(baseNoiseLevelAbsoluteThreshold1, baseNoiseLevelAbsoluteThreshold2)
+        assertNull(generator.accelerometerBaseNoiseLevel)
+        assertNull(generator.accelerometerBaseNoiseLevelAsMeasurement)
+        val baseNoiseLevel = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        assertFalse(generator.getAccelerometerBaseNoiseLevelAsMeasurement(baseNoiseLevel))
+        assertNull(generator.accelerometerBaseNoiseLevelPsd)
+        assertNull(generator.accelerometerBaseNoiseLevelRootPsd)
+        assertNull(generator.threshold)
+        assertNull(generator.thresholdAsMeasurement)
+        val threshold = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        assertFalse(generator.getThresholdAsMeasurement(threshold))
+        assertEquals(0, generator.processedStaticSamples)
+        assertEquals(0, generator.processedDynamicSamples)
+        assertFalse(generator.isStaticIntervalSkipped)
+        assertFalse(generator.isDynamicIntervalSkipped)
+        assertNull(generator.accelerometerAverageTimeInterval)
+        assertNull(generator.accelerometerAverageTimeIntervalAsTime)
+        val time = Time(0.0, TimeUnit.SECOND)
+        assertFalse(generator.getAccelerometerAverageTimeIntervalAsTime(time))
+        assertNull(generator.accelerometerTimeIntervalVariance)
+        assertNull(generator.accelerometerTimeIntervalStandardDeviation)
+        assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
+        assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
+        assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
+        assertEquals(0, generator.numberOfProcessedGyroscopeMeasurements)
+        assertFalse(generator.running)
+        assertEquals(Status.IDLE, generator.status)
+        assertNull(generator.gyroscopeBaseNoiseLevel)
+        assertNull(generator.gyroscopeBaseNoiseLevelAsMeasurement)
+        val angularSpeed = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertFalse(generator.getGyroscopeBaseNoiseLevelAsMeasurement(angularSpeed))
+    }
+
+    @Test
+    fun constructor_whenGyroscopeSensorType_setsExpectedValues() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val generator = AccelerometerAndGyroscopeMeasurementGenerator(
+            context,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            SensorDelay.NORMAL,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE
+        )
+
+        // check default values
+        assertSame(context, generator.context)
+        assertEquals(
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
@@ -355,131 +461,25 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
     }
 
     @Test
-    fun constructor_whenGyroscopeSensorType_setsExpectedValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerAndGyroscopeMeasurementGenerator(
-            context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
-            SensorDelay.NORMAL,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED
-        )
-
-        // check default values
-        assertSame(context, generator.context)
-        assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
-            generator.accelerometerSensorType
-        )
-        assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
-        assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
-            generator.gyroscopeSensorType
-        )
-        assertEquals(SensorDelay.FASTEST, generator.gyroscopeSensorDelay)
-        assertNull(generator.initializationStartedListener)
-        assertNull(generator.initializationCompletedListener)
-        assertNull(generator.errorListener)
-        assertNull(generator.staticIntervalDetectedListener)
-        assertNull(generator.dynamicIntervalDetectedListener)
-        assertNull(generator.staticIntervalSkippedListener)
-        assertNull(generator.dynamicIntervalSkippedListener)
-        assertNull(generator.generatedAccelerometerMeasurementListener)
-        assertNull(generator.generatedGyroscopeMeasurementListener)
-        assertNull(generator.resetListener)
-        assertNull(generator.accelerometerMeasurementListener)
-        assertNull(generator.gyroscopeMeasurementListener)
-        assertNull(generator.accuracyChangedListener)
-        assertNull(generator.accelerometerSensor)
-        assertNull(generator.gyroscopeSensor)
-        assertEquals(MeasurementsGenerator.DEFAULT_MIN_STATIC_SAMPLES, generator.minStaticSamples)
-        assertEquals(MeasurementsGenerator.DEFAULT_MAX_DYNAMIC_SAMPLES, generator.maxDynamicSamples)
-        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, generator.windowSize)
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
-            generator.initialStaticSamples
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
-            generator.thresholdFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
-            generator.instantaneousNoiseLevelFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
-            generator.baseNoiseLevelAbsoluteThreshold,
-            0.0
-        )
-        val baseNoiseLevelAbsoluteThreshold1 =
-            generator.baseNoiseLevelAbsoluteThresholdAsMeasurement
-        assertEquals(
-            generator.baseNoiseLevelAbsoluteThreshold,
-            baseNoiseLevelAbsoluteThreshold1.value.toDouble(),
-            0.0
-        )
-        assertEquals(
-            AccelerationUnit.METERS_PER_SQUARED_SECOND,
-            baseNoiseLevelAbsoluteThreshold1.unit
-        )
-        val baseNoiseLevelAbsoluteThreshold2 =
-            Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        generator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevelAbsoluteThreshold2)
-        assertEquals(baseNoiseLevelAbsoluteThreshold1, baseNoiseLevelAbsoluteThreshold2)
-        assertNull(generator.accelerometerBaseNoiseLevel)
-        assertNull(generator.accelerometerBaseNoiseLevelAsMeasurement)
-        val baseNoiseLevel = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        assertFalse(generator.getAccelerometerBaseNoiseLevelAsMeasurement(baseNoiseLevel))
-        assertNull(generator.accelerometerBaseNoiseLevelPsd)
-        assertNull(generator.accelerometerBaseNoiseLevelRootPsd)
-        assertNull(generator.threshold)
-        assertNull(generator.thresholdAsMeasurement)
-        val threshold = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        assertFalse(generator.getThresholdAsMeasurement(threshold))
-        assertEquals(0, generator.processedStaticSamples)
-        assertEquals(0, generator.processedDynamicSamples)
-        assertFalse(generator.isStaticIntervalSkipped)
-        assertFalse(generator.isDynamicIntervalSkipped)
-        assertNull(generator.accelerometerAverageTimeInterval)
-        assertNull(generator.accelerometerAverageTimeIntervalAsTime)
-        val time = Time(0.0, TimeUnit.SECOND)
-        assertFalse(generator.getAccelerometerAverageTimeIntervalAsTime(time))
-        assertNull(generator.accelerometerTimeIntervalVariance)
-        assertNull(generator.accelerometerTimeIntervalStandardDeviation)
-        assertNull(generator.accelerometerTimeIntervalStandardDeviationAsTime)
-        assertFalse(generator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
-        assertEquals(0, generator.numberOfProcessedAccelerometerMeasurements)
-        assertEquals(0, generator.numberOfProcessedGyroscopeMeasurements)
-        assertFalse(generator.running)
-        assertEquals(Status.IDLE, generator.status)
-        assertNull(generator.gyroscopeBaseNoiseLevel)
-        assertNull(generator.gyroscopeBaseNoiseLevelAsMeasurement)
-        val angularSpeed = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        assertFalse(generator.getGyroscopeBaseNoiseLevelAsMeasurement(angularSpeed))
-    }
-
-    @Test
     fun constructor_whenGyroscopeSensorDelay_setsExpectedValues() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerAndGyroscopeMeasurementGenerator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             SensorDelay.NORMAL
         )
 
         // check default values
         assertSame(context, generator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             generator.gyroscopeSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.gyroscopeSensorDelay)
@@ -574,9 +574,9 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerAndGyroscopeMeasurementGenerator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             SensorDelay.NORMAL,
             initializationStartedListener
         )
@@ -584,12 +584,12 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         // check default values
         assertSame(context, generator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             generator.gyroscopeSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.gyroscopeSensorDelay)
@@ -686,9 +686,9 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerAndGyroscopeMeasurementGenerator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener
@@ -697,12 +697,12 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         // check default values
         assertSame(context, generator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             generator.gyroscopeSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.gyroscopeSensorDelay)
@@ -800,9 +800,9 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerAndGyroscopeMeasurementGenerator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -812,12 +812,12 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         // check default values
         assertSame(context, generator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             generator.gyroscopeSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.gyroscopeSensorDelay)
@@ -917,9 +917,9 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerAndGyroscopeMeasurementGenerator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -930,12 +930,12 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         // check default values
         assertSame(context, generator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             generator.gyroscopeSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.gyroscopeSensorDelay)
@@ -1037,9 +1037,9 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerAndGyroscopeMeasurementGenerator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -1051,12 +1051,12 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         // check default values
         assertSame(context, generator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             generator.gyroscopeSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.gyroscopeSensorDelay)
@@ -1160,9 +1160,9 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerAndGyroscopeMeasurementGenerator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -1175,12 +1175,12 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         // check default values
         assertSame(context, generator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             generator.gyroscopeSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.gyroscopeSensorDelay)
@@ -1286,9 +1286,9 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerAndGyroscopeMeasurementGenerator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -1302,12 +1302,12 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         // check default values
         assertSame(context, generator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             generator.gyroscopeSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.gyroscopeSensorDelay)
@@ -1415,9 +1415,9 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerAndGyroscopeMeasurementGenerator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -1432,12 +1432,12 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         // check default values
         assertSame(context, generator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             generator.gyroscopeSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.gyroscopeSensorDelay)
@@ -1550,9 +1550,9 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerAndGyroscopeMeasurementGenerator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -1568,12 +1568,12 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         // check default values
         assertSame(context, generator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             generator.gyroscopeSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.gyroscopeSensorDelay)
@@ -1690,9 +1690,9 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerAndGyroscopeMeasurementGenerator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -1709,12 +1709,12 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         // check default values
         assertSame(context, generator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             generator.gyroscopeSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.gyroscopeSensorDelay)
@@ -1833,9 +1833,9 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerAndGyroscopeMeasurementGenerator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -1853,12 +1853,12 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         // check default values
         assertSame(context, generator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             generator.gyroscopeSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.gyroscopeSensorDelay)
@@ -1978,9 +1978,9 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerAndGyroscopeMeasurementGenerator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -1999,12 +1999,12 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         // check default values
         assertSame(context, generator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             generator.gyroscopeSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.gyroscopeSensorDelay)
@@ -2125,9 +2125,9 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerAndGyroscopeMeasurementGenerator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -2147,12 +2147,12 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
         // check default values
         assertSame(context, generator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             generator.gyroscopeSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.gyroscopeSensorDelay)

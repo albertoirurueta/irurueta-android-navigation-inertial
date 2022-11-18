@@ -134,7 +134,7 @@ class SingleSensorStaticIntervalMagnetometerCalibrator private constructor(
         timestamp: Date = Date(),
         worldMagneticModel: WorldMagneticModel? = null,
         sensorType: MagnetometerSensorCollector.SensorType =
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
         sensorDelay: SensorDelay = SensorDelay.FASTEST,
         solveCalibrationWhenEnoughMeasurements: Boolean = true,
         isGroundTruthInitialHardIron: Boolean = false,

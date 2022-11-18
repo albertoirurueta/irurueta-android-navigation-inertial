@@ -51,7 +51,7 @@ class RelativeGyroscopeAttitudeEstimatorActivity : AppCompatActivity() {
         val extras = intent.extras
         val gyroscopeSensorType =
             (extras?.getSerializable(GYROSCOPE_SENSOR_TYPE) as GyroscopeSensorCollector.SensorType?)
-                ?: GyroscopeSensorCollector.SensorType.GYROSCOPE
+                ?: GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED
 
         setContentView(R.layout.activity_relative_gyroscope_attitude_estimator)
         cubeView = findViewById(R.id.cube)

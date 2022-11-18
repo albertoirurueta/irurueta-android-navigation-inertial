@@ -67,9 +67,11 @@ class GeomagneticAttitudeEstimatorActivity : AppCompatActivity() {
 
     private var useWorldMagneticModel = false
 
-    private var accelerometerSensorType = AccelerometerSensorCollector.SensorType.ACCELEROMETER
+    private var accelerometerSensorType =
+        AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
 
-    private var magnetometerSensorType = MagnetometerSensorCollector.SensorType.MAGNETOMETER
+    private var magnetometerSensorType =
+        MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED
 
     private var averagingFilterType: String? = null
 
@@ -80,10 +82,10 @@ class GeomagneticAttitudeEstimatorActivity : AppCompatActivity() {
         useAccelerometer = extras?.getBoolean(USE_ACCELEROMETER, false) ?: false
         accelerometerSensorType =
             (extras?.getSerializable(ACCELEROMETER_SENSOR_TYPE) as AccelerometerSensorCollector.SensorType?)
-                ?: AccelerometerSensorCollector.SensorType.ACCELEROMETER
+                ?: AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
         magnetometerSensorType =
             (extras?.getSerializable(MAGNETOMETER_SENSOR_TYPE) as MagnetometerSensorCollector.SensorType?)
-                ?: MagnetometerSensorCollector.SensorType.MAGNETOMETER
+                ?: MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED
         averagingFilterType = extras?.getString(ACCELEROMETER_AVERAGING_FILTER_TYPE)
         useWorldMagneticModel = extras?.getBoolean(USE_WORLD_MAGNETIC_MODEL, false) ?: false
 

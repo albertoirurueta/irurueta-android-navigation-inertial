@@ -69,7 +69,10 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
 
         // check default values
         assertSame(context, calibrator.context)
-        assertEquals(AccelerometerSensorCollector.SensorType.ACCELEROMETER, calibrator.sensorType)
+        assertEquals(
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            calibrator.sensorType
+        )
         assertEquals(SensorDelay.FASTEST, calibrator.sensorDelay)
         assertTrue(calibrator.solveCalibrationWhenEnoughMeasurements)
         assertFalse(calibrator.isGroundTruthInitialBias)
@@ -241,13 +244,13 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = SingleSensorStaticIntervalAccelerometerCalibrator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER
         )
 
         // check default values
         assertSame(context, calibrator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             calibrator.sensorType
         )
         assertEquals(SensorDelay.FASTEST, calibrator.sensorDelay)
@@ -421,14 +424,14 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = SingleSensorStaticIntervalAccelerometerCalibrator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             SensorDelay.NORMAL
         )
 
         // check default values
         assertSame(context, calibrator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             calibrator.sensorType
         )
         assertEquals(SensorDelay.NORMAL, calibrator.sensorDelay)
@@ -602,7 +605,7 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = SingleSensorStaticIntervalAccelerometerCalibrator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
             false
         )
@@ -610,7 +613,7 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
         // check default values
         assertSame(context, calibrator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             calibrator.sensorType
         )
         assertEquals(SensorDelay.NORMAL, calibrator.sensorDelay)
@@ -784,7 +787,7 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = SingleSensorStaticIntervalAccelerometerCalibrator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
             solveCalibrationWhenEnoughMeasurements = false,
             isGroundTruthInitialBias = true
@@ -793,7 +796,7 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
         // check default values
         assertSame(context, calibrator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             calibrator.sensorType
         )
         assertEquals(SensorDelay.NORMAL, calibrator.sensorDelay)
@@ -969,7 +972,7 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = SingleSensorStaticIntervalAccelerometerCalibrator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
             solveCalibrationWhenEnoughMeasurements = false,
             isGroundTruthInitialBias = true,
@@ -979,7 +982,7 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
         // check default values
         assertSame(context, calibrator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             calibrator.sensorType
         )
         assertEquals(SensorDelay.NORMAL, calibrator.sensorDelay)
@@ -1166,7 +1169,7 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = SingleSensorStaticIntervalAccelerometerCalibrator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
             solveCalibrationWhenEnoughMeasurements = false,
             isGroundTruthInitialBias = true,
@@ -1177,7 +1180,7 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
         // check default values
         assertSame(context, calibrator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             calibrator.sensorType
         )
         assertEquals(SensorDelay.NORMAL, calibrator.sensorDelay)
@@ -1366,7 +1369,7 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = SingleSensorStaticIntervalAccelerometerCalibrator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
             solveCalibrationWhenEnoughMeasurements = false,
             isGroundTruthInitialBias = true,
@@ -1378,7 +1381,7 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
         // check default values
         assertSame(context, calibrator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             calibrator.sensorType
         )
         assertEquals(SensorDelay.NORMAL, calibrator.sensorDelay)
@@ -1569,7 +1572,7 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = SingleSensorStaticIntervalAccelerometerCalibrator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
             solveCalibrationWhenEnoughMeasurements = false,
             isGroundTruthInitialBias = true,
@@ -1582,7 +1585,7 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
         // check default values
         assertSame(context, calibrator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             calibrator.sensorType
         )
         assertEquals(SensorDelay.NORMAL, calibrator.sensorDelay)
@@ -1775,7 +1778,7 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = SingleSensorStaticIntervalAccelerometerCalibrator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
             solveCalibrationWhenEnoughMeasurements = false,
             isGroundTruthInitialBias = true,
@@ -1789,7 +1792,7 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
         // check default values
         assertSame(context, calibrator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             calibrator.sensorType
         )
         assertEquals(SensorDelay.NORMAL, calibrator.sensorDelay)
@@ -1987,7 +1990,7 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = SingleSensorStaticIntervalAccelerometerCalibrator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
             solveCalibrationWhenEnoughMeasurements = false,
             isGroundTruthInitialBias = true,
@@ -2002,7 +2005,7 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
         // check default values
         assertSame(context, calibrator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             calibrator.sensorType
         )
         assertEquals(SensorDelay.NORMAL, calibrator.sensorDelay)
@@ -2202,7 +2205,7 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = SingleSensorStaticIntervalAccelerometerCalibrator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
             solveCalibrationWhenEnoughMeasurements = false,
             isGroundTruthInitialBias = true,
@@ -2218,7 +2221,7 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
         // check default values
         assertSame(context, calibrator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             calibrator.sensorType
         )
         assertEquals(SensorDelay.NORMAL, calibrator.sensorDelay)
@@ -2423,7 +2426,7 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = SingleSensorStaticIntervalAccelerometerCalibrator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
             solveCalibrationWhenEnoughMeasurements = false,
             isGroundTruthInitialBias = true,
@@ -2440,7 +2443,7 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
         // check default values
         assertSame(context, calibrator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             calibrator.sensorType
         )
         assertEquals(SensorDelay.NORMAL, calibrator.sensorDelay)
@@ -2647,7 +2650,7 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = SingleSensorStaticIntervalAccelerometerCalibrator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
             solveCalibrationWhenEnoughMeasurements = false,
             isGroundTruthInitialBias = true,
@@ -2665,7 +2668,7 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
         // check default values
         assertSame(context, calibrator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             calibrator.sensorType
         )
         assertEquals(SensorDelay.NORMAL, calibrator.sensorDelay)
@@ -2874,7 +2877,7 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = SingleSensorStaticIntervalAccelerometerCalibrator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
             solveCalibrationWhenEnoughMeasurements = false,
             isGroundTruthInitialBias = true,
@@ -2893,7 +2896,7 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
         // check default values
         assertSame(context, calibrator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             calibrator.sensorType
         )
         assertEquals(SensorDelay.NORMAL, calibrator.sensorDelay)
@@ -3104,7 +3107,7 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = SingleSensorStaticIntervalAccelerometerCalibrator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
             solveCalibrationWhenEnoughMeasurements = false,
             isGroundTruthInitialBias = true,
@@ -3124,7 +3127,7 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
         // check default values
         assertSame(context, calibrator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             calibrator.sensorType
         )
         assertEquals(SensorDelay.NORMAL, calibrator.sensorDelay)
@@ -3336,7 +3339,7 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = SingleSensorStaticIntervalAccelerometerCalibrator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
             solveCalibrationWhenEnoughMeasurements = false,
             isGroundTruthInitialBias = true,
@@ -3357,7 +3360,7 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
         // check default values
         assertSame(context, calibrator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             calibrator.sensorType
         )
         assertEquals(SensorDelay.NORMAL, calibrator.sensorDelay)

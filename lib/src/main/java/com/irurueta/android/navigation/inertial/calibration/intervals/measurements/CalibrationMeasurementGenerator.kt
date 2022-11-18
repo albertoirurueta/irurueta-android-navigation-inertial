@@ -48,7 +48,7 @@ import com.irurueta.units.TimeConverter
 abstract class CalibrationMeasurementGenerator<I>(
     val context: Context,
     val accelerometerSensorType: AccelerometerSensorCollector.SensorType =
-        AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+        AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
     val accelerometerSensorDelay: SensorDelay = SensorDelay.FASTEST,
     var accuracyChangedListener: SensorCollector.OnAccuracyChangedListener? = null
 ) {

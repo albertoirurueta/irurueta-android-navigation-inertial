@@ -137,7 +137,7 @@ class SingleSensorStaticIntervalAccelerometerCalibrator private constructor(
     constructor(
         context: Context,
         sensorType: AccelerometerSensorCollector.SensorType =
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
         sensorDelay: SensorDelay = SensorDelay.FASTEST,
         solveCalibrationWhenEnoughMeasurements: Boolean = true,
         isGroundTruthInitialBias: Boolean = false,

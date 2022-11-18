@@ -56,7 +56,10 @@ class MagnetometerNoiseEstimatorTest {
 
         // check default values
         assertSame(context, estimator.context)
-        assertEquals(MagnetometerSensorCollector.SensorType.MAGNETOMETER, estimator.sensorType)
+        assertEquals(
+            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            estimator.sensorType
+        )
         assertEquals(SensorDelay.FASTEST, estimator.sensorDelay)
         assertEquals(BaseAccumulatedEstimator.DEFAULT_MAX_SAMPLES, estimator.maxSamples)
         assertEquals(
@@ -136,13 +139,13 @@ class MagnetometerNoiseEstimatorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = MagnetometerNoiseEstimator(
             context,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED
+            MagnetometerSensorCollector.SensorType.MAGNETOMETER
         )
 
         // check default values
         assertSame(context, estimator.context)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
             estimator.sensorType
         )
         assertEquals(SensorDelay.FASTEST, estimator.sensorDelay)
@@ -224,14 +227,14 @@ class MagnetometerNoiseEstimatorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = MagnetometerNoiseEstimator(
             context,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
             SensorDelay.NORMAL
         )
 
         // check default values
         assertSame(context, estimator.context)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
             estimator.sensorType
         )
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
@@ -313,7 +316,7 @@ class MagnetometerNoiseEstimatorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         MagnetometerNoiseEstimator(
             context,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
             SensorDelay.NORMAL,
             -1
         )
@@ -324,7 +327,7 @@ class MagnetometerNoiseEstimatorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = MagnetometerNoiseEstimator(
             context,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
             SensorDelay.NORMAL,
             MAX_SAMPLES
         )
@@ -332,7 +335,7 @@ class MagnetometerNoiseEstimatorTest {
         // check default values
         assertSame(context, estimator.context)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
             estimator.sensorType
         )
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
@@ -414,7 +417,7 @@ class MagnetometerNoiseEstimatorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         MagnetometerNoiseEstimator(
             context,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
             SensorDelay.NORMAL,
             MAX_SAMPLES,
             -1L
@@ -426,7 +429,7 @@ class MagnetometerNoiseEstimatorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = MagnetometerNoiseEstimator(
             context,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
             SensorDelay.NORMAL,
             MAX_SAMPLES,
             MAX_DURATION_MILLIS
@@ -435,7 +438,7 @@ class MagnetometerNoiseEstimatorTest {
         // check default values
         assertSame(context, estimator.context)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
             estimator.sensorType
         )
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
@@ -514,7 +517,7 @@ class MagnetometerNoiseEstimatorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = MagnetometerNoiseEstimator(
             context,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
             SensorDelay.NORMAL,
             MAX_SAMPLES,
             MAX_DURATION_MILLIS,
@@ -524,7 +527,7 @@ class MagnetometerNoiseEstimatorTest {
         // check default values
         assertSame(context, estimator.context)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
             estimator.sensorType
         )
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
@@ -605,7 +608,7 @@ class MagnetometerNoiseEstimatorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = MagnetometerNoiseEstimator(
             context,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
             SensorDelay.NORMAL,
             MAX_SAMPLES,
             MAX_DURATION_MILLIS,
@@ -616,7 +619,7 @@ class MagnetometerNoiseEstimatorTest {
         // check default values
         assertSame(context, estimator.context)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
             estimator.sensorType
         )
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
@@ -699,7 +702,7 @@ class MagnetometerNoiseEstimatorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = MagnetometerNoiseEstimator(
             context,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
             SensorDelay.NORMAL,
             MAX_SAMPLES,
             MAX_DURATION_MILLIS,
@@ -711,7 +714,7 @@ class MagnetometerNoiseEstimatorTest {
         // check default values
         assertSame(context, estimator.context)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
             estimator.sensorType
         )
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
@@ -795,7 +798,7 @@ class MagnetometerNoiseEstimatorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = MagnetometerNoiseEstimator(
             context,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
             SensorDelay.NORMAL,
             MAX_SAMPLES,
             MAX_DURATION_MILLIS,
@@ -808,7 +811,7 @@ class MagnetometerNoiseEstimatorTest {
         // check default values
         assertSame(context, estimator.context)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
             estimator.sensorType
         )
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
