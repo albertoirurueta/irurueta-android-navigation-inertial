@@ -2,6 +2,7 @@ package com.irurueta.android.navigation.inertial.test.estimators.attitude
 
 import android.hardware.SensorManager
 import android.util.Log
+import androidx.test.filters.RequiresDevice
 import androidx.test.platform.app.InstrumentationRegistry
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
@@ -14,6 +15,7 @@ import kotlin.math.abs
 import kotlin.math.pow
 import kotlin.math.sqrt
 
+@RequiresDevice
 class GravityEstimatorTest {
 
     private val syncHelper = ThreadSyncHelper()
