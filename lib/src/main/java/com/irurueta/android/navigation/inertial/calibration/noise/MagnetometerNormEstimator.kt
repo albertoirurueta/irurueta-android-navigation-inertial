@@ -53,7 +53,7 @@ import kotlin.math.sqrt
 class MagnetometerNormEstimator(
     context: Context,
     val sensorType: MagnetometerSensorCollector.SensorType =
-        MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+        MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
     sensorDelay: SensorDelay = SensorDelay.FASTEST,
     maxSamples: Int = DEFAULT_MAX_SAMPLES,
     maxDurationMillis: Long = DEFAULT_MAX_DURATION_MILLIS,

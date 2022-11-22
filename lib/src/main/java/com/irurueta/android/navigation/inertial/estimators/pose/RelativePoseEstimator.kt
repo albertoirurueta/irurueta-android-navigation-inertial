@@ -17,10 +17,12 @@ package com.irurueta.android.navigation.inertial.estimators.pose
 
 import android.content.Context
 import android.location.Location
+import android.util.Log
 import com.irurueta.algebra.Matrix
 import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.android.navigation.inertial.estimators.attitude.GravityEstimator
 import com.irurueta.android.navigation.inertial.estimators.attitude.LeveledRelativeAttitudeEstimator
@@ -38,6 +40,10 @@ import com.irurueta.navigation.inertial.calibration.AngularSpeedTriad
  *
  * @property context Android context.
  * @property sensorDelay Delay of sensors between samples.
+ * @property useAccelerometerForAttitudeEstimation true to use accelerometer sensor for attitude
+ * estimation, false to use system gravity sensor for leveling purposes. Regardless of this values,
+ * pose estimator always uses the accelerometer sensor, however, it can be used both for leveling
+ * and device motion, or only for device motion.
  * @property accelerometerSensorType One of the supported accelerometer sensor types. It is
  * suggested to avoid using non-calibrated accelerometers.
  * @property gyroscopeSensorType One of the supported gyroscope sensor types. It is suggested to
@@ -53,6 +59,7 @@ import com.irurueta.navigation.inertial.calibration.AngularSpeedTriad
 class RelativePoseEstimator private constructor(
     override val context: Context,
     override val sensorDelay: SensorDelay,
+    val useAccelerometerForAttitudeEstimation: Boolean,
     override val accelerometerSensorType: AccelerometerSensorCollector.SensorType,
     override val gyroscopeSensorType: GyroscopeSensorCollector.SensorType,
     override val accelerometerAveragingFilter: AveragingFilter,
@@ -67,6 +74,10 @@ class RelativePoseEstimator private constructor(
      *
      * @param context Android context.
      * @param sensorDelay Delay of sensors between samples.
+     * @property useAccelerometerForAttitudeEstimation true to use accelerometer sensor for attitude
+     * estimation, false to use system gravity sensor for leveling purposes. Regardless of this values,
+     * pose estimator always uses the accelerometer sensor, however, it can be used both for leveling
+     * and device motion, or only for device motion.
      * @param accelerometerSensorType One of the supported accelerometer sensor types. It is
      * suggested to avoid using non-calibrated accelerometers.
      * @param gyroscopeSensorType One of the supported gyroscope sensor types. It is suggested to
@@ -90,10 +101,11 @@ class RelativePoseEstimator private constructor(
     constructor(
         context: Context,
         sensorDelay: SensorDelay = SensorDelay.GAME,
+        useAccelerometerForAttitudeEstimation: Boolean = false,
         accelerometerSensorType: AccelerometerSensorCollector.SensorType =
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
         gyroscopeSensorType: GyroscopeSensorCollector.SensorType =
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
         accelerometerAveragingFilter: AveragingFilter = LowPassAveragingFilter(),
         useAccurateLevelingEstimator: Boolean = false,
         useAccurateRelativeGyroscopeAttitudeEstimator: Boolean = true,
@@ -106,6 +118,7 @@ class RelativePoseEstimator private constructor(
     ) : this(
         context,
         sensorDelay,
+        useAccelerometerForAttitudeEstimation,
         accelerometerSensorType,
         gyroscopeSensorType,
         accelerometerAveragingFilter,
@@ -128,9 +141,10 @@ class RelativePoseEstimator private constructor(
     private val gravity = AccelerationTriad()
 
     /**
-     * Acceleration measured by accelerometer sensor.
+     * Specific force measured by accelerometer sensor containing both device acceleration and
+     * gravity component.
      */
-    private val acceleration = AccelerationTriad()
+    private val specificForce = AccelerationTriad()
 
     /**
      * Angular speed measured by gyroscope sensor.
@@ -163,9 +177,9 @@ class RelativePoseEstimator private constructor(
     private val averageAttitude = Quaternion()
 
     /**
-     * Contains specific force in NED body coordinates. This is reused for performance reasons.
+     * Contains device acceleration in NED body coordinates. This is reused for performance reasons.
      */
-    private val fibb = Matrix(AccelerationTriad.COMPONENTS, 1)
+    private val abb = Matrix(AccelerationTriad.COMPONENTS, 1)
 
     /**
      * Contains average attitude expressed in matrix form. This is reused for performance reasons.
@@ -173,9 +187,9 @@ class RelativePoseEstimator private constructor(
     private val avgAttitudeMatrix = Matrix(Quaternion.N_ANGLES, Quaternion.N_ANGLES)
 
     /**
-     * Contains specific force in NED coordinates. This is reused for performance reasons.
+     * Contains device acceleration in NED coordinates. This is reused for performance reasons.
      */
-    private val fibn = Matrix(AccelerationTriad.COMPONENTS, 1)
+    private val abn = Matrix(AccelerationTriad.COMPONENTS, 1)
 
     /**
      * Previous speed in last sample.
@@ -396,6 +410,13 @@ class RelativePoseEstimator private constructor(
 
         reset()
         running = attitudeEstimator?.start() ?: false
+
+        running = running && if (!useAccelerometerForAttitudeEstimation) {
+            accelerometerSensorCollector.start()
+        } else {
+            true
+        }
+
         if (!running) {
             stop()
         }
@@ -407,6 +428,9 @@ class RelativePoseEstimator private constructor(
      * Stops this estimator.
      */
     override fun stop() {
+        if (!useAccelerometerForAttitudeEstimation) {
+            accelerometerSensorCollector.stop()
+        }
         attitudeEstimator?.stop()
         running = false
     }
@@ -426,7 +450,7 @@ class RelativePoseEstimator private constructor(
             context,
             initialLocation,
             sensorDelay,
-            useAccelerometer = true,
+            useAccelerometerForAttitudeEstimation,
             accelerometerSensorType,
             accelerometerAveragingFilter,
             gyroscopeSensorType,
@@ -435,132 +459,250 @@ class RelativePoseEstimator private constructor(
             estimateCoordinateTransformation = false,
             estimateEulerAngles = false,
             attitudeAvailableListener = { estimator, attitude, timestamp, _, _, _, _ ->
-                if (!initialize(attitude)) {
-                    return@LeveledRelativeAttitudeEstimator
-                }
-
-                val timeInterval = estimator.gyroscopeAverageTimeInterval
-
-                // current attitude is expressed in NED coordinates system
-                attitude.copyTo(currentAttitude)
-                // obtain average attitude between current and previous attitude
-                Quaternion.slerp(previousAttitude, currentAttitude, 0.5, averageAttitude)
-
-                // transform specific force to NED frame
-                acceleration.getValuesAsMatrix(fibb)
-                averageAttitude.asInhomogeneousMatrix(avgAttitudeMatrix)
-                avgAttitudeMatrix.multiply(fibb, fibn)
-
-                val ax = fibn.getElementAtIndex(0)
-                val ay = fibn.getElementAtIndex(1)
-                val az = fibn.getElementAtIndex(2)
-
-                val gx = gravity.valueX
-                val gy = gravity.valueY
-                val gz = gravity.valueZ
-
-                val fx = ax - gx
-                val fy = ay - gy
-                val fz = az - gz
-
-                // Update velocity
-                val oldVx = previousSpeed.valueX
-                val oldVy = previousSpeed.valueY
-                val oldVz = previousSpeed.valueZ
-
-                val newVx = oldVx + fx * timeInterval
-                val newVy = oldVy + fy * timeInterval
-                val newVz = oldVz + fz * timeInterval
-                currentSpeed.setValueCoordinates(newVx, newVy, newVz)
-
-                // Update position
-                val oldX = previousPosition.inhomX
-                val oldY = previousPosition.inhomY
-                val oldZ = previousPosition.inhomZ
-
-                val newX = oldX + 0.5 * (oldVx + newVx) * timeInterval
-                val newY = oldY + 0.5 * (oldVy + newVy) * timeInterval
-                val newZ = oldZ + 0.5 * (oldVz + newVz) * timeInterval
-                currentPosition.setCoordinates(newX, newY, newZ)
-
-                // compute transformation
-                computeTransformation()
-
-                // notify
-                poseAvailableListener?.onPoseAvailable(this, timestamp, poseTransformation)
-
-                // update previous values
-                currentAttitude.copyTo(previousAttitude)
-                currentSpeed.copyTo(previousSpeed)
-                previousPosition.setCoordinates(
-                    currentPosition.inhomX,
-                    currentPosition.inhomY,
-                    currentPosition.inhomY
-                )
+                processAttitude(estimator, attitude, timestamp)
             },
             accelerometerMeasurementListener = { ax, ay, az, bx, by, bz, timestamp, accuracy ->
-                val currentAx = if (bx != null)
-                    ax.toDouble() - bx.toDouble()
-                else
-                    ax.toDouble()
-                val currentAy = if (by != null)
-                    ay.toDouble() - by.toDouble()
-                else
-                    ay.toDouble()
-                val currentAz = if (bz != null)
-                    az.toDouble() - bz.toDouble()
-                else
-                    az.toDouble()
-
-                ENUtoNEDTriadConverter.convert(currentAx, currentAy, currentAz, acceleration)
-
-                accelerometerMeasurementListener?.onMeasurement(
-                    ax,
-                    ay,
-                    az,
-                    bx,
-                    by,
-                    bz,
-                    timestamp,
-                    accuracy
-                )
+                // this is only called when useAccelerometerForAttitudeEstimation = true
+                processAccelerometerMeasurement(ax, ay, az, bx, by, bz, timestamp, accuracy)
             },
             gyroscopeMeasurementListener = { wx, wy, wz, bx, by, bz, timestamp, accuracy ->
-                val currentWx = if (bx != null)
-                    wx.toDouble() - bx.toDouble()
-                else
-                    wx.toDouble()
-
-                val currentWy = if (by != null)
-                    wy.toDouble() - by.toDouble()
-                else
-                    wy.toDouble()
-
-                val currentWz = if (bz != null)
-                    wz.toDouble() - bz.toDouble()
-                else
-                    wz.toDouble()
-
-                ENUtoNEDTriadConverter.convert(currentWx, currentWy, currentWz, angularSpeed)
-
-                gyroscopeMeasurementListener?.onMeasurement(
-                    wx,
-                    wy,
-                    wz,
-                    bx,
-                    by,
-                    bz,
-                    timestamp,
-                    accuracy
-                )
+                processGyroscopeMeasurement(wx, wy, wz, bx, by, bz, timestamp, accuracy)
             },
-            gravityEstimationListener = { estimator, fx, fy, fz, timestamp ->
-                gravity.setValueCoordinates(fx, fy, fz)
-
-                gravityEstimationListener?.onEstimation(estimator, fx, fy, fz, timestamp)
+            gravityEstimationListener = { estimator, gx, gy, gz, timestamp ->
+                processGravityMeasurement(estimator, gx, gy, gz, timestamp)
             }
         )
     }
+
+    private val accelerometerSensorCollector = AccelerometerSensorCollector(
+        context,
+        accelerometerSensorType,
+        sensorDelay,
+        measurementListener = { ax, ay, az, bx, by, bz, timestamp, accuracy ->
+            // this is called when useAccelerometerForAttitudeEstimation = false
+            processAccelerometerMeasurement(ax, ay, az, bx, by, bz, timestamp, accuracy)
+        }
+    )
+
+    private var attitudeTimestamp = 0L
+    private var accelerometerTimestamp = 0L
+    private var gyroscopeTimestamp = 0L
+    private var gravityTimestamp = 0L
+
+    private fun processAttitude(
+        estimator: LeveledRelativeAttitudeEstimator,
+        attitude: Quaternion,
+        timestamp: Long,
+    ) {
+        attitudeTimestamp = timestamp
+
+        if (!initialize(attitude)) {
+            return
+        }
+
+        val timeInterval = estimator.gyroscopeAverageTimeInterval
+
+        // current attitude is expressed in NED coordinates system
+        attitude.copyTo(currentAttitude)
+        // obtain average attitude between current and previous attitude
+        Quaternion.slerp(previousAttitude, currentAttitude, 0.5, averageAttitude)
+
+        // transform specific force, gravity and acceleration to NED frame
+        val fbx = specificForce.valueX
+        val fby = specificForce.valueY
+        val fbz = specificForce.valueZ
+        val gbx = gravity.valueX
+        val gby = gravity.valueY
+        val gbz = gravity.valueZ
+        val abx = fbx - gbx
+        val aby = fby - gby
+        val abz = fbz - gbz
+        abb.setElementAtIndex(0, abx)
+        abb.setElementAtIndex(1, aby)
+        abb.setElementAtIndex(2, abz)
+
+        averageAttitude.asInhomogeneousMatrix(avgAttitudeMatrix)
+        avgAttitudeMatrix.multiply(abb, abn)
+
+        val ax = abn.getElementAtIndex(0)
+        val ay = abn.getElementAtIndex(1)
+        val az = abn.getElementAtIndex(2)
+
+        // Update velocity
+        val oldVx = previousSpeed.valueX
+        val oldVy = previousSpeed.valueY
+        val oldVz = previousSpeed.valueZ
+
+        val newVx = oldVx + ax * timeInterval
+        val newVy = oldVy + ay * timeInterval
+        val newVz = oldVz + az * timeInterval
+        currentSpeed.setValueCoordinates(newVx, newVy, newVz)
+
+        // Update position
+        val oldX = previousPosition.inhomX
+        val oldY = previousPosition.inhomY
+        val oldZ = previousPosition.inhomZ
+
+        val newX = oldX + 0.5 * (oldVx + newVx) * timeInterval
+        val newY = oldY + 0.5 * (oldVy + newVy) * timeInterval
+        val newZ = oldZ + 0.5 * (oldVz + newVz) * timeInterval
+        currentPosition.setCoordinates(newX, newY, newZ)
+
+        // compute transformation
+        computeTransformation()
+
+        // notify
+        poseAvailableListener?.onPoseAvailable(this, timestamp, poseTransformation)
+
+        // update previous values
+        currentAttitude.copyTo(previousAttitude)
+        currentSpeed.copyTo(previousSpeed)
+        previousPosition.setCoordinates(
+            currentPosition.inhomX,
+            currentPosition.inhomY,
+            currentPosition.inhomY
+        )
+    }
+
+    private fun processAccelerometerMeasurement(
+        ax: Float,
+        ay: Float,
+        az: Float,
+        bx: Float?,
+        by: Float?,
+        bz: Float?,
+        timestamp: Long,
+        accuracy: SensorAccuracy?
+    ) {
+        if (timestamp <= accelerometerTimestamp) {
+            Log.d(
+                "RelativePoseEstimator",
+                "Already processed accelerometer measurement. Last timestamp: $accelerometerTimestamp, current timestamp: $timestamp"
+            )
+            return
+        }
+
+        accelerometerTimestamp = timestamp
+        if (initialized && accelerometerTimestamp < attitudeTimestamp) {
+            Log.d(
+                "RelativePoseEstimator",
+                "Out of order accelerometer measurement. Accelerometer timestamp: $timestamp, attitude timestamp: $attitudeTimestamp"
+            )
+            return
+        }
+
+        val currentAx = if (bx != null)
+            ax.toDouble() - bx.toDouble()
+        else
+            ax.toDouble()
+        val currentAy = if (by != null)
+            ay.toDouble() - by.toDouble()
+        else
+            ay.toDouble()
+        val currentAz = if (bz != null)
+            az.toDouble() - bz.toDouble()
+        else
+            az.toDouble()
+
+        ENUtoNEDTriadConverter.convert(currentAx, currentAy, currentAz, specificForce)
+
+        accelerometerMeasurementListener?.onMeasurement(
+            ax,
+            ay,
+            az,
+            bx,
+            by,
+            bz,
+            timestamp,
+            accuracy
+        )
+    }
+
+    private fun processGyroscopeMeasurement(
+        wx: Float,
+        wy: Float,
+        wz: Float,
+        bx: Float?,
+        by: Float?,
+        bz: Float?,
+        timestamp: Long,
+        accuracy: SensorAccuracy?
+    ) {
+        if (timestamp <= gyroscopeTimestamp) {
+            Log.d(
+                "RelativePoseEstimator",
+                "Already processed gyroscope measurement. Last timestamp: $gyroscopeTimestamp, current timestamp: $timestamp"
+            )
+            return
+        }
+
+        gyroscopeTimestamp = timestamp
+        if (initialized && gyroscopeTimestamp < attitudeTimestamp) {
+            Log.d(
+                "RelativePoseEstimator",
+                "Out of order gyroscope measurement. Gyroscope timestamp: $timestamp, attitude timestamp: $attitudeTimestamp"
+            )
+            return
+        }
+
+        val currentWx = if (bx != null)
+            wx.toDouble() - bx.toDouble()
+        else
+            wx.toDouble()
+
+        val currentWy = if (by != null)
+            wy.toDouble() - by.toDouble()
+        else
+            wy.toDouble()
+
+        val currentWz = if (bz != null)
+            wz.toDouble() - bz.toDouble()
+        else
+            wz.toDouble()
+
+        ENUtoNEDTriadConverter.convert(currentWx, currentWy, currentWz, angularSpeed)
+
+        gyroscopeMeasurementListener?.onMeasurement(
+            wx,
+            wy,
+            wz,
+            bx,
+            by,
+            bz,
+            timestamp,
+            accuracy
+        )
+    }
+
+    private fun processGravityMeasurement(
+        estimator: GravityEstimator,
+        gx: Double,
+        gy: Double,
+        gz: Double,
+        timestamp: Long
+    ) {
+        if (timestamp <= gravityTimestamp) {
+            Log.d(
+                "RelativePoseEstimator",
+                "Already processed gravity measurement. Last timestamp: $gravityTimestamp, current timestamp: $timestamp"
+            )
+            return
+        }
+
+        gravityTimestamp = timestamp
+        if (initialized && gravityTimestamp < attitudeTimestamp) {
+            Log.d(
+                "RelativePoseEstimator",
+                "Out of order gravity measurement. Gravity timestamp: $timestamp, attitude timestamp: $attitudeTimestamp"
+            )
+            return
+        }
+
+        gravity.setValueCoordinates(gx, gy, gz)
+
+        gravityEstimationListener?.onEstimation(estimator, gx, gy, gz, timestamp)
+    }
+
 
     /**
      * Computes pose transformation using current attitude and position.

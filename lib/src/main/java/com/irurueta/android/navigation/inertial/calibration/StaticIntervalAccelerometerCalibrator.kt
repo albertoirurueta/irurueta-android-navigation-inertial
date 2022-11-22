@@ -19,6 +19,7 @@ import android.content.Context
 import android.location.Location
 import android.util.Log
 import com.irurueta.algebra.Matrix
+import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
 import com.irurueta.android.navigation.inertial.GravityHelper
 import com.irurueta.android.navigation.inertial.calibration.builder.AccelerometerInternalCalibratorBuilder
 import com.irurueta.android.navigation.inertial.calibration.intervals.measurements.AccelerometerMeasurementGenerator
@@ -44,6 +45,9 @@ import com.irurueta.units.AccelerationUnit
 /**
  * Collects accelerometer measurements by detecting periods when device remains static,
  * and using such static periods, measurements are obtained to solve calibration parameters.
+ * This calibrator converts sensor measurements from device ENU coordinates to local plane NED
+ * coordinates. Thus, all values referring to a given x-y-z coordinates refers to local plane
+ * NED system of coordinates.
  *
  * @property context Android context.
  * @property accelerometerSensorType One of the supported accelerometer sensor types.
@@ -160,7 +164,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
     constructor(
         context: Context,
         accelerometerSensorType: AccelerometerSensorCollector.SensorType =
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
         accelerometerSensorDelay: SensorDelay = SensorDelay.FASTEST,
         solveCalibrationWhenEnoughMeasurements: Boolean = true,
         isAccelerometerGroundTruthInitialBias: Boolean = false,
@@ -209,6 +213,13 @@ class StaticIntervalAccelerometerCalibrator private constructor(
         requiredMeasurements = minimumRequiredMeasurements
         accelerometerRobustPreliminarySubsetSize = minimumRequiredMeasurements
     }
+
+    /**
+     * Triad containing samples converted from device ENU coordinates to local plane NED
+     * coordinates.
+     * This is reused for performance reasons.
+     */
+    private val biasTriad = AccelerationTriad()
 
     /**
      * Listener used by internal generator to handle events when initialization is started.
@@ -1753,15 +1764,18 @@ class StaticIntervalAccelerometerCalibrator private constructor(
             initialBiasZ = 0.0
         }
 
-        accelerometerInitialBiasX = initialBiasX
-        accelerometerInitialBiasY = initialBiasY
-        accelerometerInitialBiasZ = initialBiasZ
+        // convert from device ENU coordinate to local plane NED coordinates
+        ENUtoNEDTriadConverter.convert(initialBiasX, initialBiasY, initialBiasZ, biasTriad)
+
+        accelerometerInitialBiasX = biasTriad.valueX
+        accelerometerInitialBiasY = biasTriad.valueY
+        accelerometerInitialBiasZ = biasTriad.valueZ
 
         initialAccelerometerBiasAvailableListener?.onInitialBiasAvailable(
             this,
-            initialBiasX,
-            initialBiasY,
-            initialBiasZ
+            biasTriad.valueX,
+            biasTriad.valueY,
+            biasTriad.valueZ
         )
     }
 

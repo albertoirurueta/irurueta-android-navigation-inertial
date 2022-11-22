@@ -39,6 +39,9 @@ import kotlin.math.max
  * determine orientation based on gravity vector at the end of static intervals, and integrating
  * values of gyroscope measurements during dynamic ones, and using static periods to obtain
  * averaged accelerometer and magnetometer values.
+ * This calibrator converts sensor measurements from device ENU coordinates to local plane NED
+ * coordinates. Thus, all values referring to a given x-y-z coordinates refers to local plane
+ * NED system of coordinates.
  *
  * @property context Android context.
  * @property accelerometerSensorType One of the supported accelerometer sensor types.
@@ -201,11 +204,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2 private con
         timestamp: Date = Date(),
         worldMagneticModel: WorldMagneticModel? = null,
         accelerometerSensorType: AccelerometerSensorCollector.SensorType =
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
         gyroscopeSensorType: GyroscopeSensorCollector.SensorType =
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
         magnetometerSensorType: MagnetometerSensorCollector.SensorType =
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
         accelerometerSensorDelay: SensorDelay = SensorDelay.FASTEST,
         gyroscopeSensorDelay: SensorDelay = SensorDelay.FASTEST,
         magnetometerSensorDelay: SensorDelay = SensorDelay.FASTEST,

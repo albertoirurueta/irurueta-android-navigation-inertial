@@ -16,6 +16,7 @@
 package com.irurueta.android.navigation.inertial.calibration.noise
 
 import android.content.Context
+import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
 import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
 import com.irurueta.android.navigation.inertial.collectors.SensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
@@ -30,6 +31,9 @@ import com.irurueta.units.Measurement
  * deviations, variances, as well as average time interval between measurements.
  * For best accuracy of estimated results, device should remain static while data is being
  * collected.
+ * This estimator converts sensor measurements from device ENU coordinates to local plane NED
+ * coordinates. Thus, all values referring to a given x-y-z coordinates refers to local plane
+ * NED system of coordinates.
  *
  * @property context Android context.
  * @property sensorDelay Delay of sensor between samples.
@@ -56,6 +60,13 @@ abstract class AccumulatedTriadEstimator<A : AccumulatedTriadEstimator<A, N, C, 
     var completedListener: OnEstimationCompletedListener<A>? = null,
     var unreliableListener: OnUnreliableListener<A>? = null
 ) : BaseAccumulatedEstimator(maxSamples, maxDurationMillis, stopMode) {
+
+    /**
+     * Triad containing samples converted from device ENU coordinates to local plane NED
+     * coordinates.
+     * This is reused for performance reasons.
+     */
+    protected abstract val triad: T
 
     /**
      * Internal noise estimator of magnitude measurements.
@@ -811,7 +822,10 @@ abstract class AccumulatedTriadEstimator<A : AccumulatedTriadEstimator<A, N, C, 
             initialTimestampNanos = timestamp
         }
 
-        noiseEstimator.addTriad(valueX, valueY, valueZ)
+        // convert from device ENU coordinate to local plane NED coordinates
+        ENUtoNEDTriadConverter.convert(valueX, valueY, valueZ, triad)
+
+        noiseEstimator.addTriad(triad.valueX, triad.valueY, triad.valueZ)
 
         handleTimestamp(timestamp)
         numberOfProcessedMeasurements++

@@ -16,12 +16,14 @@
 package com.irurueta.android.navigation.inertial.test.calibration.intervals.measurements
 
 import android.util.Log
+import androidx.test.filters.RequiresDevice
 import androidx.test.platform.app.InstrumentationRegistry
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
 import com.irurueta.android.navigation.inertial.calibration.intervals.measurements.MagnetometerMeasurementGenerator
 import org.junit.Before
 import org.junit.Test
 
+@RequiresDevice
 class MagnetometerMeasurementGeneratorTest {
 
     private val syncHelper = ThreadSyncHelper()

@@ -16,6 +16,7 @@
 package com.irurueta.android.navigation.inertial.calibration.intervals
 
 import android.content.Context
+import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
@@ -37,6 +38,9 @@ import com.irurueta.units.TimeConverter
  * averages as "instantaneous" values during dynamic intervals.
  * Length of windows, as well as thresholds to determine when changes between static and dynamic
  * intervals occur can be easily configured.
+ * This interval detector converts sensor measurements from device ENU coordinates to local plane
+ * NED coordinates. Thus, all values referring to a given x-y-z coordinate refers to local plane
+ * NED system of coordinates.
  *
  * @property context Android context.
  * @property sensorType One of the supported accelerometer sensor types.
@@ -58,7 +62,7 @@ import com.irurueta.units.TimeConverter
 class AccelerometerIntervalDetector(
     context: Context,
     val sensorType: AccelerometerSensorCollector.SensorType =
-        AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+        AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
     sensorDelay: SensorDelay = SensorDelay.FASTEST,
     initializationStartedListener: OnInitializationStartedListener<AccelerometerIntervalDetector>? = null,
     initializationCompletedListener: OnInitializationCompletedListener<AccelerometerIntervalDetector>? = null,
@@ -177,6 +181,13 @@ class AccelerometerIntervalDetector(
         AccelerationTriadStaticIntervalDetector(internalDetectorListener)
 
     /**
+     * Triad containing acceleration samples converted from device ENU coordinates to local plane
+     * NED coordinates.
+     * This is reused for performance reasons.
+     */
+    private val acceleration = AccelerationTriad()
+
+    /**
      * Internal listener for accelerometer sensor collector.
      * Handles measurements collected by the sensor collector so that they are processed by
      * the internal interval detector.
@@ -195,7 +206,15 @@ class AccelerometerIntervalDetector(
                 }
             }
 
-            internalDetector.process(ax.toDouble(), ay.toDouble(), az.toDouble())
+            // convert from device ENU coordinates to local plane NED coordinates
+            ENUtoNEDTriadConverter.convert(
+                ax.toDouble(),
+                ay.toDouble(),
+                az.toDouble(),
+                acceleration
+            )
+
+            internalDetector.process(acceleration.valueX, acceleration.valueY, acceleration.valueZ)
             numberOfProcessedMeasurements++
 
             if (status == Status.INITIALIZATION_COMPLETED) {

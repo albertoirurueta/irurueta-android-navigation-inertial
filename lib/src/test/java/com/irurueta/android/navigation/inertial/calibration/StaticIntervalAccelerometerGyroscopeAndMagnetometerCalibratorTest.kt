@@ -77,12 +77,15 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertTrue(calibrator.isInitialMagneticFluxDensityNormMeasured)
         assertTrue(calibrator.isGravityNormEstimated)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             calibrator.accelerometerSensorType
         )
-        assertEquals(GyroscopeSensorCollector.SensorType.GYROSCOPE, calibrator.gyroscopeSensorType)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            calibrator.gyroscopeSensorType
+        )
+        assertEquals(
+            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
             calibrator.magnetometerSensorType
         )
         assertEquals(SensorDelay.FASTEST, calibrator.accelerometerSensorDelay)
@@ -528,9 +531,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             location,
             timestamp,
             worldMagneticModel,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
             SensorDelay.NORMAL,
             SensorDelay.NORMAL,
             SensorDelay.NORMAL,
@@ -570,15 +573,15 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertFalse(calibrator.isInitialMagneticFluxDensityNormMeasured)
         assertFalse(calibrator.isGravityNormEstimated)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             calibrator.accelerometerSensorType
         )
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             calibrator.gyroscopeSensorType
         )
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
             calibrator.magnetometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, calibrator.accelerometerSensorDelay)
@@ -9219,9 +9222,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         requireNotNull(initialBiasY)
         val initialBiasZ = calibrator.accelerometerInitialBiasZ
         requireNotNull(initialBiasZ)
-        assertEquals(bx.toDouble(), initialBiasX, 0.0)
-        assertEquals(by.toDouble(), initialBiasY, 0.0)
-        assertEquals(bz.toDouble(), initialBiasZ, 0.0)
+        assertEquals(by.toDouble(), initialBiasX, 0.0)
+        assertEquals(bx.toDouble(), initialBiasY, 0.0)
+        assertEquals(-bz.toDouble(), initialBiasZ, 0.0)
     }
 
     @Test
@@ -9431,16 +9434,16 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         requireNotNull(initialBiasY)
         val initialBiasZ = calibrator.accelerometerInitialBiasZ
         requireNotNull(initialBiasZ)
-        assertEquals(bx.toDouble(), initialBiasX, 0.0)
-        assertEquals(by.toDouble(), initialBiasY, 0.0)
-        assertEquals(bz.toDouble(), initialBiasZ, 0.0)
+        assertEquals(by.toDouble(), initialBiasX, 0.0)
+        assertEquals(bx.toDouble(), initialBiasY, 0.0)
+        assertEquals(-bz.toDouble(), initialBiasZ, 0.0)
 
         verify(exactly = 1) {
             initialAccelerometerBiasAvailableListener.onInitialBiasAvailable(
                 calibrator,
-                bx.toDouble(),
                 by.toDouble(),
-                bz.toDouble()
+                bx.toDouble(),
+                -bz.toDouble()
             )
         }
     }
@@ -9546,9 +9549,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         requireNotNull(initialBiasY)
         val initialBiasZ = calibrator.gyroscopeInitialBiasZ
         requireNotNull(initialBiasZ)
-        assertEquals(bx.toDouble(), initialBiasX, 0.0)
-        assertEquals(by.toDouble(), initialBiasY, 0.0)
-        assertEquals(bz.toDouble(), initialBiasZ, 0.0)
+        assertEquals(by.toDouble(), initialBiasX, 0.0)
+        assertEquals(bx.toDouble(), initialBiasY, 0.0)
+        assertEquals(-bz.toDouble(), initialBiasZ, 0.0)
     }
 
     @Test
@@ -9757,9 +9760,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         requireNotNull(initialBiasY)
         val initialBiasZ = calibrator.gyroscopeInitialBiasZ
         requireNotNull(initialBiasZ)
-        assertEquals(bx.toDouble(), initialBiasX, 0.0)
-        assertEquals(by.toDouble(), initialBiasY, 0.0)
-        assertEquals(bz.toDouble(), initialBiasZ, 0.0)
+        assertEquals(by.toDouble(), initialBiasX, 0.0)
+        assertEquals(bx.toDouble(), initialBiasY, 0.0)
+        assertEquals(-bz.toDouble(), initialBiasZ, 0.0)
 
         verify(exactly = 1) {
             initialGyroscopeBiasAvailableListener.onInitialBiasAvailable(
@@ -9873,17 +9876,17 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val initialHardIronZ = calibrator.magnetometerInitialHardIronZ
         requireNotNull(initialHardIronZ)
         assertEquals(
-            MagneticFluxDensityConverter.microTeslaToTesla(hardIronX.toDouble()),
+            MagneticFluxDensityConverter.microTeslaToTesla(hardIronY.toDouble()),
             initialHardIronX,
             0.0
         )
         assertEquals(
-            MagneticFluxDensityConverter.microTeslaToTesla(hardIronY.toDouble()),
+            MagneticFluxDensityConverter.microTeslaToTesla(hardIronX.toDouble()),
             initialHardIronY,
             0.0
         )
         assertEquals(
-            MagneticFluxDensityConverter.microTeslaToTesla(hardIronZ.toDouble()),
+            MagneticFluxDensityConverter.microTeslaToTesla(-hardIronZ.toDouble()),
             initialHardIronZ,
             0.0
         )
@@ -10097,17 +10100,17 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val initialHardIronZ = calibrator.magnetometerInitialHardIronZ
         requireNotNull(initialHardIronZ)
         assertEquals(
-            MagneticFluxDensityConverter.microTeslaToTesla(hardIronX.toDouble()),
+            MagneticFluxDensityConverter.microTeslaToTesla(hardIronY.toDouble()),
             initialHardIronX,
             0.0
         )
         assertEquals(
-            MagneticFluxDensityConverter.microTeslaToTesla(hardIronY.toDouble()),
+            MagneticFluxDensityConverter.microTeslaToTesla(hardIronX.toDouble()),
             initialHardIronY,
             0.0
         )
         assertEquals(
-            MagneticFluxDensityConverter.microTeslaToTesla(hardIronZ.toDouble()),
+            MagneticFluxDensityConverter.microTeslaToTesla(-hardIronZ.toDouble()),
             initialHardIronZ,
             0.0
         )

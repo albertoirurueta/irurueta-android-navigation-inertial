@@ -19,6 +19,7 @@ import android.content.Context
 import android.location.Location
 import android.util.Log
 import com.irurueta.algebra.Matrix
+import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
 import com.irurueta.android.navigation.inertial.GravityHelper
 import com.irurueta.android.navigation.inertial.calibration.builder.AccelerometerInternalCalibratorBuilder
 import com.irurueta.android.navigation.inertial.calibration.builder.GyroscopeInternalCalibratorBuilder
@@ -55,6 +56,9 @@ import kotlin.math.max
  * on gravity vector at the end of static intervals, and integrating values of gyroscope
  * measurements during dynamic ones, and using static periods to obtain averaged accelerometer
  * values.
+ * This calibrator converts sensor measurements from device ENU coordinates to local plane NED
+ * coordinates. Thus, all values referring to a given x-y-z coordinates refers to local plane
+ * NED system of coordinates.
  *
  * @property context Android context.
  * @property accelerometerSensorType One of the supported accelerometer sensor types.
@@ -198,9 +202,9 @@ class StaticIntervalAccelerometerAndGyroscopeCalibrator private constructor(
     constructor(
         context: Context,
         accelerometerSensorType: AccelerometerSensorCollector.SensorType =
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
         gyroscopeSensorType: GyroscopeSensorCollector.SensorType =
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
         accelerometerSensorDelay: SensorDelay = SensorDelay.FASTEST,
         gyroscopeSensorDelay: SensorDelay = SensorDelay.FASTEST,
         solveCalibrationWhenEnoughMeasurements: Boolean = true,
@@ -264,6 +268,20 @@ class StaticIntervalAccelerometerAndGyroscopeCalibrator private constructor(
 
         requiredMeasurements = minimumRequiredMeasurements
     }
+
+    /**
+     * Triad containing samples converted from device ENU coordinates to local plane NED
+     * coordinates.
+     * This is reused for performance reasons.
+     */
+    private val accelerometerBiasTriad = AccelerationTriad()
+
+    /**
+     * Triad containing samples converted from device ENU coordinates to local plane NED
+     * coordinates.
+     * This is reused for performance reasons.
+     */
+    private val gyroscopeBiasTriad = AngularSpeedTriad()
 
     /**
      * Listener used by internal generator to handle events when initialization is started.
@@ -3084,15 +3102,23 @@ class StaticIntervalAccelerometerAndGyroscopeCalibrator private constructor(
             initialBiasZ = 0.0
         }
 
-        accelerometerInitialBiasX = initialBiasX
-        accelerometerInitialBiasY = initialBiasY
-        accelerometerInitialBiasZ = initialBiasZ
+        // convert from device ENU coordinates to local plane NED coordinates
+        ENUtoNEDTriadConverter.convert(
+            initialBiasX,
+            initialBiasY,
+            initialBiasZ,
+            accelerometerBiasTriad
+        )
+
+        accelerometerInitialBiasX = accelerometerBiasTriad.valueX
+        accelerometerInitialBiasY = accelerometerBiasTriad.valueY
+        accelerometerInitialBiasZ = accelerometerBiasTriad.valueZ
 
         initialAccelerometerBiasAvailableListener?.onInitialBiasAvailable(
             this,
-            initialBiasX,
-            initialBiasY,
-            initialBiasZ
+            accelerometerBiasTriad.valueX,
+            accelerometerBiasTriad.valueY,
+            accelerometerBiasTriad.valueZ
         )
     }
 
@@ -3119,15 +3145,18 @@ class StaticIntervalAccelerometerAndGyroscopeCalibrator private constructor(
             initialBiasZ = 0.0
         }
 
-        gyroscopeInitialBiasX = initialBiasX
-        gyroscopeInitialBiasY = initialBiasY
-        gyroscopeInitialBiasZ = initialBiasZ
+        // convert from device ENU coordinates to local plane NED coordinates
+        ENUtoNEDTriadConverter.convert(initialBiasX, initialBiasY, initialBiasZ, gyroscopeBiasTriad)
+
+        gyroscopeInitialBiasX = gyroscopeBiasTriad.valueX
+        gyroscopeInitialBiasY = gyroscopeBiasTriad.valueY
+        gyroscopeInitialBiasZ = gyroscopeBiasTriad.valueZ
 
         initialGyroscopeBiasAvailableListener?.onInitialBiasAvailable(
             this,
-            initialBiasX,
-            initialBiasY,
-            initialBiasZ
+            gyroscopeBiasTriad.valueX,
+            gyroscopeBiasTriad.valueY,
+            gyroscopeBiasTriad.valueZ
         )
     }
 

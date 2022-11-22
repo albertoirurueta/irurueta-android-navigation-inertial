@@ -36,6 +36,8 @@ import com.irurueta.units.TimeConverter
  * changing its position or orientation.
  * Static and dynamic intervals are always measured using the accelerometer. An additional sensor
  * such as the gyroscope or magnetometer can be used to generate measurements for them.
+ * Measurement generator converts device ENU measurements into measurements expressed in local
+ * tangent plane NED coordinates.
  *
  * @property context Android context.
  * @property accelerometerSensorType One of the supported accelerometer sensor types.
@@ -46,7 +48,7 @@ import com.irurueta.units.TimeConverter
 abstract class CalibrationMeasurementGenerator<I>(
     val context: Context,
     val accelerometerSensorType: AccelerometerSensorCollector.SensorType =
-        AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+        AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
     val accelerometerSensorDelay: SensorDelay = SensorDelay.FASTEST,
     var accuracyChangedListener: SensorCollector.OnAccuracyChangedListener? = null
 ) {

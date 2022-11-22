@@ -251,8 +251,46 @@ class ENUtoNEDTriadConverterTest {
     }
 
     @Test
-    fun conversionRotationMatrix_returnsExpectedResult() {
+    fun conversionRotationMatrix_whenValidSize_returnsExpectedResult() {
         val m1 = Matrix(Rotation3D.INHOM_COORDS, Rotation3D.INHOM_COORDS)
+        ENUtoNEDTriadConverter.conversionRotationMatrix(m1)
+        val m2 = ENUtoNEDTriadConverter.conversionRotationMatrix
+
+        assertEquals(m1, m2)
+
+        val m3 = Matrix(Rotation3D.INHOM_COORDS, Rotation3D.INHOM_COORDS)
+        m3.setElementAt(0, 1, 1.0)
+        m3.setElementAt(1, 0, 1.0)
+        m3.setElementAt(2, 2, -1.0)
+
+        assertEquals(m1, m3)
+
+        val m4 = ENUtoNEDTriadConverter.conversionRotation.asInhomogeneousMatrix()
+        assertTrue(m1.equals(m4, ABSOLUTE_ERROR))
+    }
+
+    @Test
+    fun conversionRotationMatrix_whenInvalidRows_returnsExpectedResult() {
+        val m1 = Matrix(1, Rotation3D.INHOM_COORDS)
+        ENUtoNEDTriadConverter.conversionRotationMatrix(m1)
+        val m2 = ENUtoNEDTriadConverter.conversionRotationMatrix
+
+        assertEquals(m1, m2)
+
+        val m3 = Matrix(Rotation3D.INHOM_COORDS, Rotation3D.INHOM_COORDS)
+        m3.setElementAt(0, 1, 1.0)
+        m3.setElementAt(1, 0, 1.0)
+        m3.setElementAt(2, 2, -1.0)
+
+        assertEquals(m1, m3)
+
+        val m4 = ENUtoNEDTriadConverter.conversionRotation.asInhomogeneousMatrix()
+        assertTrue(m1.equals(m4, ABSOLUTE_ERROR))
+    }
+
+    @Test
+    fun conversionRotationMatrix_whenInvalidColumns_returnsExpectedResult() {
+        val m1 = Matrix(Rotation3D.INHOM_COORDS, 1)
         ENUtoNEDTriadConverter.conversionRotationMatrix(m1)
         val m2 = ENUtoNEDTriadConverter.conversionRotationMatrix
 

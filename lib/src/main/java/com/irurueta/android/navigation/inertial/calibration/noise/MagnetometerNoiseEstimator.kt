@@ -32,6 +32,9 @@ import com.irurueta.units.MagneticFluxDensityUnit
  * To be able to measure magnetometer noise, device should remain static so that average
  * magnetometer measurements are constant and their standard deviation reflect actual sensor noise,
  * otherwise only norm values will be reliable.
+ * This estimator converts sensor measurements from device ENU coordinates to local plane NED
+ * coordinates. Thus, all values referring to a given x-y-z coordinates refers to local plane
+ * NED system of coordinates.
  *
  * @param context Android context.
  * @property sensorType One of the supported magnetometer sensor types.
@@ -52,7 +55,7 @@ import com.irurueta.units.MagneticFluxDensityUnit
 class MagnetometerNoiseEstimator(
     context: Context,
     val sensorType: MagnetometerSensorCollector.SensorType =
-        MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+        MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
     sensorDelay: SensorDelay = SensorDelay.FASTEST,
     maxSamples: Int = DEFAULT_MAX_SAMPLES,
     maxDurationMillis: Long = DEFAULT_MAX_DURATION_MILLIS,
@@ -71,6 +74,13 @@ class MagnetometerNoiseEstimator(
     completedListener,
     unreliableListener
 ) {
+    /**
+     * Triad containing samples converted from device ENU coordinates to local plane NED
+     * coordinates.
+     * This is reused for performance reasons.
+     */
+    override val triad = MagneticFluxDensityTriad()
+
     /**
      * Internal noise estimator of magnetometer measurements.
      * This can be used to estimate statistics about magnetometer noise measurements.

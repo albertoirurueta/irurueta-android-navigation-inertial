@@ -22,8 +22,8 @@ import android.os.SystemClock
 import androidx.test.core.app.ApplicationProvider
 import com.irurueta.algebra.Matrix
 import com.irurueta.algebra.WrongSizeException
-import com.irurueta.android.navigation.inertial.calibration.intervals.IntervalDetector
 import com.irurueta.android.navigation.inertial.calibration.intervals.ErrorReason
+import com.irurueta.android.navigation.inertial.calibration.intervals.IntervalDetector
 import com.irurueta.android.navigation.inertial.calibration.intervals.MagnetometerIntervalDetector
 import com.irurueta.android.navigation.inertial.callPrivateFuncWithResult
 import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
@@ -77,7 +77,10 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
         assertNotNull(calibrator.timestamp)
         assertNull(calibrator.worldMagneticModel)
         assertTrue(calibrator.isInitialMagneticFluxDensityNormMeasured)
-        assertEquals(MagnetometerSensorCollector.SensorType.MAGNETOMETER, calibrator.sensorType)
+        assertEquals(
+            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            calibrator.sensorType
+        )
         assertEquals(SensorDelay.FASTEST, calibrator.sensorDelay)
         assertTrue(calibrator.solveCalibrationWhenEnoughMeasurements)
         assertFalse(calibrator.isGroundTruthInitialHardIron)
@@ -261,7 +264,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
                 location,
                 timestamp,
                 worldMagneticModel,
-                MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+                MagnetometerSensorCollector.SensorType.MAGNETOMETER,
                 SensorDelay.NORMAL,
                 solveCalibrationWhenEnoughMeasurements = false,
                 isGroundTruthInitialHardIron = true,
@@ -284,7 +287,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
         assertSame(worldMagneticModel, calibrator.worldMagneticModel)
         assertFalse(calibrator.isInitialMagneticFluxDensityNormMeasured)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
             calibrator.sensorType
         )
         assertEquals(SensorDelay.NORMAL, calibrator.sensorDelay)
@@ -2698,9 +2701,9 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
         requireNotNull(initialHardIronY)
         val initialHardIronZ = calibrator.initialHardIronZ
         requireNotNull(initialHardIronZ)
-        assertEquals(4.0e-6, initialHardIronX, SMALL_ABSOLUTE_ERROR)
-        assertEquals(5.0e-6, initialHardIronY, SMALL_ABSOLUTE_ERROR)
-        assertEquals(6.0e-6, initialHardIronZ, SMALL_ABSOLUTE_ERROR)
+        assertEquals(5.0e-6, initialHardIronX, SMALL_ABSOLUTE_ERROR)
+        assertEquals(4.0e-6, initialHardIronY, SMALL_ABSOLUTE_ERROR)
+        assertEquals(-6.0e-6, initialHardIronZ, SMALL_ABSOLUTE_ERROR)
     }
 
     @Test
@@ -2886,7 +2889,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
                 calibrator,
                 0.0,
                 0.0,
-                0.0
+                -0.0
             )
         }
     }

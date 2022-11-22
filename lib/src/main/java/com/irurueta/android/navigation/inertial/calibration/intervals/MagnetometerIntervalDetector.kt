@@ -16,6 +16,7 @@
 package com.irurueta.android.navigation.inertial.calibration.intervals
 
 import android.content.Context
+import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
 import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
@@ -38,6 +39,9 @@ import com.irurueta.units.TimeConverter
  * averages as "instantaneous" values during dynamic intervals.
  * Length of windows, as well as thresholds to determine when changes between static and dynamic
  * intervals occur can be easily configured.
+ * This interval detector converts sensor measurements from device ENU coordinates to local plane
+ * NED coordinates. Thus, all values referring to a given x-y-z coordinate refers to local plane
+ * NED system of coordinates.
  *
  * @property context Android context.
  * @property sensorType One of the supported magnetometer sensor types.
@@ -59,7 +63,7 @@ import com.irurueta.units.TimeConverter
 class MagnetometerIntervalDetector(
     context: Context,
     val sensorType: MagnetometerSensorCollector.SensorType =
-        MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+        MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
     sensorDelay: SensorDelay = SensorDelay.FASTEST,
     initializationStartedListener: OnInitializationStartedListener<MagnetometerIntervalDetector>? = null,
     initializationCompletedListener: OnInitializationCompletedListener<MagnetometerIntervalDetector>? = null,
@@ -180,6 +184,13 @@ class MagnetometerIntervalDetector(
         MagneticFluxDensityTriadStaticIntervalDetector(internalDetectorListener)
 
     /**
+     * Triad containing magnetic flux density samples converted from device ENU coordinates to local
+     * plane NED coordinates.
+     * This is reused for performance reasons.
+     */
+    private val b = MagneticFluxDensityTriad()
+
+    /**
      * Internal listener for magnetometer sensor collector.
      * Handles measurements collected by the sensor collector so that they are processed by
      * the internal interval detector.
@@ -202,7 +213,10 @@ class MagnetometerIntervalDetector(
             val byT = MagneticFluxDensityConverter.microTeslaToTesla(by.toDouble())
             val bzT = MagneticFluxDensityConverter.microTeslaToTesla(bz.toDouble())
 
-            internalDetector.process(bxT, byT, bzT)
+            // convert from device ENU coordinates to local plane NED coordinates
+            ENUtoNEDTriadConverter.convert(bxT, byT, bzT, b)
+
+            internalDetector.process(b.valueX, b.valueY, b.valueZ)
             numberOfProcessedMeasurements++
 
             if (status == Status.INITIALIZATION_COMPLETED) {

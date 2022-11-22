@@ -16,6 +16,7 @@
 package com.irurueta.android.navigation.inertial.calibration.intervals
 
 import android.content.Context
+import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
@@ -37,11 +38,14 @@ import com.irurueta.units.TimeConverter
  * "instantaneous" values during dynamic intervals.
  * Length of windows, as well as thresholds to determine when changes between static and dynamic
  * intervals occur can be easily configured.
+ * This interval detector converts sensor measurements from device ENU coordinates to local plane
+ * NED coordinates. Thus, all values referring to a given x-y-z coordinate refers to local plane
+ * NED system of coordinates.
  */
 class GyroscopeIntervalDetector(
     context: Context,
     val sensorType: GyroscopeSensorCollector.SensorType =
-        GyroscopeSensorCollector.SensorType.GYROSCOPE,
+        GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
     sensorDelay: SensorDelay = SensorDelay.FASTEST,
     initializationStartedListener: OnInitializationStartedListener<GyroscopeIntervalDetector>? = null,
     initializationCompletedListener: OnInitializationCompletedListener<GyroscopeIntervalDetector>? = null,
@@ -158,6 +162,13 @@ class GyroscopeIntervalDetector(
         AngularSpeedTriadStaticIntervalDetector(internalDetectorListener)
 
     /**
+     * Triad containing angular speed samples converted from device ENU coordinates to local plane
+     * NED coordinates.
+     * This is reused for performance reasons.
+     */
+    private val angularSpeed = AngularSpeedTriad()
+
+    /**
      * Internal listener for gyroscope sensor collector.
      * Handles measurements collected by the sensor collector so that they are processed by
      * the internal interval detector.
@@ -176,7 +187,15 @@ class GyroscopeIntervalDetector(
                 }
             }
 
-            internalDetector.process(wx.toDouble(), wy.toDouble(), wz.toDouble())
+            // convert from device ENU coordinates to local plane NED coordinates
+            ENUtoNEDTriadConverter.convert(
+                wx.toDouble(),
+                wy.toDouble(),
+                wz.toDouble(),
+                angularSpeed
+            )
+
+            internalDetector.process(angularSpeed.valueX, angularSpeed.valueY, angularSpeed.valueZ)
             numberOfProcessedMeasurements++
 
             if (status == Status.INITIALIZATION_COMPLETED) {

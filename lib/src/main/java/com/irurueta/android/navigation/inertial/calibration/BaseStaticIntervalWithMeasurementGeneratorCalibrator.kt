@@ -53,7 +53,7 @@ import com.irurueta.units.Time
  */
 abstract class BaseStaticIntervalWithMeasurementGeneratorCalibrator<C : StaticIntervalWithMeasurementGeneratorCalibrator<C, I>, I>(
     override val context: Context,
-    override val accelerometerSensorType: AccelerometerSensorCollector.SensorType = AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+    override val accelerometerSensorType: AccelerometerSensorCollector.SensorType = AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
     override val accelerometerSensorDelay: SensorDelay = SensorDelay.FASTEST,
     override val solveCalibrationWhenEnoughMeasurements: Boolean = true,
     override var initializationStartedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<C>? = null,
@@ -68,7 +68,7 @@ abstract class BaseStaticIntervalWithMeasurementGeneratorCalibrator<C : StaticIn
     override var calibrationCompletedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<C>? = null,
     override var stoppedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<C>? = null,
     override var accuracyChangedListener: SensorCollector.OnAccuracyChangedListener? = null
-) : StaticIntervalWithMeasurementGeneratorCalibrator<C, I>{
+) : StaticIntervalWithMeasurementGeneratorCalibrator<C, I> {
     /**
      * Internal generator to generate measurements for calibration.
      */

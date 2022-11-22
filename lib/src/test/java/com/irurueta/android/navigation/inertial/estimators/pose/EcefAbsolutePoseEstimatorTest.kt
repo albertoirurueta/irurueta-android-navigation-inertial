@@ -58,22 +58,27 @@ class EcefAbsolutePoseEstimatorTest {
         assertSame(location, estimator.initialLocation)
         assertEquals(NEDVelocity(), estimator.initialVelocity)
         assertEquals(SensorDelay.GAME, estimator.sensorDelay)
+        assertFalse(estimator.useAccelerometerForAttitudeEstimation)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             estimator.accelerometerSensorType
         )
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
             estimator.magnetometerSensorType
         )
         assertNotNull(estimator.accelerometerAveragingFilter)
         assertTrue(estimator.accelerometerAveragingFilter is LowPassAveragingFilter)
-        assertEquals(GyroscopeSensorCollector.SensorType.GYROSCOPE, estimator.gyroscopeSensorType)
+        assertEquals(
+            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            estimator.gyroscopeSensorType
+        )
         assertNull(estimator.worldMagneticModel)
         assertNotNull(estimator.timestamp)
         assertFalse(estimator.useWorldMagneticModel)
         assertTrue(estimator.useAccurateLevelingEstimator)
         assertTrue(estimator.useAccurateRelativeGyroscopeAttitudeEstimator)
+        assertTrue(estimator.useAccurateAttitudeEstimator)
         assertTrue(estimator.useIndirectAttitudeInterpolation)
         assertEquals(
             FusedGeomagneticAttitudeEstimator.DEFAULT_INTERPOLATION_VALUE,
@@ -130,15 +135,17 @@ class EcefAbsolutePoseEstimatorTest {
             location,
             initialVelocity,
             SensorDelay.NORMAL,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            useAccelerometerForAttitudeEstimation = true,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
             accelerometerAveragingFilter,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             worldMagneticModel,
             timestamp,
             useWorldMagneticModel = true,
             useAccurateLevelingEstimator = false,
             useAccurateRelativeGyroscopeAttitudeEstimator = false,
+            useAccurateAttitudeEstimator = false,
             estimatePoseTransformation = true,
             poseAvailableListener,
             accelerometerMeasurementListener,
@@ -152,17 +159,18 @@ class EcefAbsolutePoseEstimatorTest {
         assertSame(location, estimator.initialLocation)
         assertSame(initialVelocity, estimator.initialVelocity)
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
+        assertTrue(estimator.useAccelerometerForAttitudeEstimation)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             estimator.accelerometerSensorType
         )
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
             estimator.magnetometerSensorType
         )
         assertSame(accelerometerAveragingFilter, estimator.accelerometerAveragingFilter)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             estimator.gyroscopeSensorType
         )
         assertSame(worldMagneticModel, estimator.worldMagneticModel)
@@ -170,6 +178,7 @@ class EcefAbsolutePoseEstimatorTest {
         assertTrue(estimator.useWorldMagneticModel)
         assertFalse(estimator.useAccurateLevelingEstimator)
         assertFalse(estimator.useAccurateRelativeGyroscopeAttitudeEstimator)
+        assertFalse(estimator.useAccurateAttitudeEstimator)
         assertTrue(estimator.useIndirectAttitudeInterpolation)
         assertEquals(
             FusedGeomagneticAttitudeEstimator.DEFAULT_INTERPOLATION_VALUE,
@@ -795,7 +804,7 @@ class EcefAbsolutePoseEstimatorTest {
     }
 
     @Test
-    fun start_whenNotRunningAndInternalEstimatorFails_stopsAndReturnsFalse() {
+    fun start_whenUseAccurateAttitudeEstimatorEnabledNotRunningAndInternalEstimatorFails_stopsAndReturnsFalse() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val location = getLocation()
         val estimator = EcefAbsolutePoseEstimator(context, location)
@@ -807,7 +816,66 @@ class EcefAbsolutePoseEstimatorTest {
         every { absoluteAttitudeEstimatorSpy.start() }.returns(false)
         estimator.setPrivateProperty("absoluteAttitudeEstimator", absoluteAttitudeEstimatorSpy)
 
+        val absoluteAttitudeEstimator2: AbsoluteAttitudeEstimator<*, *>? =
+            estimator.getPrivateProperty("absoluteAttitudeEstimator2")
+        requireNotNull(absoluteAttitudeEstimator2)
+        val absoluteAttitudeEstimator2Spy = spyk(absoluteAttitudeEstimator2)
+        every { absoluteAttitudeEstimator2Spy.start() }.returns(false)
+        estimator.setPrivateProperty("absoluteAttitudeEstimator2", absoluteAttitudeEstimator2Spy)
+
+        val accelerometerSensorCollector: AccelerometerSensorCollector? =
+            estimator.getPrivateProperty("accelerometerSensorCollector")
+        requireNotNull(accelerometerSensorCollector)
+        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
+        every { accelerometerSensorCollectorSpy.start() }.returns(true)
+        estimator.setPrivateProperty("accelerometerSensorCollector", accelerometerSensorCollectorSpy)
+
         assertFalse(estimator.running)
+        assertTrue(estimator.useAccurateAttitudeEstimator)
+
+        // start
+        assertFalse(estimator.start())
+        assertFalse(estimator.running)
+
+        verify(exactly = 0) { absoluteAttitudeEstimatorSpy.start() }
+        verify(exactly = 0) { absoluteAttitudeEstimatorSpy.stop() }
+
+        verify(exactly = 1) { absoluteAttitudeEstimator2Spy.start() }
+        verify(exactly = 1) { absoluteAttitudeEstimator2Spy.stop() }
+
+        verify(exactly = 1) { accelerometerSensorCollectorSpy.stop() }
+    }
+
+    @Test
+    fun start_whenUseAccurateAttitudeEstimatorDisabledNotRunningAndInternalEstimatorFails_stopsAndReturnsFalse() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val location = getLocation()
+        val estimator =
+            EcefAbsolutePoseEstimator(context, location, useAccurateAttitudeEstimator = false)
+
+        val absoluteAttitudeEstimator: AbsoluteAttitudeEstimator<*, *>? =
+            estimator.getPrivateProperty("absoluteAttitudeEstimator")
+        requireNotNull(absoluteAttitudeEstimator)
+        val absoluteAttitudeEstimatorSpy = spyk(absoluteAttitudeEstimator)
+        every { absoluteAttitudeEstimatorSpy.start() }.returns(false)
+        estimator.setPrivateProperty("absoluteAttitudeEstimator", absoluteAttitudeEstimatorSpy)
+
+        val absoluteAttitudeEstimator2: AbsoluteAttitudeEstimator<*, *>? =
+            estimator.getPrivateProperty("absoluteAttitudeEstimator2")
+        requireNotNull(absoluteAttitudeEstimator2)
+        val absoluteAttitudeEstimator2Spy = spyk(absoluteAttitudeEstimator2)
+        every { absoluteAttitudeEstimator2Spy.start() }.returns(false)
+        estimator.setPrivateProperty("absoluteAttitudeEstimator2", absoluteAttitudeEstimator2Spy)
+
+        val accelerometerSensorCollector: AccelerometerSensorCollector? =
+            estimator.getPrivateProperty("accelerometerSensorCollector")
+        requireNotNull(accelerometerSensorCollector)
+        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
+        every { accelerometerSensorCollectorSpy.start() }.returns(true)
+        estimator.setPrivateProperty("accelerometerSensorCollector", accelerometerSensorCollectorSpy)
+
+        assertFalse(estimator.running)
+        assertFalse(estimator.useAccurateAttitudeEstimator)
 
         // start
         assertFalse(estimator.start())
@@ -815,10 +883,58 @@ class EcefAbsolutePoseEstimatorTest {
 
         verify(exactly = 1) { absoluteAttitudeEstimatorSpy.start() }
         verify(exactly = 1) { absoluteAttitudeEstimatorSpy.stop() }
+
+        verify(exactly = 0) { absoluteAttitudeEstimator2Spy.start() }
+        verify(exactly = 0) { absoluteAttitudeEstimator2Spy.stop() }
+
+        verify(exactly = 1) { accelerometerSensorCollectorSpy.stop() }
     }
 
     @Test
-    fun start_whenNotRunningAndInternalEstimatorSucceeds_returnsTrue() {
+    fun start_whenAccelerometerSensorCollectorFails_stopsAndReturnsFalse() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val location = getLocation()
+        val estimator = EcefAbsolutePoseEstimator(context, location)
+
+        val absoluteAttitudeEstimator: AbsoluteAttitudeEstimator<*, *>? =
+            estimator.getPrivateProperty("absoluteAttitudeEstimator")
+        requireNotNull(absoluteAttitudeEstimator)
+        val absoluteAttitudeEstimatorSpy = spyk(absoluteAttitudeEstimator)
+        every { absoluteAttitudeEstimatorSpy.start() }.returns(false)
+        estimator.setPrivateProperty("absoluteAttitudeEstimator", absoluteAttitudeEstimatorSpy)
+
+        val absoluteAttitudeEstimator2: AbsoluteAttitudeEstimator<*, *>? =
+            estimator.getPrivateProperty("absoluteAttitudeEstimator2")
+        requireNotNull(absoluteAttitudeEstimator2)
+        val absoluteAttitudeEstimator2Spy = spyk(absoluteAttitudeEstimator2)
+        every { absoluteAttitudeEstimator2Spy.start() }.returns(false)
+        estimator.setPrivateProperty("absoluteAttitudeEstimator2", absoluteAttitudeEstimator2Spy)
+
+        val accelerometerSensorCollector: AccelerometerSensorCollector? =
+            estimator.getPrivateProperty("accelerometerSensorCollector")
+        requireNotNull(accelerometerSensorCollector)
+        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
+        every { accelerometerSensorCollectorSpy.start() }.returns(false)
+        estimator.setPrivateProperty("accelerometerSensorCollector", accelerometerSensorCollectorSpy)
+
+        assertFalse(estimator.running)
+        assertTrue(estimator.useAccurateAttitudeEstimator)
+
+        // start
+        assertFalse(estimator.start())
+        assertFalse(estimator.running)
+
+        verify(exactly = 0) { absoluteAttitudeEstimatorSpy.start() }
+        verify(exactly = 0) { absoluteAttitudeEstimatorSpy.stop() }
+
+        verify(exactly = 1) { absoluteAttitudeEstimator2Spy.start() }
+        verify(exactly = 1) { absoluteAttitudeEstimator2Spy.stop() }
+
+        verify(exactly = 1) { accelerometerSensorCollectorSpy.stop() }
+    }
+
+    @Test
+    fun start_whenUseAccurateAttitudeEstimatorEnabledNotRunningAndInternalEstimatorSucceeds_returnsTrue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val location = getLocation()
         val estimator = EcefAbsolutePoseEstimator(context, location)
@@ -830,6 +946,63 @@ class EcefAbsolutePoseEstimatorTest {
         every { absoluteAttitudeEstimatorSpy.start() }.returns(true)
         estimator.setPrivateProperty("absoluteAttitudeEstimator", absoluteAttitudeEstimatorSpy)
 
+        val absoluteAttitudeEstimator2: AbsoluteAttitudeEstimator<*, *>? =
+            estimator.getPrivateProperty("absoluteAttitudeEstimator2")
+        requireNotNull(absoluteAttitudeEstimator2)
+        val absoluteAttitudeEstimator2Spy = spyk(absoluteAttitudeEstimator2)
+        every { absoluteAttitudeEstimator2Spy.start() }.returns(true)
+        estimator.setPrivateProperty("absoluteAttitudeEstimator2", absoluteAttitudeEstimator2Spy)
+
+        val accelerometerSensorCollector: AccelerometerSensorCollector? =
+            estimator.getPrivateProperty("accelerometerSensorCollector")
+        requireNotNull(accelerometerSensorCollector)
+        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
+        every { accelerometerSensorCollectorSpy.start() }.returns(true)
+        estimator.setPrivateProperty("accelerometerSensorCollector", accelerometerSensorCollectorSpy)
+
+        assertFalse(estimator.running)
+
+        // start
+        assertTrue(estimator.start())
+        assertTrue(estimator.running)
+
+        verify(exactly = 0) { absoluteAttitudeEstimatorSpy.start() }
+        verify(exactly = 0) { absoluteAttitudeEstimatorSpy.stop() }
+
+        verify(exactly = 1) { absoluteAttitudeEstimator2Spy.start() }
+        verify(exactly = 0) { absoluteAttitudeEstimator2Spy.stop() }
+
+        verify(exactly = 1) { accelerometerSensorCollectorSpy.start() }
+    }
+
+    @Test
+    fun start_whenUseAccurateAttitudeEstimatorDisabledNotRunningAndInternalEstimatorSucceeds_returnsTrue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val location = getLocation()
+        val estimator =
+            EcefAbsolutePoseEstimator(context, location, useAccurateAttitudeEstimator = false)
+
+        val absoluteAttitudeEstimator: AbsoluteAttitudeEstimator<*, *>? =
+            estimator.getPrivateProperty("absoluteAttitudeEstimator")
+        requireNotNull(absoluteAttitudeEstimator)
+        val absoluteAttitudeEstimatorSpy = spyk(absoluteAttitudeEstimator)
+        every { absoluteAttitudeEstimatorSpy.start() }.returns(true)
+        estimator.setPrivateProperty("absoluteAttitudeEstimator", absoluteAttitudeEstimatorSpy)
+
+        val absoluteAttitudeEstimator2: AbsoluteAttitudeEstimator<*, *>? =
+            estimator.getPrivateProperty("absoluteAttitudeEstimator2")
+        requireNotNull(absoluteAttitudeEstimator2)
+        val absoluteAttitudeEstimator2Spy = spyk(absoluteAttitudeEstimator2)
+        every { absoluteAttitudeEstimator2Spy.start() }.returns(true)
+        estimator.setPrivateProperty("absoluteAttitudeEstimator2", absoluteAttitudeEstimator2Spy)
+
+        val accelerometerSensorCollector: AccelerometerSensorCollector? =
+            estimator.getPrivateProperty("accelerometerSensorCollector")
+        requireNotNull(accelerometerSensorCollector)
+        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
+        every { accelerometerSensorCollectorSpy.start() }.returns(true)
+        estimator.setPrivateProperty("accelerometerSensorCollector", accelerometerSensorCollectorSpy)
+
         assertFalse(estimator.running)
 
         // start
@@ -838,10 +1011,15 @@ class EcefAbsolutePoseEstimatorTest {
 
         verify(exactly = 1) { absoluteAttitudeEstimatorSpy.start() }
         verify(exactly = 0) { absoluteAttitudeEstimatorSpy.stop() }
+
+        verify(exactly = 0) { absoluteAttitudeEstimator2Spy.start() }
+        verify(exactly = 0) { absoluteAttitudeEstimator2Spy.stop() }
+
+        verify(exactly = 1) { accelerometerSensorCollectorSpy.start() }
     }
 
     @Test
-    fun start_whenNotRunning_resetsInitialized() {
+    fun start_whenNotRunningAndUseAccurateAttitudeEstimatorEnabled_resetsInitialized() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val location = getLocation()
         val estimator = EcefAbsolutePoseEstimator(context, location)
@@ -859,7 +1037,60 @@ class EcefAbsolutePoseEstimatorTest {
         every { absoluteAttitudeEstimatorSpy.start() }.returns(false)
         estimator.setPrivateProperty("absoluteAttitudeEstimator", absoluteAttitudeEstimatorSpy)
 
+        val absoluteAttitudeEstimator2: AbsoluteAttitudeEstimator<*, *>? =
+            estimator.getPrivateProperty("absoluteAttitudeEstimator2")
+        requireNotNull(absoluteAttitudeEstimator2)
+        val absoluteAttitudeEstimator2Spy = spyk(absoluteAttitudeEstimator2)
+        every { absoluteAttitudeEstimator2Spy.start() }.returns(false)
+        estimator.setPrivateProperty("absoluteAttitudeEstimator2", absoluteAttitudeEstimator2Spy)
+
         assertFalse(estimator.running)
+        assertTrue(estimator.useAccurateAttitudeEstimator)
+
+        // start
+        assertFalse(estimator.start())
+        assertFalse(estimator.running)
+
+        verify(exactly = 0) { absoluteAttitudeEstimatorSpy.start() }
+        verify(exactly = 0) { absoluteAttitudeEstimatorSpy.stop() }
+
+        verify(exactly = 1) { absoluteAttitudeEstimator2Spy.start() }
+        verify(exactly = 1) { absoluteAttitudeEstimator2Spy.stop() }
+
+        val initializedFrame2: Boolean? = estimator.getPrivateProperty("initializedFrame")
+        requireNotNull(initializedFrame2)
+        assertFalse(initializedFrame2)
+    }
+
+    @Test
+    fun start_whenNotRunningAndUseAccurateAttitudeEstimatorDisabled_resetsInitialized() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val location = getLocation()
+        val estimator =
+            EcefAbsolutePoseEstimator(context, location, useAccurateAttitudeEstimator = false)
+
+        // set as initialized
+        estimator.setPrivateProperty("initializedFrame", true)
+        val initializedFrame1: Boolean? = estimator.getPrivateProperty("initializedFrame")
+        requireNotNull(initializedFrame1)
+        assertTrue(initializedFrame1)
+
+        val absoluteAttitudeEstimator: AbsoluteAttitudeEstimator<*, *>? =
+            estimator.getPrivateProperty("absoluteAttitudeEstimator")
+        requireNotNull(absoluteAttitudeEstimator)
+        val absoluteAttitudeEstimatorSpy = spyk(absoluteAttitudeEstimator)
+        every { absoluteAttitudeEstimatorSpy.start() }.returns(false)
+        estimator.setPrivateProperty("absoluteAttitudeEstimator", absoluteAttitudeEstimatorSpy)
+
+        val absoluteAttitudeEstimator2: AbsoluteAttitudeEstimator<*, *>? =
+            estimator.getPrivateProperty("absoluteAttitudeEstimator2")
+        requireNotNull(absoluteAttitudeEstimator2)
+        val absoluteAttitudeEstimator2Spy = spyk(absoluteAttitudeEstimator2)
+        every { absoluteAttitudeEstimator2Spy.start() }.returns(false)
+        estimator.setPrivateProperty("absoluteAttitudeEstimator2", absoluteAttitudeEstimator2Spy)
+
+        assertFalse(estimator.running)
+        assertFalse(estimator.useAccurateAttitudeEstimator)
 
         // start
         assertFalse(estimator.start())
@@ -868,13 +1099,16 @@ class EcefAbsolutePoseEstimatorTest {
         verify(exactly = 1) { absoluteAttitudeEstimatorSpy.start() }
         verify(exactly = 1) { absoluteAttitudeEstimatorSpy.stop() }
 
+        verify(exactly = 0) { absoluteAttitudeEstimator2Spy.start() }
+        verify(exactly = 0) { absoluteAttitudeEstimator2Spy.stop() }
+
         val initializedFrame2: Boolean? = estimator.getPrivateProperty("initializedFrame")
         requireNotNull(initializedFrame2)
         assertFalse(initializedFrame2)
     }
 
     @Test
-    fun stop_callsInternalEstimatorAndSetsAsNotRunning() {
+    fun stop_whenUseAccurateAttitudeEstimatorEnabled_callsInternalEstimatorAndSetsAsNotRunning() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val location = getLocation()
         val estimator = EcefAbsolutePoseEstimator(context, location)
@@ -889,11 +1123,49 @@ class EcefAbsolutePoseEstimatorTest {
         val absoluteAttitudeEstimatorSpy = spyk(absoluteAttitudeEstimator)
         estimator.setPrivateProperty("absoluteAttitudeEstimator", absoluteAttitudeEstimatorSpy)
 
+        val absoluteAttitudeEstimator2: AbsoluteAttitudeEstimator<*, *>? =
+            estimator.getPrivateProperty("absoluteAttitudeEstimator2")
+        requireNotNull(absoluteAttitudeEstimator2)
+        val absoluteAttitudeEstimator2Spy = spyk(absoluteAttitudeEstimator2)
+        estimator.setPrivateProperty("absoluteAttitudeEstimator2", absoluteAttitudeEstimator2Spy)
+
+        estimator.stop()
+
+        // check
+        assertFalse(estimator.running)
+        verify(exactly = 0) { absoluteAttitudeEstimatorSpy.stop() }
+        verify(exactly = 1) { absoluteAttitudeEstimator2Spy.stop() }
+    }
+
+    @Test
+    fun stop_whenUseAccurateAttitudeEstimatorDisabled_callsInternalEstimatorAndSetsAsNotRunning() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val location = getLocation()
+        val estimator =
+            EcefAbsolutePoseEstimator(context, location, useAccurateAttitudeEstimator = false)
+
+        // set as running
+        estimator.setPrivateProperty("running", true)
+        assertTrue(estimator.running)
+
+        val absoluteAttitudeEstimator: AbsoluteAttitudeEstimator<*, *>? =
+            estimator.getPrivateProperty("absoluteAttitudeEstimator")
+        requireNotNull(absoluteAttitudeEstimator)
+        val absoluteAttitudeEstimatorSpy = spyk(absoluteAttitudeEstimator)
+        estimator.setPrivateProperty("absoluteAttitudeEstimator", absoluteAttitudeEstimatorSpy)
+
+        val absoluteAttitudeEstimator2: AbsoluteAttitudeEstimator<*, *>? =
+            estimator.getPrivateProperty("absoluteAttitudeEstimator2")
+        requireNotNull(absoluteAttitudeEstimator2)
+        val absoluteAttitudeEstimator2Spy = spyk(absoluteAttitudeEstimator2)
+        estimator.setPrivateProperty("absoluteAttitudeEstimator2", absoluteAttitudeEstimator2Spy)
+
         estimator.stop()
 
         // check
         assertFalse(estimator.running)
         verify(exactly = 1) { absoluteAttitudeEstimatorSpy.stop() }
+        verify(exactly = 0) { absoluteAttitudeEstimator2Spy.stop() }
     }
 
     @Test
@@ -1146,11 +1418,11 @@ class EcefAbsolutePoseEstimatorTest {
         val estimator = EcefAbsolutePoseEstimator(context, location)
 
         // check initial value
-        val acceleration: AccelerationTriad? = estimator.getPrivateProperty("acceleration")
-        requireNotNull(acceleration)
-        assertEquals(0.0, acceleration.valueX, 0.0)
-        assertEquals(0.0, acceleration.valueY, 0.0)
-        assertEquals(0.0, acceleration.valueZ, 0.0)
+        val specificForce: AccelerationTriad? = estimator.getPrivateProperty("specificForce")
+        requireNotNull(specificForce)
+        assertEquals(0.0, specificForce.valueX, 0.0)
+        assertEquals(0.0, specificForce.valueY, 0.0)
+        assertEquals(0.0, specificForce.valueZ, 0.0)
 
         val absoluteAttitudeEstimator: AbsoluteAttitudeEstimator<*, *>? =
             estimator.getPrivateProperty("absoluteAttitudeEstimator")
@@ -1177,9 +1449,9 @@ class EcefAbsolutePoseEstimatorTest {
         )
 
         // check
-        assertEquals(ax.toDouble(), acceleration.valueY, 0.0)
-        assertEquals(ay.toDouble(), acceleration.valueX, 0.0)
-        assertEquals(az.toDouble(), -acceleration.valueZ, 0.0)
+        assertEquals(ax.toDouble(), specificForce.valueY, 0.0)
+        assertEquals(ay.toDouble(), specificForce.valueX, 0.0)
+        assertEquals(az.toDouble(), -specificForce.valueZ, 0.0)
     }
 
     @Test
@@ -1189,11 +1461,11 @@ class EcefAbsolutePoseEstimatorTest {
         val estimator = EcefAbsolutePoseEstimator(context, location)
 
         // check initial value
-        val acceleration: AccelerationTriad? = estimator.getPrivateProperty("acceleration")
-        requireNotNull(acceleration)
-        assertEquals(0.0, acceleration.valueX, 0.0)
-        assertEquals(0.0, acceleration.valueY, 0.0)
-        assertEquals(0.0, acceleration.valueZ, 0.0)
+        val specificForce: AccelerationTriad? = estimator.getPrivateProperty("specificForce")
+        requireNotNull(specificForce)
+        assertEquals(0.0, specificForce.valueX, 0.0)
+        assertEquals(0.0, specificForce.valueY, 0.0)
+        assertEquals(0.0, specificForce.valueZ, 0.0)
 
         val absoluteAttitudeEstimator: AbsoluteAttitudeEstimator<*, *>? =
             estimator.getPrivateProperty("absoluteAttitudeEstimator")
@@ -1223,9 +1495,9 @@ class EcefAbsolutePoseEstimatorTest {
         )
 
         // check
-        assertEquals((ax - bx).toDouble(), acceleration.valueY, 0.0)
-        assertEquals((ay - by).toDouble(), acceleration.valueX, 0.0)
-        assertEquals((az - bz).toDouble(), -acceleration.valueZ, 0.0)
+        assertEquals((ax - bx).toDouble(), specificForce.valueY, 0.0)
+        assertEquals((ay - by).toDouble(), specificForce.valueX, 0.0)
+        assertEquals((az - bz).toDouble(), -specificForce.valueZ, 0.0)
     }
 
     @Test
@@ -1235,14 +1507,18 @@ class EcefAbsolutePoseEstimatorTest {
         val listener =
             mockk<AccelerometerSensorCollector.OnMeasurementListener>(relaxUnitFun = true)
         val estimator =
-            EcefAbsolutePoseEstimator(context, location, accelerometerMeasurementListener = listener)
+            EcefAbsolutePoseEstimator(
+                context,
+                location,
+                accelerometerMeasurementListener = listener
+            )
 
         // check initial value
-        val acceleration: AccelerationTriad? = estimator.getPrivateProperty("acceleration")
-        requireNotNull(acceleration)
-        assertEquals(0.0, acceleration.valueX, 0.0)
-        assertEquals(0.0, acceleration.valueY, 0.0)
-        assertEquals(0.0, acceleration.valueZ, 0.0)
+        val specificForce: AccelerationTriad? = estimator.getPrivateProperty("specificForce")
+        requireNotNull(specificForce)
+        assertEquals(0.0, specificForce.valueX, 0.0)
+        assertEquals(0.0, specificForce.valueY, 0.0)
+        assertEquals(0.0, specificForce.valueZ, 0.0)
 
         val absoluteAttitudeEstimator: AbsoluteAttitudeEstimator<*, *>? =
             estimator.getPrivateProperty("absoluteAttitudeEstimator")
@@ -1272,9 +1548,9 @@ class EcefAbsolutePoseEstimatorTest {
         )
 
         // check
-        assertEquals((ax - bx).toDouble(), acceleration.valueY, 0.0)
-        assertEquals((ay - by).toDouble(), acceleration.valueX, 0.0)
-        assertEquals((az - bz).toDouble(), -acceleration.valueZ, 0.0)
+        assertEquals((ax - bx).toDouble(), specificForce.valueY, 0.0)
+        assertEquals((ay - by).toDouble(), specificForce.valueX, 0.0)
+        assertEquals((az - bz).toDouble(), -specificForce.valueZ, 0.0)
 
         verify(exactly = 1) { listener.onMeasurement(ax, ay, az, bx, by, bz, timestamp, accuracy) }
     }
@@ -1371,7 +1647,8 @@ class EcefAbsolutePoseEstimatorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val location = getLocation()
         val listener = mockk<GyroscopeSensorCollector.OnMeasurementListener>(relaxUnitFun = true)
-        val estimator = EcefAbsolutePoseEstimator(context, location, gyroscopeMeasurementListener = listener)
+        val estimator =
+            EcefAbsolutePoseEstimator(context, location, gyroscopeMeasurementListener = listener)
 
         // check initial value
         val angularSpeed: AngularSpeedTriad? = estimator.getPrivateProperty("angularSpeed")
@@ -1419,7 +1696,8 @@ class EcefAbsolutePoseEstimatorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val location = getLocation()
         val listener = mockk<GravityEstimator.OnEstimationListener>(relaxUnitFun = true)
-        val estimator = EcefAbsolutePoseEstimator(context, location, gravityEstimationListener = listener)
+        val estimator =
+            EcefAbsolutePoseEstimator(context, location, gravityEstimationListener = listener)
 
         val absoluteAttitudeEstimator: AbsoluteAttitudeEstimator<*, *>? =
             estimator.getPrivateProperty("absoluteAttitudeEstimator")
@@ -1444,7 +1722,8 @@ class EcefAbsolutePoseEstimatorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val location = getLocation()
         val listener = mockk<MagnetometerSensorCollector.OnMeasurementListener>(relaxUnitFun = true)
-        val estimator = EcefAbsolutePoseEstimator(context, location, magnetometerMeasurementListener = listener)
+        val estimator =
+            EcefAbsolutePoseEstimator(context, location, magnetometerMeasurementListener = listener)
 
         val absoluteAttitudeEstimator: AbsoluteAttitudeEstimator<*, *>? =
             estimator.getPrivateProperty("absoluteAttitudeEstimator")
@@ -1611,12 +1890,12 @@ class EcefAbsolutePoseEstimatorTest {
         estimator.setPrivateProperty("initialAttitude", initialAttitude)
 
         val randomizer = UniformRandomizer()
-        // set acceleration
-        val ax = randomizer.nextDouble()
-        val ay = randomizer.nextDouble()
-        val az = randomizer.nextDouble()
-        val acceleration = AccelerationTriad(ax, ay, az)
-        estimator.setPrivateProperty("acceleration", acceleration)
+        // set specific force
+        val fx = randomizer.nextDouble()
+        val fy = randomizer.nextDouble()
+        val fz = randomizer.nextDouble()
+        val specificForce = AccelerationTriad(fx, fy, fz)
+        estimator.setPrivateProperty("specificForce", specificForce)
 
         // set angular speed
         val wx = randomizer.nextDouble()
@@ -1652,18 +1931,19 @@ class EcefAbsolutePoseEstimatorTest {
 
         val bodyKinematics: BodyKinematics? = estimator.getPrivateProperty("bodyKinematics")
         requireNotNull(bodyKinematics)
-        assertEquals(ax, bodyKinematics.fx, 0.0)
-        assertEquals(ay, bodyKinematics.fy, 0.0)
-        assertEquals(az, bodyKinematics.fz, 0.0)
+        assertEquals(fx, bodyKinematics.fx, 0.0)
+        assertEquals(fy, bodyKinematics.fy, 0.0)
+        assertEquals(fz, bodyKinematics.fz, 0.0)
         assertEquals(wx, bodyKinematics.angularRateX, 0.0)
         assertEquals(wy, bodyKinematics.angularRateY, 0.0)
         assertEquals(wz, bodyKinematics.angularRateZ, 0.0)
 
-        val currentEcefFrame1 = com.irurueta.navigation.inertial.navigators.ECEFInertialNavigator.navigateECEFAndReturnNew(
-            TIME_INTERVAL,
-            previousEcefFrame2,
-            bodyKinematics
-        )
+        val currentEcefFrame1 =
+            com.irurueta.navigation.inertial.navigators.ECEFInertialNavigator.navigateECEFAndReturnNew(
+                TIME_INTERVAL,
+                previousEcefFrame2,
+                bodyKinematics
+            )
         val currentNedFrame1 =
             ECEFtoNEDFrameConverter.convertECEFtoNEDAndReturnNew(currentEcefFrame1)
         currentNedFrame1.coordinateTransformation = CoordinateTransformation(
@@ -1745,12 +2025,12 @@ class EcefAbsolutePoseEstimatorTest {
 
         // set body kinematics
         val randomizer = UniformRandomizer()
-        // set acceleration
-        val ax = randomizer.nextDouble()
-        val ay = randomizer.nextDouble()
-        val az = randomizer.nextDouble()
-        val acceleration = AccelerationTriad(ax, ay, az)
-        estimator.setPrivateProperty("acceleration", acceleration)
+        // set specific force
+        val fx = randomizer.nextDouble()
+        val fy = randomizer.nextDouble()
+        val fz = randomizer.nextDouble()
+        val specificForce = AccelerationTriad(fx, fy, fz)
+        estimator.setPrivateProperty("specificForce", specificForce)
 
         // set angular speed
         val wx = randomizer.nextDouble()
@@ -1786,18 +2066,19 @@ class EcefAbsolutePoseEstimatorTest {
 
         val bodyKinematics: BodyKinematics? = estimator.getPrivateProperty("bodyKinematics")
         requireNotNull(bodyKinematics)
-        assertEquals(ax, bodyKinematics.fx, 0.0)
-        assertEquals(ay, bodyKinematics.fy, 0.0)
-        assertEquals(az, bodyKinematics.fz, 0.0)
+        assertEquals(fx, bodyKinematics.fx, 0.0)
+        assertEquals(fy, bodyKinematics.fy, 0.0)
+        assertEquals(fz, bodyKinematics.fz, 0.0)
         assertEquals(wx, bodyKinematics.angularRateX, 0.0)
         assertEquals(wy, bodyKinematics.angularRateY, 0.0)
         assertEquals(wz, bodyKinematics.angularRateZ, 0.0)
 
-        val currentEcefFrame1 = com.irurueta.navigation.inertial.navigators.ECEFInertialNavigator.navigateECEFAndReturnNew(
-            TIME_INTERVAL,
-            previousEcefFrame2,
-            bodyKinematics
-        )
+        val currentEcefFrame1 =
+            com.irurueta.navigation.inertial.navigators.ECEFInertialNavigator.navigateECEFAndReturnNew(
+                TIME_INTERVAL,
+                previousEcefFrame2,
+                bodyKinematics
+            )
         val currentNedFrame1 =
             ECEFtoNEDFrameConverter.convertECEFtoNEDAndReturnNew(currentEcefFrame1)
         currentNedFrame1.coordinateTransformation = CoordinateTransformation(

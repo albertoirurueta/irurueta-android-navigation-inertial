@@ -19,6 +19,7 @@ import android.content.Context
 import android.location.Location
 import android.util.Log
 import com.irurueta.algebra.Matrix
+import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
 import com.irurueta.android.navigation.inertial.calibration.builder.MagnetometerInternalCalibratorBuilder
 import com.irurueta.android.navigation.inertial.calibration.intervals.IntervalDetector
 import com.irurueta.android.navigation.inertial.calibration.intervals.MagnetometerIntervalDetector
@@ -46,6 +47,9 @@ import kotlin.math.sqrt
  * field (typically when device orientation remains static).
  * Such static periods are used to obtain measurements and solve calibration parameters.
  * This calibrator DOES NOT require an accelerometer. Only a magnetometer is needed.
+ * This calibrator converts sensor measurements from device ENU coordinates to local plane NED
+ * coordinates. Thus, all values referring to a given x-y-z coordinates refers to local plane
+ * NED system of coordinates.
  *
  * @property context Android context.
  * @property sensorType One of the supported magnetometer sensor types.
@@ -130,7 +134,7 @@ class SingleSensorStaticIntervalMagnetometerCalibrator private constructor(
         timestamp: Date = Date(),
         worldMagneticModel: WorldMagneticModel? = null,
         sensorType: MagnetometerSensorCollector.SensorType =
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
         sensorDelay: SensorDelay = SensorDelay.FASTEST,
         solveCalibrationWhenEnoughMeasurements: Boolean = true,
         isGroundTruthInitialHardIron: Boolean = false,
@@ -167,6 +171,13 @@ class SingleSensorStaticIntervalMagnetometerCalibrator private constructor(
         requiredMeasurements = minimumRequiredMeasurements
         robustPreliminarySubsetSize = minimumRequiredMeasurements
     }
+
+    /**
+     * Triad containing samples converted from device ENU coordinates to local plane NED
+     * coordinates.
+     * This is reused for performance reasons.
+     */
+    private val biasTriad = MagneticFluxDensityTriad()
 
     /**
      * Listener used by the internal interval detector when a static period ends and a dynamic
@@ -1101,15 +1112,23 @@ class SingleSensorStaticIntervalMagnetometerCalibrator private constructor(
             initialHardIronZ = 0.0
         }
 
-        this.initialHardIronX = initialHardIronX
-        this.initialHardIronY = initialHardIronY
-        this.initialHardIronZ = initialHardIronZ
+        // convert from device ENU coordinate to local plane NED coordinates
+        ENUtoNEDTriadConverter.convert(
+            initialHardIronX,
+            initialHardIronY,
+            initialHardIronZ,
+            biasTriad
+        )
+
+        this.initialHardIronX = biasTriad.valueX
+        this.initialHardIronY = biasTriad.valueY
+        this.initialHardIronZ = biasTriad.valueZ
 
         initialHardIronAvailableListener?.onInitialHardIronAvailable(
             this,
-            initialHardIronX,
-            initialHardIronY,
-            initialHardIronZ
+            biasTriad.valueX,
+            biasTriad.valueY,
+            biasTriad.valueZ
         )
     }
 

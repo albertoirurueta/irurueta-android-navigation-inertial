@@ -53,7 +53,7 @@ abstract class BaseLevelingEstimator<T : BaseLevelingEstimator<T, L>,
     val sensorDelay: SensorDelay = SensorDelay.GAME,
     val useAccelerometer: Boolean = false,
     val accelerometerSensorType: AccelerometerSensorCollector.SensorType =
-        AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+        AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
     val accelerometerAveragingFilter: AveragingFilter = LowPassAveragingFilter(),
     val estimateCoordinateTransformation: Boolean = false,
     val estimateEulerAngles: Boolean = true,

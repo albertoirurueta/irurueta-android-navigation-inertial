@@ -98,14 +98,14 @@ class LeveledRelativeAttitudeEstimator private constructor(
         context: Context,
         location: Location? = null,
         sensorDelay: SensorDelay = SensorDelay.GAME,
-        useAccelerometer: Boolean = false,
+        useAccelerometer: Boolean = true,
         accelerometerSensorType: AccelerometerSensorCollector.SensorType =
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
         accelerometerAveragingFilter: AveragingFilter = LowPassAveragingFilter(),
         gyroscopeSensorType: GyroscopeSensorCollector.SensorType =
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
         useAccurateLevelingEstimator: Boolean = false,
-        useAccurateRelativeGyroscopeAttitudeEstimator: Boolean = false,
+        useAccurateRelativeGyroscopeAttitudeEstimator: Boolean = true,
         estimateCoordinateTransformation: Boolean = false,
         estimateEulerAngles: Boolean = true,
         attitudeAvailableListener: OnAttitudeAvailableListener? = null,
@@ -247,7 +247,7 @@ class LeveledRelativeAttitudeEstimator private constructor(
      *
      * @throws IllegalStateException if estimator is running.
      */
-    var useAccurateRelativeGyroscopeAttitudeEstimator: Boolean = false
+    var useAccurateRelativeGyroscopeAttitudeEstimator: Boolean = true
         @Throws(IllegalStateException::class)
         set(value) {
             check(!running)

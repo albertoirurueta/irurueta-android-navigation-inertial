@@ -50,23 +50,26 @@ class FusedGeomagneticAttitudeEstimator2Test {
         assertSame(context, estimator.context)
         assertNull(estimator.location)
         assertEquals(SensorDelay.GAME, estimator.sensorDelay)
-        assertFalse(estimator.useAccelerometer)
+        assertTrue(estimator.useAccelerometer)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
             estimator.accelerometerSensorType
         )
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
             estimator.magnetometerSensorType
         )
         assertNotNull(estimator.accelerometerAveragingFilter)
         assertTrue(estimator.accelerometerAveragingFilter is LowPassAveragingFilter)
-        assertEquals(GyroscopeSensorCollector.SensorType.GYROSCOPE, estimator.gyroscopeSensorType)
+        assertEquals(
+            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            estimator.gyroscopeSensorType
+        )
         assertNull(estimator.worldMagneticModel)
         assertNotNull(estimator.timestamp)
         assertFalse(estimator.useWorldMagneticModel)
         assertFalse(estimator.useAccurateLevelingEstimator)
-        assertFalse(estimator.useAccurateRelativeGyroscopeAttitudeEstimator)
+        assertTrue(estimator.useAccurateRelativeGyroscopeAttitudeEstimator)
         assertFalse(estimator.estimateCoordinateTransformation)
         assertTrue(estimator.estimateEulerAngles)
         assertNull(estimator.attitudeAvailableListener)
@@ -97,16 +100,16 @@ class FusedGeomagneticAttitudeEstimator2Test {
             context,
             location,
             SensorDelay.NORMAL,
-            useAccelerometer = true,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            useAccelerometer = false,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
             accelerometerAveragingFilter,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             worldMagneticModel,
             timestamp,
             useWorldMagneticModel = true,
             useAccurateLevelingEstimator = true,
-            useAccurateRelativeGyroscopeAttitudeEstimator = true,
+            useAccurateRelativeGyroscopeAttitudeEstimator = false,
             estimateCoordinateTransformation = true,
             estimateEulerAngles = false,
             attitudeAvailableListener = listener,
@@ -121,25 +124,25 @@ class FusedGeomagneticAttitudeEstimator2Test {
         assertSame(context, estimator.context)
         assertSame(location, estimator.location)
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
-        assertTrue(estimator.useAccelerometer)
+        assertFalse(estimator.useAccelerometer)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             estimator.accelerometerSensorType
         )
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
             estimator.magnetometerSensorType
         )
         assertSame(accelerometerAveragingFilter, estimator.accelerometerAveragingFilter)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE,
             estimator.gyroscopeSensorType
         )
         assertSame(worldMagneticModel, estimator.worldMagneticModel)
         assertSame(timestamp, estimator.timestamp)
         assertTrue(estimator.useWorldMagneticModel)
         assertTrue(estimator.useAccurateLevelingEstimator)
-        assertTrue(estimator.useAccurateRelativeGyroscopeAttitudeEstimator)
+        assertFalse(estimator.useAccurateRelativeGyroscopeAttitudeEstimator)
         assertTrue(estimator.estimateCoordinateTransformation)
         assertFalse(estimator.estimateEulerAngles)
         assertSame(listener, estimator.attitudeAvailableListener)
@@ -526,13 +529,13 @@ class FusedGeomagneticAttitudeEstimator2Test {
         val estimator = FusedGeomagneticAttitudeEstimator2(context)
 
         assertFalse(estimator.running)
-        assertFalse(estimator.useAccurateRelativeGyroscopeAttitudeEstimator)
+        assertTrue(estimator.useAccurateRelativeGyroscopeAttitudeEstimator)
 
         // set new value
-        estimator.useAccurateRelativeGyroscopeAttitudeEstimator = true
+        estimator.useAccurateRelativeGyroscopeAttitudeEstimator = false
 
         // check
-        assertTrue(estimator.useAccurateRelativeGyroscopeAttitudeEstimator)
+        assertFalse(estimator.useAccurateRelativeGyroscopeAttitudeEstimator)
     }
 
     @Test
@@ -1497,7 +1500,8 @@ class FusedGeomagneticAttitudeEstimator2Test {
         val relativeAttitudeSpy = spyk(relativeAttitude)
         estimator.setPrivateProperty("relativeAttitude", relativeAttitudeSpy)
 
-        val internalFusedAttitude: Quaternion? = estimator.getPrivateProperty("internalFusedAttitude")
+        val internalFusedAttitude: Quaternion? =
+            estimator.getPrivateProperty("internalFusedAttitude")
         requireNotNull(internalFusedAttitude)
         val internalFusedAttitudeSpy = spyk(internalFusedAttitude)
         estimator.setPrivateProperty("internalFusedAttitude", internalFusedAttitudeSpy)
@@ -1747,7 +1751,8 @@ class FusedGeomagneticAttitudeEstimator2Test {
         val relativeAttitudeSpy = spyk(relativeAttitude)
         estimator.setPrivateProperty("relativeAttitude", relativeAttitudeSpy)
 
-        val internalFusedAttitude: Quaternion? = estimator.getPrivateProperty("internalFusedAttitude")
+        val internalFusedAttitude: Quaternion? =
+            estimator.getPrivateProperty("internalFusedAttitude")
         requireNotNull(internalFusedAttitude)
         getAttitude().copyTo(internalFusedAttitude)
         val internalFusedAttitudeSpy = spyk(internalFusedAttitude)
@@ -1896,7 +1901,8 @@ class FusedGeomagneticAttitudeEstimator2Test {
         val relativeAttitudeSpy = spyk(relativeAttitude)
         estimator.setPrivateProperty("relativeAttitude", relativeAttitudeSpy)
 
-        val internalFusedAttitude: Quaternion? = estimator.getPrivateProperty("internalFusedAttitude")
+        val internalFusedAttitude: Quaternion? =
+            estimator.getPrivateProperty("internalFusedAttitude")
         requireNotNull(internalFusedAttitude)
         getAttitude().copyTo(internalFusedAttitude)
         val internalFusedAttitudeSpy = spyk(internalFusedAttitude)
@@ -2046,7 +2052,8 @@ class FusedGeomagneticAttitudeEstimator2Test {
         val relativeAttitudeSpy = spyk(relativeAttitude)
         estimator.setPrivateProperty("relativeAttitude", relativeAttitudeSpy)
 
-        val internalFusedAttitude: Quaternion? = estimator.getPrivateProperty("internalFusedAttitude")
+        val internalFusedAttitude: Quaternion? =
+            estimator.getPrivateProperty("internalFusedAttitude")
         requireNotNull(internalFusedAttitude)
         getAttitude().copyTo(internalFusedAttitude)
         val internalFusedAttitudeSpy = spyk(internalFusedAttitude)

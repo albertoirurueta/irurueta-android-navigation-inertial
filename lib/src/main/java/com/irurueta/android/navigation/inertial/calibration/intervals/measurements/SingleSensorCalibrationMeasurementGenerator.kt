@@ -34,6 +34,8 @@ import com.irurueta.units.Acceleration
  * where the device is kept static (e.g. motionless), or where some force is applied to the device
  * changing its position or orientation.
  * Static and dynamic intervals are measured using the only sensor used by the generator.
+ * Measurement generator converts device ENU measurements into measurements expressed in local
+ * tangent plane NED coordinates.
  *
  * @property context Android context.
  * @property accelerometerSensorType One of the supported accelerometer sensor types.
@@ -63,7 +65,7 @@ abstract class SingleSensorCalibrationMeasurementGenerator<C : SingleSensorCalib
         T, G : MeasurementsGenerator<T, G, L, I>, L : MeasurementsGeneratorListener<T, G, L, I>,
         I>(
     context: Context,
-    accelerometerSensorType: AccelerometerSensorCollector.SensorType = AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+    accelerometerSensorType: AccelerometerSensorCollector.SensorType = AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
     accelerometerSensorDelay: SensorDelay = SensorDelay.FASTEST,
     var initializationStartedListener: OnInitializationStartedListener<C>? = null,
     var initializationCompletedListener: OnInitializationCompletedListener<C>? = null,
@@ -76,7 +78,12 @@ abstract class SingleSensorCalibrationMeasurementGenerator<C : SingleSensorCalib
     var resetListener: OnResetListener<C>? = null,
     var accelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? = null,
     accuracyChangedListener: SensorCollector.OnAccuracyChangedListener? = null
-) : CalibrationMeasurementGenerator<I>(context, accelerometerSensorType, accelerometerSensorDelay, accuracyChangedListener) {
+) : CalibrationMeasurementGenerator<I>(
+    context,
+    accelerometerSensorType,
+    accelerometerSensorDelay,
+    accuracyChangedListener
+) {
     /**
      * Listener for internal measurement generator.
      */

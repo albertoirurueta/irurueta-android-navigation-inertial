@@ -59,7 +59,10 @@ class AccelerometerIntervalDetectorTest {
 
         // check default values
         assertSame(context, detector.context)
-        assertEquals(AccelerometerSensorCollector.SensorType.ACCELEROMETER, detector.sensorType)
+        assertEquals(
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            detector.sensorType
+        )
         assertEquals(SensorDelay.FASTEST, detector.sensorDelay)
         assertNull(detector.initializationStartedListener)
         assertNull(detector.initializationCompletedListener)
@@ -249,13 +252,13 @@ class AccelerometerIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = AccelerometerIntervalDetector(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER
         )
 
         // check default values
         assertSame(context, detector.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             detector.sensorType
         )
         assertEquals(SensorDelay.FASTEST, detector.sensorDelay)
@@ -447,14 +450,14 @@ class AccelerometerIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = AccelerometerIntervalDetector(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             SensorDelay.NORMAL
         )
 
         // check default values
         assertSame(context, detector.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             detector.sensorType
         )
         assertEquals(SensorDelay.NORMAL, detector.sensorDelay)
@@ -648,7 +651,7 @@ class AccelerometerIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = AccelerometerIntervalDetector(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
             initializationStartedListener
         )
@@ -656,7 +659,7 @@ class AccelerometerIntervalDetectorTest {
         // check default values
         assertSame(context, detector.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             detector.sensorType
         )
         assertEquals(SensorDelay.NORMAL, detector.sensorDelay)
@@ -852,7 +855,7 @@ class AccelerometerIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = AccelerometerIntervalDetector(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener
@@ -861,7 +864,7 @@ class AccelerometerIntervalDetectorTest {
         // check default values
         assertSame(context, detector.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             detector.sensorType
         )
         assertEquals(SensorDelay.NORMAL, detector.sensorDelay)
@@ -1058,7 +1061,7 @@ class AccelerometerIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = AccelerometerIntervalDetector(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -1068,7 +1071,7 @@ class AccelerometerIntervalDetectorTest {
         // check default values
         assertSame(context, detector.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             detector.sensorType
         )
         assertEquals(SensorDelay.NORMAL, detector.sensorDelay)
@@ -1267,7 +1270,7 @@ class AccelerometerIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = AccelerometerIntervalDetector(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -1278,7 +1281,7 @@ class AccelerometerIntervalDetectorTest {
         // check default values
         assertSame(context, detector.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             detector.sensorType
         )
         assertEquals(SensorDelay.NORMAL, detector.sensorDelay)
@@ -1479,7 +1482,7 @@ class AccelerometerIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = AccelerometerIntervalDetector(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -1491,7 +1494,7 @@ class AccelerometerIntervalDetectorTest {
         // check default values
         assertSame(context, detector.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             detector.sensorType
         )
         assertEquals(SensorDelay.NORMAL, detector.sensorDelay)
@@ -1693,7 +1696,7 @@ class AccelerometerIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = AccelerometerIntervalDetector(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -1706,7 +1709,7 @@ class AccelerometerIntervalDetectorTest {
         // check default values
         assertSame(context, detector.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             detector.sensorType
         )
         assertEquals(SensorDelay.NORMAL, detector.sensorDelay)
@@ -1909,7 +1912,7 @@ class AccelerometerIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = AccelerometerIntervalDetector(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -1923,7 +1926,7 @@ class AccelerometerIntervalDetectorTest {
         // check default values
         assertSame(context, detector.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             detector.sensorType
         )
         assertEquals(SensorDelay.NORMAL, detector.sensorDelay)
@@ -2127,7 +2130,7 @@ class AccelerometerIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = AccelerometerIntervalDetector(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -2142,7 +2145,7 @@ class AccelerometerIntervalDetectorTest {
         // check default values
         assertSame(context, detector.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
             detector.sensorType
         )
         assertEquals(SensorDelay.NORMAL, detector.sensorDelay)
@@ -3002,9 +3005,9 @@ class AccelerometerIntervalDetectorTest {
         // check
         verify(exactly = 1) {
             internalDetectorSpy.process(
-                ax.toDouble(),
                 ay.toDouble(),
-                az.toDouble()
+                ax.toDouble(),
+                -az.toDouble()
             )
         }
         assertEquals(1, detector.numberOfProcessedMeasurements)
@@ -3049,9 +3052,9 @@ class AccelerometerIntervalDetectorTest {
         // check
         verify(exactly = 1) {
             internalDetectorSpy.process(
-                ax.toDouble(),
                 ay.toDouble(),
-                az.toDouble()
+                ax.toDouble(),
+                -az.toDouble()
             )
         }
         assertEquals(1, detector.numberOfProcessedMeasurements)
@@ -3116,9 +3119,9 @@ class AccelerometerIntervalDetectorTest {
         verify(exactly = 1) { timeIntervalEstimatorSpy.addTimestamp(TIME_INTERVAL_SECONDS) }
         verify(exactly = 1) {
             internalDetectorSpy.process(
-                ax.toDouble(),
                 ay.toDouble(),
-                az.toDouble()
+                ax.toDouble(),
+                -az.toDouble()
             )
         }
         assertEquals(2, detector.numberOfProcessedMeasurements)
@@ -3191,9 +3194,9 @@ class AccelerometerIntervalDetectorTest {
         verify(exactly = 1) { timeIntervalEstimatorSpy.addTimestamp(TIME_INTERVAL_SECONDS) }
         verify(exactly = 1) {
             internalDetectorSpy.process(
-                ax.toDouble(),
                 ay.toDouble(),
-                az.toDouble()
+                ax.toDouble(),
+                -az.toDouble()
             )
         }
         assertEquals(2, detector.numberOfProcessedMeasurements)

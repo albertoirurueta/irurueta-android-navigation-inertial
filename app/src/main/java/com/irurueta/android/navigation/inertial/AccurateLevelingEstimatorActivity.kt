@@ -58,9 +58,10 @@ class AccurateLevelingEstimatorActivity : AppCompatActivity() {
 
     private var useAccelerometer = false
 
-    private var accelerometerSensorType = AccelerometerSensorCollector.SensorType.ACCELEROMETER
+    private var accelerometerSensorType =
+        AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
 
-    private var averagingFilterType : String? = null
+    private var averagingFilterType: String? = null
 
     private val conversionRotation = ENUtoNEDTriadConverter.conversionRotation
 
@@ -73,7 +74,7 @@ class AccurateLevelingEstimatorActivity : AppCompatActivity() {
         useAccelerometer = extras?.getBoolean(USE_ACCELEROMETER, false) ?: false
         accelerometerSensorType =
             (extras?.getSerializable(ACCELEROMETER_SENSOR_TYPE) as AccelerometerSensorCollector.SensorType?)
-                ?: AccelerometerSensorCollector.SensorType.ACCELEROMETER
+                ?: AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
         averagingFilterType = extras?.getString(AVERAGING_FILTER_TYPE)
 
         setContentView(R.layout.activity_accurate_leveling_estimator)
@@ -157,7 +158,8 @@ class AccurateLevelingEstimatorActivity : AppCompatActivity() {
                     attitude.toQuaternion(rotation)
 
                     rollView?.text = getString(R.string.roll_degrees, Math.toDegrees(roll ?: 0.0))
-                    pitchView?.text = getString(R.string.pitch_degrees, Math.toDegrees(pitch ?: 0.0))
+                    pitchView?.text =
+                        getString(R.string.pitch_degrees, Math.toDegrees(pitch ?: 0.0))
 
                     // rotation refers to pinhole camera point of view, to apply rotation to the cube
                     // its inverse must be used.

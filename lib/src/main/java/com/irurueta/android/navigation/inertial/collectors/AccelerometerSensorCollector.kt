@@ -33,7 +33,7 @@ import android.os.Build
  */
 class AccelerometerSensorCollector(
     context: Context,
-    val sensorType: SensorType = SensorType.ACCELEROMETER,
+    val sensorType: SensorType = SensorType.ACCELEROMETER_UNCALIBRATED,
     sensorDelay: SensorDelay = SensorDelay.FASTEST,
     var measurementListener: OnMeasurementListener? = null,
     accuracyChangedListener: OnAccuracyChangedListener? = null

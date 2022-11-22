@@ -115,11 +115,11 @@ class GeomagneticAttitudeEstimator private constructor(
         context: Context,
         location: Location? = null,
         sensorDelay: SensorDelay = SensorDelay.GAME,
-        useAccelerometer: Boolean = false,
+        useAccelerometer: Boolean = true,
         accelerometerSensorType: AccelerometerSensorCollector.SensorType =
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
         magnetometerSensorType: MagnetometerSensorCollector.SensorType =
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
         accelerometerAveragingFilter: AveragingFilter = LowPassAveragingFilter(),
         worldMagneticModel: WorldMagneticModel? = null,
         timestamp: Date = Date(),

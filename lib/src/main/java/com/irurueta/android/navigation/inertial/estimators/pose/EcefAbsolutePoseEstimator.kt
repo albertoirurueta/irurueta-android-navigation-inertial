@@ -18,11 +18,10 @@ package com.irurueta.android.navigation.inertial.estimators.pose
 import android.content.Context
 import android.location.Location
 import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.navigation.inertial.collectors.*
+import com.irurueta.android.navigation.inertial.estimators.attitude.AbsoluteAttitudeEstimator
 import com.irurueta.android.navigation.inertial.estimators.attitude.FusedGeomagneticAttitudeEstimator
+import com.irurueta.android.navigation.inertial.estimators.attitude.FusedGeomagneticAttitudeEstimator2
 import com.irurueta.android.navigation.inertial.estimators.attitude.GravityEstimator
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
@@ -47,6 +46,10 @@ import java.util.*
  *
  * @property context Android context.
  * @property sensorDelay Delay of sensors between samples.
+ * @property useAccelerometerForAttitudeEstimation true to use accelerometer sensor for attitude
+ * estimation, false to use system gravity sensor for leveling purposes. Regardless of this values,
+ * pose estimator always uses the accelerometer sensor, however, it can be used both for leveling
+ * and device motion, or only for device motion.
  * @property accelerometerSensorType One of the supported accelerometer sensor types. It is
  * suggested to avoid using non-calibrated accelerometers.
  * @property magnetometerSensorType One of the supported magnetometer sensor types.
@@ -54,6 +57,8 @@ import java.util.*
  * sensed gravity component of specific force.
  * @property gyroscopeSensorType One of the supported gyroscope sensor types. It is suggested to
  * avoid using non-calibrated gyroscopes.
+ * @param useAccurateAttitudeEstimator true to use improved absolute attitude estimator, false
+ * otherwise.
  * @property estimatePoseTransformation true to estimate 3D metric pose transformation.
  * @property poseAvailableListener notifies when a new estimated pose is available.
  * @property accelerometerMeasurementListener listener to notify new accelerometer measurements.
@@ -66,10 +71,12 @@ import java.util.*
 class EcefAbsolutePoseEstimator private constructor(
     override val context: Context,
     override val sensorDelay: SensorDelay,
+    val useAccelerometerForAttitudeEstimation: Boolean,
     override val accelerometerSensorType: AccelerometerSensorCollector.SensorType,
     override val magnetometerSensorType: MagnetometerSensorCollector.SensorType,
     override val accelerometerAveragingFilter: AveragingFilter,
     override val gyroscopeSensorType: GyroscopeSensorCollector.SensorType,
+    val useAccurateAttitudeEstimator: Boolean,
     override val estimatePoseTransformation: Boolean,
     var poseAvailableListener: OnPoseAvailableListener?,
     override var accelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener?,
@@ -86,6 +93,10 @@ class EcefAbsolutePoseEstimator private constructor(
      * @param location current device location.
      * @param initialVelocity initial velocity of device expressed in NED coordinates.
      * @param sensorDelay Delay of sensors between samples.
+     * @property useAccelerometerForAttitudeEstimation true to use accelerometer sensor for attitude
+     * estimation, false to use system gravity sensor for leveling purposes. Regardless of this
+     * values, pose estimator always uses the accelerometer sensor, however, it can be used both for
+     * leveling and device motion, or only for device motion.
      * @param accelerometerSensorType One of the supported accelerometer sensor types. It is
      * suggested to avoid using non-calibrated accelerometers.
      * @param magnetometerSensorType One of the supported magnetometer sensor types.
@@ -104,6 +115,8 @@ class EcefAbsolutePoseEstimator private constructor(
      * @param useAccurateRelativeGyroscopeAttitudeEstimator true to use accurate non-leveled
      * relative attitude estimator, false to use non-accurate non-leveled relative attitude
      * estimator.
+     * @param useAccurateAttitudeEstimator true to use accurate absolute attitude estimator, false
+     * otherwise.
      * @param estimatePoseTransformation true to estimate 3D metric pose transformation, false to
      * skip transformation computation.
      * @param poseAvailableListener notifies when a new estimated pose is available.
@@ -118,18 +131,20 @@ class EcefAbsolutePoseEstimator private constructor(
         location: Location,
         initialVelocity: NEDVelocity = NEDVelocity(),
         sensorDelay: SensorDelay = SensorDelay.GAME,
+        useAccelerometerForAttitudeEstimation: Boolean = false,
         accelerometerSensorType: AccelerometerSensorCollector.SensorType =
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
         magnetometerSensorType: MagnetometerSensorCollector.SensorType =
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
         accelerometerAveragingFilter: AveragingFilter = LowPassAveragingFilter(),
         gyroscopeSensorType: GyroscopeSensorCollector.SensorType =
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
         worldMagneticModel: WorldMagneticModel? = null,
         timestamp: Date = Date(),
         useWorldMagneticModel: Boolean = false,
         useAccurateLevelingEstimator: Boolean = true,
         useAccurateRelativeGyroscopeAttitudeEstimator: Boolean = true,
+        useAccurateAttitudeEstimator: Boolean = true,
         estimatePoseTransformation: Boolean = false,
         poseAvailableListener: OnPoseAvailableListener? = null,
         accelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? = null,
@@ -139,10 +154,12 @@ class EcefAbsolutePoseEstimator private constructor(
     ) : this(
         context,
         sensorDelay,
+        useAccelerometerForAttitudeEstimation,
         accelerometerSensorType,
         magnetometerSensorType,
         accelerometerAveragingFilter,
         gyroscopeSensorType,
+        useAccurateAttitudeEstimator,
         estimatePoseTransformation,
         poseAvailableListener,
         accelerometerMeasurementListener,
@@ -168,9 +185,10 @@ class EcefAbsolutePoseEstimator private constructor(
     private val bodyKinematics = BodyKinematics()
 
     /**
-     * Acceleration measured by accelerometer sensor.
+     * Specific force measured by accelerometer sensor containing both device acceleration and
+     * gravity component.
      */
-    private val acceleration = AccelerationTriad()
+    private val specificForce = AccelerationTriad()
 
     /**
      * Angular speed measured by gyroscope sensor.
@@ -492,7 +510,18 @@ class EcefAbsolutePoseEstimator private constructor(
         check(!running)
 
         reset()
-        running = absoluteAttitudeEstimator.start()
+        running = if (useAccurateAttitudeEstimator) {
+            absoluteAttitudeEstimator2.start()
+        } else {
+            absoluteAttitudeEstimator.start()
+        }
+
+        running = running && if (!useAccelerometerForAttitudeEstimation) {
+            accelerometerSensorCollector.start()
+        } else {
+            true
+        }
+
         if (!running) {
             stop()
         }
@@ -504,7 +533,14 @@ class EcefAbsolutePoseEstimator private constructor(
      * Stops this estimator.
      */
     override fun stop() {
-        absoluteAttitudeEstimator.stop()
+        if (!useAccelerometerForAttitudeEstimation) {
+            accelerometerSensorCollector.stop()
+        }
+        if (useAccurateAttitudeEstimator) {
+            absoluteAttitudeEstimator2.stop()
+        } else {
+            absoluteAttitudeEstimator.stop()
+        }
         running = false
     }
 
@@ -515,7 +551,7 @@ class EcefAbsolutePoseEstimator private constructor(
         context,
         this.initialLocation,
         sensorDelay,
-        true,
+        useAccelerometerForAttitudeEstimation,
         accelerometerSensorType,
         magnetometerSensorType,
         accelerometerAveragingFilter,
@@ -528,126 +564,204 @@ class EcefAbsolutePoseEstimator private constructor(
         estimateCoordinateTransformation = true,
         estimateEulerAngles = false,
         attitudeAvailableListener = { estimator, attitude, timestamp, _, _, _, coordinateTransformation ->
-            if (!initialize(attitude, coordinateTransformation)) {
-                return@FusedGeomagneticAttitudeEstimator
-            }
-
-            val timeInterval = estimator.gyroscopeAverageTimeInterval
-
-            // current attitude is expressed in NED coordinates system
-            attitude.copyTo(currentAttitude)
-
-            // compensate measured gravity respect theoretical gravity
-            bodyKinematics.fx = acceleration.valueX
-            bodyKinematics.fy = acceleration.valueY
-            bodyKinematics.fz = acceleration.valueZ
-
-            // compensate measured angular speed respect theoretical Earth rotation
-            bodyKinematics.angularRateX = angularSpeed.valueX
-            bodyKinematics.angularRateY = angularSpeed.valueY
-            bodyKinematics.angularRateZ = angularSpeed.valueZ
-
-            ECEFInertialNavigator.navigateECEF(
-                timeInterval,
-                previousEcefFrame,
-                bodyKinematics,
-                currentEcefFrame
-            )
-
-            // Ensure that attitude does not drift by resetting current local attitude in NED
-            // coordinates and converting back to ECEF coordinates
-            ECEFtoNEDFrameConverter.convertECEFtoNED(currentEcefFrame, currentNedFrame)
-            currentNedFrame.coordinateTransformationRotation = currentAttitude
-            NEDtoECEFFrameConverter.convertNEDtoECEF(currentNedFrame, currentEcefFrame)
-
-            // compute transformation between initial and current frame and previous and current frame
-            if (estimatePoseTransformation) {
-                computeTransformation(
-                    initialEcefFrame,
-                    currentEcefFrame,
-                    initialAttitude,
-                    currentAttitude,
-                    poseTransformation
-                )
-            }
-
-            // notify
-            val poseTransformation =
-                if (estimatePoseTransformation) poseTransformation else null
-
-            poseAvailableListener?.onPoseAvailable(
-                this,
-                currentEcefFrame,
-                previousEcefFrame,
-                initialEcefFrame,
-                timestamp,
-                poseTransformation
-            )
-
-            // update previous frame
-            previousEcefFrame.copyFrom(currentEcefFrame)
-            previousNedFrame.copyFrom(currentNedFrame)
+            processAttitude(estimator, attitude, timestamp, coordinateTransformation)
         },
         accelerometerMeasurementListener = { ax, ay, az, bx, by, bz, timestamp, accuracy ->
-
-            val currentAx = if (bx != null)
-                ax.toDouble() - bx.toDouble()
-            else
-                ax.toDouble()
-            val currentAy = if (by != null)
-                ay.toDouble() - by.toDouble()
-            else
-                ay.toDouble()
-            val currentAz = if (bz != null)
-                az.toDouble() - bz.toDouble()
-            else
-                az.toDouble()
-
-            ENUtoNEDTriadConverter.convert(currentAx, currentAy, currentAz, acceleration)
-
-            accelerometerMeasurementListener?.onMeasurement(
-                ax,
-                ay,
-                az,
-                bx,
-                by,
-                bz,
-                timestamp,
-                accuracy
-            )
+            // this is only called when useAccelerometerForAttitudeEstimation = true
+            processAccelerometerMeasurement(ax, ay, az, bx, by, bz, timestamp, accuracy)
         },
         gyroscopeMeasurementListener = { wx, wy, wz, bx, by, bz, timestamp, accuracy ->
-            val currentWx = if (bx != null)
-                wx.toDouble() - bx.toDouble()
-            else
-                wx.toDouble()
-
-            val currentWy = if (by != null)
-                wy.toDouble() - by.toDouble()
-            else
-                wy.toDouble()
-
-            val currentWz = if (bz != null)
-                wz.toDouble() - bz.toDouble()
-            else
-                wz.toDouble()
-
-            ENUtoNEDTriadConverter.convert(currentWx, currentWy, currentWz, angularSpeed)
-
-            gyroscopeMeasurementListener?.onMeasurement(
-                wx,
-                wy,
-                wz,
-                bx,
-                by,
-                bz,
-                timestamp,
-                accuracy
-            )
+            processGyroscopeMeasurement(wx, wy, wz, bx, by, bz, timestamp, accuracy)
         },
         gravityEstimationListener = gravityEstimationListener,
         magnetometerMeasurementListener = magnetometerMeasurementListener
     )
+
+    /**
+     * Estimates device absolute attitude using accelerometer, gyroscope and magnetometer sensors.
+     */
+    private val absoluteAttitudeEstimator2 = FusedGeomagneticAttitudeEstimator2(
+        context,
+        this.initialLocation,
+        sensorDelay,
+        useAccelerometerForAttitudeEstimation,
+        accelerometerSensorType,
+        magnetometerSensorType,
+        accelerometerAveragingFilter,
+        gyroscopeSensorType,
+        worldMagneticModel,
+        timestamp,
+        useWorldMagneticModel,
+        useAccurateLevelingEstimator,
+        useAccurateRelativeGyroscopeAttitudeEstimator,
+        estimateCoordinateTransformation = true,
+        estimateEulerAngles = false,
+        attitudeAvailableListener = { estimator, attitude, timestamp, _, _, _, coordinateTransformation ->
+            processAttitude(estimator, attitude, timestamp, coordinateTransformation)
+        },
+        accelerometerMeasurementListener = { ax, ay, az, bx, by, bz, timestamp, accuracy ->
+            // this is only called when useAccelerometerForAttitudeEstimation = true
+            processAccelerometerMeasurement(ax, ay, az, bx, by, bz, timestamp, accuracy)
+        },
+        gyroscopeMeasurementListener = { wx, wy, wz, bx, by, bz, timestamp, accuracy ->
+            processGyroscopeMeasurement(wx, wy, wz, bx, by, bz, timestamp, accuracy)
+        },
+        gravityEstimationListener = gravityEstimationListener,
+        magnetometerMeasurementListener = magnetometerMeasurementListener
+    )
+
+    private val accelerometerSensorCollector = AccelerometerSensorCollector(
+        context,
+        accelerometerSensorType,
+        sensorDelay,
+        measurementListener = { ax, ay, az, bx, by, bz, timestamp, accuracy ->
+            // this is called when useAccelerometerForAttitudeEstimation = false
+            processAccelerometerMeasurement(ax, ay, az, bx, by, bz, timestamp, accuracy)
+        }
+    )
+
+    private fun processAttitude(
+        estimator: AbsoluteAttitudeEstimator<*, *>,
+        attitude: Quaternion,
+        timestamp: Long,
+        coordinateTransformation: CoordinateTransformation?
+    ) {
+        if (!initialize(attitude, coordinateTransformation)) {
+            return
+        }
+
+        val timeInterval = estimator.gyroscopeAverageTimeInterval
+
+        // current attitude is expressed in NED coordinates system
+        attitude.copyTo(currentAttitude)
+
+        // compensate measured gravity respect theoretical gravity
+        bodyKinematics.fx = specificForce.valueX
+        bodyKinematics.fy = specificForce.valueY
+        bodyKinematics.fz = specificForce.valueZ
+
+        // compensate measured angular speed respect theoretical Earth rotation
+        bodyKinematics.angularRateX = angularSpeed.valueX
+        bodyKinematics.angularRateY = angularSpeed.valueY
+        bodyKinematics.angularRateZ = angularSpeed.valueZ
+
+        ECEFInertialNavigator.navigateECEF(
+            timeInterval,
+            previousEcefFrame,
+            bodyKinematics,
+            currentEcefFrame
+        )
+
+        // Ensure that attitude does not drift by resetting current local attitude in NED
+        // coordinates and converting back to ECEF coordinates
+        ECEFtoNEDFrameConverter.convertECEFtoNED(currentEcefFrame, currentNedFrame)
+        currentNedFrame.coordinateTransformationRotation = currentAttitude
+        NEDtoECEFFrameConverter.convertNEDtoECEF(currentNedFrame, currentEcefFrame)
+
+        // compute transformation between initial and current frame and previous and current frame
+        if (estimatePoseTransformation) {
+            computeTransformation(
+                initialEcefFrame,
+                currentEcefFrame,
+                initialAttitude,
+                currentAttitude,
+                poseTransformation
+            )
+        }
+
+        // notify
+        val poseTransformation =
+            if (estimatePoseTransformation) poseTransformation else null
+
+        poseAvailableListener?.onPoseAvailable(
+            this,
+            currentEcefFrame,
+            previousEcefFrame,
+            initialEcefFrame,
+            timestamp,
+            poseTransformation
+        )
+
+        // update previous frame
+        previousEcefFrame.copyFrom(currentEcefFrame)
+        previousNedFrame.copyFrom(currentNedFrame)
+    }
+
+    private fun processAccelerometerMeasurement(
+        ax: Float,
+        ay: Float,
+        az: Float,
+        bx: Float?,
+        by: Float?,
+        bz: Float?,
+        timestamp: Long,
+        accuracy: SensorAccuracy?
+    ) {
+        val currentAx = if (bx != null)
+            ax.toDouble() - bx.toDouble()
+        else
+            ax.toDouble()
+        val currentAy = if (by != null)
+            ay.toDouble() - by.toDouble()
+        else
+            ay.toDouble()
+        val currentAz = if (bz != null)
+            az.toDouble() - bz.toDouble()
+        else
+            az.toDouble()
+
+        ENUtoNEDTriadConverter.convert(currentAx, currentAy, currentAz, specificForce)
+
+        accelerometerMeasurementListener?.onMeasurement(
+            ax,
+            ay,
+            az,
+            bx,
+            by,
+            bz,
+            timestamp,
+            accuracy
+        )
+    }
+
+    private fun processGyroscopeMeasurement(
+        wx: Float,
+        wy: Float,
+        wz: Float,
+        bx: Float?,
+        by: Float?,
+        bz: Float?,
+        timestamp: Long,
+        accuracy: SensorAccuracy?
+    ) {
+        val currentWx = if (bx != null)
+            wx.toDouble() - bx.toDouble()
+        else
+            wx.toDouble()
+
+        val currentWy = if (by != null)
+            wy.toDouble() - by.toDouble()
+        else
+            wy.toDouble()
+
+        val currentWz = if (bz != null)
+            wz.toDouble() - bz.toDouble()
+        else
+            wz.toDouble()
+
+        ENUtoNEDTriadConverter.convert(currentWx, currentWy, currentWz, angularSpeed)
+
+        gyroscopeMeasurementListener?.onMeasurement(
+            wx,
+            wy,
+            wz,
+            bx,
+            by,
+            bz,
+            timestamp,
+            accuracy
+        )
+    }
 
     /**
      * Resets internal parameters.

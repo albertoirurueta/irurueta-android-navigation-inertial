@@ -31,7 +31,7 @@ import android.hardware.SensorEventListener
  */
 class GyroscopeSensorCollector(
     context: Context,
-    val sensorType: SensorType = SensorType.GYROSCOPE,
+    val sensorType: SensorType = SensorType.GYROSCOPE_UNCALIBRATED,
     sensorDelay: SensorDelay = SensorDelay.FASTEST,
     var measurementListener: OnMeasurementListener? = null,
     accuracyChangedListener: OnAccuracyChangedListener? = null

@@ -54,7 +54,7 @@ class LevelingEstimatorActivity : AppCompatActivity() {
         val useAccelerometer = extras?.getBoolean(USE_ACCELEROMETER, false) ?: false
         val accelerometerSensorType =
             (extras?.getSerializable(ACCELEROMETER_SENSOR_TYPE) as AccelerometerSensorCollector.SensorType?)
-                ?: AccelerometerSensorCollector.SensorType.ACCELEROMETER
+                ?: AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
         val averagingFilterType = extras?.getString(AVERAGING_FILTER_TYPE)
         val averagingFilter = buildAveragingFilter(averagingFilterType)
 
