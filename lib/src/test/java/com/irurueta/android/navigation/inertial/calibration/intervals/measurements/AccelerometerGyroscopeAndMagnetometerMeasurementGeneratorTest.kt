@@ -54,17 +54,17 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         // check default values
         assertSame(context, generator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.FASTEST, generator.accelerometerSensorDelay)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorType.GYROSCOPE_UNCALIBRATED,
             generator.gyroscopeSensorType
         )
         assertEquals(SensorDelay.FASTEST, generator.gyroscopeSensorDelay)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED,
             generator.magnetometerSensorType
         )
         assertEquals(SensorDelay.FASTEST, generator.magnetometerSensorDelay)
@@ -174,23 +174,23 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER
+            AccelerometerSensorType.ACCELEROMETER
         )
 
         // check default values
         assertSame(context, generator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.FASTEST, generator.accelerometerSensorDelay)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorType.GYROSCOPE_UNCALIBRATED,
             generator.gyroscopeSensorType
         )
         assertEquals(SensorDelay.FASTEST, generator.gyroscopeSensorDelay)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED,
             generator.magnetometerSensorType
         )
         assertEquals(SensorDelay.FASTEST, generator.magnetometerSensorDelay)
@@ -300,24 +300,24 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             SensorDelay.NORMAL
         )
 
         // check default values
         assertSame(context, generator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorType.GYROSCOPE_UNCALIBRATED,
             generator.gyroscopeSensorType
         )
         assertEquals(SensorDelay.FASTEST, generator.gyroscopeSensorDelay)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED,
             generator.magnetometerSensorType
         )
         assertEquals(SensorDelay.FASTEST, generator.magnetometerSensorDelay)
@@ -427,25 +427,25 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE
+            GyroscopeSensorType.GYROSCOPE
         )
 
         // check default values
         assertSame(context, generator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorType.GYROSCOPE,
             generator.gyroscopeSensorType
         )
         assertEquals(SensorDelay.FASTEST, generator.gyroscopeSensorDelay)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED,
             generator.magnetometerSensorType
         )
         assertEquals(SensorDelay.FASTEST, generator.magnetometerSensorDelay)
@@ -555,26 +555,26 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorType.GYROSCOPE,
             SensorDelay.NORMAL
         )
 
         // check default values
         assertSame(context, generator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorType.GYROSCOPE,
             generator.gyroscopeSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.gyroscopeSensorDelay)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED,
             generator.magnetometerSensorType
         )
         assertEquals(SensorDelay.FASTEST, generator.magnetometerSensorDelay)
@@ -684,27 +684,27 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorType.GYROSCOPE,
             SensorDelay.NORMAL,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER
+            MagnetometerSensorType.MAGNETOMETER
         )
 
         // check default values
         assertSame(context, generator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorType.GYROSCOPE,
             generator.gyroscopeSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.gyroscopeSensorDelay)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             generator.magnetometerSensorType
         )
         assertEquals(SensorDelay.FASTEST, generator.magnetometerSensorDelay)
@@ -814,28 +814,28 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorType.GYROSCOPE,
             SensorDelay.NORMAL,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             SensorDelay.NORMAL
         )
 
         // check default values
         assertSame(context, generator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorType.GYROSCOPE,
             generator.gyroscopeSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.gyroscopeSensorDelay)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             generator.magnetometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.magnetometerSensorDelay)
@@ -947,11 +947,11 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorType.GYROSCOPE,
             SensorDelay.NORMAL,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             SensorDelay.NORMAL,
             initializationStartedListener
         )
@@ -959,17 +959,17 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         // check default values
         assertSame(context, generator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorType.GYROSCOPE,
             generator.gyroscopeSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.gyroscopeSensorDelay)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             generator.magnetometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.magnetometerSensorDelay)
@@ -1083,11 +1083,11 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorType.GYROSCOPE,
             SensorDelay.NORMAL,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener
@@ -1096,17 +1096,17 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         // check default values
         assertSame(context, generator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorType.GYROSCOPE,
             generator.gyroscopeSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.gyroscopeSensorDelay)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             generator.magnetometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.magnetometerSensorDelay)
@@ -1222,11 +1222,11 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorType.GYROSCOPE,
             SensorDelay.NORMAL,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -1236,17 +1236,17 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         // check default values
         assertSame(context, generator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorType.GYROSCOPE,
             generator.gyroscopeSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.gyroscopeSensorDelay)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             generator.magnetometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.magnetometerSensorDelay)
@@ -1364,11 +1364,11 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorType.GYROSCOPE,
             SensorDelay.NORMAL,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -1379,17 +1379,17 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         // check default values
         assertSame(context, generator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorType.GYROSCOPE,
             generator.gyroscopeSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.gyroscopeSensorDelay)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             generator.magnetometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.magnetometerSensorDelay)
@@ -1509,11 +1509,11 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorType.GYROSCOPE,
             SensorDelay.NORMAL,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -1525,17 +1525,17 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         // check default values
         assertSame(context, generator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorType.GYROSCOPE,
             generator.gyroscopeSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.gyroscopeSensorDelay)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             generator.magnetometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.magnetometerSensorDelay)
@@ -1657,11 +1657,11 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorType.GYROSCOPE,
             SensorDelay.NORMAL,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -1674,17 +1674,17 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         // check default values
         assertSame(context, generator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorType.GYROSCOPE,
             generator.gyroscopeSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.gyroscopeSensorDelay)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             generator.magnetometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.magnetometerSensorDelay)
@@ -1808,11 +1808,11 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorType.GYROSCOPE,
             SensorDelay.NORMAL,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -1826,17 +1826,17 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         // check default values
         assertSame(context, generator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorType.GYROSCOPE,
             generator.gyroscopeSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.gyroscopeSensorDelay)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             generator.magnetometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.magnetometerSensorDelay)
@@ -1962,11 +1962,11 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorType.GYROSCOPE,
             SensorDelay.NORMAL,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -1981,17 +1981,17 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         // check default values
         assertSame(context, generator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorType.GYROSCOPE,
             generator.gyroscopeSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.gyroscopeSensorDelay)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             generator.magnetometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.magnetometerSensorDelay)
@@ -2122,11 +2122,11 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorType.GYROSCOPE,
             SensorDelay.NORMAL,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -2142,17 +2142,17 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         // check default values
         assertSame(context, generator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorType.GYROSCOPE,
             generator.gyroscopeSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.gyroscopeSensorDelay)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             generator.magnetometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.magnetometerSensorDelay)
@@ -2288,11 +2288,11 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorType.GYROSCOPE,
             SensorDelay.NORMAL,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -2309,17 +2309,17 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         // check default values
         assertSame(context, generator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorType.GYROSCOPE,
             generator.gyroscopeSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.gyroscopeSensorDelay)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             generator.magnetometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.magnetometerSensorDelay)
@@ -2460,11 +2460,11 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorType.GYROSCOPE,
             SensorDelay.NORMAL,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -2482,17 +2482,17 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         // check default values
         assertSame(context, generator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorType.GYROSCOPE,
             generator.gyroscopeSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.gyroscopeSensorDelay)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             generator.magnetometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.magnetometerSensorDelay)
@@ -2635,11 +2635,11 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorType.GYROSCOPE,
             SensorDelay.NORMAL,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -2658,17 +2658,17 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         // check default values
         assertSame(context, generator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorType.GYROSCOPE,
             generator.gyroscopeSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.gyroscopeSensorDelay)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             generator.magnetometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.magnetometerSensorDelay)
@@ -2812,11 +2812,11 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorType.GYROSCOPE,
             SensorDelay.NORMAL,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -2836,17 +2836,17 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         // check default values
         assertSame(context, generator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorType.GYROSCOPE,
             generator.gyroscopeSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.gyroscopeSensorDelay)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             generator.magnetometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.magnetometerSensorDelay)
@@ -2992,11 +2992,11 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorType.GYROSCOPE,
             SensorDelay.NORMAL,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -3017,17 +3017,17 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         // check default values
         assertSame(context, generator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorType.GYROSCOPE,
             generator.gyroscopeSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.gyroscopeSensorDelay)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             generator.magnetometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.magnetometerSensorDelay)
@@ -3174,11 +3174,11 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorType.GYROSCOPE,
             SensorDelay.NORMAL,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -3200,17 +3200,17 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         // check default values
         assertSame(context, generator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorType.GYROSCOPE,
             generator.gyroscopeSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.gyroscopeSensorDelay)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             generator.magnetometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.magnetometerSensorDelay)

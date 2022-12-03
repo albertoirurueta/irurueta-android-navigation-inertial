@@ -23,6 +23,7 @@ import android.view.Surface
 import androidx.test.core.app.ApplicationProvider
 import com.irurueta.algebra.Matrix
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
 import com.irurueta.android.navigation.inertial.collectors.GravitySensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.android.navigation.inertial.estimators.filter.MeanAveragingFilter
@@ -54,7 +55,7 @@ class AccurateLevelingEstimatorTest {
         assertEquals(SensorDelay.GAME, estimator.sensorDelay)
         assertTrue(estimator.useAccelerometer)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
             estimator.accelerometerSensorType
         )
         assertNotNull(estimator.accelerometerAveragingFilter)
@@ -81,7 +82,7 @@ class AccurateLevelingEstimatorTest {
             location,
             SensorDelay.NORMAL,
             useAccelerometer = false,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             accelerometerAveragingFilter,
             estimateCoordinateTransformation = true,
             estimateEulerAngles = false,
@@ -97,7 +98,7 @@ class AccurateLevelingEstimatorTest {
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
         assertFalse(estimator.useAccelerometer)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             estimator.accelerometerSensorType
         )
         assertSame(accelerometerAveragingFilter, estimator.accelerometerAveragingFilter)

@@ -22,8 +22,8 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
 import com.irurueta.android.navigation.inertial.calibration.StaticIntervalGyroscopeCalibrator
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
+import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorType
 import com.irurueta.numerical.robust.RobustEstimatorMethod
 import org.junit.Before
 import org.junit.Rule
@@ -54,8 +54,8 @@ class StaticIntervalGyroscopeCalibratorTest {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val calibrator = buildCalibrator(
             context,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER
+            GyroscopeSensorType.GYROSCOPE,
+            AccelerometerSensorType.ACCELEROMETER
         )
 
         calibrator.start()
@@ -73,8 +73,8 @@ class StaticIntervalGyroscopeCalibratorTest {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val calibrator = buildCalibrator(
             context,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+            GyroscopeSensorType.GYROSCOPE,
+            AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
         )
 
         calibrator.start()
@@ -92,8 +92,8 @@ class StaticIntervalGyroscopeCalibratorTest {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val calibrator = buildCalibrator(
             context,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER
+            GyroscopeSensorType.GYROSCOPE_UNCALIBRATED,
+            AccelerometerSensorType.ACCELEROMETER
         )
 
         calibrator.start()
@@ -111,8 +111,8 @@ class StaticIntervalGyroscopeCalibratorTest {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val calibrator = buildCalibrator(
             context,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+            GyroscopeSensorType.GYROSCOPE_UNCALIBRATED,
+            AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
         )
 
         calibrator.start()
@@ -126,8 +126,8 @@ class StaticIntervalGyroscopeCalibratorTest {
 
     private fun buildCalibrator(
         context: Context,
-        gyroscopeSensorType: GyroscopeSensorCollector.SensorType,
-        accelerometerSensorType: AccelerometerSensorCollector.SensorType
+        gyroscopeSensorType: GyroscopeSensorType,
+        accelerometerSensorType: AccelerometerSensorType
     ): StaticIntervalGyroscopeCalibrator {
         val calibrator = StaticIntervalGyroscopeCalibrator(context,
             gyroscopeSensorType = gyroscopeSensorType,

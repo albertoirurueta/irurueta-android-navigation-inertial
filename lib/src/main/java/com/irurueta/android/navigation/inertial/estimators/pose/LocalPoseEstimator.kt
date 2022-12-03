@@ -76,9 +76,9 @@ class LocalPoseEstimator private constructor(
     override val context: Context,
     override val sensorDelay: SensorDelay,
     val useAccelerometerForAttitudeEstimation: Boolean,
-    override val accelerometerSensorType: AccelerometerSensorCollector.SensorType,
-    override val gyroscopeSensorType: GyroscopeSensorCollector.SensorType,
-    override val magnetometerSensorType: MagnetometerSensorCollector.SensorType,
+    override val accelerometerSensorType: AccelerometerSensorType,
+    override val gyroscopeSensorType: GyroscopeSensorType,
+    override val magnetometerSensorType: MagnetometerSensorType,
     override val accelerometerAveragingFilter: AveragingFilter,
     val useAccurateAttitudeEstimator: Boolean,
     override val estimatePoseTransformation: Boolean,
@@ -136,12 +136,11 @@ class LocalPoseEstimator private constructor(
         initialVelocity: NEDVelocity = NEDVelocity(),
         sensorDelay: SensorDelay = SensorDelay.GAME,
         useAccelerometerForAttitudeEstimation: Boolean = false,
-        accelerometerSensorType: AccelerometerSensorCollector.SensorType =
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
-        gyroscopeSensorType: GyroscopeSensorCollector.SensorType =
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
-        magnetometerSensorType: MagnetometerSensorCollector.SensorType =
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+        accelerometerSensorType: AccelerometerSensorType =
+            AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
+        gyroscopeSensorType: GyroscopeSensorType = GyroscopeSensorType.GYROSCOPE_UNCALIBRATED,
+        magnetometerSensorType: MagnetometerSensorType =
+            MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED,
         accelerometerAveragingFilter: AveragingFilter = LowPassAveragingFilter(),
         worldMagneticModel: WorldMagneticModel? = null,
         timestamp: Date = Date(),

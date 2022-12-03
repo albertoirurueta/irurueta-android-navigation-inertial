@@ -5,7 +5,7 @@ import android.util.Log
 import androidx.test.filters.RequiresDevice
 import androidx.test.platform.app.InstrumentationRegistry
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
 import com.irurueta.android.navigation.inertial.estimators.attitude.GravityEstimator
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -68,7 +68,7 @@ class GravityEstimatorTest {
         val estimator = GravityEstimator(
             context,
             useAccelerometer = true,
-            accelerometerSensorType = AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            accelerometerSensorType = AccelerometerSensorType.ACCELEROMETER,
             estimationListener = { _, fx, fy, fz, timestamp ->
                 logGravity(fx, fy, fz, timestamp)
 
@@ -95,7 +95,7 @@ class GravityEstimatorTest {
         val estimator = GravityEstimator(
             context,
             useAccelerometer = true,
-            accelerometerSensorType = AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            accelerometerSensorType = AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
             estimationListener = { _, fx, fy, fz, timestamp ->
                 logGravity(fx, fy, fz, timestamp)
 

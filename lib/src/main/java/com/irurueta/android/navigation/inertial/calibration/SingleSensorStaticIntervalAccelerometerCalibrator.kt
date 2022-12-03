@@ -28,6 +28,7 @@ import com.irurueta.android.navigation.inertial.calibration.noise.AccumulatedMea
 import com.irurueta.android.navigation.inertial.calibration.noise.GravityNormEstimator
 import com.irurueta.android.navigation.inertial.calibration.noise.StopMode
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.navigation.NavigationException
 import com.irurueta.navigation.inertial.BodyKinematics
@@ -75,7 +76,7 @@ import kotlin.math.sqrt
  */
 class SingleSensorStaticIntervalAccelerometerCalibrator private constructor(
     context: Context,
-    val sensorType: AccelerometerSensorCollector.SensorType,
+    val sensorType: AccelerometerSensorType,
     sensorDelay: SensorDelay,
     solveCalibrationWhenEnoughMeasurements: Boolean,
     initializationStartedListener: OnInitializationStartedListener<SingleSensorStaticIntervalAccelerometerCalibrator>?,
@@ -109,8 +110,8 @@ class SingleSensorStaticIntervalAccelerometerCalibrator private constructor(
      * enough measurements are available, false otherwise.
      * @param isGroundTruthInitialBias true if estimated bias is assumed to be the true value,
      * false if estimated bias is assumed to be only an initial guess. When [sensorType] is
-     * [AccelerometerSensorCollector.SensorType.ACCELEROMETER], bias guess is zero,
-     * otherwise when it is [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED],
+     * [AccelerometerSensorType.ACCELEROMETER], bias guess is zero,
+     * otherwise when it is [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED],
      * bias guess is the device calibrated values.
      * @param location location where device is located at. When location is provided, gravity norm
      * is assumed to be the theoretical value determined by WGS84 Earth model, otherwise, if no
@@ -136,8 +137,8 @@ class SingleSensorStaticIntervalAccelerometerCalibrator private constructor(
      */
     constructor(
         context: Context,
-        sensorType: AccelerometerSensorCollector.SensorType =
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+        sensorType: AccelerometerSensorType =
+            AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
         sensorDelay: SensorDelay = SensorDelay.FASTEST,
         solveCalibrationWhenEnoughMeasurements: Boolean = true,
         isGroundTruthInitialBias: Boolean = false,
@@ -246,7 +247,7 @@ class SingleSensorStaticIntervalAccelerometerCalibrator private constructor(
      * Listener for accelerometer sensor collector.
      * This is used to determine device calibration and obtain initial guesses
      * for accelerometer bias (only available if
-     * [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED] is used, otherwise zero
+     * [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED] is used, otherwise zero
      * bias is assumed as an initial guess).
      */
     private val intervalDetectorMeasurementListener =
@@ -332,10 +333,10 @@ class SingleSensorStaticIntervalAccelerometerCalibrator private constructor(
      * Gets X-coordinate of bias used as an initial guess and expressed in meters per squared second
      * (m/s^2).
      * This value is determined once the calibrator starts.
-     * If [sensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED], this
+     * If [sensorType] is [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED], this
      * will be equal to the value used internally by the device as part of the accelerometer
      * hardware calibration.
-     * If [sensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER], then
+     * If [sensorType] is [AccelerometerSensorType.ACCELEROMETER], then
      * accelerometer sensor measurements are assumed to be already bias compensated, and the initial
      * bias is assumed to be zero.
      * If [isGroundTruthInitialBias] is true, this is assumed to be the true bias, and [estimatedBiasX] will be
@@ -349,10 +350,10 @@ class SingleSensorStaticIntervalAccelerometerCalibrator private constructor(
      * Gets Y-coordinate of bias used as an initial guess and expressed in meters per squared second
      * (m/s^2).
      * This value is determined once the calibrator starts.
-     * If [sensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED], this
+     * If [sensorType] is [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED], this
      * will be equal to the value used internally by the device as part of the accelerometer
      * hardware calibration.
-     * If [sensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER], then
+     * If [sensorType] is [AccelerometerSensorType.ACCELEROMETER], then
      * accelerometer sensor measurements are assumed to be already bias compensated, and the initial
      * bias is assumed to be zero.
      * If [isGroundTruthInitialBias] is true, this is assumed to be the true bias, and [estimatedBiasY] will be
@@ -366,10 +367,10 @@ class SingleSensorStaticIntervalAccelerometerCalibrator private constructor(
      * Gets Z-coordinate of bias used as an initial guess and expressed in meters per squared second
      * (m/s^2).
      * This value is determined once the calibrator starts.
-     * If [sensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED], this
+     * If [sensorType] is [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED], this
      * will be equal to the value used internally by the device as part of the accelerometer
      * hardware calibration.
-     * If [sensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER], then
+     * If [sensorType] is [AccelerometerSensorType.ACCELEROMETER], then
      * accelerometer sensor measurements are assumed to be already bias compensated, and the initial
      * bias is assumed to be zero.
      * If [isGroundTruthInitialBias] is true, this is assumed to be the true bias, and [estimatedBiasZ] will be
@@ -382,10 +383,10 @@ class SingleSensorStaticIntervalAccelerometerCalibrator private constructor(
     /**
      * Gets X-coordinate of bias used as an initial guess.
      * This value is determined once the calibrator starts.
-     * If [sensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED], this
+     * If [sensorType] is [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED], this
      * will be equal to the value used internally by the device as part of the accelerometer
      * hardware calibration.
-     * If [sensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER], then
+     * If [sensorType] is [AccelerometerSensorType.ACCELEROMETER], then
      * accelerometer sensor measurements are assumed to be already bias compensated, and the initial
      * bias is assumed to be zero.
      * If [isGroundTruthInitialBias] is true, this is assumed to be the true bias, and [estimatedBiasX] will be
@@ -401,10 +402,10 @@ class SingleSensorStaticIntervalAccelerometerCalibrator private constructor(
     /**
      * Gets X-coordinate of bias used as an initial guess.
      * This value is determined once the calibrator starts.
-     * If [sensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED], this
+     * If [sensorType] is [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED], this
      * will be equal to the value used internally by the device as part of the accelerometer
      * hardware calibration.
-     * If [sensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER], then
+     * If [sensorType] is [AccelerometerSensorType.ACCELEROMETER], then
      * accelerometer sensor measurements are assumed to be already bias compensated, and the initial
      * bias is assumed to be zero.
      * If [isGroundTruthInitialBias] is true, this is assumed to be the true bias, and [estimatedBiasX] will be
@@ -428,10 +429,10 @@ class SingleSensorStaticIntervalAccelerometerCalibrator private constructor(
     /**
      * Gets Y-coordinate of bias used as an initial guess.
      * This value is determined once the calibrator starts.
-     * If [sensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED], this
+     * If [sensorType] is [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED], this
      * will be equal to the value used internally by the device as part of the accelerometer
      * hardware calibration.
-     * If [sensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER], then
+     * If [sensorType] is [AccelerometerSensorType.ACCELEROMETER], then
      * accelerometer sensor measurements are assumed to be already bias compensated, and the initial
      * bias is assumed to be zero.
      * If [isGroundTruthInitialBias] is true, this is assumed to be the true bias, and [estimatedBiasY] will be
@@ -447,10 +448,10 @@ class SingleSensorStaticIntervalAccelerometerCalibrator private constructor(
     /**
      * Gets Y-coordinate of bias used as an initial guess.
      * This value is determined once the calibrator starts.
-     * If [sensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED], this
+     * If [sensorType] is [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED], this
      * will be equal to the value used internally by the device as part of the accelerometer
      * hardware calibration.
-     * If [sensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER], then
+     * If [sensorType] is [AccelerometerSensorType.ACCELEROMETER], then
      * accelerometer sensor measurements are assumed to be already bias compensated, and the initial
      * bias is assumed to be zero.
      * If [isGroundTruthInitialBias] is true, this is assumed to be the true bias, and [estimatedBiasY] will be
@@ -471,10 +472,10 @@ class SingleSensorStaticIntervalAccelerometerCalibrator private constructor(
     /**
      * Gets Z-coordinate of bias used as an initial guess.
      * This value is determined once the calibrator starts.
-     * If [sensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED], this
+     * If [sensorType] is [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED], this
      * will be equal to the value used internally by the device as part of the accelerometer
      * hardware calibration.
-     * If [sensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER], then
+     * If [sensorType] is [AccelerometerSensorType.ACCELEROMETER], then
      * accelerometer sensor measurements are assumed to be already bias compensated, and the initial
      * bias is assumed to be zero.
      * If [isGroundTruthInitialBias] is true, this is assumed to be the true bias, and [estimatedBiasZ] will be
@@ -490,10 +491,10 @@ class SingleSensorStaticIntervalAccelerometerCalibrator private constructor(
     /**
      * Gets Z-coordinate of bias used as an initial guess.
      * This value is determined once the calibrator starts.
-     * If [sensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED], this
+     * If [sensorType] is [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED], this
      * will be equal to the value used internally by the device as part of the accelerometer
      * hardware calibration.
-     * If [sensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER], then
+     * If [sensorType] is [AccelerometerSensorType.ACCELEROMETER], then
      * accelerometer sensor measurements are assumed to be already bias compensated, and the initial
      * bias is assumed to be zero.
      * If [isGroundTruthInitialBias] is true, this is assumed to be the true bias, and [estimatedBiasZ] will be
@@ -514,10 +515,10 @@ class SingleSensorStaticIntervalAccelerometerCalibrator private constructor(
     /**
      * Gets initial bias coordinates used as an initial guess.
      * This value is determined once the calibrator starts.
-     * If [sensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED], this
+     * If [sensorType] is [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED], this
      * will be equal to the values used internally by the device as part of the accelerometer
      * hardware calibration.
-     * If [sensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER], then
+     * If [sensorType] is [AccelerometerSensorType.ACCELEROMETER], then
      * accelerometer sensor measurements are assumed to be already bias compensated, and the initial
      * bias is assumed to be zero.
      * If [isGroundTruthInitialBias] is true, this is assumed to be the true bias, and [estimatedBiasAsTriad]
@@ -544,10 +545,10 @@ class SingleSensorStaticIntervalAccelerometerCalibrator private constructor(
     /**
      * Gets initial bias coordinates used as an initial guess.
      * This value is determined once the calibrator starts.
-     * If [sensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED], this
+     * If [sensorType] is [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED], this
      * will be equal to the values used internally by the device as part of the accelerometer
      * hardware calibration.
-     * If [sensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER], then
+     * If [sensorType] is [AccelerometerSensorType.ACCELEROMETER], then
      * accelerometer sensor measurements are assumed to be already bias compensated, and the initial
      * bias is assumed to be zero.
      * If [isGroundTruthInitialBias] is true, this is assumed to be the true bias, and [estimatedBiasAsTriad]
@@ -1273,7 +1274,7 @@ class SingleSensorStaticIntervalAccelerometerCalibrator private constructor(
     /**
      * Updates initial biases values when first accelerometer measurement is received, so
      * that hardware calibrated biases are retrieved if
-     * [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED] is used.
+     * [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED] is used.
      *
      * @param bx x-coordinate of initial bias to be set expressed in meters per squared second
      * (m/s^2).

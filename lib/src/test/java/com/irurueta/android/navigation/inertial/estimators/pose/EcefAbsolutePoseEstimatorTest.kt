@@ -60,17 +60,17 @@ class EcefAbsolutePoseEstimatorTest {
         assertEquals(SensorDelay.GAME, estimator.sensorDelay)
         assertFalse(estimator.useAccelerometerForAttitudeEstimation)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
             estimator.accelerometerSensorType
         )
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED,
             estimator.magnetometerSensorType
         )
         assertNotNull(estimator.accelerometerAveragingFilter)
         assertTrue(estimator.accelerometerAveragingFilter is LowPassAveragingFilter)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorType.GYROSCOPE_UNCALIBRATED,
             estimator.gyroscopeSensorType
         )
         assertNull(estimator.worldMagneticModel)
@@ -136,10 +136,10 @@ class EcefAbsolutePoseEstimatorTest {
             initialVelocity,
             SensorDelay.NORMAL,
             useAccelerometerForAttitudeEstimation = true,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            AccelerometerSensorType.ACCELEROMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             accelerometerAveragingFilter,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorType.GYROSCOPE,
             worldMagneticModel,
             timestamp,
             useWorldMagneticModel = true,
@@ -161,16 +161,16 @@ class EcefAbsolutePoseEstimatorTest {
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
         assertTrue(estimator.useAccelerometerForAttitudeEstimation)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             estimator.accelerometerSensorType
         )
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             estimator.magnetometerSensorType
         )
         assertSame(accelerometerAveragingFilter, estimator.accelerometerAveragingFilter)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorType.GYROSCOPE,
             estimator.gyroscopeSensorType
         )
         assertSame(worldMagneticModel, estimator.worldMagneticModel)

@@ -123,14 +123,14 @@ class GravitySensorCollectorTest {
         val wakeUpSensor = sensor.isWakeUpSensor
 
         Log.d(
-            "AccelerometerSensorCollectorTest", "Sensor - fifoMaxEventCount: $fifoMaxEventCount, "
+            "GravitySensorCollectorTest", "Sensor - fifoMaxEventCount: $fifoMaxEventCount, "
                     + "fifoReversedEventCount: $fifoReversedEventCount, "
                     + "highestDirectReportRateLevel: $highestDirectReportRateLevel, "
                     + "highestDirectReportRateLevelName: $highestDirectReportRateLevelName, "
                     + "id: $id, "
                     + "maxDelay: $maxDelay µs, "
                     + "maximumRange: $maximumRange m/s^2, "
-                    + "minDelay: $minDelay µa, "
+                    + "minDelay: $minDelay µs, "
                     + "name: $name, "
                     + "power: $power mA, "
                     + "reportingMode: $reportingMode, "

@@ -22,6 +22,8 @@ import android.hardware.SensorManager
 
 /**
  * Base class for sensor collectors.
+ * This collector does not have an internal buffer, and consequently out of order measurements can
+ * be notified.
  *
  * @property context Android context.
  * @property sensorDelay Delay of sensor between samples.

@@ -21,6 +21,7 @@ import android.view.Display
 import android.view.Surface
 import androidx.test.core.app.ApplicationProvider
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorType
 import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.android.navigation.inertial.getPrivateProperty
@@ -48,7 +49,7 @@ class AccurateRelativeGyroscopeAttitudeEstimatorTest {
         // check
         assertSame(context, estimator.context)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorType.GYROSCOPE_UNCALIBRATED,
             estimator.sensorType
         )
         assertEquals(SensorDelay.GAME, estimator.sensorDelay)
@@ -68,7 +69,7 @@ class AccurateRelativeGyroscopeAttitudeEstimatorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = AccurateRelativeGyroscopeAttitudeEstimator(
             context,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorType.GYROSCOPE,
             SensorDelay.NORMAL,
             estimateCoordinateTransformation = true,
             estimateEulerAngles = false,
@@ -79,7 +80,7 @@ class AccurateRelativeGyroscopeAttitudeEstimatorTest {
         // check
         assertSame(context, estimator.context)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorType.GYROSCOPE,
             estimator.sensorType
         )
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)

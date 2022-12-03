@@ -20,10 +20,7 @@ import android.location.Location
 import android.util.Log
 import com.irurueta.algebra.Matrix
 import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
-import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.estimators.attitude.GravityEstimator
 import com.irurueta.android.navigation.inertial.estimators.attitude.LeveledRelativeAttitudeEstimator
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
@@ -60,8 +57,8 @@ class RelativePoseEstimator private constructor(
     override val context: Context,
     override val sensorDelay: SensorDelay,
     val useAccelerometerForAttitudeEstimation: Boolean,
-    override val accelerometerSensorType: AccelerometerSensorCollector.SensorType,
-    override val gyroscopeSensorType: GyroscopeSensorCollector.SensorType,
+    override val accelerometerSensorType: AccelerometerSensorType,
+    override val gyroscopeSensorType: GyroscopeSensorType,
     override val accelerometerAveragingFilter: AveragingFilter,
     var poseAvailableListener: OnPoseAvailableListener?,
     override var accelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener?,
@@ -102,10 +99,9 @@ class RelativePoseEstimator private constructor(
         context: Context,
         sensorDelay: SensorDelay = SensorDelay.GAME,
         useAccelerometerForAttitudeEstimation: Boolean = false,
-        accelerometerSensorType: AccelerometerSensorCollector.SensorType =
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
-        gyroscopeSensorType: GyroscopeSensorCollector.SensorType =
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+        accelerometerSensorType: AccelerometerSensorType =
+            AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
+        gyroscopeSensorType: GyroscopeSensorType = GyroscopeSensorType.GYROSCOPE_UNCALIBRATED,
         accelerometerAveragingFilter: AveragingFilter = LowPassAveragingFilter(),
         useAccurateLevelingEstimator: Boolean = false,
         useAccurateRelativeGyroscopeAttitudeEstimator: Boolean = true,

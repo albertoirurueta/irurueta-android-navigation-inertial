@@ -23,8 +23,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatTextView
 import com.irurueta.android.gl.cube.CubeRenderer
 import com.irurueta.android.gl.cube.CubeTextureView
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
+import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorType
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
@@ -73,11 +73,11 @@ class RelativePoseEstimatorActivity : AppCompatActivity() {
     private var locationService: LocationService? = null
 
     private var accelerometerSensorType =
-        AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+        AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
 
     private var accelerometerAveragingFilterType: String? = null
 
-    private var gyroscopeSensorType = GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED
+    private var gyroscopeSensorType = GyroscopeSensorType.GYROSCOPE_UNCALIBRATED
 
     private var useAccurateLevelingEstimator = false
 
@@ -88,13 +88,13 @@ class RelativePoseEstimatorActivity : AppCompatActivity() {
 
         val extras = intent.extras
         accelerometerSensorType =
-            (extras?.getSerializable(ACCELEROMETER_SENSOR_TYPE) as AccelerometerSensorCollector.SensorType?)
-                ?: AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+            (extras?.getSerializable(ACCELEROMETER_SENSOR_TYPE) as AccelerometerSensorType?)
+                ?: AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
         accelerometerAveragingFilterType =
             extras?.getString(ACCELEROMETER_AVERAGING_FILTER_TYPE)
         gyroscopeSensorType =
-            (extras?.getSerializable(GYROSCOPE_SENSOR_TYPE) as GyroscopeSensorCollector.SensorType?)
-                ?: GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED
+            (extras?.getSerializable(GYROSCOPE_SENSOR_TYPE) as GyroscopeSensorType?)
+                ?: GyroscopeSensorType.GYROSCOPE_UNCALIBRATED
         useAccurateLevelingEstimator =
             extras?.getBoolean(USE_ACCURATE_LEVELING_ESTIMATOR, false) ?: false
         useAccurateRelativeGyroscopeAttitudeEstimator =

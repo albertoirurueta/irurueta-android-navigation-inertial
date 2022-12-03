@@ -109,9 +109,9 @@ import kotlin.math.max
  */
 class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private constructor(
     context: Context,
-    accelerometerSensorType: AccelerometerSensorCollector.SensorType,
-    val gyroscopeSensorType: GyroscopeSensorCollector.SensorType,
-    val magnetometerSensorType: MagnetometerSensorCollector.SensorType,
+    accelerometerSensorType: AccelerometerSensorType,
+    val gyroscopeSensorType: GyroscopeSensorType,
+    val magnetometerSensorType: MagnetometerSensorType,
     accelerometerSensorDelay: SensorDelay,
     val gyroscopeSensorDelay: SensorDelay,
     val magnetometerSensorDelay: SensorDelay,
@@ -178,20 +178,20 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * enough measurements are available, false otherwise.
      * @param isAccelerometerGroundTruthInitialBias true if estimated accelerometer bias is assumed
      * to be the true value, false if estimated bias is assumed to be only an initial guess. When
-     * [accelerometerSensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER], bias
+     * [accelerometerSensorType] is [AccelerometerSensorType.ACCELEROMETER], bias
      * guess is zero, otherwise when it is
-     * [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED], bias guess is the
+     * [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED], bias guess is the
      * device calibrated values.
      * @param isGyroscopeGroundTruthInitialBias true if estimated gyroscope bias is assumed to be
      * the true value, false if estimated bias is assumed to be only an initial guess. When
-     * [gyroscopeSensorType] is [GyroscopeSensorCollector.SensorType.GYROSCOPE], bias guess is zero,
-     * otherwise when it is [GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED], bias guess
+     * [gyroscopeSensorType] is [GyroscopeSensorType.GYROSCOPE], bias guess is zero,
+     * otherwise when it is [GyroscopeSensorType.GYROSCOPE_UNCALIBRATED], bias guess
      * is the device calibrated values.
      * @param isMagnetometerGroundTruthInitialHardIron true if estimated magnetometer hard iron is
      * assumed to be the true value, false if estimated hard iron is assumed to be only an initial
      * guess. When [magnetometerSensorType] is
-     * [MagnetometerSensorCollector.SensorType.MAGNETOMETER], hard iron guess is zero, otherwise
-     * when it is [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED], hard iron
+     * [MagnetometerSensorType.MAGNETOMETER], hard iron guess is zero, otherwise
+     * when it is [MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED], hard iron
      * guess is the device calibrated values.
      * @param initializationStartedListener listener to notify when initialization starts.
      * @property initializationCompletedListener listener to notify when initialization completes.
@@ -237,12 +237,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
         location: Location? = null,
         timestamp: Date = Date(),
         worldMagneticModel: WorldMagneticModel? = null,
-        accelerometerSensorType: AccelerometerSensorCollector.SensorType =
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
-        gyroscopeSensorType: GyroscopeSensorCollector.SensorType =
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
-        magnetometerSensorType: MagnetometerSensorCollector.SensorType =
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+        accelerometerSensorType: AccelerometerSensorType =
+            AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
+        gyroscopeSensorType: GyroscopeSensorType = GyroscopeSensorType.GYROSCOPE_UNCALIBRATED,
+        magnetometerSensorType: MagnetometerSensorType =
+            MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED,
         accelerometerSensorDelay: SensorDelay = SensorDelay.FASTEST,
         gyroscopeSensorDelay: SensorDelay = SensorDelay.FASTEST,
         magnetometerSensorDelay: SensorDelay = SensorDelay.FASTEST,
@@ -475,7 +474,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * Listener for accelerometer sensor collector.
      * This is used to determine device calibration and obtain initial guesses
      * for accelerometer bias (only available if
-     * [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED] is used, otherwise zero
+     * [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED] is used, otherwise zero
      * bias is assumed as an initial guess).
      */
     private val generatorAccelerometerMeasurementListener =
@@ -489,7 +488,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * Listener for gyroscope sensor collector.
      * This is used to determine device calibration and obtain initial guesses
      * for gyroscope bias (only available if
-     * [GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED] is used, otherwise zero
+     * [GyroscopeSensorType.GYROSCOPE_UNCALIBRATED] is used, otherwise zero
      * bias is assumed as an initial guess).
      */
     private val generatorGyroscopeMeasurementListener =
@@ -503,7 +502,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * Listener for magnetometer sensor collector.
      * This is used to determine device calibration and obtain initial guesses
      * for magnetometer hard iron values (only available if
-     * [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED] is used, otherwise zero
+     * [MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED] is used, otherwise zero
      * hard iron is assumed as an initial guess).
      */
     private val generatorMagnetometerMeasurementListener =
@@ -638,9 +637,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * squared second (m/s^2).
      * This value is determined once the calibrator starts.
      * If [accelerometerSensorType] is
-     * [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED], this will be equal to
+     * [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED], this will be equal to
      * the value used internally by the device as part of the accelerometer hardware calibration.
-     * If [accelerometerSensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER], then
+     * If [accelerometerSensorType] is [AccelerometerSensorType.ACCELEROMETER], then
      * accelerometer sensor measurements are assumed to be already bias compensated, and the initial
      * bias is assumed to be zero.
      * If [isAccelerometerGroundTruthInitialBias] is true, this is assumed to be the true bias, and
@@ -656,9 +655,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * squared second (m/s^2).
      * This value is determined once the calibrator starts.
      * If [accelerometerSensorType] is
-     * [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED], this will be equal to
+     * [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED], this will be equal to
      * the value used internally by the device as part of the accelerometer hardware calibration.
-     * If [accelerometerSensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER], then
+     * If [accelerometerSensorType] is [AccelerometerSensorType.ACCELEROMETER], then
      * accelerometer sensor measurements are assumed to be already bias compensated, and the initial
      * bias is assumed to be zero.
      * If [isAccelerometerGroundTruthInitialBias] is true, this is assumed to be the true bias, and
@@ -674,9 +673,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * squared second (m/s^2).
      * This value is determined once the calibrator starts.
      * If [accelerometerSensorType] is
-     * [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED], this will be equal to
+     * [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED], this will be equal to
      * the value used internally by the device as part of the accelerometer hardware calibration.
-     * If [accelerometerSensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER], then
+     * If [accelerometerSensorType] is [AccelerometerSensorType.ACCELEROMETER], then
      * accelerometer sensor measurements are assumed to be already bias compensated, and the initial
      * bias is assumed to be zero.
      * If [isAccelerometerGroundTruthInitialBias] is true, this is assumed to be the true bias, and
@@ -691,9 +690,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * Gets accelerometer X-coordinate of bias used as an initial guess.
      * This value is determined once the calibrator starts.
      * If [accelerometerSensorType] is
-     * [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED], this will be equal to
+     * [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED], this will be equal to
      * the value used internally by the device as part of the accelerometer hardware calibration.
-     * If [accelerometerSensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER], then
+     * If [accelerometerSensorType] is [AccelerometerSensorType.ACCELEROMETER], then
      * accelerometer sensor measurements are assumed to be already bias compensated, and the initial
      * bias is assumed to be zero.
      * If [isAccelerometerGroundTruthInitialBias] is true, this is assumed to be the true bias, and
@@ -711,9 +710,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * Gets accelerometer X-coordinate of bias used as an initial guess.
      * This value is determined once the calibrator starts.
      * If [accelerometerSensorType] is
-     * [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED], this will be equal to
+     * [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED], this will be equal to
      * the value used internally by the device as part of the accelerometer hardware calibration.
-     * If [accelerometerSensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER], then
+     * If [accelerometerSensorType] is [AccelerometerSensorType.ACCELEROMETER], then
      * accelerometer sensor measurements are assumed to be already bias compensated, and the initial
      * bias is assumed to be zero.
      * If [isAccelerometerGroundTruthInitialBias] is true, this is assumed to be the true bias, and
@@ -739,9 +738,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * Gets accelerometer Y-coordinate of bias used as an initial guess.
      * This value is determined once the calibrator starts.
      * If [accelerometerSensorType] is
-     * [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED], this will be equal to
+     * [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED], this will be equal to
      * the value used internally by the device as part of the accelerometer hardware calibration.
-     * If [accelerometerSensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER], then
+     * If [accelerometerSensorType] is [AccelerometerSensorType.ACCELEROMETER], then
      * accelerometer sensor measurements are assumed to be already bias compensated, and the initial
      * bias is assumed to be zero.
      * If [isAccelerometerGroundTruthInitialBias] is true, this is assumed to be the true bias, and
@@ -759,9 +758,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * Gets accelerometer Y-coordinate of bias used as an initial guess.
      * This value is determined once the calibrator starts.
      * If [accelerometerSensorType] is
-     * [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED], this will be equal to
+     * [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED], this will be equal to
      * the value used internally by the device as part of the accelerometer hardware calibration.
-     * If [accelerometerSensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER], then
+     * If [accelerometerSensorType] is [AccelerometerSensorType.ACCELEROMETER], then
      * accelerometer sensor measurements are assumed to be already bias compensated, and the initial
      * bias is assumed to be zero.
      * If [isAccelerometerGroundTruthInitialBias] is true, this is assumed to be the true bias, and
@@ -787,9 +786,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * Gets accelerometer Z-coordinate of bias used as an initial guess.
      * This value is determined once the calibrator starts.
      * If [accelerometerSensorType] is
-     * [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED], this will be equal to
+     * [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED], this will be equal to
      * the value used internally by the device as part of the accelerometer hardware calibration.
-     * If [accelerometerSensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER], then
+     * If [accelerometerSensorType] is [AccelerometerSensorType.ACCELEROMETER], then
      * accelerometer sensor measurements are assumed to be already bias compensated, and the initial
      * bias is assumed to be zero.
      * If [isAccelerometerGroundTruthInitialBias] is true, this is assumed to be the true bias, and
@@ -807,9 +806,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * Gets accelerometer Z-coordinate of bias used as an initial guess.
      * This value is determined once the calibrator starts.
      * If [accelerometerSensorType] is
-     * [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED], this will be equal to
+     * [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED], this will be equal to
      * the value used internally by the device as part of the accelerometer hardware calibration.
-     * If [accelerometerSensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER], then
+     * If [accelerometerSensorType] is [AccelerometerSensorType.ACCELEROMETER], then
      * accelerometer sensor measurements are assumed to be already bias compensated, and the initial
      * bias is assumed to be zero.
      * If [isAccelerometerGroundTruthInitialBias] is true, this is assumed to be the true bias, and
@@ -835,9 +834,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * Gets initial bias coordinate used as an initial guess.
      * This value is determined once the calibrator starts.
      * If [accelerometerSensorType] is
-     * [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED], this will be equal to
+     * [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED], this will be equal to
      * the values used internally by the device as part of the accelerometer hardware calibration.
-     * If [accelerometerSensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER], then
+     * If [accelerometerSensorType] is [AccelerometerSensorType.ACCELEROMETER], then
      * accelerometer sensor measurements are assumed to be already bias compensated, and the initial
      * bias is assumed to be zero.
      * If [isAccelerometerGroundTruthInitialBias] is true, this is assumed to be the true bias, and
@@ -866,9 +865,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * Gets initial bias coordinates used as an initial guess.
      * This value is determined once the calibrator starts.
      * If [accelerometerSensorType] is
-     * [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED], this will be equal to
+     * [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED], this will be equal to
      * the values used internally by the device as part of the accelerometer hardware calibration.
-     * If [accelerometerSensorType] is [AccelerometerSensorCollector.SensorType.ACCELEROMETER], then
+     * If [accelerometerSensorType] is [AccelerometerSensorType.ACCELEROMETER], then
      * accelerometer sensor measurements are assumed to be already bias compensated, and the initial
      * bias is assumed to be zero.
      * If [isAccelerometerGroundTruthInitialBias] is true, this is assumed to be the true bias, and
@@ -900,10 +899,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * Gets x-coordinate of gyroscope bias used as an initial guess and expressed in radians per
      * second (rad/s).
      * This value is determined once the calibrator starts.
-     * If [gyroscopeSensorType] is [GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED],
+     * If [gyroscopeSensorType] is [GyroscopeSensorType.GYROSCOPE_UNCALIBRATED],
      * this will be equal to the value used internally by the device as part of the gyroscope
      * hardware calibration.
-     * If [gyroscopeSensorType] is [GyroscopeSensorCollector.SensorType.GYROSCOPE], then gyroscope
+     * If [gyroscopeSensorType] is [GyroscopeSensorType.GYROSCOPE], then gyroscope
      * sensor measurements are assumed to be already bias compensated, and the initial bias is
      * assumed to be zero.
      * If [isGyroscopeGroundTruthInitialBias] is true, this is assumed to be the true bias, and
@@ -918,10 +917,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * Gets y-coordinate of gyroscope bias used as an initial guess and expressed in radians per
      * second (rad/s).
      * This value is determined once the calibrator starts.
-     * If [gyroscopeSensorType] is [GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED],
+     * If [gyroscopeSensorType] is [GyroscopeSensorType.GYROSCOPE_UNCALIBRATED],
      * this will be equal to the value used internally by the device as part of the gyroscope
      * hardware calibration.
-     * If [gyroscopeSensorType] is [GyroscopeSensorCollector.SensorType.GYROSCOPE], then gyroscope
+     * If [gyroscopeSensorType] is [GyroscopeSensorType.GYROSCOPE], then gyroscope
      * sensor measurements are assumed to be already bias compensated, and the initial bias is
      * assumed to be zero.
      * If [isGyroscopeGroundTruthInitialBias] is true, this is assumed to be the true bias, and
@@ -936,10 +935,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * Gets z-coordinate of gyroscope bias used as an initial guess and expressed in radians per
      * second (rad/s).
      * This value is determined once the calibrator starts.
-     * If [gyroscopeSensorType] is [GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED],
+     * If [gyroscopeSensorType] is [GyroscopeSensorType.GYROSCOPE_UNCALIBRATED],
      * this will be equal to the value used internally by the device as part of the gyroscope
      * hardware calibration.
-     * If [gyroscopeSensorType] is [GyroscopeSensorCollector.SensorType.GYROSCOPE], then gyroscope
+     * If [gyroscopeSensorType] is [GyroscopeSensorType.GYROSCOPE], then gyroscope
      * sensor measurements are assumed to be already bias compensated, and the initial bias is
      * assumed to be zero.
      * If [isGyroscopeGroundTruthInitialBias] is true, this is assumed to be the true bias, and
@@ -953,10 +952,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
     /**
      * Gets x-coordinate of gyroscope bias used as an initial guess.
      * This value is determined once the calibrator starts.
-     * If [gyroscopeSensorType] is [GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED],
+     * If [gyroscopeSensorType] is [GyroscopeSensorType.GYROSCOPE_UNCALIBRATED],
      * this will be equal to the value used internally by the device as part of the gyroscope
      * hardware calibration.
-     * If [gyroscopeSensorType] is [GyroscopeSensorCollector.SensorType.GYROSCOPE], then gyroscope
+     * If [gyroscopeSensorType] is [GyroscopeSensorType.GYROSCOPE], then gyroscope
      * sensor measurements are assumed to be already bias compensated, and the initial bias is
      * assumed to be zero.
      * If [isGyroscopeGroundTruthInitialBias] is true, this is assumed to be the true bias, and
@@ -973,10 +972,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
     /**
      * Gets x-coordinate of gyroscope bias used as an initial guess.
      * This value is determined once the calibrator starts.
-     * If [gyroscopeSensorType] is [GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED],
+     * If [gyroscopeSensorType] is [GyroscopeSensorType.GYROSCOPE_UNCALIBRATED],
      * this will be equal to the value used internally by the device as part of the gyroscope
      * hardware calibration.
-     * If [gyroscopeSensorType] is [GyroscopeSensorCollector.SensorType.GYROSCOPE], then gyroscope
+     * If [gyroscopeSensorType] is [GyroscopeSensorType.GYROSCOPE], then gyroscope
      * sensor measurements are assumed to be already bias compensated, and the initial bias is
      * assumed to be zero.
      * If [isGyroscopeGroundTruthInitialBias] is true, this is assumed to be the true bias, and
@@ -1001,10 +1000,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
     /**
      * Gets y-coordinate of gyroscope bias used as an initial guess.
      * This value is determined once the calibrator starts.
-     * If [gyroscopeSensorType] is [GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED],
+     * If [gyroscopeSensorType] is [GyroscopeSensorType.GYROSCOPE_UNCALIBRATED],
      * this will be equal to the value used internally by the device as part of the gyroscope
      * hardware calibration.
-     * If [gyroscopeSensorType] is [GyroscopeSensorCollector.SensorType.GYROSCOPE], then gyroscope
+     * If [gyroscopeSensorType] is [GyroscopeSensorType.GYROSCOPE], then gyroscope
      * sensor measurements are assumed to be already bias compensated, and the initial bias is
      * assumed to be zero.
      * If [isGyroscopeGroundTruthInitialBias] is true, this is assumed to be the true bias, and
@@ -1021,10 +1020,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
     /**
      * Gets y-coordinate of gyroscope bias used as an initial guess.
      * This value is determined once the calibrator starts.
-     * If [gyroscopeSensorType] is [GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED],
+     * If [gyroscopeSensorType] is [GyroscopeSensorType.GYROSCOPE_UNCALIBRATED],
      * this will be equal to the value used internally by the device as part of the gyroscope
      * hardware calibration.
-     * If [gyroscopeSensorType] is [GyroscopeSensorCollector.SensorType.GYROSCOPE], then gyroscope
+     * If [gyroscopeSensorType] is [GyroscopeSensorType.GYROSCOPE], then gyroscope
      * sensor measurements are assumed to be already bias compensated, and the initial bias is
      * assumed to be zero.
      * If [isGyroscopeGroundTruthInitialBias] is true, this is assumed to be the true bias, and
@@ -1049,10 +1048,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
     /**
      * Gets z-coordinate of gyroscope bias used as an initial guess.
      * This value is determined once the calibrator starts.
-     * If [gyroscopeSensorType] is [GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED],
+     * If [gyroscopeSensorType] is [GyroscopeSensorType.GYROSCOPE_UNCALIBRATED],
      * this will be equal to the value used internally by the device as part of the gyroscope
      * hardware calibration.
-     * If [gyroscopeSensorType] is [GyroscopeSensorCollector.SensorType.GYROSCOPE], then gyroscope
+     * If [gyroscopeSensorType] is [GyroscopeSensorType.GYROSCOPE], then gyroscope
      * sensor measurements are assumed to be already bias compensated, and the initial bias is
      * assumed to be zero.
      * If [isGyroscopeGroundTruthInitialBias] is true, this is assumed to be the true bias, and
@@ -1069,10 +1068,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
     /**
      * Gets z-coordinate of gyroscope bias used as an initial guess.
      * This value is determined once the calibrator starts.
-     * If [gyroscopeSensorType] is [GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED],
+     * If [gyroscopeSensorType] is [GyroscopeSensorType.GYROSCOPE_UNCALIBRATED],
      * this will be equal to the value used internally by the device as part of the gyroscope
      * hardware calibration.
-     * If [gyroscopeSensorType] is [GyroscopeSensorCollector.SensorType.GYROSCOPE], then gyroscope
+     * If [gyroscopeSensorType] is [GyroscopeSensorType.GYROSCOPE], then gyroscope
      * sensor measurements are assumed to be already bias compensated, and the initial bias is
      * assumed to be zero.
      * If [isGyroscopeGroundTruthInitialBias] is true, this is assumed to be the true bias, and
@@ -1097,10 +1096,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
     /**
      * Gets gyroscope bias used as an initial guess.
      * This value is determined once the calibrator starts.
-     * If [gyroscopeSensorType] is [GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED],
+     * If [gyroscopeSensorType] is [GyroscopeSensorType.GYROSCOPE_UNCALIBRATED],
      * this will be equal to the value used internally by the device as part of the gyroscope
      * hardware calibration.
-     * If [gyroscopeSensorType] is [GyroscopeSensorCollector.SensorType.GYROSCOPE], then gyroscope
+     * If [gyroscopeSensorType] is [GyroscopeSensorType.GYROSCOPE], then gyroscope
      * sensor measurements are assumed to be already bias compensated, and the initial bias is
      * assumed to be zero.
      * If [isGyroscopeGroundTruthInitialBias] is true, this is assumed to be the true bias, and
@@ -1128,10 +1127,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
     /**
      * Gets gyroscope bias used as an initial guess.
      * This value is determined once the calibrator starts.
-     * If [gyroscopeSensorType] is [GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED],
+     * If [gyroscopeSensorType] is [GyroscopeSensorType.GYROSCOPE_UNCALIBRATED],
      * this will be equal to the value used internally by the device as part of the gyroscope
      * hardware calibration.
-     * If [gyroscopeSensorType] is [GyroscopeSensorCollector.SensorType.GYROSCOPE], then gyroscope
+     * If [gyroscopeSensorType] is [GyroscopeSensorType.GYROSCOPE], then gyroscope
      * sensor measurements are assumed to be already bias compensated, and the initial bias is
      * assumed to be zero.
      * If [isGyroscopeGroundTruthInitialBias] is true, this is assumed to be the true bias, and
@@ -1160,9 +1159,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * Gets X-coordinate of hard iron used as an initial guess and expressed in Teslas (T).
      * This value is determined once the calibration starts.
      * If [magnetometerSensorType] is
-     * [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
+     * [MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
      * the value used internally by the device as part of the magnetometer hardware calibration.
-     * If [magnetometerSensorType] is [MagnetometerSensorCollector.SensorType.MAGNETOMETER], then
+     * If [magnetometerSensorType] is [MagnetometerSensorType.MAGNETOMETER], then
      * magnetometer sensor measurements are assumed to be already hard iron compensated, and the
      * initial hard iron is assumed to be zero.
      * If [isMagnetometerGroundTruthInitialHardIron] is true, this is assumed to be the true hard
@@ -1177,9 +1176,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * Gets Y-coordinate of hard iron used as an initial guess and expressed in Teslas (T).
      * This value is determined once the calibration starts.
      * If [magnetometerSensorType] is
-     * [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
+     * [MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
      * the value used internally by the device as part of the magnetometer hardware calibration.
-     * If [magnetometerSensorType] is [MagnetometerSensorCollector.SensorType.MAGNETOMETER], then
+     * If [magnetometerSensorType] is [MagnetometerSensorType.MAGNETOMETER], then
      * magnetometer sensor measurements are assumed to be already hard iron compensated, and the
      * initial hard iron is assumed to be zero.
      * If [isMagnetometerGroundTruthInitialHardIron] is true, this is assumed to be the true hard
@@ -1194,9 +1193,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * Gets Y-coordinate of hard iron used as an initial guess and expressed in Teslas (T).
      * This value is determined once the calibration starts.
      * If [magnetometerSensorType] is
-     * [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
+     * [MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
      * the value used internally by the device as part of the magnetometer hardware calibration.
-     * If [magnetometerSensorType] is [MagnetometerSensorCollector.SensorType.MAGNETOMETER], then
+     * If [magnetometerSensorType] is [MagnetometerSensorType.MAGNETOMETER], then
      * magnetometer sensor measurements are assumed to be already hard iron compensated, and the
      * initial hard iron is assumed to be zero.
      * If [isMagnetometerGroundTruthInitialHardIron] is true, this is assumed to be the true hard
@@ -1211,9 +1210,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * Gets X-coordinate of hard iron used as an initial guess.
      * This value is determined once the calibration starts.
      * If [magnetometerSensorType] is
-     * [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
+     * [MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
      * the value used internally by the device as part of the magnetometer hardware calibration.
-     * If [magnetometerSensorType] is [MagnetometerSensorCollector.SensorType.MAGNETOMETER], then
+     * If [magnetometerSensorType] is [MagnetometerSensorType.MAGNETOMETER], then
      * magnetometer sensor measurements are assumed to be already hard iron compensated, and the
      * initial hard iron is assumed to be zero.
      * If [isMagnetometerGroundTruthInitialHardIron] is true, this is assumed to be the true hard
@@ -1231,9 +1230,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * Gets X-coordinate of hard iron used as an initial guess.
      * This value is determined once the calibration starts.
      * If [magnetometerSensorType] is
-     * [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
+     * [MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
      * the value used internally by the device as part of the magnetometer hardware calibration.
-     * If [magnetometerSensorType] is [MagnetometerSensorCollector.SensorType.MAGNETOMETER], then
+     * If [magnetometerSensorType] is [MagnetometerSensorType.MAGNETOMETER], then
      * magnetometer sensor measurements are assumed to be already hard iron compensated, and the
      * initial hard iron is assumed to be zero.
      * If [isMagnetometerGroundTruthInitialHardIron] is true, this is assumed to be the true hard
@@ -1259,9 +1258,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * Gets Y-coordinate of hard iron used as an initial guess.
      * This value is determined once the calibration starts.
      * If [magnetometerSensorType] is
-     * [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
+     * [MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
      * the value used internally by the device as part of the magnetometer hardware calibration.
-     * If [magnetometerSensorType] is [MagnetometerSensorCollector.SensorType.MAGNETOMETER], then
+     * If [magnetometerSensorType] is [MagnetometerSensorType.MAGNETOMETER], then
      * magnetometer sensor measurements are assumed to be already hard iron compensated, and the
      * initial hard iron is assumed to be zero.
      * If [isMagnetometerGroundTruthInitialHardIron] is true, this is assumed to be the true hard
@@ -1279,9 +1278,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * Gets Y-coordinate of hard iron used as an initial guess.
      * This value is determined once the calibration starts.
      * If [magnetometerSensorType] is
-     * [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
+     * [MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
      * the value used internally by the device as part of the magnetometer hardware calibration.
-     * If [magnetometerSensorType] is [MagnetometerSensorCollector.SensorType.MAGNETOMETER], then
+     * If [magnetometerSensorType] is [MagnetometerSensorType.MAGNETOMETER], then
      * magnetometer sensor measurements are assumed to be already hard iron compensated, and the
      * initial hard iron is assumed to be zero.
      * If [isMagnetometerGroundTruthInitialHardIron] is true, this is assumed to be the true hard
@@ -1307,9 +1306,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * Gets Z-coordinate of hard iron used as an initial guess.
      * This value is determined once the calibration starts.
      * If [magnetometerSensorType] is
-     * [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
+     * [MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
      * the value used internally by the device as part of the magnetometer hardware calibration.
-     * If [magnetometerSensorType] is [MagnetometerSensorCollector.SensorType.MAGNETOMETER], then
+     * If [magnetometerSensorType] is [MagnetometerSensorType.MAGNETOMETER], then
      * magnetometer sensor measurements are assumed to be already hard iron compensated, and the
      * initial hard iron is assumed to be zero.
      * If [isMagnetometerGroundTruthInitialHardIron] is true, this is assumed to be the true hard
@@ -1327,9 +1326,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * Gets Z-coordinate of hard iron used as an initial guess.
      * This value is determined once the calibration starts.
      * If [magnetometerSensorType] is
-     * [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
+     * [MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
      * the value used internally by the device as part of the magnetometer hardware calibration.
-     * If [magnetometerSensorType] is [MagnetometerSensorCollector.SensorType.MAGNETOMETER], then
+     * If [magnetometerSensorType] is [MagnetometerSensorType.MAGNETOMETER], then
      * magnetometer sensor measurements are assumed to be already hard iron compensated, and the
      * initial hard iron is assumed to be zero.
      * If [isMagnetometerGroundTruthInitialHardIron] is true, this is assumed to be the true hard
@@ -1355,9 +1354,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * Gets initial hard iron used as an initial guess.
      * This value is determined once the calibration starts.
      * If [magnetometerSensorType] is
-     * [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
+     * [MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
      * the value used internally by the device as part of the magnetometer hardware calibration.
-     * If [magnetometerSensorType] is [MagnetometerSensorCollector.SensorType.MAGNETOMETER], then
+     * If [magnetometerSensorType] is [MagnetometerSensorType.MAGNETOMETER], then
      * magnetometer sensor measurements are assumed to be already hard iron compensated, and the
      * initial hard iron is assumed to be zero.
      * If [isMagnetometerGroundTruthInitialHardIron] is true, this is assumed to be the true hard
@@ -1386,9 +1385,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * Gets initial hard iron used as an initial guess.
      * This value is determined once the calibration starts.
      * If [magnetometerSensorType] is
-     * [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
+     * [MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
      * the value used internally by the device as part of the magnetometer hardware calibration.
-     * If [magnetometerSensorType] is [MagnetometerSensorCollector.SensorType.MAGNETOMETER], then
+     * If [magnetometerSensorType] is [MagnetometerSensorType.MAGNETOMETER], then
      * magnetometer sensor measurements are assumed to be already hard iron compensated, and the
      * initial hard iron is assumed to be zero.
      * If [isMagnetometerGroundTruthInitialHardIron] is true, this is assumed to be the true hard
@@ -4389,7 +4388,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
     /**
      * Updates initial biases values when first accelerometer measurement is received, so
      * that hardware calibrated biases are retrieved if
-     * [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED] is used.
+     * [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED] is used.
      *
      * @param bx x-coordinate of initial bias to be set expressed in meters per squared second
      * (m/s^2).
@@ -4435,7 +4434,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
     /**
      * Updates initial biases values when first gyroscope measurement is received, so
      * that hardware calibrated biases are retrieved if
-     * [GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED] is used.
+     * [GyroscopeSensorType.GYROSCOPE_UNCALIBRATED] is used.
      *
      * @param bx x-coordinate of initial bias to be set expressed in radians per second (rad/s).
      * @param by y-coordinate of initial bias to be set expressed in radians per second (rad/s).
@@ -4473,16 +4472,16 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
     /**
      * Updates initial hard iron values when first magnetometer measurement is received, so
      * that hardware calibrated biases are retrieved if
-     * [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED] is used.
+     * [MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED] is used.
      *
      * @param hardIronX hard iron on device x-axis expressed in Teslas (T). Only
-     * available when using [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED].
+     * available when using [MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED].
      * If available, this value remains constant with calibrated bias value.
      * @param hardIronY hard iron on device y-axis expressed in Teslas (T). Only
-     * available when using [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED].
+     * available when using [MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED].
      * If available, this value remains constant with calibrated bias value.
      * @param hardIronZ hard iron on device y-axis expressed in Teslas (T). Only
-     * available when using [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED].
+     * available when using [MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED].
      * If available, this value remains constant with calibrated bias value.
      */
     private fun updateMagnetometerInitialHardIrons(

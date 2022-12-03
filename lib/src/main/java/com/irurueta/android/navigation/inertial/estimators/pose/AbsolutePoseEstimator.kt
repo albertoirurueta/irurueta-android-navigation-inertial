@@ -17,6 +17,7 @@ package com.irurueta.android.navigation.inertial.estimators.pose
 
 import android.location.Location
 import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorType
 import com.irurueta.geometry.EuclideanTransformation3D
 import com.irurueta.navigation.frames.ECEFFrame
 import com.irurueta.navigation.frames.NEDVelocity
@@ -38,7 +39,7 @@ interface AbsolutePoseEstimator : PoseEstimator {
     /**
      * One of the supported magnetometer sensor types.
      */
-    val magnetometerSensorType: MagnetometerSensorCollector.SensorType
+    val magnetometerSensorType: MagnetometerSensorType
 
     /**
      * Initial velocity of device expressed in NED coordinates.

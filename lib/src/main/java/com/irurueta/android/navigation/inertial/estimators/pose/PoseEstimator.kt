@@ -16,9 +16,7 @@
 package com.irurueta.android.navigation.inertial.estimators.pose
 
 import android.content.Context
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.estimators.attitude.GravityEstimator
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
 
@@ -40,12 +38,12 @@ interface PoseEstimator {
     /**
      * One of the supported accelerometer sensor types.
      */
-    val accelerometerSensorType: AccelerometerSensorCollector.SensorType
+    val accelerometerSensorType: AccelerometerSensorType
 
     /**
      * One of the supported gyroscope sensor types.
      */
-    val gyroscopeSensorType: GyroscopeSensorCollector.SensorType
+    val gyroscopeSensorType: GyroscopeSensorType
 
     /**
      * An averaging filter for accelerometer samples to obtain sensed gravity component of

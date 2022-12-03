@@ -19,10 +19,11 @@ import android.content.Context
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
-import android.os.Build
 
 /**
  * Manages and collects accelerometer sensor measurements.
+ * This collector does not have an internal buffer, and consequently out of order measurements can
+ * be notified.
  *
  * @property context Android context.
  * @property sensorType One of the supported accelerometer sensor types.
@@ -33,7 +34,7 @@ import android.os.Build
  */
 class AccelerometerSensorCollector(
     context: Context,
-    val sensorType: SensorType = SensorType.ACCELEROMETER_UNCALIBRATED,
+    val sensorType: AccelerometerSensorType = AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
     sensorDelay: SensorDelay = SensorDelay.FASTEST,
     var measurementListener: OnMeasurementListener? = null,
     accuracyChangedListener: OnAccuracyChangedListener? = null
@@ -47,7 +48,7 @@ class AccelerometerSensorCollector(
             if (event == null) {
                 return
             }
-            val sensorType = SensorType.from(event.sensor.type) ?: return
+            val sensorType = AccelerometerSensorType.from(event.sensor.type) ?: return
 
             val sensorAccuracy = SensorAccuracy.from(event.accuracy)
             val timestamp = event.timestamp
@@ -58,7 +59,7 @@ class AccelerometerSensorCollector(
             var bx: Float? = null
             var by: Float? = null
             var bz: Float? = null
-            if (sensorType == SensorType.ACCELEROMETER_UNCALIBRATED) {
+            if (sensorType == AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED) {
                 bx = event.values[3]
                 by = event.values[4]
                 bz = event.values[5]
@@ -80,7 +81,7 @@ class AccelerometerSensorCollector(
             if (sensor == null) {
                 return
             }
-            if (SensorType.from(sensor.type) == null) {
+            if (AccelerometerSensorType.from(sensor.type) == null) {
                 return
             }
 
@@ -100,54 +101,7 @@ class AccelerometerSensorCollector(
      * Indicates whether requested accelerometer sensor is available or not.
      */
     override val sensorAvailable: Boolean by lazy {
-        SensorType.from(sensorType.value) != null && super.sensorAvailable
-    }
-
-    private companion object {
-        /**
-         * Constant defining uncalibrated accelerometer type.
-         */
-        val TYPE_ACCELEROMETER_UNCALIBRATED =
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-                Sensor.TYPE_ACCELEROMETER_UNCALIBRATED
-            else 35
-    }
-
-    /**
-     * Indicates the accelerometer types supported by this accelerometer sensor.
-     *
-     * @property value numerical value representing accelerometer sensor type.
-     */
-    enum class SensorType(val value: Int) {
-        /**
-         * Accelerometer sensor.
-         * Returns acceleration including gravity.
-         */
-        ACCELEROMETER(Sensor.TYPE_ACCELEROMETER),
-
-        /**
-         * Uncalibrated accelerometer sensor.
-         * Returns acceleration including gravity but without bias correction.
-         * This accelerometer is only available for SDK 26 or later.
-         */
-        ACCELEROMETER_UNCALIBRATED(TYPE_ACCELEROMETER_UNCALIBRATED);
-
-        companion object {
-            /**
-             * Gets accelerometer sensor type based on provided numerical value.
-             *
-             * @param value numerical value representing accelerometer sensor type.
-             * @return accelerometer sensor type as an enum or null if value has no match.
-             */
-            fun from(value: Int): SensorType? {
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O
-                    && value == TYPE_ACCELEROMETER_UNCALIBRATED
-                ) {
-                    return null
-                }
-                return values().find { it.value == value }
-            }
-        }
+        AccelerometerSensorType.from(sensorType.value) != null && super.sensorAvailable
     }
 
     /**
@@ -165,16 +119,16 @@ class AccelerometerSensorCollector(
          * and in ENU coordinates system.
          * @param bx bias on device x-axis expressed in meters per squared second (m/s^2) and in
          * ENU coordinates system. Only available when using
-         * [SensorType.ACCELEROMETER_UNCALIBRATED]. If available, this value remains constant with
-         * calibrated bias value.
+         * [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED]. If available, this value remains
+         * constant with calibrated bias value.
          * @param by bias on device y-axis expressed in meters per squared second (m/s^2) and in
          * ENU coordinates system. Only available when using
-         * [SensorType.ACCELEROMETER_UNCALIBRATED]. If available, this value remains constant with
-         * calibrated bias value.
+         * [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED]. If available, this value remains
+         * constant with calibrated bias value.
          * @param bz bias on device z-axis expressed in meters per squared second (m/s^2) and in
          * ENU coordinates system. Only available when using
-         * [SensorType.ACCELEROMETER_UNCALIBRATED]. If available, this value remains constant with
-         * calibrated bias value.
+         * [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED]. If available, this value remains
+         * constant with calibrated bias value.
          * @param timestamp time in nanoseconds at which the measurement was made. Each measurement
          * will be monotonically increasing using the same time base as
          * [android.os.SystemClock.elapsedRealtimeNanos].

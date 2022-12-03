@@ -21,10 +21,7 @@ import android.os.SystemClock
 import androidx.test.core.app.ApplicationProvider
 import com.irurueta.algebra.Matrix
 import com.irurueta.android.navigation.inertial.*
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
-import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.estimators.attitude.GravityEstimator
 import com.irurueta.android.navigation.inertial.estimators.attitude.LeveledRelativeAttitudeEstimator
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
@@ -56,11 +53,11 @@ class RelativePoseEstimatorTest {
         assertEquals(SensorDelay.GAME, estimator.sensorDelay)
         assertFalse(estimator.useAccelerometerForAttitudeEstimation)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
             estimator.accelerometerSensorType
         )
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorType.GYROSCOPE_UNCALIBRATED,
             estimator.gyroscopeSensorType
         )
         assertNotNull(estimator.accelerometerAveragingFilter)
@@ -117,8 +114,8 @@ class RelativePoseEstimatorTest {
             context,
             SensorDelay.NORMAL,
             useAccelerometerForAttitudeEstimation = true,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            AccelerometerSensorType.ACCELEROMETER,
+            GyroscopeSensorType.GYROSCOPE,
             accelerometerAveragingFilter,
             useAccurateLevelingEstimator = true,
             useAccurateRelativeGyroscopeAttitudeEstimator = false,
@@ -135,11 +132,11 @@ class RelativePoseEstimatorTest {
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
         assertTrue(estimator.useAccelerometerForAttitudeEstimation)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             estimator.accelerometerSensorType
         )
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorType.GYROSCOPE,
             estimator.gyroscopeSensorType
         )
         assertSame(accelerometerAveragingFilter, estimator.accelerometerAveragingFilter)

@@ -19,9 +19,9 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatButton
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
+import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorType
+import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorType
 
 class MainActivity : AppCompatActivity() {
 
@@ -236,7 +236,7 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra(LevelingEstimatorActivity.USE_ACCELEROMETER, true)
             intent.putExtra(
                 LevelingEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER
+                AccelerometerSensorType.ACCELEROMETER
             )
             intent.putExtra(
                 LevelingEstimatorActivity.AVERAGING_FILTER_TYPE,
@@ -252,7 +252,7 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra(LevelingEstimatorActivity.USE_ACCELEROMETER, true)
             intent.putExtra(
                 LevelingEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER
+                AccelerometerSensorType.ACCELEROMETER
             )
             intent.putExtra(
                 LevelingEstimatorActivity.AVERAGING_FILTER_TYPE,
@@ -268,7 +268,7 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra(LevelingEstimatorActivity.USE_ACCELEROMETER, true)
             intent.putExtra(
                 LevelingEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER
+                AccelerometerSensorType.ACCELEROMETER
             )
             intent.putExtra(
                 LevelingEstimatorActivity.AVERAGING_FILTER_TYPE,
@@ -284,7 +284,7 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra(LevelingEstimatorActivity.USE_ACCELEROMETER, true)
             intent.putExtra(
                 LevelingEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
             )
             intent.putExtra(
                 LevelingEstimatorActivity.AVERAGING_FILTER_TYPE,
@@ -300,7 +300,7 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra(LevelingEstimatorActivity.USE_ACCELEROMETER, true)
             intent.putExtra(
                 LevelingEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
             )
             intent.putExtra(
                 LevelingEstimatorActivity.AVERAGING_FILTER_TYPE,
@@ -316,7 +316,7 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra(LevelingEstimatorActivity.USE_ACCELEROMETER, true)
             intent.putExtra(
                 LevelingEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
             )
             intent.putExtra(
                 LevelingEstimatorActivity.AVERAGING_FILTER_TYPE,
@@ -339,7 +339,7 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra(AccurateLevelingEstimatorActivity.USE_ACCELEROMETER, true)
             intent.putExtra(
                 AccurateLevelingEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER
+                AccelerometerSensorType.ACCELEROMETER
             )
             intent.putExtra(
                 AccurateLevelingEstimatorActivity.AVERAGING_FILTER_TYPE,
@@ -355,7 +355,7 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra(AccurateLevelingEstimatorActivity.USE_ACCELEROMETER, true)
             intent.putExtra(
                 AccurateLevelingEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER
+                AccelerometerSensorType.ACCELEROMETER
             )
             intent.putExtra(
                 AccurateLevelingEstimatorActivity.AVERAGING_FILTER_TYPE,
@@ -371,7 +371,7 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra(AccurateLevelingEstimatorActivity.USE_ACCELEROMETER, true)
             intent.putExtra(
                 AccurateLevelingEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER
+                AccelerometerSensorType.ACCELEROMETER
             )
             intent.putExtra(
                 AccurateLevelingEstimatorActivity.AVERAGING_FILTER_TYPE,
@@ -387,7 +387,7 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra(AccurateLevelingEstimatorActivity.USE_ACCELEROMETER, true)
             intent.putExtra(
                 AccurateLevelingEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
             )
             intent.putExtra(
                 AccurateLevelingEstimatorActivity.AVERAGING_FILTER_TYPE,
@@ -403,7 +403,7 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra(AccurateLevelingEstimatorActivity.USE_ACCELEROMETER, true)
             intent.putExtra(
                 AccurateLevelingEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
             )
             intent.putExtra(
                 AccurateLevelingEstimatorActivity.AVERAGING_FILTER_TYPE,
@@ -419,7 +419,7 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra(AccurateLevelingEstimatorActivity.USE_ACCELEROMETER, true)
             intent.putExtra(
                 AccurateLevelingEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
             )
             intent.putExtra(
                 AccurateLevelingEstimatorActivity.AVERAGING_FILTER_TYPE,
@@ -434,7 +434,7 @@ class MainActivity : AppCompatActivity() {
                 Intent(this@MainActivity, RelativeGyroscopeAttitudeEstimatorActivity::class.java)
             intent.putExtra(
                 RelativeGyroscopeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
-                GyroscopeSensorCollector.SensorType.GYROSCOPE
+                GyroscopeSensorType.GYROSCOPE
             )
             startActivity(intent)
         }
@@ -446,7 +446,7 @@ class MainActivity : AppCompatActivity() {
                 Intent(this@MainActivity, RelativeGyroscopeAttitudeEstimatorActivity::class.java)
             intent.putExtra(
                 RelativeGyroscopeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
-                GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED
+                GyroscopeSensorType.GYROSCOPE_UNCALIBRATED
             )
             startActivity(intent)
         }
@@ -461,7 +461,7 @@ class MainActivity : AppCompatActivity() {
                 )
             intent.putExtra(
                 AccurateRelativeGyroscopeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
-                GyroscopeSensorCollector.SensorType.GYROSCOPE
+                GyroscopeSensorType.GYROSCOPE
             )
             startActivity(intent)
         }
@@ -476,7 +476,7 @@ class MainActivity : AppCompatActivity() {
                 )
             intent.putExtra(
                 AccurateRelativeGyroscopeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
-                GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED
+                GyroscopeSensorType.GYROSCOPE_UNCALIBRATED
             )
             startActivity(intent)
         }
@@ -492,7 +492,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
-                GyroscopeSensorCollector.SensorType.GYROSCOPE
+                GyroscopeSensorType.GYROSCOPE
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_LEVELING_ESTIMATOR,
@@ -516,7 +516,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER
+                AccelerometerSensorType.ACCELEROMETER
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
@@ -524,7 +524,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
-                GyroscopeSensorCollector.SensorType.GYROSCOPE
+                GyroscopeSensorType.GYROSCOPE
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_LEVELING_ESTIMATOR,
@@ -548,7 +548,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER
+                AccelerometerSensorType.ACCELEROMETER
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
@@ -556,7 +556,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
-                GyroscopeSensorCollector.SensorType.GYROSCOPE
+                GyroscopeSensorType.GYROSCOPE
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_LEVELING_ESTIMATOR,
@@ -580,7 +580,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER
+                AccelerometerSensorType.ACCELEROMETER
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
@@ -588,7 +588,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
-                GyroscopeSensorCollector.SensorType.GYROSCOPE
+                GyroscopeSensorType.GYROSCOPE
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_LEVELING_ESTIMATOR,
@@ -612,7 +612,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
@@ -620,7 +620,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
-                GyroscopeSensorCollector.SensorType.GYROSCOPE
+                GyroscopeSensorType.GYROSCOPE
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_LEVELING_ESTIMATOR,
@@ -644,7 +644,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
@@ -652,7 +652,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
-                GyroscopeSensorCollector.SensorType.GYROSCOPE
+                GyroscopeSensorType.GYROSCOPE
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_LEVELING_ESTIMATOR,
@@ -676,7 +676,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
@@ -684,7 +684,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
-                GyroscopeSensorCollector.SensorType.GYROSCOPE
+                GyroscopeSensorType.GYROSCOPE
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_LEVELING_ESTIMATOR,
@@ -704,7 +704,7 @@ class MainActivity : AppCompatActivity() {
                 Intent(this@MainActivity, LeveledRelativeAttitudeEstimatorActivity::class.java)
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
-                GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED
+                GyroscopeSensorType.GYROSCOPE_UNCALIBRATED
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_LEVELING_ESTIMATOR,
@@ -728,7 +728,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
-                GyroscopeSensorCollector.SensorType.GYROSCOPE
+                GyroscopeSensorType.GYROSCOPE
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_LEVELING_ESTIMATOR,
@@ -752,7 +752,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER
+                AccelerometerSensorType.ACCELEROMETER
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
@@ -760,7 +760,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
-                GyroscopeSensorCollector.SensorType.GYROSCOPE
+                GyroscopeSensorType.GYROSCOPE
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_LEVELING_ESTIMATOR,
@@ -784,7 +784,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER
+                AccelerometerSensorType.ACCELEROMETER
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
@@ -792,7 +792,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
-                GyroscopeSensorCollector.SensorType.GYROSCOPE
+                GyroscopeSensorType.GYROSCOPE
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_LEVELING_ESTIMATOR,
@@ -816,7 +816,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER
+                AccelerometerSensorType.ACCELEROMETER
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
@@ -824,7 +824,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
-                GyroscopeSensorCollector.SensorType.GYROSCOPE
+                GyroscopeSensorType.GYROSCOPE
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_LEVELING_ESTIMATOR,
@@ -848,7 +848,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
@@ -856,7 +856,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
-                GyroscopeSensorCollector.SensorType.GYROSCOPE
+                GyroscopeSensorType.GYROSCOPE
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_LEVELING_ESTIMATOR,
@@ -880,7 +880,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
@@ -888,7 +888,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
-                GyroscopeSensorCollector.SensorType.GYROSCOPE
+                GyroscopeSensorType.GYROSCOPE
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_LEVELING_ESTIMATOR,
@@ -912,7 +912,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
@@ -920,7 +920,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
-                GyroscopeSensorCollector.SensorType.GYROSCOPE
+                GyroscopeSensorType.GYROSCOPE
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_LEVELING_ESTIMATOR,
@@ -940,7 +940,7 @@ class MainActivity : AppCompatActivity() {
                 Intent(this@MainActivity, LeveledRelativeAttitudeEstimatorActivity::class.java)
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
-                GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED
+                GyroscopeSensorType.GYROSCOPE_UNCALIBRATED
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_LEVELING_ESTIMATOR,
@@ -964,7 +964,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
-                GyroscopeSensorCollector.SensorType.GYROSCOPE
+                GyroscopeSensorType.GYROSCOPE
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_LEVELING_ESTIMATOR,
@@ -988,7 +988,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER
+                AccelerometerSensorType.ACCELEROMETER
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
@@ -996,7 +996,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
-                GyroscopeSensorCollector.SensorType.GYROSCOPE
+                GyroscopeSensorType.GYROSCOPE
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_LEVELING_ESTIMATOR,
@@ -1020,7 +1020,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER
+                AccelerometerSensorType.ACCELEROMETER
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
@@ -1028,7 +1028,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
-                GyroscopeSensorCollector.SensorType.GYROSCOPE
+                GyroscopeSensorType.GYROSCOPE
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_LEVELING_ESTIMATOR,
@@ -1052,7 +1052,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER
+                AccelerometerSensorType.ACCELEROMETER
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
@@ -1060,7 +1060,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
-                GyroscopeSensorCollector.SensorType.GYROSCOPE
+                GyroscopeSensorType.GYROSCOPE
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_LEVELING_ESTIMATOR,
@@ -1084,7 +1084,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
@@ -1092,7 +1092,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
-                GyroscopeSensorCollector.SensorType.GYROSCOPE
+                GyroscopeSensorType.GYROSCOPE
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_LEVELING_ESTIMATOR,
@@ -1116,7 +1116,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
@@ -1124,7 +1124,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
-                GyroscopeSensorCollector.SensorType.GYROSCOPE
+                GyroscopeSensorType.GYROSCOPE
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_LEVELING_ESTIMATOR,
@@ -1148,7 +1148,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
@@ -1156,7 +1156,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
-                GyroscopeSensorCollector.SensorType.GYROSCOPE
+                GyroscopeSensorType.GYROSCOPE
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_LEVELING_ESTIMATOR,
@@ -1176,7 +1176,7 @@ class MainActivity : AppCompatActivity() {
                 Intent(this@MainActivity, LeveledRelativeAttitudeEstimatorActivity::class.java)
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
-                GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED
+                GyroscopeSensorType.GYROSCOPE_UNCALIBRATED
             )
             intent.putExtra(
                 LeveledRelativeAttitudeEstimatorActivity.USE_ACCURATE_LEVELING_ESTIMATOR,
@@ -1196,7 +1196,7 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra(GeomagneticAttitudeEstimatorActivity.USE_ACCELEROMETER, false)
             intent.putExtra(
                 GeomagneticAttitudeEstimatorActivity.MAGNETOMETER_SENSOR_TYPE,
-                MagnetometerSensorCollector.SensorType.MAGNETOMETER
+                MagnetometerSensorType.MAGNETOMETER
             )
             startActivity(intent)
         }
@@ -1208,7 +1208,7 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra(GeomagneticAttitudeEstimatorActivity.USE_ACCELEROMETER, true)
             intent.putExtra(
                 GeomagneticAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER
+                AccelerometerSensorType.ACCELEROMETER
             )
             intent.putExtra(
                 GeomagneticAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
@@ -1216,7 +1216,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 GeomagneticAttitudeEstimatorActivity.MAGNETOMETER_SENSOR_TYPE,
-                MagnetometerSensorCollector.SensorType.MAGNETOMETER
+                MagnetometerSensorType.MAGNETOMETER
             )
             startActivity(intent)
         }
@@ -1228,7 +1228,7 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra(GeomagneticAttitudeEstimatorActivity.USE_ACCELEROMETER, true)
             intent.putExtra(
                 GeomagneticAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER
+                AccelerometerSensorType.ACCELEROMETER
             )
             intent.putExtra(
                 GeomagneticAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
@@ -1236,7 +1236,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 GeomagneticAttitudeEstimatorActivity.MAGNETOMETER_SENSOR_TYPE,
-                MagnetometerSensorCollector.SensorType.MAGNETOMETER
+                MagnetometerSensorType.MAGNETOMETER
             )
             startActivity(intent)
         }
@@ -1248,7 +1248,7 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra(GeomagneticAttitudeEstimatorActivity.USE_ACCELEROMETER, true)
             intent.putExtra(
                 GeomagneticAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER
+                AccelerometerSensorType.ACCELEROMETER
             )
             intent.putExtra(
                 GeomagneticAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
@@ -1256,7 +1256,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 GeomagneticAttitudeEstimatorActivity.MAGNETOMETER_SENSOR_TYPE,
-                MagnetometerSensorCollector.SensorType.MAGNETOMETER
+                MagnetometerSensorType.MAGNETOMETER
             )
             startActivity(intent)
         }
@@ -1268,7 +1268,7 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra(GeomagneticAttitudeEstimatorActivity.USE_ACCELEROMETER, true)
             intent.putExtra(
                 GeomagneticAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
             )
             intent.putExtra(
                 GeomagneticAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
@@ -1276,7 +1276,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 GeomagneticAttitudeEstimatorActivity.MAGNETOMETER_SENSOR_TYPE,
-                MagnetometerSensorCollector.SensorType.MAGNETOMETER
+                MagnetometerSensorType.MAGNETOMETER
             )
             startActivity(intent)
         }
@@ -1288,7 +1288,7 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra(GeomagneticAttitudeEstimatorActivity.USE_ACCELEROMETER, true)
             intent.putExtra(
                 GeomagneticAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
             )
             intent.putExtra(
                 GeomagneticAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
@@ -1296,7 +1296,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 GeomagneticAttitudeEstimatorActivity.MAGNETOMETER_SENSOR_TYPE,
-                MagnetometerSensorCollector.SensorType.MAGNETOMETER
+                MagnetometerSensorType.MAGNETOMETER
             )
             startActivity(intent)
         }
@@ -1308,7 +1308,7 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra(GeomagneticAttitudeEstimatorActivity.USE_ACCELEROMETER, true)
             intent.putExtra(
                 GeomagneticAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
             )
             intent.putExtra(
                 GeomagneticAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
@@ -1316,7 +1316,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 GeomagneticAttitudeEstimatorActivity.MAGNETOMETER_SENSOR_TYPE,
-                MagnetometerSensorCollector.SensorType.MAGNETOMETER
+                MagnetometerSensorType.MAGNETOMETER
             )
             startActivity(intent)
         }
@@ -1328,7 +1328,7 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra(GeomagneticAttitudeEstimatorActivity.USE_ACCELEROMETER, true)
             intent.putExtra(
                 GeomagneticAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER
+                AccelerometerSensorType.ACCELEROMETER
             )
             intent.putExtra(
                 GeomagneticAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
@@ -1336,7 +1336,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 GeomagneticAttitudeEstimatorActivity.MAGNETOMETER_SENSOR_TYPE,
-                MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED
+                MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED
             )
             startActivity(intent)
         }
@@ -1348,7 +1348,7 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra(GeomagneticAttitudeEstimatorActivity.USE_ACCELEROMETER, true)
             intent.putExtra(
                 GeomagneticAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER
+                AccelerometerSensorType.ACCELEROMETER
             )
             intent.putExtra(
                 GeomagneticAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
@@ -1356,7 +1356,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 GeomagneticAttitudeEstimatorActivity.MAGNETOMETER_SENSOR_TYPE,
-                MagnetometerSensorCollector.SensorType.MAGNETOMETER
+                MagnetometerSensorType.MAGNETOMETER
             )
             intent.putExtra(GeomagneticAttitudeEstimatorActivity.USE_WORLD_MAGNETIC_MODEL, true)
             startActivity(intent)
@@ -1370,7 +1370,7 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra(FusedGeomagneticAttitudeEstimatorActivity.USE_ACCELEROMETER, false)
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimatorActivity.MAGNETOMETER_SENSOR_TYPE,
-                MagnetometerSensorCollector.SensorType.MAGNETOMETER
+                MagnetometerSensorType.MAGNETOMETER
             )
             startActivity(intent)
         }
@@ -1383,7 +1383,7 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra(FusedGeomagneticAttitudeEstimatorActivity.USE_ACCELEROMETER, true)
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER
+                AccelerometerSensorType.ACCELEROMETER
             )
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
@@ -1391,7 +1391,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimatorActivity.MAGNETOMETER_SENSOR_TYPE,
-                MagnetometerSensorCollector.SensorType.MAGNETOMETER
+                MagnetometerSensorType.MAGNETOMETER
             )
             startActivity(intent)
         }
@@ -1404,7 +1404,7 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra(FusedGeomagneticAttitudeEstimatorActivity.USE_ACCELEROMETER, true)
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER
+                AccelerometerSensorType.ACCELEROMETER
             )
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
@@ -1412,7 +1412,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimatorActivity.MAGNETOMETER_SENSOR_TYPE,
-                MagnetometerSensorCollector.SensorType.MAGNETOMETER
+                MagnetometerSensorType.MAGNETOMETER
             )
             startActivity(intent)
         }
@@ -1425,7 +1425,7 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra(FusedGeomagneticAttitudeEstimatorActivity.USE_ACCELEROMETER, true)
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER
+                AccelerometerSensorType.ACCELEROMETER
             )
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
@@ -1433,7 +1433,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimatorActivity.MAGNETOMETER_SENSOR_TYPE,
-                MagnetometerSensorCollector.SensorType.MAGNETOMETER
+                MagnetometerSensorType.MAGNETOMETER
             )
             startActivity(intent)
         }
@@ -1446,7 +1446,7 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra(FusedGeomagneticAttitudeEstimatorActivity.USE_ACCELEROMETER, true)
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
             )
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
@@ -1454,7 +1454,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimatorActivity.MAGNETOMETER_SENSOR_TYPE,
-                MagnetometerSensorCollector.SensorType.MAGNETOMETER
+                MagnetometerSensorType.MAGNETOMETER
             )
             startActivity(intent)
         }
@@ -1467,7 +1467,7 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra(FusedGeomagneticAttitudeEstimatorActivity.USE_ACCELEROMETER, true)
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
             )
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
@@ -1475,7 +1475,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimatorActivity.MAGNETOMETER_SENSOR_TYPE,
-                MagnetometerSensorCollector.SensorType.MAGNETOMETER
+                MagnetometerSensorType.MAGNETOMETER
             )
             startActivity(intent)
         }
@@ -1488,7 +1488,7 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra(FusedGeomagneticAttitudeEstimatorActivity.USE_ACCELEROMETER, true)
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
             )
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
@@ -1496,7 +1496,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimatorActivity.MAGNETOMETER_SENSOR_TYPE,
-                MagnetometerSensorCollector.SensorType.MAGNETOMETER
+                MagnetometerSensorType.MAGNETOMETER
             )
             startActivity(intent)
         }
@@ -1509,7 +1509,7 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra(FusedGeomagneticAttitudeEstimatorActivity.USE_ACCELEROMETER, true)
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER
+                AccelerometerSensorType.ACCELEROMETER
             )
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
@@ -1517,7 +1517,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimatorActivity.MAGNETOMETER_SENSOR_TYPE,
-                MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED
+                MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED
             )
             startActivity(intent)
         }
@@ -1530,7 +1530,7 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra(FusedGeomagneticAttitudeEstimatorActivity.USE_ACCELEROMETER, true)
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER
+                AccelerometerSensorType.ACCELEROMETER
             )
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
@@ -1538,11 +1538,11 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimatorActivity.MAGNETOMETER_SENSOR_TYPE,
-                MagnetometerSensorCollector.SensorType.MAGNETOMETER
+                MagnetometerSensorType.MAGNETOMETER
             )
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimatorActivity.GYROSCOPE_SENSOR_TYPE,
-                GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED
+                GyroscopeSensorType.GYROSCOPE_UNCALIBRATED
             )
             startActivity(intent)
         }
@@ -1555,7 +1555,7 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra(FusedGeomagneticAttitudeEstimatorActivity.USE_ACCELEROMETER, true)
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER
+                AccelerometerSensorType.ACCELEROMETER
             )
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimatorActivity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
@@ -1563,7 +1563,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimatorActivity.MAGNETOMETER_SENSOR_TYPE,
-                MagnetometerSensorCollector.SensorType.MAGNETOMETER
+                MagnetometerSensorType.MAGNETOMETER
             )
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimatorActivity.USE_WORLD_MAGNETIC_MODEL,
@@ -1580,7 +1580,7 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra(FusedGeomagneticAttitudeEstimator2Activity.USE_ACCELEROMETER, false)
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimator2Activity.MAGNETOMETER_SENSOR_TYPE,
-                MagnetometerSensorCollector.SensorType.MAGNETOMETER
+                MagnetometerSensorType.MAGNETOMETER
             )
             startActivity(intent)
         }
@@ -1593,7 +1593,7 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra(FusedGeomagneticAttitudeEstimator2Activity.USE_ACCELEROMETER, true)
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimator2Activity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER
+                AccelerometerSensorType.ACCELEROMETER
             )
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimator2Activity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
@@ -1601,7 +1601,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimator2Activity.MAGNETOMETER_SENSOR_TYPE,
-                MagnetometerSensorCollector.SensorType.MAGNETOMETER
+                MagnetometerSensorType.MAGNETOMETER
             )
             startActivity(intent)
         }
@@ -1614,7 +1614,7 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra(FusedGeomagneticAttitudeEstimator2Activity.USE_ACCELEROMETER, true)
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimator2Activity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER
+                AccelerometerSensorType.ACCELEROMETER
             )
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimator2Activity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
@@ -1622,7 +1622,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimator2Activity.MAGNETOMETER_SENSOR_TYPE,
-                MagnetometerSensorCollector.SensorType.MAGNETOMETER
+                MagnetometerSensorType.MAGNETOMETER
             )
             startActivity(intent)
         }
@@ -1635,7 +1635,7 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra(FusedGeomagneticAttitudeEstimator2Activity.USE_ACCELEROMETER, true)
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimator2Activity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER
+                AccelerometerSensorType.ACCELEROMETER
             )
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimator2Activity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
@@ -1643,7 +1643,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimator2Activity.MAGNETOMETER_SENSOR_TYPE,
-                MagnetometerSensorCollector.SensorType.MAGNETOMETER
+                MagnetometerSensorType.MAGNETOMETER
             )
             startActivity(intent)
         }
@@ -1656,7 +1656,7 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra(FusedGeomagneticAttitudeEstimator2Activity.USE_ACCELEROMETER, true)
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimator2Activity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
             )
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimator2Activity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
@@ -1664,7 +1664,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimator2Activity.MAGNETOMETER_SENSOR_TYPE,
-                MagnetometerSensorCollector.SensorType.MAGNETOMETER
+                MagnetometerSensorType.MAGNETOMETER
             )
             startActivity(intent)
         }
@@ -1677,7 +1677,7 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra(FusedGeomagneticAttitudeEstimator2Activity.USE_ACCELEROMETER, true)
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimator2Activity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
             )
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimator2Activity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
@@ -1685,7 +1685,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimator2Activity.MAGNETOMETER_SENSOR_TYPE,
-                MagnetometerSensorCollector.SensorType.MAGNETOMETER
+                MagnetometerSensorType.MAGNETOMETER
             )
             startActivity(intent)
         }
@@ -1698,7 +1698,7 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra(FusedGeomagneticAttitudeEstimator2Activity.USE_ACCELEROMETER, true)
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimator2Activity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
             )
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimator2Activity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
@@ -1706,7 +1706,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimator2Activity.MAGNETOMETER_SENSOR_TYPE,
-                MagnetometerSensorCollector.SensorType.MAGNETOMETER
+                MagnetometerSensorType.MAGNETOMETER
             )
             startActivity(intent)
         }
@@ -1719,7 +1719,7 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra(FusedGeomagneticAttitudeEstimator2Activity.USE_ACCELEROMETER, true)
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimator2Activity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER
+                AccelerometerSensorType.ACCELEROMETER
             )
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimator2Activity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
@@ -1727,7 +1727,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimator2Activity.MAGNETOMETER_SENSOR_TYPE,
-                MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED
+                MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED
             )
             startActivity(intent)
         }
@@ -1740,7 +1740,7 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra(FusedGeomagneticAttitudeEstimator2Activity.USE_ACCELEROMETER, true)
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimator2Activity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER
+                AccelerometerSensorType.ACCELEROMETER
             )
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimator2Activity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
@@ -1748,11 +1748,11 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimator2Activity.MAGNETOMETER_SENSOR_TYPE,
-                MagnetometerSensorCollector.SensorType.MAGNETOMETER
+                MagnetometerSensorType.MAGNETOMETER
             )
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimator2Activity.GYROSCOPE_SENSOR_TYPE,
-                GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED
+                GyroscopeSensorType.GYROSCOPE_UNCALIBRATED
             )
             startActivity(intent)
         }
@@ -1766,7 +1766,7 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra(FusedGeomagneticAttitudeEstimator2Activity.USE_ACCELEROMETER, true)
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimator2Activity.ACCELEROMETER_SENSOR_TYPE,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER
+                AccelerometerSensorType.ACCELEROMETER
             )
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimator2Activity.ACCELEROMETER_AVERAGING_FILTER_TYPE,
@@ -1774,7 +1774,7 @@ class MainActivity : AppCompatActivity() {
             )
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimator2Activity.MAGNETOMETER_SENSOR_TYPE,
-                MagnetometerSensorCollector.SensorType.MAGNETOMETER
+                MagnetometerSensorType.MAGNETOMETER
             )
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimator2Activity.USE_WORLD_MAGNETIC_MODEL,

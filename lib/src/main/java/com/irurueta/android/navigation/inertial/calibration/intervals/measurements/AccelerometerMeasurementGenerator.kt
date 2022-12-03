@@ -18,6 +18,7 @@ package com.irurueta.android.navigation.inertial.calibration.intervals.measureme
 import android.content.Context
 import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
 import com.irurueta.android.navigation.inertial.collectors.SensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.navigation.inertial.BodyKinematics
@@ -57,8 +58,8 @@ import com.irurueta.navigation.inertial.calibration.intervals.TriadStaticInterva
  */
 class AccelerometerMeasurementGenerator(
     context: Context,
-    accelerometerSensorType: AccelerometerSensorCollector.SensorType =
-        AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+    accelerometerSensorType: AccelerometerSensorType =
+        AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
     accelerometerSensorDelay: SensorDelay = SensorDelay.FASTEST,
     initializationStartedListener: OnInitializationStartedListener<AccelerometerMeasurementGenerator>? = null,
     initializationCompletedListener: OnInitializationCompletedListener<AccelerometerMeasurementGenerator>? = null,

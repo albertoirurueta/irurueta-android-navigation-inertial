@@ -425,6 +425,7 @@ class MagnetometerInternalCalibratorBuilderTest {
         builder.robustMethod = null
 
         // check
+        @Suppress("KotlinConstantConditions")
         assertNull(builder.robustMethod)
     }
 
@@ -741,6 +742,7 @@ class MagnetometerInternalCalibratorBuilderTest {
         builder.isGroundTruthInitialHardIron = true
 
         // check
+        @Suppress("KotlinConstantConditions")
         assertTrue(builder.isGroundTruthInitialHardIron)
     }
 
@@ -802,6 +804,7 @@ class MagnetometerInternalCalibratorBuilderTest {
         builder.initialHardIronX = null
 
         // check
+        @Suppress("KotlinConstantConditions")
         assertNull(builder.initialHardIronX)
     }
 
@@ -833,6 +836,7 @@ class MagnetometerInternalCalibratorBuilderTest {
         builder.initialHardIronY = null
 
         // check
+        @Suppress("KotlinConstantConditions")
         assertNull(builder.initialHardIronY)
     }
 
@@ -864,6 +868,7 @@ class MagnetometerInternalCalibratorBuilderTest {
         builder.initialHardIronZ = null
 
         // check
+        @Suppress("KotlinConstantConditions")
         assertNull(builder.initialHardIronZ)
     }
 
@@ -1120,6 +1125,7 @@ class MagnetometerInternalCalibratorBuilderTest {
         builder.baseNoiseLevel = null
 
         // check
+        @Suppress("KotlinConstantConditions")
         assertNull(builder.baseNoiseLevel)
     }
 

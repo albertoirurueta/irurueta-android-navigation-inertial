@@ -318,6 +318,7 @@ class AccelerometerInternalCalibratorBuilderTest {
         builder.robustMethod = null
 
         // check
+        @Suppress("KotlinConstantConditions")
         assertNull(builder.robustMethod)
     }
 
@@ -641,6 +642,7 @@ class AccelerometerInternalCalibratorBuilderTest {
         builder.location = null
 
         // check
+        @Suppress("KotlinConstantConditions")
         assertNull(builder.location)
     }
 
@@ -718,6 +720,7 @@ class AccelerometerInternalCalibratorBuilderTest {
         builder.isGroundTruthInitialBias = true
 
         // check
+        @Suppress("KotlinConstantConditions")
         assertTrue(builder.isGroundTruthInitialBias)
     }
 
@@ -779,6 +782,7 @@ class AccelerometerInternalCalibratorBuilderTest {
         builder.initialBiasX = null
 
         // check
+        @Suppress("KotlinConstantConditions")
         assertNull(builder.initialBiasX)
     }
 
@@ -810,6 +814,7 @@ class AccelerometerInternalCalibratorBuilderTest {
         builder.initialBiasY = null
 
         // check
+        @Suppress("KotlinConstantConditions")
         assertNull(builder.initialBiasY)
     }
 
@@ -841,6 +846,7 @@ class AccelerometerInternalCalibratorBuilderTest {
         builder.initialBiasZ = null
 
         // check
+        @Suppress("KotlinConstantConditions")
         assertNull(builder.initialBiasZ)
     }
 
@@ -1097,6 +1103,7 @@ class AccelerometerInternalCalibratorBuilderTest {
         builder.baseNoiseLevel = null
 
         // check
+        @Suppress("KotlinConstantConditions")
         assertNull(builder.baseNoiseLevel)
     }
 

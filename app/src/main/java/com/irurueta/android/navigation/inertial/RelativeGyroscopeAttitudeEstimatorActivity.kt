@@ -20,7 +20,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatTextView
 import com.irurueta.android.gl.cube.CubeRenderer
 import com.irurueta.android.gl.cube.CubeTextureView
-import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorType
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.android.navigation.inertial.estimators.attitude.RelativeGyroscopeAttitudeEstimator
 import com.irurueta.geometry.*
@@ -50,8 +50,8 @@ class RelativeGyroscopeAttitudeEstimatorActivity : AppCompatActivity() {
 
         val extras = intent.extras
         val gyroscopeSensorType =
-            (extras?.getSerializable(GYROSCOPE_SENSOR_TYPE) as GyroscopeSensorCollector.SensorType?)
-                ?: GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED
+            (extras?.getSerializable(GYROSCOPE_SENSOR_TYPE) as GyroscopeSensorType?)
+                ?: GyroscopeSensorType.GYROSCOPE_UNCALIBRATED
 
         setContentView(R.layout.activity_relative_gyroscope_attitude_estimator)
         cubeView = findViewById(R.id.cube)

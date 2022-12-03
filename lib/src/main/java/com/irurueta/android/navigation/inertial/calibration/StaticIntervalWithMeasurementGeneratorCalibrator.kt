@@ -17,7 +17,7 @@ package com.irurueta.android.navigation.inertial.calibration
 
 import android.content.Context
 import android.hardware.Sensor
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
 import com.irurueta.android.navigation.inertial.collectors.SensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.navigation.inertial.calibration.intervals.TriadStaticIntervalDetector
@@ -60,7 +60,7 @@ interface StaticIntervalWithMeasurementGeneratorCalibrator<C : StaticIntervalWit
     /**
      * One of the supported accelerometer sensor types.
      */
-    val accelerometerSensorType: AccelerometerSensorCollector.SensorType
+    val accelerometerSensorType: AccelerometerSensorType
 
     /**
      * Delay of sensor between samples.

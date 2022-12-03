@@ -51,12 +51,12 @@ interface AbsoluteAttitudeEstimator<T : AbsoluteAttitudeEstimator<T, L>,
      * Gets one of the supported accelerometer sensor types.
      * (Only used if [useAccelerometer] is true).
      */
-    val accelerometerSensorType: AccelerometerSensorCollector.SensorType
+    val accelerometerSensorType: AccelerometerSensorType
 
     /**
      * Gets one of the supported magnetometer sensor types.
      */
-    val magnetometerSensorType: MagnetometerSensorCollector.SensorType
+    val magnetometerSensorType: MagnetometerSensorType
 
     /**
      * Gets an averaging filter for accelerometer samples to obtain
@@ -67,7 +67,7 @@ interface AbsoluteAttitudeEstimator<T : AbsoluteAttitudeEstimator<T, L>,
     /**
      * Gets one of the supported gyroscope sensor types.
      */
-    val gyroscopeSensorType: GyroscopeSensorCollector.SensorType
+    val gyroscopeSensorType: GyroscopeSensorType
 
     /**
      * Indicates whether coordinate transformation must be estimated or not.

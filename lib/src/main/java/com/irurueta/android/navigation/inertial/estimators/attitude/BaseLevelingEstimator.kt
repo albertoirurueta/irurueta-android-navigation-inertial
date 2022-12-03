@@ -17,6 +17,7 @@ package com.irurueta.android.navigation.inertial.estimators.attitude
 
 import android.content.Context
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
 import com.irurueta.android.navigation.inertial.collectors.GravitySensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
@@ -52,8 +53,8 @@ abstract class BaseLevelingEstimator<T : BaseLevelingEstimator<T, L>,
     val context: Context,
     val sensorDelay: SensorDelay = SensorDelay.GAME,
     val useAccelerometer: Boolean = false,
-    val accelerometerSensorType: AccelerometerSensorCollector.SensorType =
-        AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+    val accelerometerSensorType: AccelerometerSensorType =
+        AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
     val accelerometerAveragingFilter: AveragingFilter = LowPassAveragingFilter(),
     val estimateCoordinateTransformation: Boolean = false,
     val estimateEulerAngles: Boolean = true,

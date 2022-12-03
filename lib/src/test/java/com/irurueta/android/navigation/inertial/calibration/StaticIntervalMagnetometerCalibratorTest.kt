@@ -68,11 +68,11 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertNull(calibrator.worldMagneticModel)
         assertTrue(calibrator.isInitialMagneticFluxDensityNormMeasured)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
             calibrator.accelerometerSensorType
         )
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED,
             calibrator.magnetometerSensorType
         )
         assertEquals(SensorDelay.FASTEST, calibrator.accelerometerSensorDelay)
@@ -288,8 +288,8 @@ class StaticIntervalMagnetometerCalibratorTest {
                 location,
                 timestamp,
                 worldMagneticModel,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER,
-                MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+                AccelerometerSensorType.ACCELEROMETER,
+                MagnetometerSensorType.MAGNETOMETER,
                 SensorDelay.NORMAL,
                 SensorDelay.NORMAL,
                 solveCalibrationWhenEnoughMeasurements = false,
@@ -318,11 +318,11 @@ class StaticIntervalMagnetometerCalibratorTest {
         assertSame(worldMagneticModel, calibrator.worldMagneticModel)
         assertFalse(calibrator.isInitialMagneticFluxDensityNormMeasured)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             calibrator.accelerometerSensorType
         )
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             calibrator.magnetometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, calibrator.accelerometerSensorDelay)

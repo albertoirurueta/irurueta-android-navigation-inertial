@@ -22,7 +22,7 @@ import androidx.test.filters.RequiresDevice
 import androidx.test.rule.GrantPermissionRule
 import com.irurueta.android.navigation.inertial.LocationService
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
 import com.irurueta.android.navigation.inertial.estimators.attitude.AccurateLevelingEstimator
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.MeanAveragingFilter
@@ -97,7 +97,7 @@ class AccurateLevelingEstimatorTest {
             activity,
             location,
             useAccelerometer = true,
-            accelerometerSensorType = AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            accelerometerSensorType = AccelerometerSensorType.ACCELEROMETER,
             accelerometerAveragingFilter = LowPassAveragingFilter(),
             estimateEulerAngles = true,
             levelingAvailableListener = { _, _, _, roll, pitch, _ ->
@@ -126,7 +126,7 @@ class AccurateLevelingEstimatorTest {
             activity,
             location,
             useAccelerometer = true,
-            accelerometerSensorType = AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            accelerometerSensorType = AccelerometerSensorType.ACCELEROMETER,
             accelerometerAveragingFilter = MeanAveragingFilter(),
             estimateEulerAngles = true,
             levelingAvailableListener = { _, _, _, roll, pitch, _ ->
@@ -155,7 +155,7 @@ class AccurateLevelingEstimatorTest {
             activity,
             location,
             useAccelerometer = true,
-            accelerometerSensorType = AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            accelerometerSensorType = AccelerometerSensorType.ACCELEROMETER,
             accelerometerAveragingFilter = MedianAveragingFilter(),
             estimateEulerAngles = true,
             levelingAvailableListener = { _, _, _, roll, pitch, _ ->
@@ -184,7 +184,7 @@ class AccurateLevelingEstimatorTest {
             activity,
             location,
             useAccelerometer = true,
-            accelerometerSensorType = AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            accelerometerSensorType = AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
             accelerometerAveragingFilter = LowPassAveragingFilter(),
             estimateEulerAngles = true,
             levelingAvailableListener = { _, _, _, roll, pitch, _ ->
@@ -213,7 +213,7 @@ class AccurateLevelingEstimatorTest {
             activity,
             location,
             useAccelerometer = true,
-            accelerometerSensorType = AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            accelerometerSensorType = AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
             accelerometerAveragingFilter = MeanAveragingFilter(),
             estimateEulerAngles = true,
             levelingAvailableListener = { _, _, _, roll, pitch, _ ->
@@ -242,7 +242,7 @@ class AccurateLevelingEstimatorTest {
             activity,
             location,
             useAccelerometer = true,
-            accelerometerSensorType = AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            accelerometerSensorType = AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
             accelerometerAveragingFilter = MedianAveragingFilter(),
             estimateEulerAngles = true,
             levelingAvailableListener = { _, _, _, roll, pitch, _ ->

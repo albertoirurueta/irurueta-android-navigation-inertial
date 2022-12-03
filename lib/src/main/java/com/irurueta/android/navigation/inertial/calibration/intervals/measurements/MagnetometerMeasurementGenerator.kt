@@ -18,10 +18,7 @@ package com.irurueta.android.navigation.inertial.calibration.intervals.measureme
 import android.content.Context
 import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
 import com.irurueta.android.navigation.inertial.calibration.intervals.Status
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.SensorCollector
-import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.navigation.inertial.BodyKinematics
 import com.irurueta.navigation.inertial.BodyKinematicsAndMagneticFluxDensity
 import com.irurueta.navigation.inertial.BodyMagneticFluxDensity
@@ -70,10 +67,10 @@ import com.irurueta.units.MagneticFluxDensityUnit
  */
 class MagnetometerMeasurementGenerator(
     context: Context,
-    accelerometerSensorType: AccelerometerSensorCollector.SensorType = AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+    accelerometerSensorType: AccelerometerSensorType = AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
     accelerometerSensorDelay: SensorDelay = SensorDelay.FASTEST,
-    val magnetometerSensorType: MagnetometerSensorCollector.SensorType =
-        MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+    val magnetometerSensorType: MagnetometerSensorType =
+        MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED,
     val magnetometerSensorDelay: SensorDelay = SensorDelay.FASTEST,
     initializationStartedListener: OnInitializationStartedListener<MagnetometerMeasurementGenerator>? = null,
     initializationCompletedListener: OnInitializationCompletedListener<MagnetometerMeasurementGenerator>? = null,

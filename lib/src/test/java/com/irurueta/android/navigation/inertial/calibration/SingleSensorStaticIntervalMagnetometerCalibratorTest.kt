@@ -27,6 +27,7 @@ import com.irurueta.android.navigation.inertial.calibration.intervals.IntervalDe
 import com.irurueta.android.navigation.inertial.calibration.intervals.MagnetometerIntervalDetector
 import com.irurueta.android.navigation.inertial.callPrivateFuncWithResult
 import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorType
 import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.android.navigation.inertial.getPrivateProperty
@@ -78,7 +79,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
         assertNull(calibrator.worldMagneticModel)
         assertTrue(calibrator.isInitialMagneticFluxDensityNormMeasured)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED,
             calibrator.sensorType
         )
         assertEquals(SensorDelay.FASTEST, calibrator.sensorDelay)
@@ -264,7 +265,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
                 location,
                 timestamp,
                 worldMagneticModel,
-                MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+                MagnetometerSensorType.MAGNETOMETER,
                 SensorDelay.NORMAL,
                 solveCalibrationWhenEnoughMeasurements = false,
                 isGroundTruthInitialHardIron = true,
@@ -287,7 +288,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
         assertSame(worldMagneticModel, calibrator.worldMagneticModel)
         assertFalse(calibrator.isInitialMagneticFluxDensityNormMeasured)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             calibrator.sensorType
         )
         assertEquals(SensorDelay.NORMAL, calibrator.sensorDelay)

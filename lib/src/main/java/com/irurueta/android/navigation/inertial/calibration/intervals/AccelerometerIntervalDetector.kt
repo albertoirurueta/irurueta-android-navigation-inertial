@@ -18,6 +18,7 @@ package com.irurueta.android.navigation.inertial.calibration.intervals
 import android.content.Context
 import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
 import com.irurueta.android.navigation.inertial.collectors.SensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.navigation.inertial.calibration.AccelerationTriad
@@ -61,8 +62,8 @@ import com.irurueta.units.TimeConverter
  */
 class AccelerometerIntervalDetector(
     context: Context,
-    val sensorType: AccelerometerSensorCollector.SensorType =
-        AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+    val sensorType: AccelerometerSensorType =
+        AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
     sensorDelay: SensorDelay = SensorDelay.FASTEST,
     initializationStartedListener: OnInitializationStartedListener<AccelerometerIntervalDetector>? = null,
     initializationCompletedListener: OnInitializationCompletedListener<AccelerometerIntervalDetector>? = null,

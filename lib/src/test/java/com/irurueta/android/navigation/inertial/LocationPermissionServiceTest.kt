@@ -16,6 +16,7 @@
 package com.irurueta.android.navigation.inertial
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
@@ -32,6 +33,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
+@Suppress("UseCheckPermission")
 @RunWith(RobolectricTestRunner::class)
 class LocationPermissionServiceTest {
 
@@ -97,6 +99,7 @@ class LocationPermissionServiceTest {
         assertSame(listener, service.onLocationPermissionRequestResultListener)
     }
 
+    @SuppressLint("UseCheckPermission")
     @Test
     fun hasFineLocationPermission_whenPermissionGranted_callsExpectedMethod() {
         val context = spyk(ApplicationProvider.getApplicationContext())
@@ -119,6 +122,7 @@ class LocationPermissionServiceTest {
         }
     }
 
+    @SuppressLint("UseCheckPermission")
     @Test
     fun hasFineLocationPermission_whenPermissionDenied_callsExpectedMethod() {
         val context = spyk(ApplicationProvider.getApplicationContext())
@@ -429,6 +433,7 @@ class LocationPermissionServiceTest {
         unmockkStatic(ActivityCompat::class)
     }
 
+    @SuppressLint("UseCheckPermission")
     @Config(sdk = [Build.VERSION_CODES.P])
     @Test
     fun shouldShowRequestBackgroundLocationPermissionRationale_whenNoActivityAndSdkR_callsExpectedMethod() {

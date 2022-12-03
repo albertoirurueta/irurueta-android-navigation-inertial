@@ -17,7 +17,7 @@ package com.irurueta.android.navigation.inertial.calibration
 
 import android.content.Context
 import com.irurueta.android.navigation.inertial.calibration.intervals.measurements.CalibrationMeasurementGenerator
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
 import com.irurueta.android.navigation.inertial.collectors.SensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.navigation.inertial.calibration.intervals.TriadStaticIntervalDetector
@@ -53,7 +53,7 @@ import com.irurueta.units.Time
  */
 abstract class BaseStaticIntervalWithMeasurementGeneratorCalibrator<C : StaticIntervalWithMeasurementGeneratorCalibrator<C, I>, I>(
     override val context: Context,
-    override val accelerometerSensorType: AccelerometerSensorCollector.SensorType = AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+    override val accelerometerSensorType: AccelerometerSensorType = AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
     override val accelerometerSensorDelay: SensorDelay = SensorDelay.FASTEST,
     override val solveCalibrationWhenEnoughMeasurements: Boolean = true,
     override var initializationStartedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<C>? = null,

@@ -22,8 +22,8 @@ import androidx.test.filters.RequiresDevice
 import androidx.test.rule.GrantPermissionRule
 import com.irurueta.android.navigation.inertial.LocationService
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
+import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorType
 import com.irurueta.android.navigation.inertial.estimators.attitude.GeomagneticAttitudeEstimator
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.MeanAveragingFilter
@@ -98,8 +98,8 @@ class GeomagneticAttitudeEstimatorTest {
             activity,
             location,
             useAccelerometer = true,
-            accelerometerSensorType = AccelerometerSensorCollector.SensorType.ACCELEROMETER,
-            magnetometerSensorType = MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            accelerometerSensorType = AccelerometerSensorType.ACCELEROMETER,
+            magnetometerSensorType = MagnetometerSensorType.MAGNETOMETER,
             accelerometerAveragingFilter = LowPassAveragingFilter(),
             estimateEulerAngles = true,
             attitudeAvailableListener = { _, _, _, roll, pitch, yaw, _ ->
@@ -128,8 +128,8 @@ class GeomagneticAttitudeEstimatorTest {
             activity,
             location,
             useAccelerometer = true,
-            accelerometerSensorType = AccelerometerSensorCollector.SensorType.ACCELEROMETER,
-            magnetometerSensorType = MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            accelerometerSensorType = AccelerometerSensorType.ACCELEROMETER,
+            magnetometerSensorType = MagnetometerSensorType.MAGNETOMETER,
             accelerometerAveragingFilter = MeanAveragingFilter(),
             estimateEulerAngles = true,
             attitudeAvailableListener = { _, _, _, roll, pitch, yaw, _ ->
@@ -158,8 +158,8 @@ class GeomagneticAttitudeEstimatorTest {
             activity,
             location,
             useAccelerometer = true,
-            accelerometerSensorType = AccelerometerSensorCollector.SensorType.ACCELEROMETER,
-            magnetometerSensorType = MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            accelerometerSensorType = AccelerometerSensorType.ACCELEROMETER,
+            magnetometerSensorType = MagnetometerSensorType.MAGNETOMETER,
             accelerometerAveragingFilter = MedianAveragingFilter(),
             estimateEulerAngles = true,
             attitudeAvailableListener = { _, _, _, roll, pitch, yaw, _ ->
@@ -188,8 +188,8 @@ class GeomagneticAttitudeEstimatorTest {
             activity,
             location,
             useAccelerometer = true,
-            accelerometerSensorType = AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
-            magnetometerSensorType = MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            accelerometerSensorType = AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
+            magnetometerSensorType = MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED,
             accelerometerAveragingFilter = LowPassAveragingFilter(),
             estimateEulerAngles = true,
             attitudeAvailableListener = { _, _, _, roll, pitch, yaw, _ ->
@@ -218,8 +218,8 @@ class GeomagneticAttitudeEstimatorTest {
             activity,
             location,
             useAccelerometer = true,
-            accelerometerSensorType = AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
-            magnetometerSensorType = MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            accelerometerSensorType = AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
+            magnetometerSensorType = MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED,
             accelerometerAveragingFilter = MeanAveragingFilter(),
             estimateEulerAngles = true,
             attitudeAvailableListener = { _, _, _, roll, pitch, yaw, _ ->
@@ -248,8 +248,8 @@ class GeomagneticAttitudeEstimatorTest {
             activity,
             location,
             useAccelerometer = true,
-            accelerometerSensorType = AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
-            magnetometerSensorType = MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            accelerometerSensorType = AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
+            magnetometerSensorType = MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED,
             accelerometerAveragingFilter = MedianAveragingFilter(),
             estimateEulerAngles = true,
             attitudeAvailableListener = { _, _, _, roll, pitch, yaw, _ ->

@@ -22,8 +22,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatTextView
 import com.irurueta.android.gl.cube.CubeRenderer
 import com.irurueta.android.gl.cube.CubeTextureView
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
+import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorType
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.android.navigation.inertial.estimators.attitude.GeomagneticAttitudeEstimator
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
@@ -68,10 +68,10 @@ class GeomagneticAttitudeEstimatorActivity : AppCompatActivity() {
     private var useWorldMagneticModel = false
 
     private var accelerometerSensorType =
-        AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+        AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
 
     private var magnetometerSensorType =
-        MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED
+        MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED
 
     private var averagingFilterType: String? = null
 
@@ -81,11 +81,11 @@ class GeomagneticAttitudeEstimatorActivity : AppCompatActivity() {
         val extras = intent.extras
         useAccelerometer = extras?.getBoolean(USE_ACCELEROMETER, false) ?: false
         accelerometerSensorType =
-            (extras?.getSerializable(ACCELEROMETER_SENSOR_TYPE) as AccelerometerSensorCollector.SensorType?)
-                ?: AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+            (extras?.getSerializable(ACCELEROMETER_SENSOR_TYPE) as AccelerometerSensorType?)
+                ?: AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
         magnetometerSensorType =
-            (extras?.getSerializable(MAGNETOMETER_SENSOR_TYPE) as MagnetometerSensorCollector.SensorType?)
-                ?: MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED
+            (extras?.getSerializable(MAGNETOMETER_SENSOR_TYPE) as MagnetometerSensorType?)
+                ?: MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED
         averagingFilterType = extras?.getString(ACCELEROMETER_AVERAGING_FILTER_TYPE)
         useWorldMagneticModel = extras?.getBoolean(USE_WORLD_MAGNETIC_MODEL, false) ?: false
 

@@ -56,11 +56,11 @@ class GeomagneticAttitudeEstimatorTest {
         assertEquals(SensorDelay.GAME, estimator.sensorDelay)
         assertTrue(estimator.useAccelerometer)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
             estimator.accelerometerSensorType
         )
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED,
             estimator.magnetometerSensorType
         )
         assertNotNull(estimator.accelerometerAveragingFilter)
@@ -98,8 +98,8 @@ class GeomagneticAttitudeEstimatorTest {
             location,
             SensorDelay.NORMAL,
             useAccelerometer = false,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            AccelerometerSensorType.ACCELEROMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             filter,
             worldMagneticModel,
             timestamp,
@@ -120,11 +120,11 @@ class GeomagneticAttitudeEstimatorTest {
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
         assertFalse(estimator.useAccelerometer)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             estimator.accelerometerSensorType
         )
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             estimator.magnetometerSensorType
         )
         assertSame(filter, estimator.accelerometerAveragingFilter)

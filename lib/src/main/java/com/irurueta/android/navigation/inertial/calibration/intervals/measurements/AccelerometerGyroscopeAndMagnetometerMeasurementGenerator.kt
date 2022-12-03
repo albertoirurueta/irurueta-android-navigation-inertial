@@ -77,14 +77,13 @@ import com.irurueta.units.*
  */
 class AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
     context: Context,
-    accelerometerSensorType: AccelerometerSensorCollector.SensorType =
-        AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+    accelerometerSensorType: AccelerometerSensorType =
+        AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
     accelerometerSensorDelay: SensorDelay = SensorDelay.FASTEST,
-    val gyroscopeSensorType: GyroscopeSensorCollector.SensorType =
-        GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+    val gyroscopeSensorType: GyroscopeSensorType = GyroscopeSensorType.GYROSCOPE_UNCALIBRATED,
     val gyroscopeSensorDelay: SensorDelay = SensorDelay.FASTEST,
-    val magnetometerSensorType: MagnetometerSensorCollector.SensorType =
-        MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+    val magnetometerSensorType: MagnetometerSensorType =
+        MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED,
     val magnetometerSensorDelay: SensorDelay = SensorDelay.FASTEST,
     var initializationStartedListener: OnInitializationStartedListener? = null,
     var initializationCompletedListener: OnInitializationCompletedListener? = null,
@@ -246,13 +245,13 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
      * @param ay acceleration on device y-axis expressed in meters per squared second (m/s^2).
      * @param az acceleration on device z-axis expressed in meters per squared second (m/s^2).
      * @param bx bias on device x-axis expressed in meters per squared second (m/s^2). Only
-     * available when using [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED].
+     * available when using [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED].
      * If available, this value remains constant with calibrated bias value.
      * @param by bias on device y-axis expressed in meters per squared second (m/s^2). Only
-     * available when using [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED].
+     * available when using [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED].
      * If available, this value remains constant with calibrated bias value.
      * @param bz bias on device z-axis expressed in meters per squared second (m/s^2). Only
-     * available when using [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED].
+     * available when using [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED].
      * If available, this value remains constant with calibrated bias value.
      * @param timestamp time in nanoseconds at which the measurement was made. Each measurement
      * will be monotonically increasing using the same time base as

@@ -17,6 +17,7 @@ package com.irurueta.android.navigation.inertial.estimators.attitude
 
 import android.content.Context
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
 import com.irurueta.android.navigation.inertial.collectors.GravitySensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
@@ -50,7 +51,7 @@ class LevelingEstimator private constructor(
     context: Context,
     sensorDelay: SensorDelay,
     useAccelerometer: Boolean,
-    accelerometerSensorType: AccelerometerSensorCollector.SensorType,
+    accelerometerSensorType: AccelerometerSensorType,
     accelerometerAveragingFilter: AveragingFilter,
     estimateCoordinateTransformation: Boolean,
     estimateEulerAngles: Boolean,
@@ -94,8 +95,8 @@ class LevelingEstimator private constructor(
         context: Context,
         sensorDelay: SensorDelay = SensorDelay.GAME,
         useAccelerometer: Boolean = true,
-        accelerometerSensorType: AccelerometerSensorCollector.SensorType =
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+        accelerometerSensorType: AccelerometerSensorType =
+            AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
         accelerometerAveragingFilter: AveragingFilter = LowPassAveragingFilter(),
         estimateCoordinateTransformation: Boolean = false,
         estimateEulerAngles: Boolean = true,

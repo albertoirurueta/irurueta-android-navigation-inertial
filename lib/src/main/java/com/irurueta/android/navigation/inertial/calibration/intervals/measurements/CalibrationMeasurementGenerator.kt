@@ -18,10 +18,7 @@ package com.irurueta.android.navigation.inertial.calibration.intervals.measureme
 import android.content.Context
 import com.irurueta.android.navigation.inertial.calibration.intervals.ErrorReason
 import com.irurueta.android.navigation.inertial.calibration.intervals.Status
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
-import com.irurueta.android.navigation.inertial.collectors.SensorCollector
-import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.navigation.inertial.calibration.TimeIntervalEstimator
 import com.irurueta.navigation.inertial.calibration.TimedBodyKinematics
 import com.irurueta.navigation.inertial.calibration.intervals.TriadStaticIntervalDetector
@@ -47,8 +44,8 @@ import com.irurueta.units.TimeConverter
  */
 abstract class CalibrationMeasurementGenerator<I>(
     val context: Context,
-    val accelerometerSensorType: AccelerometerSensorCollector.SensorType =
-        AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+    val accelerometerSensorType: AccelerometerSensorType =
+        AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
     val accelerometerSensorDelay: SensorDelay = SensorDelay.FASTEST,
     var accuracyChangedListener: SensorCollector.OnAccuracyChangedListener? = null
 ) {
@@ -451,13 +448,13 @@ abstract class CalibrationMeasurementGenerator<I>(
      * @param ay acceleration on device y-axis expressed in meters per squared second (m/s^2).
      * @param az acceleration on device z-axis expressed in meters per squared second (m/s^2).
      * @param bx bias on device x-axis expressed in meters per squared second (m/s^2). Only
-     * available when using [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED].
+     * available when using [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED].
      * If available, this value remains constant with calibrated bias value.
      * @param by bias on device y-axis expressed in meters per squared second (m/s^2). Only
-     * available when using [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED].
+     * available when using [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED].
      * If available, this value remains constant with calibrated bias value.
      * @param bz bias on device z-axis expressed in meters per squared second (m/s^2). Only
-     * available when using [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED].
+     * available when using [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED].
      * If available, this value remains constant with calibrated bias value.
      * @param timestamp time in nanoseconds at which the measurement was made. Each measurement
      * will be monotonically increasing using the same time base as

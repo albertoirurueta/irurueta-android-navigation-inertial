@@ -17,6 +17,7 @@ package com.irurueta.android.navigation.inertial.estimators.attitude
 
 import android.content.Context
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorType
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.frames.CoordinateTransformation
@@ -42,8 +43,7 @@ import com.irurueta.navigation.inertial.calibration.TimeIntervalEstimator
 abstract class BaseRelativeGyroscopeAttitudeEstimator<T : BaseRelativeGyroscopeAttitudeEstimator<T, L>,
         L : BaseRelativeGyroscopeAttitudeEstimator.OnAttitudeAvailableListener<T, L>>(
     val context: Context,
-    val sensorType: GyroscopeSensorCollector.SensorType =
-        GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+    val sensorType: GyroscopeSensorType = GyroscopeSensorType.GYROSCOPE_UNCALIBRATED,
     val sensorDelay: SensorDelay = SensorDelay.GAME,
     val estimateCoordinateTransformation: Boolean = false,
     val estimateEulerAngles: Boolean = true,

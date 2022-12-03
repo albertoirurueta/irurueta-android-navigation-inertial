@@ -17,6 +17,7 @@ package com.irurueta.android.navigation.inertial.calibration.noise
 
 import android.content.Context
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorType
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.navigation.inertial.calibration.noise.AccumulatedAngularSpeedMeasurementNoiseEstimator
 import com.irurueta.units.AngularSpeed
@@ -50,8 +51,7 @@ import kotlin.math.sqrt
  */
 class GyroscopeNormEstimator(
     context: Context,
-    val sensorType: GyroscopeSensorCollector.SensorType =
-        GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+    val sensorType: GyroscopeSensorType = GyroscopeSensorType.GYROSCOPE_UNCALIBRATED,
     sensorDelay: SensorDelay = SensorDelay.FASTEST,
     maxSamples: Int = DEFAULT_MAX_SAMPLES,
     maxDurationMillis: Long = DEFAULT_MAX_DURATION_MILLIS,

@@ -21,6 +21,7 @@ import com.irurueta.algebra.ArrayUtils
 import com.irurueta.algebra.Matrix
 import com.irurueta.algebra.Utils
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
 import com.irurueta.android.navigation.inertial.collectors.GravitySensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
@@ -58,7 +59,7 @@ class AccurateLevelingEstimator private constructor(
     var location: Location,
     sensorDelay: SensorDelay,
     useAccelerometer: Boolean,
-    accelerometerSensorType: AccelerometerSensorCollector.SensorType,
+    accelerometerSensorType: AccelerometerSensorType,
     accelerometerAveragingFilter: AveragingFilter,
     estimateCoordinateTransformation: Boolean,
     estimateEulerAngles: Boolean,
@@ -104,8 +105,8 @@ class AccurateLevelingEstimator private constructor(
         location: Location,
         sensorDelay: SensorDelay = SensorDelay.GAME,
         useAccelerometer: Boolean = true,
-        accelerometerSensorType: AccelerometerSensorCollector.SensorType =
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+        accelerometerSensorType: AccelerometerSensorType =
+            AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
         accelerometerAveragingFilter: AveragingFilter = LowPassAveragingFilter(),
         estimateCoordinateTransformation: Boolean = false,
         estimateEulerAngles: Boolean = true,

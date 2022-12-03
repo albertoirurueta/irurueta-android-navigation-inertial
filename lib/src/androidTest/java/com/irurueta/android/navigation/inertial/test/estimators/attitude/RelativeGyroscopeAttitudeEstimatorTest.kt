@@ -19,7 +19,7 @@ import android.util.Log
 import androidx.test.core.app.ActivityScenario
 import androidx.test.filters.RequiresDevice
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
-import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorType
 import com.irurueta.android.navigation.inertial.estimators.attitude.RelativeGyroscopeAttitudeEstimator
 import com.irurueta.android.navigation.inertial.test.LocationActivity
 import org.junit.Assert.assertNotNull
@@ -55,7 +55,7 @@ class RelativeGyroscopeAttitudeEstimatorTest {
 
         val estimator = RelativeGyroscopeAttitudeEstimator(
             activity,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorType.GYROSCOPE,
             estimateDisplayEulerAngles = true,
             attitudeAvailableListener = { _, _, _, roll, pitch, yaw, _ ->
                 logAttitude(roll, pitch, yaw)
@@ -85,7 +85,7 @@ class RelativeGyroscopeAttitudeEstimatorTest {
 
         val estimator = RelativeGyroscopeAttitudeEstimator(
             activity,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorType.GYROSCOPE_UNCALIBRATED,
             estimateDisplayEulerAngles = true,
             attitudeAvailableListener = { _, _, _, roll, pitch, yaw, _ ->
                 logAttitude(roll, pitch, yaw)

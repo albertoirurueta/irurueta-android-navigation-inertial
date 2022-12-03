@@ -65,11 +65,11 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         // check default values
         assertSame(context, calibrator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
             calibrator.accelerometerSensorType
         )
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorType.GYROSCOPE_UNCALIBRATED,
             calibrator.gyroscopeSensorType
         )
         assertEquals(SensorDelay.FASTEST, calibrator.accelerometerSensorDelay)
@@ -408,8 +408,8 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerAndGyroscopeCalibrator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            AccelerometerSensorType.ACCELEROMETER,
+            GyroscopeSensorType.GYROSCOPE,
             SensorDelay.NORMAL,
             SensorDelay.NORMAL,
             solveCalibrationWhenEnoughMeasurements = false,
@@ -440,11 +440,11 @@ class StaticIntervalAccelerometerAndGyroscopeCalibratorTest {
         // check default values
         assertSame(context, calibrator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             calibrator.accelerometerSensorType
         )
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorType.GYROSCOPE,
             calibrator.gyroscopeSensorType
         )
         assertEquals(SensorDelay.NORMAL, calibrator.accelerometerSensorDelay)

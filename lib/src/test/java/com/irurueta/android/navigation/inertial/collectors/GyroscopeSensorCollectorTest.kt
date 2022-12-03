@@ -39,7 +39,7 @@ class GyroscopeSensorCollectorTest {
         // check values
         assertSame(context, collector.context)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorType.GYROSCOPE_UNCALIBRATED,
             collector.sensorType
         )
         assertEquals(SensorDelay.FASTEST, collector.sensorDelay)
@@ -58,13 +58,13 @@ class GyroscopeSensorCollectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val collector = GyroscopeSensorCollector(
             context,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE
+            GyroscopeSensorType.GYROSCOPE
         )
 
         // check values
         assertSame(context, collector.context)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorType.GYROSCOPE,
             collector.sensorType
         )
         assertEquals(SensorDelay.FASTEST, collector.sensorDelay)
@@ -83,14 +83,14 @@ class GyroscopeSensorCollectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val collector = GyroscopeSensorCollector(
             context,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorType.GYROSCOPE,
             SensorDelay.NORMAL
         )
 
         // check values
         assertSame(context, collector.context)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorType.GYROSCOPE,
             collector.sensorType
         )
         assertEquals(SensorDelay.NORMAL, collector.sensorDelay)
@@ -109,14 +109,14 @@ class GyroscopeSensorCollectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val measurementListener = mockk<GyroscopeSensorCollector.OnMeasurementListener>()
         val collector = GyroscopeSensorCollector(
-            context, GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            context, GyroscopeSensorType.GYROSCOPE,
             SensorDelay.NORMAL, measurementListener
         )
 
         // check values
         assertSame(context, collector.context)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorType.GYROSCOPE,
             collector.sensorType
         )
         assertEquals(SensorDelay.NORMAL, collector.sensorDelay)
@@ -137,14 +137,14 @@ class GyroscopeSensorCollectorTest {
         val accuracyChangedListener =
             mockk<SensorCollector.OnAccuracyChangedListener>()
         val collector = GyroscopeSensorCollector(
-            context, GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            context, GyroscopeSensorType.GYROSCOPE,
             SensorDelay.NORMAL, measurementListener, accuracyChangedListener
         )
 
         // check values
         assertSame(context, collector.context)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorType.GYROSCOPE,
             collector.sensorType
         )
         assertEquals(SensorDelay.NORMAL, collector.sensorDelay)
@@ -201,7 +201,7 @@ class GyroscopeSensorCollectorTest {
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val collector =
-            GyroscopeSensorCollector(contextSpy, GyroscopeSensorCollector.SensorType.GYROSCOPE)
+            GyroscopeSensorCollector(contextSpy, GyroscopeSensorType.GYROSCOPE)
 
         assertSame(sensorMock, collector.sensor)
         verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
@@ -224,7 +224,7 @@ class GyroscopeSensorCollectorTest {
 
         val collector = GyroscopeSensorCollector(
             contextSpy,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED
+            GyroscopeSensorType.GYROSCOPE_UNCALIBRATED
         )
 
         assertSame(sensorMock, collector.sensor)
@@ -245,7 +245,7 @@ class GyroscopeSensorCollectorTest {
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val collector =
-            GyroscopeSensorCollector(contextSpy, GyroscopeSensorCollector.SensorType.GYROSCOPE)
+            GyroscopeSensorCollector(contextSpy, GyroscopeSensorType.GYROSCOPE)
 
         assertFalse(collector.sensorAvailable)
         verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
@@ -264,7 +264,7 @@ class GyroscopeSensorCollectorTest {
 
         val collector = GyroscopeSensorCollector(
             contextSpy,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED
+            GyroscopeSensorType.GYROSCOPE_UNCALIBRATED
         )
 
         assertFalse(collector.sensorAvailable)
@@ -531,7 +531,7 @@ class GyroscopeSensorCollectorTest {
 
         val eventListener = slot.captured
 
-        every { sensorMock.type }.returns(GyroscopeSensorCollector.SensorType.GYROSCOPE.value)
+        every { sensorMock.type }.returns(GyroscopeSensorType.GYROSCOPE.value)
         val event = mockk<SensorEvent>()
         event.sensor = sensorMock
         event.timestamp = System.nanoTime()
@@ -574,7 +574,7 @@ class GyroscopeSensorCollectorTest {
             mockk<GyroscopeSensorCollector.OnMeasurementListener>(relaxUnitFun = true)
         val collector = GyroscopeSensorCollector(
             contextSpy,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorType.GYROSCOPE_UNCALIBRATED,
             measurementListener = measurementListener
         )
         assertTrue(collector.start())
@@ -591,7 +591,7 @@ class GyroscopeSensorCollectorTest {
         val eventListener = slot.captured
 
         every { sensorMock.type }
-            .returns(GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED.value)
+            .returns(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value)
         val event = mockk<SensorEvent>()
         event.sensor = sensorMock
         event.timestamp = System.nanoTime()
@@ -723,7 +723,7 @@ class GyroscopeSensorCollectorTest {
 
         val eventListener = slot.captured
 
-        every { sensorMock.type }.returns(GyroscopeSensorCollector.SensorType.GYROSCOPE.value)
+        every { sensorMock.type }.returns(GyroscopeSensorType.GYROSCOPE.value)
         eventListener.onAccuracyChanged(sensorMock, SensorAccuracy.HIGH.value)
 
         verify(exactly = 1) {
@@ -735,14 +735,14 @@ class GyroscopeSensorCollectorTest {
 
     @Test
     fun sensorType_fromValues_returnsExpected() {
-        assertEquals(2, GyroscopeSensorCollector.SensorType.values().size)
+        assertEquals(2, GyroscopeSensorType.values().size)
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
-            GyroscopeSensorCollector.SensorType.from(Sensor.TYPE_GYROSCOPE)
+            GyroscopeSensorType.GYROSCOPE,
+            GyroscopeSensorType.from(Sensor.TYPE_GYROSCOPE)
         )
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
-            GyroscopeSensorCollector.SensorType.from(Sensor.TYPE_GYROSCOPE_UNCALIBRATED)
+            GyroscopeSensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorType.from(Sensor.TYPE_GYROSCOPE_UNCALIBRATED)
         )
     }
 }

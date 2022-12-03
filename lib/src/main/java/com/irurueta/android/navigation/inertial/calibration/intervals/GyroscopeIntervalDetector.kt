@@ -18,6 +18,7 @@ package com.irurueta.android.navigation.inertial.calibration.intervals
 import android.content.Context
 import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorType
 import com.irurueta.android.navigation.inertial.collectors.SensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.navigation.inertial.calibration.AngularSpeedTriad
@@ -44,8 +45,7 @@ import com.irurueta.units.TimeConverter
  */
 class GyroscopeIntervalDetector(
     context: Context,
-    val sensorType: GyroscopeSensorCollector.SensorType =
-        GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+    val sensorType: GyroscopeSensorType = GyroscopeSensorType.GYROSCOPE_UNCALIBRATED,
     sensorDelay: SensorDelay = SensorDelay.FASTEST,
     initializationStartedListener: OnInitializationStartedListener<GyroscopeIntervalDetector>? = null,
     initializationCompletedListener: OnInitializationCompletedListener<GyroscopeIntervalDetector>? = null,

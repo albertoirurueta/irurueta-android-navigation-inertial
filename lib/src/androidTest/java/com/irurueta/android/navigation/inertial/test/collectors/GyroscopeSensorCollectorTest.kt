@@ -22,6 +22,7 @@ import androidx.test.filters.RequiresDevice
 import androidx.test.platform.app.InstrumentationRegistry
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorType
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import org.junit.Assert.*
 import org.junit.Before
@@ -43,7 +44,7 @@ class GyroscopeSensorCollectorTest {
     fun sensor_whenGyroscopeSensorType_returnsSensor() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val collector =
-            GyroscopeSensorCollector(context, GyroscopeSensorCollector.SensorType.GYROSCOPE)
+            GyroscopeSensorCollector(context, GyroscopeSensorType.GYROSCOPE)
 
         val sensor = collector.sensor
         requireNotNull(sensor)
@@ -57,7 +58,7 @@ class GyroscopeSensorCollectorTest {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val collector = GyroscopeSensorCollector(
             context,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED
+            GyroscopeSensorType.GYROSCOPE_UNCALIBRATED
         )
 
         val sensor = collector.sensor
@@ -70,7 +71,7 @@ class GyroscopeSensorCollectorTest {
     fun sensorAvailable_whenGyroscopeSensorType_returnsTrue() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val collector =
-            GyroscopeSensorCollector(context, GyroscopeSensorCollector.SensorType.GYROSCOPE)
+            GyroscopeSensorCollector(context, GyroscopeSensorType.GYROSCOPE)
 
         assertTrue(collector.sensorAvailable)
     }
@@ -81,7 +82,7 @@ class GyroscopeSensorCollectorTest {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val collector = GyroscopeSensorCollector(
             context,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED
+            GyroscopeSensorType.GYROSCOPE_UNCALIBRATED
         )
 
         assertTrue(collector.sensorAvailable)
@@ -92,7 +93,7 @@ class GyroscopeSensorCollectorTest {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val collector = GyroscopeSensorCollector(
             context,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorType.GYROSCOPE,
             SensorDelay.FASTEST,
             measurementListener = { wx, wy, wz, bx, by, bz, timestamp, accuracy ->
                 assertNull(bx)
@@ -129,7 +130,7 @@ class GyroscopeSensorCollectorTest {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val collector = GyroscopeSensorCollector(
             context,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorType.GYROSCOPE_UNCALIBRATED,
             SensorDelay.FASTEST,
             measurementListener = { wx, wy, wz, bx, by, bz, timestamp, accuracy ->
                 assertNotNull(bx)
@@ -195,14 +196,14 @@ class GyroscopeSensorCollectorTest {
         val wakeUpSensor = sensor.isWakeUpSensor
 
         Log.d(
-            "AccelerometerSensorCollectorTest", "Sensor - fifoMaxEventCount: $fifoMaxEventCount, "
+            "GyroscopeSensorCollectorTest", "Sensor - fifoMaxEventCount: $fifoMaxEventCount, "
                     + "fifoReversedEventCount: $fifoReversedEventCount, "
                     + "highestDirectReportRateLevel: $highestDirectReportRateLevel, "
                     + "highestDirectReportRateLevelName: $highestDirectReportRateLevelName, "
                     + "id: $id, "
                     + "maxDelay: $maxDelay µs, "
                     + "maximumRange: $maximumRange rad/s, "
-                    + "minDelay: $minDelay µa, "
+                    + "minDelay: $minDelay µs, "
                     + "name: $name, "
                     + "power: $power mA, "
                     + "reportingMode: $reportingMode, "

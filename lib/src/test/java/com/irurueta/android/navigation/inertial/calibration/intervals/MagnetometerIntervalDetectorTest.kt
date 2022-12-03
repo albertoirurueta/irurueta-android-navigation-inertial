@@ -1,3 +1,18 @@
+/*
+ * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.irurueta.android.navigation.inertial.calibration.intervals
 
 import android.content.Context
@@ -5,10 +20,7 @@ import android.hardware.Sensor
 import android.os.SystemClock
 import androidx.test.core.app.ApplicationProvider
 import com.irurueta.android.navigation.inertial.callPrivateFuncWithResult
-import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
-import com.irurueta.android.navigation.inertial.collectors.SensorCollector
-import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.getPrivateProperty
 import com.irurueta.android.navigation.inertial.setPrivateProperty
 import com.irurueta.navigation.frames.CoordinateTransformation
@@ -47,7 +59,7 @@ class MagnetometerIntervalDetectorTest {
         // check default values
         assertSame(context, detector.context)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED,
             detector.sensorType
         )
         assertEquals(SensorDelay.FASTEST, detector.sensorDelay)
@@ -239,13 +251,13 @@ class MagnetometerIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(
             context,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER
+            MagnetometerSensorType.MAGNETOMETER
         )
 
         // check default values
         assertSame(context, detector.context)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             detector.sensorType
         )
         assertEquals(SensorDelay.FASTEST, detector.sensorDelay)
@@ -437,14 +449,14 @@ class MagnetometerIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(
             context,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             SensorDelay.NORMAL
         )
 
         // check default values
         assertSame(context, detector.context)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             detector.sensorType
         )
         assertEquals(SensorDelay.NORMAL, detector.sensorDelay)
@@ -638,7 +650,7 @@ class MagnetometerIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(
             context,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             SensorDelay.NORMAL,
             initializationStartedListener
         )
@@ -646,7 +658,7 @@ class MagnetometerIntervalDetectorTest {
         // check default values
         assertSame(context, detector.context)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             detector.sensorType
         )
         assertEquals(SensorDelay.NORMAL, detector.sensorDelay)
@@ -842,7 +854,7 @@ class MagnetometerIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(
             context,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener
@@ -851,7 +863,7 @@ class MagnetometerIntervalDetectorTest {
         // check default values
         assertSame(context, detector.context)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             detector.sensorType
         )
         assertEquals(SensorDelay.NORMAL, detector.sensorDelay)
@@ -1048,7 +1060,7 @@ class MagnetometerIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(
             context,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -1058,7 +1070,7 @@ class MagnetometerIntervalDetectorTest {
         // check default values
         assertSame(context, detector.context)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             detector.sensorType
         )
         assertEquals(SensorDelay.NORMAL, detector.sensorDelay)
@@ -1257,7 +1269,7 @@ class MagnetometerIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(
             context,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -1268,7 +1280,7 @@ class MagnetometerIntervalDetectorTest {
         // check default values
         assertSame(context, detector.context)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             detector.sensorType
         )
         assertEquals(SensorDelay.NORMAL, detector.sensorDelay)
@@ -1469,7 +1481,7 @@ class MagnetometerIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(
             context,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -1481,7 +1493,7 @@ class MagnetometerIntervalDetectorTest {
         // check default values
         assertSame(context, detector.context)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             detector.sensorType
         )
         assertEquals(SensorDelay.NORMAL, detector.sensorDelay)
@@ -1683,7 +1695,7 @@ class MagnetometerIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(
             context,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -1696,7 +1708,7 @@ class MagnetometerIntervalDetectorTest {
         // check default values
         assertSame(context, detector.context)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             detector.sensorType
         )
         assertEquals(SensorDelay.NORMAL, detector.sensorDelay)
@@ -1899,7 +1911,7 @@ class MagnetometerIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(
             context,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -1913,7 +1925,7 @@ class MagnetometerIntervalDetectorTest {
         // check default values
         assertSame(context, detector.context)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             detector.sensorType
         )
         assertEquals(SensorDelay.NORMAL, detector.sensorDelay)
@@ -2117,7 +2129,7 @@ class MagnetometerIntervalDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(
             context,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -2132,7 +2144,7 @@ class MagnetometerIntervalDetectorTest {
         // check default values
         assertSame(context, detector.context)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             detector.sensorType
         )
         assertEquals(SensorDelay.NORMAL, detector.sensorDelay)

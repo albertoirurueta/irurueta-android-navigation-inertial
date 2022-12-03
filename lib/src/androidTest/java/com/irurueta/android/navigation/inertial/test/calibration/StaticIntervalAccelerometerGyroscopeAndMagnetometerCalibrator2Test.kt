@@ -10,9 +10,9 @@ import androidx.test.rule.GrantPermissionRule
 import com.irurueta.android.navigation.inertial.LocationService
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
 import com.irurueta.android.navigation.inertial.calibration.StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
+import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorType
+import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorType
 import com.irurueta.android.navigation.inertial.test.LocationActivity
 import com.irurueta.numerical.robust.RobustEstimatorMethod
 import io.mockk.spyk
@@ -50,9 +50,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val calibrator = buildCalibrator(
             context,
             location,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER
+            MagnetometerSensorType.MAGNETOMETER,
+            GyroscopeSensorType.GYROSCOPE,
+            AccelerometerSensorType.ACCELEROMETER
         )
 
         calibrator.start()
@@ -72,9 +72,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val calibrator = buildCalibrator(
             context,
             location,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+            MagnetometerSensorType.MAGNETOMETER,
+            GyroscopeSensorType.GYROSCOPE,
+            AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
         )
 
         calibrator.start()
@@ -94,9 +94,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val calibrator = buildCalibrator(
             context,
             location,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER
+            MagnetometerSensorType.MAGNETOMETER,
+            GyroscopeSensorType.GYROSCOPE_UNCALIBRATED,
+            AccelerometerSensorType.ACCELEROMETER
         )
 
         calibrator.start()
@@ -116,9 +116,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val calibrator = buildCalibrator(
             context,
             location,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+            MagnetometerSensorType.MAGNETOMETER,
+            GyroscopeSensorType.GYROSCOPE_UNCALIBRATED,
+            AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
         )
 
         calibrator.start()
@@ -138,9 +138,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val calibrator = buildCalibrator(
             context,
             location,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER
+            MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED,
+            GyroscopeSensorType.GYROSCOPE,
+            AccelerometerSensorType.ACCELEROMETER
         )
 
         calibrator.start()
@@ -160,9 +160,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val calibrator = buildCalibrator(
             context,
             location,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+            MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED,
+            GyroscopeSensorType.GYROSCOPE,
+            AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
         )
 
         calibrator.start()
@@ -182,9 +182,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val calibrator = buildCalibrator(
             context,
             location,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER
+            MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED,
+            GyroscopeSensorType.GYROSCOPE_UNCALIBRATED,
+            AccelerometerSensorType.ACCELEROMETER
         )
 
         calibrator.start()
@@ -204,9 +204,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val calibrator = buildCalibrator(
             context,
             location,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+            MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED,
+            GyroscopeSensorType.GYROSCOPE_UNCALIBRATED,
+            AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
         )
 
         calibrator.start()
@@ -253,9 +253,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
     private fun buildCalibrator(
         context: Context,
         location: Location,
-        magnetometerSensorType: MagnetometerSensorCollector.SensorType,
-        gyroscopeSensorType: GyroscopeSensorCollector.SensorType,
-        accelerometerSensorType: AccelerometerSensorCollector.SensorType
+        magnetometerSensorType: MagnetometerSensorType,
+        gyroscopeSensorType: GyroscopeSensorType,
+        accelerometerSensorType: AccelerometerSensorType
     ): StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2 {
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(
             context,

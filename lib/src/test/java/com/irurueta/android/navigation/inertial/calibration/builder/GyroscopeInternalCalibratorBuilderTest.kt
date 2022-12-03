@@ -15,7 +15,6 @@
  */
 package com.irurueta.android.navigation.inertial.calibration.builder
 
-import android.location.Location
 import com.irurueta.algebra.Matrix
 import com.irurueta.android.navigation.inertial.calibration.StaticIntervalGyroscopeCalibrator
 import com.irurueta.navigation.inertial.BodyKinematics
@@ -25,8 +24,6 @@ import com.irurueta.navigation.inertial.calibration.gyroscope.*
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.DefaultGyroscopeQualityScoreMapper
 import com.irurueta.numerical.robust.RobustEstimatorMethod
 import com.irurueta.statistics.UniformRandomizer
-import io.mockk.every
-import io.mockk.mockk
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -383,6 +380,7 @@ class GyroscopeInternalCalibratorBuilderTest {
         builder.robustMethod = null
 
         // check
+        @Suppress("KotlinConstantConditions")
         assertNull(builder.robustMethod)
     }
 
@@ -711,6 +709,7 @@ class GyroscopeInternalCalibratorBuilderTest {
         builder.isGroundTruthInitialBias = true
 
         // check
+        @Suppress("KotlinConstantConditions")
         assertTrue(builder.isGroundTruthInitialBias)
     }
 
@@ -774,6 +773,7 @@ class GyroscopeInternalCalibratorBuilderTest {
         builder.initialBiasX = null
 
         // check
+        @Suppress("KotlinConstantConditions")
         assertNull(builder.initialBiasX)
     }
 
@@ -806,6 +806,7 @@ class GyroscopeInternalCalibratorBuilderTest {
         builder.initialBiasY = null
 
         // check
+        @Suppress("KotlinConstantConditions")
         assertNull(builder.initialBiasY)
     }
 
@@ -838,6 +839,7 @@ class GyroscopeInternalCalibratorBuilderTest {
         builder.initialBiasZ = null
 
         // check
+        @Suppress("KotlinConstantConditions")
         assertNull(builder.initialBiasZ)
     }
 
@@ -1166,6 +1168,7 @@ class GyroscopeInternalCalibratorBuilderTest {
         builder.accelerometerBiasX = null
 
         // check
+        @Suppress("KotlinConstantConditions")
         assertNull(builder.accelerometerBiasX)
     }
 
@@ -1198,6 +1201,7 @@ class GyroscopeInternalCalibratorBuilderTest {
         builder.accelerometerBiasY = null
 
         // check
+        @Suppress("KotlinConstantConditions")
         assertNull(builder.accelerometerBiasY)
     }
 
@@ -1230,6 +1234,7 @@ class GyroscopeInternalCalibratorBuilderTest {
         builder.accelerometerBiasZ = null
 
         // check
+        @Suppress("KotlinConstantConditions")
         assertNull(builder.accelerometerBiasZ)
     }
 
@@ -1496,6 +1501,7 @@ class GyroscopeInternalCalibratorBuilderTest {
         builder.baseNoiseLevel = null
 
         // check
+        @Suppress("KotlinConstantConditions")
         assertNull(builder.baseNoiseLevel)
     }
 

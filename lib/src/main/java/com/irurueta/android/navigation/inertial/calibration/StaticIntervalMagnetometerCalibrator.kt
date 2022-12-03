@@ -23,10 +23,7 @@ import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
 import com.irurueta.android.navigation.inertial.calibration.builder.MagnetometerInternalCalibratorBuilder
 import com.irurueta.android.navigation.inertial.calibration.intervals.measurements.MagnetometerMeasurementGenerator
 import com.irurueta.android.navigation.inertial.calibration.intervals.measurements.SingleSensorCalibrationMeasurementGenerator
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.SensorCollector
-import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.navigation.NavigationException
 import com.irurueta.navigation.inertial.BodyKinematicsAndMagneticFluxDensity
 import com.irurueta.navigation.inertial.calibration.MagneticFluxDensityTriad
@@ -83,8 +80,8 @@ import java.util.*
  */
 class StaticIntervalMagnetometerCalibrator private constructor(
     context: Context,
-    accelerometerSensorType: AccelerometerSensorCollector.SensorType,
-    val magnetometerSensorType: MagnetometerSensorCollector.SensorType,
+    accelerometerSensorType: AccelerometerSensorType,
+    val magnetometerSensorType: MagnetometerSensorType,
     accelerometerSensorDelay: SensorDelay,
     val magnetometerSensorDelay: SensorDelay,
     solveCalibrationWhenEnoughMeasurements: Boolean,
@@ -139,8 +136,8 @@ class StaticIntervalMagnetometerCalibrator private constructor(
      * @param isMagnetometerGroundTruthInitialHardIron true if estimated magnetometer hard iron is
      * assumed to be the true value, false if estimated hard iron is assumed to be only an initial
      * guess. When [magnetometerSensorType] is
-     * [MagnetometerSensorCollector.SensorType.MAGNETOMETER], hard iron guess is zero, otherwise
-     * when it is [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED], hard iron
+     * [MagnetometerSensorType.MAGNETOMETER], hard iron guess is zero, otherwise
+     * when it is [MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED], hard iron
      * guess is the device calibrated values.
      * @param initializationStartedListener listener to notify when initialization starts.
      * @param initializationCompletedListener listener to notify when initialization completes.
@@ -170,10 +167,10 @@ class StaticIntervalMagnetometerCalibrator private constructor(
         location: Location? = null,
         timestamp: Date = Date(),
         worldMagneticModel: WorldMagneticModel? = null,
-        accelerometerSensorType: AccelerometerSensorCollector.SensorType =
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
-        magnetometerSensorType: MagnetometerSensorCollector.SensorType =
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+        accelerometerSensorType: AccelerometerSensorType =
+            AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
+        magnetometerSensorType: MagnetometerSensorType =
+            MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED,
         accelerometerSensorDelay: SensorDelay = SensorDelay.FASTEST,
         magnetometerSensorDelay: SensorDelay = SensorDelay.FASTEST,
         solveCalibrationWhenEnoughMeasurements: Boolean = true,
@@ -338,7 +335,7 @@ class StaticIntervalMagnetometerCalibrator private constructor(
      * Listener for magnetometer sensor collector.
      * This is used to determine device calibration and obtain initial guesses
      * for magnetometer hard iron values (only available if
-     * [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED] is used, otherwise zero
+     * [MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED] is used, otherwise zero
      * hard iron is assumed as an initial guess).
      */
     private val generatorMagnetometerMeasurementListener =
@@ -405,9 +402,9 @@ class StaticIntervalMagnetometerCalibrator private constructor(
      * Gets X-coordinate of hard iron used as an initial guess and expressed in Teslas (T).
      * This value is determined once the calibration starts.
      * If [magnetometerSensorType] is
-     * [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
+     * [MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
      * the value used internally by the device as part of the magnetometer hardware calibration.
-     * If [magnetometerSensorType] is [MagnetometerSensorCollector.SensorType.MAGNETOMETER], then
+     * If [magnetometerSensorType] is [MagnetometerSensorType.MAGNETOMETER], then
      * magnetometer sensor measurements are assumed to be already hard iron compensated, and the
      * initial hard iron is assumed to be zero.
      * If [isMagnetometerGroundTruthInitialHardIron] is true, this is assumed to be the true hard
@@ -422,9 +419,9 @@ class StaticIntervalMagnetometerCalibrator private constructor(
      * Gets Y-coordinate of hard iron used as an initial guess and expressed in Teslas (T).
      * This value is determined once the calibration starts.
      * If [magnetometerSensorType] is
-     * [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
+     * [MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
      * the value used internally by the device as part of the magnetometer hardware calibration.
-     * If [magnetometerSensorType] is [MagnetometerSensorCollector.SensorType.MAGNETOMETER], then
+     * If [magnetometerSensorType] is [MagnetometerSensorType.MAGNETOMETER], then
      * magnetometer sensor measurements are assumed to be already hard iron compensated, and the
      * initial hard iron is assumed to be zero.
      * If [isMagnetometerGroundTruthInitialHardIron] is true, this is assumed to be the true hard
@@ -439,9 +436,9 @@ class StaticIntervalMagnetometerCalibrator private constructor(
      * Gets Y-coordinate of hard iron used as an initial guess and expressed in Teslas (T).
      * This value is determined once the calibration starts.
      * If [magnetometerSensorType] is
-     * [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
+     * [MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
      * the value used internally by the device as part of the magnetometer hardware calibration.
-     * If [magnetometerSensorType] is [MagnetometerSensorCollector.SensorType.MAGNETOMETER], then
+     * If [magnetometerSensorType] is [MagnetometerSensorType.MAGNETOMETER], then
      * magnetometer sensor measurements are assumed to be already hard iron compensated, and the
      * initial hard iron is assumed to be zero.
      * If [isMagnetometerGroundTruthInitialHardIron] is true, this is assumed to be the true hard
@@ -456,9 +453,9 @@ class StaticIntervalMagnetometerCalibrator private constructor(
      * Gets X-coordinate of hard iron used as an initial guess.
      * This value is determined once the calibration starts.
      * If [magnetometerSensorType] is
-     * [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
+     * [MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
      * the value used internally by the device as part of the magnetometer hardware calibration.
-     * If [magnetometerSensorType] is [MagnetometerSensorCollector.SensorType.MAGNETOMETER], then
+     * If [magnetometerSensorType] is [MagnetometerSensorType.MAGNETOMETER], then
      * magnetometer sensor measurements are assumed to be already hard iron compensated, and the
      * initial hard iron is assumed to be zero.
      * If [isMagnetometerGroundTruthInitialHardIron] is true, this is assumed to be the true hard
@@ -476,9 +473,9 @@ class StaticIntervalMagnetometerCalibrator private constructor(
      * Gets X-coordinate of hard iron used as an initial guess.
      * This value is determined once the calibration starts.
      * If [magnetometerSensorType] is
-     * [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
+     * [MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
      * the value used internally by the device as part of the magnetometer hardware calibration.
-     * If [magnetometerSensorType] is [MagnetometerSensorCollector.SensorType.MAGNETOMETER], then
+     * If [magnetometerSensorType] is [MagnetometerSensorType.MAGNETOMETER], then
      * magnetometer sensor measurements are assumed to be already hard iron compensated, and the
      * initial hard iron is assumed to be zero.
      * If [isMagnetometerGroundTruthInitialHardIron] is true, this is assumed to be the true hard
@@ -504,9 +501,9 @@ class StaticIntervalMagnetometerCalibrator private constructor(
      * Gets Y-coordinate of hard iron used as an initial guess.
      * This value is determined once the calibration starts.
      * If [magnetometerSensorType] is
-     * [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
+     * [MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
      * the value used internally by the device as part of the magnetometer hardware calibration.
-     * If [magnetometerSensorType] is [MagnetometerSensorCollector.SensorType.MAGNETOMETER], then
+     * If [magnetometerSensorType] is [MagnetometerSensorType.MAGNETOMETER], then
      * magnetometer sensor measurements are assumed to be already hard iron compensated, and the
      * initial hard iron is assumed to be zero.
      * If [isMagnetometerGroundTruthInitialHardIron] is true, this is assumed to be the true hard
@@ -524,9 +521,9 @@ class StaticIntervalMagnetometerCalibrator private constructor(
      * Gets Y-coordinate of hard iron used as an initial guess.
      * This value is determined once the calibration starts.
      * If [magnetometerSensorType] is
-     * [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
+     * [MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
      * the value used internally by the device as part of the magnetometer hardware calibration.
-     * If [magnetometerSensorType] is [MagnetometerSensorCollector.SensorType.MAGNETOMETER], then
+     * If [magnetometerSensorType] is [MagnetometerSensorType.MAGNETOMETER], then
      * magnetometer sensor measurements are assumed to be already hard iron compensated, and the
      * initial hard iron is assumed to be zero.
      * If [isMagnetometerGroundTruthInitialHardIron] is true, this is assumed to be the true hard
@@ -552,9 +549,9 @@ class StaticIntervalMagnetometerCalibrator private constructor(
      * Gets Z-coordinate of hard iron used as an initial guess.
      * This value is determined once the calibration starts.
      * If [magnetometerSensorType] is
-     * [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
+     * [MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
      * the value used internally by the device as part of the magnetometer hardware calibration.
-     * If [magnetometerSensorType] is [MagnetometerSensorCollector.SensorType.MAGNETOMETER], then
+     * If [magnetometerSensorType] is [MagnetometerSensorType.MAGNETOMETER], then
      * magnetometer sensor measurements are assumed to be already hard iron compensated, and the
      * initial hard iron is assumed to be zero.
      * If [isMagnetometerGroundTruthInitialHardIron] is true, this is assumed to be the true hard
@@ -572,9 +569,9 @@ class StaticIntervalMagnetometerCalibrator private constructor(
      * Gets Z-coordinate of hard iron used as an initial guess.
      * This value is determined once the calibration starts.
      * If [magnetometerSensorType] is
-     * [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
+     * [MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
      * the value used internally by the device as part of the magnetometer hardware calibration.
-     * If [magnetometerSensorType] is [MagnetometerSensorCollector.SensorType.MAGNETOMETER], then
+     * If [magnetometerSensorType] is [MagnetometerSensorType.MAGNETOMETER], then
      * magnetometer sensor measurements are assumed to be already hard iron compensated, and the
      * initial hard iron is assumed to be zero.
      * If [isMagnetometerGroundTruthInitialHardIron] is true, this is assumed to be the true hard
@@ -600,9 +597,9 @@ class StaticIntervalMagnetometerCalibrator private constructor(
      * Gets initial hard iron used as an initial guess.
      * This value is determined once the calibration starts.
      * If [magnetometerSensorType] is
-     * [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
+     * [MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
      * the value used internally by the device as part of the magnetometer hardware calibration.
-     * If [magnetometerSensorType] is [MagnetometerSensorCollector.SensorType.MAGNETOMETER], then
+     * If [magnetometerSensorType] is [MagnetometerSensorType.MAGNETOMETER], then
      * magnetometer sensor measurements are assumed to be already hard iron compensated, and the
      * initial hard iron is assumed to be zero.
      * If [isMagnetometerGroundTruthInitialHardIron] is true, this is assumed to be the true hard
@@ -631,9 +628,9 @@ class StaticIntervalMagnetometerCalibrator private constructor(
      * Gets initial hard iron used as an initial guess.
      * This value is determined once the calibration starts.
      * If [magnetometerSensorType] is
-     * [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
+     * [MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED], this will be equal to
      * the value used internally by the device as part of the magnetometer hardware calibration.
-     * If [magnetometerSensorType] is [MagnetometerSensorCollector.SensorType.MAGNETOMETER], then
+     * If [magnetometerSensorType] is [MagnetometerSensorType.MAGNETOMETER], then
      * magnetometer sensor measurements are assumed to be already hard iron compensated, and the
      * initial hard iron is assumed to be zero.
      * If [isMagnetometerGroundTruthInitialHardIron] is true, this is assumed to be the true hard
@@ -1627,16 +1624,16 @@ class StaticIntervalMagnetometerCalibrator private constructor(
     /**
      * Updates initial hard iron values when first magnetometer measurement is received, so
      * that hardware calibrated biases are retrieved if
-     * [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED] is used.
+     * [MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED] is used.
      *
      * @param hardIronX hard iron on device x-axis expressed in Teslas (T). Only
-     * available when using [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED].
+     * available when using [MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED].
      * If available, this value remains constant with calibrated bias value.
      * @param hardIronY hard iron on device y-axis expressed in Teslas (T). Only
-     * available when using [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED].
+     * available when using [MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED].
      * If available, this value remains constant with calibrated bias value.
      * @param hardIronZ hard iron on device y-axis expressed in Teslas (T). Only
-     * available when using [MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED].
+     * available when using [MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED].
      * If available, this value remains constant with calibrated bias value.
      */
     private fun updateMagnetometerInitialHardIrons(

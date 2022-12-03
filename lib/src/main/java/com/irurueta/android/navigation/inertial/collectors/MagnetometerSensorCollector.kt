@@ -22,6 +22,8 @@ import android.hardware.SensorEventListener
 
 /**
  * Manages and collects magnetometer sensor measurements.
+ * This collector does not have an internal buffer, and consequently out of order measurements can
+ * be notified.
  *
  * @property context Android context.
  * @property sensorType One of the supported magnetometer sensor types.
@@ -32,7 +34,7 @@ import android.hardware.SensorEventListener
  */
 class MagnetometerSensorCollector(
     context: Context,
-    val sensorType: SensorType = SensorType.MAGNETOMETER_UNCALIBRATED,
+    val sensorType: MagnetometerSensorType = MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED,
     sensorDelay: SensorDelay = SensorDelay.FASTEST,
     var measurementListener: OnMeasurementListener? = null,
     accuracyChangedListener: OnAccuracyChangedListener? = null
@@ -46,7 +48,7 @@ class MagnetometerSensorCollector(
             if (event == null) {
                 return
             }
-            val sensorType = SensorType.from(event.sensor.type) ?: return
+            val sensorType = MagnetometerSensorType.from(event.sensor.type) ?: return
 
             val sensorAccuracy = SensorAccuracy.from(event.accuracy)
             val timestamp = event.timestamp
@@ -57,7 +59,7 @@ class MagnetometerSensorCollector(
             var hardIronX: Float? = null
             var hardIronY: Float? = null
             var hardIronZ: Float? = null
-            if (sensorType == SensorType.MAGNETOMETER_UNCALIBRATED) {
+            if (sensorType == MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED) {
                 hardIronX = event.values[3]
                 hardIronY = event.values[4]
                 hardIronZ = event.values[5]
@@ -79,7 +81,7 @@ class MagnetometerSensorCollector(
             if (sensor == null) {
                 return
             }
-            if (SensorType.from(sensor.type) == null) {
+            if (MagnetometerSensorType.from(sensor.type) == null) {
                 return
             }
 
@@ -96,38 +98,6 @@ class MagnetometerSensorCollector(
     override val sensor: Sensor? by lazy { sensorManager?.getDefaultSensor(sensorType.value) }
 
     /**
-     * Indicates the magnetometer types supported by this magnetometer sensor.
-     *
-     * @property value numerical value representing magnetometer sensor type.
-     */
-
-    enum class SensorType(val value: Int) {
-        /**
-         * Magnetometer.
-         * Returns magnetic field measurements.
-         */
-        MAGNETOMETER(Sensor.TYPE_MAGNETIC_FIELD),
-
-        /**
-         * Uncalibrated magnetometer.
-         * Returns magnetic field measurements without hard-iron bias correction.
-         */
-        MAGNETOMETER_UNCALIBRATED(Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED);
-
-        companion object {
-            /**
-             * Gets magnetometer sensor type based on provided numerical value.
-             *
-             * @param value numerical value representing magnetometer sensor type.
-             * @return corresponding sensor type as an enum or null if value has no match.
-             */
-            fun from(value: Int): SensorType? {
-                return values().find { it.value == value }
-            }
-        }
-    }
-
-    /**
      * Interface to notify when a new magnetometer measurement is available.
      */
     fun interface OnMeasurementListener {
@@ -141,13 +111,16 @@ class MagnetometerSensorCollector(
          * @param bz magnetic field on device z-axis expressed in micro-Teslas (µT) and in ENU
          * coordinates system.
          * @param hardIronX hard iron on device x-axis expressed in micro-Teslas (µT) and in ENU
-         * coordinates system. Only available when using [SensorType.MAGNETOMETER_UNCALIBRATED].
+         * coordinates system. Only available when using
+         * [MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED].
          * If available, this value remains constant with calibrated bias value.
          * @param hardIronY hard iron on device y-axis expressed in micro-Teslas (µT) and in ENU
-         * coordinates system. Only available when using [SensorType.MAGNETOMETER_UNCALIBRATED].
+         * coordinates system. Only available when using
+         * [MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED].
          * If available, this value remains constant with calibrated bias value.
          * @param hardIronZ hard iron on device y-axis expressed in micro-Teslas (µT) and in ENU
-         * coordinates system. Only available when using [SensorType.MAGNETOMETER_UNCALIBRATED].
+         * coordinates system. Only available when using
+         * [MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED].
          * If available, this value remains constant with calibrated bias value.
          * @param timestamp time in nanoseconds at which the measurement was made. Each measurement
          * will be monotonically increasing using the same time base as

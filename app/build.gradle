@@ -6,15 +6,16 @@ plugins {
     id 'org.jetbrains.dokka'
     id 'jacoco'
     id 'org.sonarqube'
+    //id("org.jetbrains.kotlinx.kover") version "0.6.1"
 }
 
 android {
-    compileSdk 32
+    compileSdk 33
 
     defaultConfig {
         applicationId "com.irurueta.android.navigation.inertial"
         minSdk 21
-        targetSdk 32
+        targetSdk 33
         versionCode 1
         versionName "1.0.0"
 

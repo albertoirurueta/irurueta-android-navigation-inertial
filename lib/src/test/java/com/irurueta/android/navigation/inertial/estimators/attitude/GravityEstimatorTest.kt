@@ -18,10 +18,7 @@ package com.irurueta.android.navigation.inertial.estimators.attitude
 import android.content.Context
 import android.os.SystemClock
 import androidx.test.core.app.ApplicationProvider
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.GravitySensorCollector
-import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
-import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.MeanAveragingFilter
@@ -47,7 +44,7 @@ class GravityEstimatorTest {
         assertEquals(SensorDelay.FASTEST, estimator.sensorDelay)
         assertFalse(estimator.useAccelerometer)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
             estimator.accelerometerSensorType
         )
         assertNull(estimator.estimationListener)
@@ -70,7 +67,7 @@ class GravityEstimatorTest {
             context,
             SensorDelay.NORMAL,
             useAccelerometer = true,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             estimationListener,
             accelerometerAveragingFilter,
             accelerometerMeasurementListener,
@@ -82,7 +79,7 @@ class GravityEstimatorTest {
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
         assertTrue(estimator.useAccelerometer)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             estimator.accelerometerSensorType
         )
         assertSame(estimationListener, estimator.estimationListener)

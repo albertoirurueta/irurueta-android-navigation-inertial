@@ -23,10 +23,7 @@ import com.irurueta.android.navigation.inertial.calibration.intervals.ErrorReaso
 import com.irurueta.android.navigation.inertial.calibration.intervals.Status
 import com.irurueta.android.navigation.inertial.callPrivateFunc
 import com.irurueta.android.navigation.inertial.callPrivateFuncWithResult
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
-import com.irurueta.android.navigation.inertial.collectors.SensorCollector
-import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.getPrivateProperty
 import com.irurueta.android.navigation.inertial.setPrivateProperty
 import com.irurueta.navigation.inertial.BodyKinematics
@@ -55,7 +52,7 @@ class AccelerometerMeasurementGeneratorTest {
         // check default values
         assertSame(context, generator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.FASTEST, generator.accelerometerSensorDelay)
@@ -140,13 +137,13 @@ class AccelerometerMeasurementGeneratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerMeasurementGenerator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER
+            AccelerometerSensorType.ACCELEROMETER
         )
 
         // check default values
         assertSame(context, generator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.FASTEST, generator.accelerometerSensorDelay)
@@ -231,14 +228,14 @@ class AccelerometerMeasurementGeneratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerMeasurementGenerator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             SensorDelay.NORMAL
         )
 
         // check default values
         assertSame(context, generator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
@@ -325,7 +322,7 @@ class AccelerometerMeasurementGeneratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerMeasurementGenerator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
             initializationStartedListener
         )
@@ -333,7 +330,7 @@ class AccelerometerMeasurementGeneratorTest {
         // check default values
         assertSame(context, generator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
@@ -422,7 +419,7 @@ class AccelerometerMeasurementGeneratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerMeasurementGenerator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener
@@ -431,7 +428,7 @@ class AccelerometerMeasurementGeneratorTest {
         // check default values
         assertSame(context, generator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
@@ -522,7 +519,7 @@ class AccelerometerMeasurementGeneratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerMeasurementGenerator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -532,7 +529,7 @@ class AccelerometerMeasurementGeneratorTest {
         // check default values
         assertSame(context, generator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
@@ -625,7 +622,7 @@ class AccelerometerMeasurementGeneratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerMeasurementGenerator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -636,7 +633,7 @@ class AccelerometerMeasurementGeneratorTest {
         // check default values
         assertSame(context, generator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
@@ -731,7 +728,7 @@ class AccelerometerMeasurementGeneratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerMeasurementGenerator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -743,7 +740,7 @@ class AccelerometerMeasurementGeneratorTest {
         // check default values
         assertSame(context, generator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
@@ -840,7 +837,7 @@ class AccelerometerMeasurementGeneratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerMeasurementGenerator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -853,7 +850,7 @@ class AccelerometerMeasurementGeneratorTest {
         // check default values
         assertSame(context, generator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
@@ -952,7 +949,7 @@ class AccelerometerMeasurementGeneratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerMeasurementGenerator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -966,7 +963,7 @@ class AccelerometerMeasurementGeneratorTest {
         // check default values
         assertSame(context, generator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
@@ -1067,7 +1064,7 @@ class AccelerometerMeasurementGeneratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerMeasurementGenerator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -1082,7 +1079,7 @@ class AccelerometerMeasurementGeneratorTest {
         // check default values
         assertSame(context, generator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
@@ -1185,7 +1182,7 @@ class AccelerometerMeasurementGeneratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerMeasurementGenerator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -1201,7 +1198,7 @@ class AccelerometerMeasurementGeneratorTest {
         // check default values
         assertSame(context, generator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
@@ -1306,7 +1303,7 @@ class AccelerometerMeasurementGeneratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerMeasurementGenerator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -1323,7 +1320,7 @@ class AccelerometerMeasurementGeneratorTest {
         // check default values
         assertSame(context, generator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)
@@ -1429,7 +1426,7 @@ class AccelerometerMeasurementGeneratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerMeasurementGenerator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             SensorDelay.NORMAL,
             initializationStartedListener,
             initializationCompletedListener,
@@ -1447,7 +1444,7 @@ class AccelerometerMeasurementGeneratorTest {
         // check default values
         assertSame(context, generator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             generator.accelerometerSensorType
         )
         assertEquals(SensorDelay.NORMAL, generator.accelerometerSensorDelay)

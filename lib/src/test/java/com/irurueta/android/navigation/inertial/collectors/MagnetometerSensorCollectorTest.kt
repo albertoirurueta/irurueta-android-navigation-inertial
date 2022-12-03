@@ -39,7 +39,7 @@ class MagnetometerSensorCollectorTest {
         // check values
         assertSame(context, collector.context)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED,
             collector.sensorType
         )
         assertEquals(SensorDelay.FASTEST, collector.sensorDelay)
@@ -58,13 +58,13 @@ class MagnetometerSensorCollectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val collector = MagnetometerSensorCollector(
             context,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER
+            MagnetometerSensorType.MAGNETOMETER
         )
 
         // check values
         assertSame(context, collector.context)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             collector.sensorType
         )
         assertEquals(SensorDelay.FASTEST, collector.sensorDelay)
@@ -83,14 +83,14 @@ class MagnetometerSensorCollectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val collector = MagnetometerSensorCollector(
             context,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             SensorDelay.NORMAL
         )
 
         // check values
         assertSame(context, collector.context)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             collector.sensorType
         )
         assertEquals(SensorDelay.NORMAL, collector.sensorDelay)
@@ -110,7 +110,7 @@ class MagnetometerSensorCollectorTest {
         val measurementListener = mockk<MagnetometerSensorCollector.OnMeasurementListener>()
         val collector = MagnetometerSensorCollector(
             context,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             SensorDelay.NORMAL,
             measurementListener
         )
@@ -118,7 +118,7 @@ class MagnetometerSensorCollectorTest {
         // check values
         assertSame(context, collector.context)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             collector.sensorType
         )
         assertEquals(SensorDelay.NORMAL, collector.sensorDelay)
@@ -139,7 +139,7 @@ class MagnetometerSensorCollectorTest {
         val accuracyChangedListener = mockk<SensorCollector.OnAccuracyChangedListener>()
         val collector = MagnetometerSensorCollector(
             context,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             SensorDelay.NORMAL,
             measurementListener,
             accuracyChangedListener
@@ -148,7 +148,7 @@ class MagnetometerSensorCollectorTest {
         // check values
         assertSame(context, collector.context)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             collector.sensorType
         )
         assertEquals(SensorDelay.NORMAL, collector.sensorDelay)
@@ -206,7 +206,7 @@ class MagnetometerSensorCollectorTest {
 
         val collector = MagnetometerSensorCollector(
             contextSpy,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER
+            MagnetometerSensorType.MAGNETOMETER
         )
 
         assertSame(sensorMock, collector.sensor)
@@ -230,7 +230,7 @@ class MagnetometerSensorCollectorTest {
 
         val collector = MagnetometerSensorCollector(
             contextSpy,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED
+            MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED
         )
 
         assertSame(sensorMock, collector.sensor)
@@ -252,7 +252,7 @@ class MagnetometerSensorCollectorTest {
 
         val collector = MagnetometerSensorCollector(
             contextSpy,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER
+            MagnetometerSensorType.MAGNETOMETER
         )
 
         assertFalse(collector.sensorAvailable)
@@ -275,7 +275,7 @@ class MagnetometerSensorCollectorTest {
 
         val collector = MagnetometerSensorCollector(
             contextSpy,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED
+            MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED
         )
 
         assertTrue(collector.sensorAvailable)
@@ -499,7 +499,7 @@ class MagnetometerSensorCollectorTest {
         val eventListener = slot.captured
 
         every { sensorMock.type }
-            .returns(MagnetometerSensorCollector.SensorType.MAGNETOMETER.value)
+            .returns(MagnetometerSensorType.MAGNETOMETER.value)
         val event = mockk<SensorEvent>()
         event.sensor = sensorMock
         event.timestamp = System.nanoTime()
@@ -546,7 +546,7 @@ class MagnetometerSensorCollectorTest {
         val eventListener = slot.captured
 
         every { sensorMock.type }
-            .returns(MagnetometerSensorCollector.SensorType.MAGNETOMETER.value)
+            .returns(MagnetometerSensorType.MAGNETOMETER.value)
         val event = mockk<SensorEvent>()
         event.sensor = sensorMock
         event.timestamp = System.nanoTime()
@@ -588,7 +588,7 @@ class MagnetometerSensorCollectorTest {
             mockk<MagnetometerSensorCollector.OnMeasurementListener>(relaxUnitFun = true)
         val collector = MagnetometerSensorCollector(
             contextSpy,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED,
             measurementListener = measurementListener
         )
         assertTrue(collector.start())
@@ -605,7 +605,7 @@ class MagnetometerSensorCollectorTest {
         val eventListener = slot.captured
 
         every { sensorMock.type }
-            .returns(MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED.value)
+            .returns(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value)
         val event = mockk<SensorEvent>()
         event.sensor = sensorMock
         event.timestamp = System.nanoTime()
@@ -743,7 +743,7 @@ class MagnetometerSensorCollectorTest {
         val eventListener = slot.captured
 
         every { sensorMock.type }
-            .returns(MagnetometerSensorCollector.SensorType.MAGNETOMETER.value)
+            .returns(MagnetometerSensorType.MAGNETOMETER.value)
         eventListener.onAccuracyChanged(sensorMock, SensorAccuracy.HIGH.value)
 
         verify(exactly = 1) {
@@ -755,14 +755,14 @@ class MagnetometerSensorCollectorTest {
 
     @Test
     fun magnetometerSensorType_fromValues_returnsExpected() {
-        assertEquals(2, MagnetometerSensorCollector.SensorType.values().size)
+        assertEquals(2, MagnetometerSensorType.values().size)
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
-            MagnetometerSensorCollector.SensorType.from(Sensor.TYPE_MAGNETIC_FIELD)
+            MagnetometerSensorType.MAGNETOMETER,
+            MagnetometerSensorType.from(Sensor.TYPE_MAGNETIC_FIELD)
         )
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
-            MagnetometerSensorCollector.SensorType.from(Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED)
+            MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED,
+            MagnetometerSensorType.from(Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED)
         )
     }
 }

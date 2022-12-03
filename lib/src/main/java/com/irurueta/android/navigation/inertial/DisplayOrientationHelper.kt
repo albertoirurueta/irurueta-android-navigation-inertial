@@ -20,8 +20,16 @@ import android.os.Build
 import android.view.Surface
 import android.view.WindowManager
 
+/**
+ * Helper class to obtain UI display orientation respect to the device screen.
+ */
 object DisplayOrientationHelper {
 
+    /**
+     * Gets UI display orientation respect to the device screen.
+     *
+     * @return orientation expressed in degrees. Can be either 0.0, 90.0, 180.0 or 270.0 degrees.
+     */
     @Suppress("DEPRECATION")
     fun getDisplayRotationDegrees(context: Context): Double {
         // Device orientation (portrait, landscape, etc)
@@ -44,6 +52,12 @@ object DisplayOrientationHelper {
         }
     }
 
+    /**
+     * Gets UI display orientation respect to the device screen.
+     *
+     * @return orientation expressed in radians.
+     * @see [getDisplayRotationDegrees]
+     */
     fun getDisplayRotationRadians(context: Context): Double {
         return Math.toRadians(getDisplayRotationDegrees(context))
     }

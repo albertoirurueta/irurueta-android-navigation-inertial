@@ -20,7 +20,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatTextView
 import com.irurueta.android.gl.cube.CubeRenderer
 import com.irurueta.android.gl.cube.CubeTextureView
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.android.navigation.inertial.estimators.attitude.LevelingEstimator
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
@@ -53,8 +53,8 @@ class LevelingEstimatorActivity : AppCompatActivity() {
         val extras = intent.extras
         val useAccelerometer = extras?.getBoolean(USE_ACCELEROMETER, false) ?: false
         val accelerometerSensorType =
-            (extras?.getSerializable(ACCELEROMETER_SENSOR_TYPE) as AccelerometerSensorCollector.SensorType?)
-                ?: AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+            (extras?.getSerializable(ACCELEROMETER_SENSOR_TYPE) as AccelerometerSensorType?)
+                ?: AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
         val averagingFilterType = extras?.getString(AVERAGING_FILTER_TYPE)
         val averagingFilter = buildAveragingFilter(averagingFilterType)
 

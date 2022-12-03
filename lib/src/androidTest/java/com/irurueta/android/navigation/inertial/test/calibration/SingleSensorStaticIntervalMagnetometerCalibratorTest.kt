@@ -22,7 +22,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
 import com.irurueta.android.navigation.inertial.calibration.SingleSensorStaticIntervalMagnetometerCalibrator
-import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorType
 import com.irurueta.numerical.robust.RobustEstimatorMethod
 import org.junit.Before
 import org.junit.Rule
@@ -52,7 +52,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
     fun startAndStop_whenMagnetometerSensor_completesCalibration() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val calibrator =
-            buildCalibrator(context, MagnetometerSensorCollector.SensorType.MAGNETOMETER)
+            buildCalibrator(context, MagnetometerSensorType.MAGNETOMETER)
 
         calibrator.start()
 
@@ -69,7 +69,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val calibrator = buildCalibrator(
             context,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED
+            MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED
         )
 
         calibrator.start()
@@ -83,7 +83,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
 
     private fun buildCalibrator(
         context: Context,
-        sensorType: MagnetometerSensorCollector.SensorType
+        sensorType: MagnetometerSensorType
     ): SingleSensorStaticIntervalMagnetometerCalibrator {
         val calibrator = SingleSensorStaticIntervalMagnetometerCalibrator(
             context,

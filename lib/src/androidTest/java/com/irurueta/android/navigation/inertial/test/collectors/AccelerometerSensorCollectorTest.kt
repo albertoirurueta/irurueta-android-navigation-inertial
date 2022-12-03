@@ -22,6 +22,7 @@ import androidx.test.filters.RequiresDevice
 import androidx.test.platform.app.InstrumentationRegistry
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import org.junit.Assert.*
 import org.junit.Before
@@ -44,7 +45,7 @@ class AccelerometerSensorCollectorTest {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val collector = AccelerometerSensorCollector(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER
+            AccelerometerSensorType.ACCELEROMETER
         )
 
         val sensor = collector.sensor
@@ -59,7 +60,7 @@ class AccelerometerSensorCollectorTest {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val collector = AccelerometerSensorCollector(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+            AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
         )
 
         val sensor = collector.sensor
@@ -73,7 +74,7 @@ class AccelerometerSensorCollectorTest {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val collector = AccelerometerSensorCollector(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER
+            AccelerometerSensorType.ACCELEROMETER
         )
 
         assertTrue(collector.sensorAvailable)
@@ -85,7 +86,7 @@ class AccelerometerSensorCollectorTest {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val collector = AccelerometerSensorCollector(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+            AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
         )
 
         assertTrue(collector.sensorAvailable)
@@ -96,7 +97,7 @@ class AccelerometerSensorCollectorTest {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val collector = AccelerometerSensorCollector(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             SensorDelay.FASTEST,
             measurementListener = { ax, ay, az, bx, by, bz, timestamp, accuracy ->
                 assertNull(bx)
@@ -133,7 +134,7 @@ class AccelerometerSensorCollectorTest {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val collector = AccelerometerSensorCollector(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
             SensorDelay.FASTEST,
             measurementListener = { ax, ay, az, bx, by, bz, timestamp, accuracy ->
                 assertNotNull(bx)
@@ -206,7 +207,7 @@ class AccelerometerSensorCollectorTest {
                     + "id: $id, "
                     + "maxDelay: $maxDelay µs, "
                     + "maximumRange: $maximumRange m/s^2, "
-                    + "minDelay: $minDelay µa, "
+                    + "minDelay: $minDelay µs, "
                     + "name: $name, "
                     + "power: $power mA, "
                     + "reportingMode: $reportingMode, "

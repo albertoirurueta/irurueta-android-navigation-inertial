@@ -18,6 +18,7 @@ package com.irurueta.android.navigation.inertial.estimators.attitude
 import android.content.Context
 import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
 import com.irurueta.android.navigation.inertial.collectors.GravitySensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
@@ -27,10 +28,10 @@ import com.irurueta.navigation.inertial.calibration.AccelerationTriad
 /**
  * Estimates sensed specific force component associated to gravity by either using the OS gravity
  * sensor or by low-pass filtering accelerometer measurements.
- * It must be noticed that usage of [AccelerometerSensorCollector.SensorType.ACCELEROMETER] is
+ * It must be noticed that usage of [AccelerometerSensorType.ACCELEROMETER] is
  * discouraged for posing purposes if [useAccelerometer] is enabled, as it will yield poor gravity
  * estimation values.
- * Instead either [AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED] must be used
+ * Instead either [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED] must be used
  * or [useAccelerometer] must be disabled to use gravity sensor.
  *
  * @property context Android context.
@@ -50,8 +51,8 @@ class GravityEstimator(
     val context: Context,
     val sensorDelay: SensorDelay = SensorDelay.FASTEST,
     val useAccelerometer: Boolean = false,
-    val accelerometerSensorType: AccelerometerSensorCollector.SensorType =
-        AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+    val accelerometerSensorType: AccelerometerSensorType =
+        AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
     var estimationListener: OnEstimationListener? = null,
     val accelerometerAveragingFilter: AveragingFilter = LowPassAveragingFilter(),
     var accelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? = null,

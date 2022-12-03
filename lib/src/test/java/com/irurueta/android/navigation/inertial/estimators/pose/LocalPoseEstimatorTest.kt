@@ -58,15 +58,15 @@ class LocalPoseEstimatorTest {
         assertEquals(SensorDelay.GAME, estimator.sensorDelay)
         assertFalse(estimator.useAccelerometerForAttitudeEstimation)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
             estimator.accelerometerSensorType
         )
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+            GyroscopeSensorType.GYROSCOPE_UNCALIBRATED,
             estimator.gyroscopeSensorType
         )
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED,
             estimator.magnetometerSensorType
         )
         assertNotNull(estimator.accelerometerAveragingFilter)
@@ -134,9 +134,9 @@ class LocalPoseEstimatorTest {
             initialVelocity,
             SensorDelay.NORMAL,
             useAccelerometerForAttitudeEstimation = true,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            AccelerometerSensorType.ACCELEROMETER,
+            GyroscopeSensorType.GYROSCOPE,
+            MagnetometerSensorType.MAGNETOMETER,
             accelerometerAveragingFilter,
             worldMagneticModel,
             timestamp,
@@ -159,15 +159,15 @@ class LocalPoseEstimatorTest {
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
         assertTrue(estimator.useAccelerometerForAttitudeEstimation)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             estimator.accelerometerSensorType
         )
         assertEquals(
-            GyroscopeSensorCollector.SensorType.GYROSCOPE,
+            GyroscopeSensorType.GYROSCOPE,
             estimator.gyroscopeSensorType
         )
         assertEquals(
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             estimator.magnetometerSensorType
         )
         assertSame(accelerometerAveragingFilter, estimator.accelerometerAveragingFilter)

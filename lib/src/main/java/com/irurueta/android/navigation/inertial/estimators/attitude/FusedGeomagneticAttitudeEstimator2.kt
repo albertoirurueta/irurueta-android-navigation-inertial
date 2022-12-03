@@ -57,10 +57,10 @@ class FusedGeomagneticAttitudeEstimator2 private constructor(
     override val context: Context,
     override val sensorDelay: SensorDelay,
     override val useAccelerometer: Boolean,
-    override val accelerometerSensorType: AccelerometerSensorCollector.SensorType,
-    override val magnetometerSensorType: MagnetometerSensorCollector.SensorType,
+    override val accelerometerSensorType: AccelerometerSensorType,
+    override val magnetometerSensorType: MagnetometerSensorType,
     override val accelerometerAveragingFilter: AveragingFilter,
-    override val gyroscopeSensorType: GyroscopeSensorCollector.SensorType,
+    override val gyroscopeSensorType: GyroscopeSensorType,
     override val estimateCoordinateTransformation: Boolean,
     override val estimateEulerAngles: Boolean,
     override var attitudeAvailableListener: OnAttitudeAvailableListener?
@@ -108,13 +108,12 @@ class FusedGeomagneticAttitudeEstimator2 private constructor(
         location: Location? = null,
         sensorDelay: SensorDelay = SensorDelay.GAME,
         useAccelerometer: Boolean = true,
-        accelerometerSensorType: AccelerometerSensorCollector.SensorType =
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
-        magnetometerSensorType: MagnetometerSensorCollector.SensorType =
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+        accelerometerSensorType: AccelerometerSensorType =
+            AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
+        magnetometerSensorType: MagnetometerSensorType =
+            MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED,
         accelerometerAveragingFilter: AveragingFilter = LowPassAveragingFilter(),
-        gyroscopeSensorType: GyroscopeSensorCollector.SensorType =
-            GyroscopeSensorCollector.SensorType.GYROSCOPE_UNCALIBRATED,
+        gyroscopeSensorType: GyroscopeSensorType = GyroscopeSensorType.GYROSCOPE_UNCALIBRATED,
         worldMagneticModel: WorldMagneticModel? = null,
         timestamp: Date = Date(),
         useWorldMagneticModel: Boolean = false,

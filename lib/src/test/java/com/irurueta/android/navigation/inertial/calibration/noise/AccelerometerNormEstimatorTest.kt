@@ -20,10 +20,7 @@ import android.hardware.Sensor
 import android.os.SystemClock
 import androidx.test.core.app.ApplicationProvider
 import com.irurueta.android.navigation.inertial.GravityHelper
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
-import com.irurueta.android.navigation.inertial.collectors.SensorCollector
-import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.getPrivateProperty
 import com.irurueta.android.navigation.inertial.setPrivateProperty
 import com.irurueta.navigation.frames.NEDPosition
@@ -57,7 +54,7 @@ class AccelerometerNormEstimatorTest {
         // check default values
         assertSame(context, estimator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
             estimator.sensorType
         )
         assertEquals(SensorDelay.FASTEST, estimator.sensorDelay)
@@ -105,13 +102,13 @@ class AccelerometerNormEstimatorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = AccelerometerNormEstimator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER
+            AccelerometerSensorType.ACCELEROMETER
         )
 
         // check values
         assertSame(context, estimator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER,
+            AccelerometerSensorType.ACCELEROMETER,
             estimator.sensorType
         )
         assertEquals(SensorDelay.FASTEST, estimator.sensorDelay)
@@ -159,14 +156,14 @@ class AccelerometerNormEstimatorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = AccelerometerNormEstimator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
             SensorDelay.NORMAL
         )
 
         // check values
         assertSame(context, estimator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
             estimator.sensorType
         )
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
@@ -214,7 +211,7 @@ class AccelerometerNormEstimatorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         AccelerometerNormEstimator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
             SensorDelay.NORMAL,
             -1
         )
@@ -225,7 +222,7 @@ class AccelerometerNormEstimatorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = AccelerometerNormEstimator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
             SensorDelay.NORMAL,
             MAX_SAMPLES
         )
@@ -233,7 +230,7 @@ class AccelerometerNormEstimatorTest {
         // check values
         assertSame(context, estimator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
             estimator.sensorType
         )
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
@@ -281,7 +278,7 @@ class AccelerometerNormEstimatorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         AccelerometerNormEstimator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
             SensorDelay.NORMAL,
             MAX_SAMPLES,
             -1L
@@ -293,7 +290,7 @@ class AccelerometerNormEstimatorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = AccelerometerNormEstimator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
             SensorDelay.NORMAL,
             MAX_SAMPLES,
             MAX_DURATION_MILLIS
@@ -302,7 +299,7 @@ class AccelerometerNormEstimatorTest {
         // check values
         assertSame(context, estimator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
             estimator.sensorType
         )
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
@@ -347,7 +344,7 @@ class AccelerometerNormEstimatorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = AccelerometerNormEstimator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
             SensorDelay.NORMAL,
             MAX_SAMPLES,
             MAX_DURATION_MILLIS,
@@ -357,7 +354,7 @@ class AccelerometerNormEstimatorTest {
         // check values
         assertSame(context, estimator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
             estimator.sensorType
         )
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
@@ -405,7 +402,7 @@ class AccelerometerNormEstimatorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = AccelerometerNormEstimator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
             SensorDelay.NORMAL,
             MAX_SAMPLES,
             MAX_DURATION_MILLIS,
@@ -416,7 +413,7 @@ class AccelerometerNormEstimatorTest {
         // check values
         assertSame(context, estimator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
             estimator.sensorType
         )
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
@@ -467,7 +464,7 @@ class AccelerometerNormEstimatorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = AccelerometerNormEstimator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
             SensorDelay.NORMAL,
             MAX_SAMPLES,
             MAX_DURATION_MILLIS,
@@ -479,7 +476,7 @@ class AccelerometerNormEstimatorTest {
         // check values
         assertSame(context, estimator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
             estimator.sensorType
         )
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
@@ -531,7 +528,7 @@ class AccelerometerNormEstimatorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = AccelerometerNormEstimator(
             context,
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
             SensorDelay.NORMAL,
             MAX_SAMPLES,
             MAX_DURATION_MILLIS,
@@ -544,7 +541,7 @@ class AccelerometerNormEstimatorTest {
         // check values
         assertSame(context, estimator.context)
         assertEquals(
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
+            AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
             estimator.sensorType
         )
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)

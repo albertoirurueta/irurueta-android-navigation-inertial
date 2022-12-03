@@ -18,10 +18,7 @@ package com.irurueta.android.navigation.inertial.estimators.attitude
 import android.content.Context
 import android.location.Location
 import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.GravitySensorCollector
-import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
 import com.irurueta.android.navigation.inertial.toNEDPosition
@@ -66,8 +63,8 @@ class GeomagneticAttitudeEstimator private constructor(
     val context: Context,
     val sensorDelay: SensorDelay,
     val useAccelerometer: Boolean,
-    val accelerometerSensorType: AccelerometerSensorCollector.SensorType,
-    val magnetometerSensorType: MagnetometerSensorCollector.SensorType,
+    val accelerometerSensorType: AccelerometerSensorType,
+    val magnetometerSensorType: MagnetometerSensorType,
     val accelerometerAveragingFilter: AveragingFilter,
     var timestamp: Date,
     val estimateCoordinateTransformation: Boolean,
@@ -116,10 +113,10 @@ class GeomagneticAttitudeEstimator private constructor(
         location: Location? = null,
         sensorDelay: SensorDelay = SensorDelay.GAME,
         useAccelerometer: Boolean = true,
-        accelerometerSensorType: AccelerometerSensorCollector.SensorType =
-            AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED,
-        magnetometerSensorType: MagnetometerSensorCollector.SensorType =
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+        accelerometerSensorType: AccelerometerSensorType =
+            AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
+        magnetometerSensorType: MagnetometerSensorType =
+            MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED,
         accelerometerAveragingFilter: AveragingFilter = LowPassAveragingFilter(),
         worldMagneticModel: WorldMagneticModel? = null,
         timestamp: Date = Date(),

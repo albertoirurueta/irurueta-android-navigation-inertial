@@ -22,6 +22,7 @@ import androidx.test.filters.RequiresDevice
 import androidx.test.platform.app.InstrumentationRegistry
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
 import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorType
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import org.junit.Assert.*
 import org.junit.Before
@@ -45,7 +46,7 @@ class MagnetometerSensorCollectorTest {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val collector = MagnetometerSensorCollector(
             context,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER
+            MagnetometerSensorType.MAGNETOMETER
         )
 
         val sensor = collector.sensor
@@ -59,7 +60,7 @@ class MagnetometerSensorCollectorTest {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val collector = MagnetometerSensorCollector(
             context,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED
+            MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED
         )
 
         val sensor = collector.sensor
@@ -73,7 +74,7 @@ class MagnetometerSensorCollectorTest {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val collector = MagnetometerSensorCollector(
             context,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER
+            MagnetometerSensorType.MAGNETOMETER
         )
 
         assertTrue(collector.sensorAvailable)
@@ -84,7 +85,7 @@ class MagnetometerSensorCollectorTest {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val collector = MagnetometerSensorCollector(
             context,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED
+            MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED
         )
 
         assertTrue(collector.sensorAvailable)
@@ -95,7 +96,7 @@ class MagnetometerSensorCollectorTest {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val collector = MagnetometerSensorCollector(
             context,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER,
+            MagnetometerSensorType.MAGNETOMETER,
             SensorDelay.FASTEST,
             measurementListener = { bx, by, bz, hardIronX, hardIronY, hardIronZ, timestamp, accuracy ->
                 assertNull(hardIronX)
@@ -132,7 +133,7 @@ class MagnetometerSensorCollectorTest {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val collector = MagnetometerSensorCollector(
             context,
-            MagnetometerSensorCollector.SensorType.MAGNETOMETER_UNCALIBRATED,
+            MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED,
             SensorDelay.FASTEST,
             measurementListener = { bx, by, bz, hardIronX, hardIronY, hardIronZ, timestamp, accuracy ->
                 assertNotNull(hardIronX)
@@ -199,14 +200,14 @@ class MagnetometerSensorCollectorTest {
         val wakeUpSensor = sensor.isWakeUpSensor
 
         Log.d(
-            "AccelerometerSensorCollectorTest", "Sensor - fifoMaxEventCount: $fifoMaxEventCount, "
+            "MagnetometerSensorCollectorTest", "Sensor - fifoMaxEventCount: $fifoMaxEventCount, "
                     + "fifoReversedEventCount: $fifoReversedEventCount, "
                     + "highestDirectReportRateLevel: $highestDirectReportRateLevel, "
                     + "highestDirectReportRateLevelName: $highestDirectReportRateLevelName, "
                     + "id: $id, "
                     + "maxDelay: $maxDelay µs, "
                     + "maximumRange: $maximumRange µT, "
-                    + "minDelay: $minDelay µa, "
+                    + "minDelay: $minDelay µs, "
                     + "name: $name, "
                     + "power: $power mA, "
                     + "reportingMode: $reportingMode, "

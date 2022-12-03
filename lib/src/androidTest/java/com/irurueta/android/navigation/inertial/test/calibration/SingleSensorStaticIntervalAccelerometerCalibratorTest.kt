@@ -25,7 +25,7 @@ import androidx.test.rule.GrantPermissionRule
 import com.irurueta.android.navigation.inertial.LocationService
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
 import com.irurueta.android.navigation.inertial.calibration.SingleSensorStaticIntervalAccelerometerCalibrator
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
 import com.irurueta.android.navigation.inertial.test.LocationActivity
 import com.irurueta.numerical.robust.RobustEstimatorMethod
 import io.mockk.spyk
@@ -60,7 +60,7 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
     fun startAndStop_whenNoLocationAccelerometerSensor_completesCalibration() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val calibrator =
-            buildCalibrator(context, AccelerometerSensorCollector.SensorType.ACCELEROMETER)
+            buildCalibrator(context, AccelerometerSensorType.ACCELEROMETER)
 
         calibrator.start()
 
@@ -78,7 +78,7 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
 
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val calibrator =
-            buildCalibrator(context, AccelerometerSensorCollector.SensorType.ACCELEROMETER)
+            buildCalibrator(context, AccelerometerSensorType.ACCELEROMETER)
         calibrator.location = location
 
         calibrator.start()
@@ -97,7 +97,7 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
         val calibrator =
             buildCalibrator(
                 context,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
             )
 
         calibrator.start()
@@ -118,7 +118,7 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
         val calibrator =
             buildCalibrator(
                 context,
-                AccelerometerSensorCollector.SensorType.ACCELEROMETER_UNCALIBRATED
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
             )
         calibrator.location = location
 
@@ -165,7 +165,7 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
 
     private fun buildCalibrator(
         context: Context,
-        sensorType: AccelerometerSensorCollector.SensorType
+        sensorType: AccelerometerSensorType
     ): SingleSensorStaticIntervalAccelerometerCalibrator {
         val calibrator = SingleSensorStaticIntervalAccelerometerCalibrator(context,
             sensorType = sensorType,
