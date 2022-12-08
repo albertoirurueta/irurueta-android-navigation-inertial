@@ -342,7 +342,7 @@ abstract class BufferedSensorCollector<M : SensorMeasurement<M>, C : BufferedSen
      * @return true if sensor is available and was successfully enabled.
      * @throws IllegalStateException if collector is already running.
      */
-    @Throws(java.lang.IllegalStateException::class)
+    @Throws(IllegalStateException::class)
     fun start(startTimestamp: Long = SystemClock.elapsedRealtimeNanos()): Boolean {
         check(!running)
 
@@ -419,7 +419,7 @@ abstract class BufferedSensorCollector<M : SensorMeasurement<M>, C : BufferedSen
         // check that capacity is larger than zero
         require(capacity > 0)
 
-        // initializes collection of measurements to be reused
+        // initializes collections of measurements to be reused
         initializeMeasurements()
     }
 
@@ -465,7 +465,7 @@ abstract class BufferedSensorCollector<M : SensorMeasurement<M>, C : BufferedSen
     }
 
     /**
-     * Interface to notify when a new accelerometer measurement is available.
+     * Interface to notify when a new measurement is available.
      * Notice that notified measurements from multiple collectors of different sensors, might be
      * out of order.
      * Calling [getMeasurementsBeforeTimestamp] or [getMeasurementsBeforePosition] periodically will
