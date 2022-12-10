@@ -61,17 +61,17 @@ class BufferedMagnetometerSensorCollectorTest {
         assertNull(collector.oldestTimestampInBuffer)
 
         // check internal fields initialization
-        val buffer: LinkedList<MagnetometerSensorMeasurement>? =
+        val buffer: ArrayDeque<MagnetometerSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "buffer")
         requireNotNull(buffer)
         assertTrue(buffer.isEmpty())
 
-        val availableMeasurements: LinkedList<MagnetometerSensorMeasurement>? =
+        val availableMeasurements: ArrayDeque<MagnetometerSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "availableMeasurements")
         requireNotNull(availableMeasurements)
         assertEquals(BufferedSensorCollector.DEFAULT_CAPACITY, availableMeasurements.size)
 
-        val measurementsBeforeTimestamp: LinkedList<MagnetometerSensorMeasurement>? =
+        val measurementsBeforeTimestamp: ArrayDeque<MagnetometerSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -80,7 +80,7 @@ class BufferedMagnetometerSensorCollectorTest {
         requireNotNull(measurementsBeforeTimestamp)
         assertTrue(measurementsBeforeTimestamp.isEmpty())
 
-        val measurementsBeforePosition: LinkedList<MagnetometerSensorMeasurement>? =
+        val measurementsBeforePosition: ArrayDeque<MagnetometerSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -89,7 +89,7 @@ class BufferedMagnetometerSensorCollectorTest {
         requireNotNull(measurementsBeforePosition)
         assertTrue(measurementsBeforePosition.isEmpty())
 
-        val availableMeasurementsBeforeTimestamp: LinkedList<MagnetometerSensorMeasurement>? =
+        val availableMeasurementsBeforeTimestamp: ArrayList<MagnetometerSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -101,7 +101,7 @@ class BufferedMagnetometerSensorCollectorTest {
             availableMeasurementsBeforeTimestamp.size
         )
 
-        val availableMeasurementsBeforePosition: LinkedList<MagnetometerSensorMeasurement>? =
+        val availableMeasurementsBeforePosition: ArrayList<MagnetometerSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -157,17 +157,17 @@ class BufferedMagnetometerSensorCollectorTest {
         assertNull(collector.oldestTimestampInBuffer)
 
         // check internal fields initialization
-        val buffer: LinkedList<MagnetometerSensorMeasurement>? =
+        val buffer: ArrayDeque<MagnetometerSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "buffer")
         requireNotNull(buffer)
         assertTrue(buffer.isEmpty())
 
-        val availableMeasurements: LinkedList<MagnetometerSensorMeasurement>? =
+        val availableMeasurements: ArrayDeque<MagnetometerSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "availableMeasurements")
         requireNotNull(availableMeasurements)
         assertEquals(CAPACITY, availableMeasurements.size)
 
-        val measurementsBeforeTimestamp: LinkedList<MagnetometerSensorMeasurement>? =
+        val measurementsBeforeTimestamp: ArrayDeque<MagnetometerSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -176,7 +176,7 @@ class BufferedMagnetometerSensorCollectorTest {
         requireNotNull(measurementsBeforeTimestamp)
         assertTrue(measurementsBeforeTimestamp.isEmpty())
 
-        val measurementsBeforePosition: LinkedList<MagnetometerSensorMeasurement>? =
+        val measurementsBeforePosition: ArrayDeque<MagnetometerSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -185,7 +185,7 @@ class BufferedMagnetometerSensorCollectorTest {
         requireNotNull(measurementsBeforePosition)
         assertTrue(measurementsBeforePosition.isEmpty())
 
-        val availableMeasurementsBeforeTimestamp: LinkedList<MagnetometerSensorMeasurement>? =
+        val availableMeasurementsBeforeTimestamp: ArrayList<MagnetometerSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -194,7 +194,7 @@ class BufferedMagnetometerSensorCollectorTest {
         requireNotNull(availableMeasurementsBeforeTimestamp)
         assertEquals(CAPACITY, availableMeasurementsBeforeTimestamp.size)
 
-        val availableMeasurementsBeforePosition: LinkedList<MagnetometerSensorMeasurement>? =
+        val availableMeasurementsBeforePosition: ArrayList<MagnetometerSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -516,7 +516,7 @@ class BufferedMagnetometerSensorCollectorTest {
         val collector = BufferedMagnetometerSensorCollector(contextSpy)
 
         // set initial values
-        val buffer: LinkedList<MagnetometerSensorMeasurement>? =
+        val buffer: ArrayDeque<MagnetometerSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "buffer")
         requireNotNull(buffer)
         buffer.add(MagnetometerSensorMeasurement())
@@ -584,7 +584,7 @@ class BufferedMagnetometerSensorCollectorTest {
         val collector = BufferedMagnetometerSensorCollector(contextSpy)
 
         // set initial values
-        val buffer: LinkedList<MagnetometerSensorMeasurement>? =
+        val buffer: ArrayDeque<MagnetometerSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "buffer")
         requireNotNull(buffer)
         buffer.add(MagnetometerSensorMeasurement())
@@ -664,17 +664,17 @@ class BufferedMagnetometerSensorCollectorTest {
         assertEquals(0, collector.numberOfProcessedMeasurements)
 
         // check internal fields
-        val buffer: LinkedList<MagnetometerSensorMeasurement>? =
+        val buffer: ArrayDeque<MagnetometerSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "buffer")
         requireNotNull(buffer)
         assertTrue(buffer.isEmpty())
 
-        val availableMeasurements: LinkedList<MagnetometerSensorMeasurement>? =
+        val availableMeasurements: ArrayDeque<MagnetometerSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "availableMeasurements")
         requireNotNull(availableMeasurements)
         assertEquals(BufferedSensorCollector.DEFAULT_CAPACITY, availableMeasurements.size)
 
-        val measurementsBeforeTimestamp: LinkedList<MagnetometerSensorMeasurement>? =
+        val measurementsBeforeTimestamp: ArrayDeque<MagnetometerSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -683,7 +683,7 @@ class BufferedMagnetometerSensorCollectorTest {
         requireNotNull(measurementsBeforeTimestamp)
         assertTrue(measurementsBeforeTimestamp.isEmpty())
 
-        val measurementsBeforePosition: LinkedList<MagnetometerSensorMeasurement>? =
+        val measurementsBeforePosition: ArrayDeque<MagnetometerSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -692,7 +692,7 @@ class BufferedMagnetometerSensorCollectorTest {
         requireNotNull(measurementsBeforePosition)
         assertTrue(measurementsBeforePosition.isEmpty())
 
-        val availableMeasurementsBeforeTimestamp: LinkedList<MagnetometerSensorMeasurement>? =
+        val availableMeasurementsBeforeTimestamp: ArrayList<MagnetometerSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -704,7 +704,7 @@ class BufferedMagnetometerSensorCollectorTest {
             availableMeasurementsBeforeTimestamp.size
         )
 
-        val availableMeasurementsBeforePosition: LinkedList<MagnetometerSensorMeasurement>? =
+        val availableMeasurementsBeforePosition: ArrayList<MagnetometerSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -757,17 +757,17 @@ class BufferedMagnetometerSensorCollectorTest {
         assertEquals(0, collector.numberOfProcessedMeasurements)
 
         // check internal fields
-        val buffer: LinkedList<MagnetometerSensorMeasurement>? =
+        val buffer: ArrayDeque<MagnetometerSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "buffer")
         requireNotNull(buffer)
         assertTrue(buffer.isEmpty())
 
-        val availableMeasurements: LinkedList<MagnetometerSensorMeasurement>? =
+        val availableMeasurements: ArrayDeque<MagnetometerSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "availableMeasurements")
         requireNotNull(availableMeasurements)
         assertEquals(BufferedSensorCollector.DEFAULT_CAPACITY, availableMeasurements.size)
 
-        val measurementsBeforeTimestamp: LinkedList<MagnetometerSensorMeasurement>? =
+        val measurementsBeforeTimestamp: ArrayDeque<MagnetometerSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -776,7 +776,7 @@ class BufferedMagnetometerSensorCollectorTest {
         requireNotNull(measurementsBeforeTimestamp)
         assertTrue(measurementsBeforeTimestamp.isEmpty())
 
-        val measurementsBeforePosition: LinkedList<MagnetometerSensorMeasurement>? =
+        val measurementsBeforePosition: ArrayDeque<MagnetometerSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -785,7 +785,7 @@ class BufferedMagnetometerSensorCollectorTest {
         requireNotNull(measurementsBeforePosition)
         assertTrue(measurementsBeforePosition.isEmpty())
 
-        val availableMeasurementsBeforeTimestamp: LinkedList<MagnetometerSensorMeasurement>? =
+        val availableMeasurementsBeforeTimestamp: ArrayList<MagnetometerSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -797,7 +797,7 @@ class BufferedMagnetometerSensorCollectorTest {
             availableMeasurementsBeforeTimestamp.size
         )
 
-        val availableMeasurementsBeforePosition: LinkedList<MagnetometerSensorMeasurement>? =
+        val availableMeasurementsBeforePosition: ArrayList<MagnetometerSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -874,18 +874,18 @@ class BufferedMagnetometerSensorCollectorTest {
         assertEquals(event.timestamp + startOffset, collector.oldestTimestampInBuffer)
 
         // check internal fields
-        val buffer: LinkedList<MagnetometerSensorMeasurement>? =
+        val buffer: ArrayDeque<MagnetometerSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "buffer")
         requireNotNull(buffer)
         assertEquals(1, buffer.size)
-        assertSame(measurement, buffer[0])
+        assertSame(measurement, buffer.peek())
 
-        val availableMeasurements: LinkedList<MagnetometerSensorMeasurement>? =
+        val availableMeasurements: ArrayDeque<MagnetometerSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "availableMeasurements")
         requireNotNull(availableMeasurements)
         assertEquals(BufferedSensorCollector.DEFAULT_CAPACITY - 1, availableMeasurements.size)
 
-        val measurementsBeforeTimestamp: LinkedList<MagnetometerSensorMeasurement>? =
+        val measurementsBeforeTimestamp: ArrayDeque<MagnetometerSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -894,7 +894,7 @@ class BufferedMagnetometerSensorCollectorTest {
         requireNotNull(measurementsBeforeTimestamp)
         assertTrue(measurementsBeforeTimestamp.isEmpty())
 
-        val measurementsBeforePosition: LinkedList<MagnetometerSensorMeasurement>? =
+        val measurementsBeforePosition: ArrayDeque<MagnetometerSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -903,7 +903,7 @@ class BufferedMagnetometerSensorCollectorTest {
         requireNotNull(measurementsBeforePosition)
         assertTrue(measurementsBeforePosition.isEmpty())
 
-        val availableMeasurementsBeforeTimestamp: LinkedList<MagnetometerSensorMeasurement>? =
+        val availableMeasurementsBeforeTimestamp: ArrayList<MagnetometerSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -915,7 +915,7 @@ class BufferedMagnetometerSensorCollectorTest {
             availableMeasurementsBeforeTimestamp.size
         )
 
-        val availableMeasurementsBeforePosition: LinkedList<MagnetometerSensorMeasurement>? =
+        val availableMeasurementsBeforePosition: ArrayList<MagnetometerSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -961,11 +961,11 @@ class BufferedMagnetometerSensorCollectorTest {
         requireNotNull(sensorEventListener)
 
         // clear available measurements and fill buffer
-        val buffer: LinkedList<MagnetometerSensorMeasurement>? =
+        val buffer: ArrayDeque<MagnetometerSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "buffer")
         requireNotNull(buffer)
 
-        val availableMeasurements: LinkedList<MagnetometerSensorMeasurement>? =
+        val availableMeasurements: ArrayDeque<MagnetometerSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "availableMeasurements")
         requireNotNull(availableMeasurements)
 
@@ -1035,11 +1035,11 @@ class BufferedMagnetometerSensorCollectorTest {
         requireNotNull(sensorEventListener)
 
         // clear available measurements and fill buffer
-        val buffer: LinkedList<MagnetometerSensorMeasurement>? =
+        val buffer: ArrayDeque<MagnetometerSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "buffer")
         requireNotNull(buffer)
 
-        val availableMeasurements: LinkedList<MagnetometerSensorMeasurement>? =
+        val availableMeasurements: ArrayDeque<MagnetometerSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "availableMeasurements")
         requireNotNull(availableMeasurements)
 
@@ -1172,7 +1172,7 @@ class BufferedMagnetometerSensorCollectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val collector = BufferedMagnetometerSensorCollector(context)
 
-        val buffer: LinkedList<MagnetometerSensorMeasurement>? =
+        val buffer: ArrayDeque<MagnetometerSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "buffer")
         requireNotNull(buffer)
         assertTrue(buffer.isEmpty())
@@ -1187,12 +1187,12 @@ class BufferedMagnetometerSensorCollectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val collector = BufferedMagnetometerSensorCollector(context)
 
-        val buffer: LinkedList<MagnetometerSensorMeasurement>? =
+        val buffer: ArrayDeque<MagnetometerSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "buffer")
         requireNotNull(buffer)
         assertTrue(buffer.isEmpty())
 
-        val availableMeasurements: LinkedList<MagnetometerSensorMeasurement>? =
+        val availableMeasurements: ArrayDeque<MagnetometerSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "availableMeasurements")
         requireNotNull(availableMeasurements)
         assertEquals(BufferedSensorCollector.DEFAULT_CAPACITY, availableMeasurements.size)
@@ -1235,7 +1235,7 @@ class BufferedMagnetometerSensorCollectorTest {
         buffer.add(measurement2)
         buffer.add(measurement3)
 
-        val measurements = collector.getMeasurementsBeforeTimestamp(timestamp)
+        val measurements = ArrayList(collector.getMeasurementsBeforeTimestamp(timestamp))
         assertEquals(2, measurements.size)
 
         assertNotSame(measurement1, measurements[0])
@@ -1248,7 +1248,7 @@ class BufferedMagnetometerSensorCollectorTest {
         assertEquals(timestamp - 1, measurements[0].timestamp)
         assertEquals(SensorAccuracy.HIGH, measurements[0].accuracy)
 
-        assertNotSame(measurement2, measurements[0])
+        assertNotSame(measurement2, measurements[1])
         assertEquals(2.0f, measurements[1].bx)
         assertEquals(2.0f, measurements[1].by)
         assertEquals(2.0f, measurements[1].bz)
@@ -1267,7 +1267,7 @@ class BufferedMagnetometerSensorCollectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val collector = BufferedMagnetometerSensorCollector(context)
 
-        val buffer: LinkedList<MagnetometerSensorMeasurement>? =
+        val buffer: ArrayDeque<MagnetometerSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "buffer")
         requireNotNull(buffer)
         assertTrue(buffer.isEmpty())
@@ -1281,12 +1281,12 @@ class BufferedMagnetometerSensorCollectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val collector = BufferedMagnetometerSensorCollector(context)
 
-        val buffer: LinkedList<MagnetometerSensorMeasurement>? =
+        val buffer: ArrayDeque<MagnetometerSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "buffer")
         requireNotNull(buffer)
         assertTrue(buffer.isEmpty())
 
-        val availableMeasurements: LinkedList<MagnetometerSensorMeasurement>? =
+        val availableMeasurements: ArrayDeque<MagnetometerSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "availableMeasurements")
         requireNotNull(availableMeasurements)
         assertEquals(BufferedSensorCollector.DEFAULT_CAPACITY, availableMeasurements.size)
@@ -1329,7 +1329,7 @@ class BufferedMagnetometerSensorCollectorTest {
         buffer.add(measurement2)
         buffer.add(measurement3)
 
-        val measurements = collector.getMeasurementsBeforePosition(1)
+        val measurements = ArrayList(collector.getMeasurementsBeforePosition(1))
         assertEquals(2, measurements.size)
 
         assertNotSame(measurement1, measurements[0])
@@ -1342,7 +1342,7 @@ class BufferedMagnetometerSensorCollectorTest {
         assertEquals(timestamp - 1, measurements[0].timestamp)
         assertEquals(SensorAccuracy.HIGH, measurements[0].accuracy)
 
-        assertNotSame(measurement2, measurements[0])
+        assertNotSame(measurement2, measurements[1])
         assertEquals(2.0f, measurements[1].bx)
         assertEquals(2.0f, measurements[1].by)
         assertEquals(2.0f, measurements[1].bz)

@@ -31,6 +31,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
+@RequiresDevice
 class LocationServiceTest {
 
     private val syncHelper = ThreadSyncHelper()
@@ -119,7 +120,6 @@ class LocationServiceTest {
         assertTrue(locationEnabled)
     }
 
-    @RequiresDevice
     @Test
     fun getLastKnownLocation_whenCurrentLocationIsKnown_returnsExpectedValue() {
         val scenario = ActivityScenario.launch(LocationActivity::class.java).use {
@@ -154,7 +154,6 @@ class LocationServiceTest {
         verify(exactly = 1) { currentLocationListener?.onCurrentLocation(any()) }
     }
 
-    @RequiresDevice
     @Test
     fun getCurrentLocation_returnsExpectedValue() {
         val scenario = ActivityScenario.launch(LocationActivity::class.java).use {
@@ -186,7 +185,6 @@ class LocationServiceTest {
         verify(exactly = 1) { currentLocationListener?.onCurrentLocation(any()) }
     }
 
-    @RequiresDevice
     @Test
     fun cancelCurrentLocation_cancelsRequest() {
         val scenario = ActivityScenario.launch(LocationActivity::class.java).use {
@@ -211,7 +209,6 @@ class LocationServiceTest {
         verify { listener wasNot Called }
     }
 
-    @RequiresDevice
     @Test
     fun requestLocationUpdates_obtainsMultipleLocationUpdates() {
         val scenario = ActivityScenario.launch(LocationActivity::class.java).use {

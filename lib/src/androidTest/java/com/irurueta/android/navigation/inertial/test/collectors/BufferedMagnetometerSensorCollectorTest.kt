@@ -295,7 +295,7 @@ class BufferedMagnetometerSensorCollectorTest {
 
                 val bufferCopy = collector.bufferedMeasurements
                 val measurementsBefore = collector.getMeasurementsBeforeTimestamp(collector.mostRecentTimestamp)
-                assertEqualAndValidMeasurements(measurementsBefore, bufferCopy)
+                assertEqualAndValidMeasurements(ArrayList(measurementsBefore), bufferCopy)
 
                 syncHelper.notifyAll { completed++ }
             }

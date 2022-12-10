@@ -144,41 +144,41 @@ abstract class BufferedSensorCollector<M : SensorMeasurement<M>, C : BufferedSen
     /**
      * Buffer containing ordered measurements by ascending timestamp.
      */
-    private val buffer = LinkedList<M>()
+    private val buffer = ArrayDeque<M>(capacity)
 
     /**
      * Queue of measurements that ar no longer buffered and ar available to be reused when a new
      * measurement arrives.
      */
-    private val availableMeasurements = LinkedList<M>()
+    private val availableMeasurements = ArrayDeque<M>(capacity)
 
     /**
      * Internal list being reused containing retrieved measurements using
      * [getMeasurementsBeforeTimestamp].
      * This is used for efficiency purposes.
      */
-    private val measurementsBeforeTimestamp = LinkedList<M>()
+    private val measurementsBeforeTimestamp = ArrayDeque<M>(capacity)
 
     /**
      * Internal list being reused containing retrieved measurements using
      * [getMeasurementsBeforePosition].
      * This is used for efficiency purposes.
      */
-    private val measurementsBeforePosition = LinkedList<M>()
+    private val measurementsBeforePosition = ArrayDeque<M>(capacity)
 
     /**
      * Internal list containing instance of [measurementsBeforeTimestamp] that can be reused for
      * performance reasons. Instances in this list are reused every time that
      * [getMeasurementsBeforeTimestamp] is called.
      */
-    private val availableMeasurementsBeforeTimestamp = LinkedList<M>()
+    private val availableMeasurementsBeforeTimestamp = ArrayList<M>(capacity)
 
     /**
      * Internal list containing instance of [measurementsBeforePosition] that can be reused for
      * performance reasons. Instances in this list are reused every time that
      * [getMeasurementsBeforePosition] is called.
      */
-    private val availableMeasurementsBeforePosition = LinkedList<M>()
+    private val availableMeasurementsBeforePosition = ArrayList<M>(capacity)
 
     /**
      * System sensor manager.
@@ -281,7 +281,7 @@ abstract class BufferedSensorCollector<M : SensorMeasurement<M>, C : BufferedSen
      * @param timestamp timestamp to limit measurements to be retrieved from buffer.
      */
     @Synchronized
-    fun getMeasurementsBeforeTimestamp(timestamp: Long): List<M> {
+    fun getMeasurementsBeforeTimestamp(timestamp: Long): Deque<M> {
         measurementsBeforeTimestamp.clear()
         do {
             val measurement = buffer.peek()
@@ -315,7 +315,7 @@ abstract class BufferedSensorCollector<M : SensorMeasurement<M>, C : BufferedSen
      * @param position position to limit measurements to be retrieved from buffer
      */
     @Synchronized
-    fun getMeasurementsBeforePosition(position: Int): List<M> {
+    fun getMeasurementsBeforePosition(position: Int): Deque<M> {
         measurementsBeforePosition.clear()
         val size = buffer.size
         for (i in 0 until min(size, position + 1)) {
@@ -427,7 +427,7 @@ abstract class BufferedSensorCollector<M : SensorMeasurement<M>, C : BufferedSen
         /**
          * Default initial capacity of buffer.
          */
-        const val DEFAULT_CAPACITY = 1000
+        const val DEFAULT_CAPACITY = 100
     }
 
     /**

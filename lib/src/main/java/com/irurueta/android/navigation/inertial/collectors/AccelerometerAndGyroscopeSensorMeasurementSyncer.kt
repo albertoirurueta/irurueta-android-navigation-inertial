@@ -251,16 +251,14 @@ class AccelerometerAndGyroscopeSensorMeasurementSyncer(
         check(!running)
 
         this.startTimestamp = startTimestamp
-        running =
-            if (accelerometerSensorCollector.start(startTimestamp) && gyroscopeSensorCollector.start(
-                    startTimestamp
-                )
-            ) {
-                true
-            } else {
-                stop()
-                false
-            }
+        running = if (accelerometerSensorCollector.start(startTimestamp)
+            && gyroscopeSensorCollector.start(startTimestamp)
+        ) {
+            true
+        } else {
+            stop()
+            false
+        }
 
         return running
     }
@@ -285,7 +283,7 @@ class AccelerometerAndGyroscopeSensorMeasurementSyncer(
      * Measurements are moved from a collection of cached available measurements to a new list
      * to avoid inadvertently reusing measurements by internal collector.
      */
-    private fun copyToAccelerometerMeasurements(measurements: List<AccelerometerSensorMeasurement>) {
+    private fun copyToAccelerometerMeasurements(measurements: Collection<AccelerometerSensorMeasurement>) {
         for (measurement in measurements) {
             // move an available measurement to the list of measurements
             // if for any reason there are no more available cached measurements, build new ones
@@ -302,7 +300,7 @@ class AccelerometerAndGyroscopeSensorMeasurementSyncer(
      * Measurements are moved from a collection of cached available measurements to a new list
      * to avoid inadvertently reusing measurements by internal collector.
      */
-    private fun copyToGyroscopeMeasurements(measurements: List<GyroscopeSensorMeasurement>) {
+    private fun copyToGyroscopeMeasurements(measurements: Collection<GyroscopeSensorMeasurement>) {
         for (measurement in measurements) {
             // move an available measurement to the list of measurements
             // if for any reason there are no more available cached measurements, build new ones
@@ -346,7 +344,8 @@ class AccelerometerAndGyroscopeSensorMeasurementSyncer(
                 }
 
                 if ((previousAccelerometerTimestamp == null && gyroscopeTimestamp < accelerometerTimestamp)
-                    || (previousAccelerometerTimestamp != null && gyroscopeTimestamp >= previousAccelerometerTimestamp && gyroscopeTimestamp < accelerometerTimestamp)) {
+                    || (previousAccelerometerTimestamp != null && gyroscopeTimestamp >= previousAccelerometerTimestamp && gyroscopeTimestamp < accelerometerTimestamp)
+                ) {
                     // generate synchronized measurement
                     syncedMeasurement.timestamp = gyroscopeTimestamp
                     syncedMeasurement.accelerometerMeasurement = accelerometerMeasurement
@@ -361,7 +360,7 @@ class AccelerometerAndGyroscopeSensorMeasurementSyncer(
                     )
 
                 } else if (gyroscopeTimestamp > accelerometerTimestamp) {
-                    // no need to kp processing gyroscope measurements until next accelerometer
+                    // no need to keep processing gyroscope measurements until next accelerometer
                     // measurement is processed
                     break
                 }

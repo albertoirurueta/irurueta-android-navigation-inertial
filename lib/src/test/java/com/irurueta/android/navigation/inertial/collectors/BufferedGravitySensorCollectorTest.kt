@@ -60,17 +60,17 @@ class BufferedGravitySensorCollectorTest {
         assertNull(collector.oldestTimestampInBuffer)
 
         // check internal fields initialization
-        val buffer: LinkedList<GravitySensorMeasurement>? =
+        val buffer: ArrayDeque<GravitySensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "buffer")
         requireNotNull(buffer)
         assertTrue(buffer.isEmpty())
 
-        val availableMeasurements: LinkedList<GravitySensorMeasurement>? =
+        val availableMeasurements: ArrayDeque<GravitySensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "availableMeasurements")
         requireNotNull(availableMeasurements)
         assertEquals(BufferedSensorCollector.DEFAULT_CAPACITY, availableMeasurements.size)
 
-        val measurementsBeforeTimestamp: LinkedList<GravitySensorMeasurement>? =
+        val measurementsBeforeTimestamp: ArrayDeque<GravitySensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -79,7 +79,7 @@ class BufferedGravitySensorCollectorTest {
         requireNotNull(measurementsBeforeTimestamp)
         assertTrue(measurementsBeforeTimestamp.isEmpty())
 
-        val measurementsBeforePosition: LinkedList<GravitySensorMeasurement>? =
+        val measurementsBeforePosition: ArrayDeque<GravitySensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -88,7 +88,7 @@ class BufferedGravitySensorCollectorTest {
         requireNotNull(measurementsBeforePosition)
         assertTrue(measurementsBeforePosition.isEmpty())
 
-        val availableMeasurementsBeforeTimestamp: LinkedList<GravitySensorMeasurement>? =
+        val availableMeasurementsBeforeTimestamp: ArrayList<GravitySensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -100,7 +100,7 @@ class BufferedGravitySensorCollectorTest {
             availableMeasurementsBeforeTimestamp.size
         )
 
-        val availableMeasurementsBeforePosition: LinkedList<GravitySensorMeasurement>? =
+        val availableMeasurementsBeforePosition: ArrayList<GravitySensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -154,17 +154,17 @@ class BufferedGravitySensorCollectorTest {
         assertNull(collector.oldestTimestampInBuffer)
 
         // check internal fields initialization
-        val buffer: LinkedList<GravitySensorMeasurement>? =
+        val buffer: ArrayDeque<GravitySensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "buffer")
         requireNotNull(buffer)
         assertTrue(buffer.isEmpty())
 
-        val availableMeasurements: LinkedList<GravitySensorMeasurement>? =
+        val availableMeasurements: ArrayDeque<GravitySensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "availableMeasurements")
         requireNotNull(availableMeasurements)
         assertEquals(CAPACITY, availableMeasurements.size)
 
-        val measurementsBeforeTimestamp: LinkedList<GravitySensorMeasurement>? =
+        val measurementsBeforeTimestamp: ArrayDeque<GravitySensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -173,7 +173,7 @@ class BufferedGravitySensorCollectorTest {
         requireNotNull(measurementsBeforeTimestamp)
         assertTrue(measurementsBeforeTimestamp.isEmpty())
 
-        val measurementsBeforePosition: LinkedList<GravitySensorMeasurement>? =
+        val measurementsBeforePosition: ArrayDeque<GravitySensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -182,7 +182,7 @@ class BufferedGravitySensorCollectorTest {
         requireNotNull(measurementsBeforePosition)
         assertTrue(measurementsBeforePosition.isEmpty())
 
-        val availableMeasurementsBeforeTimestamp: LinkedList<GravitySensorMeasurement>? =
+        val availableMeasurementsBeforeTimestamp: ArrayList<GravitySensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -191,7 +191,7 @@ class BufferedGravitySensorCollectorTest {
         requireNotNull(availableMeasurementsBeforeTimestamp)
         assertEquals(CAPACITY, availableMeasurementsBeforeTimestamp.size)
 
-        val availableMeasurementsBeforePosition: LinkedList<GravitySensorMeasurement>? =
+        val availableMeasurementsBeforePosition: ArrayList<GravitySensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -463,7 +463,7 @@ class BufferedGravitySensorCollectorTest {
         val collector = BufferedGravitySensorCollector(contextSpy)
 
         // set initial values
-        val buffer: LinkedList<GravitySensorMeasurement>? =
+        val buffer: ArrayDeque<GravitySensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "buffer")
         requireNotNull(buffer)
         buffer.add(GravitySensorMeasurement())
@@ -530,7 +530,7 @@ class BufferedGravitySensorCollectorTest {
         val collector = BufferedGravitySensorCollector(contextSpy)
 
         // set initial values
-        val buffer: LinkedList<GravitySensorMeasurement>? =
+        val buffer: ArrayDeque<GravitySensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "buffer")
         requireNotNull(buffer)
         buffer.add(GravitySensorMeasurement())
@@ -610,17 +610,17 @@ class BufferedGravitySensorCollectorTest {
         assertEquals(0, collector.numberOfProcessedMeasurements)
 
         // check internal fields
-        val buffer: LinkedList<GravitySensorMeasurement>? =
+        val buffer: ArrayDeque<GravitySensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "buffer")
         requireNotNull(buffer)
         assertTrue(buffer.isEmpty())
 
-        val availableMeasurements: LinkedList<GravitySensorMeasurement>? =
+        val availableMeasurements: ArrayDeque<GravitySensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "availableMeasurements")
         requireNotNull(availableMeasurements)
         assertEquals(BufferedSensorCollector.DEFAULT_CAPACITY, availableMeasurements.size)
 
-        val measurementsBeforeTimestamp: LinkedList<GravitySensorMeasurement>? =
+        val measurementsBeforeTimestamp: ArrayDeque<GravitySensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -629,7 +629,7 @@ class BufferedGravitySensorCollectorTest {
         requireNotNull(measurementsBeforeTimestamp)
         assertTrue(measurementsBeforeTimestamp.isEmpty())
 
-        val measurementsBeforePosition: LinkedList<GravitySensorMeasurement>? =
+        val measurementsBeforePosition: ArrayDeque<GravitySensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -638,7 +638,7 @@ class BufferedGravitySensorCollectorTest {
         requireNotNull(measurementsBeforePosition)
         assertTrue(measurementsBeforePosition.isEmpty())
 
-        val availableMeasurementsBeforeTimestamp: LinkedList<GravitySensorMeasurement>? =
+        val availableMeasurementsBeforeTimestamp: ArrayList<GravitySensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -650,7 +650,7 @@ class BufferedGravitySensorCollectorTest {
             availableMeasurementsBeforeTimestamp.size
         )
 
-        val availableMeasurementsBeforePosition: LinkedList<GravitySensorMeasurement>? =
+        val availableMeasurementsBeforePosition: ArrayList<GravitySensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -702,17 +702,17 @@ class BufferedGravitySensorCollectorTest {
         assertEquals(0, collector.numberOfProcessedMeasurements)
 
         // check internal fields
-        val buffer: LinkedList<GravitySensorMeasurement>? =
+        val buffer: ArrayDeque<GravitySensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "buffer")
         requireNotNull(buffer)
         assertTrue(buffer.isEmpty())
 
-        val availableMeasurements: LinkedList<GravitySensorMeasurement>? =
+        val availableMeasurements: ArrayDeque<GravitySensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "availableMeasurements")
         requireNotNull(availableMeasurements)
         assertEquals(BufferedSensorCollector.DEFAULT_CAPACITY, availableMeasurements.size)
 
-        val measurementsBeforeTimestamp: LinkedList<GravitySensorMeasurement>? =
+        val measurementsBeforeTimestamp: ArrayDeque<GravitySensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -721,7 +721,7 @@ class BufferedGravitySensorCollectorTest {
         requireNotNull(measurementsBeforeTimestamp)
         assertTrue(measurementsBeforeTimestamp.isEmpty())
 
-        val measurementsBeforePosition: LinkedList<GravitySensorMeasurement>? =
+        val measurementsBeforePosition: ArrayDeque<GravitySensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -730,7 +730,7 @@ class BufferedGravitySensorCollectorTest {
         requireNotNull(measurementsBeforePosition)
         assertTrue(measurementsBeforePosition.isEmpty())
 
-        val availableMeasurementsBeforeTimestamp: LinkedList<GravitySensorMeasurement>? =
+        val availableMeasurementsBeforeTimestamp: ArrayList<GravitySensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -742,7 +742,7 @@ class BufferedGravitySensorCollectorTest {
             availableMeasurementsBeforeTimestamp.size
         )
 
-        val availableMeasurementsBeforePosition: LinkedList<GravitySensorMeasurement>? =
+        val availableMeasurementsBeforePosition: ArrayList<GravitySensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -818,18 +818,18 @@ class BufferedGravitySensorCollectorTest {
         assertEquals(event.timestamp + startOffset, collector.oldestTimestampInBuffer)
 
         // check internal fields
-        val buffer: LinkedList<GravitySensorMeasurement>? =
+        val buffer: ArrayDeque<GravitySensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "buffer")
         requireNotNull(buffer)
         assertEquals(1, buffer.size)
-        assertSame(measurement, buffer[0])
+        assertSame(measurement, buffer.peek())
 
-        val availableMeasurements: LinkedList<GravitySensorMeasurement>? =
+        val availableMeasurements: ArrayDeque<GravitySensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "availableMeasurements")
         requireNotNull(availableMeasurements)
         assertEquals(BufferedSensorCollector.DEFAULT_CAPACITY - 1, availableMeasurements.size)
 
-        val measurementsBeforeTimestamp: LinkedList<GravitySensorMeasurement>? =
+        val measurementsBeforeTimestamp: ArrayDeque<GravitySensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -838,7 +838,7 @@ class BufferedGravitySensorCollectorTest {
         requireNotNull(measurementsBeforeTimestamp)
         assertTrue(measurementsBeforeTimestamp.isEmpty())
 
-        val measurementsBeforePosition: LinkedList<GravitySensorMeasurement>? =
+        val measurementsBeforePosition: ArrayDeque<GravitySensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -847,7 +847,7 @@ class BufferedGravitySensorCollectorTest {
         requireNotNull(measurementsBeforePosition)
         assertTrue(measurementsBeforePosition.isEmpty())
 
-        val availableMeasurementsBeforeTimestamp: LinkedList<GravitySensorMeasurement>? =
+        val availableMeasurementsBeforeTimestamp: ArrayList<GravitySensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -859,7 +859,7 @@ class BufferedGravitySensorCollectorTest {
             availableMeasurementsBeforeTimestamp.size
         )
 
-        val availableMeasurementsBeforePosition: LinkedList<GravitySensorMeasurement>? =
+        val availableMeasurementsBeforePosition: ArrayList<GravitySensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -906,11 +906,11 @@ class BufferedGravitySensorCollectorTest {
         requireNotNull(sensorEventListener)
 
         // clear available measurements and fill buffer
-        val buffer: LinkedList<GravitySensorMeasurement>? =
+        val buffer: ArrayDeque<GravitySensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "buffer")
         requireNotNull(buffer)
 
-        val availableMeasurements: LinkedList<GravitySensorMeasurement>? =
+        val availableMeasurements: ArrayDeque<GravitySensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "availableMeasurements")
         requireNotNull(availableMeasurements)
 
@@ -980,11 +980,11 @@ class BufferedGravitySensorCollectorTest {
         requireNotNull(sensorEventListener)
 
         // clear available measurements and fill buffer
-        val buffer: LinkedList<GravitySensorMeasurement>? =
+        val buffer: ArrayDeque<GravitySensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "buffer")
         requireNotNull(buffer)
 
-        val availableMeasurements: LinkedList<GravitySensorMeasurement>? =
+        val availableMeasurements: ArrayDeque<GravitySensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "availableMeasurements")
         requireNotNull(availableMeasurements)
 
@@ -1114,7 +1114,7 @@ class BufferedGravitySensorCollectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val collector = BufferedGravitySensorCollector(context)
 
-        val buffer: LinkedList<GravitySensorMeasurement>? =
+        val buffer: ArrayDeque<GravitySensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "buffer")
         requireNotNull(buffer)
         assertTrue(buffer.isEmpty())
@@ -1129,12 +1129,12 @@ class BufferedGravitySensorCollectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val collector = BufferedGravitySensorCollector(context)
 
-        val buffer: LinkedList<GravitySensorMeasurement>? =
+        val buffer: ArrayDeque<GravitySensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "buffer")
         requireNotNull(buffer)
         assertTrue(buffer.isEmpty())
 
-        val availableMeasurements: LinkedList<GravitySensorMeasurement>? =
+        val availableMeasurements: ArrayDeque<GravitySensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "availableMeasurements")
         requireNotNull(availableMeasurements)
         assertEquals(BufferedSensorCollector.DEFAULT_CAPACITY, availableMeasurements.size)
@@ -1168,7 +1168,7 @@ class BufferedGravitySensorCollectorTest {
         buffer.add(measurement2)
         buffer.add(measurement3)
 
-        val measurements = collector.getMeasurementsBeforeTimestamp(timestamp)
+        val measurements = ArrayList(collector.getMeasurementsBeforeTimestamp(timestamp))
         assertEquals(2, measurements.size)
 
         assertNotSame(measurement1, measurements[0])
@@ -1178,7 +1178,7 @@ class BufferedGravitySensorCollectorTest {
         assertEquals(timestamp - 1, measurements[0].timestamp)
         assertEquals(SensorAccuracy.HIGH, measurements[0].accuracy)
 
-        assertNotSame(measurement2, measurements[0])
+        assertNotSame(measurement2, measurements[1])
         assertEquals(2.0f, measurements[1].gx)
         assertEquals(2.0f, measurements[1].gy)
         assertEquals(2.0f, measurements[1].gz)
@@ -1194,7 +1194,7 @@ class BufferedGravitySensorCollectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val collector = BufferedGravitySensorCollector(context)
 
-        val buffer: LinkedList<GravitySensorMeasurement>? =
+        val buffer: ArrayDeque<GravitySensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "buffer")
         requireNotNull(buffer)
         assertTrue(buffer.isEmpty())
@@ -1208,12 +1208,12 @@ class BufferedGravitySensorCollectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val collector = BufferedGravitySensorCollector(context)
 
-        val buffer: LinkedList<GravitySensorMeasurement>? =
+        val buffer: ArrayDeque<GravitySensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "buffer")
         requireNotNull(buffer)
         assertTrue(buffer.isEmpty())
 
-        val availableMeasurements: LinkedList<GravitySensorMeasurement>? =
+        val availableMeasurements: ArrayDeque<GravitySensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "availableMeasurements")
         requireNotNull(availableMeasurements)
         assertEquals(BufferedSensorCollector.DEFAULT_CAPACITY, availableMeasurements.size)
@@ -1247,7 +1247,7 @@ class BufferedGravitySensorCollectorTest {
         buffer.add(measurement2)
         buffer.add(measurement3)
 
-        val measurements = collector.getMeasurementsBeforePosition(1)
+        val measurements = ArrayList(collector.getMeasurementsBeforePosition(1))
         assertEquals(2, measurements.size)
 
         assertNotSame(measurement1, measurements[0])
@@ -1257,7 +1257,7 @@ class BufferedGravitySensorCollectorTest {
         assertEquals(timestamp - 1, measurements[0].timestamp)
         assertEquals(SensorAccuracy.HIGH, measurements[0].accuracy)
 
-        assertNotSame(measurement2, measurements[0])
+        assertNotSame(measurement2, measurements[1])
         assertEquals(2.0f, measurements[1].gx)
         assertEquals(2.0f, measurements[1].gy)
         assertEquals(2.0f, measurements[1].gz)

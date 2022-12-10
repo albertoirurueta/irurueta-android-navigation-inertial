@@ -63,17 +63,17 @@ class BufferedAccelerometerSensorCollectorTest {
         assertNull(collector.oldestTimestampInBuffer)
 
         // check internal fields initialization
-        val buffer: LinkedList<AccelerometerSensorMeasurement>? =
+        val buffer: ArrayDeque<AccelerometerSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "buffer")
         requireNotNull(buffer)
         assertTrue(buffer.isEmpty())
 
-        val availableMeasurements: LinkedList<AccelerometerSensorMeasurement>? =
+        val availableMeasurements: ArrayDeque<AccelerometerSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "availableMeasurements")
         requireNotNull(availableMeasurements)
         assertEquals(BufferedSensorCollector.DEFAULT_CAPACITY, availableMeasurements.size)
 
-        val measurementsBeforeTimestamp: LinkedList<AccelerometerSensorMeasurement>? =
+        val measurementsBeforeTimestamp: ArrayDeque<AccelerometerSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -82,7 +82,7 @@ class BufferedAccelerometerSensorCollectorTest {
         requireNotNull(measurementsBeforeTimestamp)
         assertTrue(measurementsBeforeTimestamp.isEmpty())
 
-        val measurementsBeforePosition: LinkedList<AccelerometerSensorMeasurement>? =
+        val measurementsBeforePosition: ArrayDeque<AccelerometerSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -91,7 +91,7 @@ class BufferedAccelerometerSensorCollectorTest {
         requireNotNull(measurementsBeforePosition)
         assertTrue(measurementsBeforePosition.isEmpty())
 
-        val availableMeasurementsBeforeTimestamp: LinkedList<AccelerometerSensorMeasurement>? =
+        val availableMeasurementsBeforeTimestamp: ArrayList<AccelerometerSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -103,7 +103,7 @@ class BufferedAccelerometerSensorCollectorTest {
             availableMeasurementsBeforeTimestamp.size
         )
 
-        val availableMeasurementsBeforePosition: LinkedList<AccelerometerSensorMeasurement>? =
+        val availableMeasurementsBeforePosition: ArrayList<AccelerometerSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -159,17 +159,17 @@ class BufferedAccelerometerSensorCollectorTest {
         assertNull(collector.oldestTimestampInBuffer)
 
         // check internal fields initialization
-        val buffer: LinkedList<AccelerometerSensorMeasurement>? =
+        val buffer: ArrayDeque<AccelerometerSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "buffer")
         requireNotNull(buffer)
         assertTrue(buffer.isEmpty())
 
-        val availableMeasurements: LinkedList<AccelerometerSensorMeasurement>? =
+        val availableMeasurements: ArrayDeque<AccelerometerSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "availableMeasurements")
         requireNotNull(availableMeasurements)
         assertEquals(CAPACITY, availableMeasurements.size)
 
-        val measurementsBeforeTimestamp: LinkedList<AccelerometerSensorMeasurement>? =
+        val measurementsBeforeTimestamp: ArrayDeque<AccelerometerSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -178,7 +178,7 @@ class BufferedAccelerometerSensorCollectorTest {
         requireNotNull(measurementsBeforeTimestamp)
         assertTrue(measurementsBeforeTimestamp.isEmpty())
 
-        val measurementsBeforePosition: LinkedList<AccelerometerSensorMeasurement>? =
+        val measurementsBeforePosition: ArrayDeque<AccelerometerSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -187,7 +187,7 @@ class BufferedAccelerometerSensorCollectorTest {
         requireNotNull(measurementsBeforePosition)
         assertTrue(measurementsBeforePosition.isEmpty())
 
-        val availableMeasurementsBeforeTimestamp: LinkedList<AccelerometerSensorMeasurement>? =
+        val availableMeasurementsBeforeTimestamp: ArrayList<AccelerometerSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -196,7 +196,7 @@ class BufferedAccelerometerSensorCollectorTest {
         requireNotNull(availableMeasurementsBeforeTimestamp)
         assertEquals(CAPACITY, availableMeasurementsBeforeTimestamp.size)
 
-        val availableMeasurementsBeforePosition: LinkedList<AccelerometerSensorMeasurement>? =
+        val availableMeasurementsBeforePosition: ArrayList<AccelerometerSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -546,7 +546,7 @@ class BufferedAccelerometerSensorCollectorTest {
         val collector = BufferedAccelerometerSensorCollector(contextSpy)
 
         // set initial values
-        val buffer: LinkedList<AccelerometerSensorMeasurement>? =
+        val buffer: ArrayDeque<AccelerometerSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "buffer")
         requireNotNull(buffer)
         buffer.add(AccelerometerSensorMeasurement())
@@ -614,7 +614,7 @@ class BufferedAccelerometerSensorCollectorTest {
         val collector = BufferedAccelerometerSensorCollector(contextSpy)
 
         // set initial values
-        val buffer: LinkedList<AccelerometerSensorMeasurement>? =
+        val buffer: ArrayDeque<AccelerometerSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "buffer")
         requireNotNull(buffer)
         buffer.add(AccelerometerSensorMeasurement())
@@ -694,17 +694,17 @@ class BufferedAccelerometerSensorCollectorTest {
         assertEquals(0, collector.numberOfProcessedMeasurements)
 
         // check internal fields
-        val buffer: LinkedList<AccelerometerSensorMeasurement>? =
+        val buffer: ArrayDeque<AccelerometerSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "buffer")
         requireNotNull(buffer)
         assertTrue(buffer.isEmpty())
 
-        val availableMeasurements: LinkedList<AccelerometerSensorMeasurement>? =
+        val availableMeasurements: ArrayDeque<AccelerometerSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "availableMeasurements")
         requireNotNull(availableMeasurements)
         assertEquals(BufferedSensorCollector.DEFAULT_CAPACITY, availableMeasurements.size)
 
-        val measurementsBeforeTimestamp: LinkedList<AccelerometerSensorMeasurement>? =
+        val measurementsBeforeTimestamp: ArrayDeque<AccelerometerSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -713,7 +713,7 @@ class BufferedAccelerometerSensorCollectorTest {
         requireNotNull(measurementsBeforeTimestamp)
         assertTrue(measurementsBeforeTimestamp.isEmpty())
 
-        val measurementsBeforePosition: LinkedList<AccelerometerSensorMeasurement>? =
+        val measurementsBeforePosition: ArrayDeque<AccelerometerSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -722,7 +722,7 @@ class BufferedAccelerometerSensorCollectorTest {
         requireNotNull(measurementsBeforePosition)
         assertTrue(measurementsBeforePosition.isEmpty())
 
-        val availableMeasurementsBeforeTimestamp: LinkedList<AccelerometerSensorMeasurement>? =
+        val availableMeasurementsBeforeTimestamp: ArrayList<AccelerometerSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -734,7 +734,7 @@ class BufferedAccelerometerSensorCollectorTest {
             availableMeasurementsBeforeTimestamp.size
         )
 
-        val availableMeasurementsBeforePosition: LinkedList<AccelerometerSensorMeasurement>? =
+        val availableMeasurementsBeforePosition: ArrayList<AccelerometerSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -787,17 +787,17 @@ class BufferedAccelerometerSensorCollectorTest {
         assertEquals(0, collector.numberOfProcessedMeasurements)
 
         // check internal fields
-        val buffer: LinkedList<AccelerometerSensorMeasurement>? =
+        val buffer: ArrayDeque<AccelerometerSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "buffer")
         requireNotNull(buffer)
         assertTrue(buffer.isEmpty())
 
-        val availableMeasurements: LinkedList<AccelerometerSensorMeasurement>? =
+        val availableMeasurements: ArrayDeque<AccelerometerSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "availableMeasurements")
         requireNotNull(availableMeasurements)
         assertEquals(BufferedSensorCollector.DEFAULT_CAPACITY, availableMeasurements.size)
 
-        val measurementsBeforeTimestamp: LinkedList<AccelerometerSensorMeasurement>? =
+        val measurementsBeforeTimestamp: ArrayDeque<AccelerometerSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -806,7 +806,7 @@ class BufferedAccelerometerSensorCollectorTest {
         requireNotNull(measurementsBeforeTimestamp)
         assertTrue(measurementsBeforeTimestamp.isEmpty())
 
-        val measurementsBeforePosition: LinkedList<AccelerometerSensorMeasurement>? =
+        val measurementsBeforePosition: ArrayDeque<AccelerometerSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -815,7 +815,7 @@ class BufferedAccelerometerSensorCollectorTest {
         requireNotNull(measurementsBeforePosition)
         assertTrue(measurementsBeforePosition.isEmpty())
 
-        val availableMeasurementsBeforeTimestamp: LinkedList<AccelerometerSensorMeasurement>? =
+        val availableMeasurementsBeforeTimestamp: ArrayList<AccelerometerSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -827,7 +827,7 @@ class BufferedAccelerometerSensorCollectorTest {
             availableMeasurementsBeforeTimestamp.size
         )
 
-        val availableMeasurementsBeforePosition: LinkedList<AccelerometerSensorMeasurement>? =
+        val availableMeasurementsBeforePosition: ArrayList<AccelerometerSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -904,18 +904,18 @@ class BufferedAccelerometerSensorCollectorTest {
         assertEquals(event.timestamp + startOffset, collector.oldestTimestampInBuffer)
 
         // check internal fields
-        val buffer: LinkedList<AccelerometerSensorMeasurement>? =
+        val buffer: ArrayDeque<AccelerometerSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "buffer")
         requireNotNull(buffer)
         assertEquals(1, buffer.size)
-        assertSame(measurement, buffer[0])
+        assertSame(measurement, buffer.peek())
 
-        val availableMeasurements: LinkedList<AccelerometerSensorMeasurement>? =
+        val availableMeasurements: ArrayDeque<AccelerometerSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "availableMeasurements")
         requireNotNull(availableMeasurements)
         assertEquals(BufferedSensorCollector.DEFAULT_CAPACITY - 1, availableMeasurements.size)
 
-        val measurementsBeforeTimestamp: LinkedList<AccelerometerSensorMeasurement>? =
+        val measurementsBeforeTimestamp: ArrayDeque<AccelerometerSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -924,7 +924,7 @@ class BufferedAccelerometerSensorCollectorTest {
         requireNotNull(measurementsBeforeTimestamp)
         assertTrue(measurementsBeforeTimestamp.isEmpty())
 
-        val measurementsBeforePosition: LinkedList<AccelerometerSensorMeasurement>? =
+        val measurementsBeforePosition: ArrayDeque<AccelerometerSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -933,7 +933,7 @@ class BufferedAccelerometerSensorCollectorTest {
         requireNotNull(measurementsBeforePosition)
         assertTrue(measurementsBeforePosition.isEmpty())
 
-        val availableMeasurementsBeforeTimestamp: LinkedList<AccelerometerSensorMeasurement>? =
+        val availableMeasurementsBeforeTimestamp: ArrayList<AccelerometerSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -945,7 +945,7 @@ class BufferedAccelerometerSensorCollectorTest {
             availableMeasurementsBeforeTimestamp.size
         )
 
-        val availableMeasurementsBeforePosition: LinkedList<AccelerometerSensorMeasurement>? =
+        val availableMeasurementsBeforePosition: ArrayList<AccelerometerSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -991,11 +991,11 @@ class BufferedAccelerometerSensorCollectorTest {
         requireNotNull(sensorEventListener)
 
         // clear available measurements and fill buffer
-        val buffer: LinkedList<AccelerometerSensorMeasurement>? =
+        val buffer: ArrayDeque<AccelerometerSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "buffer")
         requireNotNull(buffer)
 
-        val availableMeasurements: LinkedList<AccelerometerSensorMeasurement>? =
+        val availableMeasurements: ArrayDeque<AccelerometerSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "availableMeasurements")
         requireNotNull(availableMeasurements)
 
@@ -1065,11 +1065,11 @@ class BufferedAccelerometerSensorCollectorTest {
         requireNotNull(sensorEventListener)
 
         // clear available measurements and fill buffer
-        val buffer: LinkedList<AccelerometerSensorMeasurement>? =
+        val buffer: ArrayDeque<AccelerometerSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "buffer")
         requireNotNull(buffer)
 
-        val availableMeasurements: LinkedList<AccelerometerSensorMeasurement>? =
+        val availableMeasurements: ArrayDeque<AccelerometerSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "availableMeasurements")
         requireNotNull(availableMeasurements)
 
@@ -1202,7 +1202,7 @@ class BufferedAccelerometerSensorCollectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val collector = BufferedAccelerometerSensorCollector(context)
 
-        val buffer: LinkedList<AccelerometerSensorMeasurement>? =
+        val buffer: ArrayDeque<AccelerometerSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "buffer")
         requireNotNull(buffer)
         assertTrue(buffer.isEmpty())
@@ -1217,12 +1217,12 @@ class BufferedAccelerometerSensorCollectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val collector = BufferedAccelerometerSensorCollector(context)
 
-        val buffer: LinkedList<AccelerometerSensorMeasurement>? =
+        val buffer: ArrayDeque<AccelerometerSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "buffer")
         requireNotNull(buffer)
         assertTrue(buffer.isEmpty())
 
-        val availableMeasurements: LinkedList<AccelerometerSensorMeasurement>? =
+        val availableMeasurements: ArrayDeque<AccelerometerSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "availableMeasurements")
         requireNotNull(availableMeasurements)
         assertEquals(BufferedSensorCollector.DEFAULT_CAPACITY, availableMeasurements.size)
@@ -1265,7 +1265,7 @@ class BufferedAccelerometerSensorCollectorTest {
         buffer.add(measurement2)
         buffer.add(measurement3)
 
-        val measurements = collector.getMeasurementsBeforeTimestamp(timestamp)
+        val measurements = ArrayList(collector.getMeasurementsBeforeTimestamp(timestamp))
         assertEquals(2, measurements.size)
 
         assertNotSame(measurement1, measurements[0])
@@ -1278,7 +1278,7 @@ class BufferedAccelerometerSensorCollectorTest {
         assertEquals(timestamp - 1, measurements[0].timestamp)
         assertEquals(SensorAccuracy.HIGH, measurements[0].accuracy)
 
-        assertNotSame(measurement2, measurements[0])
+        assertNotSame(measurement2, measurements[1])
         assertEquals(2.0f, measurements[1].ax)
         assertEquals(2.0f, measurements[1].ay)
         assertEquals(2.0f, measurements[1].az)
@@ -1297,7 +1297,7 @@ class BufferedAccelerometerSensorCollectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val collector = BufferedAccelerometerSensorCollector(context)
 
-        val buffer: LinkedList<AccelerometerSensorMeasurement>? =
+        val buffer: ArrayDeque<AccelerometerSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "buffer")
         requireNotNull(buffer)
         assertTrue(buffer.isEmpty())
@@ -1311,12 +1311,12 @@ class BufferedAccelerometerSensorCollectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val collector = BufferedAccelerometerSensorCollector(context)
 
-        val buffer: LinkedList<AccelerometerSensorMeasurement>? =
+        val buffer: ArrayDeque<AccelerometerSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "buffer")
         requireNotNull(buffer)
         assertTrue(buffer.isEmpty())
 
-        val availableMeasurements: LinkedList<AccelerometerSensorMeasurement>? =
+        val availableMeasurements: ArrayDeque<AccelerometerSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "availableMeasurements")
         requireNotNull(availableMeasurements)
         assertEquals(BufferedSensorCollector.DEFAULT_CAPACITY, availableMeasurements.size)
@@ -1359,7 +1359,7 @@ class BufferedAccelerometerSensorCollectorTest {
         buffer.add(measurement2)
         buffer.add(measurement3)
 
-        val measurements = collector.getMeasurementsBeforePosition(1)
+        val measurements = ArrayList(collector.getMeasurementsBeforePosition(1))
         assertEquals(2, measurements.size)
 
         assertNotSame(measurement1, measurements[0])
@@ -1372,7 +1372,7 @@ class BufferedAccelerometerSensorCollectorTest {
         assertEquals(timestamp - 1, measurements[0].timestamp)
         assertEquals(SensorAccuracy.HIGH, measurements[0].accuracy)
 
-        assertNotSame(measurement2, measurements[0])
+        assertNotSame(measurement2, measurements[1])
         assertEquals(2.0f, measurements[1].ax)
         assertEquals(2.0f, measurements[1].ay)
         assertEquals(2.0f, measurements[1].az)

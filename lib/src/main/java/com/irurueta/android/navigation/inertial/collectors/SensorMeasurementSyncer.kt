@@ -19,7 +19,6 @@ import android.content.Context
 import android.hardware.Sensor
 import android.os.Build
 import android.os.SystemClock
-import com.irurueta.android.navigation.inertial.SensorAvailabilityService
 
 /**
  * Syncs measurements collected from multiple sensors.
@@ -248,15 +247,21 @@ abstract class SensorMeasurementSyncer<M : SyncedSensorMeasurement, S : SensorMe
              * @param value code used for sensor types.
              * @return code expressed as an enum or null if code has no match.
              */
-            fun from(value: Int): SensorAvailabilityService.SensorType? {
+            fun from(value: Int): SensorType? {
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O
                     && value == Constants.TYPE_ACCELEROMETER_UNCALIBRATED
                 ) {
                     return null
                 }
-                return SensorAvailabilityService.SensorType.values().find { it.value == value }
+                return values().find { it.value == value }
             }
 
+            /**
+             * Gets sensor type based on provided [AccelerometerSensorType].
+             *
+             * @param accelerometerSensorType accelerometer sensor type.
+             * @return conversion to [SensorType] or null if no match is found.
+             */
             fun from(accelerometerSensorType: AccelerometerSensorType): SensorType {
                 return when (accelerometerSensorType) {
                     AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED -> ACCELEROMETER_UNCALIBRATED
@@ -264,10 +269,29 @@ abstract class SensorMeasurementSyncer<M : SyncedSensorMeasurement, S : SensorMe
                 }
             }
 
+            /**
+             * Gets sensor type based on provided [GyroscopeSensorType].
+             *
+             * @param gyroscopeSensorType gyroscope sensor type.
+             * @return conversion to [SensorType] or null if no match is found.
+             */
             fun from(gyroscopeSensorType: GyroscopeSensorType): SensorType {
                 return when (gyroscopeSensorType) {
                     GyroscopeSensorType.GYROSCOPE_UNCALIBRATED -> GYROSCOPE_UNCALIBRATED
                     else -> GYROSCOPE
+                }
+            }
+
+            /**
+             * Gets sensor type based on provided [MagnetometerSensorType].
+             *
+             * @param magnetometerSensorType magnetometer sensor type.
+             * @return conversion to [SensorType] or null if no match is found.
+             */
+            fun from(magnetometerSensorType: MagnetometerSensorType): SensorType {
+                return when (magnetometerSensorType) {
+                    MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED -> MAGNETOMETER_UNCALIBRATED
+                    else -> MAGNETOMETER
                 }
             }
         }

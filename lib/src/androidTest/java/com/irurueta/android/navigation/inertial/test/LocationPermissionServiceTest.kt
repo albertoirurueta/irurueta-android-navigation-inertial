@@ -16,6 +16,7 @@
 package com.irurueta.android.navigation.inertial.test
 
 import androidx.test.core.app.ActivityScenario
+import androidx.test.filters.RequiresDevice
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
 import androidx.test.runner.lifecycle.ActivityLifecycleCallback
@@ -30,6 +31,7 @@ import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
 
+@RequiresDevice
 class LocationPermissionServiceTest {
 
     @get:Rule

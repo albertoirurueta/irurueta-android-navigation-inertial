@@ -61,17 +61,17 @@ class BufferedGyroscopeSensorCollectorTest {
         assertNull(collector.oldestTimestampInBuffer)
 
         // check internal fields initialization
-        val buffer: LinkedList<GyroscopeSensorMeasurement>? =
+        val buffer: ArrayDeque<GyroscopeSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "buffer")
         requireNotNull(buffer)
         assertTrue(buffer.isEmpty())
 
-        val availableMeasurements: LinkedList<GyroscopeSensorMeasurement>? =
+        val availableMeasurements: ArrayDeque<GyroscopeSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "availableMeasurements")
         requireNotNull(availableMeasurements)
         assertEquals(BufferedSensorCollector.DEFAULT_CAPACITY, availableMeasurements.size)
 
-        val measurementsBeforeTimestamp: LinkedList<GyroscopeSensorMeasurement>? =
+        val measurementsBeforeTimestamp: ArrayDeque<GyroscopeSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -80,7 +80,7 @@ class BufferedGyroscopeSensorCollectorTest {
         requireNotNull(measurementsBeforeTimestamp)
         assertTrue(measurementsBeforeTimestamp.isEmpty())
 
-        val measurementsBeforePosition: LinkedList<GyroscopeSensorMeasurement>? =
+        val measurementsBeforePosition: ArrayDeque<GyroscopeSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -89,7 +89,7 @@ class BufferedGyroscopeSensorCollectorTest {
         requireNotNull(measurementsBeforePosition)
         assertTrue(measurementsBeforePosition.isEmpty())
 
-        val availableMeasurementsBeforeTimestamp: LinkedList<GyroscopeSensorMeasurement>? =
+        val availableMeasurementsBeforeTimestamp: ArrayList<GyroscopeSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -101,7 +101,7 @@ class BufferedGyroscopeSensorCollectorTest {
             availableMeasurementsBeforeTimestamp.size
         )
 
-        val availableMeasurementsBeforePosition: LinkedList<GyroscopeSensorMeasurement>? =
+        val availableMeasurementsBeforePosition: ArrayList<GyroscopeSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -157,17 +157,17 @@ class BufferedGyroscopeSensorCollectorTest {
         assertNull(collector.oldestTimestampInBuffer)
 
         // check internal fields initialization
-        val buffer: LinkedList<GyroscopeSensorMeasurement>? =
+        val buffer: ArrayDeque<GyroscopeSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "buffer")
         requireNotNull(buffer)
         assertTrue(buffer.isEmpty())
 
-        val availableMeasurements: LinkedList<GyroscopeSensorMeasurement>? =
+        val availableMeasurements: ArrayDeque<GyroscopeSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "availableMeasurements")
         requireNotNull(availableMeasurements)
         assertEquals(CAPACITY, availableMeasurements.size)
 
-        val measurementsBeforeTimestamp: LinkedList<GyroscopeSensorMeasurement>? =
+        val measurementsBeforeTimestamp: ArrayDeque<GyroscopeSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -176,7 +176,7 @@ class BufferedGyroscopeSensorCollectorTest {
         requireNotNull(measurementsBeforeTimestamp)
         assertTrue(measurementsBeforeTimestamp.isEmpty())
 
-        val measurementsBeforePosition: LinkedList<GyroscopeSensorMeasurement>? =
+        val measurementsBeforePosition: ArrayDeque<GyroscopeSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -185,7 +185,7 @@ class BufferedGyroscopeSensorCollectorTest {
         requireNotNull(measurementsBeforePosition)
         assertTrue(measurementsBeforePosition.isEmpty())
 
-        val availableMeasurementsBeforeTimestamp: LinkedList<GyroscopeSensorMeasurement>? =
+        val availableMeasurementsBeforeTimestamp: ArrayList<GyroscopeSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -194,7 +194,7 @@ class BufferedGyroscopeSensorCollectorTest {
         requireNotNull(availableMeasurementsBeforeTimestamp)
         assertEquals(CAPACITY, availableMeasurementsBeforeTimestamp.size)
 
-        val availableMeasurementsBeforePosition: LinkedList<GyroscopeSensorMeasurement>? =
+        val availableMeasurementsBeforePosition: ArrayList<GyroscopeSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -514,7 +514,7 @@ class BufferedGyroscopeSensorCollectorTest {
         val collector = BufferedGyroscopeSensorCollector(contextSpy)
 
         // set initial values
-        val buffer: LinkedList<GyroscopeSensorMeasurement>? =
+        val buffer: ArrayDeque<GyroscopeSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "buffer")
         requireNotNull(buffer)
         buffer.add(GyroscopeSensorMeasurement())
@@ -582,7 +582,7 @@ class BufferedGyroscopeSensorCollectorTest {
         val collector = BufferedGyroscopeSensorCollector(contextSpy)
 
         // set initial values
-        val buffer: LinkedList<GyroscopeSensorMeasurement>? =
+        val buffer: ArrayDeque<GyroscopeSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "buffer")
         requireNotNull(buffer)
         buffer.add(GyroscopeSensorMeasurement())
@@ -662,17 +662,17 @@ class BufferedGyroscopeSensorCollectorTest {
         assertEquals(0, collector.numberOfProcessedMeasurements)
 
         // check internal fields
-        val buffer: LinkedList<GyroscopeSensorMeasurement>? =
+        val buffer: ArrayDeque<GyroscopeSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "buffer")
         requireNotNull(buffer)
         assertTrue(buffer.isEmpty())
 
-        val availableMeasurements: LinkedList<GyroscopeSensorMeasurement>? =
+        val availableMeasurements: ArrayDeque<GyroscopeSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "availableMeasurements")
         requireNotNull(availableMeasurements)
         assertEquals(BufferedSensorCollector.DEFAULT_CAPACITY, availableMeasurements.size)
 
-        val measurementsBeforeTimestamp: LinkedList<GyroscopeSensorMeasurement>? =
+        val measurementsBeforeTimestamp: ArrayDeque<GyroscopeSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -681,7 +681,7 @@ class BufferedGyroscopeSensorCollectorTest {
         requireNotNull(measurementsBeforeTimestamp)
         assertTrue(measurementsBeforeTimestamp.isEmpty())
 
-        val measurementsBeforePosition: LinkedList<GyroscopeSensorMeasurement>? =
+        val measurementsBeforePosition: ArrayDeque<GyroscopeSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -690,7 +690,7 @@ class BufferedGyroscopeSensorCollectorTest {
         requireNotNull(measurementsBeforePosition)
         assertTrue(measurementsBeforePosition.isEmpty())
 
-        val availableMeasurementsBeforeTimestamp: LinkedList<GyroscopeSensorMeasurement>? =
+        val availableMeasurementsBeforeTimestamp: ArrayList<GyroscopeSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -702,7 +702,7 @@ class BufferedGyroscopeSensorCollectorTest {
             availableMeasurementsBeforeTimestamp.size
         )
 
-        val availableMeasurementsBeforePosition: LinkedList<GyroscopeSensorMeasurement>? =
+        val availableMeasurementsBeforePosition: ArrayList<GyroscopeSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -755,17 +755,17 @@ class BufferedGyroscopeSensorCollectorTest {
         assertEquals(0, collector.numberOfProcessedMeasurements)
 
         // check internal fields
-        val buffer: LinkedList<GyroscopeSensorMeasurement>? =
+        val buffer: ArrayDeque<GyroscopeSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "buffer")
         requireNotNull(buffer)
         assertTrue(buffer.isEmpty())
 
-        val availableMeasurements: LinkedList<GyroscopeSensorMeasurement>? =
+        val availableMeasurements: ArrayDeque<GyroscopeSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "availableMeasurements")
         requireNotNull(availableMeasurements)
         assertEquals(BufferedSensorCollector.DEFAULT_CAPACITY, availableMeasurements.size)
 
-        val measurementsBeforeTimestamp: LinkedList<GyroscopeSensorMeasurement>? =
+        val measurementsBeforeTimestamp: ArrayDeque<GyroscopeSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -774,7 +774,7 @@ class BufferedGyroscopeSensorCollectorTest {
         requireNotNull(measurementsBeforeTimestamp)
         assertTrue(measurementsBeforeTimestamp.isEmpty())
 
-        val measurementsBeforePosition: LinkedList<GyroscopeSensorMeasurement>? =
+        val measurementsBeforePosition: ArrayDeque<GyroscopeSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -783,7 +783,7 @@ class BufferedGyroscopeSensorCollectorTest {
         requireNotNull(measurementsBeforePosition)
         assertTrue(measurementsBeforePosition.isEmpty())
 
-        val availableMeasurementsBeforeTimestamp: LinkedList<GyroscopeSensorMeasurement>? =
+        val availableMeasurementsBeforeTimestamp: ArrayList<GyroscopeSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -795,7 +795,7 @@ class BufferedGyroscopeSensorCollectorTest {
             availableMeasurementsBeforeTimestamp.size
         )
 
-        val availableMeasurementsBeforePosition: LinkedList<GyroscopeSensorMeasurement>? =
+        val availableMeasurementsBeforePosition: ArrayList<GyroscopeSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -872,18 +872,18 @@ class BufferedGyroscopeSensorCollectorTest {
         assertEquals(event.timestamp + startOffset, collector.oldestTimestampInBuffer)
 
         // check internal fields
-        val buffer: LinkedList<GyroscopeSensorMeasurement>? =
+        val buffer: ArrayDeque<GyroscopeSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "buffer")
         requireNotNull(buffer)
         assertEquals(1, buffer.size)
-        assertSame(measurement, buffer[0])
+        assertSame(measurement, buffer.peek())
 
-        val availableMeasurements: LinkedList<GyroscopeSensorMeasurement>? =
+        val availableMeasurements: ArrayDeque<GyroscopeSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "availableMeasurements")
         requireNotNull(availableMeasurements)
         assertEquals(BufferedSensorCollector.DEFAULT_CAPACITY - 1, availableMeasurements.size)
 
-        val measurementsBeforeTimestamp: LinkedList<GyroscopeSensorMeasurement>? =
+        val measurementsBeforeTimestamp: ArrayDeque<GyroscopeSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -892,7 +892,7 @@ class BufferedGyroscopeSensorCollectorTest {
         requireNotNull(measurementsBeforeTimestamp)
         assertTrue(measurementsBeforeTimestamp.isEmpty())
 
-        val measurementsBeforePosition: LinkedList<GyroscopeSensorMeasurement>? =
+        val measurementsBeforePosition: ArrayDeque<GyroscopeSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -901,7 +901,7 @@ class BufferedGyroscopeSensorCollectorTest {
         requireNotNull(measurementsBeforePosition)
         assertTrue(measurementsBeforePosition.isEmpty())
 
-        val availableMeasurementsBeforeTimestamp: LinkedList<GyroscopeSensorMeasurement>? =
+        val availableMeasurementsBeforeTimestamp: ArrayList<GyroscopeSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -913,7 +913,7 @@ class BufferedGyroscopeSensorCollectorTest {
             availableMeasurementsBeforeTimestamp.size
         )
 
-        val availableMeasurementsBeforePosition: LinkedList<GyroscopeSensorMeasurement>? =
+        val availableMeasurementsBeforePosition: ArrayList<GyroscopeSensorMeasurement>? =
             getPrivateProperty(
                 BufferedSensorCollector::class,
                 collector,
@@ -959,11 +959,11 @@ class BufferedGyroscopeSensorCollectorTest {
         requireNotNull(sensorEventListener)
 
         // clear available measurements and fill buffer
-        val buffer: LinkedList<GyroscopeSensorMeasurement>? =
+        val buffer: ArrayDeque<GyroscopeSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "buffer")
         requireNotNull(buffer)
 
-        val availableMeasurements: LinkedList<GyroscopeSensorMeasurement>? =
+        val availableMeasurements: ArrayDeque<GyroscopeSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "availableMeasurements")
         requireNotNull(availableMeasurements)
 
@@ -1033,11 +1033,11 @@ class BufferedGyroscopeSensorCollectorTest {
         requireNotNull(sensorEventListener)
 
         // clear available measurements and fill buffer
-        val buffer: LinkedList<GyroscopeSensorMeasurement>? =
+        val buffer: ArrayDeque<GyroscopeSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "buffer")
         requireNotNull(buffer)
 
-        val availableMeasurements: LinkedList<GyroscopeSensorMeasurement>? =
+        val availableMeasurements: ArrayDeque<GyroscopeSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "availableMeasurements")
         requireNotNull(availableMeasurements)
 
@@ -1170,7 +1170,7 @@ class BufferedGyroscopeSensorCollectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val collector = BufferedGyroscopeSensorCollector(context)
 
-        val buffer: LinkedList<GyroscopeSensorMeasurement>? =
+        val buffer: ArrayDeque<GyroscopeSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "buffer")
         requireNotNull(buffer)
         assertTrue(buffer.isEmpty())
@@ -1185,12 +1185,12 @@ class BufferedGyroscopeSensorCollectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val collector = BufferedGyroscopeSensorCollector(context)
 
-        val buffer: LinkedList<GyroscopeSensorMeasurement>? =
+        val buffer: ArrayDeque<GyroscopeSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "buffer")
         requireNotNull(buffer)
         assertTrue(buffer.isEmpty())
 
-        val availableMeasurements: LinkedList<GyroscopeSensorMeasurement>? =
+        val availableMeasurements: ArrayDeque<GyroscopeSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "availableMeasurements")
         requireNotNull(availableMeasurements)
         assertEquals(BufferedSensorCollector.DEFAULT_CAPACITY, availableMeasurements.size)
@@ -1233,7 +1233,7 @@ class BufferedGyroscopeSensorCollectorTest {
         buffer.add(measurement2)
         buffer.add(measurement3)
 
-        val measurements = collector.getMeasurementsBeforeTimestamp(timestamp)
+        val measurements = ArrayList(collector.getMeasurementsBeforeTimestamp(timestamp))
         assertEquals(2, measurements.size)
 
         assertNotSame(measurement1, measurements[0])
@@ -1246,7 +1246,7 @@ class BufferedGyroscopeSensorCollectorTest {
         assertEquals(timestamp - 1, measurements[0].timestamp)
         assertEquals(SensorAccuracy.HIGH, measurements[0].accuracy)
 
-        assertNotSame(measurement2, measurements[0])
+        assertNotSame(measurement2, measurements[1])
         assertEquals(2.0f, measurements[1].wx)
         assertEquals(2.0f, measurements[1].wy)
         assertEquals(2.0f, measurements[1].wz)
@@ -1265,7 +1265,7 @@ class BufferedGyroscopeSensorCollectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val collector = BufferedGyroscopeSensorCollector(context)
 
-        val buffer: LinkedList<GyroscopeSensorMeasurement>? =
+        val buffer: ArrayDeque<GyroscopeSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "buffer")
         requireNotNull(buffer)
         assertTrue(buffer.isEmpty())
@@ -1279,12 +1279,12 @@ class BufferedGyroscopeSensorCollectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val collector = BufferedGyroscopeSensorCollector(context)
 
-        val buffer: LinkedList<GyroscopeSensorMeasurement>? =
+        val buffer: ArrayDeque<GyroscopeSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "buffer")
         requireNotNull(buffer)
         assertTrue(buffer.isEmpty())
 
-        val availableMeasurements: LinkedList<GyroscopeSensorMeasurement>? =
+        val availableMeasurements: ArrayDeque<GyroscopeSensorMeasurement>? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "availableMeasurements")
         requireNotNull(availableMeasurements)
         assertEquals(BufferedSensorCollector.DEFAULT_CAPACITY, availableMeasurements.size)
@@ -1327,7 +1327,7 @@ class BufferedGyroscopeSensorCollectorTest {
         buffer.add(measurement2)
         buffer.add(measurement3)
 
-        val measurements = collector.getMeasurementsBeforePosition(1)
+        val measurements = ArrayList(collector.getMeasurementsBeforePosition(1))
         assertEquals(2, measurements.size)
 
         assertNotSame(measurement1, measurements[0])
@@ -1340,7 +1340,7 @@ class BufferedGyroscopeSensorCollectorTest {
         assertEquals(timestamp - 1, measurements[0].timestamp)
         assertEquals(SensorAccuracy.HIGH, measurements[0].accuracy)
 
-        assertNotSame(measurement2, measurements[0])
+        assertNotSame(measurement2, measurements[1])
         assertEquals(2.0f, measurements[1].wx)
         assertEquals(2.0f, measurements[1].wy)
         assertEquals(2.0f, measurements[1].wz)
