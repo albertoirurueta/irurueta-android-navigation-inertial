@@ -245,6 +245,7 @@ class BufferedAccelerometerSensorCollectorTest {
         assertFalse(collector.running)
     }
 
+    @RequiresDevice
     @Test
     fun startAndStop_whenStopWhenFilledBufferDisabled_collectsMeasurementsUntilStopped() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
