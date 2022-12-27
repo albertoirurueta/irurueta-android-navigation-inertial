@@ -110,19 +110,13 @@ abstract class BufferedSensorCollector<M : SensorMeasurement<M>, C : BufferedSen
                 buffer.add(measurement)
 
                 bufferPosition = buffer.size - 1
-            }
 
-            mostRecentTimestamp = measurement.timestamp
-            numberOfProcessedMeasurements++
+                mostRecentTimestamp = measurement.timestamp
+                numberOfProcessedMeasurements++
 
-            // notify measurement
-            val measurementListener = this@BufferedSensorCollector.measurementListener
-            if (measurementListener != null) {
-                // copy measurement into reusable instance to prevent changes introduced
-                // from listener call
-                this@BufferedSensorCollector.measurement.copyFrom(measurement)
+                // notify measurement
                 @Suppress("UNCHECKED_CAST")
-                measurementListener.onMeasurement(
+                measurementListener?.onMeasurement(
                     this@BufferedSensorCollector as C,
                     measurement,
                     bufferPosition
@@ -186,12 +180,6 @@ abstract class BufferedSensorCollector<M : SensorMeasurement<M>, C : BufferedSen
     protected val sensorManager: SensorManager? by lazy {
         context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
     }
-
-    /**
-     * Measurement being reused internally to copy data and avoid exposing
-     * internal instances through listeners for security purposes.
-     */
-    protected abstract val measurement: M
 
     /**
      * Sensor being used to obtain measurements or null if not available.

@@ -64,12 +64,6 @@ class BufferedGyroscopeSensorCollector(
     measurementListener
 ) {
     /**
-     * Measurement being reused internally to copy data and avoid exposing
-     * internal instances through listeners for security purposes.
-     */
-    override val measurement = createEmptyMeasurement()
-
-    /**
      * Sensor being used to obtain measurements or null if not available.
      * This can be used to obtain additional information about the sensor.
      * @see sensorAvailable

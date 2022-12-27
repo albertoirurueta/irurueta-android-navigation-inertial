@@ -19,6 +19,7 @@ import android.content.Context
 import android.hardware.Sensor
 import android.os.Build
 import android.os.SystemClock
+import java.util.*
 
 /**
  * Syncs measurements collected from multiple sensors.
@@ -29,29 +30,28 @@ import android.os.SystemClock
  * @property stopWhenFilledBuffer true to stop syncer when any buffer completely fills, false to
  * continue processing measurements at the expense of loosing old data. This will be notified using
  * [bufferFilledListener].
- * @property outOfOrderDetectionEnabled true to enable out of order detection of measurements, false
- * otherwise.
- * @property stopWhenOutOfOrder true to stop syncer if any out of order measurement is detected,
- * folse to continue processing measurements at the expense of receiving unordered data. This will
- * be notified using [outOfOrderMeasurementListener].
+ * @property staleOffsetNanos offset respect most recent received timestamp of a measurement to
+ * consider the measurement as stale so that it is skipped from synced measurement processing and
+ * returned back from buffer to cache of measurements.
+ * @property staleDetectionEnabled true to enable stale measurement detection, false otherwise.
  * @property accuracyChangedListener listener to notify changes in accuracy.
  * @property bufferFilledListener listener to notify that some buffer has been filled. This usually
  * happens when consumer of measurements cannot keep up with the rate at which measurements are
  * generated.
- * @property outOfOrderMeasurementListener listener to notify that an out of order measurement has
- * been received. This usually happens when capacity of buffers are too small.
  * @property syncedMeasurementListener listener to notify the generation of a new synced
  * measurement.
+ * @property staleDetectedMeasurementsListener listener to notify when stale measurements are found.
+ * This might indicate that buffers are too small and data is not being properly synced.
  */
 abstract class SensorMeasurementSyncer<M : SyncedSensorMeasurement, S : SensorMeasurementSyncer<M, S>>(
     val context: Context,
     val stopWhenFilledBuffer: Boolean,
-    val outOfOrderDetectionEnabled: Boolean,
-    val stopWhenOutOfOrder: Boolean,
+    val staleOffsetNanos: Long,
+    val staleDetectionEnabled: Boolean,
     var accuracyChangedListener: OnAccuracyChangedListener<M, S>?,
     var bufferFilledListener: OnBufferFilledListener<M, S>?,
-    var outOfOrderMeasurementListener: OnOutOfOrderMeasurementListener<M, S>?,
-    var syncedMeasurementListener: OnSyncedMeasurementsListener<M, S>?
+    var syncedMeasurementListener: OnSyncedMeasurementsListener<M, S>?,
+    var staleDetectedMeasurementsListener: OnStaleDetectedMeasurementsListener<M, S>?
 ) {
     /**
      * Synced measurement to be reused for efficiency purposes.
@@ -86,8 +86,7 @@ abstract class SensorMeasurementSyncer<M : SyncedSensorMeasurement, S : SensorMe
         protected set
 
     /**
-     * Gets oldest timestamp in the buffer. If a new measurement arrives having
-     * a timestamp older than this value, [OnOutOfOrderMeasurementListener] will be notified.
+     * Gets oldest timestamp in the buffer.
      */
     var oldestTimestamp: Long? = null
         protected set
@@ -108,6 +107,78 @@ abstract class SensorMeasurementSyncer<M : SyncedSensorMeasurement, S : SensorMe
      * Stops processing and syncing sensor measurements.
      */
     abstract fun stop()
+
+    protected companion object {
+        /**
+         * Finds measurements within provided minimum and maximum timestamps.
+         *
+         * @param minTimestamp minimum timestamp.
+         * @param maxTimestamp maximum timestamp.
+         * @param result instance where found measurements will be stored.
+         */
+        fun <T : SensorMeasurement<T>> findMeasurementsBetween(
+            minTimestamp: Long,
+            maxTimestamp: Long,
+            measurements: ArrayDeque<T>,
+            result: ArrayDeque<T>
+        ) {
+            result.clear()
+            for (measurement in measurements) {
+                if (measurement.timestamp < minTimestamp) {
+                    continue
+                }
+                if (measurement.timestamp > maxTimestamp) {
+                    break
+                }
+
+                result.add(measurement)
+            }
+        }
+
+        /**
+         * Finds and deletes stale measurements from provided buffer if their timestamp is older
+         * than provided [staleTimestamp].
+         *
+         * @param staleTimestamp timestamp to consider measurements as stale. Any measurement older
+         * than this value wll be deleted.
+         * @param measurementsToDelete collection containing measurements that were found to be
+         * stale and will be deleted from [measurements] collection.
+         * @param measurements collection containing measurements that will be deleted from.
+         * @param sensorType sensor type of provided measurements
+         * @param syncer syncer that will raise a notification.
+         * @param staleDetectedMeasurementsListener listener to notify stale measurements if any is
+         * found
+         */
+        fun <T : SensorMeasurement<T>, M : SyncedSensorMeasurement, S : SensorMeasurementSyncer<M, S>> cleanupStaleMeasurements(
+            staleTimestamp: Long,
+            measurementsToDelete: ArrayDeque<T>,
+            measurements: ArrayDeque<T>,
+            sensorType: SensorType,
+            syncer: S,
+            staleDetectedMeasurementsListener: OnStaleDetectedMeasurementsListener<M, S>?
+        ) {
+            measurementsToDelete.clear()
+            for (accelerometerMeasurement in measurements) {
+                if (accelerometerMeasurement.timestamp < staleTimestamp) {
+                    measurementsToDelete.add(accelerometerMeasurement)
+                }
+            }
+
+            if (measurementsToDelete.isNotEmpty()) {
+                // remove found stale measurements
+                measurements.removeAll(measurementsToDelete)
+
+                // notify stale measurements
+                staleDetectedMeasurementsListener?.onStaleMeasurements(
+                    syncer,
+                    sensorType,
+                    measurementsToDelete
+                )
+
+                measurementsToDelete.clear()
+            }
+        }
+    }
 
     /**
      * Interface to notify when sensor accuracy changes.
@@ -148,33 +219,6 @@ abstract class SensorMeasurementSyncer<M : SyncedSensorMeasurement, S : SensorMe
     }
 
     /**
-     * Interface to notify when an out of order measurement is detected.
-     * This usually happens if capacity of internal buffers is too small.
-     * If [stopWhenOutOfOrder] is true, syncer stops if any out of order measurement is detected.
-     * If [stopWhenOutOfOrder] is false, processing of measurements continues at the expense of
-     * possibly receiving some unordered data. Consumers of this listener should decide what to do
-     * at this point.
-     *
-     * @param M type of synced measurement.
-     * @param S type of syncer.
-     */
-    fun interface OnOutOfOrderMeasurementListener<M : SyncedSensorMeasurement, S : SensorMeasurementSyncer<M, S>> {
-
-        /**
-         * Called when an out of order measurement is detected.
-         *
-         * @param syncer syncer that raised this event.
-         * @param sensorType sensor type of detected out of order measurement.
-         * @param measurement detected out of order measurement.
-         */
-        fun onOutOfOrderMeasurement(
-            syncer: S,
-            sensorType: SensorType,
-            measurement: SensorMeasurement<*>
-        )
-    }
-
-    /**
      * Interface to notify when a nw synced measurement is available.
      * Measurements notified by this listener are guaranteed to be ordered and synced.
      * Notice that notified measurement i reused for memory efficiency.
@@ -190,6 +234,28 @@ abstract class SensorMeasurementSyncer<M : SyncedSensorMeasurement, S : SensorMe
          * @param measurement a synced measurement containing measurements for each sensor being synced.
          */
         fun onSyncedMeasurements(syncer: S, measurement: M)
+    }
+
+    /**
+     * Interface to notify when stale measurements were in the buffer but could not be
+     * synced against other measurements after elapsing a certain amount of time.
+     *
+     * @param M type of synced measurement.
+     * @param S type of syncer.
+     */
+    fun interface OnStaleDetectedMeasurementsListener<M : SyncedSensorMeasurement, S : SensorMeasurementSyncer<M, S>> {
+        /**
+         * Called when new stale measurements are detected.
+         *
+         * @param syncer syncer that raised this event.
+         * @param sensorType sensor type where stale measurements were found.
+         * @param measurements found stale measurements.
+         */
+        fun onStaleMeasurements(
+            syncer: S,
+            sensorType: SensorType,
+            measurements: Collection<SensorMeasurement<*>>
+        )
     }
 
     /**

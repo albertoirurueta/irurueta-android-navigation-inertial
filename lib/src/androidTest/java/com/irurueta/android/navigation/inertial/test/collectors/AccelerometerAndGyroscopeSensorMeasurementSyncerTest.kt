@@ -40,6 +40,8 @@ class AccelerometerAndGyroscopeSensorMeasurementSyncerTest {
     private var gyroscopeTimestamp = 0L
     private var maxAccelerometerUsage = -1.0f
     private var maxGyroscopeUsage = -1.0f
+    private var maxAccelerometerCollectorUsage = -1.0f
+    private var maxGyroscopeCollectorUsage = -1.0f
 
     @Before
     fun setUp() {
@@ -50,6 +52,8 @@ class AccelerometerAndGyroscopeSensorMeasurementSyncerTest {
         gyroscopeTimestamp = 0L
         maxAccelerometerUsage = -1.0f
         maxGyroscopeUsage = -1.0f
+        maxAccelerometerCollectorUsage = -1.0f
+        maxGyroscopeCollectorUsage = -1.0f
     }
 
     @Test
@@ -157,9 +161,7 @@ class AccelerometerAndGyroscopeSensorMeasurementSyncerTest {
         runTest(
             accelerometerStartOffsetEnabled = true,
             gyroscopeStartOffsetEnabled = true,
-            stopWhenFilledBuffer = false,
-            outOfOrderDetectionEnabled = false,
-            stopWhenOutOfOrder = false
+            stopWhenFilledBuffer = false
         )
     }
 
@@ -168,20 +170,7 @@ class AccelerometerAndGyroscopeSensorMeasurementSyncerTest {
         runTest(
             accelerometerStartOffsetEnabled = false,
             gyroscopeStartOffsetEnabled = false,
-            stopWhenFilledBuffer = true,
-            outOfOrderDetectionEnabled = false,
-            stopWhenOutOfOrder = false
-        )
-    }
-
-    @Test
-    fun startAndStop_whenOutOfOrderEnabled_notifiesMeasurements() {
-        runTest(
-            accelerometerStartOffsetEnabled = false,
-            gyroscopeStartOffsetEnabled = false,
-            stopWhenFilledBuffer = false,
-            outOfOrderDetectionEnabled = true,
-            stopWhenOutOfOrder = true
+            stopWhenFilledBuffer = true
         )
     }
 
@@ -190,26 +179,22 @@ class AccelerometerAndGyroscopeSensorMeasurementSyncerTest {
         runTest(
             accelerometerStartOffsetEnabled = false,
             gyroscopeStartOffsetEnabled = false,
-            stopWhenFilledBuffer = false,
-            outOfOrderDetectionEnabled = false,
-            stopWhenOutOfOrder = false
+            stopWhenFilledBuffer = false
         )
     }
 
     private fun runTest(
         accelerometerStartOffsetEnabled: Boolean,
         gyroscopeStartOffsetEnabled: Boolean,
-        stopWhenFilledBuffer: Boolean,
-        outOfOrderDetectionEnabled: Boolean,
-        stopWhenOutOfOrder: Boolean
+        stopWhenFilledBuffer: Boolean
     ) {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val syncer = AccelerometerAndGyroscopeSensorMeasurementSyncer(context,
+        val syncer = AccelerometerAndGyroscopeSensorMeasurementSyncer(
+            context,
             accelerometerStartOffsetEnabled = accelerometerStartOffsetEnabled,
             gyroscopeStartOffsetEnabled = gyroscopeStartOffsetEnabled,
             stopWhenFilledBuffer = stopWhenFilledBuffer,
-            outOfOrderDetectionEnabled = outOfOrderDetectionEnabled,
-            stopWhenOutOfOrder = stopWhenOutOfOrder,
+            staleDetectionEnabled = true,
             accuracyChangedListener = { syncer, sensorType, accuracy ->
                 logAccuracyChanged(
                     syncer,
@@ -218,13 +203,6 @@ class AccelerometerAndGyroscopeSensorMeasurementSyncerTest {
                 )
             },
             bufferFilledListener = { syncer, sensorType -> logBufferFilled(syncer, sensorType) },
-            outOfOrderMeasurementListener = { syncer, sensorType, measurement ->
-                logOutOfOrderMeasurement(
-                    syncer,
-                    sensorType,
-                    measurement
-                )
-            },
             syncedMeasurementListener = { syncer, measurement ->
                 assertTrue(measurement.timestamp > timestamp)
 
@@ -233,7 +211,7 @@ class AccelerometerAndGyroscopeSensorMeasurementSyncerTest {
 
                 val currentGyroscopeTimestamp = measurement.gyroscopeMeasurement?.timestamp
                 requireNotNull(currentGyroscopeTimestamp)
-                assertTrue(currentGyroscopeTimestamp > gyroscopeTimestamp)
+                assertTrue(currentGyroscopeTimestamp >= gyroscopeTimestamp)
 
                 val currentAccelerometerTimestamp = measurement.accelerometerMeasurement?.timestamp
                 requireNotNull(currentAccelerometerTimestamp)
@@ -243,6 +221,14 @@ class AccelerometerAndGyroscopeSensorMeasurementSyncerTest {
                 gyroscopeTimestamp = currentGyroscopeTimestamp
                 accelerometerTimestamp = currentAccelerometerTimestamp
 
+                val accelerometerCollectorUsage = syncer.accelerometerCollectorUsage
+                if (accelerometerCollectorUsage > maxAccelerometerCollectorUsage) {
+                    maxAccelerometerCollectorUsage = accelerometerCollectorUsage
+                }
+                val gyroscopeCollectorUsage = syncer.gyroscopeCollectorUsage
+                if (gyroscopeCollectorUsage > maxGyroscopeCollectorUsage) {
+                    maxGyroscopeCollectorUsage = gyroscopeCollectorUsage
+                }
                 val accelerometerUsage = syncer.accelerometerUsage
                 if (accelerometerUsage > maxAccelerometerUsage) {
                     maxAccelerometerUsage = accelerometerUsage
@@ -257,11 +243,14 @@ class AccelerometerAndGyroscopeSensorMeasurementSyncerTest {
                     measurement
                 )
 
-                if (syncer.numberOfProcessedMeasurements >= 2 * syncer.accelerometerCapacity) {
+                if (syncer.numberOfProcessedMeasurements >= 10 * syncer.accelerometerCapacity) {
                     syncer.stop()
 
                     syncHelper.notifyAll { completed++ }
                 }
+            },
+            staleDetectedMeasurementsListener = { syncer, sensorType, measurements ->
+                logStaleMeasurements(syncer, sensorType, measurements)
             }
         )
 
@@ -277,7 +266,9 @@ class AccelerometerAndGyroscopeSensorMeasurementSyncerTest {
         Log.d(
             AccelerometerAndGyroscopeSensorMeasurementSyncerTest::class.simpleName,
             "Max accelerometer usage: $maxAccelerometerUsage, " +
-                    "max gyroscope usage: $maxGyroscopeUsage"
+                    "max gyroscope usage: $maxGyroscopeUsage, " +
+                    "max accelerometer collector usage: $maxAccelerometerCollectorUsage, " +
+                    "max gyroscope collector usage: $maxGyroscopeCollectorUsage"
         )
     }
 
@@ -418,11 +409,12 @@ class AccelerometerAndGyroscopeSensorMeasurementSyncerTest {
         val accelerometerStartOffsetEnabled = syncer.accelerometerStartOffsetEnabled
         val gyroscopeStartOffsetEnabled = syncer.gyroscopeStartOffsetEnabled
         val stopWhenFilledBuffer = syncer.stopWhenFilledBuffer
-        val stopWhenOutOfOrder = syncer.stopWhenOutOfOrder
         val accelerometerSensorAvailable = syncer.accelerometerSensorAvailable
         val gyroscopeSensorAvailable = syncer.gyroscopeSensorAvailable
         val accelerometerStartOffset = syncer.accelerometerStartOffset
         val gyroscopeStartOffset = syncer.gyroscopeStartOffset
+        val accelerometerCollectorUsage = syncer.accelerometerCollectorUsage
+        val gyroscopeCollectorUsage = syncer.gyroscopeCollectorUsage
         val accelerometerUsage = syncer.accelerometerUsage
         val gyroscopeUsage = syncer.gyroscopeUsage
 
@@ -442,12 +434,14 @@ class AccelerometerAndGyroscopeSensorMeasurementSyncerTest {
                     "accelerometerStartOffsetEnabled: $accelerometerStartOffsetEnabled, " +
                     "gyroscopeStartOffsetEnabled: $gyroscopeStartOffsetEnabled, " +
                     "stopWhenFilledBuffer: $stopWhenFilledBuffer, " +
-                    "stopWhenOutOfOrder: $stopWhenOutOfOrder, " +
                     "accelerometerSensorAvailable: $accelerometerSensorAvailable, " +
                     "gyroscopeSensorAvailable: $gyroscopeSensorAvailable, " +
                     "accelerometerStartOffset: $accelerometerStartOffset, " +
                     "gyroscopeStartOffset: $gyroscopeStartOffset, " +
-                    "accelerometerUsage: $accelerometerUsage, gyroscopeUsage: $gyroscopeUsage"
+                    "accelerometerCollectorUsage: $accelerometerCollectorUsage, " +
+                    "gyroscopeCollectorUsage: $gyroscopeCollectorUsage, " +
+                    "accelerometerUsage: $accelerometerUsage, " +
+                    "gyroscopeUsage: $gyroscopeUsage"
         )
     }
 
@@ -469,11 +463,12 @@ class AccelerometerAndGyroscopeSensorMeasurementSyncerTest {
         val accelerometerStartOffsetEnabled = syncer.accelerometerStartOffsetEnabled
         val gyroscopeStartOffsetEnabled = syncer.gyroscopeStartOffsetEnabled
         val stopWhenFilledBuffer = syncer.stopWhenFilledBuffer
-        val stopWhenOutOfOrder = syncer.stopWhenOutOfOrder
         val accelerometerSensorAvailable = syncer.accelerometerSensorAvailable
         val gyroscopeSensorAvailable = syncer.gyroscopeSensorAvailable
         val accelerometerStartOffset = syncer.accelerometerStartOffset
         val gyroscopeStartOffset = syncer.gyroscopeStartOffset
+        val accelerometerCollectorUsage = syncer.accelerometerCollectorUsage
+        val gyroscopeCollectorUsage = syncer.gyroscopeCollectorUsage
         val accelerometerUsage = syncer.accelerometerUsage
         val gyroscopeUsage = syncer.gyroscopeUsage
 
@@ -493,19 +488,21 @@ class AccelerometerAndGyroscopeSensorMeasurementSyncerTest {
                     "accelerometerStartOffsetEnabled: $accelerometerStartOffsetEnabled, " +
                     "gyroscopeStartOffsetEnabled: $gyroscopeStartOffsetEnabled, " +
                     "stopWhenFilledBuffer: $stopWhenFilledBuffer, " +
-                    "stopWhenOutOfOrder: $stopWhenOutOfOrder, " +
                     "accelerometerSensorAvailable: $accelerometerSensorAvailable, " +
                     "gyroscopeSensorAvailable: $gyroscopeSensorAvailable, " +
                     "accelerometerStartOffset: $accelerometerStartOffset, " +
                     "gyroscopeStartOffset: $gyroscopeStartOffset, " +
-                    "accelerometerUsage: $accelerometerUsage, gyroscopeUsage: $gyroscopeUsage"
+                    "accelerometerCollectorUsage: $accelerometerCollectorUsage, " +
+                    "gyroscopeCollectorUsage: $gyroscopeCollectorUsage, " +
+                    "accelerometerUsage: $accelerometerUsage, " +
+                    "gyroscopeUsage: $gyroscopeUsage"
         )
     }
 
-    private fun logOutOfOrderMeasurement(
+    private fun logStaleMeasurements(
         syncer: AccelerometerAndGyroscopeSensorMeasurementSyncer,
         sensorType: SensorMeasurementSyncer.SensorType,
-        measurement: SensorMeasurement<*>
+        measurements: Collection<SensorMeasurement<*>>
     ) {
         val startTime = syncer.startTimestamp
         val running = syncer.running
@@ -521,19 +518,20 @@ class AccelerometerAndGyroscopeSensorMeasurementSyncerTest {
         val accelerometerStartOffsetEnabled = syncer.accelerometerStartOffsetEnabled
         val gyroscopeStartOffsetEnabled = syncer.gyroscopeStartOffsetEnabled
         val stopWhenFilledBuffer = syncer.stopWhenFilledBuffer
-        val stopWhenOutOfOrder = syncer.stopWhenOutOfOrder
         val accelerometerSensorAvailable = syncer.accelerometerSensorAvailable
         val gyroscopeSensorAvailable = syncer.gyroscopeSensorAvailable
         val accelerometerStartOffset = syncer.accelerometerStartOffset
         val gyroscopeStartOffset = syncer.gyroscopeStartOffset
+        val accelerometerCollectorUsage = syncer.accelerometerCollectorUsage
+        val gyroscopeCollectorUsage = syncer.gyroscopeCollectorUsage
         val accelerometerUsage = syncer.accelerometerUsage
         val gyroscopeUsage = syncer.gyroscopeUsage
 
-        val measurementTimestamp = measurement.timestamp
+        val numberOfStaleMeasurements = measurements.size
 
         Log.d(
             "AccelerometerAndGyroscopeSensorMeasurementSyncerTest",
-            "outOfOrderMeasurement - sensorType: $sensorType, " +
+            "staleMeasurements - sensorType: $sensorType, " +
                     "startTime: $startTime, running: $running, " +
                     "numberOfProcessedMeasurements: $numberOfProcessedMeasurements, " +
                     "mostRecentTimestamp: $mostRecentTimestamp, " +
@@ -547,13 +545,15 @@ class AccelerometerAndGyroscopeSensorMeasurementSyncerTest {
                     "accelerometerStartOffsetEnabled: $accelerometerStartOffsetEnabled, " +
                     "gyroscopeStartOffsetEnabled: $gyroscopeStartOffsetEnabled, " +
                     "stopWhenFilledBuffer: $stopWhenFilledBuffer, " +
-                    "stopWhenOutOfOrder: $stopWhenOutOfOrder, " +
                     "accelerometerSensorAvailable: $accelerometerSensorAvailable, " +
                     "gyroscopeSensorAvailable: $gyroscopeSensorAvailable, " +
                     "accelerometerStartOffset: $accelerometerStartOffset, " +
                     "gyroscopeStartOffset: $gyroscopeStartOffset, " +
-                    "accelerometerUsage: $accelerometerUsage, gyroscopeUsage: $gyroscopeUsage, " +
-                    "measurementTimestamp: $measurementTimestamp"
+                    "accelerometerCollectorUsage: $accelerometerCollectorUsage, " +
+                    "gyroscopeCollectorUsage: $gyroscopeCollectorUsage, " +
+                    "accelerometerUsage: $accelerometerUsage, " +
+                    "gyroscopeUsage: $gyroscopeUsage, " +
+                    "numberOfStaleMeasurements: $numberOfStaleMeasurements"
         )
     }
 
@@ -575,10 +575,11 @@ class AccelerometerAndGyroscopeSensorMeasurementSyncerTest {
         val accelerometerStartOffsetEnabled = syncer.accelerometerStartOffsetEnabled
         val gyroscopeStartOffsetEnabled = syncer.gyroscopeStartOffsetEnabled
         val stopWhenFilledBuffer = syncer.stopWhenFilledBuffer
-        val stopWhenOutOfOrder = syncer.stopWhenOutOfOrder
         val accelerometerSensorAvailable = syncer.accelerometerSensorAvailable
         val gyroscopeSensorAvailable = syncer.gyroscopeSensorAvailable
         val accelerometerStartOffset = syncer.accelerometerStartOffset
+        val accelerometerCollectorUsage = syncer.accelerometerCollectorUsage
+        val gyroscopeCollectorUsage = syncer.gyroscopeCollectorUsage
         val gyroscopeStartOffset = syncer.gyroscopeStartOffset
         val accelerometerUsage = syncer.accelerometerUsage
         val gyroscopeUsage = syncer.gyroscopeUsage
@@ -614,12 +615,14 @@ class AccelerometerAndGyroscopeSensorMeasurementSyncerTest {
                     "accelerometerStartOffsetEnabled: $accelerometerStartOffsetEnabled, " +
                     "gyroscopeStartOffsetEnabled: $gyroscopeStartOffsetEnabled, " +
                     "stopWhenFilledBuffer: $stopWhenFilledBuffer, " +
-                    "stopWhenOutOfOrder: $stopWhenOutOfOrder, " +
                     "accelerometerSensorAvailable: $accelerometerSensorAvailable, " +
                     "gyroscopeSensorAvailable: $gyroscopeSensorAvailable, " +
                     "accelerometerStartOffset: $accelerometerStartOffset, " +
                     "gyroscopeStartOffset: $gyroscopeStartOffset, " +
-                    "accelerometerUsage: $accelerometerUsage, gyroscopeUsage: $gyroscopeUsage, " +
+                    "accelerometerCollectorUsage: $accelerometerCollectorUsage, " +
+                    "gyroscopeCollectorUsage: $gyroscopeCollectorUsage, " +
+                    "accelerometerUsage: $accelerometerUsage, " +
+                    "gyroscopeUsage: $gyroscopeUsage, " +
                     "timestamp: $timestamp, ax: $ax, ay: $ay, az: $az, " +
                     "abx: $abx, aby: $aby, abz: $abz, " +
                     "accelerometerTimestamp: $accelerometerTimestamp, wx: $wx, wy: $wy, wz: $wz, " +

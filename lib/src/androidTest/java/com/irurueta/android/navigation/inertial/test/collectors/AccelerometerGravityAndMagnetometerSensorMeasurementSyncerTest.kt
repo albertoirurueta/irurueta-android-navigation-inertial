@@ -28,7 +28,7 @@ import org.junit.Before
 import org.junit.Test
 
 @RequiresDevice
-class AccelerometerAndMagnetometerSensorMeasurementSyncerTest {
+class AccelerometerGravityAndMagnetometerSensorMeasurementSyncerTest {
 
     private val syncHelper = ThreadSyncHelper()
 
@@ -37,10 +37,13 @@ class AccelerometerAndMagnetometerSensorMeasurementSyncerTest {
 
     private var timestamp = 0L
     private var accelerometerTimestamp = 0L
+    private var gravityTimestamp = 0L
     private var magnetometerTimestamp = 0L
     private var maxAccelerometerUsage = -1.0f
+    private var maxGravityUsage = -1.0f
     private var maxMagnetometerUsage = -1.0f
     private var maxAccelerometerCollectorUsage = -1.0f
+    private var maxGravityCollectorUsage = -1.0f
     private var maxMagnetometerCollectorUsage = -1.0f
 
     @Before
@@ -49,17 +52,20 @@ class AccelerometerAndMagnetometerSensorMeasurementSyncerTest {
 
         timestamp = 0L
         accelerometerTimestamp = 0L
+        gravityTimestamp = 0L
         magnetometerTimestamp = 0L
         maxAccelerometerUsage = -1.0f
+        maxGravityUsage = -1.0f
         maxMagnetometerUsage = -1.0f
         maxAccelerometerCollectorUsage = -1.0f
+        maxGravityCollectorUsage = -1.0f
         maxMagnetometerCollectorUsage = -1.0f
     }
 
     @Test
     fun accelerometerSensor_whenAccelerometerSensorType_returnsSensor() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val syncer = AccelerometerAndMagnetometerSensorMeasurementSyncer(
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(
             context,
             accelerometerSensorType = AccelerometerSensorType.ACCELEROMETER
         )
@@ -73,7 +79,7 @@ class AccelerometerAndMagnetometerSensorMeasurementSyncerTest {
     @Test
     fun accelerometerSensor_whenAccelerometerUncalibratedSensorType_returnsSensor() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val syncer = AccelerometerAndMagnetometerSensorMeasurementSyncer(
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(
             context,
             accelerometerSensorType = AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
         )
@@ -85,14 +91,28 @@ class AccelerometerAndMagnetometerSensorMeasurementSyncerTest {
     }
 
     @Test
+    fun gravitySensor_returnsSensor() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(
+            context,
+            accelerometerSensorType = AccelerometerSensorType.ACCELEROMETER
+        )
+
+        val sensor = syncer.gravitySensor
+        requireNotNull(sensor)
+
+        logGravitySensor(sensor)
+    }
+
+    @Test
     fun magnetometerSensor_whenMagnetometerSensorType_returnsSensor() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val syncer = AccelerometerAndMagnetometerSensorMeasurementSyncer(
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(
             context,
             magnetometerSensorType = MagnetometerSensorType.MAGNETOMETER
         )
 
-        val sensor = syncer.magnetometerSensor
+        val sensor = syncer.accelerometerSensor
         requireNotNull(sensor)
 
         logMagnetometerSensor(sensor)
@@ -101,12 +121,12 @@ class AccelerometerAndMagnetometerSensorMeasurementSyncerTest {
     @Test
     fun magnetometerSensor_whenMagnetometerUncalibratedSensorType_returnsSensor() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val syncer = AccelerometerAndMagnetometerSensorMeasurementSyncer(
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(
             context,
             magnetometerSensorType = MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED
         )
 
-        val sensor = syncer.magnetometerSensor
+        val sensor = syncer.accelerometerSensor
         requireNotNull(sensor)
 
         logMagnetometerSensor(sensor)
@@ -115,7 +135,7 @@ class AccelerometerAndMagnetometerSensorMeasurementSyncerTest {
     @Test
     fun accelerometerSensorAvailable_whenAccelerometerSensorType_returnsTrue() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val syncer = AccelerometerAndMagnetometerSensorMeasurementSyncer(
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(
             context,
             accelerometerSensorType = AccelerometerSensorType.ACCELEROMETER
         )
@@ -126,7 +146,7 @@ class AccelerometerAndMagnetometerSensorMeasurementSyncerTest {
     @Test
     fun accelerometerSensorAvailable_whenAccelerometerUncalibratedSensorType_returnsTrue() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val syncer = AccelerometerAndMagnetometerSensorMeasurementSyncer(
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(
             context,
             accelerometerSensorType = AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
         )
@@ -135,9 +155,17 @@ class AccelerometerAndMagnetometerSensorMeasurementSyncerTest {
     }
 
     @Test
+    fun gravitySensorAvailable_returnsTrue() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(context)
+
+        assertTrue(syncer.gravitySensorAvailable)
+    }
+
+    @Test
     fun magnetometerSensorAvailable_whenMagnetometerSensorType_returnsTrue() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val syncer = AccelerometerAndMagnetometerSensorMeasurementSyncer(
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(
             context,
             magnetometerSensorType = MagnetometerSensorType.MAGNETOMETER
         )
@@ -148,7 +176,7 @@ class AccelerometerAndMagnetometerSensorMeasurementSyncerTest {
     @Test
     fun magnetometerSensorAvailable_whenMagnetometerUncalibratedSensorType_returnsTrue() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val syncer = AccelerometerAndMagnetometerSensorMeasurementSyncer(
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(
             context,
             magnetometerSensorType = MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED
         )
@@ -157,9 +185,10 @@ class AccelerometerAndMagnetometerSensorMeasurementSyncerTest {
     }
 
     @Test
-    fun startAndStop_whenStartOffsetsEnabled_notifiesMeasurements() {
+    fun startAndStop_whenStartOffsetEnabled_notifiesMeasurements() {
         runTest(
             accelerometerStartOffsetEnabled = true,
+            gravityStartOffsetEnabled = true,
             magnetometerStartOffsetEnabled = true,
             stopWhenFilledBuffer = false
         )
@@ -169,6 +198,7 @@ class AccelerometerAndMagnetometerSensorMeasurementSyncerTest {
     fun startAndStop_whenFilledBufferEnabled_notifiesMeasurements() {
         runTest(
             accelerometerStartOffsetEnabled = false,
+            gravityStartOffsetEnabled = false,
             magnetometerStartOffsetEnabled = false,
             stopWhenFilledBuffer = true
         )
@@ -178,6 +208,7 @@ class AccelerometerAndMagnetometerSensorMeasurementSyncerTest {
     fun startAndStop_whenAllFlagsDisabled_notifiesMeasurements() {
         runTest(
             accelerometerStartOffsetEnabled = false,
+            gravityStartOffsetEnabled = false,
             magnetometerStartOffsetEnabled = false,
             stopWhenFilledBuffer = false
         )
@@ -185,13 +216,15 @@ class AccelerometerAndMagnetometerSensorMeasurementSyncerTest {
 
     private fun runTest(
         accelerometerStartOffsetEnabled: Boolean,
+        gravityStartOffsetEnabled: Boolean,
         magnetometerStartOffsetEnabled: Boolean,
         stopWhenFilledBuffer: Boolean
     ) {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val syncer = AccelerometerAndMagnetometerSensorMeasurementSyncer(
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(
             context,
             accelerometerStartOffsetEnabled = accelerometerStartOffsetEnabled,
+            gravityStartOffsetEnabled = gravityStartOffsetEnabled,
             magnetometerStartOffsetEnabled = magnetometerStartOffsetEnabled,
             stopWhenFilledBuffer = stopWhenFilledBuffer,
             staleDetectionEnabled = true,
@@ -202,30 +235,49 @@ class AccelerometerAndMagnetometerSensorMeasurementSyncerTest {
                     accuracy
                 )
             },
-            bufferFilledListener = { syncer, sensorType ->
-                logBufferFilled(syncer, sensorType)
-            },
+            bufferFilledListener = { syncer, sensorType -> logBufferFilled(syncer, sensorType) },
             syncedMeasurementListener = { syncer, measurement ->
                 assertTrue(measurement.timestamp > timestamp)
 
                 requireNotNull(measurement.magnetometerMeasurement)
+                requireNotNull(measurement.gravityMeasurement)
                 requireNotNull(measurement.accelerometerMeasurement)
 
                 val currentMagnetometerTimestamp = measurement.magnetometerMeasurement?.timestamp
                 requireNotNull(currentMagnetometerTimestamp)
                 assertTrue(currentMagnetometerTimestamp >= magnetometerTimestamp)
 
+                val currentGravityTimestamp = measurement.gravityMeasurement?.timestamp
+                requireNotNull(currentGravityTimestamp)
+                assertTrue(currentGravityTimestamp >= gravityTimestamp)
+
                 val currentAccelerometerTimestamp = measurement.accelerometerMeasurement?.timestamp
                 requireNotNull(currentAccelerometerTimestamp)
+                if (currentAccelerometerTimestamp < accelerometerTimestamp) {
+                    Log.d(
+                        AccelerometerGravityAndMagnetometerSensorMeasurementSyncerTest::class.simpleName,
+                        "Max accelerometer usage: $maxAccelerometerUsage, " +
+                                "max gravity usage: $maxGravityUsage, " +
+                                "max magnetometer usage: $maxMagnetometerUsage, " +
+                                "max accelerometer collector usage: $maxAccelerometerCollectorUsage, " +
+                                "max gravity collector usage: $maxGravityCollectorUsage, " +
+                                "max magnetometer collector usage: $maxMagnetometerCollectorUsage"
+                    )
+                }
                 assertTrue(currentAccelerometerTimestamp >= accelerometerTimestamp)
 
                 timestamp = measurement.timestamp
                 magnetometerTimestamp = currentMagnetometerTimestamp
+                gravityTimestamp = currentGravityTimestamp
                 accelerometerTimestamp = currentAccelerometerTimestamp
 
                 val accelerometerCollectorUsage = syncer.accelerometerCollectorUsage
                 if (accelerometerCollectorUsage > maxAccelerometerCollectorUsage) {
                     maxAccelerometerCollectorUsage = accelerometerCollectorUsage
+                }
+                val gravityCollectorUsage = syncer.gravityCollectorUsage
+                if (gravityCollectorUsage > maxGravityCollectorUsage) {
+                    maxGravityCollectorUsage = gravityCollectorUsage
                 }
                 val magnetometerCollectorUsage = syncer.magnetometerCollectorUsage
                 if (magnetometerCollectorUsage > maxMagnetometerCollectorUsage) {
@@ -234,6 +286,10 @@ class AccelerometerAndMagnetometerSensorMeasurementSyncerTest {
                 val accelerometerUsage = syncer.accelerometerUsage
                 if (accelerometerUsage > maxAccelerometerUsage) {
                     maxAccelerometerUsage = accelerometerUsage
+                }
+                val gravityUsage = syncer.gravityUsage
+                if (gravityUsage > maxGravityUsage) {
+                    maxGravityUsage = gravityUsage
                 }
                 val magnetometerUsage = syncer.magnetometerUsage
                 if (magnetometerUsage > maxMagnetometerUsage) {
@@ -266,10 +322,12 @@ class AccelerometerAndMagnetometerSensorMeasurementSyncerTest {
         assertFalse(syncer.running)
 
         Log.d(
-            AccelerometerAndMagnetometerSensorMeasurementSyncerTest::class.simpleName,
+            AccelerometerGravityAndMagnetometerSensorMeasurementSyncerTest::class.simpleName,
             "Max accelerometer usage: $maxAccelerometerUsage, " +
+                    "max gravity usage: $maxGravityUsage, " +
                     "max magnetometer usage: $maxMagnetometerUsage, " +
                     "max accelerometer collector usage: $maxAccelerometerCollectorUsage, " +
+                    "max gravity collector usage: $maxGravityCollectorUsage, " +
                     "max magnetometer collector usage: $maxMagnetometerCollectorUsage"
         )
     }
@@ -309,7 +367,7 @@ class AccelerometerAndMagnetometerSensorMeasurementSyncerTest {
         val wakeUpSensor = sensor.isWakeUpSensor
 
         Log.d(
-            "AccelerometerAndMagnetometerSensorMeasurementSyncerTest",
+            "AccelerometerGravityAndMagnetometerSensorMeasurementSyncerTest",
             "Sensor - fifoMaxEventCount: $fifoMaxEventCount, "
                     + "fifoReversedEventCount: $fifoReversedEventCount, "
                     + "highestDirectReportRateLevel: $highestDirectReportRateLevel, "
@@ -331,6 +389,10 @@ class AccelerometerAndMagnetometerSensorMeasurementSyncerTest {
                     + "dynamicSensor: $dynamicSensor, "
                     + "wakeUpSensor: $wakeUpSensor"
         )
+    }
+
+    private fun logGravitySensor(sensor: Sensor) {
+        logAccelerometerSensor(sensor)
     }
 
     private fun logMagnetometerSensor(sensor: Sensor) {
@@ -368,7 +430,7 @@ class AccelerometerAndMagnetometerSensorMeasurementSyncerTest {
         val wakeUpSensor = sensor.isWakeUpSensor
 
         Log.d(
-            "AccelerometerAndMagnetometerSensorMeasurementSyncerTest",
+            "AccelerometerGravityAndMagnetometerSensorMeasurementSyncerTest",
             "Sensor - fifoMaxEventCount: $fifoMaxEventCount, "
                     + "fifoReversedEventCount: $fifoReversedEventCount, "
                     + "highestDirectReportRateLevel: $highestDirectReportRateLevel, "
@@ -393,7 +455,7 @@ class AccelerometerAndMagnetometerSensorMeasurementSyncerTest {
     }
 
     private fun logAccuracyChanged(
-        syncer: AccelerometerAndMagnetometerSensorMeasurementSyncer,
+        syncer: AccelerometerGravityAndMagnetometerSensorMeasurementSyncer,
         sensorType: SensorMeasurementSyncer.SensorType,
         accuracy: SensorAccuracy?
     ) {
@@ -405,50 +467,64 @@ class AccelerometerAndMagnetometerSensorMeasurementSyncerTest {
         val accelerometerSensorType = syncer.accelerometerSensorType
         val magnetometerSensorType = syncer.magnetometerSensorType
         val accelerometerSensorDelay = syncer.accelerometerSensorDelay
+        val gravitySensorDelay = syncer.gravitySensorDelay
         val magnetometerSensorDelay = syncer.magnetometerSensorDelay
         val accelerometerCapacity = syncer.accelerometerCapacity
+        val gravityCapacity = syncer.gravityCapacity
         val magnetometerCapacity = syncer.magnetometerCapacity
         val accelerometerStartOffsetEnabled = syncer.accelerometerStartOffsetEnabled
+        val gravityStartOffsetEnabled = syncer.gravityStartOffsetEnabled
         val magnetometerStartOffsetEnabled = syncer.magnetometerStartOffsetEnabled
         val stopWhenFilledBuffer = syncer.stopWhenFilledBuffer
         val accelerometerSensorAvailable = syncer.accelerometerSensorAvailable
+        val gravitySensorAvailable = syncer.gravitySensorAvailable
         val magnetometerSensorAvailable = syncer.magnetometerSensorAvailable
         val accelerometerStartOffset = syncer.accelerometerStartOffset
+        val gravityStartOffset = syncer.gravityStartOffset
         val magnetometerStartOffset = syncer.magnetometerStartOffset
         val accelerometerCollectorUsage = syncer.accelerometerCollectorUsage
+        val gravityCollectorUsage = syncer.gravityCollectorUsage
         val magnetometerCollectorUsage = syncer.magnetometerCollectorUsage
         val accelerometerUsage = syncer.accelerometerUsage
+        val gravityUsage = syncer.gravityUsage
         val magnetometerUsage = syncer.magnetometerUsage
 
         Log.d(
-            "AccelerometerAndMagnetometerSensorMeasurementSyncerTest",
+            "AccelerometerGravityAndMagnetometerSensorMeasurementSyncerTest",
             "accuracyChanged - sensorType: $sensorType, accuracy: $accuracy, " +
                     "startTime: $startTime, running: $running, " +
                     "numberOfProcessedMeasurements: $numberOfProcessedMeasurements, " +
                     "mostRecentTimestamp: $mostRecentTimestamp, " +
                     "oldestTimestamp: $oldestTimestamp, " +
                     "accelerometerSensorType: $accelerometerSensorType, " +
-                    "gyroscopeSensorType: $magnetometerSensorType, " +
+                    "magnetometerSensorType: $magnetometerSensorType, " +
                     "accelerometerSensorDelay: $accelerometerSensorDelay, " +
-                    "gyroscopeSensorDelay: $magnetometerSensorDelay, " +
+                    "gravitySensorDelay: $gravitySensorDelay, " +
+                    "magnetometerSensorDelay: $magnetometerSensorDelay, " +
                     "accelerometerCapacity: $accelerometerCapacity," +
-                    "gyroscopeCapacity: $magnetometerCapacity, " +
+                    "gravityCapacity: $gravityCapacity, " +
+                    "magnetometerCapacity: $magnetometerCapacity, " +
                     "accelerometerStartOffsetEnabled: $accelerometerStartOffsetEnabled, " +
-                    "gyroscopeStartOffsetEnabled: $magnetometerStartOffsetEnabled, " +
+                    "gravityStartOffsetEnabled: $gravityStartOffsetEnabled, " +
+                    "magnetometerStartOffsetEnabled: $magnetometerStartOffsetEnabled, " +
                     "stopWhenFilledBuffer: $stopWhenFilledBuffer, " +
                     "accelerometerSensorAvailable: $accelerometerSensorAvailable, " +
-                    "gyroscopeSensorAvailable: $magnetometerSensorAvailable, " +
+                    "gravitySensorAvailable: $gravitySensorAvailable, " +
+                    "magnetometerSensorAvailable: $magnetometerSensorAvailable, " +
                     "accelerometerStartOffset: $accelerometerStartOffset, " +
-                    "gyroscopeStartOffset: $magnetometerStartOffset, " +
+                    "gravityStartOffset: $gravityStartOffset, " +
+                    "magnetometerStartOffset: $magnetometerStartOffset, " +
                     "accelerometerCollectorUsage: $accelerometerCollectorUsage, " +
+                    "gravityCollectorUsage: $gravityCollectorUsage, " +
                     "magnetometerCollectorUsage: $magnetometerCollectorUsage, " +
                     "accelerometerUsage: $accelerometerUsage, " +
+                    "gravityUsage: $gravityUsage, " +
                     "magnetometerUsage: $magnetometerUsage"
         )
     }
 
     private fun logBufferFilled(
-        syncer: AccelerometerAndMagnetometerSensorMeasurementSyncer,
+        syncer: AccelerometerGravityAndMagnetometerSensorMeasurementSyncer,
         sensorType: SensorMeasurementSyncer.SensorType
     ) {
         val startTime = syncer.startTimestamp
@@ -459,50 +535,64 @@ class AccelerometerAndMagnetometerSensorMeasurementSyncerTest {
         val accelerometerSensorType = syncer.accelerometerSensorType
         val magnetometerSensorType = syncer.magnetometerSensorType
         val accelerometerSensorDelay = syncer.accelerometerSensorDelay
+        val gravitySensorDelay = syncer.gravitySensorDelay
         val magnetometerSensorDelay = syncer.magnetometerSensorDelay
         val accelerometerCapacity = syncer.accelerometerCapacity
+        val gravityCapacity = syncer.gravityCapacity
         val magnetometerCapacity = syncer.magnetometerCapacity
         val accelerometerStartOffsetEnabled = syncer.accelerometerStartOffsetEnabled
+        val gravityStartOffsetEnabled = syncer.gravityStartOffsetEnabled
         val magnetometerStartOffsetEnabled = syncer.magnetometerStartOffsetEnabled
         val stopWhenFilledBuffer = syncer.stopWhenFilledBuffer
         val accelerometerSensorAvailable = syncer.accelerometerSensorAvailable
+        val gravitySensorAvailable = syncer.gravitySensorAvailable
         val magnetometerSensorAvailable = syncer.magnetometerSensorAvailable
         val accelerometerStartOffset = syncer.accelerometerStartOffset
+        val gravityStartOffset = syncer.gravityStartOffset
         val magnetometerStartOffset = syncer.magnetometerStartOffset
         val accelerometerCollectorUsage = syncer.accelerometerCollectorUsage
+        val gravityCollectorUsage = syncer.gravityCollectorUsage
         val magnetometerCollectorUsage = syncer.magnetometerCollectorUsage
         val accelerometerUsage = syncer.accelerometerUsage
+        val gravityUsage = syncer.gravityUsage
         val magnetometerUsage = syncer.magnetometerUsage
 
         Log.d(
-            "AccelerometerAndMagnetometerSensorMeasurementSyncerTest",
+            "AccelerometerGravityAndMagnetometerSensorMeasurementSyncerTest",
             "bufferFilled - sensorType: $sensorType, " +
                     "startTime: $startTime, running: $running, " +
                     "numberOfProcessedMeasurements: $numberOfProcessedMeasurements, " +
                     "mostRecentTimestamp: $mostRecentTimestamp, " +
                     "oldestTimestamp: $oldestTimestamp, " +
                     "accelerometerSensorType: $accelerometerSensorType, " +
-                    "gyroscopeSensorType: $magnetometerSensorType, " +
+                    "magnetometerSensorType: $magnetometerSensorType, " +
                     "accelerometerSensorDelay: $accelerometerSensorDelay, " +
-                    "gyroscopeSensorDelay: $magnetometerSensorDelay, " +
+                    "gravitySensorDelay: $gravitySensorDelay, " +
+                    "magnetometerSensorDelay: $magnetometerSensorDelay, " +
                     "accelerometerCapacity: $accelerometerCapacity," +
-                    "gyroscopeCapacity: $magnetometerCapacity, " +
+                    "gravityCapacity: $gravityCapacity, " +
+                    "magnetometerCapacity: $magnetometerCapacity, " +
                     "accelerometerStartOffsetEnabled: $accelerometerStartOffsetEnabled, " +
-                    "gyroscopeStartOffsetEnabled: $magnetometerStartOffsetEnabled, " +
+                    "magnetometerStartOffsetEnabled: $magnetometerStartOffsetEnabled, " +
                     "stopWhenFilledBuffer: $stopWhenFilledBuffer, " +
                     "accelerometerSensorAvailable: $accelerometerSensorAvailable, " +
-                    "gyroscopeSensorAvailable: $magnetometerSensorAvailable, " +
+                    "gravitySensorAvailable: $gravitySensorAvailable, " +
+                    "magnetometerSensorAvailable: $magnetometerSensorAvailable, " +
                     "accelerometerStartOffset: $accelerometerStartOffset, " +
-                    "gyroscopeStartOffset: $magnetometerStartOffset, " +
+                    "gravityStartOffset: $gravityStartOffset, " +
+                    "gravityStartOffsetEnabled: $gravityStartOffsetEnabled, " +
+                    "magnetometerStartOffset: $magnetometerStartOffset, " +
                     "accelerometerCollectorUsage: $accelerometerCollectorUsage, " +
+                    "gravityCollectorUsage: $gravityCollectorUsage, " +
                     "magnetometerCollectorUsage: $magnetometerCollectorUsage, " +
                     "accelerometerUsage: $accelerometerUsage, " +
+                    "gravityUsage: $gravityUsage, " +
                     "magnetometerUsage: $magnetometerUsage"
         )
     }
 
     private fun logStaleMeasurements(
-        syncer: AccelerometerAndMagnetometerSensorMeasurementSyncer,
+        syncer: AccelerometerGravityAndMagnetometerSensorMeasurementSyncer,
         sensorType: SensorMeasurementSyncer.SensorType,
         measurements: Collection<SensorMeasurement<*>>
     ) {
@@ -514,54 +604,68 @@ class AccelerometerAndMagnetometerSensorMeasurementSyncerTest {
         val accelerometerSensorType = syncer.accelerometerSensorType
         val magnetometerSensorType = syncer.magnetometerSensorType
         val accelerometerSensorDelay = syncer.accelerometerSensorDelay
+        val gravitySensorDelay = syncer.gravitySensorDelay
         val magnetometerSensorDelay = syncer.magnetometerSensorDelay
         val accelerometerCapacity = syncer.accelerometerCapacity
+        val gravityCapacity = syncer.gravityCapacity
         val magnetometerCapacity = syncer.magnetometerCapacity
         val accelerometerStartOffsetEnabled = syncer.accelerometerStartOffsetEnabled
+        val gravityStartOffsetEnabled = syncer.gravityStartOffsetEnabled
         val magnetometerStartOffsetEnabled = syncer.magnetometerStartOffsetEnabled
         val stopWhenFilledBuffer = syncer.stopWhenFilledBuffer
         val accelerometerSensorAvailable = syncer.accelerometerSensorAvailable
+        val gravitySensorAvailable = syncer.gravitySensorAvailable
         val magnetometerSensorAvailable = syncer.magnetometerSensorAvailable
         val accelerometerStartOffset = syncer.accelerometerStartOffset
+        val gravityStartOffset = syncer.gravityStartOffset
         val magnetometerStartOffset = syncer.magnetometerStartOffset
         val accelerometerCollectorUsage = syncer.accelerometerCollectorUsage
+        val gravityCollectorUsage = syncer.gravityCollectorUsage
         val magnetometerCollectorUsage = syncer.magnetometerCollectorUsage
         val accelerometerUsage = syncer.accelerometerUsage
+        val gravityUsage = syncer.gravityUsage
         val magnetometerUsage = syncer.magnetometerUsage
 
         val numberOfStaleMeasurements = measurements.size
 
         Log.d(
-            "AccelerometerAndMagnetometerSensorMeasurementSyncerTest",
+            "AccelerometerGravityAndMagnetometerSensorMeasurementSyncerTest",
             "staleMeasurements - sensorType: $sensorType, " +
                     "startTime: $startTime, running: $running, " +
                     "numberOfProcessedMeasurements: $numberOfProcessedMeasurements, " +
                     "mostRecentTimestamp: $mostRecentTimestamp, " +
                     "oldestTimestamp: $oldestTimestamp, " +
                     "accelerometerSensorType: $accelerometerSensorType, " +
-                    "gyroscopeSensorType: $magnetometerSensorType, " +
+                    "magnetometerSensorType: $magnetometerSensorType, " +
                     "accelerometerSensorDelay: $accelerometerSensorDelay, " +
-                    "gyroscopeSensorDelay: $magnetometerSensorDelay, " +
-                    "accelerometerCapacity: $accelerometerCapacity," +
-                    "gyroscopeCapacity: $magnetometerCapacity, " +
+                    "gravitySensorDelay: $gravitySensorDelay, " +
+                    "magnetometerSensorDelay: $magnetometerSensorDelay, " +
+                    "accelerometerCapacity: $accelerometerCapacity, " +
+                    "gravityCapacity: $gravityCapacity, " +
+                    "magnetometerCapacity: $magnetometerCapacity, " +
                     "accelerometerStartOffsetEnabled: $accelerometerStartOffsetEnabled, " +
-                    "gyroscopeStartOffsetEnabled: $magnetometerStartOffsetEnabled, " +
+                    "gravityStartOffsetEnabled: $gravityStartOffsetEnabled, " +
+                    "magnetometerStartOffsetEnabled: $magnetometerStartOffsetEnabled, " +
                     "stopWhenFilledBuffer: $stopWhenFilledBuffer, " +
                     "accelerometerSensorAvailable: $accelerometerSensorAvailable, " +
-                    "gyroscopeSensorAvailable: $magnetometerSensorAvailable, " +
+                    "gravitySensorAvailable: $gravitySensorAvailable, " +
+                    "magnetometerSensorAvailable: $magnetometerSensorAvailable, " +
                     "accelerometerStartOffset: $accelerometerStartOffset, " +
-                    "gyroscopeStartOffset: $magnetometerStartOffset, " +
+                    "gravityStartOffset: $gravityStartOffset, " +
+                    "magnetometerStartOffset: $magnetometerStartOffset, " +
                     "accelerometerCollectorUsage: $accelerometerCollectorUsage, " +
+                    "gravityCollectorUsage: $gravityCollectorUsage, " +
                     "magnetometerCollectorUsage: $magnetometerCollectorUsage, " +
                     "accelerometerUsage: $accelerometerUsage, " +
+                    "gravityUsage: $gravityUsage, " +
                     "magnetometerUsage: $magnetometerUsage, " +
                     "numberOfStaleMeasurements: $numberOfStaleMeasurements"
         )
     }
 
     private fun logSyncedMeasurement(
-        syncer: AccelerometerAndMagnetometerSensorMeasurementSyncer,
-        measurement: AccelerometerAndMagnetometerSyncedSensorMeasurement
+        syncer: AccelerometerGravityAndMagnetometerSensorMeasurementSyncer,
+        measurement: AccelerometerGravityAndMagnetometerSyncedSensorMeasurement
     ) {
         val startTime = syncer.startTimestamp
         val running = syncer.running
@@ -571,19 +675,26 @@ class AccelerometerAndMagnetometerSensorMeasurementSyncerTest {
         val accelerometerSensorType = syncer.accelerometerSensorType
         val magnetometerSensorType = syncer.magnetometerSensorType
         val accelerometerSensorDelay = syncer.accelerometerSensorDelay
+        val gravitySensorDelay = syncer.gravitySensorDelay
         val magnetometerSensorDelay = syncer.magnetometerSensorDelay
         val accelerometerCapacity = syncer.accelerometerCapacity
+        val gravityCapacity = syncer.gravityCapacity
         val magnetometerCapacity = syncer.magnetometerCapacity
         val accelerometerStartOffsetEnabled = syncer.accelerometerStartOffsetEnabled
+        val gravityStartOffsetEnabled = syncer.gravityStartOffsetEnabled
         val magnetometerStartOffsetEnabled = syncer.magnetometerStartOffsetEnabled
         val stopWhenFilledBuffer = syncer.stopWhenFilledBuffer
         val accelerometerSensorAvailable = syncer.accelerometerSensorAvailable
+        val gravitySensorAvailable = syncer.gravitySensorAvailable
         val magnetometerSensorAvailable = syncer.magnetometerSensorAvailable
         val accelerometerStartOffset = syncer.accelerometerStartOffset
-        val magnetometerStartOffset = syncer.magnetometerStartOffset
+        val gravityStartOffset = syncer.gravityStartOffset
         val accelerometerCollectorUsage = syncer.accelerometerCollectorUsage
         val magnetometerCollectorUsage = syncer.magnetometerCollectorUsage
+        val gravityCollectorUsage = syncer.gravityCollectorUsage
+        val magnetometerStartOffset = syncer.magnetometerStartOffset
         val accelerometerUsage = syncer.accelerometerUsage
+        val gravityUsage = syncer.gravityUsage
         val magnetometerUsage = syncer.magnetometerUsage
 
         val timestamp = measurement.timestamp
@@ -594,6 +705,10 @@ class AccelerometerAndMagnetometerSensorMeasurementSyncerTest {
         val aby = measurement.accelerometerMeasurement?.by
         val abz = measurement.accelerometerMeasurement?.bz
         val accelerometerTimestamp = measurement.accelerometerMeasurement?.timestamp
+        val gx = measurement.gravityMeasurement?.gx
+        val gy = measurement.gravityMeasurement?.gy
+        val gz = measurement.gravityMeasurement?.gz
+        val gravityTimestamp = measurement.gravityMeasurement?.timestamp
         val bx = measurement.magnetometerMeasurement?.bx
         val by = measurement.magnetometerMeasurement?.by
         val bz = measurement.magnetometerMeasurement?.bz
@@ -603,31 +718,41 @@ class AccelerometerAndMagnetometerSensorMeasurementSyncerTest {
         val magnetometerTimestamp = measurement.magnetometerMeasurement?.timestamp
 
         Log.d(
-            "AccelerometerAndMagnetometerSensorMeasurementSyncerTest",
+            "AccelerometerGravityAndMagnetometerSensorMeasurementSyncerTest",
             "syncedMeasurement - startTime: $startTime, running: $running, " +
                     "numberOfProcessedMeasurements: $numberOfProcessedMeasurements, " +
                     "mostRecentTimestamp: $mostRecentTimestamp, " +
                     "oldestTimestamp: $oldestTimestamp, " +
                     "accelerometerSensorType: $accelerometerSensorType, " +
-                    "gyroscopeSensorType: $magnetometerSensorType, " +
+                    "magnetometerSensorType: $magnetometerSensorType, " +
                     "accelerometerSensorDelay: $accelerometerSensorDelay, " +
-                    "gyroscopeSensorDelay: $magnetometerSensorDelay, " +
+                    "gravitySensorDelay: $gravitySensorDelay, " +
+                    "magnetometerSensorDelay: $magnetometerSensorDelay, " +
                     "accelerometerCapacity: $accelerometerCapacity," +
-                    "gyroscopeCapacity: $magnetometerCapacity, " +
+                    "magnetometerCapacity: $magnetometerCapacity, " +
+                    "gravityCapacity: $gravityCapacity, " +
                     "accelerometerStartOffsetEnabled: $accelerometerStartOffsetEnabled, " +
-                    "gyroscopeStartOffsetEnabled: $magnetometerStartOffsetEnabled, " +
+                    "gravityStartOffsetEnabled: $gravityStartOffsetEnabled, " +
+                    "magnetometerStartOffsetEnabled: $magnetometerStartOffsetEnabled, " +
                     "stopWhenFilledBuffer: $stopWhenFilledBuffer, " +
                     "accelerometerSensorAvailable: $accelerometerSensorAvailable, " +
-                    "gyroscopeSensorAvailable: $magnetometerSensorAvailable, " +
+                    "magnetometerSensorAvailable: $magnetometerSensorAvailable, " +
+                    "gravitySensorAvailable: $gravitySensorAvailable, " +
                     "accelerometerStartOffset: $accelerometerStartOffset, " +
-                    "gyroscopeStartOffset: $magnetometerStartOffset, " +
+                    "gravityStartOffset: $gravityStartOffset, " +
+                    "magnetometerStartOffset: $magnetometerStartOffset, " +
                     "accelerometerCollectorUsage: $accelerometerCollectorUsage, " +
+                    "gravityCollectorUsage: $gravityCollectorUsage, " +
                     "magnetometerCollectorUsage: $magnetometerCollectorUsage, " +
                     "accelerometerUsage: $accelerometerUsage, " +
+                    "gravityUsage: $gravityUsage, " +
                     "magnetometerUsage: $magnetometerUsage, " +
                     "timestamp: $timestamp, ax: $ax, ay: $ay, az: $az, " +
                     "abx: $abx, aby: $aby, abz: $abz, " +
-                    "accelerometerTimestamp: $accelerometerTimestamp, bx: $bx, by: $by, bz: $bz, " +
+                    "accelerometerTimestamp: $accelerometerTimestamp, " +
+                    "gx: $gx, gy: $gy, gz: $gz, " +
+                    "gravityTimestamp: $gravityTimestamp, " +
+                    "bx: $bx, by: $by, bz: $bz, " +
                     "hardIronX: $hardIronX, hardIronY: $hardIronY, hardIronZ: $hardIronZ, " +
                     "magnetometerTimestamp: $magnetometerTimestamp"
         )

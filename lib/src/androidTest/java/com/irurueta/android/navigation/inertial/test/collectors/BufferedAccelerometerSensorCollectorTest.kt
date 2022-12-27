@@ -287,6 +287,7 @@ class BufferedAccelerometerSensorCollectorTest {
         assertFalse(collector.running)
     }
 
+    @RequiresDevice
     @Test
     fun getMeasurementsBefore_obtainsExpectedMeasurements() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
