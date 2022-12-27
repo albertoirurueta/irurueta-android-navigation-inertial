@@ -168,6 +168,7 @@ class BufferedAccelerometerSensorCollectorTest {
         assertFalse(collector.running)
     }
 
+    @RequiresDevice
     @Test
     fun startAndStop_whenAccelerometerSensorTypeStartOffsetDisabledAndStopWhenFilledBuffer_stopsWhenBufferFills() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
