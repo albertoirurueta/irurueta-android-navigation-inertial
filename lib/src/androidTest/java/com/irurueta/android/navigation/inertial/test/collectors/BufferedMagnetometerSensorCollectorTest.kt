@@ -26,6 +26,7 @@ import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 
+@RequiresDevice
 class BufferedMagnetometerSensorCollectorTest {
 
     private val syncHelper = ThreadSyncHelper()
@@ -50,7 +51,6 @@ class BufferedMagnetometerSensorCollectorTest {
         logSensor(sensor)
     }
 
-    @RequiresDevice
     @Test
     fun sensor_whenMagnetometerUncalibratedSensorType_returnsSensor() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -74,7 +74,6 @@ class BufferedMagnetometerSensorCollectorTest {
         assertTrue(collector.sensorAvailable)
     }
 
-    @RequiresDevice
     @Test
     fun sensorAvailable_whenMagnetometerUncalibratedSensorType_returnsTrue() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
