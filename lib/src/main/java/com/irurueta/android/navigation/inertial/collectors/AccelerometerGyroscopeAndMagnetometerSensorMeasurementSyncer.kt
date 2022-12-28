@@ -486,6 +486,9 @@ class AccelerometerGyroscopeAndMagnetometerSensorMeasurementSyncer(
         gyroscopeMeasurements.clear()
         magnetometerMeasurements.clear()
 
+        foundGyroscopeMeasurements.clear()
+        foundMagnetometerMeasurements.clear()
+
         numberOfProcessedMeasurements = 0
         mostRecentTimestamp = null
         oldestTimestamp = null

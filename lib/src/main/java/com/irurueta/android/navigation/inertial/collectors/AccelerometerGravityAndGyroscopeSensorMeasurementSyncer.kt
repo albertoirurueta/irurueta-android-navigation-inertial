@@ -482,6 +482,9 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
         gravityMeasurements.clear()
         gyroscopeMeasurements.clear()
 
+        foundGravityMeasurements.clear()
+        foundGyroscopeMeasurements.clear()
+
         numberOfProcessedMeasurements = 0
         mostRecentTimestamp = null
         oldestTimestamp = null

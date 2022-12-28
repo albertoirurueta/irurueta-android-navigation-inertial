@@ -26,6 +26,7 @@ import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 
+@RequiresDevice
 class BufferedGyroscopeSensorCollectorTest {
 
     private val syncHelper = ThreadSyncHelper()
@@ -49,7 +50,6 @@ class BufferedGyroscopeSensorCollectorTest {
         logSensor(sensor)
     }
 
-    @RequiresDevice
     @Test
     fun sensor_whenGyroscopeUncalibratedSensorType_returnsSensor() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -70,7 +70,6 @@ class BufferedGyroscopeSensorCollectorTest {
         assertTrue(collector.sensorAvailable)
     }
 
-    @RequiresDevice
     @Test
     fun sensorAvailable_whenGyroscopeUncalibratedSensorType_returnsTrue() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -118,7 +117,6 @@ class BufferedGyroscopeSensorCollectorTest {
         assertFalse(collector.running)
     }
 
-    @RequiresDevice
     @Test
     fun startAndStop_whenGyroscopeUncalibratedSensorTypeOffsetEnabledAndStopWhenFilledBuffer_stopsWhenBufferFills() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -195,7 +193,6 @@ class BufferedGyroscopeSensorCollectorTest {
         assertFalse(collector.running)
     }
 
-    @RequiresDevice
     @Test
     fun startAndStop_whenGyroscopeSensorUncalibratedTypeOffsetDisabledAndStopWhenFilledBuffer_stopsWhenBufferFills() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -275,7 +272,6 @@ class BufferedGyroscopeSensorCollectorTest {
         assertFalse(collector.running)
     }
 
-    @RequiresDevice
     @Test
     fun getMeasurementsBefore_obtainsExpectedMeasurements() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
