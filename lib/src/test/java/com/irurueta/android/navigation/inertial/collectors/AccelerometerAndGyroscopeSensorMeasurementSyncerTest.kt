@@ -16,7 +16,6 @@
 package com.irurueta.android.navigation.inertial.collectors
 
 import android.content.Context
-import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import com.irurueta.android.navigation.inertial.getPrivateProperty
 import com.irurueta.android.navigation.inertial.setPrivateProperty
@@ -26,7 +25,6 @@ import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.annotation.Config
 import java.util.*
 
 @RunWith(RobolectricTestRunner::class)
@@ -1228,7 +1226,7 @@ class AccelerometerAndGyroscopeSensorMeasurementSyncerTest {
         assertEquals(gyroscopeTimestamp, gyroscopeMeasurement2.timestamp)
         assertEquals(SensorAccuracy.HIGH, gyroscopeMeasurement2.accuracy)
 
-        val alreadyProcessedGyroscopeMeasurements: ArrayDeque<AccelerometerSensorMeasurement>? =
+        val alreadyProcessedGyroscopeMeasurements: ArrayDeque<GyroscopeSensorMeasurement>? =
             syncer.getPrivateProperty("alreadyProcessedGyroscopeMeasurements")
         requireNotNull(alreadyProcessedGyroscopeMeasurements)
         assertTrue(alreadyProcessedGyroscopeMeasurements.isEmpty())
@@ -1935,106 +1933,5 @@ class AccelerometerAndGyroscopeSensorMeasurementSyncerTest {
         assertEquals(wbz, syncedGyroscopeMeasurement.bz)
         assertEquals(gyroscopeTimestamp, syncedGyroscopeMeasurement.timestamp)
         assertEquals(SensorAccuracy.HIGH, syncedGyroscopeMeasurement.accuracy)
-    }
-
-    @Config(sdk = [Build.VERSION_CODES.O])
-    @Test
-    fun sensorType_fromIntWhenSdkO_returnsExpectedValues() {
-        assertEquals(7, SensorMeasurementSyncer.SensorType.values().size)
-        assertEquals(
-            SensorMeasurementSyncer.SensorType.ACCELEROMETER,
-            SensorMeasurementSyncer.SensorType.from(SensorMeasurementSyncer.SensorType.ACCELEROMETER.value)
-        )
-        assertEquals(
-            SensorMeasurementSyncer.SensorType.ACCELEROMETER_UNCALIBRATED,
-            SensorMeasurementSyncer.SensorType.from(SensorMeasurementSyncer.SensorType.ACCELEROMETER_UNCALIBRATED.value)
-        )
-        assertEquals(
-            SensorMeasurementSyncer.SensorType.GYROSCOPE,
-            SensorMeasurementSyncer.SensorType.from(SensorMeasurementSyncer.SensorType.GYROSCOPE.value)
-        )
-        assertEquals(
-            SensorMeasurementSyncer.SensorType.GYROSCOPE_UNCALIBRATED,
-            SensorMeasurementSyncer.SensorType.from(SensorMeasurementSyncer.SensorType.GYROSCOPE_UNCALIBRATED.value)
-        )
-        assertEquals(
-            SensorMeasurementSyncer.SensorType.MAGNETOMETER,
-            SensorMeasurementSyncer.SensorType.from(SensorMeasurementSyncer.SensorType.MAGNETOMETER.value)
-        )
-        assertEquals(
-            SensorMeasurementSyncer.SensorType.MAGNETOMETER_UNCALIBRATED,
-            SensorMeasurementSyncer.SensorType.from(SensorMeasurementSyncer.SensorType.MAGNETOMETER_UNCALIBRATED.value)
-        )
-        assertEquals(
-            SensorMeasurementSyncer.SensorType.GRAVITY,
-            SensorMeasurementSyncer.SensorType.from(SensorMeasurementSyncer.SensorType.GRAVITY.value)
-        )
-    }
-
-    @Config(sdk = [Build.VERSION_CODES.N])
-    @Test
-    fun sensorType_fromIntWhenSdkN_returnsExpectedValues() {
-        assertEquals(7, SensorMeasurementSyncer.SensorType.values().size)
-        assertEquals(
-            SensorMeasurementSyncer.SensorType.ACCELEROMETER,
-            SensorMeasurementSyncer.SensorType.from(SensorMeasurementSyncer.SensorType.ACCELEROMETER.value)
-        )
-        assertNull(SensorMeasurementSyncer.SensorType.from(SensorMeasurementSyncer.SensorType.ACCELEROMETER_UNCALIBRATED.value))
-        assertEquals(
-            SensorMeasurementSyncer.SensorType.GYROSCOPE,
-            SensorMeasurementSyncer.SensorType.from(SensorMeasurementSyncer.SensorType.GYROSCOPE.value)
-        )
-        assertEquals(
-            SensorMeasurementSyncer.SensorType.GYROSCOPE_UNCALIBRATED,
-            SensorMeasurementSyncer.SensorType.from(SensorMeasurementSyncer.SensorType.GYROSCOPE_UNCALIBRATED.value)
-        )
-        assertEquals(
-            SensorMeasurementSyncer.SensorType.MAGNETOMETER,
-            SensorMeasurementSyncer.SensorType.from(SensorMeasurementSyncer.SensorType.MAGNETOMETER.value)
-        )
-        assertEquals(
-            SensorMeasurementSyncer.SensorType.MAGNETOMETER_UNCALIBRATED,
-            SensorMeasurementSyncer.SensorType.from(SensorMeasurementSyncer.SensorType.MAGNETOMETER_UNCALIBRATED.value)
-        )
-        assertEquals(
-            SensorMeasurementSyncer.SensorType.GRAVITY,
-            SensorMeasurementSyncer.SensorType.from(SensorMeasurementSyncer.SensorType.GRAVITY.value)
-        )
-    }
-
-    @Test
-    fun sensorType_fromAccelerometerSensorType_returnsExpectedValue() {
-        assertEquals(
-            SensorMeasurementSyncer.SensorType.ACCELEROMETER,
-            SensorMeasurementSyncer.SensorType.from(AccelerometerSensorType.ACCELEROMETER)
-        )
-        assertEquals(
-            SensorMeasurementSyncer.SensorType.ACCELEROMETER_UNCALIBRATED,
-            SensorMeasurementSyncer.SensorType.from(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED)
-        )
-    }
-
-    @Test
-    fun sensorType_fromGyroscopeSensorType_returnsExpectedValue() {
-        assertEquals(
-            SensorMeasurementSyncer.SensorType.GYROSCOPE,
-            SensorMeasurementSyncer.SensorType.from(GyroscopeSensorType.GYROSCOPE)
-        )
-        assertEquals(
-            SensorMeasurementSyncer.SensorType.GYROSCOPE_UNCALIBRATED,
-            SensorMeasurementSyncer.SensorType.from(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED)
-        )
-    }
-
-    @Test
-    fun sensorType_fromMagnetometerSensorType_returnsExpectedValue() {
-        assertEquals(
-            SensorMeasurementSyncer.SensorType.MAGNETOMETER,
-            SensorMeasurementSyncer.SensorType.from(MagnetometerSensorType.MAGNETOMETER)
-        )
-        assertEquals(
-            SensorMeasurementSyncer.SensorType.MAGNETOMETER_UNCALIBRATED,
-            SensorMeasurementSyncer.SensorType.from(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED)
-        )
     }
 }
