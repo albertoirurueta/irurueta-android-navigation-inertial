@@ -28,12 +28,12 @@ import org.robolectric.RobolectricTestRunner
 import java.util.*
 
 @RunWith(RobolectricTestRunner::class)
-class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
+class AccelerometerGravityAndMagnetometerSensorMeasurementSyncerTest {
 
     @Test
     fun constructor_whenRequiredParameters_setsDefaultValues() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(context)
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(context)
 
         // check
         assertSame(context, syncer.context)
@@ -41,28 +41,31 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
             AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
             syncer.accelerometerSensorType
         )
-        assertEquals(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED, syncer.gyroscopeSensorType)
+        assertEquals(
+            MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED,
+            syncer.magnetometerSensorType
+        )
         assertEquals(SensorDelay.FASTEST, syncer.accelerometerSensorDelay)
         assertEquals(SensorDelay.FASTEST, syncer.gravitySensorDelay)
-        assertEquals(SensorDelay.FASTEST, syncer.gyroscopeSensorDelay)
+        assertEquals(SensorDelay.FASTEST, syncer.magnetometerSensorDelay)
         assertEquals(
-            AccelerometerGravityAndGyroscopeSensorMeasurementSyncer.DEFAULT_ACCELEROMETER_CAPACITY,
+            AccelerometerGravityAndMagnetometerSensorMeasurementSyncer.DEFAULT_ACCELEROMETER_CAPACITY,
             syncer.accelerometerCapacity
         )
         assertEquals(
-            AccelerometerGravityAndGyroscopeSensorMeasurementSyncer.DEFAULT_GRAVITY_CAPACITY,
+            AccelerometerGravityAndMagnetometerSensorMeasurementSyncer.DEFAULT_GRAVITY_CAPACITY,
             syncer.gravityCapacity
         )
         assertEquals(
-            AccelerometerGravityAndGyroscopeSensorMeasurementSyncer.DEFAULT_GYROSCOPE_CAPACITY,
-            syncer.gyroscopeCapacity
+            AccelerometerGravityAndMagnetometerSensorMeasurementSyncer.DEFAULT_MAGNETOMETER_CAPACITY,
+            syncer.magnetometerCapacity
         )
         assertFalse(syncer.accelerometerStartOffsetEnabled)
         assertFalse(syncer.gravityStartOffsetEnabled)
-        assertFalse(syncer.gyroscopeStartOffsetEnabled)
+        assertFalse(syncer.magnetometerStartOffsetEnabled)
         assertTrue(syncer.stopWhenFilledBuffer)
         assertEquals(
-            AccelerometerGravityAndGyroscopeSensorMeasurementSyncer.DEFAULT_STALE_OFFSET_NANOS,
+            AccelerometerGravityAndMagnetometerSensorMeasurementSyncer.DEFAULT_STALE_OFFSET_NANOS,
             syncer.staleOffsetNanos
         )
         assertTrue(syncer.staleDetectionEnabled)
@@ -77,63 +80,69 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         assertNull(syncer.oldestTimestamp)
         assertNull(syncer.accelerometerSensor)
         assertNull(syncer.gravitySensor)
-        assertNull(syncer.gyroscopeSensor)
+        assertNull(syncer.magnetometerSensor)
         assertFalse(syncer.accelerometerSensorAvailable)
         assertFalse(syncer.gravitySensorAvailable)
-        assertFalse(syncer.gyroscopeSensorAvailable)
+        assertFalse(syncer.magnetometerSensorAvailable)
         assertNull(syncer.accelerometerStartOffset)
         assertNull(syncer.gravityStartOffset)
-        assertNull(syncer.gyroscopeStartOffset)
+        assertNull(syncer.magnetometerStartOffset)
         assertEquals(0.0f, syncer.accelerometerCollectorUsage, 0.0f)
         assertEquals(0.0f, syncer.gravityCollectorUsage, 0.0f)
-        assertEquals(0.0f, syncer.gyroscopeCollectorUsage, 0.0f)
+        assertEquals(0.0f, syncer.magnetometerCollectorUsage, 0.0f)
         assertEquals(0.0f, syncer.accelerometerUsage, 0.0f)
         assertEquals(0.0f, syncer.gravityUsage, 0.0f)
-        assertEquals(0.0f, syncer.gyroscopeUsage, 0.0f)
+        assertEquals(0.0f, syncer.magnetometerUsage, 0.0f)
     }
 
     @Test(expected = IllegalArgumentException::class)
     fun constructor_whenZeroAccelerometerCapacity_throwsIllegalArgumentException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(context, accelerometerCapacity = 0)
+        AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(
+            context,
+            accelerometerCapacity = 0
+        )
     }
 
     @Test(expected = IllegalArgumentException::class)
     fun constructor_whenZeroGravityCapacity_throwsIllegalArgumentException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(context, gravityCapacity = 0)
+        AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(context, gravityCapacity = 0)
     }
 
     @Test(expected = IllegalArgumentException::class)
-    fun constructor_whenZeroGyroscopeCapacity_throwsIllegalArgumentException() {
+    fun constructor_whenZeroMagnetometerCapacity_throwsIllegalArgumentException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(context, gyroscopeCapacity = 0)
+        AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(
+            context,
+            magnetometerCapacity = 0
+        )
     }
 
     @Test
     fun constructor_whenAllParameters_setsExpectedValues() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val accuracyChangedListener =
-            mockk<SensorMeasurementSyncer.OnAccuracyChangedListener<AccelerometerGravityAndGyroscopeSyncedSensorMeasurement, AccelerometerGravityAndGyroscopeSensorMeasurementSyncer>>()
+            mockk<SensorMeasurementSyncer.OnAccuracyChangedListener<AccelerometerGravityAndMagnetometerSyncedSensorMeasurement, AccelerometerGravityAndMagnetometerSensorMeasurementSyncer>>()
         val bufferFilledListener =
-            mockk<SensorMeasurementSyncer.OnBufferFilledListener<AccelerometerGravityAndGyroscopeSyncedSensorMeasurement, AccelerometerGravityAndGyroscopeSensorMeasurementSyncer>>()
+            mockk<SensorMeasurementSyncer.OnBufferFilledListener<AccelerometerGravityAndMagnetometerSyncedSensorMeasurement, AccelerometerGravityAndMagnetometerSensorMeasurementSyncer>>()
         val syncedMeasurementListener =
-            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AccelerometerGravityAndGyroscopeSyncedSensorMeasurement, AccelerometerGravityAndGyroscopeSensorMeasurementSyncer>>()
+            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AccelerometerGravityAndMagnetometerSyncedSensorMeasurement, AccelerometerGravityAndMagnetometerSensorMeasurementSyncer>>()
         val staleDetectedMeasurementsListener =
-            mockk<SensorMeasurementSyncer.OnStaleDetectedMeasurementsListener<AccelerometerGravityAndGyroscopeSyncedSensorMeasurement, AccelerometerGravityAndGyroscopeSensorMeasurementSyncer>>()
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
+            mockk<SensorMeasurementSyncer.OnStaleDetectedMeasurementsListener<AccelerometerGravityAndMagnetometerSyncedSensorMeasurement, AccelerometerGravityAndMagnetometerSensorMeasurementSyncer>>()
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(
             context,
             AccelerometerSensorType.ACCELEROMETER,
-            GyroscopeSensorType.GYROSCOPE,
+            MagnetometerSensorType.MAGNETOMETER,
             SensorDelay.NORMAL,
             SensorDelay.UI,
             SensorDelay.GAME,
             accelerometerCapacity = 2,
             gravityCapacity = 4,
-            gyroscopeCapacity = 3,
+            magnetometerCapacity = 3,
             accelerometerStartOffsetEnabled = true,
             gravityStartOffsetEnabled = true,
-            gyroscopeStartOffsetEnabled = true,
+            magnetometerStartOffsetEnabled = true,
             stopWhenFilledBuffer = false,
             staleOffsetNanos = 123456789L,
             staleDetectionEnabled = false,
@@ -145,20 +154,17 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
 
         // check
         assertSame(context, syncer.context)
-        assertEquals(
-            AccelerometerSensorType.ACCELEROMETER,
-            syncer.accelerometerSensorType
-        )
-        assertEquals(GyroscopeSensorType.GYROSCOPE, syncer.gyroscopeSensorType)
+        assertEquals(AccelerometerSensorType.ACCELEROMETER, syncer.accelerometerSensorType)
+        assertEquals(MagnetometerSensorType.MAGNETOMETER, syncer.magnetometerSensorType)
         assertEquals(SensorDelay.NORMAL, syncer.accelerometerSensorDelay)
         assertEquals(SensorDelay.UI, syncer.gravitySensorDelay)
-        assertEquals(SensorDelay.GAME, syncer.gyroscopeSensorDelay)
+        assertEquals(SensorDelay.GAME, syncer.magnetometerSensorDelay)
         assertEquals(2, syncer.accelerometerCapacity)
         assertEquals(4, syncer.gravityCapacity)
-        assertEquals(3, syncer.gyroscopeCapacity)
+        assertEquals(3, syncer.magnetometerCapacity)
         assertTrue(syncer.accelerometerStartOffsetEnabled)
         assertTrue(syncer.gravityStartOffsetEnabled)
-        assertTrue(syncer.gyroscopeStartOffsetEnabled)
+        assertTrue(syncer.magnetometerStartOffsetEnabled)
         assertFalse(syncer.stopWhenFilledBuffer)
         assertEquals(123456789L, syncer.staleOffsetNanos)
         assertFalse(syncer.staleDetectionEnabled)
@@ -173,32 +179,32 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         assertNull(syncer.oldestTimestamp)
         assertNull(syncer.accelerometerSensor)
         assertNull(syncer.gravitySensor)
-        assertNull(syncer.gyroscopeSensor)
+        assertNull(syncer.magnetometerSensor)
         assertFalse(syncer.accelerometerSensorAvailable)
         assertFalse(syncer.gravitySensorAvailable)
-        assertFalse(syncer.gyroscopeSensorAvailable)
+        assertFalse(syncer.magnetometerSensorAvailable)
         assertNull(syncer.accelerometerStartOffset)
         assertNull(syncer.gravityStartOffset)
-        assertNull(syncer.gyroscopeStartOffset)
+        assertNull(syncer.magnetometerStartOffset)
         assertEquals(0.0f, syncer.accelerometerCollectorUsage, 0.0f)
         assertEquals(0.0f, syncer.gravityCollectorUsage, 0.0f)
-        assertEquals(0.0f, syncer.gyroscopeCollectorUsage, 0.0f)
+        assertEquals(0.0f, syncer.magnetometerCollectorUsage, 0.0f)
         assertEquals(0.0f, syncer.accelerometerUsage, 0.0f)
         assertEquals(0.0f, syncer.gravityUsage, 0.0f)
-        assertEquals(0.0f, syncer.gyroscopeUsage, 0.0f)
+        assertEquals(0.0f, syncer.magnetometerUsage, 0.0f)
     }
 
     @Test
     fun accuracyChangedListener_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(context)
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(context)
 
         // check default value
         assertNull(syncer.accuracyChangedListener)
 
         // set new value
         val accuracyChangedListener =
-            mockk<SensorMeasurementSyncer.OnAccuracyChangedListener<AccelerometerGravityAndGyroscopeSyncedSensorMeasurement, AccelerometerGravityAndGyroscopeSensorMeasurementSyncer>>()
+            mockk<SensorMeasurementSyncer.OnAccuracyChangedListener<AccelerometerGravityAndMagnetometerSyncedSensorMeasurement, AccelerometerGravityAndMagnetometerSensorMeasurementSyncer>>()
         syncer.accuracyChangedListener = accuracyChangedListener
 
         // check
@@ -208,14 +214,14 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
     @Test
     fun bufferFilledListener_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(context)
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(context)
 
         // check default value
         assertNull(syncer.bufferFilledListener)
 
         // set new value
         val bufferFilledListener =
-            mockk<SensorMeasurementSyncer.OnBufferFilledListener<AccelerometerGravityAndGyroscopeSyncedSensorMeasurement, AccelerometerGravityAndGyroscopeSensorMeasurementSyncer>>()
+            mockk<SensorMeasurementSyncer.OnBufferFilledListener<AccelerometerGravityAndMagnetometerSyncedSensorMeasurement, AccelerometerGravityAndMagnetometerSensorMeasurementSyncer>>()
         syncer.bufferFilledListener = bufferFilledListener
 
         // check
@@ -225,14 +231,14 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
     @Test
     fun syncedMeasurementListener_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(context)
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(context)
 
         // check default value
         assertNull(syncer.syncedMeasurementListener)
 
         // set new value
         val syncedMeasurementListener =
-            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AccelerometerGravityAndGyroscopeSyncedSensorMeasurement, AccelerometerGravityAndGyroscopeSensorMeasurementSyncer>>()
+            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AccelerometerGravityAndMagnetometerSyncedSensorMeasurement, AccelerometerGravityAndMagnetometerSensorMeasurementSyncer>>()
         syncer.syncedMeasurementListener = syncedMeasurementListener
 
         // check
@@ -242,14 +248,14 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
     @Test
     fun staleDetectedMeasurementsListener_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(context)
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(context)
 
         // check default value
         assertNull(syncer.staleDetectedMeasurementsListener)
 
         // set new value
         val staleDetectedMeasurementsListener =
-            mockk<SensorMeasurementSyncer.OnStaleDetectedMeasurementsListener<AccelerometerGravityAndGyroscopeSyncedSensorMeasurement, AccelerometerGravityAndGyroscopeSensorMeasurementSyncer>>()
+            mockk<SensorMeasurementSyncer.OnStaleDetectedMeasurementsListener<AccelerometerGravityAndMagnetometerSyncedSensorMeasurement, AccelerometerGravityAndMagnetometerSensorMeasurementSyncer>>()
         syncer.staleDetectedMeasurementsListener = staleDetectedMeasurementsListener
 
         // check
@@ -259,7 +265,7 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
     @Test
     fun accelerometerSensor_callsInternalCollector() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(context)
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(context)
 
         val accelerometerSensorCollector: BufferedAccelerometerSensorCollector? =
             syncer.getPrivateProperty("accelerometerSensorCollector")
@@ -274,7 +280,7 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
     @Test
     fun gravitySensor_callsInternalCollector() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(context)
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(context)
 
         val gravitySensorCollector: BufferedGravitySensorCollector? =
             syncer.getPrivateProperty("gravitySensorCollector")
@@ -287,24 +293,24 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
     }
 
     @Test
-    fun gyroscopeSensor_callsInternalCollector() {
+    fun magnetometerSensor_callsInternalCollector() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(context)
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(context)
 
-        val gyroscopeSensorCollector: BufferedGyroscopeSensorCollector? =
-            syncer.getPrivateProperty("gyroscopeSensorCollector")
-        requireNotNull(gyroscopeSensorCollector)
-        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
-        syncer.setPrivateProperty("gyroscopeSensorCollector", gyroscopeSensorCollectorSpy)
+        val magnetometerSensorCollector: BufferedMagnetometerSensorCollector? =
+            syncer.getPrivateProperty("magnetometerSensorCollector")
+        requireNotNull(magnetometerSensorCollector)
+        val magnetometerSensorCollectorSpy = spyk(magnetometerSensorCollector)
+        syncer.setPrivateProperty("magnetometerSensorCollector", magnetometerSensorCollectorSpy)
 
-        assertNull(syncer.gyroscopeSensor)
-        verify(exactly = 1) { gyroscopeSensorCollectorSpy.sensor }
+        assertNull(syncer.magnetometerSensor)
+        verify(exactly = 1) { magnetometerSensorCollectorSpy.sensor }
     }
 
     @Test
     fun accelerometerSensorAvailable_callsInternalCollector() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(context)
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(context)
 
         val accelerometerSensorCollector: BufferedAccelerometerSensorCollector? =
             syncer.getPrivateProperty("accelerometerSensorCollector")
@@ -319,7 +325,7 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
     @Test
     fun gravitySensorAvailable_callsInternalCollector() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(context)
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(context)
 
         val gravitySensorCollector: BufferedGravitySensorCollector? =
             syncer.getPrivateProperty("gravitySensorCollector")
@@ -332,24 +338,24 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
     }
 
     @Test
-    fun gyroscopeSensorAvailable_callsInternalCollector() {
+    fun magnetometerSensorAvailable_callsInternalCollector() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(context)
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(context)
 
-        val gyroscopeSensorCollector: BufferedGyroscopeSensorCollector? =
-            syncer.getPrivateProperty("gyroscopeSensorCollector")
-        requireNotNull(gyroscopeSensorCollector)
-        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
-        syncer.setPrivateProperty("gyroscopeSensorCollector", gyroscopeSensorCollectorSpy)
+        val magnetometerSensorCollector: BufferedMagnetometerSensorCollector? =
+            syncer.getPrivateProperty("magnetometerSensorCollector")
+        requireNotNull(magnetometerSensorCollector)
+        val magnetometerSensorCollectorSpy = spyk(magnetometerSensorCollector)
+        syncer.setPrivateProperty("magnetometerSensorCollector", magnetometerSensorCollectorSpy)
 
-        assertFalse(syncer.gyroscopeSensorAvailable)
-        verify(exactly = 1) { gyroscopeSensorCollectorSpy.sensorAvailable }
+        assertFalse(syncer.magnetometerSensorAvailable)
+        verify(exactly = 1) { magnetometerSensorCollectorSpy.sensorAvailable }
     }
 
     @Test
     fun accelerometerStartOffset_callsInternalCollector() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(context)
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(context)
 
         val accelerometerSensorCollector: BufferedAccelerometerSensorCollector? =
             syncer.getPrivateProperty("accelerometerSensorCollector")
@@ -364,7 +370,7 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
     @Test
     fun gravityStartOffset_callsInternalCollector() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(context)
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(context)
 
         val gravitySensorCollector: BufferedGravitySensorCollector? =
             syncer.getPrivateProperty("gravitySensorCollector")
@@ -377,24 +383,24 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
     }
 
     @Test
-    fun gyroscopeStartOffset_callsInternalCollector() {
+    fun magnetometerStartOffset_callsInternalCollector() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(context)
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(context)
 
-        val gyroscopeSensorCollector: BufferedGyroscopeSensorCollector? =
-            syncer.getPrivateProperty("gyroscopeSensorCollector")
-        requireNotNull(gyroscopeSensorCollector)
-        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
-        syncer.setPrivateProperty("gyroscopeSensorCollector", gyroscopeSensorCollectorSpy)
+        val magnetometerSensorCollector: BufferedMagnetometerSensorCollector? =
+            syncer.getPrivateProperty("magnetometerSensorCollector")
+        requireNotNull(magnetometerSensorCollector)
+        val magnetometerSensorCollectorSpy = spyk(magnetometerSensorCollector)
+        syncer.setPrivateProperty("magnetometerSensorCollector", magnetometerSensorCollectorSpy)
 
-        assertNull(syncer.gyroscopeStartOffset)
-        verify(exactly = 1) { gyroscopeSensorCollectorSpy.startOffset }
+        assertNull(syncer.magnetometerStartOffset)
+        verify(exactly = 1) { magnetometerSensorCollectorSpy.startOffset }
     }
 
     @Test
     fun accelerometerCollectorUsage_callsInternalCollector() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(context)
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(context)
 
         val accelerometerSensorCollector: BufferedAccelerometerSensorCollector? =
             syncer.getPrivateProperty("accelerometerSensorCollector")
@@ -409,7 +415,7 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
     @Test
     fun gravityCollectorUsage_callsInternalCollector() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(context)
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(context)
 
         val gravitySensorCollector: BufferedGravitySensorCollector? =
             syncer.getPrivateProperty("gravitySensorCollector")
@@ -422,24 +428,24 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
     }
 
     @Test
-    fun gyroscopeCollectorUsage_callsInternalCollector() {
+    fun magnetometerCollectorUsage_callsInternalCollector() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(context)
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(context)
 
-        val gyroscopeSensorCollector: BufferedGyroscopeSensorCollector? =
-            syncer.getPrivateProperty("gyroscopeSensorCollector")
-        requireNotNull(gyroscopeSensorCollector)
-        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
-        syncer.setPrivateProperty("gyroscopeSensorCollector", gyroscopeSensorCollectorSpy)
+        val magnetometerSensorCollector: BufferedMagnetometerSensorCollector? =
+            syncer.getPrivateProperty("magnetometerSensorCollector")
+        requireNotNull(magnetometerSensorCollector)
+        val magnetometerSensorCollectorSpy = spyk(magnetometerSensorCollector)
+        syncer.setPrivateProperty("magnetometerSensorCollector", magnetometerSensorCollectorSpy)
 
-        assertEquals(0.0f, syncer.gyroscopeCollectorUsage, 0.0f)
-        verify(exactly = 1) { gyroscopeSensorCollectorSpy.usage }
+        assertEquals(0.0f, syncer.magnetometerCollectorUsage, 0.0f)
+        verify(exactly = 1) { magnetometerSensorCollectorSpy.usage }
     }
 
     @Test
     fun accelerometerUsage_getsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(context)
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(context)
 
         // check default value
         assertEquals(0.0f, syncer.accelerometerUsage, 0.0f)
@@ -458,7 +464,7 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
     @Test
     fun gravityUsage_getsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(context)
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(context)
 
         // check default value
         assertEquals(0.0f, syncer.gravityUsage, 0.0f)
@@ -475,28 +481,28 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
     }
 
     @Test
-    fun gyroscopeUsage_getsExpectedValue() {
+    fun magnetometerUsage_getsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(context)
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(context)
 
         // check default value
-        assertEquals(0.0f, syncer.gyroscopeUsage, 0.0f)
+        assertEquals(0.0f, syncer.magnetometerUsage, 0.0f)
 
         // add measurement
-        val gyroscopeMeasurements: ArrayDeque<GyroscopeSensorMeasurement>? =
-            syncer.getPrivateProperty("gyroscopeMeasurements")
-        requireNotNull(gyroscopeMeasurements)
-        assertTrue(gyroscopeMeasurements.isEmpty())
-        gyroscopeMeasurements.add(GyroscopeSensorMeasurement())
+        val magnetometerMeasurements: ArrayDeque<MagnetometerSensorMeasurement>? =
+            syncer.getPrivateProperty("magnetometerMeasurements")
+        requireNotNull(magnetometerMeasurements)
+        assertTrue(magnetometerMeasurements.isEmpty())
+        magnetometerMeasurements.add(MagnetometerSensorMeasurement())
 
         // check
-        assertEquals(1.0f / syncer.gyroscopeCapacity.toFloat(), syncer.gyroscopeUsage, 0.0f)
+        assertEquals(1.0f / syncer.magnetometerCapacity.toFloat(), syncer.magnetometerUsage, 0.0f)
     }
 
     @Test(expected = IllegalStateException::class)
     fun start_whenAlreadyRunning_throwsIllegalStateException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(context)
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(context)
 
         // set as running
         setPrivateProperty(SensorMeasurementSyncer::class, syncer, "running", true)
@@ -508,7 +514,7 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
     @Test
     fun start_whenNotRunningAndNoTimestamp_setsCurrentStartTimestamp() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(context)
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(context)
 
         assertFalse(syncer.running)
         assertEquals(0L, syncer.startTimestamp)
@@ -523,7 +529,7 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
     @Test
     fun start_whenNotRunningAndTimestampProvided_setsProvidedTimestamp() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(context)
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(context)
 
         assertFalse(syncer.running)
         assertEquals(0L, syncer.startTimestamp)
@@ -539,7 +545,7 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
     @Test
     fun start_whenAccelerometerCollectorFails_returnsFalse() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(context)
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(context)
 
         val accelerometerSensorCollector: BufferedAccelerometerSensorCollector? =
             syncer.getPrivateProperty("accelerometerSensorCollector")
@@ -552,12 +558,12 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         requireNotNull(gravitySensorCollector)
         val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
         every { gravitySensorCollectorSpy.start(any()) }.returns(true)
-        val gyroscopeSensorCollector: BufferedGyroscopeSensorCollector? =
-            syncer.getPrivateProperty("gyroscopeSensorCollector")
-        requireNotNull(gyroscopeSensorCollector)
-        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
-        every { gyroscopeSensorCollectorSpy.start(any()) }.returns(true)
-        syncer.setPrivateProperty("gyroscopeSensorCollector", gyroscopeSensorCollectorSpy)
+        val magnetometerSensorCollector: BufferedMagnetometerSensorCollector? =
+            syncer.getPrivateProperty("magnetometerSensorCollector")
+        requireNotNull(magnetometerSensorCollector)
+        val magnetometerSensorCollectorSpy = spyk(magnetometerSensorCollector)
+        every { magnetometerSensorCollectorSpy.start(any()) }.returns(true)
+        syncer.setPrivateProperty("magnetometerSensorCollector", magnetometerSensorCollectorSpy)
 
         assertFalse(syncer.running)
 
@@ -569,13 +575,13 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
 
         verify(exactly = 1) { accelerometerSensorCollectorSpy.start(timestamp) }
         verify(exactly = 0) { gravitySensorCollectorSpy.start(any()) }
-        verify(exactly = 0) { gyroscopeSensorCollectorSpy.start(any()) }
+        verify(exactly = 0) { magnetometerSensorCollectorSpy.start(any()) }
     }
 
     @Test
     fun start_whenGravityCollectorFails_returnsFalse() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(context)
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(context)
 
         val accelerometerSensorCollector: BufferedAccelerometerSensorCollector? =
             syncer.getPrivateProperty("accelerometerSensorCollector")
@@ -589,12 +595,12 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
         every { gravitySensorCollectorSpy.start(any()) }.returns(false)
         syncer.setPrivateProperty("gravitySensorCollector", gravitySensorCollectorSpy)
-        val gyroscopeSensorCollector: BufferedGyroscopeSensorCollector? =
-            syncer.getPrivateProperty("gyroscopeSensorCollector")
-        requireNotNull(gyroscopeSensorCollector)
-        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
-        every { gyroscopeSensorCollectorSpy.start(any()) }.returns(true)
-        syncer.setPrivateProperty("gyroscopeSensorCollector", gyroscopeSensorCollectorSpy)
+        val magnetometerSensorCollector: BufferedMagnetometerSensorCollector? =
+            syncer.getPrivateProperty("magnetometerSensorCollector")
+        requireNotNull(magnetometerSensorCollector)
+        val magnetometerSensorCollectorSpy = spyk(magnetometerSensorCollector)
+        every { magnetometerSensorCollectorSpy.start(any()) }.returns(true)
+        syncer.setPrivateProperty("magnetometerSensorCollector", magnetometerSensorCollectorSpy)
 
         assertFalse(syncer.running)
 
@@ -606,13 +612,13 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
 
         verify(exactly = 1) { accelerometerSensorCollectorSpy.start(timestamp) }
         verify(exactly = 1) { gravitySensorCollectorSpy.start(timestamp) }
-        verify(exactly = 0) { gyroscopeSensorCollectorSpy.start(any()) }
+        verify(exactly = 0) { magnetometerSensorCollectorSpy.start(any()) }
     }
 
     @Test
-    fun start_whenGyroscopeCollectorFails_returnsFalse() {
+    fun start_whenMagnetometerCollectorFails_returnsFalse() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(context)
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(context)
 
         val accelerometerSensorCollector: BufferedAccelerometerSensorCollector? =
             syncer.getPrivateProperty("accelerometerSensorCollector")
@@ -626,12 +632,12 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
         every { gravitySensorCollectorSpy.start(any()) }.returns(true)
         syncer.setPrivateProperty("gravitySensorCollector", gravitySensorCollectorSpy)
-        val gyroscopeSensorCollector: BufferedGyroscopeSensorCollector? =
-            syncer.getPrivateProperty("gyroscopeSensorCollector")
-        requireNotNull(gyroscopeSensorCollector)
-        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
-        every { gyroscopeSensorCollectorSpy.start(any()) }.returns(false)
-        syncer.setPrivateProperty("gyroscopeSensorCollector", gyroscopeSensorCollectorSpy)
+        val magnetometerSensorCollector: BufferedMagnetometerSensorCollector? =
+            syncer.getPrivateProperty("magnetometerSensorCollector")
+        requireNotNull(magnetometerSensorCollector)
+        val magnetometerSensorCollectorSpy = spyk(magnetometerSensorCollector)
+        every { magnetometerSensorCollectorSpy.start(any()) }.returns(false)
+        syncer.setPrivateProperty("magnetometerSensorCollector", magnetometerSensorCollectorSpy)
 
         assertFalse(syncer.running)
 
@@ -643,13 +649,13 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
 
         verify(exactly = 1) { accelerometerSensorCollectorSpy.start(timestamp) }
         verify(exactly = 1) { gravitySensorCollectorSpy.start(timestamp) }
-        verify(exactly = 1) { gyroscopeSensorCollectorSpy.start(any()) }
+        verify(exactly = 1) { magnetometerSensorCollectorSpy.start(any()) }
     }
 
     @Test
     fun start_whenCollectorsSucceed_returnsTrue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(context)
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(context)
 
         val accelerometerSensorCollector: BufferedAccelerometerSensorCollector? =
             syncer.getPrivateProperty("accelerometerSensorCollector")
@@ -663,12 +669,12 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
         every { gravitySensorCollectorSpy.start(any()) }.returns(true)
         syncer.setPrivateProperty("gravitySensorCollector", gravitySensorCollectorSpy)
-        val gyroscopeSensorCollector: BufferedGyroscopeSensorCollector? =
-            syncer.getPrivateProperty("gyroscopeSensorCollector")
-        requireNotNull(gyroscopeSensorCollector)
-        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
-        every { gyroscopeSensorCollectorSpy.start(any()) }.returns(true)
-        syncer.setPrivateProperty("gyroscopeSensorCollector", gyroscopeSensorCollectorSpy)
+        val magnetometerSensorCollector: BufferedMagnetometerSensorCollector? =
+            syncer.getPrivateProperty("magnetometerSensorCollector")
+        requireNotNull(magnetometerSensorCollector)
+        val magnetometerSensorCollectorSpy = spyk(magnetometerSensorCollector)
+        every { magnetometerSensorCollectorSpy.start(any()) }.returns(true)
+        syncer.setPrivateProperty("magnetometerSensorCollector", magnetometerSensorCollectorSpy)
 
         assertFalse(syncer.running)
 
@@ -680,13 +686,13 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
 
         verify(exactly = 1) { accelerometerSensorCollectorSpy.start(timestamp) }
         verify(exactly = 1) { gravitySensorCollectorSpy.start(timestamp) }
-        verify(exactly = 1) { gyroscopeSensorCollectorSpy.start(any()) }
+        verify(exactly = 1) { magnetometerSensorCollectorSpy.start(any()) }
     }
 
     @Test
     fun stop_stopsCollectorsInitializesCachesAndResetsProperties() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(context)
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(context)
 
         val accelerometerSensorCollector: BufferedAccelerometerSensorCollector? =
             syncer.getPrivateProperty("accelerometerSensorCollector")
@@ -698,11 +704,11 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         requireNotNull(gravitySensorCollector)
         val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
         syncer.setPrivateProperty("gravitySensorCollector", gravitySensorCollectorSpy)
-        val gyroscopeSensorCollector: BufferedGyroscopeSensorCollector? =
-            syncer.getPrivateProperty("gyroscopeSensorCollector")
-        requireNotNull(gyroscopeSensorCollector)
-        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
-        syncer.setPrivateProperty("gyroscopeSensorCollector", gyroscopeSensorCollectorSpy)
+        val magnetometerSensorCollector: BufferedMagnetometerSensorCollector? =
+            syncer.getPrivateProperty("magnetometerSensorCollector")
+        requireNotNull(magnetometerSensorCollector)
+        val magnetometerSensorCollectorSpy = spyk(magnetometerSensorCollector)
+        syncer.setPrivateProperty("magnetometerSensorCollector", magnetometerSensorCollectorSpy)
 
         val accelerometerMeasurements: ArrayDeque<AccelerometerSensorMeasurement>? =
             syncer.getPrivateProperty("accelerometerMeasurements")
@@ -714,20 +720,20 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         requireNotNull(gravityMeasurements)
         gravityMeasurements.add(GravitySensorMeasurement())
 
-        val gyroscopeMeasurements: ArrayDeque<GyroscopeSensorMeasurement>? =
-            syncer.getPrivateProperty("gyroscopeMeasurements")
-        requireNotNull(gyroscopeMeasurements)
-        gyroscopeMeasurements.add(GyroscopeSensorMeasurement())
+        val magnetometerMeasurements: ArrayDeque<MagnetometerSensorMeasurement>? =
+            syncer.getPrivateProperty("magnetometerMeasurements")
+        requireNotNull(magnetometerMeasurements)
+        magnetometerMeasurements.add(MagnetometerSensorMeasurement())
 
         val foundGravityMeasurements: ArrayDeque<GravitySensorMeasurement>? =
             syncer.getPrivateProperty("foundGravityMeasurements")
         requireNotNull(foundGravityMeasurements)
         foundGravityMeasurements.add(GravitySensorMeasurement())
 
-        val foundGyroscopeMeasurements: ArrayDeque<GyroscopeSensorMeasurement>? =
-            syncer.getPrivateProperty("foundGyroscopeMeasurements")
-        requireNotNull(foundGyroscopeMeasurements)
-        foundGyroscopeMeasurements.add(GyroscopeSensorMeasurement())
+        val foundMagnetometerMeasurements: ArrayDeque<MagnetometerSensorMeasurement>? =
+            syncer.getPrivateProperty("foundMagnetometerMeasurements")
+        requireNotNull(foundMagnetometerMeasurements)
+        foundMagnetometerMeasurements.add(MagnetometerSensorMeasurement())
 
         // set variables that will be later reset
         setPrivateProperty(
@@ -752,23 +758,23 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
 
         syncer.setPrivateProperty("hasPreviousAccelerometerMeasurement", true)
         syncer.setPrivateProperty("hasPreviousGravityMeasurement", true)
-        syncer.setPrivateProperty("hasPreviousGyroscopeMeasurement", true)
+        syncer.setPrivateProperty("hasPreviousMagnetometerMeasurement", true)
         syncer.setPrivateProperty("lastNotifiedTimestamp", 1L)
         syncer.setPrivateProperty("lastNotifiedAccelerometerTimestamp", 2L)
         syncer.setPrivateProperty("lastNotifiedGravityTimestamp", 4L)
-        syncer.setPrivateProperty("lastNotifiedGyroscopeTimestamp", 3L)
+        syncer.setPrivateProperty("lastNotifiedMagnetometerTimestamp", 3L)
 
         syncer.stop()
 
         // check
         verify(exactly = 1) { accelerometerSensorCollectorSpy.stop() }
         verify(exactly = 1) { gravitySensorCollectorSpy.stop() }
-        verify(exactly = 1) { gyroscopeSensorCollectorSpy.stop() }
+        verify(exactly = 1) { magnetometerSensorCollectorSpy.stop() }
         assertTrue(accelerometerMeasurements.isEmpty())
         assertTrue(gravityMeasurements.isEmpty())
-        assertTrue(gyroscopeMeasurements.isEmpty())
+        assertTrue(magnetometerMeasurements.isEmpty())
         assertTrue(foundGravityMeasurements.isEmpty())
-        assertTrue(foundGyroscopeMeasurements.isEmpty())
+        assertTrue(foundMagnetometerMeasurements.isEmpty())
 
         val numberOfProcessedMeasurements: Int? = getPrivateProperty(
             SensorMeasurementSyncer::class,
@@ -798,10 +804,10 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         requireNotNull(hasPreviousGravityMeasurement)
         assertFalse(hasPreviousGravityMeasurement)
 
-        val hasPreviousGyroscopeMeasurement: Boolean? =
-            syncer.getPrivateProperty("hasPreviousGyroscopeMeasurement")
-        requireNotNull(hasPreviousGyroscopeMeasurement)
-        assertFalse(hasPreviousGyroscopeMeasurement)
+        val hasPreviousMagnetometerMeasurement: Boolean? =
+            syncer.getPrivateProperty("hasPreviousMagnetometerMeasurement")
+        requireNotNull(hasPreviousMagnetometerMeasurement)
+        assertFalse(hasPreviousMagnetometerMeasurement)
 
         val lastNotifiedTimestamp: Long? = syncer.getPrivateProperty("lastNotifiedTimestamp")
         requireNotNull(lastNotifiedTimestamp)
@@ -817,16 +823,16 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         requireNotNull(lastNotifiedGravityTimestamp)
         assertEquals(0L, lastNotifiedGravityTimestamp)
 
-        val lastNotifiedGyroscopeTimestamp: Long? =
-            syncer.getPrivateProperty("lastNotifiedGyroscopeTimestamp")
-        requireNotNull(lastNotifiedGyroscopeTimestamp)
-        assertEquals(0L, lastNotifiedGyroscopeTimestamp)
+        val lastNotifiedMagnetometerTimestamp: Long? =
+            syncer.getPrivateProperty("lastNotifiedMagnetometerTimestamp")
+        requireNotNull(lastNotifiedMagnetometerTimestamp)
+        assertEquals(0L, lastNotifiedMagnetometerTimestamp)
     }
 
     @Test
     fun accelerometerSensorCollector_whenAccuracyChangedListenerAndNoListener_makesNoAction() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(context)
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(context)
 
         val accelerometerSensorCollector: BufferedAccelerometerSensorCollector? =
             syncer.getPrivateProperty("accelerometerSensorCollector")
@@ -840,11 +846,11 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
     @Test
     fun accelerometerSensorCollector_whenAccuracyChangedListenerAndListenerAvailable_notifies() {
         val accuracyChangedListener =
-            mockk<SensorMeasurementSyncer.OnAccuracyChangedListener<AccelerometerGravityAndGyroscopeSyncedSensorMeasurement, AccelerometerGravityAndGyroscopeSensorMeasurementSyncer>>(
+            mockk<SensorMeasurementSyncer.OnAccuracyChangedListener<AccelerometerGravityAndMagnetometerSyncedSensorMeasurement, AccelerometerGravityAndMagnetometerSensorMeasurementSyncer>>(
                 relaxUnitFun = true
             )
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(
             context,
             accuracyChangedListener = accuracyChangedListener
         )
@@ -870,7 +876,7 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
     fun accelerometerSensorCollector_whenBufferFilledAndStopWhenFilledBuffer_stops() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val syncer =
-            AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
+            AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(
                 context,
                 stopWhenFilledBuffer = true
             )
@@ -895,11 +901,11 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
     @Test
     fun accelerometerSensorCollector_whenBufferFilledAndListenerAvailable_notifies() {
         val bufferFilledListener =
-            mockk<SensorMeasurementSyncer.OnBufferFilledListener<AccelerometerGravityAndGyroscopeSyncedSensorMeasurement, AccelerometerGravityAndGyroscopeSensorMeasurementSyncer>>(
+            mockk<SensorMeasurementSyncer.OnBufferFilledListener<AccelerometerGravityAndMagnetometerSyncedSensorMeasurement, AccelerometerGravityAndMagnetometerSensorMeasurementSyncer>>(
                 relaxUnitFun = true
             )
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(
             context,
             stopWhenFilledBuffer = false,
             bufferFilledListener = bufferFilledListener
@@ -931,9 +937,9 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
     @Test
     fun accelerometerSensorCollector_whenMeasurementAndNoMeasurementsAvailable_callsCollector() {
         val syncedMeasurementListener =
-            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AccelerometerGravityAndGyroscopeSyncedSensorMeasurement, AccelerometerGravityAndGyroscopeSensorMeasurementSyncer>>()
+            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AccelerometerGravityAndMagnetometerSyncedSensorMeasurement, AccelerometerGravityAndMagnetometerSensorMeasurementSyncer>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(
             context,
             syncedMeasurementListener = syncedMeasurementListener
         )
@@ -960,9 +966,9 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
     @Test
     fun accelerometerSensorCollector_whenMeasurementAndMeasurementsAvailable_updatesMostRecentTimestampCopiesMeasurementsAndProcessesThem() {
         val syncedMeasurementListener =
-            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AccelerometerGravityAndGyroscopeSyncedSensorMeasurement, AccelerometerGravityAndGyroscopeSensorMeasurementSyncer>>()
+            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AccelerometerGravityAndMagnetometerSyncedSensorMeasurement, AccelerometerGravityAndMagnetometerSensorMeasurementSyncer>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(
             context,
             syncedMeasurementListener = syncedMeasurementListener
         )
@@ -1027,10 +1033,10 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         requireNotNull(alreadyProcessedAccelerometerMeasurements)
         assertTrue(alreadyProcessedAccelerometerMeasurements.isEmpty())
 
-        val alreadyProcessedGyroscopeMeasurements: ArrayDeque<GyroscopeSensorMeasurement>? =
-            syncer.getPrivateProperty("alreadyProcessedGyroscopeMeasurements")
-        requireNotNull(alreadyProcessedGyroscopeMeasurements)
-        assertTrue(alreadyProcessedGyroscopeMeasurements.isEmpty())
+        val alreadyProcessedMagnetometerMeasurements: ArrayDeque<MagnetometerSensorMeasurement>? =
+            syncer.getPrivateProperty("alreadyProcessedMagnetometerMeasurements")
+        requireNotNull(alreadyProcessedMagnetometerMeasurements)
+        assertTrue(alreadyProcessedMagnetometerMeasurements.isEmpty())
 
         verify { syncedMeasurementListener wasNot Called }
         assertTrue(syncer.running)
@@ -1039,7 +1045,7 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
     @Test
     fun gravitySensorCollector_whenAccuracyChangedListenerAndNoListener_makesNoAction() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(context)
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(context)
 
         val gravitySensorCollector: BufferedGravitySensorCollector? =
             syncer.getPrivateProperty("gravitySensorCollector")
@@ -1053,11 +1059,11 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
     @Test
     fun gravitySensorCollector_whenAccuracyChangedListenerAndListenerAvailable_notifies() {
         val accuracyChangedListener =
-            mockk<SensorMeasurementSyncer.OnAccuracyChangedListener<AccelerometerGravityAndGyroscopeSyncedSensorMeasurement, AccelerometerGravityAndGyroscopeSensorMeasurementSyncer>>(
+            mockk<SensorMeasurementSyncer.OnAccuracyChangedListener<AccelerometerGravityAndMagnetometerSyncedSensorMeasurement, AccelerometerGravityAndMagnetometerSensorMeasurementSyncer>>(
                 relaxUnitFun = true
             )
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(
             context,
             accuracyChangedListener = accuracyChangedListener
         )
@@ -1083,7 +1089,7 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
     fun gravitySensorCollector_whenBufferFilledAndStopWhenFilledBuffer_stops() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val syncer =
-            AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
+            AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(
                 context,
                 stopWhenFilledBuffer = true
             )
@@ -1108,11 +1114,11 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
     @Test
     fun gravitySensorCollector_whenBufferFilledAndListenerAvailable_notifies() {
         val bufferFilledListener =
-            mockk<SensorMeasurementSyncer.OnBufferFilledListener<AccelerometerGravityAndGyroscopeSyncedSensorMeasurement, AccelerometerGravityAndGyroscopeSensorMeasurementSyncer>>(
+            mockk<SensorMeasurementSyncer.OnBufferFilledListener<AccelerometerGravityAndMagnetometerSyncedSensorMeasurement, AccelerometerGravityAndMagnetometerSensorMeasurementSyncer>>(
                 relaxUnitFun = true
             )
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(
             context,
             stopWhenFilledBuffer = false,
             bufferFilledListener = bufferFilledListener
@@ -1144,9 +1150,9 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
     @Test
     fun gravitySensorCollector_whenMeasurementAndMostRecentTimestampNotDefined_makesNoAction() {
         val syncedMeasurementListener =
-            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AccelerometerGravityAndGyroscopeSyncedSensorMeasurement, AccelerometerGravityAndGyroscopeSensorMeasurementSyncer>>()
+            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AccelerometerGravityAndMagnetometerSyncedSensorMeasurement, AccelerometerGravityAndMagnetometerSensorMeasurementSyncer>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(
             context,
             syncedMeasurementListener = syncedMeasurementListener
         )
@@ -1170,9 +1176,9 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
     @Test
     fun gravitySensorCollector_whenMeasurementMostRecentTimestampDefinedAndNoMeasurementsAvailable_callsCollector() {
         val syncedMeasurementListener =
-            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AccelerometerGravityAndGyroscopeSyncedSensorMeasurement, AccelerometerGravityAndGyroscopeSensorMeasurementSyncer>>()
+            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AccelerometerGravityAndMagnetometerSyncedSensorMeasurement, AccelerometerGravityAndMagnetometerSensorMeasurementSyncer>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(
             context,
             syncedMeasurementListener = syncedMeasurementListener
         )
@@ -1212,9 +1218,9 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
     @Test
     fun gravitySensorCollector_whenMeasurementMostRecentTimestampDefinedAndMeasurementsAvailable_copiesMeasurements() {
         val syncedMeasurementListener =
-            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AccelerometerGravityAndGyroscopeSyncedSensorMeasurement, AccelerometerGravityAndGyroscopeSensorMeasurementSyncer>>()
+            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AccelerometerGravityAndMagnetometerSyncedSensorMeasurement, AccelerometerGravityAndMagnetometerSensorMeasurementSyncer>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(
             context,
             syncedMeasurementListener = syncedMeasurementListener
         )
@@ -1297,155 +1303,153 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
     }
 
     @Test
-    fun gyroscopeSensorCollector_whenAccuracyChangedListenerAndNoListener_makesNoAction() {
+    fun magnetometerSensorCollector_whenAccuracyChangedListenerAndNoListener_makesNoAction() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(context)
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(context)
 
-        val gyroscopeSensorCollector: BufferedGyroscopeSensorCollector? =
-            syncer.getPrivateProperty("gyroscopeSensorCollector")
-        requireNotNull(gyroscopeSensorCollector)
+        val magnetometerSensorCollector: BufferedMagnetometerSensorCollector? =
+            syncer.getPrivateProperty("magnetometerSensorCollector")
+        requireNotNull(magnetometerSensorCollector)
 
-        val listener = gyroscopeSensorCollector.accuracyChangedListener
+        val listener = magnetometerSensorCollector.accuracyChangedListener
         requireNotNull(listener)
-        listener.onAccuracyChanged(gyroscopeSensorCollector, SensorAccuracy.HIGH)
+        listener.onAccuracyChanged(magnetometerSensorCollector, SensorAccuracy.MEDIUM)
     }
 
     @Test
-    fun gyroscopeSensorCollector_whenAccuracyChangedListenerAndListenerAvailable_notifies() {
+    fun magnetometerSensorCollector_whenAccuracyChangedListenerAndListenerAvailable_notifies() {
         val accuracyChangedListener =
-            mockk<SensorMeasurementSyncer.OnAccuracyChangedListener<AccelerometerGravityAndGyroscopeSyncedSensorMeasurement, AccelerometerGravityAndGyroscopeSensorMeasurementSyncer>>(
+            mockk<SensorMeasurementSyncer.OnAccuracyChangedListener<AccelerometerGravityAndMagnetometerSyncedSensorMeasurement, AccelerometerGravityAndMagnetometerSensorMeasurementSyncer>>(
                 relaxUnitFun = true
             )
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(
             context,
             accuracyChangedListener = accuracyChangedListener
         )
 
-        val gyroscopeSensorCollector: BufferedGyroscopeSensorCollector? =
-            syncer.getPrivateProperty("gyroscopeSensorCollector")
-        requireNotNull(gyroscopeSensorCollector)
+        val magnetometerSensorCollector: BufferedMagnetometerSensorCollector? =
+            syncer.getPrivateProperty("magnetometerSensorCollector")
+        requireNotNull(magnetometerSensorCollector)
 
-        val listener = gyroscopeSensorCollector.accuracyChangedListener
+        val listener = magnetometerSensorCollector.accuracyChangedListener
         requireNotNull(listener)
-        listener.onAccuracyChanged(gyroscopeSensorCollector, SensorAccuracy.HIGH)
+        listener.onAccuracyChanged(magnetometerSensorCollector, SensorAccuracy.MEDIUM)
 
         verify(exactly = 1) {
             accuracyChangedListener.onAccuracyChanged(
                 syncer,
-                SensorMeasurementSyncer.SensorType.GYROSCOPE_UNCALIBRATED,
-                SensorAccuracy.HIGH
+                SensorMeasurementSyncer.SensorType.MAGNETOMETER_UNCALIBRATED,
+                SensorAccuracy.MEDIUM
             )
         }
     }
 
     @Test
-    fun gyroscopeSensorCollector_whenBufferFilledAndStopWhenFilledBuffer_stops() {
+    fun magnetometerSensorCollector_whenBufferFilledAndStopWhenFilledBuffer_stops() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val syncer =
-            AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
-                context,
-                stopWhenFilledBuffer = true
-            )
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(
+            context,
+            stopWhenFilledBuffer = true
+        )
 
         // set as running
         setPrivateProperty(SensorMeasurementSyncer::class, syncer, "running", true)
         assertTrue(syncer.running)
         assertTrue(syncer.stopWhenFilledBuffer)
 
-        val gyroscopeSensorCollector: BufferedGyroscopeSensorCollector? =
-            syncer.getPrivateProperty("gyroscopeSensorCollector")
-        requireNotNull(gyroscopeSensorCollector)
+        val magnetometerSensorCollector: BufferedMagnetometerSensorCollector? =
+            syncer.getPrivateProperty("magnetometerSensorCollector")
+        requireNotNull(magnetometerSensorCollector)
 
-        val listener = gyroscopeSensorCollector.bufferFilledListener
+        val listener = magnetometerSensorCollector.bufferFilledListener
         requireNotNull(listener)
 
-        listener.onBufferFilled(gyroscopeSensorCollector)
+        listener.onBufferFilled(magnetometerSensorCollector)
 
         assertFalse(syncer.running)
     }
 
     @Test
-    fun gyroscopeSensorCollector_whenBufferFilledAndListenerAvailable_notifies() {
+    fun magnetometerSensorCollector_whenBufferFilledAndListenerAvailable_notifies() {
         val bufferFilledListener =
-            mockk<SensorMeasurementSyncer.OnBufferFilledListener<AccelerometerGravityAndGyroscopeSyncedSensorMeasurement, AccelerometerGravityAndGyroscopeSensorMeasurementSyncer>>(
+            mockk<SensorMeasurementSyncer.OnBufferFilledListener<AccelerometerGravityAndMagnetometerSyncedSensorMeasurement, AccelerometerGravityAndMagnetometerSensorMeasurementSyncer>>(
                 relaxUnitFun = true
             )
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val syncer =
-            AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
-                context,
-                stopWhenFilledBuffer = false,
-                bufferFilledListener = bufferFilledListener
-            )
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(
+            context,
+            stopWhenFilledBuffer = false,
+            bufferFilledListener = bufferFilledListener
+        )
 
         // set as running
         setPrivateProperty(SensorMeasurementSyncer::class, syncer, "running", true)
         assertTrue(syncer.running)
         assertFalse(syncer.stopWhenFilledBuffer)
 
-        val gyroscopeSensorCollector: BufferedGyroscopeSensorCollector? =
-            syncer.getPrivateProperty("gyroscopeSensorCollector")
-        requireNotNull(gyroscopeSensorCollector)
+        val magnetometerSensorCollector: BufferedMagnetometerSensorCollector? =
+            syncer.getPrivateProperty("magnetometerSensorCollector")
+        requireNotNull(magnetometerSensorCollector)
 
-        val listener = gyroscopeSensorCollector.bufferFilledListener
+        val listener = magnetometerSensorCollector.bufferFilledListener
         requireNotNull(listener)
 
-        listener.onBufferFilled(gyroscopeSensorCollector)
+        listener.onBufferFilled(magnetometerSensorCollector)
 
         verify(exactly = 1) {
             bufferFilledListener.onBufferFilled(
                 syncer,
-                SensorMeasurementSyncer.SensorType.GYROSCOPE_UNCALIBRATED
+                SensorMeasurementSyncer.SensorType.MAGNETOMETER_UNCALIBRATED
             )
         }
         assertTrue(syncer.running)
     }
 
     @Test
-    fun gyroscopeSensorCollector_whenMeasurementAndMostRecentTimestampNotDefined_makesNoAction() {
+    fun magnetometerSensorCollector_whenMeasurementAndMostRecentTimestampNotDefined_makesNoAction() {
         val syncedMeasurementListener =
-            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AccelerometerGravityAndGyroscopeSyncedSensorMeasurement, AccelerometerGravityAndGyroscopeSensorMeasurementSyncer>>()
+            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AccelerometerGravityAndMagnetometerSyncedSensorMeasurement, AccelerometerGravityAndMagnetometerSensorMeasurementSyncer>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(
             context,
             syncedMeasurementListener = syncedMeasurementListener
         )
 
-        val gyroscopeSensorCollector: BufferedGyroscopeSensorCollector? =
-            syncer.getPrivateProperty("gyroscopeSensorCollector")
-        requireNotNull(gyroscopeSensorCollector)
-        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
-        syncer.setPrivateProperty("gyroscopeSensorCollector", gyroscopeSensorCollectorSpy)
+        val magnetometerSensorCollector: BufferedMagnetometerSensorCollector? =
+            syncer.getPrivateProperty("magnetometerSensorCollector")
+        requireNotNull(magnetometerSensorCollector)
+        val magnetometerSensorCollectorSpy = spyk(magnetometerSensorCollector)
+        syncer.setPrivateProperty("magnetometerSensorCollector", magnetometerSensorCollectorSpy)
 
-        val listener = gyroscopeSensorCollector.measurementListener
+        val listener = magnetometerSensorCollector.measurementListener
         requireNotNull(listener)
 
-        listener.onMeasurement(gyroscopeSensorCollectorSpy, GyroscopeSensorMeasurement(), 0)
+        listener.onMeasurement(magnetometerSensorCollectorSpy, MagnetometerSensorMeasurement(), 0)
 
-        verify { gyroscopeSensorCollectorSpy wasNot Called }
+        verify { magnetometerSensorCollectorSpy wasNot Called }
         verify { syncedMeasurementListener wasNot Called }
         assertNull(syncer.mostRecentTimestamp)
     }
 
     @Test
-    fun gyroscopeSensorCollector_whenMeasurementMostRecentTimestampDefinedAndNoMeasurementsAvailable_callsCollector() {
+    fun magnetometerSensorCollector_whenMeasurementMostRecentTimestampDefinedAndNoMeasurementsAvailable_callsCollector() {
         val syncedMeasurementListener =
-            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AccelerometerGravityAndGyroscopeSyncedSensorMeasurement, AccelerometerGravityAndGyroscopeSensorMeasurementSyncer>>()
+            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AccelerometerGravityAndMagnetometerSyncedSensorMeasurement, AccelerometerGravityAndMagnetometerSensorMeasurementSyncer>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(
             context,
             syncedMeasurementListener = syncedMeasurementListener
         )
 
-        val gyroscopeSensorCollector: BufferedGyroscopeSensorCollector? =
-            syncer.getPrivateProperty("gyroscopeSensorCollector")
-        requireNotNull(gyroscopeSensorCollector)
-        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
-        every { gyroscopeSensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
+        val magnetometerSensorCollector: BufferedMagnetometerSensorCollector? =
+            syncer.getPrivateProperty("magnetometerSensorCollector")
+        requireNotNull(magnetometerSensorCollector)
+        val magnetometerSensorCollectorSpy = spyk(magnetometerSensorCollector)
+        every { magnetometerSensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
             ArrayDeque()
         )
-        syncer.setPrivateProperty("gyroscopeSensorCollector", gyroscopeSensorCollectorSpy)
+        syncer.setPrivateProperty("magnetometerSensorCollector", magnetometerSensorCollectorSpy)
 
         // set most recent timestamp
         val mostRecentTimestamp = System.nanoTime()
@@ -1456,13 +1460,13 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
             mostRecentTimestamp
         )
 
-        val listener = gyroscopeSensorCollector.measurementListener
+        val listener = magnetometerSensorCollector.measurementListener
         requireNotNull(listener)
 
-        listener.onMeasurement(gyroscopeSensorCollectorSpy, GyroscopeSensorMeasurement(), 0)
+        listener.onMeasurement(magnetometerSensorCollectorSpy, MagnetometerSensorMeasurement(), 0)
 
         verify(exactly = 1) {
-            gyroscopeSensorCollectorSpy.getMeasurementsBeforeTimestamp(
+            magnetometerSensorCollectorSpy.getMeasurementsBeforeTimestamp(
                 mostRecentTimestamp
             )
         }
@@ -1471,11 +1475,11 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
     }
 
     @Test
-    fun gyroscopeSensorCollector_whenMeasurementMostRecentTimestampDefinedAndMeasurementsAvailable_copiesMeasurements() {
+    fun magnetometerSensorCollector_whenMeasurementMostRecentTimestampDefinedAndMeasurementsAvailable_copiesMeasurements() {
         val syncedMeasurementListener =
-            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AccelerometerGravityAndGyroscopeSyncedSensorMeasurement, AccelerometerGravityAndGyroscopeSensorMeasurementSyncer>>()
+            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AccelerometerGravityAndMagnetometerSyncedSensorMeasurement, AccelerometerGravityAndMagnetometerSensorMeasurementSyncer>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(
             context,
             syncedMeasurementListener = syncedMeasurementListener
         )
@@ -1486,27 +1490,35 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         setPrivateProperty(SensorMeasurementSyncer::class, syncer, "running", true)
         assertTrue(syncer.running)
 
-        val gyroscopeSensorCollector: BufferedGyroscopeSensorCollector? =
-            syncer.getPrivateProperty("gyroscopeSensorCollector")
-        requireNotNull(gyroscopeSensorCollector)
-        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
+        val magnetometerSensorCollector: BufferedMagnetometerSensorCollector? =
+            syncer.getPrivateProperty("magnetometerSensorCollector")
+        requireNotNull(magnetometerSensorCollector)
+        val magnetometerSensorCollectorSpy = spyk(magnetometerSensorCollector)
 
         val randomizer = UniformRandomizer()
-        val wx = randomizer.nextFloat()
-        val wy = randomizer.nextFloat()
-        val wz = randomizer.nextFloat()
         val bx = randomizer.nextFloat()
         val by = randomizer.nextFloat()
         val bz = randomizer.nextFloat()
+        val hardIronX = randomizer.nextFloat()
+        val hardIronY = randomizer.nextFloat()
+        val hardIronZ = randomizer.nextFloat()
         val timestamp = System.nanoTime()
-        val gyroscopeMeasurement =
-            GyroscopeSensorMeasurement(wx, wy, wz, bx, by, bz, timestamp, SensorAccuracy.HIGH)
-        val measurementsBeforeTimestamp = ArrayDeque<GyroscopeSensorMeasurement>()
-        measurementsBeforeTimestamp.add(gyroscopeMeasurement)
-        every { gyroscopeSensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
+        val magnetometerMeasurement = MagnetometerSensorMeasurement(
+            bx,
+            by,
+            bz,
+            hardIronX,
+            hardIronY,
+            hardIronZ,
+            timestamp,
+            SensorAccuracy.HIGH
+        )
+        val measurementsBeforeTimestamp = ArrayDeque<MagnetometerSensorMeasurement>()
+        measurementsBeforeTimestamp.add(magnetometerMeasurement)
+        every { magnetometerSensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
             measurementsBeforeTimestamp
         )
-        syncer.setPrivateProperty("gyroscopeSensorCollector", gyroscopeSensorCollectorSpy)
+        syncer.setPrivateProperty("magnetometerSensorCollector", magnetometerSensorCollectorSpy)
 
         // set most recent timestamp
         val mostRecentTimestamp = System.nanoTime()
@@ -1517,33 +1529,33 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
             mostRecentTimestamp
         )
 
-        val listener = gyroscopeSensorCollector.measurementListener
+        val listener = magnetometerSensorCollector.measurementListener
         requireNotNull(listener)
 
-        listener.onMeasurement(gyroscopeSensorCollectorSpy, GyroscopeSensorMeasurement(), 0)
+        listener.onMeasurement(magnetometerSensorCollectorSpy, MagnetometerSensorMeasurement(), 0)
 
         verify(exactly = 1) {
-            gyroscopeSensorCollectorSpy.getMeasurementsBeforeTimestamp(
+            magnetometerSensorCollectorSpy.getMeasurementsBeforeTimestamp(
                 mostRecentTimestamp
             )
         }
 
         assertEquals(mostRecentTimestamp, syncer.mostRecentTimestamp)
-        val gyroscopeMeasurements: ArrayDeque<GyroscopeSensorMeasurement>? =
-            syncer.getPrivateProperty("gyroscopeMeasurements")
-        requireNotNull(gyroscopeMeasurements)
-        assertEquals(1, gyroscopeMeasurements.size)
-        val gyroscopeMeasurement2 = gyroscopeMeasurements.peek()
-        requireNotNull(gyroscopeMeasurement2)
-        assertNotSame(gyroscopeMeasurement, gyroscopeMeasurement2)
-        assertEquals(wx, gyroscopeMeasurement2.wx, 0.0f)
-        assertEquals(wy, gyroscopeMeasurement2.wy, 0.0f)
-        assertEquals(wz, gyroscopeMeasurement2.wz, 0.0f)
-        assertEquals(bx, gyroscopeMeasurement2.bx)
-        assertEquals(by, gyroscopeMeasurement2.by)
-        assertEquals(bz, gyroscopeMeasurement2.bz)
-        assertEquals(timestamp, gyroscopeMeasurement2.timestamp)
-        assertEquals(SensorAccuracy.HIGH, gyroscopeMeasurement2.accuracy)
+        val magnetometerMeasurements: ArrayDeque<MagnetometerSensorMeasurement>? =
+            syncer.getPrivateProperty("magnetometerMeasurements")
+        requireNotNull(magnetometerMeasurements)
+        assertEquals(1, magnetometerMeasurements.size)
+        val magnetometerMeasurement2 = magnetometerMeasurements.peek()
+        requireNotNull(magnetometerMeasurement2)
+        assertNotSame(magnetometerMeasurement, magnetometerMeasurement2)
+        assertEquals(bx, magnetometerMeasurement2.bx, 0.0f)
+        assertEquals(by, magnetometerMeasurement2.by, 0.0f)
+        assertEquals(bz, magnetometerMeasurement2.bz, 0.0f)
+        assertEquals(hardIronX, magnetometerMeasurement2.hardIronX)
+        assertEquals(hardIronY, magnetometerMeasurement2.hardIronY)
+        assertEquals(hardIronZ, magnetometerMeasurement2.hardIronZ)
+        assertEquals(timestamp, magnetometerMeasurement2.timestamp)
+        assertEquals(SensorAccuracy.HIGH, magnetometerMeasurement2.accuracy)
 
         assertEquals(mostRecentTimestamp, syncer.mostRecentTimestamp)
         assertNull(syncer.oldestTimestamp)
@@ -1554,10 +1566,10 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         requireNotNull(alreadyProcessedAccelerometerMeasurements)
         assertTrue(alreadyProcessedAccelerometerMeasurements.isEmpty())
 
-        val alreadyProcessedGyroscopeMeasurements: ArrayDeque<GyroscopeSensorMeasurement>? =
-            syncer.getPrivateProperty("alreadyProcessedGyroscopeMeasurements")
-        requireNotNull(alreadyProcessedGyroscopeMeasurements)
-        assertTrue(alreadyProcessedGyroscopeMeasurements.isEmpty())
+        val alreadyProcessedMagnetometerMeasurements: ArrayDeque<MagnetometerSensorMeasurement>? =
+            syncer.getPrivateProperty("alreadyProcessedMagnetometerMeasurements")
+        requireNotNull(alreadyProcessedMagnetometerMeasurements)
+        assertTrue(alreadyProcessedMagnetometerMeasurements.isEmpty())
 
         verify { syncedMeasurementListener wasNot Called }
         assertTrue(syncer.running)
@@ -1566,11 +1578,11 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
     @Test
     fun sensorCollectors_whenAllMeasurements_notifiesSyncedMeasurement() {
         val syncedMeasurementListener =
-            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AccelerometerGravityAndGyroscopeSyncedSensorMeasurement, AccelerometerGravityAndGyroscopeSensorMeasurementSyncer>>(
+            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AccelerometerGravityAndMagnetometerSyncedSensorMeasurement, AccelerometerGravityAndMagnetometerSensorMeasurementSyncer>>(
                 relaxUnitFun = true
             )
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(
             context,
             syncedMeasurementListener = syncedMeasurementListener
         )
@@ -1592,36 +1604,35 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
             mostRecentTimestamp
         )
 
-        val gyroscopeSensorCollector: BufferedGyroscopeSensorCollector? =
-            syncer.getPrivateProperty("gyroscopeSensorCollector")
-        requireNotNull(gyroscopeSensorCollector)
-        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
+        val magnetometerSensorCollector: BufferedMagnetometerSensorCollector? =
+            syncer.getPrivateProperty("magnetometerSensorCollector")
+        requireNotNull(magnetometerSensorCollector)
+        val magnetometerSensorCollectorSpy = spyk(magnetometerSensorCollector)
 
         val randomizer = UniformRandomizer()
-        val wx = randomizer.nextFloat()
-        val wy = randomizer.nextFloat()
-        val wz = randomizer.nextFloat()
-        val wbx = randomizer.nextFloat()
-        val wby = randomizer.nextFloat()
-        val wbz = randomizer.nextFloat()
-        val gyroscopeTimestamp = accelerometerTimestamp - 1
-        val gyroscopeMeasurement1 =
-            GyroscopeSensorMeasurement(
-                wx,
-                wy,
-                wz,
-                wbx,
-                wby,
-                wbz,
-                gyroscopeTimestamp,
-                SensorAccuracy.HIGH
-            )
-        val gyroscopeMeasurementsBeforeTimestamp = ArrayDeque<GyroscopeSensorMeasurement>()
-        gyroscopeMeasurementsBeforeTimestamp.add(gyroscopeMeasurement1)
-        every { gyroscopeSensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
-            gyroscopeMeasurementsBeforeTimestamp
+        val bx = randomizer.nextFloat()
+        val by = randomizer.nextFloat()
+        val bz = randomizer.nextFloat()
+        val hardIronX = randomizer.nextFloat()
+        val hardIronY = randomizer.nextFloat()
+        val hardIronZ = randomizer.nextFloat()
+        val magnetometerTimestamp = accelerometerTimestamp - 1
+        val magnetometerMeasurement1 = MagnetometerSensorMeasurement(
+            bx,
+            by,
+            bz,
+            hardIronX,
+            hardIronY,
+            hardIronZ,
+            magnetometerTimestamp,
+            SensorAccuracy.MEDIUM
         )
-        syncer.setPrivateProperty("gyroscopeSensorCollector", gyroscopeSensorCollectorSpy)
+        val magnetometerMeasurementsBeforeTimestamp = ArrayDeque<MagnetometerSensorMeasurement>()
+        magnetometerMeasurementsBeforeTimestamp.add(magnetometerMeasurement1)
+        every { magnetometerSensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
+            magnetometerMeasurementsBeforeTimestamp
+        )
+        syncer.setPrivateProperty("magnetometerSensorCollector", magnetometerSensorCollectorSpy)
 
         val gravitySensorCollector: BufferedGravitySensorCollector? =
             syncer.getPrivateProperty("gravitySensorCollector")
@@ -1652,17 +1663,16 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val abx = randomizer.nextFloat()
         val aby = randomizer.nextFloat()
         val abz = randomizer.nextFloat()
-        val accelerometerMeasurement1 =
-            AccelerometerSensorMeasurement(
-                ax,
-                ay,
-                az,
-                abx,
-                aby,
-                abz,
-                accelerometerTimestamp,
-                SensorAccuracy.HIGH
-            )
+        val accelerometerMeasurement1 = AccelerometerSensorMeasurement(
+            ax,
+            ay,
+            az,
+            abx,
+            aby,
+            abz,
+            accelerometerTimestamp,
+            SensorAccuracy.HIGH
+        )
         val measurementsBeforePosition = ArrayDeque<AccelerometerSensorMeasurement>()
         measurementsBeforePosition.add(accelerometerMeasurement1)
         every { accelerometerSensorCollectorSpy.getMeasurementsBeforePosition(any()) }.returns(
@@ -1676,13 +1686,13 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val gravityListener = gravitySensorCollector.measurementListener
         requireNotNull(gravityListener)
 
-        val gyroscopeListener = gyroscopeSensorCollector.measurementListener
-        requireNotNull(gyroscopeListener)
+        val magnetometerListener = magnetometerSensorCollector.measurementListener
+        requireNotNull(magnetometerListener)
 
-        // process gyroscope measurement
-        gyroscopeListener.onMeasurement(
-            gyroscopeSensorCollectorSpy,
-            GyroscopeSensorMeasurement(),
+        // process magnetometer measurement
+        magnetometerListener.onMeasurement(
+            magnetometerSensorCollectorSpy,
+            MagnetometerSensorMeasurement(),
             0
         )
 
@@ -1691,26 +1701,26 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         assertEquals(0, syncer.numberOfProcessedMeasurements)
         assertTrue(syncer.running)
 
-        val gyroscopeMeasurements: ArrayDeque<GyroscopeSensorMeasurement>? =
-            syncer.getPrivateProperty("gyroscopeMeasurements")
-        requireNotNull(gyroscopeMeasurements)
-        assertEquals(1, gyroscopeMeasurements.size)
-        val gyroscopeMeasurement2 = gyroscopeMeasurements.peek()
-        requireNotNull(gyroscopeMeasurement2)
-        assertNotSame(gyroscopeMeasurement1, gyroscopeMeasurement2)
-        assertEquals(wx, gyroscopeMeasurement2.wx, 0.0f)
-        assertEquals(wy, gyroscopeMeasurement2.wy, 0.0f)
-        assertEquals(wz, gyroscopeMeasurement2.wz, 0.0f)
-        assertEquals(wbx, gyroscopeMeasurement2.bx)
-        assertEquals(wby, gyroscopeMeasurement2.by)
-        assertEquals(wbz, gyroscopeMeasurement2.bz)
-        assertEquals(gyroscopeTimestamp, gyroscopeMeasurement2.timestamp)
-        assertEquals(SensorAccuracy.HIGH, gyroscopeMeasurement2.accuracy)
+        val magnetometerMeasurements: ArrayDeque<MagnetometerSensorMeasurement>? =
+            syncer.getPrivateProperty("magnetometerMeasurements")
+        requireNotNull(magnetometerMeasurements)
+        assertEquals(1, magnetometerMeasurements.size)
+        val magnetometerMeasurement2 = magnetometerMeasurements.peek()
+        requireNotNull(magnetometerMeasurement2)
+        assertNotSame(magnetometerMeasurement1, magnetometerMeasurement2)
+        assertEquals(bx, magnetometerMeasurement2.bx, 0.0f)
+        assertEquals(by, magnetometerMeasurement2.by, 0.0f)
+        assertEquals(bz, magnetometerMeasurement2.bz, 0.0f)
+        assertEquals(hardIronX, magnetometerMeasurement2.hardIronX)
+        assertEquals(hardIronY, magnetometerMeasurement2.hardIronY)
+        assertEquals(hardIronZ, magnetometerMeasurement2.hardIronZ)
+        assertEquals(magnetometerTimestamp, magnetometerMeasurement2.timestamp)
+        assertEquals(SensorAccuracy.MEDIUM, magnetometerMeasurement2.accuracy)
 
-        val alreadyProcessedGyroscopeMeasurements: ArrayDeque<GyroscopeSensorMeasurement>? =
-            syncer.getPrivateProperty("alreadyProcessedGyroscopeMeasurements")
-        requireNotNull(alreadyProcessedGyroscopeMeasurements)
-        assertTrue(alreadyProcessedGyroscopeMeasurements.isEmpty())
+        val alreadyProcessedMagnetometerMeasurements: ArrayDeque<MagnetometerSensorMeasurement>? =
+            syncer.getPrivateProperty("alreadyProcessedMagnetometerMeasurements")
+        requireNotNull(alreadyProcessedMagnetometerMeasurements)
+        assertTrue(alreadyProcessedMagnetometerMeasurements.isEmpty())
 
         // process gravity measurement
         gravityListener.onMeasurement(gravitySensorCollectorSpy, GravitySensorMeasurement(), 0)
@@ -1755,15 +1765,15 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
             syncer.getPrivateProperty("accelerometerMeasurements")
         requireNotNull(accelerometerMeasurements)
         assertTrue(accelerometerMeasurements.isEmpty())
-        assertTrue(gyroscopeMeasurements.isEmpty())
+        assertTrue(magnetometerMeasurements.isEmpty())
 
         val alreadyProcessedAccelerometerMeasurements: ArrayDeque<AccelerometerSensorMeasurement>? =
             syncer.getPrivateProperty("alreadyProcessedAccelerometerMeasurements")
         requireNotNull(alreadyProcessedAccelerometerMeasurements)
         assertTrue(alreadyProcessedAccelerometerMeasurements.isEmpty())
-        assertTrue(alreadyProcessedGyroscopeMeasurements.isEmpty())
+        assertTrue(alreadyProcessedMagnetometerMeasurements.isEmpty())
 
-        val slot = slot<AccelerometerGravityAndGyroscopeSyncedSensorMeasurement>()
+        val slot = slot<AccelerometerGravityAndMagnetometerSyncedSensorMeasurement>()
         verify(exactly = 1) {
             syncedMeasurementListener.onSyncedMeasurements(
                 syncer,
@@ -1772,7 +1782,7 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         }
 
         val syncedMeasurement = slot.captured
-        assertEquals(gyroscopeTimestamp, syncedMeasurement.timestamp)
+        assertEquals(magnetometerTimestamp, syncedMeasurement.timestamp)
         val syncedAccelerometerMeasurement = syncedMeasurement.accelerometerMeasurement
         requireNotNull(syncedAccelerometerMeasurement)
         assertEquals(ax, syncedAccelerometerMeasurement.ax, 0.0f)
@@ -1790,30 +1800,30 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         assertEquals(gz, syncedGravityMeasurement.gz, 0.0f)
         assertEquals(gravityTimestamp, syncedGravityMeasurement.timestamp)
         assertEquals(SensorAccuracy.HIGH, syncedGravityMeasurement.accuracy)
-        val syncedGyroscopeMeasurement = syncedMeasurement.gyroscopeMeasurement
-        requireNotNull(syncedGyroscopeMeasurement)
-        assertEquals(wx, syncedGyroscopeMeasurement.wx, 0.0f)
-        assertEquals(wy, syncedGyroscopeMeasurement.wy, 0.0f)
-        assertEquals(wz, syncedGyroscopeMeasurement.wz, 0.0f)
-        assertEquals(wbx, syncedGyroscopeMeasurement.bx)
-        assertEquals(wby, syncedGyroscopeMeasurement.by)
-        assertEquals(wbz, syncedGyroscopeMeasurement.bz)
-        assertEquals(gyroscopeTimestamp, syncedGyroscopeMeasurement.timestamp)
-        assertEquals(SensorAccuracy.HIGH, syncedGyroscopeMeasurement.accuracy)
+        val syncedMagnetometerMeasurement = syncedMeasurement.magnetometerMeasurement
+        requireNotNull(syncedMagnetometerMeasurement)
+        assertEquals(bx, syncedMagnetometerMeasurement.bx, 0.0f)
+        assertEquals(by, syncedMagnetometerMeasurement.by, 0.0f)
+        assertEquals(bz, syncedMagnetometerMeasurement.bz, 0.0f)
+        assertEquals(hardIronX, syncedMagnetometerMeasurement.hardIronX)
+        assertEquals(hardIronY, syncedMagnetometerMeasurement.hardIronY)
+        assertEquals(hardIronZ, syncedMagnetometerMeasurement.hardIronZ)
+        assertEquals(magnetometerTimestamp, syncedMagnetometerMeasurement.timestamp)
+        assertEquals(SensorAccuracy.MEDIUM, syncedMagnetometerMeasurement.accuracy)
     }
 
     @Test
     fun cleanupStaleMeasurements_whenStaleMeasurementsAvailable_notifies() {
         val syncedMeasurementListener =
-            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AccelerometerGravityAndGyroscopeSyncedSensorMeasurement, AccelerometerGravityAndGyroscopeSensorMeasurementSyncer>>(
+            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AccelerometerGravityAndMagnetometerSyncedSensorMeasurement, AccelerometerGravityAndMagnetometerSensorMeasurementSyncer>>(
                 relaxUnitFun = true
             )
         val staleDetectedMeasurementsListener =
-            mockk<SensorMeasurementSyncer.OnStaleDetectedMeasurementsListener<AccelerometerGravityAndGyroscopeSyncedSensorMeasurement, AccelerometerGravityAndGyroscopeSensorMeasurementSyncer>>(
+            mockk<SensorMeasurementSyncer.OnStaleDetectedMeasurementsListener<AccelerometerGravityAndMagnetometerSyncedSensorMeasurement, AccelerometerGravityAndMagnetometerSensorMeasurementSyncer>>(
                 relaxUnitFun = true
             )
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(
             context,
             syncedMeasurementListener = syncedMeasurementListener,
             staleDetectedMeasurementsListener = staleDetectedMeasurementsListener
@@ -1839,29 +1849,28 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
 
         // add stale measurements
         val staleTimestamp =
-            mostRecentTimestamp - 2 * AccelerometerAndGyroscopeSensorMeasurementSyncer.DEFAULT_STALE_OFFSET_NANOS
-        val gyroscopeMeasurements: ArrayDeque<GyroscopeSensorMeasurement>? =
-            syncer.getPrivateProperty("gyroscopeMeasurements")
-        requireNotNull(gyroscopeMeasurements)
+            mostRecentTimestamp - 2 * AccelerometerAndMagnetometerSensorMeasurementSyncer.DEFAULT_STALE_OFFSET_NANOS
+        val magnetometerMeasurements: ArrayDeque<MagnetometerSensorMeasurement>? =
+            syncer.getPrivateProperty("magnetometerMeasurements")
+        requireNotNull(magnetometerMeasurements)
         val randomizer = UniformRandomizer()
-        val wx1 = randomizer.nextFloat()
-        val wy1 = randomizer.nextFloat()
-        val wz1 = randomizer.nextFloat()
-        val wbx = randomizer.nextFloat()
-        val wby = randomizer.nextFloat()
-        val wbz = randomizer.nextFloat()
-        val staleGyroscopeMeasurement =
-            GyroscopeSensorMeasurement(
-                wx1,
-                wy1,
-                wz1,
-                wbx,
-                wby,
-                wbz,
-                staleTimestamp,
-                SensorAccuracy.HIGH
-            )
-        gyroscopeMeasurements.add(staleGyroscopeMeasurement)
+        val bx1 = randomizer.nextFloat()
+        val by1 = randomizer.nextFloat()
+        val bz1 = randomizer.nextFloat()
+        val hardIronX = randomizer.nextFloat()
+        val hardIronY = randomizer.nextFloat()
+        val hardIronZ = randomizer.nextFloat()
+        val staleMagnetometerMeasurement = MagnetometerSensorMeasurement(
+            bx1,
+            by1,
+            bz1,
+            hardIronX,
+            hardIronY,
+            hardIronZ,
+            staleTimestamp,
+            SensorAccuracy.MEDIUM
+        )
+        magnetometerMeasurements.add(staleMagnetometerMeasurement)
 
         val gravityMeasurements: ArrayDeque<GravitySensorMeasurement>? =
             syncer.getPrivateProperty("gravityMeasurements")
@@ -1882,45 +1891,43 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val abx = randomizer.nextFloat()
         val aby = randomizer.nextFloat()
         val abz = randomizer.nextFloat()
-        val staleAccelerometerMeasurement =
-            AccelerometerSensorMeasurement(
-                ax1,
-                ay1,
-                az1,
-                abx,
-                aby,
-                abz,
-                staleTimestamp,
-                SensorAccuracy.HIGH
-            )
+        val staleAccelerometerMeasurement = AccelerometerSensorMeasurement(
+            ax1,
+            ay1,
+            az1,
+            abx,
+            aby,
+            abz,
+            staleTimestamp,
+            SensorAccuracy.HIGH
+        )
         accelerometerMeasurements.add(staleAccelerometerMeasurement)
 
-        val gyroscopeSensorCollector: BufferedGyroscopeSensorCollector? =
-            syncer.getPrivateProperty("gyroscopeSensorCollector")
-        requireNotNull(gyroscopeSensorCollector)
-        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
+        val magnetometerSensorCollector: BufferedMagnetometerSensorCollector? =
+            syncer.getPrivateProperty("magnetometerSensorCollector")
+        requireNotNull(magnetometerSensorCollector)
+        val magnetometerSensorCollectorSpy = spyk(magnetometerSensorCollector)
 
-        val wx = randomizer.nextFloat()
-        val wy = randomizer.nextFloat()
-        val wz = randomizer.nextFloat()
-        val gyroscopeTimestamp = accelerometerTimestamp - 1
-        val gyroscopeMeasurement1 =
-            GyroscopeSensorMeasurement(
-                wx,
-                wy,
-                wz,
-                wbx,
-                wby,
-                wbz,
-                gyroscopeTimestamp,
-                SensorAccuracy.HIGH
-            )
-        val gyroscopeMeasurementsBeforeTimestamp = ArrayDeque<GyroscopeSensorMeasurement>()
-        gyroscopeMeasurementsBeforeTimestamp.add(gyroscopeMeasurement1)
-        every { gyroscopeSensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
-            gyroscopeMeasurementsBeforeTimestamp
+        val bx = randomizer.nextFloat()
+        val by = randomizer.nextFloat()
+        val bz = randomizer.nextFloat()
+        val magnetometerTimestamp = accelerometerTimestamp - 1
+        val magnetometerMeasurement1 = MagnetometerSensorMeasurement(
+            bx,
+            by,
+            bz,
+            hardIronX,
+            hardIronY,
+            hardIronZ,
+            magnetometerTimestamp,
+            SensorAccuracy.MEDIUM
         )
-        syncer.setPrivateProperty("gyroscopeSensorCollector", gyroscopeSensorCollectorSpy)
+        val magnetometerMeasurementsBeforeTimestamp = ArrayDeque<MagnetometerSensorMeasurement>()
+        magnetometerMeasurementsBeforeTimestamp.add(magnetometerMeasurement1)
+        every { magnetometerSensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
+            magnetometerMeasurementsBeforeTimestamp
+        )
+        syncer.setPrivateProperty("magnetometerSensorCollector", magnetometerSensorCollectorSpy)
 
         val gravitySensorCollector: BufferedGravitySensorCollector? =
             syncer.getPrivateProperty("gravitySensorCollector")
@@ -1948,17 +1955,16 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val ax = randomizer.nextFloat()
         val ay = randomizer.nextFloat()
         val az = randomizer.nextFloat()
-        val accelerometerMeasurement1 =
-            AccelerometerSensorMeasurement(
-                ax,
-                ay,
-                az,
-                abx,
-                aby,
-                abz,
-                accelerometerTimestamp,
-                SensorAccuracy.HIGH
-            )
+        val accelerometerMeasurement1 = AccelerometerSensorMeasurement(
+            ax,
+            ay,
+            az,
+            abx,
+            aby,
+            abz,
+            accelerometerTimestamp,
+            SensorAccuracy.HIGH
+        )
         val measurementsBeforePosition = ArrayDeque<AccelerometerSensorMeasurement>()
         measurementsBeforePosition.add(accelerometerMeasurement1)
         every { accelerometerSensorCollectorSpy.getMeasurementsBeforePosition(any()) }.returns(
@@ -1979,13 +1985,13 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val gravityListener = gravitySensorCollectorSpy.measurementListener
         requireNotNull(gravityListener)
 
-        val gyroscopeListener = gyroscopeSensorCollector.measurementListener
-        requireNotNull(gyroscopeListener)
+        val magnetometerListener = magnetometerSensorCollector.measurementListener
+        requireNotNull(magnetometerListener)
 
-        // process gyroscope measurement
-        gyroscopeListener.onMeasurement(
-            gyroscopeSensorCollectorSpy,
-            GyroscopeSensorMeasurement(),
+        // process magnetometer measurement
+        magnetometerListener.onMeasurement(
+            magnetometerSensorCollectorSpy,
+            MagnetometerSensorMeasurement(),
             0
         )
 
@@ -1994,32 +2000,32 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         assertEquals(0, syncer.numberOfProcessedMeasurements)
         assertTrue(syncer.running)
 
-        assertEquals(2, gyroscopeMeasurements.size)
-        val gyroscopeMeasurement2 = gyroscopeMeasurements.first
-        requireNotNull(gyroscopeMeasurement2)
-        assertEquals(wx1, gyroscopeMeasurement2.wx, 0.0f)
-        assertEquals(wy1, gyroscopeMeasurement2.wy, 0.0f)
-        assertEquals(wz1, gyroscopeMeasurement2.wz, 0.0f)
-        assertEquals(wbx, gyroscopeMeasurement2.bx)
-        assertEquals(wby, gyroscopeMeasurement2.by)
-        assertEquals(wbz, gyroscopeMeasurement2.bz)
-        assertEquals(staleTimestamp, gyroscopeMeasurement2.timestamp)
-        assertEquals(SensorAccuracy.HIGH, gyroscopeMeasurement2.accuracy)
-        val gyroscopeMeasurement3 = gyroscopeMeasurements.last
+        assertEquals(2, magnetometerMeasurements.size)
+        val magnetometerMeasurement2 = magnetometerMeasurements.first
+        requireNotNull(magnetometerMeasurement2)
+        assertEquals(bx1, magnetometerMeasurement2.bx, 0.0f)
+        assertEquals(by1, magnetometerMeasurement2.by, 0.0f)
+        assertEquals(bz1, magnetometerMeasurement2.bz, 0.0f)
+        assertEquals(hardIronX, magnetometerMeasurement2.hardIronX)
+        assertEquals(hardIronY, magnetometerMeasurement2.hardIronY)
+        assertEquals(hardIronZ, magnetometerMeasurement2.hardIronZ)
+        assertEquals(staleTimestamp, magnetometerMeasurement2.timestamp)
+        assertEquals(SensorAccuracy.MEDIUM, magnetometerMeasurement2.accuracy)
+        val gyroscopeMeasurement3 = magnetometerMeasurements.last
         requireNotNull(gyroscopeMeasurement3)
-        assertEquals(wx, gyroscopeMeasurement3.wx, 0.0f)
-        assertEquals(wy, gyroscopeMeasurement3.wy, 0.0f)
-        assertEquals(wz, gyroscopeMeasurement3.wz, 0.0f)
-        assertEquals(wbx, gyroscopeMeasurement3.bx)
-        assertEquals(wby, gyroscopeMeasurement3.by)
-        assertEquals(wbz, gyroscopeMeasurement3.bz)
-        assertEquals(gyroscopeTimestamp, gyroscopeMeasurement3.timestamp)
-        assertEquals(SensorAccuracy.HIGH, gyroscopeMeasurement3.accuracy)
+        assertEquals(bx, gyroscopeMeasurement3.bx, 0.0f)
+        assertEquals(by, gyroscopeMeasurement3.by, 0.0f)
+        assertEquals(bz, gyroscopeMeasurement3.bz, 0.0f)
+        assertEquals(hardIronX, gyroscopeMeasurement3.hardIronX)
+        assertEquals(hardIronY, gyroscopeMeasurement3.hardIronY)
+        assertEquals(hardIronZ, gyroscopeMeasurement3.hardIronZ)
+        assertEquals(magnetometerTimestamp, gyroscopeMeasurement3.timestamp)
+        assertEquals(SensorAccuracy.MEDIUM, gyroscopeMeasurement3.accuracy)
 
-        val alreadyProcessedGyroscopeMeasurements: ArrayDeque<GyroscopeSensorMeasurement>? =
-            syncer.getPrivateProperty("alreadyProcessedGyroscopeMeasurements")
-        requireNotNull(alreadyProcessedGyroscopeMeasurements)
-        assertTrue(alreadyProcessedGyroscopeMeasurements.isEmpty())
+        val alreadyProcessedMagnetometerMeasurements: ArrayDeque<MagnetometerSensorMeasurement>? =
+            syncer.getPrivateProperty("alreadyProcessedMagnetometerMeasurements")
+        requireNotNull(alreadyProcessedMagnetometerMeasurements)
+        assertTrue(alreadyProcessedMagnetometerMeasurements.isEmpty())
 
         // process gravity measurement
         gravityListener.onMeasurement(gravitySensorCollectorSpy, GravitySensorMeasurement(), 0)
@@ -2065,13 +2071,13 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
 
         assertTrue(accelerometerMeasurements.isEmpty())
         assertTrue(gravityMeasurements.isEmpty())
-        assertTrue(gyroscopeMeasurements.isEmpty())
+        assertTrue(magnetometerMeasurements.isEmpty())
 
         val alreadyProcessedAccelerometerMeasurements: ArrayDeque<AccelerometerSensorMeasurement>? =
             syncer.getPrivateProperty("alreadyProcessedAccelerometerMeasurements")
         requireNotNull(alreadyProcessedAccelerometerMeasurements)
         assertTrue(alreadyProcessedAccelerometerMeasurements.isEmpty())
-        assertTrue(alreadyProcessedGyroscopeMeasurements.isEmpty())
+        assertTrue(alreadyProcessedMagnetometerMeasurements.isEmpty())
         assertTrue(alreadyProcessedGravityMeasurements.isEmpty())
 
         verify(exactly = 1) {
@@ -2086,15 +2092,15 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
     @Test
     fun cleanupStaleMeasurements_whenStaleDetectionDisabled_doesNotNotify() {
         val syncedMeasurementListener =
-            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AccelerometerGravityAndGyroscopeSyncedSensorMeasurement, AccelerometerGravityAndGyroscopeSensorMeasurementSyncer>>(
+            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AccelerometerGravityAndMagnetometerSyncedSensorMeasurement, AccelerometerGravityAndMagnetometerSensorMeasurementSyncer>>(
                 relaxUnitFun = true
             )
         val staleDetectedMeasurementsListener =
-            mockk<SensorMeasurementSyncer.OnStaleDetectedMeasurementsListener<AccelerometerGravityAndGyroscopeSyncedSensorMeasurement, AccelerometerGravityAndGyroscopeSensorMeasurementSyncer>>(
+            mockk<SensorMeasurementSyncer.OnStaleDetectedMeasurementsListener<AccelerometerGravityAndMagnetometerSyncedSensorMeasurement, AccelerometerGravityAndMagnetometerSensorMeasurementSyncer>>(
                 relaxUnitFun = true
             )
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(
             context,
             staleDetectionEnabled = false,
             syncedMeasurementListener = syncedMeasurementListener,
@@ -2122,28 +2128,27 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         // add stale measurements
         val staleTimestamp =
             mostRecentTimestamp - 2 * AccelerometerAndGyroscopeSensorMeasurementSyncer.DEFAULT_STALE_OFFSET_NANOS
-        val gyroscopeMeasurements: ArrayDeque<GyroscopeSensorMeasurement>? =
-            syncer.getPrivateProperty("gyroscopeMeasurements")
-        requireNotNull(gyroscopeMeasurements)
+        val magnetometerMeasurements: ArrayDeque<MagnetometerSensorMeasurement>? =
+            syncer.getPrivateProperty("magnetometerMeasurements")
+        requireNotNull(magnetometerMeasurements)
         val randomizer = UniformRandomizer()
-        val wx1 = randomizer.nextFloat()
-        val wy1 = randomizer.nextFloat()
-        val wz1 = randomizer.nextFloat()
-        val wbx = randomizer.nextFloat()
-        val wby = randomizer.nextFloat()
-        val wbz = randomizer.nextFloat()
-        val staleGyroscopeMeasurement =
-            GyroscopeSensorMeasurement(
-                wx1,
-                wy1,
-                wz1,
-                wbx,
-                wby,
-                wbz,
-                staleTimestamp,
-                SensorAccuracy.HIGH
-            )
-        gyroscopeMeasurements.add(staleGyroscopeMeasurement)
+        val bx1 = randomizer.nextFloat()
+        val by1 = randomizer.nextFloat()
+        val bz1 = randomizer.nextFloat()
+        val hardIronX = randomizer.nextFloat()
+        val hardIronY = randomizer.nextFloat()
+        val hardIronZ = randomizer.nextFloat()
+        val staleMagnetometerMeasurement = MagnetometerSensorMeasurement(
+            bx1,
+            by1,
+            bz1,
+            hardIronX,
+            hardIronY,
+            hardIronZ,
+            staleTimestamp,
+            SensorAccuracy.MEDIUM
+        )
+        magnetometerMeasurements.add(staleMagnetometerMeasurement)
 
         val gravityMeasurements: ArrayDeque<GravitySensorMeasurement>? =
             syncer.getPrivateProperty("gravityMeasurements")
@@ -2164,45 +2169,43 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val abx = randomizer.nextFloat()
         val aby = randomizer.nextFloat()
         val abz = randomizer.nextFloat()
-        val staleAccelerometerMeasurement =
-            AccelerometerSensorMeasurement(
-                ax1,
-                ay1,
-                az1,
-                abx,
-                aby,
-                abz,
-                staleTimestamp,
-                SensorAccuracy.HIGH
-            )
+        val staleAccelerometerMeasurement = AccelerometerSensorMeasurement(
+            ax1,
+            ay1,
+            az1,
+            abx,
+            aby,
+            abz,
+            staleTimestamp,
+            SensorAccuracy.HIGH
+        )
         accelerometerMeasurements.add(staleAccelerometerMeasurement)
 
-        val gyroscopeSensorCollector: BufferedGyroscopeSensorCollector? =
-            syncer.getPrivateProperty("gyroscopeSensorCollector")
-        requireNotNull(gyroscopeSensorCollector)
-        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
+        val magnetometerSensorCollector: BufferedMagnetometerSensorCollector? =
+            syncer.getPrivateProperty("magnetometerSensorCollector")
+        requireNotNull(magnetometerSensorCollector)
+        val magnetometerSensorCollectorSpy = spyk(magnetometerSensorCollector)
 
-        val wx = randomizer.nextFloat()
-        val wy = randomizer.nextFloat()
-        val wz = randomizer.nextFloat()
-        val gyroscopeTimestamp = accelerometerTimestamp - 1
-        val gyroscopeMeasurement1 =
-            GyroscopeSensorMeasurement(
-                wx,
-                wy,
-                wz,
-                wbx,
-                wby,
-                wbz,
-                gyroscopeTimestamp,
-                SensorAccuracy.HIGH
-            )
-        val gyroscopeMeasurementsBeforeTimestamp = ArrayDeque<GyroscopeSensorMeasurement>()
-        gyroscopeMeasurementsBeforeTimestamp.add(gyroscopeMeasurement1)
-        every { gyroscopeSensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
-            gyroscopeMeasurementsBeforeTimestamp
+        val bx = randomizer.nextFloat()
+        val by = randomizer.nextFloat()
+        val bz = randomizer.nextFloat()
+        val magnetometerTimestamp = accelerometerTimestamp - 1
+        val magnetometerMeasurement1 = MagnetometerSensorMeasurement(
+            bx,
+            by,
+            bz,
+            hardIronX,
+            hardIronY,
+            hardIronZ,
+            magnetometerTimestamp,
+            SensorAccuracy.MEDIUM
         )
-        syncer.setPrivateProperty("gyroscopeSensorCollector", gyroscopeSensorCollectorSpy)
+        val magnetometerMeasurementsBeforeTimestamp = ArrayDeque<MagnetometerSensorMeasurement>()
+        magnetometerMeasurementsBeforeTimestamp.add(magnetometerMeasurement1)
+        every { magnetometerSensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
+            magnetometerMeasurementsBeforeTimestamp
+        )
+        syncer.setPrivateProperty("magnetometerSensorCollector", magnetometerSensorCollectorSpy)
 
         val gravitySensorCollector: BufferedGravitySensorCollector? =
             syncer.getPrivateProperty("gravitySensorCollector")
@@ -2230,17 +2233,16 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val ax = randomizer.nextFloat()
         val ay = randomizer.nextFloat()
         val az = randomizer.nextFloat()
-        val accelerometerMeasurement1 =
-            AccelerometerSensorMeasurement(
-                ax,
-                ay,
-                az,
-                abx,
-                aby,
-                abz,
-                accelerometerTimestamp,
-                SensorAccuracy.HIGH
-            )
+        val accelerometerMeasurement1 = AccelerometerSensorMeasurement(
+            ax,
+            ay,
+            az,
+            abx,
+            aby,
+            abz,
+            accelerometerTimestamp,
+            SensorAccuracy.HIGH
+        )
         val measurementsBeforePosition = ArrayDeque<AccelerometerSensorMeasurement>()
         measurementsBeforePosition.add(accelerometerMeasurement1)
         every { accelerometerSensorCollectorSpy.getMeasurementsBeforePosition(any()) }.returns(
@@ -2261,13 +2263,13 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val gravityListener = gravitySensorCollectorSpy.measurementListener
         requireNotNull(gravityListener)
 
-        val gyroscopeListener = gyroscopeSensorCollector.measurementListener
-        requireNotNull(gyroscopeListener)
+        val magnetometerListener = magnetometerSensorCollector.measurementListener
+        requireNotNull(magnetometerListener)
 
-        // process gyroscope measurement
-        gyroscopeListener.onMeasurement(
-            gyroscopeSensorCollectorSpy,
-            GyroscopeSensorMeasurement(),
+        // process magnetometer measurement
+        magnetometerListener.onMeasurement(
+            magnetometerSensorCollectorSpy,
+            MagnetometerSensorMeasurement(),
             0
         )
 
@@ -2276,32 +2278,32 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         assertEquals(0, syncer.numberOfProcessedMeasurements)
         assertTrue(syncer.running)
 
-        assertEquals(2, gyroscopeMeasurements.size)
-        val gyroscopeMeasurement2 = gyroscopeMeasurements.first
-        requireNotNull(gyroscopeMeasurement2)
-        assertEquals(wx1, gyroscopeMeasurement2.wx, 0.0f)
-        assertEquals(wy1, gyroscopeMeasurement2.wy, 0.0f)
-        assertEquals(wz1, gyroscopeMeasurement2.wz, 0.0f)
-        assertEquals(wbx, gyroscopeMeasurement2.bx)
-        assertEquals(wby, gyroscopeMeasurement2.by)
-        assertEquals(wbz, gyroscopeMeasurement2.bz)
-        assertEquals(staleTimestamp, gyroscopeMeasurement2.timestamp)
-        assertEquals(SensorAccuracy.HIGH, gyroscopeMeasurement2.accuracy)
-        val gyroscopeMeasurement3 = gyroscopeMeasurements.last
-        requireNotNull(gyroscopeMeasurement3)
-        assertEquals(wx, gyroscopeMeasurement3.wx, 0.0f)
-        assertEquals(wy, gyroscopeMeasurement3.wy, 0.0f)
-        assertEquals(wz, gyroscopeMeasurement3.wz, 0.0f)
-        assertEquals(wbx, gyroscopeMeasurement3.bx)
-        assertEquals(wby, gyroscopeMeasurement3.by)
-        assertEquals(wbz, gyroscopeMeasurement3.bz)
-        assertEquals(gyroscopeTimestamp, gyroscopeMeasurement3.timestamp)
-        assertEquals(SensorAccuracy.HIGH, gyroscopeMeasurement3.accuracy)
+        assertEquals(2, magnetometerMeasurements.size)
+        val magnetometerMeasurement2 = magnetometerMeasurements.first
+        requireNotNull(magnetometerMeasurement2)
+        assertEquals(bx1, magnetometerMeasurement2.bx, 0.0f)
+        assertEquals(by1, magnetometerMeasurement2.by, 0.0f)
+        assertEquals(bz1, magnetometerMeasurement2.bz, 0.0f)
+        assertEquals(hardIronX, magnetometerMeasurement2.hardIronX)
+        assertEquals(hardIronY, magnetometerMeasurement2.hardIronY)
+        assertEquals(hardIronZ, magnetometerMeasurement2.hardIronZ)
+        assertEquals(staleTimestamp, magnetometerMeasurement2.timestamp)
+        assertEquals(SensorAccuracy.MEDIUM, magnetometerMeasurement2.accuracy)
+        val magnetometerMeasurement3 = magnetometerMeasurements.last
+        requireNotNull(magnetometerMeasurement3)
+        assertEquals(bx, magnetometerMeasurement3.bx, 0.0f)
+        assertEquals(by, magnetometerMeasurement3.by, 0.0f)
+        assertEquals(bz, magnetometerMeasurement3.bz, 0.0f)
+        assertEquals(hardIronX, magnetometerMeasurement3.hardIronX)
+        assertEquals(hardIronY, magnetometerMeasurement3.hardIronY)
+        assertEquals(hardIronZ, magnetometerMeasurement3.hardIronZ)
+        assertEquals(magnetometerTimestamp, magnetometerMeasurement3.timestamp)
+        assertEquals(SensorAccuracy.MEDIUM, magnetometerMeasurement3.accuracy)
 
-        val alreadyProcessedGyroscopeMeasurements: ArrayDeque<GyroscopeSensorMeasurement>? =
-            syncer.getPrivateProperty("alreadyProcessedGyroscopeMeasurements")
-        requireNotNull(alreadyProcessedGyroscopeMeasurements)
-        assertTrue(alreadyProcessedGyroscopeMeasurements.isEmpty())
+        val alreadyProcessedMagnetometerMeasurements: ArrayDeque<MagnetometerSensorMeasurement>? =
+            syncer.getPrivateProperty("alreadyProcessedMagnetometerMeasurements")
+        requireNotNull(alreadyProcessedMagnetometerMeasurements)
+        assertTrue(alreadyProcessedMagnetometerMeasurements.isEmpty())
 
         // process gravity measurement
         gravityListener.onMeasurement(gravitySensorCollectorSpy, GravitySensorMeasurement(), 0)
@@ -2350,14 +2352,14 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         requireNotNull(accelerometerMeasurement2)
         assertSame(staleAccelerometerMeasurement, accelerometerMeasurement2)
         assertTrue(gravityMeasurements.isEmpty())
-        assertTrue(gyroscopeMeasurements.isEmpty())
+        assertTrue(magnetometerMeasurements.isEmpty())
 
         val alreadyProcessedAccelerometerMeasurements: ArrayDeque<AccelerometerSensorMeasurement>? =
             syncer.getPrivateProperty("alreadyProcessedAccelerometerMeasurements")
         requireNotNull(alreadyProcessedAccelerometerMeasurements)
         assertFalse(alreadyProcessedAccelerometerMeasurements.isEmpty())
         assertFalse(alreadyProcessedGravityMeasurements.isEmpty())
-        assertTrue(alreadyProcessedGyroscopeMeasurements.isEmpty())
+        assertTrue(alreadyProcessedMagnetometerMeasurements.isEmpty())
 
         verify { staleDetectedMeasurementsListener wasNot Called }
     }
@@ -2365,11 +2367,11 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
     @Test
     fun sensorCollectors_whenPreviousGyroscopeMeasurement_notifies() {
         val syncedMeasurementListener =
-            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AccelerometerGravityAndGyroscopeSyncedSensorMeasurement, AccelerometerGravityAndGyroscopeSensorMeasurementSyncer>>(
+            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AccelerometerGravityAndMagnetometerSyncedSensorMeasurement, AccelerometerGravityAndMagnetometerSensorMeasurementSyncer>>(
                 relaxUnitFun = true
             )
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(
             context,
             syncedMeasurementListener = syncedMeasurementListener
         )
@@ -2391,13 +2393,13 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
             mostRecentTimestamp
         )
 
-        // set previous accelerometer, gravity and magnetometer timestamp
+        // set previous accelerometer, gravity and gyroscope timestamp
         syncer.setPrivateProperty("hasPreviousAccelerometerMeasurement", true)
         val previousAccelerometerMeasurement: AccelerometerSensorMeasurement? =
             syncer.getPrivateProperty("previousAccelerometerMeasurement")
         requireNotNull(previousAccelerometerMeasurement)
         previousAccelerometerMeasurement.timestamp = mostRecentTimestamp - 1
-        syncer.setPrivateProperty("hasPreviousGyroscopeMeasurement", true)
+        syncer.setPrivateProperty("hasPreviousMagnetometerMeasurement", true)
         syncer.setPrivateProperty("lastNotifiedTimestamp", accelerometerTimestamp - 1)
         syncer.setPrivateProperty("lastNotifiedAccelerometerTimestamp", accelerometerTimestamp - 1)
         syncer.setPrivateProperty("lastNotifiedGyroscopeTimestamp", accelerometerTimestamp - 2)
@@ -2433,50 +2435,49 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         )
         syncer.setPrivateProperty("gravitySensorCollector", gravitySensorCollectorSpy)
 
-        val previousGyroscopeMeasurement: GyroscopeSensorMeasurement? =
-            syncer.getPrivateProperty("previousGyroscopeMeasurement")
-        requireNotNull(previousGyroscopeMeasurement)
-        val wx1 = randomizer.nextFloat()
-        val wy1 = randomizer.nextFloat()
-        val wz1 = randomizer.nextFloat()
-        val wbx = randomizer.nextFloat()
-        val wby = randomizer.nextFloat()
-        val wbz = randomizer.nextFloat()
-        previousGyroscopeMeasurement.wx = wx1
-        previousGyroscopeMeasurement.wy = wy1
-        previousGyroscopeMeasurement.wz = wz1
-        previousGyroscopeMeasurement.bx = wbx
-        previousGyroscopeMeasurement.by = wby
-        previousGyroscopeMeasurement.bz = wbz
-        previousGyroscopeMeasurement.timestamp = accelerometerTimestamp - 1
-        previousGyroscopeMeasurement.accuracy = SensorAccuracy.HIGH
+        val previousMagnetometerMeasurement: MagnetometerSensorMeasurement? =
+            syncer.getPrivateProperty("previousMagnetometerMeasurement")
+        requireNotNull(previousMagnetometerMeasurement)
+        val bx1 = randomizer.nextFloat()
+        val by1 = randomizer.nextFloat()
+        val bz1 = randomizer.nextFloat()
+        val hardIronX = randomizer.nextFloat()
+        val hardIronY = randomizer.nextFloat()
+        val hardIronZ = randomizer.nextFloat()
+        previousMagnetometerMeasurement.bx = bx1
+        previousMagnetometerMeasurement.by = by1
+        previousMagnetometerMeasurement.bz = bz1
+        previousMagnetometerMeasurement.hardIronX = hardIronX
+        previousMagnetometerMeasurement.hardIronY = hardIronY
+        previousMagnetometerMeasurement.hardIronZ = hardIronZ
+        previousMagnetometerMeasurement.timestamp = accelerometerTimestamp - 1
+        previousMagnetometerMeasurement.accuracy = SensorAccuracy.MEDIUM
 
-        val gyroscopeSensorCollector: BufferedGyroscopeSensorCollector? =
-            syncer.getPrivateProperty("gyroscopeSensorCollector")
-        requireNotNull(gyroscopeSensorCollector)
-        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
+        val magnetometerSensorCollector: BufferedMagnetometerSensorCollector? =
+            syncer.getPrivateProperty("magnetometerSensorCollector")
+        requireNotNull(magnetometerSensorCollector)
+        val magnetometerSensorCollectorSpy = spyk(magnetometerSensorCollector)
 
-        val wx2 = randomizer.nextFloat()
-        val wy2 = randomizer.nextFloat()
-        val wz2 = randomizer.nextFloat()
+        val bx2 = randomizer.nextFloat()
+        val by2 = randomizer.nextFloat()
+        val bz2 = randomizer.nextFloat()
         val gyroscopeTimestamp = accelerometerTimestamp - 1
-        val gyroscopeMeasurement1 =
-            GyroscopeSensorMeasurement(
-                wx2,
-                wy2,
-                wz2,
-                wbx,
-                wby,
-                wbz,
-                gyroscopeTimestamp,
-                SensorAccuracy.HIGH
-            )
-        val gyroscopeMeasurementsBeforeTimestamp = ArrayDeque<GyroscopeSensorMeasurement>()
-        gyroscopeMeasurementsBeforeTimestamp.add(gyroscopeMeasurement1)
-        every { gyroscopeSensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
-            gyroscopeMeasurementsBeforeTimestamp
+        val magnetometerMeasurement1 = MagnetometerSensorMeasurement(
+            bx2,
+            by2,
+            bz2,
+            hardIronX,
+            hardIronY,
+            hardIronZ,
+            gyroscopeTimestamp,
+            SensorAccuracy.MEDIUM
         )
-        syncer.setPrivateProperty("gyroscopeSensorCollector", gyroscopeSensorCollectorSpy)
+        val magnetometerMeasurementsBeforeTimestamp = ArrayDeque<MagnetometerSensorMeasurement>()
+        magnetometerMeasurementsBeforeTimestamp.add(magnetometerMeasurement1)
+        every { magnetometerSensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
+            magnetometerMeasurementsBeforeTimestamp
+        )
+        syncer.setPrivateProperty("magnetometerSensorCollector", magnetometerSensorCollectorSpy)
 
         val accelerometerSensorCollector: BufferedAccelerometerSensorCollector? =
             syncer.getPrivateProperty("accelerometerSensorCollector")
@@ -2489,17 +2490,16 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val abx = randomizer.nextFloat()
         val aby = randomizer.nextFloat()
         val abz = randomizer.nextFloat()
-        val accelerometerMeasurement1 =
-            AccelerometerSensorMeasurement(
-                ax,
-                ay,
-                az,
-                abx,
-                aby,
-                abz,
-                accelerometerTimestamp,
-                SensorAccuracy.HIGH
-            )
+        val accelerometerMeasurement1 = AccelerometerSensorMeasurement(
+            ax,
+            ay,
+            az,
+            abx,
+            aby,
+            abz,
+            accelerometerTimestamp,
+            SensorAccuracy.HIGH
+        )
         val measurementsBeforePosition = ArrayDeque<AccelerometerSensorMeasurement>()
         measurementsBeforePosition.add(accelerometerMeasurement1)
         every { accelerometerSensorCollectorSpy.getMeasurementsBeforePosition(any()) }.returns(
@@ -2513,13 +2513,13 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val gravityListener = gravitySensorCollectorSpy.measurementListener
         requireNotNull(gravityListener)
 
-        val gyroscopeListener = gyroscopeSensorCollector.measurementListener
+        val gyroscopeListener = magnetometerSensorCollector.measurementListener
         requireNotNull(gyroscopeListener)
 
-        // process gyroscope measurement
+        // process magnetometer measurement
         gyroscopeListener.onMeasurement(
-            gyroscopeSensorCollectorSpy,
-            GyroscopeSensorMeasurement(),
+            magnetometerSensorCollectorSpy,
+            MagnetometerSensorMeasurement(),
             0
         )
 
@@ -2528,26 +2528,26 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         assertEquals(0, syncer.numberOfProcessedMeasurements)
         assertTrue(syncer.running)
 
-        val gyroscopeMeasurements: ArrayDeque<GyroscopeSensorMeasurement>? =
-            syncer.getPrivateProperty("gyroscopeMeasurements")
-        requireNotNull(gyroscopeMeasurements)
-        assertEquals(1, gyroscopeMeasurements.size)
-        val gyroscopeMeasurement2 = gyroscopeMeasurements.peek()
-        requireNotNull(gyroscopeMeasurement2)
-        assertNotSame(gyroscopeMeasurement1, gyroscopeMeasurement2)
-        assertEquals(wx2, gyroscopeMeasurement2.wx, 0.0f)
-        assertEquals(wy2, gyroscopeMeasurement2.wy, 0.0f)
-        assertEquals(wz2, gyroscopeMeasurement2.wz, 0.0f)
-        assertEquals(wbx, gyroscopeMeasurement2.bx)
-        assertEquals(wby, gyroscopeMeasurement2.by)
-        assertEquals(wbz, gyroscopeMeasurement2.bz)
-        assertEquals(gyroscopeTimestamp, gyroscopeMeasurement2.timestamp)
-        assertEquals(SensorAccuracy.HIGH, gyroscopeMeasurement2.accuracy)
+        val magnetometerMeasurements: ArrayDeque<MagnetometerSensorMeasurement>? =
+            syncer.getPrivateProperty("magnetometerMeasurements")
+        requireNotNull(magnetometerMeasurements)
+        assertEquals(1, magnetometerMeasurements.size)
+        val magnetometerMeasurement2 = magnetometerMeasurements.peek()
+        requireNotNull(magnetometerMeasurement2)
+        assertNotSame(magnetometerMeasurement1, magnetometerMeasurement2)
+        assertEquals(bx2, magnetometerMeasurement2.bx, 0.0f)
+        assertEquals(by2, magnetometerMeasurement2.by, 0.0f)
+        assertEquals(bz2, magnetometerMeasurement2.bz, 0.0f)
+        assertEquals(hardIronX, magnetometerMeasurement2.hardIronX)
+        assertEquals(hardIronY, magnetometerMeasurement2.hardIronY)
+        assertEquals(hardIronZ, magnetometerMeasurement2.hardIronZ)
+        assertEquals(gyroscopeTimestamp, magnetometerMeasurement2.timestamp)
+        assertEquals(SensorAccuracy.MEDIUM, magnetometerMeasurement2.accuracy)
 
-        val alreadyProcessedGyroscopeMeasurements: ArrayDeque<GyroscopeSensorMeasurement>? =
-            syncer.getPrivateProperty("alreadyProcessedGyroscopeMeasurements")
-        requireNotNull(alreadyProcessedGyroscopeMeasurements)
-        assertTrue(alreadyProcessedGyroscopeMeasurements.isEmpty())
+        val alreadyProcessedMagnetometerMeasurements: ArrayDeque<MagnetometerSensorMeasurement>? =
+            syncer.getPrivateProperty("alreadyProcessedMagnetometerMeasurements")
+        requireNotNull(alreadyProcessedMagnetometerMeasurements)
+        assertTrue(alreadyProcessedMagnetometerMeasurements.isEmpty())
 
         // process gravity measurement
         gravityListener.onMeasurement(gravitySensorCollectorSpy, GravitySensorMeasurement(), 0)
@@ -2592,16 +2592,16 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
             syncer.getPrivateProperty("accelerometerMeasurements")
         requireNotNull(accelerometerMeasurements)
         assertTrue(accelerometerMeasurements.isEmpty())
-        assertEquals(1, gyroscopeMeasurements.size)
-        assertSame(gyroscopeMeasurement2, gyroscopeMeasurements.first())
+        assertEquals(1, magnetometerMeasurements.size)
+        assertSame(magnetometerMeasurement2, magnetometerMeasurements.first())
 
         val alreadyProcessedAccelerometerMeasurements: ArrayDeque<AccelerometerSensorMeasurement>? =
             syncer.getPrivateProperty("alreadyProcessedAccelerometerMeasurements")
         requireNotNull(alreadyProcessedAccelerometerMeasurements)
         assertTrue(alreadyProcessedAccelerometerMeasurements.isEmpty())
-        assertTrue(alreadyProcessedGyroscopeMeasurements.isEmpty())
+        assertTrue(alreadyProcessedMagnetometerMeasurements.isEmpty())
 
-        val slot = slot<AccelerometerGravityAndGyroscopeSyncedSensorMeasurement>()
+        val slot = slot<AccelerometerGravityAndMagnetometerSyncedSensorMeasurement>()
         verify(exactly = 1) {
             syncedMeasurementListener.onSyncedMeasurements(
                 syncer,
@@ -2628,26 +2628,26 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         assertEquals(gz1, syncedGravityMeasurement.gz, 0.0f)
         assertEquals(gravityTimestamp, syncedGravityMeasurement.timestamp)
         assertEquals(SensorAccuracy.HIGH, syncedGravityMeasurement.accuracy)
-        val syncedGyroscopeMeasurement = syncedMeasurement.gyroscopeMeasurement
-        requireNotNull(syncedGyroscopeMeasurement)
-        assertEquals(wx1, syncedGyroscopeMeasurement.wx, 0.0f)
-        assertEquals(wy1, syncedGyroscopeMeasurement.wy, 0.0f)
-        assertEquals(wz1, syncedGyroscopeMeasurement.wz, 0.0f)
-        assertEquals(wbx, syncedGyroscopeMeasurement.bx)
-        assertEquals(wby, syncedGyroscopeMeasurement.by)
-        assertEquals(wbz, syncedGyroscopeMeasurement.bz)
-        assertEquals(gyroscopeTimestamp, syncedGyroscopeMeasurement.timestamp)
-        assertEquals(SensorAccuracy.HIGH, syncedGyroscopeMeasurement.accuracy)
+        val syncedMagnetometerMeasurement = syncedMeasurement.magnetometerMeasurement
+        requireNotNull(syncedMagnetometerMeasurement)
+        assertEquals(bx1, syncedMagnetometerMeasurement.bx, 0.0f)
+        assertEquals(by1, syncedMagnetometerMeasurement.by, 0.0f)
+        assertEquals(bz1, syncedMagnetometerMeasurement.bz, 0.0f)
+        assertEquals(hardIronX, syncedMagnetometerMeasurement.hardIronX)
+        assertEquals(hardIronY, syncedMagnetometerMeasurement.hardIronY)
+        assertEquals(hardIronZ, syncedMagnetometerMeasurement.hardIronZ)
+        assertEquals(gyroscopeTimestamp, syncedMagnetometerMeasurement.timestamp)
+        assertEquals(SensorAccuracy.MEDIUM, syncedMagnetometerMeasurement.accuracy)
     }
 
     @Test
     fun sensorCollectors_whenNoPreviousGyroscopeMeasurement_notifies() {
         val syncedMeasurementListener =
-            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AccelerometerGravityAndGyroscopeSyncedSensorMeasurement, AccelerometerGravityAndGyroscopeSensorMeasurementSyncer>>(
+            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AccelerometerGravityAndMagnetometerSyncedSensorMeasurement, AccelerometerGravityAndMagnetometerSensorMeasurementSyncer>>(
                 relaxUnitFun = true
             )
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
+        val syncer = AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(
             context,
             syncedMeasurementListener = syncedMeasurementListener
         )
@@ -2669,16 +2669,16 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
             mostRecentTimestamp
         )
 
-        // set previous accelerometer, gravity and gyroscope timestamp
+        // set previous accelerometer, gravity and magnetometer timestamp
         syncer.setPrivateProperty("hasPreviousAccelerometerMeasurement", true)
         val previousAccelerometerMeasurement: AccelerometerSensorMeasurement? =
             syncer.getPrivateProperty("previousAccelerometerMeasurement")
         requireNotNull(previousAccelerometerMeasurement)
         previousAccelerometerMeasurement.timestamp = mostRecentTimestamp - 1
-        syncer.setPrivateProperty("hasPreviousGyroscopeMeasurement", true)
+        syncer.setPrivateProperty("hasPreviousMagnetometerMeasurement", true)
         syncer.setPrivateProperty("lastNotifiedTimestamp", accelerometerTimestamp - 1)
         syncer.setPrivateProperty("lastNotifiedAccelerometerTimestamp", accelerometerTimestamp - 1)
-        syncer.setPrivateProperty("lastNotifiedGyroscopeTimestamp", accelerometerTimestamp - 2)
+        syncer.setPrivateProperty("lastNotifiedMagnetometerTimestamp", accelerometerTimestamp - 2)
         syncer.setPrivateProperty("hasPreviousGravityMeasurement", true)
         val previousGravityMeasurement: GravitySensorMeasurement? =
             syncer.getPrivateProperty("previousGravityMeasurement")
@@ -2710,50 +2710,49 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         )
         syncer.setPrivateProperty("gravitySensorCollector", gravitySensorCollectorSpy)
 
-        val previousGyroscopeMeasurement: GyroscopeSensorMeasurement? =
-            syncer.getPrivateProperty("previousGyroscopeMeasurement")
-        requireNotNull(previousGyroscopeMeasurement)
-        val wx1 = randomizer.nextFloat()
-        val wy1 = randomizer.nextFloat()
-        val wz1 = randomizer.nextFloat()
-        val wbx = randomizer.nextFloat()
-        val wby = randomizer.nextFloat()
-        val wbz = randomizer.nextFloat()
-        previousGyroscopeMeasurement.wx = wx1
-        previousGyroscopeMeasurement.wy = wy1
-        previousGyroscopeMeasurement.wz = wz1
-        previousGyroscopeMeasurement.bx = wbx
-        previousGyroscopeMeasurement.by = wby
-        previousGyroscopeMeasurement.bz = wbz
-        previousGyroscopeMeasurement.timestamp = accelerometerTimestamp - 1
-        previousGyroscopeMeasurement.accuracy = SensorAccuracy.HIGH
+        val previousMagnetometerMeasurement: MagnetometerSensorMeasurement? =
+            syncer.getPrivateProperty("previousMagnetometerMeasurement")
+        requireNotNull(previousMagnetometerMeasurement)
+        val bx1 = randomizer.nextFloat()
+        val by1 = randomizer.nextFloat()
+        val bz1 = randomizer.nextFloat()
+        val hardIronX = randomizer.nextFloat()
+        val hardIronY = randomizer.nextFloat()
+        val hardIronZ = randomizer.nextFloat()
+        previousMagnetometerMeasurement.bx = bx1
+        previousMagnetometerMeasurement.by = by1
+        previousMagnetometerMeasurement.bz = bz1
+        previousMagnetometerMeasurement.hardIronX = hardIronX
+        previousMagnetometerMeasurement.hardIronY = hardIronY
+        previousMagnetometerMeasurement.hardIronZ = hardIronZ
+        previousMagnetometerMeasurement.timestamp = accelerometerTimestamp - 1
+        previousMagnetometerMeasurement.accuracy = SensorAccuracy.MEDIUM
 
-        val gyroscopeSensorCollector: BufferedGyroscopeSensorCollector? =
-            syncer.getPrivateProperty("gyroscopeSensorCollector")
-        requireNotNull(gyroscopeSensorCollector)
-        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
+        val magnetometerSensorCollector: BufferedMagnetometerSensorCollector? =
+            syncer.getPrivateProperty("magnetometerSensorCollector")
+        requireNotNull(magnetometerSensorCollector)
+        val magnetometerSensorCollectorSpy = spyk(magnetometerSensorCollector)
 
-        val wx2 = randomizer.nextFloat()
-        val wy2 = randomizer.nextFloat()
-        val wz2 = randomizer.nextFloat()
-        val gyroscopeTimestamp = accelerometerTimestamp - 3
-        val gyroscopeMeasurement1 =
-            GyroscopeSensorMeasurement(
-                wx2,
-                wy2,
-                wz2,
-                wbx,
-                wby,
-                wbz,
-                gyroscopeTimestamp,
-                SensorAccuracy.HIGH
-            )
-        val gyroscopeMeasurementsBeforeTimestamp = ArrayDeque<GyroscopeSensorMeasurement>()
-        gyroscopeMeasurementsBeforeTimestamp.add(gyroscopeMeasurement1)
-        every { gyroscopeSensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
-            gyroscopeMeasurementsBeforeTimestamp
+        val bx2 = randomizer.nextFloat()
+        val by2 = randomizer.nextFloat()
+        val bz2 = randomizer.nextFloat()
+        val magnetometerTimestamp = accelerometerTimestamp - 3
+        val magnetometerMeasurement1 = MagnetometerSensorMeasurement(
+            bx2,
+            by2,
+            bz2,
+            hardIronX,
+            hardIronY,
+            hardIronZ,
+            magnetometerTimestamp,
+            SensorAccuracy.MEDIUM
         )
-        syncer.setPrivateProperty("gyroscopeSensorCollector", gyroscopeSensorCollectorSpy)
+        val magnetometerMeasurementsBeforeTimestamp = ArrayDeque<MagnetometerSensorMeasurement>()
+        magnetometerMeasurementsBeforeTimestamp.add(magnetometerMeasurement1)
+        every { magnetometerSensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
+            magnetometerMeasurementsBeforeTimestamp
+        )
+        syncer.setPrivateProperty("magnetometerSensorCollector", magnetometerSensorCollectorSpy)
 
         val accelerometerSensorCollector: BufferedAccelerometerSensorCollector? =
             syncer.getPrivateProperty("accelerometerSensorCollector")
@@ -2766,17 +2765,16 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val abx = randomizer.nextFloat()
         val aby = randomizer.nextFloat()
         val abz = randomizer.nextFloat()
-        val accelerometerMeasurement1 =
-            AccelerometerSensorMeasurement(
-                ax,
-                ay,
-                az,
-                abx,
-                aby,
-                abz,
-                accelerometerTimestamp,
-                SensorAccuracy.HIGH
-            )
+        val accelerometerMeasurement1 = AccelerometerSensorMeasurement(
+            ax,
+            ay,
+            az,
+            abx,
+            aby,
+            abz,
+            accelerometerTimestamp,
+            SensorAccuracy.HIGH
+        )
         val measurementsBeforePosition = ArrayDeque<AccelerometerSensorMeasurement>()
         measurementsBeforePosition.add(accelerometerMeasurement1)
         every { accelerometerSensorCollectorSpy.getMeasurementsBeforePosition(any()) }.returns(
@@ -2790,13 +2788,13 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val gravityListener = gravitySensorCollectorSpy.measurementListener
         requireNotNull(gravityListener)
 
-        val gyroscopeListener = gyroscopeSensorCollector.measurementListener
-        requireNotNull(gyroscopeListener)
+        val magnetometerListener = magnetometerSensorCollector.measurementListener
+        requireNotNull(magnetometerListener)
 
-        // process gyroscope measurement
-        gyroscopeListener.onMeasurement(
-            gyroscopeSensorCollectorSpy,
-            GyroscopeSensorMeasurement(),
+        // process magnetometer measurement
+        magnetometerListener.onMeasurement(
+            magnetometerSensorCollectorSpy,
+            MagnetometerSensorMeasurement(),
             0
         )
 
@@ -2805,26 +2803,26 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         assertEquals(0, syncer.numberOfProcessedMeasurements)
         assertTrue(syncer.running)
 
-        val gyroscopeMeasurements: ArrayDeque<GyroscopeSensorMeasurement>? =
-            syncer.getPrivateProperty("gyroscopeMeasurements")
-        requireNotNull(gyroscopeMeasurements)
-        assertEquals(1, gyroscopeMeasurements.size)
-        val gyroscopeMeasurement2 = gyroscopeMeasurements.peek()
-        requireNotNull(gyroscopeMeasurement2)
-        assertNotSame(gyroscopeMeasurement1, gyroscopeMeasurement2)
-        assertEquals(wx2, gyroscopeMeasurement2.wx, 0.0f)
-        assertEquals(wy2, gyroscopeMeasurement2.wy, 0.0f)
-        assertEquals(wz2, gyroscopeMeasurement2.wz, 0.0f)
-        assertEquals(wbx, gyroscopeMeasurement2.bx)
-        assertEquals(wby, gyroscopeMeasurement2.by)
-        assertEquals(wbz, gyroscopeMeasurement2.bz)
-        assertEquals(gyroscopeTimestamp, gyroscopeMeasurement2.timestamp)
-        assertEquals(SensorAccuracy.HIGH, gyroscopeMeasurement2.accuracy)
+        val magnetometerMeasurements: ArrayDeque<MagnetometerSensorMeasurement>? =
+            syncer.getPrivateProperty("magnetometerMeasurements")
+        requireNotNull(magnetometerMeasurements)
+        assertEquals(1, magnetometerMeasurements.size)
+        val magnetometerMeasurement2 = magnetometerMeasurements.peek()
+        requireNotNull(magnetometerMeasurement2)
+        assertNotSame(magnetometerMeasurement1, magnetometerMeasurement2)
+        assertEquals(bx2, magnetometerMeasurement2.bx, 0.0f)
+        assertEquals(by2, magnetometerMeasurement2.by, 0.0f)
+        assertEquals(bz2, magnetometerMeasurement2.bz, 0.0f)
+        assertEquals(hardIronX, magnetometerMeasurement2.hardIronX)
+        assertEquals(hardIronY, magnetometerMeasurement2.hardIronY)
+        assertEquals(hardIronZ, magnetometerMeasurement2.hardIronZ)
+        assertEquals(magnetometerTimestamp, magnetometerMeasurement2.timestamp)
+        assertEquals(SensorAccuracy.MEDIUM, magnetometerMeasurement2.accuracy)
 
-        val alreadyProcessedGyroscopeMeasurements: ArrayDeque<GyroscopeSensorMeasurement>? =
-            syncer.getPrivateProperty("alreadyProcessedGyroscopeMeasurements")
-        requireNotNull(alreadyProcessedGyroscopeMeasurements)
-        assertTrue(alreadyProcessedGyroscopeMeasurements.isEmpty())
+        val alreadyProcessedMagnetometerMeasurements: ArrayDeque<MagnetometerSensorMeasurement>? =
+            syncer.getPrivateProperty("alreadyProcessedMagnetometerMeasurements")
+        requireNotNull(alreadyProcessedMagnetometerMeasurements)
+        assertTrue(alreadyProcessedMagnetometerMeasurements.isEmpty())
 
         // process gravity measurement
         gravityListener.onMeasurement(gravitySensorCollectorSpy, GravitySensorMeasurement(), 0)
@@ -2869,16 +2867,16 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
             syncer.getPrivateProperty("accelerometerMeasurements")
         requireNotNull(accelerometerMeasurements)
         assertTrue(accelerometerMeasurements.isEmpty())
-        assertEquals(1, gyroscopeMeasurements.size)
-        assertSame(gyroscopeMeasurement2, gyroscopeMeasurements.first())
+        assertEquals(1, magnetometerMeasurements.size)
+        assertSame(magnetometerMeasurement2, magnetometerMeasurements.first())
 
         val alreadyProcessedAccelerometerMeasurements: ArrayDeque<AccelerometerSensorMeasurement>? =
             syncer.getPrivateProperty("alreadyProcessedAccelerometerMeasurements")
         requireNotNull(alreadyProcessedAccelerometerMeasurements)
         assertTrue(alreadyProcessedAccelerometerMeasurements.isEmpty())
-        assertTrue(alreadyProcessedGyroscopeMeasurements.isEmpty())
+        assertTrue(alreadyProcessedMagnetometerMeasurements.isEmpty())
 
-        val slot = slot<AccelerometerGravityAndGyroscopeSyncedSensorMeasurement>()
+        val slot = slot<AccelerometerGravityAndMagnetometerSyncedSensorMeasurement>()
         verify(exactly = 1) {
             syncedMeasurementListener.onSyncedMeasurements(
                 syncer,
@@ -2905,15 +2903,15 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         assertEquals(gz2, syncedGravityMeasurement.gz, 0.0f)
         assertEquals(accelerometerTimestamp, syncedGravityMeasurement.timestamp)
         assertEquals(SensorAccuracy.HIGH, syncedGravityMeasurement.accuracy)
-        val syncedGyroscopeMeasurement = syncedMeasurement.gyroscopeMeasurement
-        requireNotNull(syncedGyroscopeMeasurement)
-        assertEquals(wx1, syncedGyroscopeMeasurement.wx, 0.0f)
-        assertEquals(wy1, syncedGyroscopeMeasurement.wy, 0.0f)
-        assertEquals(wz1, syncedGyroscopeMeasurement.wz, 0.0f)
-        assertEquals(wbx, syncedGyroscopeMeasurement.bx)
-        assertEquals(wby, syncedGyroscopeMeasurement.by)
-        assertEquals(wbz, syncedGyroscopeMeasurement.bz)
-        assertEquals(accelerometerTimestamp - 1, syncedGyroscopeMeasurement.timestamp)
-        assertEquals(SensorAccuracy.HIGH, syncedGyroscopeMeasurement.accuracy)
+        val syncedMagnetometerMeasurement = syncedMeasurement.magnetometerMeasurement
+        requireNotNull(syncedMagnetometerMeasurement)
+        assertEquals(bx1, syncedMagnetometerMeasurement.bx, 0.0f)
+        assertEquals(by1, syncedMagnetometerMeasurement.by, 0.0f)
+        assertEquals(bz1, syncedMagnetometerMeasurement.bz, 0.0f)
+        assertEquals(hardIronX, syncedMagnetometerMeasurement.hardIronX)
+        assertEquals(hardIronY, syncedMagnetometerMeasurement.hardIronY)
+        assertEquals(hardIronZ, syncedMagnetometerMeasurement.hardIronZ)
+        assertEquals(accelerometerTimestamp - 1, syncedMagnetometerMeasurement.timestamp)
+        assertEquals(SensorAccuracy.MEDIUM, syncedMagnetometerMeasurement.accuracy)
     }
 }
