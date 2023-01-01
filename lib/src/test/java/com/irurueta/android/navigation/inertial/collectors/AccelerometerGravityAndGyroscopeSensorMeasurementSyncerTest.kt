@@ -552,6 +552,7 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         requireNotNull(gravitySensorCollector)
         val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
         every { gravitySensorCollectorSpy.start(any()) }.returns(true)
+        syncer.setPrivateProperty("gravitySensorCollector", gravitySensorCollectorSpy)
         val gyroscopeSensorCollector: BufferedGyroscopeSensorCollector? =
             syncer.getPrivateProperty("gyroscopeSensorCollector")
         requireNotNull(gyroscopeSensorCollector)
