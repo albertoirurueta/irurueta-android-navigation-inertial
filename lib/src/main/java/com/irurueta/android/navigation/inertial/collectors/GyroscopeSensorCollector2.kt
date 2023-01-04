@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2023 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,53 +20,44 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 
 /**
- * Manages and collects gravity sensor measurements using a buffer.
- * A buffered collector allows proper synchronization of events from multiple collectors
- * by colling [getMeasurementsBeforeTimestamp] periodically to obtain measurements in the buffer prior to
- * a certain timestamp.
+ * Manages and collects gyroscope sensor measurements.
+ * This collector does not have an internal buffer.
  *
  * @property context Android context.
+ * @property sensorType One of the supported gyroscope sensor types.
  * @property sensorDelay Delay of sensor between samples.
- * @property capacity capacity of buffer.
  * @property startOffsetEnabled indicates whether [startOffset] will be computed when first
  * measurement is received or not. True indicates that offset is computed, false assumes that offset
  * is null.
- * @property stopWhenFilledBuffer true to stop collector when buffer completely fills, false to
- * continue collection at the expense of loosing old data. This will be notified using
- * [bufferFilledListener].
  * @property accuracyChangedListener listener to notify changes in accuracy.
- * @property bufferFilledListener listener to notify that buffer has been filled. This usually
- * happens when consumer of measurements cannot keep up with the rate at which measurements are
- * generated.
  * @property measurementListener listener to notify new measurements. It must be noticed that
  * measurements notification might be delayed.
- * @throws IllegalArgumentException if provided capacity is zero or negative.
  */
-class BufferedGravitySensorCollector(
+class GyroscopeSensorCollector2(
     context: Context,
+    val sensorType: GyroscopeSensorType = GyroscopeSensorType.GYROSCOPE_UNCALIBRATED,
     sensorDelay: SensorDelay = SensorDelay.FASTEST,
-    capacity: Int = DEFAULT_CAPACITY,
     startOffsetEnabled: Boolean = true,
-    stopWhenFilledBuffer: Boolean = true,
-    accuracyChangedListener: OnAccuracyChangedListener<GravitySensorMeasurement, BufferedGravitySensorCollector>? = null,
-    bufferFilledListener: OnBufferFilledListener<GravitySensorMeasurement, BufferedGravitySensorCollector>? = null,
-    measurementListener: OnMeasurementListener<GravitySensorMeasurement, BufferedGravitySensorCollector>? = null
-) : BufferedSensorCollector<GravitySensorMeasurement, BufferedGravitySensorCollector>(
+    accuracyChangedListener: OnAccuracyChangedListener<GyroscopeSensorMeasurement, GyroscopeSensorCollector2>? = null,
+    measurementListener: OnMeasurementListener<GyroscopeSensorMeasurement, GyroscopeSensorCollector2>? = null
+) : SensorCollector2<GyroscopeSensorMeasurement, GyroscopeSensorCollector2>(
     context,
     sensorDelay,
-    capacity,
     startOffsetEnabled,
-    stopWhenFilledBuffer,
     accuracyChangedListener,
-    bufferFilledListener,
     measurementListener
 ) {
+    /**
+     * Instance of measurement being reused and notified after conversion of sensor events.
+     */
+    override val measurement = GyroscopeSensorMeasurement()
+
     /**
      * Sensor being used to obtain measurements or null if not available.
      * This can be used to obtain additional information about the sensor.
      * @see sensorAvailable
      */
-    override val sensor: Sensor? by lazy { sensorManager?.getDefaultSensor(Sensor.TYPE_GRAVITY) }
+    override val sensor: Sensor? by lazy { sensorManager?.getDefaultSensor(sensorType.value) }
 
     /**
      * Updates measurement values with provided [SensorEvent].
@@ -76,10 +67,10 @@ class BufferedGravitySensorCollector(
      * @return true if measurement was successfully updated, false otherwise.
      */
     override fun updateMeasurementWithSensorEvent(
-        measurement: GravitySensorMeasurement,
+        measurement: GyroscopeSensorMeasurement,
         event: SensorEvent?
     ): Boolean {
-        return GravitySensorMeasurementConverter.convert(event, measurement, startOffset)
+        return GyroscopeSensorMeasurementConverter.convert(event, measurement, startOffset)
     }
 
     /**
@@ -92,18 +83,11 @@ class BufferedGravitySensorCollector(
         if (sensor == null) {
             return
         }
-        if (sensor.type != Sensor.TYPE_GRAVITY) {
+        if (GyroscopeSensorType.from(sensor.type) == null) {
             return
         }
 
         val sensorAccuracy = SensorAccuracy.from(accuracy)
         accuracyChangedListener?.onAccuracyChanged(this, sensorAccuracy)
-    }
-
-    /**
-     * Creates a new instance of a [GravitySensorMeasurement] measurement.
-     */
-    override fun createEmptyMeasurement(): GravitySensorMeasurement {
-        return GravitySensorMeasurement()
     }
 }

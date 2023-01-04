@@ -477,6 +477,7 @@ class AccelerometerGyroscopeAndMagnetometerSensorMeasurementSyncer(
     /**
      * Stops processing and syncing sensor measurements.
      */
+    @Synchronized
     override fun stop() {
         accelerometerSensorCollector.stop()
         gyroscopeSensorCollector.stop()
@@ -485,9 +486,6 @@ class AccelerometerGyroscopeAndMagnetometerSensorMeasurementSyncer(
         accelerometerMeasurements.clear()
         gyroscopeMeasurements.clear()
         magnetometerMeasurements.clear()
-
-        foundGyroscopeMeasurements.clear()
-        foundMagnetometerMeasurements.clear()
 
         numberOfProcessedMeasurements = 0
         mostRecentTimestamp = null
@@ -708,6 +706,9 @@ class AccelerometerGyroscopeAndMagnetometerSensorMeasurementSyncer(
             // return processed accelerometer measurements
             accelerometerMeasurements.removeAll(alreadyProcessedAccelerometerMeasurements)
         }
+
+        foundGyroscopeMeasurements.clear()
+        foundMagnetometerMeasurements.clear()
 
         cleanupStaleMeasurements()
     }

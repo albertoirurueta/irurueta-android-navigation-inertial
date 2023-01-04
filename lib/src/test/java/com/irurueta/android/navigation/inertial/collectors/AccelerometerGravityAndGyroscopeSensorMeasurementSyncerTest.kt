@@ -720,16 +720,6 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         requireNotNull(gyroscopeMeasurements)
         gyroscopeMeasurements.add(GyroscopeSensorMeasurement())
 
-        val foundGravityMeasurements: ArrayDeque<GravitySensorMeasurement>? =
-            syncer.getPrivateProperty("foundGravityMeasurements")
-        requireNotNull(foundGravityMeasurements)
-        foundGravityMeasurements.add(GravitySensorMeasurement())
-
-        val foundGyroscopeMeasurements: ArrayDeque<GyroscopeSensorMeasurement>? =
-            syncer.getPrivateProperty("foundGyroscopeMeasurements")
-        requireNotNull(foundGyroscopeMeasurements)
-        foundGyroscopeMeasurements.add(GyroscopeSensorMeasurement())
-
         // set variables that will be later reset
         setPrivateProperty(
             SensorMeasurementSyncer::class,
@@ -768,8 +758,6 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         assertTrue(accelerometerMeasurements.isEmpty())
         assertTrue(gravityMeasurements.isEmpty())
         assertTrue(gyroscopeMeasurements.isEmpty())
-        assertTrue(foundGravityMeasurements.isEmpty())
-        assertTrue(foundGyroscopeMeasurements.isEmpty())
 
         val numberOfProcessedMeasurements: Int? = getPrivateProperty(
             SensorMeasurementSyncer::class,

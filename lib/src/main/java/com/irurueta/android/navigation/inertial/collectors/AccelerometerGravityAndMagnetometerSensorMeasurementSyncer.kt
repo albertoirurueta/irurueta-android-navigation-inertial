@@ -474,6 +474,7 @@ class AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(
     /**
      * Stops processing and syncing sensor measurements.
      */
+    @Synchronized
     override fun stop() {
         accelerometerSensorCollector.stop()
         gravitySensorCollector.stop()
@@ -482,9 +483,6 @@ class AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(
         accelerometerMeasurements.clear()
         gravityMeasurements.clear()
         magnetometerMeasurements.clear()
-
-        foundGravityMeasurements.clear()
-        foundMagnetometerMeasurements.clear()
 
         numberOfProcessedMeasurements = 0
         mostRecentTimestamp = null
@@ -699,6 +697,9 @@ class AccelerometerGravityAndMagnetometerSensorMeasurementSyncer(
             // remove processed accelerometer measurements
             accelerometerMeasurements.removeAll(alreadyProcessedAccelerometerMeasurements)
         }
+
+        foundGravityMeasurements.clear()
+        foundMagnetometerMeasurements.clear()
 
         cleanupStaleMeasurements()
     }

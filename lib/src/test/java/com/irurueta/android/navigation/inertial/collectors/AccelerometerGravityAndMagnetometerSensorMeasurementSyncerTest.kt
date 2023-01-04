@@ -725,16 +725,6 @@ class AccelerometerGravityAndMagnetometerSensorMeasurementSyncerTest {
         requireNotNull(magnetometerMeasurements)
         magnetometerMeasurements.add(MagnetometerSensorMeasurement())
 
-        val foundGravityMeasurements: ArrayDeque<GravitySensorMeasurement>? =
-            syncer.getPrivateProperty("foundGravityMeasurements")
-        requireNotNull(foundGravityMeasurements)
-        foundGravityMeasurements.add(GravitySensorMeasurement())
-
-        val foundMagnetometerMeasurements: ArrayDeque<MagnetometerSensorMeasurement>? =
-            syncer.getPrivateProperty("foundMagnetometerMeasurements")
-        requireNotNull(foundMagnetometerMeasurements)
-        foundMagnetometerMeasurements.add(MagnetometerSensorMeasurement())
-
         // set variables that will be later reset
         setPrivateProperty(
             SensorMeasurementSyncer::class,
@@ -773,8 +763,6 @@ class AccelerometerGravityAndMagnetometerSensorMeasurementSyncerTest {
         assertTrue(accelerometerMeasurements.isEmpty())
         assertTrue(gravityMeasurements.isEmpty())
         assertTrue(magnetometerMeasurements.isEmpty())
-        assertTrue(foundGravityMeasurements.isEmpty())
-        assertTrue(foundMagnetometerMeasurements.isEmpty())
 
         val numberOfProcessedMeasurements: Int? = getPrivateProperty(
             SensorMeasurementSyncer::class,

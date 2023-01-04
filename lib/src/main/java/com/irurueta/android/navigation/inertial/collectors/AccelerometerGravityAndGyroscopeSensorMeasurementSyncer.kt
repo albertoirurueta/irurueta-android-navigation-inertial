@@ -473,6 +473,7 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
     /**
      * Stops processing and syncing sensor measurements.
      */
+    @Synchronized
     override fun stop() {
         accelerometerSensorCollector.stop()
         gravitySensorCollector.stop()
@@ -481,9 +482,6 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
         accelerometerMeasurements.clear()
         gravityMeasurements.clear()
         gyroscopeMeasurements.clear()
-
-        foundGravityMeasurements.clear()
-        foundGyroscopeMeasurements.clear()
 
         numberOfProcessedMeasurements = 0
         mostRecentTimestamp = null
@@ -699,6 +697,9 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
             accelerometerMeasurements.removeAll(alreadyProcessedAccelerometerMeasurements)
         }
 
+        foundGravityMeasurements.clear()
+        foundGyroscopeMeasurements.clear()
+
         cleanupStaleMeasurements()
     }
 
@@ -728,6 +729,7 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
      * @param maxTimestamp maximum timestamp.
      * @return found gyroscope measurements or empty.
      */
+    @Synchronized
     private fun findGyroscopeMeasurementsBetween(
         minTimestamp: Long,
         maxTimestamp: Long

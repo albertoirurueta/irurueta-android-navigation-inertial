@@ -15,6 +15,7 @@
  */
 package com.irurueta.android.navigation.inertial
 
+import android.os.Build
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatTextView
@@ -22,7 +23,7 @@ import com.irurueta.android.gl.cube.CubeRenderer
 import com.irurueta.android.gl.cube.CubeTextureView
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
-import com.irurueta.android.navigation.inertial.estimators.attitude.LevelingEstimator
+import com.irurueta.android.navigation.inertial.estimators.attitude.LevelingEstimator2
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.MeanAveragingFilter
@@ -41,7 +42,7 @@ class LevelingEstimatorActivity : AppCompatActivity() {
 
     private var camera: PinholeCamera? = null
 
-    private var levelingEstimator: LevelingEstimator? = null
+    private var levelingEstimator: LevelingEstimator2? = null
 
     private val conversionRotation = ENUtoNEDTriadConverter.conversionRotation
 
@@ -52,9 +53,14 @@ class LevelingEstimatorActivity : AppCompatActivity() {
 
         val extras = intent.extras
         val useAccelerometer = extras?.getBoolean(USE_ACCELEROMETER, false) ?: false
-        val accelerometerSensorType =
+        val accelerometerSensorType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            (extras?.getSerializable(ACCELEROMETER_SENSOR_TYPE, AccelerometerSensorType::class.java)
+                ?: AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED)
+        } else {
+            @Suppress("DEPRECATION")
             (extras?.getSerializable(ACCELEROMETER_SENSOR_TYPE) as AccelerometerSensorType?)
                 ?: AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
+        }
         val averagingFilterType = extras?.getString(AVERAGING_FILTER_TYPE)
         val averagingFilter = buildAveragingFilter(averagingFilterType)
 
@@ -73,7 +79,7 @@ class LevelingEstimatorActivity : AppCompatActivity() {
             }
         }
 
-        levelingEstimator = LevelingEstimator(
+        levelingEstimator = LevelingEstimator2(
             this,
             SensorDelay.GAME,
             useAccelerometer = useAccelerometer,

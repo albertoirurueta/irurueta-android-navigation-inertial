@@ -40,7 +40,7 @@ import android.hardware.SensorEvent
  * happens when consumer of measurements cannot keep up with the rate at which measurements are
  * generated.
  * @property measurementListener listener to notify new measurements. It must be noticed that
- * measurements notification might be delayed and measurements might arrive out of order.
+ * measurements notification might be delayed.
  * @throws IllegalArgumentException if provided capacity is zero or negative.
  */
 class BufferedAccelerometerSensorCollector(
