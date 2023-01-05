@@ -26,10 +26,7 @@ import io.mockk.slot
 import io.mockk.verify
 import org.junit.Assert.*
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
 class LevelingProcessorTest {
 
     @Test
@@ -47,6 +44,21 @@ class LevelingProcessorTest {
 
         assertSame(listener, processor.processorListener)
         assertEquals(Quaternion(), processor.attitude)
+    }
+
+    @Test
+    fun processorListener_setsExpectedValue() {
+        val processor = LevelingProcessor()
+
+        // check default value
+        assertNull(processor.processorListener)
+
+        // set new value
+        val listener = mockk<BaseLevelingProcessor.OnProcessedListener>()
+        processor.processorListener = listener
+
+        // check
+        assertSame(listener, processor.processorListener)
     }
 
     @Test

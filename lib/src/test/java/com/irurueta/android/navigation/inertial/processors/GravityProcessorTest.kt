@@ -15,7 +15,6 @@
  */
 package com.irurueta.android.navigation.inertial.processors
 
-import android.os.SystemClock
 import com.irurueta.android.navigation.inertial.collectors.GravitySensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
 import com.irurueta.statistics.UniformRandomizer
@@ -23,10 +22,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import org.junit.Assert.*
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
 class GravityProcessorTest {
 
     @Test
@@ -55,12 +51,27 @@ class GravityProcessorTest {
     }
 
     @Test
+    fun processorListener_setsExpectedValue() {
+        val processor = GravityProcessor()
+
+        // check default value
+        assertNull(processor.processorListener)
+
+        // set new value
+        val listener = mockk<BaseGravityProcessor.OnProcessedListener<GravitySensorMeasurement>>()
+        processor.processorListener = listener
+
+        // check
+        assertSame(listener, processor.processorListener)
+    }
+
+    @Test
     fun process_setsExpectedValuesAndNotifies() {
         val randomizer = UniformRandomizer()
         val gx = randomizer.nextFloat()
         val gy = randomizer.nextFloat()
         val gz = randomizer.nextFloat()
-        val timestamp = SystemClock.elapsedRealtimeNanos()
+        val timestamp = System.nanoTime()
         val measurement = GravitySensorMeasurement(gx, gy, gz, timestamp, SensorAccuracy.LOW)
 
         val listener = mockk<BaseGravityProcessor.OnProcessedListener<GravitySensorMeasurement>>(
@@ -95,7 +106,7 @@ class GravityProcessorTest {
         val gx = randomizer.nextFloat()
         val gy = randomizer.nextFloat()
         val gz = randomizer.nextFloat()
-        val timestamp = SystemClock.elapsedRealtimeNanos()
+        val timestamp = System.nanoTime()
         val measurement = GravitySensorMeasurement(gx, gy, gz, timestamp, SensorAccuracy.LOW)
 
         val processor = GravityProcessor()

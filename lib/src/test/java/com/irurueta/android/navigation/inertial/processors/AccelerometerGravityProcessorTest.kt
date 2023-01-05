@@ -15,7 +15,6 @@
  */
 package com.irurueta.android.navigation.inertial.processors
 
-import android.os.SystemClock
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
@@ -24,10 +23,7 @@ import com.irurueta.statistics.UniformRandomizer
 import io.mockk.*
 import org.junit.Assert.*
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
 class AccelerometerGravityProcessorTest {
 
     @Test
@@ -61,6 +57,22 @@ class AccelerometerGravityProcessorTest {
     }
 
     @Test
+    fun processorListener_setsExpectedValue() {
+        val processor = AccelerometerGravityProcessor()
+
+        // check default value
+        assertNull(processor.processorListener)
+
+        // set new value
+        val listener =
+            mockk<BaseGravityProcessor.OnProcessedListener<AccelerometerSensorMeasurement>>()
+        processor.processorListener = listener
+
+        // check
+        assertSame(listener, processor.processorListener)
+    }
+
+    @Test
     fun process_whenNotEnoughMeasurements_doesNotSetsExpectedValuesOrNotifies() {
         val averagingFilter = spyk(LowPassAveragingFilter())
         val listener =
@@ -76,7 +88,7 @@ class AccelerometerGravityProcessorTest {
         val bx = randomizer.nextFloat()
         val by = randomizer.nextFloat()
         val bz = randomizer.nextFloat()
-        val timestamp = SystemClock.elapsedRealtimeNanos()
+        val timestamp = System.nanoTime()
         val measurement =
             AccelerometerSensorMeasurement(ax, ay, az, bx, by, bz, timestamp, SensorAccuracy.HIGH)
 
@@ -119,7 +131,7 @@ class AccelerometerGravityProcessorTest {
         val bx = randomizer.nextFloat()
         val by = randomizer.nextFloat()
         val bz = randomizer.nextFloat()
-        val timestamp = SystemClock.elapsedRealtimeNanos()
+        val timestamp = System.nanoTime()
         val measurement =
             AccelerometerSensorMeasurement(ax, ay, az, bx, by, bz, timestamp, SensorAccuracy.HIGH)
 
@@ -169,7 +181,7 @@ class AccelerometerGravityProcessorTest {
         val ax = randomizer.nextFloat()
         val ay = randomizer.nextFloat()
         val az = randomizer.nextFloat()
-        val timestamp = SystemClock.elapsedRealtimeNanos()
+        val timestamp = System.nanoTime()
         val measurement = AccelerometerSensorMeasurement(
             ax,
             ay,
@@ -227,7 +239,7 @@ class AccelerometerGravityProcessorTest {
         val ax = randomizer.nextFloat()
         val ay = randomizer.nextFloat()
         val az = randomizer.nextFloat()
-        val timestamp = SystemClock.elapsedRealtimeNanos()
+        val timestamp = System.nanoTime()
         val measurement = AccelerometerSensorMeasurement(
             ax,
             ay,

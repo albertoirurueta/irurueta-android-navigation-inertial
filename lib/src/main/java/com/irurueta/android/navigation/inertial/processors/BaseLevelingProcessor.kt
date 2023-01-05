@@ -21,7 +21,7 @@ import com.irurueta.geometry.Quaternion
  * Base class to estimate leveling of device (roll and pitch angle) by using estimated gravity
  * vector.
  *
- * @property processorListener listener to notify new gravity measurements.
+ * @property processorListener listener to notify new leveling measurements.
  */
 abstract class BaseLevelingProcessor(var processorListener: OnProcessedListener?) {
 

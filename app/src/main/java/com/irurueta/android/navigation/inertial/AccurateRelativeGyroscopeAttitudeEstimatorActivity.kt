@@ -15,6 +15,7 @@
  */
 package com.irurueta.android.navigation.inertial
 
+import android.os.Build
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatTextView
@@ -22,7 +23,7 @@ import com.irurueta.android.gl.cube.CubeRenderer
 import com.irurueta.android.gl.cube.CubeTextureView
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorType
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
-import com.irurueta.android.navigation.inertial.estimators.attitude.AccurateRelativeGyroscopeAttitudeEstimator
+import com.irurueta.android.navigation.inertial.estimators.attitude.AccurateRelativeGyroscopeAttitudeEstimator2
 import com.irurueta.geometry.*
 
 class AccurateRelativeGyroscopeAttitudeEstimatorActivity : AppCompatActivity() {
@@ -39,7 +40,7 @@ class AccurateRelativeGyroscopeAttitudeEstimatorActivity : AppCompatActivity() {
 
     private var camera: PinholeCamera? = null
 
-    private var attitudeEstimator: AccurateRelativeGyroscopeAttitudeEstimator? = null
+    private var attitudeEstimator: AccurateRelativeGyroscopeAttitudeEstimator2? = null
 
     private val conversionRotation = ENUtoNEDTriadConverter.conversionRotation
 
@@ -49,9 +50,14 @@ class AccurateRelativeGyroscopeAttitudeEstimatorActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         val extras = intent.extras
-        val gyroscopeSensorType =
+        val gyroscopeSensorType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            (extras?.getSerializable(GYROSCOPE_SENSOR_TYPE, GyroscopeSensorType::class.java))
+                ?: GyroscopeSensorType.GYROSCOPE_UNCALIBRATED
+        } else {
+            @Suppress("DEPRECATION")
             (extras?.getSerializable(GYROSCOPE_SENSOR_TYPE) as GyroscopeSensorType?)
                 ?: GyroscopeSensorType.GYROSCOPE_UNCALIBRATED
+        }
 
         setContentView(R.layout.activity_relative_gyroscope_attitude_estimator)
         cubeView = findViewById(R.id.cube)
@@ -69,7 +75,7 @@ class AccurateRelativeGyroscopeAttitudeEstimatorActivity : AppCompatActivity() {
             }
         }
 
-        attitudeEstimator = AccurateRelativeGyroscopeAttitudeEstimator(
+        attitudeEstimator = AccurateRelativeGyroscopeAttitudeEstimator2(
             this,
             gyroscopeSensorType,
             SensorDelay.GAME,

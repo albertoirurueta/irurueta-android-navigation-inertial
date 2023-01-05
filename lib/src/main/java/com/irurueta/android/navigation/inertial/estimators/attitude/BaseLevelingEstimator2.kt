@@ -17,6 +17,7 @@ package com.irurueta.android.navigation.inertial.estimators.attitude
 
 import android.content.Context
 import android.os.SystemClock
+import com.irurueta.android.navigation.inertial.SensorAvailabilityService
 import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
 import com.irurueta.android.navigation.inertial.processors.AccelerometerGravityProcessor
@@ -184,6 +185,9 @@ abstract class BaseLevelingEstimator2<T : BaseLevelingEstimator2<T, L1, L2>,
         gravitySensorCollector.stop()
     }
 
+    /**
+     * Indicates whether this estimator is running or not.
+     */
     val running
         get() = accelerometerSensorCollector.running || gravitySensorCollector.running
 
@@ -231,8 +235,14 @@ abstract class BaseLevelingEstimator2<T : BaseLevelingEstimator2<T, L1, L2>,
      * Notifies accuracy change.
      */
     private fun notifyAccuracyChanged(accuracy: SensorAccuracy?) {
+        val sensorType = if (useAccelerometer) {
+            SensorAvailabilityService.SensorType.from(accelerometerSensorType.value)
+        } else {
+            SensorAvailabilityService.SensorType.GRAVITY
+        }
+
         @Suppress("UNCHECKED_CAST")
-        accuracyChangedListener?.onAccuracyChanged(this as T, accuracy)
+        accuracyChangedListener?.onAccuracyChanged(this as T, sensorType, accuracy)
     }
 
     /**
@@ -267,7 +277,7 @@ abstract class BaseLevelingEstimator2<T : BaseLevelingEstimator2<T, L1, L2>,
     }
 
     /**
-     * Interface to notify when sensor accuracy changes.
+     * Interface to notify when sensor (either accelerometer or gravity) accuracy changes.
      */
     fun interface OnAccuracyChangedListener<T : BaseLevelingEstimator2<T, L1, L2>,
             L1 : OnLevelingAvailableListener<T, L1, L2>,
@@ -276,9 +286,14 @@ abstract class BaseLevelingEstimator2<T : BaseLevelingEstimator2<T, L1, L2>,
          * Called when accuracy changes.
          *
          * @param estimator leveling estimator that raised this event.
+         * @param sensorType sensor that has changed its accuracy
          * @param accuracy new accuracy.
          */
-        fun onAccuracyChanged(estimator: T, accuracy: SensorAccuracy?)
+        fun onAccuracyChanged(
+            estimator: T,
+            sensorType: SensorAvailabilityService.SensorType?,
+            accuracy: SensorAccuracy?
+        )
     }
 
 }

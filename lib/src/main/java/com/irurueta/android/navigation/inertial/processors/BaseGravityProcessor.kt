@@ -70,7 +70,7 @@ abstract class BaseGravityProcessor<T : SensorMeasurement<T>>(
         protected set
 
     /**
-     * Processes a gravity sensor measurement collected by a collector or a syncer.
+     * Processes a gravity or accelerometer sensor measurement collected by a collector or a syncer.
      * @param measurement measurement expressed in ENU android coordinates system to be processed.
      * @return true if a new gravity is estimated, false otherwise.
      *

@@ -18,10 +18,9 @@ package com.irurueta.android.navigation.inertial.estimators.attitude
 import android.content.Context
 import android.location.Location
 import android.os.SystemClock
-import android.view.Display
-import android.view.Surface
 import androidx.test.core.app.ApplicationProvider
 import com.irurueta.algebra.Matrix
+import com.irurueta.android.navigation.inertial.SensorAvailabilityService
 import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.estimators.filter.MeanAveragingFilter
 import com.irurueta.android.navigation.inertial.getPrivateProperty
@@ -403,12 +402,12 @@ class AccurateLevelingEstimator2Test {
         val accuracyChangedListener =
             mockk<AccurateLevelingEstimator2.OnAccuracyChangedListener>(relaxUnitFun = true)
         val location = getLocation()
-        val estimator =
-            AccurateLevelingEstimator2(
-                context,
-                location,
-                accuracyChangedListener = accuracyChangedListener
-            )
+        val estimator = AccurateLevelingEstimator2(
+            context,
+            location,
+            useAccelerometer = false,
+            accuracyChangedListener = accuracyChangedListener
+        )
 
         val gravitySensorCollector: GravitySensorCollector2? =
             getPrivateProperty(BaseLevelingEstimator2::class, estimator, "gravitySensorCollector")
@@ -421,6 +420,7 @@ class AccurateLevelingEstimator2Test {
         verify(exactly = 1) {
             accuracyChangedListener.onAccuracyChanged(
                 estimator,
+                SensorAvailabilityService.SensorType.GRAVITY,
                 SensorAccuracy.HIGH
             )
         }
@@ -428,12 +428,8 @@ class AccurateLevelingEstimator2Test {
 
     @Test
     fun onGravityEstimation_whenNoListenerNotEstimateCoordinateTransformationAndNotEstimateEulerAngles_updatesAttitude() {
-        val display = mockk<Display>()
-        every { display.rotation }.returns(Surface.ROTATION_0)
-        val context = spyk(ApplicationProvider.getApplicationContext())
-        every { context.display }.returns(display)
+        val context = ApplicationProvider.getApplicationContext<Context>()
         val location = getLocation()
-
         val estimator = AccurateLevelingEstimator2(
             context,
             location,
@@ -559,12 +555,8 @@ class AccurateLevelingEstimator2Test {
 
     @Test
     fun onGravityEstimation_whenListenerNotEstimateCoordinateTransformationAndNotEstimateEulerAngles_updatesAttitude() {
-        val display = mockk<Display>()
-        every { display.rotation }.returns(Surface.ROTATION_0)
-        val context = spyk(ApplicationProvider.getApplicationContext())
-        every { context.display }.returns(display)
+        val context = ApplicationProvider.getApplicationContext<Context>()
         val location = getLocation()
-
         val levelingAvailableListener =
             mockk<AccurateLevelingEstimator2.OnLevelingAvailableListener>(relaxUnitFun = true)
         val estimator = AccurateLevelingEstimator2(
@@ -697,15 +689,10 @@ class AccurateLevelingEstimator2Test {
 
     @Test
     fun onGravityEstimation_whenListenerEstimateCoordinateTransformationAndEstimateEulerAngles_updatesAttitude() {
-        val display = mockk<Display>()
-        every { display.rotation }.returns(Surface.ROTATION_0)
-        val context = spyk(ApplicationProvider.getApplicationContext())
-        every { context.display }.returns(display)
+        val context = ApplicationProvider.getApplicationContext<Context>()
         val location = getLocation()
-
         val levelingAvailableListener =
             mockk<AccurateLevelingEstimator2.OnLevelingAvailableListener>(relaxUnitFun = true)
-
         val estimator = AccurateLevelingEstimator2(
             context,
             location,
@@ -863,6 +850,7 @@ class AccurateLevelingEstimator2Test {
         val estimator = AccurateLevelingEstimator2(
             context,
             location,
+            useAccelerometer = true,
             accuracyChangedListener = accuracyChangedListener
         )
 
@@ -881,6 +869,7 @@ class AccurateLevelingEstimator2Test {
         verify(exactly = 1) {
             accuracyChangedListener.onAccuracyChanged(
                 estimator,
+                SensorAvailabilityService.SensorType.ACCELEROMETER_UNCALIBRATED,
                 SensorAccuracy.HIGH
             )
         }
@@ -888,12 +877,8 @@ class AccurateLevelingEstimator2Test {
 
     @Test
     fun onAccelerometerEstimation_whenNoProcessedGravity_makesNoAction() {
-        val display = mockk<Display>()
-        every { display.rotation }.returns(Surface.ROTATION_0)
-        val context = spyk(ApplicationProvider.getApplicationContext())
-        every { context.display }.returns(display)
+        val context = ApplicationProvider.getApplicationContext<Context>()
         val location = getLocation()
-
         val levelingAvailableListener =
             mockk<AccurateLevelingEstimator2.OnLevelingAvailableListener>()
         val estimator = AccurateLevelingEstimator2(
@@ -1020,12 +1005,8 @@ class AccurateLevelingEstimator2Test {
 
     @Test
     fun onAccelerometerEstimation_whenProcessedGravity_updatesAttitude() {
-        val display = mockk<Display>()
-        every { display.rotation }.returns(Surface.ROTATION_0)
-        val context = spyk(ApplicationProvider.getApplicationContext())
-        every { context.display }.returns(display)
+        val context = ApplicationProvider.getApplicationContext<Context>()
         val location = getLocation()
-
         val estimator = AccurateLevelingEstimator2(
             context,
             location,

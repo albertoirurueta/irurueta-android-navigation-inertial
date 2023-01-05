@@ -56,6 +56,22 @@ class AccurateLevelingProcessorTest {
     }
 
     @Test
+    fun processorListener_setsExpectedValue() {
+        val location = getLocation()
+        val processor = AccurateLevelingProcessor(location)
+
+        // check default value
+        assertNull(processor.processorListener)
+
+        // set new value
+        val listener = mockk<BaseLevelingProcessor.OnProcessedListener>()
+        processor.processorListener = listener
+
+        // check
+        assertSame(listener, processor.processorListener)
+    }
+
+    @Test
     fun process_setsExpectedAttitudeAndNotifies() {
         val location = getLocation()
         val listener = mockk<BaseLevelingProcessor.OnProcessedListener>(relaxUnitFun = true)
