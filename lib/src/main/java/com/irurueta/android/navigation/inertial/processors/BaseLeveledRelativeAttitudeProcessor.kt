@@ -99,12 +99,6 @@ abstract class BaseLeveledRelativeAttitudeProcessor<M : SensorMeasurement<M>,
 
     /**
      * Instance to be reused which contains merged attitudes of both the internal leveling
-     * estimator and the relative attitude estimator taking into account display orientation.
-     */
-    private val internalFusedAttitude = Quaternion()
-
-    /**
-     * Instance to be reused which contains merged attitudes of both the internal leveling
      * processor and the relative attitude processor.
      */
     val fusedAttitude = Quaternion()
@@ -396,9 +390,8 @@ abstract class BaseLeveledRelativeAttitudeProcessor<M : SensorMeasurement<M>,
         levelingAttitude.setFromEulerAngles(levelingRoll, levelingPitch, yaw)
 
         if (resetToLeveling) {
-            levelingAttitude.copyTo(internalFusedAttitude)
+            levelingAttitude.copyTo(fusedAttitude)
             relativeAttitude.copyTo(previousRelativeAttitude)
-            internalFusedAttitude.copyTo(fusedAttitude)
             panicCounter = 0
             Log.d(
                 BaseLeveledRelativeAttitudeProcessor::class.simpleName,
@@ -408,9 +401,9 @@ abstract class BaseLeveledRelativeAttitudeProcessor<M : SensorMeasurement<M>,
         }
 
         // change attitude by the delta obtained from relative attitude (gyroscope)
-        Quaternion.product(deltaRelativeAttitude, internalFusedAttitude, internalFusedAttitude)
+        Quaternion.product(deltaRelativeAttitude, fusedAttitude, fusedAttitude)
 
-        val absDot = abs(QuaternionHelper.dotProduct(internalFusedAttitude, levelingAttitude))
+        val absDot = abs(QuaternionHelper.dotProduct(fusedAttitude, levelingAttitude))
 
         // check if fused attitude and leveling attitude have diverged
         if (absDot < outlierThreshold) {
@@ -431,16 +424,15 @@ abstract class BaseLeveledRelativeAttitudeProcessor<M : SensorMeasurement<M>,
         } else {
             // both are nearly the same. Perform normal fusion
             Quaternion.slerp(
-                internalFusedAttitude,
+                fusedAttitude,
                 levelingAttitude,
                 getSlerpFactor(),
-                internalFusedAttitude
+                fusedAttitude
             )
             panicCounter = 0
         }
 
         relativeAttitude.copyTo(previousRelativeAttitude)
-        internalFusedAttitude.copyTo(fusedAttitude)
     }
 
     /**
