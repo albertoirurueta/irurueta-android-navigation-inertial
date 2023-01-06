@@ -17,6 +17,7 @@ package com.irurueta.android.navigation.inertial.processors
 
 import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.inertial.calibration.AngularSpeedTriad
 import com.irurueta.navigation.inertial.calibration.TimeIntervalEstimator
@@ -68,9 +69,14 @@ abstract class BaseRelativeGyroscopeAttitudeProcessor(var processorListener: OnP
      *
      * @param measurement gyroscope measurement expressed in ENU android coordinates system to be
      * processed
+     * @param timestamp optional timestamp that can be provided to override timestamp associated to
+     * gyroscope measurement. If null, the timestamp from gyroscope measurement is used.
      * @return true if a new relative attitude is estimated, false otherwise.
      */
-    abstract fun process(measurement: GyroscopeSensorMeasurement): Boolean
+    abstract fun process(
+        measurement: GyroscopeSensorMeasurement,
+        timestamp: Long = measurement.timestamp
+    ): Boolean
 
     /**
      * Resets this processor to its initial state.
@@ -117,12 +123,11 @@ abstract class BaseRelativeGyroscopeAttitudeProcessor(var processorListener: OnP
     /**
      * Updates current average time interval estimation between gyroscope measurements.
      *
-     * @param measurement a gyroscope measurement.
+     * @param timestamp optional timestamp that can be provided to override timestamp associated to
+     * gyroscope measurement. If null, the timestamp from gyroscope measurement is used.
      * @return true if it is the 1st measurement by the time interval estimator, false otherwise.
      */
-    protected fun updateTimeInterval(measurement: GyroscopeSensorMeasurement) : Boolean {
-        val timestamp = measurement.timestamp
-
+    protected fun updateTimeInterval(timestamp: Long): Boolean {
         val isFirst = timeIntervalEstimator.numberOfProcessedSamples == 0
         if (isFirst) {
             initialTimestamp = timestamp
@@ -156,10 +161,12 @@ abstract class BaseRelativeGyroscopeAttitudeProcessor(var processorListener: OnP
          *
          * @param processor processor that raised this event.
          * @param attitude estimated relative attitude.
+         * @param accuracy gyroscope sensor accuracy.
          */
         fun onProcessed(
             processor: BaseRelativeGyroscopeAttitudeProcessor,
-            attitude: Quaternion
+            attitude: Quaternion,
+            accuracy: SensorAccuracy?
         )
     }
 }

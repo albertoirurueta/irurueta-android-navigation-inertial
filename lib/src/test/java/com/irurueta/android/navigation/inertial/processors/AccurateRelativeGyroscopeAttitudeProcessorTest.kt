@@ -16,6 +16,7 @@
 package com.irurueta.android.navigation.inertial.processors
 
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
 import com.irurueta.android.navigation.inertial.getPrivateProperty
 import com.irurueta.android.navigation.inertial.setPrivateProperty
 import com.irurueta.geometry.Quaternion
@@ -177,7 +178,16 @@ class AccurateRelativeGyroscopeAttitudeProcessorTest {
         val wx = randomizer.nextFloat()
         val wy = randomizer.nextFloat()
         val wz = randomizer.nextFloat()
-        val measurement = GyroscopeSensorMeasurement(wy, wx, -wz, null, null, null, timestamp)
+        val measurement = GyroscopeSensorMeasurement(
+            wy,
+            wx,
+            -wz,
+            null,
+            null,
+            null,
+            timestamp,
+            SensorAccuracy.HIGH
+        )
         assertTrue(processor.process(measurement))
 
         // check
@@ -204,7 +214,13 @@ class AccurateRelativeGyroscopeAttitudeProcessorTest {
 
         assertEquals(internalAttitude, processor.attitude)
 
-        verify(exactly = 1) { listener.onProcessed(processor, processor.attitude) }
+        verify(exactly = 1) {
+            listener.onProcessed(
+                processor,
+                processor.attitude,
+                SensorAccuracy.HIGH
+            )
+        }
     }
 
     @Test
@@ -272,7 +288,8 @@ class AccurateRelativeGyroscopeAttitudeProcessorTest {
         val bx = randomizer.nextFloat()
         val by = randomizer.nextFloat()
         val bz = randomizer.nextFloat()
-        val measurement = GyroscopeSensorMeasurement(wy, wx, -wz, by, bx, -bz, timestamp)
+        val measurement =
+            GyroscopeSensorMeasurement(wy, wx, -wz, by, bx, -bz, timestamp, SensorAccuracy.HIGH)
         assertTrue(processor.process(measurement))
 
         // check
@@ -299,7 +316,115 @@ class AccurateRelativeGyroscopeAttitudeProcessorTest {
 
         assertEquals(internalAttitude, processor.attitude)
 
-        verify(exactly = 1) { listener.onProcessed(processor, processor.attitude) }
+        verify(exactly = 1) {
+            listener.onProcessed(
+                processor,
+                processor.attitude,
+                SensorAccuracy.HIGH
+            )
+        }
+    }
+
+    @Test
+    fun process_whenProvidedTimestamp_setsExpectedAttitudeAndNotifies() {
+        val listener =
+            mockk<BaseRelativeGyroscopeAttitudeProcessor.OnProcessedListener>(relaxUnitFun = true)
+        val processor = AccurateRelativeGyroscopeAttitudeProcessor(listener)
+
+        val timeIntervalEstimator: TimeIntervalEstimator? = getPrivateProperty(
+            BaseRelativeGyroscopeAttitudeProcessor::class,
+            processor,
+            "timeIntervalEstimator"
+        )
+        requireNotNull(timeIntervalEstimator)
+        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+        every { timeIntervalEstimatorSpy.numberOfProcessedSamples }.returns(1)
+        every { timeIntervalEstimatorSpy.averageTimeInterval }.returns(INTERVAL_SECONDS)
+        setPrivateProperty(
+            BaseRelativeGyroscopeAttitudeProcessor::class,
+            processor,
+            "timeIntervalEstimator",
+            timeIntervalEstimatorSpy
+        )
+
+        val timestamp = System.nanoTime()
+        val initialTimestamp = timestamp - INTERVAL_NANOS
+        setPrivateProperty(
+            BaseRelativeGyroscopeAttitudeProcessor::class,
+            processor,
+            "initialTimestamp",
+            initialTimestamp
+        )
+
+        val triad: AngularSpeedTriad? = getPrivateProperty(
+            BaseRelativeGyroscopeAttitudeProcessor::class,
+            processor,
+            "triad"
+        )
+        requireNotNull(triad)
+        val triadSpy = spyk(triad)
+        setPrivateProperty(
+            BaseRelativeGyroscopeAttitudeProcessor::class,
+            processor,
+            "triad",
+            triadSpy
+        )
+
+        val quaternionStepIntegrator: QuaternionStepIntegrator? =
+            processor.getPrivateProperty("quaternionStepIntegrator")
+        requireNotNull(quaternionStepIntegrator)
+        val quaternionStepIntegratorSpy = spyk(quaternionStepIntegrator)
+        processor.setPrivateProperty("quaternionStepIntegrator", quaternionStepIntegratorSpy)
+
+        val internalAttitude: Quaternion? = getPrivateProperty(
+            BaseRelativeGyroscopeAttitudeProcessor::class,
+            processor,
+            "internalAttitude"
+        )
+        requireNotNull(internalAttitude)
+
+        val randomizer = UniformRandomizer()
+        val wx = randomizer.nextFloat()
+        val wy = randomizer.nextFloat()
+        val wz = randomizer.nextFloat()
+        val bx = randomizer.nextFloat()
+        val by = randomizer.nextFloat()
+        val bz = randomizer.nextFloat()
+        val measurement =
+            GyroscopeSensorMeasurement(wy, wx, -wz, by, bx, -bz, timestamp, SensorAccuracy.HIGH)
+        assertTrue(processor.process(measurement, timestamp))
+
+        // check
+        verify(exactly = 1) {
+            triadSpy.setValueCoordinates(
+                wx.toDouble() - bx.toDouble(),
+                wy.toDouble() - by.toDouble(),
+                wz.toDouble() - bz.toDouble()
+            )
+        }
+        verify(exactly = 1) {
+            quaternionStepIntegratorSpy.integrate(
+                internalAttitude,
+                0.0,
+                0.0,
+                0.0,
+                wx.toDouble() - bx.toDouble(),
+                wy.toDouble() - by.toDouble(),
+                wz.toDouble() - bz.toDouble(),
+                INTERVAL_SECONDS,
+                internalAttitude
+            )
+        }
+
+        assertEquals(internalAttitude, processor.attitude)
+
+        verify(exactly = 1) {
+            listener.onProcessed(
+                processor,
+                processor.attitude,
+                SensorAccuracy.HIGH
+            )
+        }
     }
 
     @Test

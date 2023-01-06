@@ -18,6 +18,7 @@ package com.irurueta.android.navigation.inertial.processors
 import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
 import com.irurueta.android.navigation.inertial.collectors.SensorMeasurement
 import com.irurueta.navigation.inertial.calibration.AccelerationTriad
+import com.irurueta.units.AccelerationUnit
 
 /**
  * Base class for a gravity processor.
@@ -57,6 +58,21 @@ abstract class BaseGravityProcessor<T : SensorMeasurement<T>>(
         protected set
 
     /**
+     * Gets a new triad containing gravity component of specific force expressed in NED coordinates
+     * and in meters per squared second (m/s^2).
+     */
+    val gravity: AccelerationTriad
+        get() = AccelerationTriad(gx, gy, gz)
+
+    /**
+     * Updates provided triad to contain gravity component of specific force expressed in NED
+     * coordinates and in meters per squared second (m/s^2).
+     */
+    fun getGravity(result: AccelerationTriad) {
+        result.setValueCoordinatesAndUnit(gx, gy, gz, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+    }
+
+    /**
      * Time in nanoseconds at which the measurement was made. Each measurement will be monotonically
      * increasing using the same time base as [android.os.SystemClock.elapsedRealtimeNanos].
      */
@@ -72,6 +88,8 @@ abstract class BaseGravityProcessor<T : SensorMeasurement<T>>(
     /**
      * Processes a gravity or accelerometer sensor measurement collected by a collector or a syncer.
      * @param measurement measurement expressed in ENU android coordinates system to be processed.
+     * @param timestamp optional timestamp that can be provided to override timestamp associated to
+     * accelerometer or gravity measurement. If not set, the timestamp from measurement is used.
      * @return true if a new gravity is estimated, false otherwise.
      *
      * @see com.irurueta.android.navigation.inertial.collectors.AccelerometerGravityAndGyroscopeSensorMeasurementSyncer
@@ -80,7 +98,7 @@ abstract class BaseGravityProcessor<T : SensorMeasurement<T>>(
      * @see com.irurueta.android.navigation.inertial.collectors.BufferedGravitySensorCollector
      * @see com.irurueta.android.navigation.inertial.collectors.GravitySensorCollector
      */
-    abstract fun process(measurement: T): Boolean
+    abstract fun process(measurement: T, timestamp: Long = measurement.timestamp): Boolean
 
     /**
      * Resets this processor to its initial values.
@@ -110,7 +128,7 @@ abstract class BaseGravityProcessor<T : SensorMeasurement<T>>(
          * @param timestamp time in nanoseconds at which the measurement was made. Each measurement
          * will be monotonically increasing using the same time base as
          * [android.os.SystemClock.elapsedRealtimeNanos].
-         * @param accuracy gravity sensor accuracy.
+         * @param accuracy gravity or accelerometer sensor accuracy.
          */
         fun onProcessed(
             processor: BaseGravityProcessor<T>,

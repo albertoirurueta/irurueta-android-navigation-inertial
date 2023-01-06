@@ -20,8 +20,10 @@ import com.irurueta.algebra.Matrix
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.frames.CoordinateTransformation
 import com.irurueta.navigation.frames.FrameType
+import com.irurueta.navigation.inertial.calibration.AccelerationTriad
 import com.irurueta.navigation.inertial.estimators.NEDGravityEstimator
 import com.irurueta.statistics.UniformRandomizer
+import com.irurueta.units.AccelerationUnit
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
@@ -42,6 +44,15 @@ class AccurateLevelingProcessorTest {
         assertSame(location, processor.location)
         assertNull(processor.processorListener)
         assertEquals(Quaternion(), processor.attitude)
+
+        assertEquals(0.0, processor.gx, 0.0)
+        assertEquals(0.0, processor.gy, 0.0)
+        assertEquals(0.0, processor.gz, 0.0)
+        val gravity1 = processor.gravity
+        assertEquals(AccelerationTriad(), gravity1)
+        val gravity2 = AccelerationTriad()
+        processor.getGravity(gravity2)
+        assertEquals(gravity1, gravity2)
     }
 
     @Test
@@ -53,6 +64,15 @@ class AccurateLevelingProcessorTest {
         assertSame(location, processor.location)
         assertSame(listener, processor.processorListener)
         assertEquals(Quaternion(), processor.attitude)
+
+        assertEquals(0.0, processor.gx, 0.0)
+        assertEquals(0.0, processor.gy, 0.0)
+        assertEquals(0.0, processor.gz, 0.0)
+        val gravity1 = processor.gravity
+        assertEquals(AccelerationTriad(), gravity1)
+        val gravity2 = AccelerationTriad()
+        processor.getGravity(gravity2)
+        assertEquals(gravity1, gravity2)
     }
 
     @Test
@@ -122,6 +142,100 @@ class AccurateLevelingProcessorTest {
         capturedAttitude.normalize()
         assertTrue(capturedAttitude.equals(expectedAttitude, ABSOLUTE_ERROR))
         assertTrue(processor.attitude.equals(expectedAttitude, ABSOLUTE_ERROR))
+
+        assertEquals(fx, processor.gx, 0.0)
+        assertEquals(fy, processor.gy, 0.0)
+        assertEquals(fz, processor.gz, 0.0)
+
+        val gravity1 = processor.gravity
+        assertEquals(processor.gx, gravity1.valueX, 0.0)
+        assertEquals(processor.gy, gravity1.valueY, 0.0)
+        assertEquals(processor.gz, gravity1.valueZ, 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, gravity1.unit)
+
+        val gravity2 = AccelerationTriad()
+        processor.getGravity(gravity2)
+        assertEquals(gravity1, gravity2)
+    }
+
+    @Test
+    fun reset_setsExpectedAttitudeAndNotifies() {
+        val location = getLocation()
+        val listener = mockk<BaseLevelingProcessor.OnProcessedListener>(relaxUnitFun = true)
+        val processor = AccurateLevelingProcessor(location, listener)
+
+        val latitude = Math.toRadians(location.latitude)
+        val height = location.altitude
+
+        // body attitude
+        val randomizer = UniformRandomizer()
+        val roll1 = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
+        val pitch1 = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
+        val yaw1 = 0.0
+
+        // attitude is expressed as rotation from local navigation frame
+        // to body frame, since angles are measured on the device body
+        val bodyC = CoordinateTransformation(
+            roll1,
+            pitch1,
+            yaw1,
+            FrameType.BODY_FRAME,
+            FrameType.EARTH_CENTERED_EARTH_FIXED_FRAME
+        )
+
+        // obtain specific force neglecting north component of gravity, which contains gravity for
+        // current device attitude
+        val cnb = bodyC.matrix
+        val nedGravity = NEDGravityEstimator.estimateGravityAndReturnNew(latitude, height)
+        val g = Matrix.newFromArray(nedGravity.asArray())
+        g.multiplyByScalar(-1.0)
+        val f = cnb.multiplyAndReturnNew(g)
+
+        val fx = f.getElementAtIndex(0)
+        val fy = f.getElementAtIndex(1)
+        val fz = f.getElementAtIndex(2)
+
+        processor.process(fx, fy, fz)
+
+        val slot = slot<Quaternion>()
+        verify(exactly = 1) { listener.onProcessed(processor, capture(slot)) }
+
+        val expectedAttitude = Quaternion()
+        bodyC.asRotation(expectedAttitude)
+        expectedAttitude.inverse()
+        expectedAttitude.normalize()
+
+        val capturedAttitude = slot.captured
+        capturedAttitude.normalize()
+        assertTrue(capturedAttitude.equals(expectedAttitude, ABSOLUTE_ERROR))
+        assertTrue(processor.attitude.equals(expectedAttitude, ABSOLUTE_ERROR))
+
+        assertEquals(fx, processor.gx, 0.0)
+        assertEquals(fy, processor.gy, 0.0)
+        assertEquals(fz, processor.gz, 0.0)
+
+        val gravity1 = processor.gravity
+        assertEquals(processor.gx, gravity1.valueX, 0.0)
+        assertEquals(processor.gy, gravity1.valueY, 0.0)
+        assertEquals(processor.gz, gravity1.valueZ, 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, gravity1.unit)
+
+        val gravity2 = AccelerationTriad()
+        processor.getGravity(gravity2)
+        assertEquals(gravity1, gravity2)
+
+        // reset
+        processor.reset()
+
+        // check
+        assertEquals(Quaternion(), processor.attitude)
+        assertEquals(0.0, processor.gx, 0.0)
+        assertEquals(0.0, processor.gy, 0.0)
+        assertEquals(0.0, processor.gz, 0.0)
+        assertEquals(AccelerationTriad(), processor.gravity)
+        val gravity = AccelerationTriad()
+        processor.getGravity(gravity)
+        assertEquals(AccelerationTriad(), gravity)
     }
 
     private companion object {

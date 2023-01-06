@@ -38,10 +38,12 @@ class RelativeGyroscopeAttitudeProcessor(processorListener: OnProcessedListener?
      *
      * @param measurement gyroscope measurement expressed in ENU android coordinates system to be
      * processed
+     * @param timestamp optional timestamp that can be provided to override timestamp associated to
+     * gyroscope measurement. If null, the timestamp from gyroscope measurement is used.
      * @return true if a new relative attitude is estimated, false otherwise.
      */
-    override fun process(measurement: GyroscopeSensorMeasurement): Boolean {
-        val isFirst = updateTimeInterval(measurement)
+    override fun process(measurement: GyroscopeSensorMeasurement, timestamp: Long): Boolean {
+        val isFirst = updateTimeInterval(timestamp)
 
         return if (!isFirst) {
             updateTriad(measurement)
@@ -58,7 +60,7 @@ class RelativeGyroscopeAttitudeProcessor(processorListener: OnProcessedListener?
 
             internalAttitude.copyTo(attitude)
 
-            processorListener?.onProcessed(this, attitude)
+            processorListener?.onProcessed(this, attitude, measurement.accuracy)
             true
         } else {
             false

@@ -17,6 +17,7 @@ package com.irurueta.android.navigation.inertial
 
 import android.annotation.SuppressLint
 import android.location.Location
+import android.os.Build
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatTextView
@@ -25,7 +26,7 @@ import com.irurueta.android.gl.cube.CubeTextureView
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorType
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
-import com.irurueta.android.navigation.inertial.estimators.attitude.LeveledRelativeAttitudeEstimator
+import com.irurueta.android.navigation.inertial.estimators.attitude.LeveledRelativeAttitudeEstimator2
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.MeanAveragingFilter
@@ -46,7 +47,7 @@ class LeveledRelativeAttitudeEstimatorActivity : AppCompatActivity() {
 
     private var camera: PinholeCamera? = null
 
-    private var leveledAttitudeEstimator: LeveledRelativeAttitudeEstimator? = null
+    private var leveledAttitudeEstimator: LeveledRelativeAttitudeEstimator2? = null
 
     private val conversionRotation = ENUtoNEDTriadConverter.conversionRotation
 
@@ -82,14 +83,24 @@ class LeveledRelativeAttitudeEstimatorActivity : AppCompatActivity() {
         val extras = intent.extras
         useAccelerometer =
             extras?.getBoolean(USE_ACCELEROMETER, false) ?: false
-        accelerometerSensorType =
+        accelerometerSensorType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            (extras?.getSerializable(ACCELEROMETER_SENSOR_TYPE, AccelerometerSensorType::class.java))
+                ?: AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
+        } else {
+            @Suppress("DEPRECATION")
             (extras?.getSerializable(ACCELEROMETER_SENSOR_TYPE) as AccelerometerSensorType?)
                 ?: AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
+        }
         accelerometerAveragingFilterType =
             extras?.getString(ACCELEROMETER_AVERAGING_FILTER_TYPE)
-        gyroscopeSensorType =
+        gyroscopeSensorType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            (extras?.getSerializable(GYROSCOPE_SENSOR_TYPE, GyroscopeSensorType::class.java))
+                ?: GyroscopeSensorType.GYROSCOPE_UNCALIBRATED
+        } else {
+            @Suppress("DEPRECATION")
             (extras?.getSerializable(GYROSCOPE_SENSOR_TYPE) as GyroscopeSensorType?)
                 ?: GyroscopeSensorType.GYROSCOPE_UNCALIBRATED
+        }
         useAccurateLevelingEstimator =
             extras?.getBoolean(USE_ACCURATE_LEVELING_ESTIMATOR, false) ?: false
         useAccurateRelativeGyroscopeAttitudeEstimator =
@@ -165,7 +176,7 @@ class LeveledRelativeAttitudeEstimatorActivity : AppCompatActivity() {
             val accelerometerAveragingFilter =
                 buildAveragingFilter(accelerometerAveragingFilterType)
 
-            leveledAttitudeEstimator = LeveledRelativeAttitudeEstimator(
+            leveledAttitudeEstimator = LeveledRelativeAttitudeEstimator2(
                 this,
                 location,
                 SensorDelay.GAME,

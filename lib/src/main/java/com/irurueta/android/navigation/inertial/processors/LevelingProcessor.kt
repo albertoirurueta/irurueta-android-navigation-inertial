@@ -40,6 +40,10 @@ class LevelingProcessor(processorListener: OnProcessedListener? = null) :
 
         attitude.setFromEulerAngles(roll, pitch, 0.0)
 
+        this.gx = gx
+        this.gy = gy
+        this.gz = gz
+
         processorListener?.onProcessed(this, attitude)
     }
 }

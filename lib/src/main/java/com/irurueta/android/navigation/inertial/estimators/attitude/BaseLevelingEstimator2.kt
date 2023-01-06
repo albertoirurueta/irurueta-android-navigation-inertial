@@ -111,15 +111,16 @@ abstract class BaseLevelingEstimator2<T : BaseLevelingEstimator2<T, L1, L2>,
             notifyAccuracyChanged(accuracy)
         },
         measurementListener = { _, measurement ->
-            gravityProcessor.process(measurement)
-            val gx = gravityProcessor.gx
-            val gy = gravityProcessor.gy
-            val gz = gravityProcessor.gz
-            levelingProcessor.process(gx, gy, gz)
+            if (gravityProcessor.process(measurement)) {
+                val gx = gravityProcessor.gx
+                val gy = gravityProcessor.gy
+                val gz = gravityProcessor.gz
+                levelingProcessor.process(gx, gy, gz)
 
-            attitude.fromQuaternion(levelingProcessor.attitude)
-            val timestamp = measurement.timestamp
-            postProcessAttitudeAndNotify(timestamp)
+                attitude.fromQuaternion(levelingProcessor.attitude)
+                val timestamp = measurement.timestamp
+                postProcessAttitudeAndNotify(timestamp)
+            }
         }
     )
 
@@ -163,6 +164,9 @@ abstract class BaseLevelingEstimator2<T : BaseLevelingEstimator2<T, L1, L2>,
     /**
      * Starts this estimator.
      *
+     * @param startTimestamp monotonically increasing timestamp when collector starts. If not
+     * provided, system clock is used by default, otherwise, the value can be provided to sync
+     * multiple sensor collector instances.
      * @return true if estimator successfully started, false otherwise.
      * @throws IllegalStateException if estimator is already running.
      */
@@ -192,8 +196,8 @@ abstract class BaseLevelingEstimator2<T : BaseLevelingEstimator2<T, L1, L2>,
         get() = accelerometerSensorCollector.running || gravitySensorCollector.running
 
     /**
-     * Processes current attitude to take into account display orientation and compute
-     * (if needed) a coordinate transformation or display Euler angles.
+     * Processes current attitude and computes (if needed) a coordinate transformation or display
+     * Euler angles.
      *
      * @param timestamp time in nanoseconds at which the measurement was made. Each measurement
      * wil be monotonically increasing using the same time base as

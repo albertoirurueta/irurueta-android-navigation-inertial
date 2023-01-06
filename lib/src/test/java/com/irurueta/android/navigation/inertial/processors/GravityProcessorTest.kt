@@ -17,7 +17,9 @@ package com.irurueta.android.navigation.inertial.processors
 
 import com.irurueta.android.navigation.inertial.collectors.GravitySensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
+import com.irurueta.navigation.inertial.calibration.AccelerationTriad
 import com.irurueta.statistics.UniformRandomizer
+import com.irurueta.units.AccelerationUnit
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.Assert.*
@@ -33,6 +35,11 @@ class GravityProcessorTest {
         assertEquals(0.0, processor.gx, 0.0)
         assertEquals(0.0, processor.gy, 0.0)
         assertEquals(0.0, processor.gz, 0.0)
+        val gravity1 = processor.gravity
+        assertEquals(AccelerationTriad(), gravity1)
+        val gravity2 = AccelerationTriad()
+        processor.getGravity(gravity2)
+        assertEquals(gravity1, gravity2)
         assertEquals(0L, processor.timestamp)
         assertNull(processor.accuracy)
     }
@@ -46,6 +53,11 @@ class GravityProcessorTest {
         assertEquals(0.0, processor.gx, 0.0)
         assertEquals(0.0, processor.gy, 0.0)
         assertEquals(0.0, processor.gz, 0.0)
+        val gravity1 = processor.gravity
+        assertEquals(AccelerationTriad(), gravity1)
+        val gravity2 = AccelerationTriad()
+        processor.getGravity(gravity2)
+        assertEquals(gravity1, gravity2)
         assertEquals(0L, processor.timestamp)
         assertNull(processor.accuracy)
     }
@@ -98,6 +110,61 @@ class GravityProcessorTest {
         assertEquals(-gz.toDouble(), processor.gz, 0.0)
         assertEquals(timestamp, processor.timestamp)
         assertEquals(SensorAccuracy.LOW, processor.accuracy)
+
+        val gravity1 = processor.gravity
+        assertEquals(processor.gx, gravity1.valueX, 0.0)
+        assertEquals(processor.gy, gravity1.valueY, 0.0)
+        assertEquals(processor.gz, gravity1.valueZ, 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, gravity1.unit)
+
+        val gravity2 = AccelerationTriad()
+        processor.getGravity(gravity2)
+        assertEquals(gravity1, gravity2)
+    }
+
+    @Test
+    fun process_whenProvidedTimestamp_setsExpectedValuesAndNotifies() {
+        val randomizer = UniformRandomizer()
+        val gx = randomizer.nextFloat()
+        val gy = randomizer.nextFloat()
+        val gz = randomizer.nextFloat()
+        val timestamp = System.nanoTime()
+        val measurement = GravitySensorMeasurement(gx, gy, gz, timestamp, SensorAccuracy.LOW)
+
+        val listener = mockk<BaseGravityProcessor.OnProcessedListener<GravitySensorMeasurement>>(
+            relaxUnitFun = true
+        )
+        val processor = GravityProcessor(listener)
+
+        assertTrue(processor.process(measurement, timestamp))
+
+        verify(exactly = 1) {
+            listener.onProcessed(
+                processor,
+                gy.toDouble(),
+                gx.toDouble(),
+                -gz.toDouble(),
+                timestamp,
+                SensorAccuracy.LOW
+            )
+        }
+
+        // check
+        assertEquals(gy.toDouble(), processor.gx, 0.0)
+        assertEquals(gx.toDouble(), processor.gy, 0.0)
+        assertEquals(-gz.toDouble(), processor.gz, 0.0)
+        assertEquals(timestamp, processor.timestamp)
+        assertEquals(SensorAccuracy.LOW, processor.accuracy)
+
+        val gravity1 = processor.gravity
+        assertEquals(processor.gx, gravity1.valueX, 0.0)
+        assertEquals(processor.gy, gravity1.valueY, 0.0)
+        assertEquals(processor.gz, gravity1.valueZ, 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, gravity1.unit)
+
+        val gravity2 = AccelerationTriad()
+        processor.getGravity(gravity2)
+        assertEquals(gravity1, gravity2)
     }
 
     @Test
@@ -128,5 +195,15 @@ class GravityProcessorTest {
         assertEquals(0.0, processor.gz, 0.0)
         assertEquals(0L, processor.timestamp)
         assertNull(processor.accuracy)
+
+        val gravity1 = processor.gravity
+        assertEquals(processor.gx, gravity1.valueX, 0.0)
+        assertEquals(processor.gy, gravity1.valueY, 0.0)
+        assertEquals(processor.gz, gravity1.valueZ, 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, gravity1.unit)
+
+        val gravity2 = AccelerationTriad()
+        processor.getGravity(gravity2)
+        assertEquals(gravity1, gravity2)
     }
 }

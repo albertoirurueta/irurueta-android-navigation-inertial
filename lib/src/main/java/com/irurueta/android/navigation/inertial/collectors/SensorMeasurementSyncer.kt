@@ -203,7 +203,7 @@ abstract class SensorMeasurementSyncer<M : SyncedSensorMeasurement, S : SensorMe
      * true.
      * If [stopWhenFilledBuffer] is false, internal collectors will continue collection at the
      * expense of loosing old data. Consumers of this listener should decide what to do at this
-     * point.
+     * point (which might require stopping this syncer).
      *
      * @param M type of synced measurement.
      * @param S type of syncer.

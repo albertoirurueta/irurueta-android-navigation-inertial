@@ -16,6 +16,8 @@
 package com.irurueta.android.navigation.inertial.processors
 
 import com.irurueta.geometry.Quaternion
+import com.irurueta.navigation.inertial.calibration.AccelerationTriad
+import com.irurueta.units.AccelerationUnit
 
 /**
  * Base class to estimate leveling of device (roll and pitch angle) by using estimated gravity
@@ -34,6 +36,42 @@ abstract class BaseLevelingProcessor(var processorListener: OnProcessedListener?
         protected set
 
     /**
+     * X-coordinates of last sensed gravity component of specific force expressed in NED coordinates
+     * and in meters per squared second (m/s^2).
+     */
+    var gx: Double = 0.0
+        protected set
+
+    /**
+     * Y-coordinate of last sensed gravity component of specific force expressed in NED coordinates
+     * and in meters per squared second (m/s^2).
+     */
+    var gy: Double = 0.0
+        protected set
+
+    /**
+     * Z-coordinate of last sensed gravity component of specific force expressed in NED coordinates
+     * and in meters per squared second (m/s^2).
+     */
+    var gz: Double = 0.0
+        protected set
+
+    /**
+     * Gets a new triad containing gravity component of specific force expressed in NED coordinates
+     * and in meters per squared second (m/s^2).
+     */
+    val gravity: AccelerationTriad
+        get() = AccelerationTriad(gx, gy, gz)
+
+    /**
+     * Updates provided triad to contain gravity component of specific force expressed in NED
+     * coordinates and in meters per squared second (m/s^2).
+     */
+    fun getGravity(result: AccelerationTriad) {
+        result.setValueCoordinatesAndUnit(gx, gy, gz, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+    }
+
+    /**
      * Processes provided gravity components estimated using a [BaseGravityProcessor].
      */
     abstract fun process(gx: Double, gy: Double, gz: Double)
@@ -42,6 +80,9 @@ abstract class BaseLevelingProcessor(var processorListener: OnProcessedListener?
      * Resets this processor to its initial values.
      */
     fun reset() {
+        gx = 0.0
+        gy = 0.0
+        gz = 0.0
         attitude.setFromEulerAngles(0.0, 0.0, 0.0)
     }
 

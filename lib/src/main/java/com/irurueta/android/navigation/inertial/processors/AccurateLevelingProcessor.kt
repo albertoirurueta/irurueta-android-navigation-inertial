@@ -52,6 +52,10 @@ class AccurateLevelingProcessor(
             attitude
         )
 
+        this.gx = gx
+        this.gy = gy
+        this.gz = gz
+
         processorListener?.onProcessed(this, attitude)
     }
 

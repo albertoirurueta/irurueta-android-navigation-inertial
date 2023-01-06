@@ -81,6 +81,7 @@ class RelativeGyroscopeAttitudeEstimatorActivity : AppCompatActivity() {
             SensorDelay.GAME,
             estimateCoordinateTransformation = false,
             estimateEulerAngles = true,
+            startOffsetEnabled = false,
             attitudeAvailableListener = { _, attitude, _, roll, pitch, yaw, _ ->
                 attitude.toQuaternion(rotation)
 

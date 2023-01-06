@@ -40,6 +40,8 @@ class AccelerometerGravityProcessor(
     /**
      * Processes an accelerometer sensor measurement collected by a collector or a syncer.
      * @param measurement measurement expressed in ENU android coordinates system to be processed.
+     * @param timestamp optional timestamp that can be provided to override timestamp associated to
+     * accelerometer measurement. If not set, the timestamp from measurement is used.
      * @return true if a new gravity is estimated, false otherwise.
      *
      * @see com.irurueta.android.navigation.inertial.collectors.AccelerometerAndGyroscopeSensorMeasurementSyncer
@@ -51,7 +53,7 @@ class AccelerometerGravityProcessor(
      * @see com.irurueta.android.navigation.inertial.collectors.BufferedAccelerometerSensorCollector
      * @see com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
      */
-    override fun process(measurement: AccelerometerSensorMeasurement): Boolean {
+    override fun process(measurement: AccelerometerSensorMeasurement, timestamp: Long): Boolean {
         val ax = measurement.ax.toDouble()
         val ay = measurement.ay.toDouble()
         val az = measurement.az.toDouble()
@@ -62,7 +64,7 @@ class AccelerometerGravityProcessor(
         val currentAx = if (bx != null) ax - bx else ax
         val currentAy = if (by != null) ay - by else ay
         val currentAz = if (bz != null) az - bz else az
-        val currentTimestamp = measurement.timestamp
+        val currentTimestamp = timestamp
 
         return if (averagingFilter.filter(
                 currentAx,
@@ -82,9 +84,9 @@ class AccelerometerGravityProcessor(
             gx = triad.valueX
             gy = triad.valueY
             gz = triad.valueZ
-            timestamp = currentTimestamp
+            this.timestamp = currentTimestamp
             accuracy = measurement.accuracy
-            processorListener?.onProcessed(this, gx, gy, gz, timestamp, accuracy)
+            processorListener?.onProcessed(this, gx, gy, gz, this.timestamp, accuracy)
             true
         } else {
             false

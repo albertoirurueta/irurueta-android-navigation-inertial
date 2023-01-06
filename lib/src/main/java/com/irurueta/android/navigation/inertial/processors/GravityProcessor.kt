@@ -31,6 +31,8 @@ class GravityProcessor(
     /**
      * Processes a gravity sensor measurement collected by a collector or a syncer.
      * @param measurement measurement expressed in ENU android coordinates system to be processed.
+     * @param timestamp optional timestamp that can be provided to override timestamp associated to
+     * gravity measurement. If not set, the timestamp from measurement is used.
      * @return true if a new gravity is estimated, false otherwise.
      *
      * @see com.irurueta.android.navigation.inertial.collectors.AccelerometerGravityAndGyroscopeSensorMeasurementSyncer
@@ -39,7 +41,7 @@ class GravityProcessor(
      * @see com.irurueta.android.navigation.inertial.collectors.BufferedGravitySensorCollector
      * @see com.irurueta.android.navigation.inertial.collectors.GravitySensorCollector
      */
-    override fun process(measurement: GravitySensorMeasurement): Boolean {
+    override fun process(measurement: GravitySensorMeasurement, timestamp: Long): Boolean {
         ENUtoNEDTriadConverter.convert(
             measurement.gx.toDouble(),
             measurement.gy.toDouble(),
@@ -49,9 +51,9 @@ class GravityProcessor(
         gx = triad.valueX
         gy = triad.valueY
         gz = triad.valueZ
-        timestamp = measurement.timestamp
+        this.timestamp = timestamp
         accuracy = measurement.accuracy
-        processorListener?.onProcessed(this, gx, gy, gz, timestamp, accuracy)
+        processorListener?.onProcessed(this, gx, gy, gz, this.timestamp, accuracy)
         return true
     }
 }
