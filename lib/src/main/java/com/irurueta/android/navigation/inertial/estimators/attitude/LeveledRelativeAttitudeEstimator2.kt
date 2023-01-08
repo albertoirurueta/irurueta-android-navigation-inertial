@@ -18,6 +18,7 @@ package com.irurueta.android.navigation.inertial.estimators.attitude
 import android.content.Context
 import android.location.Location
 import android.os.SystemClock
+import android.util.Log
 import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
@@ -115,7 +116,7 @@ class LeveledRelativeAttitudeEstimator2(
         gravityStartOffsetEnabled = startOffsetEnabled,
         gyroscopeStartOffsetEnabled = startOffsetEnabled,
         stopWhenFilledBuffer = false,
-        staleDetectionEnabled = true,
+        staleDetectionEnabled = false, // TODO: true,
         accuracyChangedListener = { _, sensorType, accuracy ->
             notifyAccuracyChanged(sensorType, accuracy)
         },
@@ -129,7 +130,6 @@ class LeveledRelativeAttitudeEstimator2(
                 val timestamp = measurement.timestamp
                 postProcessAttitudeAndNotify(timestamp)
             }
-
         }
     )
 
@@ -142,7 +142,7 @@ class LeveledRelativeAttitudeEstimator2(
         accelerometerStartOffsetEnabled = startOffsetEnabled,
         gyroscopeStartOffsetEnabled = startOffsetEnabled,
         stopWhenFilledBuffer = false,
-        staleDetectionEnabled = true,
+        staleDetectionEnabled = false,
         accuracyChangedListener = { _, sensorType, accuracy ->
             notifyAccuracyChanged(sensorType, accuracy)
         },
@@ -256,11 +256,21 @@ class LeveledRelativeAttitudeEstimator2(
     /**
      * Gets average time interval between gyroscope samples expressed in seconds.
      */
-    val gyroscopeAverageTimeInterval
+    /* TODO: val gyroscopeAverageTimeInterval
         get() = if (useAccelerometer) {
             accelerometerProcessor.gyroscopeAverageTimeInterval
         } else {
             gravityProcessor.gyroscopeAverageTimeInterval
+        }*/
+
+    /**
+     * Gets time interval between gyroscope samples expressed in seconds.
+     */
+    val gyroscopeTimeIntervalSeconds
+        get() = if (useAccelerometer) {
+            accelerometerProcessor.timeIntervalSeconds
+        } else {
+            gravityProcessor.timeIntervalSeconds
         }
 
     /**

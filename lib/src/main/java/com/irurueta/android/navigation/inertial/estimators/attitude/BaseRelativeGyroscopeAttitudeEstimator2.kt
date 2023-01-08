@@ -113,10 +113,10 @@ abstract class BaseRelativeGyroscopeAttitudeEstimator2<T : BaseRelativeGyroscope
         get() = gyroscopeSensorCollector.running
 
     /**
-     * Gets average time interval between gyroscope samples expressed in seconds.
+     * Time interval expressed in seconds between consecutive gyroscope measurements
      */
-    val averageTimeInterval
-        get() = processor.averageTimeInterval
+    val timeIntervalSeconds
+        get() = processor.timeIntervalSeconds
 
     /**
      * Starts this estimator.

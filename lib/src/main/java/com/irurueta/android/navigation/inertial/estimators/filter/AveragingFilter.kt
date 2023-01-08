@@ -15,7 +15,6 @@
  */
 package com.irurueta.android.navigation.inertial.estimators.filter
 
-import com.irurueta.navigation.inertial.calibration.TimeIntervalEstimator
 import com.irurueta.units.TimeConverter
 
 /**
@@ -35,14 +34,9 @@ abstract class AveragingFilter private constructor() {
     }
 
     /**
-     * Estimator to obtain average time interval between samples.
+     * Timestamp of previous sample expressed in nanoseconds.
      */
-    protected val timeIntervalEstimator = TimeIntervalEstimator(Integer.MAX_VALUE)
-
-    /**
-     * Timestamp of first sample expressed in nanoseconds.
-     */
-    private var initialTimestamp: Long = 0L
+    private var previousTimestamp: Long = -1L
 
     /**
      * Gets a constant relative to the period between consecutive samples to determine
@@ -69,25 +63,25 @@ abstract class AveragingFilter private constructor() {
         valueZ: Double,
         output: DoubleArray,
         timestamp: Long
-    ) : Boolean {
+    ): Boolean {
         require(output.size == OUTPUT_LENGTH)
 
-        val diff = timestamp - initialTimestamp
-        val diffSeconds = TimeConverter.nanosecondToSecond(diff.toDouble())
-        if (timeIntervalEstimator.numberOfProcessedSamples == 0) {
-            initialTimestamp = timestamp
+        return if (previousTimestamp >= 0) {
+            val diff = timestamp - previousTimestamp
+            val diffSeconds = TimeConverter.nanosecondToSecond(diff.toDouble())
+            previousTimestamp = timestamp
+            process(valueX, valueY, valueZ, output, diffSeconds)
+        } else {
+            previousTimestamp = timestamp
+            false
         }
-        timeIntervalEstimator.addTimestamp(diffSeconds)
-
-        return process(valueX, valueY, valueZ, output, timestamp)
     }
 
     /**
      * Resets this filter to its initial state.
      */
     open fun reset() {
-        timeIntervalEstimator.reset()
-        initialTimestamp = 0L
+        previousTimestamp = -1L
     }
 
     /**
@@ -96,8 +90,7 @@ abstract class AveragingFilter private constructor() {
      * @param input filter instance to copy from.
      */
     protected fun copyFrom(input: AveragingFilter) {
-        timeIntervalEstimator.copyFrom(input.timeIntervalEstimator)
-        initialTimestamp = input.initialTimestamp
+        previousTimestamp = input.previousTimestamp
         timeConstant = input.timeConstant
     }
 
@@ -118,7 +111,7 @@ abstract class AveragingFilter private constructor() {
      * @param valueY y-coordinate of sample to be filtered.
      * @param valueZ z-coordinate of sample to be filtered.
      * @param output array containing result of filtering. Must have length 3.
-     * @param timestamp timestamp expressed in nano seconds.
+     * @param intervalSeconds time interval between consecutive samples expressed in seconds.
      * @return true if result is reliable, false otherwise.
      */
     protected abstract fun process(
@@ -126,8 +119,8 @@ abstract class AveragingFilter private constructor() {
         valueY: Double,
         valueZ: Double,
         output: DoubleArray,
-        timestamp: Long
-    ) : Boolean
+        intervalSeconds: Double
+    ): Boolean
 
     companion object {
         /**

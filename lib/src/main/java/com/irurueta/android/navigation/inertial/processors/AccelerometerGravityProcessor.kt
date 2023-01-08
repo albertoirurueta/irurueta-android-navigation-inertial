@@ -64,14 +64,13 @@ class AccelerometerGravityProcessor(
         val currentAx = if (bx != null) ax - bx else ax
         val currentAy = if (by != null) ay - by else ay
         val currentAz = if (bz != null) az - bz else az
-        val currentTimestamp = timestamp
 
         return if (averagingFilter.filter(
                 currentAx,
                 currentAy,
                 currentAz,
                 accelerometerAveragingFilterOutput,
-                currentTimestamp
+                timestamp
             )
         ) {
             ENUtoNEDTriadConverter.convert(
@@ -84,7 +83,7 @@ class AccelerometerGravityProcessor(
             gx = triad.valueX
             gy = triad.valueY
             gz = triad.valueZ
-            this.timestamp = currentTimestamp
+            this.timestamp = timestamp
             accuracy = measurement.accuracy
             processorListener?.onProcessed(this, gx, gy, gz, this.timestamp, accuracy)
             true

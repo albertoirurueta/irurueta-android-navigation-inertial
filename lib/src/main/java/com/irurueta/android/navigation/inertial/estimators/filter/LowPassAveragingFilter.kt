@@ -65,7 +65,7 @@ class LowPassAveragingFilter(timeConstant: Double = DEFAULT_TIME_CONSTANT) :
      * @param valueY y-coordinate of sample to be filtered.
      * @param valueZ z-coordinate of sample to be filtered.
      * @param output array containing result of filtering. Must have length 3.
-     * @param timestamp timestamp expressed in nano seconds.
+     * @param intervalSeconds time interval between consecutive samples expressed in seconds.
      * @return true if result is reliable, false otherwise.
      */
     override fun process(
@@ -73,16 +73,19 @@ class LowPassAveragingFilter(timeConstant: Double = DEFAULT_TIME_CONSTANT) :
         valueY: Double,
         valueZ: Double,
         output: DoubleArray,
-        timestamp: Long
-    ) : Boolean {
-        val dt = timeIntervalEstimator.averageTimeInterval
-        val alpha = timeConstant / (timeConstant + dt)
+        intervalSeconds: Double
+    ): Boolean {
+        if (intervalSeconds <= 0.0) {
+            return false
+        }
+
+        val alpha = timeConstant / (timeConstant + intervalSeconds)
         val oneMinusAlpha = 1.0 - alpha
 
         output[0] = alpha * output[0] + oneMinusAlpha * valueX
         output[1] = alpha * output[1] + oneMinusAlpha * valueY
         output[2] = alpha * output[2] + oneMinusAlpha * valueZ
 
-        return timeIntervalEstimator.numberOfProcessedSamples > 1
+        return true
     }
 }

@@ -67,7 +67,7 @@ class LeveledRelativeAttitudeEstimator2Test {
         assertNull(estimator.attitudeAvailableListener)
         assertNull(estimator.accuracyChangedListener)
         assertNull(estimator.bufferFilledListener)
-        assertEquals(0.0, estimator.gyroscopeAverageTimeInterval, 0.0)
+        assertEquals(0.0, estimator.gyroscopeTimeIntervalSeconds, 0.0)
         assertFalse(estimator.running)
         assertTrue(estimator.useIndirectInterpolation)
         assertEquals(
@@ -125,7 +125,7 @@ class LeveledRelativeAttitudeEstimator2Test {
             GravityAndGyroscopeSensorMeasurementSyncer.DEFAULT_STALE_OFFSET_NANOS,
             gravityAndGyroscopeSyncer.staleOffsetNanos
         )
-        assertTrue(gravityAndGyroscopeSyncer.staleDetectionEnabled)
+        assertFalse(gravityAndGyroscopeSyncer.staleDetectionEnabled)
         assertNotNull(gravityAndGyroscopeSyncer.accuracyChangedListener)
         assertNotNull(gravityAndGyroscopeSyncer.bufferFilledListener)
         assertNotNull(gravityAndGyroscopeSyncer.syncedMeasurementListener)
@@ -165,7 +165,7 @@ class LeveledRelativeAttitudeEstimator2Test {
             AccelerometerAndGyroscopeSensorMeasurementSyncer.DEFAULT_STALE_OFFSET_NANOS,
             accelerometerAndGyroscopeSyncer.staleOffsetNanos
         )
-        assertTrue(accelerometerAndGyroscopeSyncer.staleDetectionEnabled)
+        assertFalse(accelerometerAndGyroscopeSyncer.staleDetectionEnabled)
         assertNotNull(accelerometerAndGyroscopeSyncer.accuracyChangedListener)
         assertNotNull(accelerometerAndGyroscopeSyncer.bufferFilledListener)
         assertNotNull(accelerometerAndGyroscopeSyncer.syncedMeasurementListener)
@@ -221,7 +221,7 @@ class LeveledRelativeAttitudeEstimator2Test {
         assertSame(attitudeAvailableListener, estimator.attitudeAvailableListener)
         assertSame(accuracyChangedListener, estimator.accuracyChangedListener)
         assertSame(bufferFilledListener, estimator.bufferFilledListener)
-        assertEquals(0.0, estimator.gyroscopeAverageTimeInterval, 0.0)
+        assertEquals(0.0, estimator.gyroscopeTimeIntervalSeconds, 0.0)
         assertFalse(estimator.running)
         assertTrue(estimator.useIndirectInterpolation)
         assertEquals(
@@ -279,7 +279,7 @@ class LeveledRelativeAttitudeEstimator2Test {
             GravityAndGyroscopeSensorMeasurementSyncer.DEFAULT_STALE_OFFSET_NANOS,
             gravityAndGyroscopeSyncer.staleOffsetNanos
         )
-        assertTrue(gravityAndGyroscopeSyncer.staleDetectionEnabled)
+        assertFalse(gravityAndGyroscopeSyncer.staleDetectionEnabled)
         assertNotNull(gravityAndGyroscopeSyncer.accuracyChangedListener)
         assertNotNull(gravityAndGyroscopeSyncer.bufferFilledListener)
         assertNotNull(gravityAndGyroscopeSyncer.syncedMeasurementListener)
@@ -319,7 +319,7 @@ class LeveledRelativeAttitudeEstimator2Test {
             AccelerometerAndGyroscopeSensorMeasurementSyncer.DEFAULT_STALE_OFFSET_NANOS,
             accelerometerAndGyroscopeSyncer.staleOffsetNanos
         )
-        assertTrue(accelerometerAndGyroscopeSyncer.staleDetectionEnabled)
+        assertFalse(accelerometerAndGyroscopeSyncer.staleDetectionEnabled)
         assertNotNull(accelerometerAndGyroscopeSyncer.accuracyChangedListener)
         assertNotNull(accelerometerAndGyroscopeSyncer.bufferFilledListener)
         assertNotNull(accelerometerAndGyroscopeSyncer.syncedMeasurementListener)
@@ -653,11 +653,11 @@ class LeveledRelativeAttitudeEstimator2Test {
             estimator.getPrivateProperty("accelerometerProcessor")
         requireNotNull(accelerometerProcessor)
         val accelerometerProcessorSpy = spyk(accelerometerProcessor)
-        every { accelerometerProcessorSpy.gyroscopeAverageTimeInterval }.returns(TIME_INTERVAL)
+        every { accelerometerProcessorSpy.timeIntervalSeconds }.returns(TIME_INTERVAL)
         estimator.setPrivateProperty("accelerometerProcessor", accelerometerProcessorSpy)
 
-        assertEquals(TIME_INTERVAL, estimator.gyroscopeAverageTimeInterval, 0.0)
-        verify(exactly = 1) { accelerometerProcessorSpy.gyroscopeAverageTimeInterval }
+        assertEquals(TIME_INTERVAL, estimator.gyroscopeTimeIntervalSeconds, 0.0)
+        verify(exactly = 1) { accelerometerProcessorSpy.timeIntervalSeconds }
     }
 
     @Test
@@ -669,11 +669,11 @@ class LeveledRelativeAttitudeEstimator2Test {
             estimator.getPrivateProperty("gravityProcessor")
         requireNotNull(gravityProcessor)
         val gravityProcessorSpy = spyk(gravityProcessor)
-        every { gravityProcessorSpy.gyroscopeAverageTimeInterval }.returns(TIME_INTERVAL)
+        every { gravityProcessorSpy.timeIntervalSeconds }.returns(TIME_INTERVAL)
         estimator.setPrivateProperty("gravityProcessor", gravityProcessorSpy)
 
-        assertEquals(TIME_INTERVAL, estimator.gyroscopeAverageTimeInterval, 0.0)
-        verify(exactly = 1) { gravityProcessorSpy.gyroscopeAverageTimeInterval }
+        assertEquals(TIME_INTERVAL, estimator.gyroscopeTimeIntervalSeconds, 0.0)
+        verify(exactly = 1) { gravityProcessorSpy.timeIntervalSeconds }
     }
 
     @Test(expected = IllegalStateException::class)

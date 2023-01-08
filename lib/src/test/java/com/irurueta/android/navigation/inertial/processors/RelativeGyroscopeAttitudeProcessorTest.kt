@@ -6,9 +6,11 @@ import com.irurueta.android.navigation.inertial.getPrivateProperty
 import com.irurueta.android.navigation.inertial.setPrivateProperty
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.inertial.calibration.AngularSpeedTriad
-import com.irurueta.navigation.inertial.calibration.TimeIntervalEstimator
 import com.irurueta.statistics.UniformRandomizer
-import io.mockk.*
+import io.mockk.Called
+import io.mockk.mockk
+import io.mockk.spyk
+import io.mockk.verify
 import org.junit.Assert.*
 import org.junit.Test
 
@@ -20,7 +22,7 @@ class RelativeGyroscopeAttitudeProcessorTest {
 
         assertNull(processor.processorListener)
         assertEquals(Quaternion(), processor.attitude)
-        assertEquals(0.0, processor.averageTimeInterval, 0.0)
+        assertEquals(0.0, processor.timeIntervalSeconds, 0.0)
     }
 
     @Test
@@ -30,7 +32,7 @@ class RelativeGyroscopeAttitudeProcessorTest {
 
         assertSame(listener, processor.processorListener)
         assertEquals(Quaternion(), processor.attitude)
-        assertEquals(0.0, processor.averageTimeInterval, 0.0)
+        assertEquals(0.0, processor.timeIntervalSeconds, 0.0)
     }
 
     @Test
@@ -49,27 +51,18 @@ class RelativeGyroscopeAttitudeProcessorTest {
     }
 
     @Test
-    fun process_whenFirstMeasurement_setsInitialTimestampInTimeIntervalEstimator() {
+    fun process_whenFirstMeasurement_setsPreviousTimestamp() {
         val listener =
             mockk<BaseRelativeGyroscopeAttitudeProcessor.OnProcessedListener>(relaxUnitFun = true)
         val processor = RelativeGyroscopeAttitudeProcessor(listener)
 
-        val timeIntervalEstimator: TimeIntervalEstimator? = getPrivateProperty(
+        val previousTimestamp1: Long? = getPrivateProperty(
             BaseRelativeGyroscopeAttitudeProcessor::class,
             processor,
-            "timeIntervalEstimator"
+            "previousTimestamp"
         )
-        requireNotNull(timeIntervalEstimator)
-        assertEquals(0, timeIntervalEstimator.numberOfProcessedSamples)
-        assertNull(timeIntervalEstimator.lastTimestamp)
-
-        val initialTimestamp1: Long? = getPrivateProperty(
-            BaseRelativeGyroscopeAttitudeProcessor::class,
-            processor,
-            "initialTimestamp"
-        )
-        requireNotNull(initialTimestamp1)
-        assertEquals(0L, initialTimestamp1)
+        requireNotNull(previousTimestamp1)
+        assertEquals(-1L, previousTimestamp1)
 
         val randomizer = UniformRandomizer()
         val wx = randomizer.nextFloat()
@@ -80,16 +73,16 @@ class RelativeGyroscopeAttitudeProcessorTest {
         assertFalse(processor.process(measurement))
 
         // check
-        val initialTimestamp2: Long? = getPrivateProperty(
+        val previousTimestamp2: Long? = getPrivateProperty(
             BaseRelativeGyroscopeAttitudeProcessor::class,
             processor,
-            "initialTimestamp"
+            "previousTimestamp"
         )
-        requireNotNull(initialTimestamp2)
-        assertEquals(timestamp, initialTimestamp2)
+        requireNotNull(previousTimestamp2)
+        assertEquals(timestamp, previousTimestamp2)
 
         assertEquals(Quaternion(), processor.attitude)
-        assertEquals(0.0, processor.averageTimeInterval, 0.0)
+        assertEquals(0.0, processor.timeIntervalSeconds, 0.0)
 
         verify { listener wasNot Called }
     }
@@ -100,29 +93,13 @@ class RelativeGyroscopeAttitudeProcessorTest {
             mockk<BaseRelativeGyroscopeAttitudeProcessor.OnProcessedListener>(relaxUnitFun = true)
         val processor = RelativeGyroscopeAttitudeProcessor(listener)
 
-        val timeIntervalEstimator: TimeIntervalEstimator? = getPrivateProperty(
-            BaseRelativeGyroscopeAttitudeProcessor::class,
-            processor,
-            "timeIntervalEstimator"
-        )
-        requireNotNull(timeIntervalEstimator)
-        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-        every { timeIntervalEstimatorSpy.numberOfProcessedSamples }.returns(1)
-        every { timeIntervalEstimatorSpy.averageTimeInterval }.returns(INTERVAL_SECONDS)
-        setPrivateProperty(
-            BaseRelativeGyroscopeAttitudeProcessor::class,
-            processor,
-            "timeIntervalEstimator",
-            timeIntervalEstimatorSpy
-        )
-
         val timestamp = System.nanoTime()
-        val initialTimestamp = timestamp - INTERVAL_NANOS
+        val previousTimestamp = timestamp - INTERVAL_NANOS
         setPrivateProperty(
             BaseRelativeGyroscopeAttitudeProcessor::class,
             processor,
-            "initialTimestamp",
-            initialTimestamp
+            "previousTimestamp",
+            previousTimestamp
         )
 
         val triad: AngularSpeedTriad? = getPrivateProperty(
@@ -198,29 +175,13 @@ class RelativeGyroscopeAttitudeProcessorTest {
             mockk<BaseRelativeGyroscopeAttitudeProcessor.OnProcessedListener>(relaxUnitFun = true)
         val processor = RelativeGyroscopeAttitudeProcessor(listener)
 
-        val timeIntervalEstimator: TimeIntervalEstimator? = getPrivateProperty(
-            BaseRelativeGyroscopeAttitudeProcessor::class,
-            processor,
-            "timeIntervalEstimator"
-        )
-        requireNotNull(timeIntervalEstimator)
-        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-        every { timeIntervalEstimatorSpy.numberOfProcessedSamples }.returns(1)
-        every { timeIntervalEstimatorSpy.averageTimeInterval }.returns(INTERVAL_SECONDS)
-        setPrivateProperty(
-            BaseRelativeGyroscopeAttitudeProcessor::class,
-            processor,
-            "timeIntervalEstimator",
-            timeIntervalEstimatorSpy
-        )
-
         val timestamp = System.nanoTime()
-        val initialTimestamp = timestamp - INTERVAL_NANOS
+        val previousTimestamp = timestamp - INTERVAL_NANOS
         setPrivateProperty(
             BaseRelativeGyroscopeAttitudeProcessor::class,
             processor,
-            "initialTimestamp",
-            initialTimestamp
+            "previousTimestamp",
+            previousTimestamp
         )
 
         val triad: AngularSpeedTriad? = getPrivateProperty(
@@ -291,29 +252,13 @@ class RelativeGyroscopeAttitudeProcessorTest {
             mockk<BaseRelativeGyroscopeAttitudeProcessor.OnProcessedListener>(relaxUnitFun = true)
         val processor = RelativeGyroscopeAttitudeProcessor(listener)
 
-        val timeIntervalEstimator: TimeIntervalEstimator? = getPrivateProperty(
-            BaseRelativeGyroscopeAttitudeProcessor::class,
-            processor,
-            "timeIntervalEstimator"
-        )
-        requireNotNull(timeIntervalEstimator)
-        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-        every { timeIntervalEstimatorSpy.numberOfProcessedSamples }.returns(1)
-        every { timeIntervalEstimatorSpy.averageTimeInterval }.returns(INTERVAL_SECONDS)
-        setPrivateProperty(
-            BaseRelativeGyroscopeAttitudeProcessor::class,
-            processor,
-            "timeIntervalEstimator",
-            timeIntervalEstimatorSpy
-        )
-
         val timestamp = System.nanoTime()
-        val initialTimestamp = timestamp - INTERVAL_NANOS
+        val previousTimestamp = timestamp - INTERVAL_NANOS
         setPrivateProperty(
             BaseRelativeGyroscopeAttitudeProcessor::class,
             processor,
-            "initialTimestamp",
-            initialTimestamp
+            "previousTimestamp",
+            previousTimestamp
         )
 
         val triad: AngularSpeedTriad? = getPrivateProperty(
@@ -382,26 +327,18 @@ class RelativeGyroscopeAttitudeProcessorTest {
     fun reset_restoresInitialState() {
         val processor = RelativeGyroscopeAttitudeProcessor()
 
-        val timeIntervalEstimator: TimeIntervalEstimator? = getPrivateProperty(
-            BaseRelativeGyroscopeAttitudeProcessor::class,
-            processor,
-            "timeIntervalEstimator"
-        )
-        requireNotNull(timeIntervalEstimator)
-        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+        val previousTimestamp1 = System.nanoTime()
         setPrivateProperty(
             BaseRelativeGyroscopeAttitudeProcessor::class,
             processor,
-            "timeIntervalEstimator",
-            timeIntervalEstimatorSpy
+            "previousTimestamp",
+            previousTimestamp1
         )
-
-        val initialTimestamp1 = System.nanoTime()
         setPrivateProperty(
             BaseRelativeGyroscopeAttitudeProcessor::class,
             processor,
-            "initialTimestamp",
-            initialTimestamp1
+            "timeIntervalSeconds",
+            INTERVAL_SECONDS
         )
 
         val randomizer = UniformRandomizer()
@@ -424,15 +361,21 @@ class RelativeGyroscopeAttitudeProcessorTest {
         processor.reset()
 
         // check
-        verify(exactly = 1) { timeIntervalEstimatorSpy.reset() }
-
-        val initialTimestamp2: Long? = getPrivateProperty(
+        val previousTimestamp: Long? = getPrivateProperty(
             BaseRelativeGyroscopeAttitudeProcessor::class,
             processor,
-            "initialTimestamp"
+            "previousTimestamp"
         )
-        requireNotNull(initialTimestamp2)
-        assertEquals(0L, initialTimestamp2)
+        requireNotNull(previousTimestamp)
+        assertEquals(-1L, previousTimestamp)
+
+        val timeIntervalSeconds: Double? = getPrivateProperty(
+            BaseRelativeGyroscopeAttitudeProcessor::class,
+            processor,
+            "timeIntervalSeconds"
+        )
+        requireNotNull(timeIntervalSeconds)
+        assertEquals(0.0, timeIntervalSeconds, 0.0)
 
         assertEquals(Quaternion(), processor.attitude)
         assertEquals(Quaternion(), internalAttitude)

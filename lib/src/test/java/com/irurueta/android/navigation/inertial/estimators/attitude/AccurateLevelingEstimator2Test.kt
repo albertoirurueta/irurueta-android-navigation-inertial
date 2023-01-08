@@ -1093,7 +1093,7 @@ class AccurateLevelingEstimator2Test {
             )
         requireNotNull(accelerometerGravityProcessor)
         val accelerometerGravityProcessorSpy = spyk(accelerometerGravityProcessor)
-        every { accelerometerGravityProcessorSpy.process(any()) }.returns(true)
+        every { accelerometerGravityProcessorSpy.process(any(), any()) }.returns(true)
         every { accelerometerGravityProcessorSpy.gx }.returns(floatFx.toDouble())
         every { accelerometerGravityProcessorSpy.gy }.returns(floatFy.toDouble())
         every { accelerometerGravityProcessorSpy.gz }.returns(floatFz.toDouble())

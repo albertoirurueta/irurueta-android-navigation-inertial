@@ -20,7 +20,6 @@ import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorMeasur
 import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.inertial.calibration.AngularSpeedTriad
-import com.irurueta.navigation.inertial.calibration.TimeIntervalEstimator
 import com.irurueta.units.TimeConverter
 
 /**
@@ -32,19 +31,14 @@ import com.irurueta.units.TimeConverter
 abstract class BaseRelativeGyroscopeAttitudeProcessor(var processorListener: OnProcessedListener?) {
 
     /**
+     * Timestamp of previous sample expressed in nanoseconds.
+     */
+    private var previousTimestamp: Long = -1L
+
+    /**
      * Instance to be reused which contains integrated attitude of all gyroscope samples.
      */
     protected val internalAttitude = Quaternion()
-
-    /**
-     * Estimates average time interval between gyroscope measurements.
-     */
-    protected val timeIntervalEstimator = TimeIntervalEstimator(Integer.MAX_VALUE)
-
-    /**
-     * Timestamp of first sample expressed in nanoseconds.
-     */
-    protected var initialTimestamp: Long = 0L
 
     /**
      * Triad to be reused for ENU to NED coordinates conversion.
@@ -52,16 +46,16 @@ abstract class BaseRelativeGyroscopeAttitudeProcessor(var processorListener: OnP
     protected val triad = AngularSpeedTriad()
 
     /**
+     * Time interval expressed in seconds between consecutive gyroscope measurements
+     */
+    var timeIntervalSeconds = 0.0
+        private set
+
+    /**
      * Instance to be reused which contains integrated attitude of all gyroscope samples using NED
      * coordinates system.
      */
     val attitude = Quaternion()
-
-    /**
-     * Gets average time interval between gyroscope samples expressed in seconds.
-     */
-    val averageTimeInterval
-        get() = timeIntervalEstimator.averageTimeInterval
 
     /**
      * Processes a gyroscope sensor measurement to integrate angular speed values to obtain
@@ -82,8 +76,8 @@ abstract class BaseRelativeGyroscopeAttitudeProcessor(var processorListener: OnP
      * Resets this processor to its initial state.
      */
     fun reset() {
-        timeIntervalEstimator.reset()
-        initialTimestamp = 0L
+        previousTimestamp = -1L
+        timeIntervalSeconds = 0.0
 
         resetQuaternion(attitude)
         resetQuaternion(internalAttitude)
@@ -121,20 +115,19 @@ abstract class BaseRelativeGyroscopeAttitudeProcessor(var processorListener: OnP
     }
 
     /**
-     * Updates current average time interval estimation between gyroscope measurements.
+     * Updates current time interval estimation between gyroscope measurements.
      *
      * @param timestamp optional timestamp that can be provided to override timestamp associated to
      * gyroscope measurement. If null, the timestamp from gyroscope measurement is used.
      * @return true if it is the 1st measurement by the time interval estimator, false otherwise.
      */
     protected fun updateTimeInterval(timestamp: Long): Boolean {
-        val isFirst = timeIntervalEstimator.numberOfProcessedSamples == 0
-        if (isFirst) {
-            initialTimestamp = timestamp
+        val isFirst = previousTimestamp <= 0
+        if (!isFirst) {
+            val diff = timestamp - previousTimestamp
+            timeIntervalSeconds = TimeConverter.nanosecondToSecond(diff.toDouble())
         }
-        val diff = timestamp - initialTimestamp
-        val diffSeconds = TimeConverter.nanosecondToSecond(diff.toDouble())
-        timeIntervalEstimator.addTimestamp(diffSeconds)
+        previousTimestamp = timestamp
 
         return isFirst
     }

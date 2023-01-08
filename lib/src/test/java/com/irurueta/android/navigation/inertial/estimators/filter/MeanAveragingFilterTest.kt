@@ -18,7 +18,6 @@ package com.irurueta.android.navigation.inertial.estimators.filter
 import android.os.SystemClock
 import com.irurueta.android.navigation.inertial.getPrivateProperty
 import com.irurueta.android.navigation.inertial.setPrivateProperty
-import com.irurueta.navigation.inertial.calibration.TimeIntervalEstimator
 import com.irurueta.statistics.UniformRandomizer
 import io.mockk.*
 import org.junit.Assert.*
@@ -37,6 +36,11 @@ class MeanAveragingFilterTest {
 
         // check
         assertEquals(timeConstant, filter.timeConstant, 0.0)
+
+        val previousTimestamp: Long? =
+            getPrivateProperty(AveragingFilter::class, filter, "previousTimestamp")
+        requireNotNull(previousTimestamp)
+        assertEquals(-1L, previousTimestamp)
     }
 
     @Test
@@ -45,6 +49,11 @@ class MeanAveragingFilterTest {
 
         // check
         assertEquals(AveragingFilter.DEFAULT_TIME_CONSTANT, filter.timeConstant, 0.0)
+
+        val previousTimestamp: Long? =
+            getPrivateProperty(AveragingFilter::class, filter, "previousTimestamp")
+        requireNotNull(previousTimestamp)
+        assertEquals(-1L, previousTimestamp)
     }
 
     @Test
@@ -54,17 +63,12 @@ class MeanAveragingFilterTest {
         val filter1 = MeanAveragingFilter(timeConstant)
 
         val timestamp = SystemClock.elapsedRealtimeNanos()
-        setPrivateProperty(
-            AveragingFilter::class,
-            filter1,
-            "initialTimestamp",
-            timestamp
-        )
+        setPrivateProperty(AveragingFilter::class, filter1, "previousTimestamp", timestamp)
 
         // check
         assertEquals(
             timestamp,
-            getPrivateProperty(AveragingFilter::class, filter1, "initialTimestamp")
+            getPrivateProperty(AveragingFilter::class, filter1, "previousTimestamp")
         )
 
         val values1: ArrayDeque<DoubleArray>? = filter1.getPrivateProperty("values")
@@ -84,7 +88,7 @@ class MeanAveragingFilterTest {
 
         assertEquals(
             timestamp,
-            getPrivateProperty(AveragingFilter::class, filter2, "initialTimestamp")
+            getPrivateProperty(AveragingFilter::class, filter2, "previousTimestamp")
         )
 
         val values2: ArrayDeque<DoubleArray>? = filter2.getPrivateProperty("values")
@@ -113,19 +117,13 @@ class MeanAveragingFilterTest {
     }
 
     @Test
-    fun filter_whenValidLengthAndEmpty_returnsExpectedValues() {
+    fun filter_whenFirstMeasurement_returnsFalse() {
         val filter = MeanAveragingFilter()
 
-        val timeIntervalEstimator = mockk<TimeIntervalEstimator>()
-        every { timeIntervalEstimator.averageTimeInterval }.returns(TIME_INTERVAL)
-        every { timeIntervalEstimator.addTimestamp(any<Double>()) }.returns(true)
-        every { timeIntervalEstimator.numberOfProcessedSamples }.returnsMany(0, 1, 2, 3, 4, 5, 6)
-        setPrivateProperty(
-            AveragingFilter::class,
-            filter,
-            "timeIntervalEstimator",
-            timeIntervalEstimator
-        )
+        val previousTimestamp: Long? =
+            getPrivateProperty(AveragingFilter::class, filter, "previousTimestamp")
+        requireNotNull(previousTimestamp)
+        assertEquals(-1L, previousTimestamp)
 
         val randomizer = UniformRandomizer()
         val valueX1 = randomizer.nextDouble()
@@ -135,12 +133,27 @@ class MeanAveragingFilterTest {
         val timestamp = SystemClock.elapsedRealtimeNanos()
 
         // filter one time
-        assertTrue(filter.filter(valueX1, valueY1, valueZ1, output, timestamp))
+        assertFalse(filter.filter(valueX1, valueY1, valueZ1, output, timestamp))
+    }
+
+    @Test
+    fun filter_whenValidLengthAndEmpty_returnsExpectedValues() {
+        val filter = MeanAveragingFilter()
+
+        val randomizer = UniformRandomizer()
+        val valueX1 = randomizer.nextDouble()
+        val valueY1 = randomizer.nextDouble()
+        val valueZ1 = randomizer.nextDouble()
+        val output = DoubleArray(AveragingFilter.OUTPUT_LENGTH)
+        val timestamp = SystemClock.elapsedRealtimeNanos()
+
+        // filter one time
+        assertFalse(filter.filter(valueX1, valueY1, valueZ1, output, timestamp))
 
         // check
-        assertEquals(valueX1, output[0], 0.0)
-        assertEquals(valueY1, output[1], 0.0)
-        assertEquals(valueZ1, output[2], 0.0)
+        assertEquals(0.0, output[0], 0.0)
+        assertEquals(0.0, output[1], 0.0)
+        assertEquals(0.0, output[2], 0.0)
 
         // filter second time
         val valueX2 = randomizer.nextDouble()
@@ -157,9 +170,9 @@ class MeanAveragingFilterTest {
         )
 
         // check
-        assertEquals((valueX1 + valueX2) / 2.0, output[0], 0.0)
-        assertEquals((valueY1 + valueY2) / 2.0, output[1], 0.0)
-        assertEquals((valueZ1 + valueZ2) / 2.0, output[2], 0.0)
+        assertEquals(valueX2, output[0], 0.0)
+        assertEquals(valueY2, output[1], 0.0)
+        assertEquals(valueZ2, output[2], 0.0)
 
         // filter third time
         val valueX3 = randomizer.nextDouble()
@@ -171,14 +184,14 @@ class MeanAveragingFilterTest {
                 valueY3,
                 valueZ3,
                 output,
-                timestamp + TIME_INTERVAL_NANOS
+                timestamp + 2 * TIME_INTERVAL_NANOS
             )
         )
 
         // check
-        assertEquals((valueX1 + valueX2 + valueX3) / 3.0, output[0], ABSOLUTE_ERROR)
-        assertEquals((valueY1 + valueY2 + valueY3) / 3.0, output[1], ABSOLUTE_ERROR)
-        assertEquals((valueZ1 + valueZ2 + valueZ3) / 3.0, output[2], ABSOLUTE_ERROR)
+        assertEquals((valueX2 + valueX3) / 2.0, output[0], 0.0)
+        assertEquals((valueY2 + valueY3) / 2.0, output[1], 0.0)
+        assertEquals((valueZ2 + valueZ3) / 2.0, output[2], 0.0)
 
         // filter 4th time
         val valueX4 = randomizer.nextDouble()
@@ -190,14 +203,14 @@ class MeanAveragingFilterTest {
                 valueY4,
                 valueZ4,
                 output,
-                timestamp + 2 * TIME_INTERVAL_NANOS
+                timestamp + 3 * TIME_INTERVAL_NANOS
             )
         )
 
         // check
-        assertEquals((valueX1 + valueX2 + valueX3 + valueX4) / 4.0, output[0], 0.0)
-        assertEquals((valueY1 + valueY2 + valueY3 + valueY4) / 4.0, output[1], 0.0)
-        assertEquals((valueZ1 + valueZ2 + valueZ3 + valueZ4) / 4.0, output[2], 0.0)
+        assertEquals((valueX2 + valueX3 + valueX4) / 3.0, output[0], ABSOLUTE_ERROR)
+        assertEquals((valueY2 + valueY3 + valueY4) / 3.0, output[1], ABSOLUTE_ERROR)
+        assertEquals((valueZ2 + valueZ3 + valueZ4) / 3.0, output[2], ABSOLUTE_ERROR)
 
         // filter 5th time
         val valueX5 = randomizer.nextDouble()
@@ -209,25 +222,25 @@ class MeanAveragingFilterTest {
                 valueY5,
                 valueZ5,
                 output,
-                timestamp + 2 * TIME_INTERVAL_NANOS
+                timestamp + 4 * TIME_INTERVAL_NANOS
             )
         )
 
         // check
         assertEquals(
-            (valueX1 + valueX2 + valueX3 + valueX4 + valueX5) / 5.0,
+            (valueX2 + valueX3 + valueX4 + valueX5) / 4.0,
             output[0],
-            ABSOLUTE_ERROR
+            0.0
         )
         assertEquals(
-            (valueY1 + valueY2 + valueY3 + valueY4 + valueY5) / 5.0,
+            (valueY2 + valueY3 + valueY4 + valueY5) / 4.0,
             output[1],
-            ABSOLUTE_ERROR
+            0.0
         )
         assertEquals(
-            (valueZ1 + valueZ2 + valueZ3 + valueZ4 + valueZ5) / 5.0,
+            (valueZ2 + valueZ3 + valueZ4 + valueZ5) / 4.0,
             output[2],
-            ABSOLUTE_ERROR
+            0.0
         )
 
         // filter 6th time
@@ -240,7 +253,7 @@ class MeanAveragingFilterTest {
                 valueY6,
                 valueZ6,
                 output,
-                timestamp + 2 * TIME_INTERVAL_NANOS
+                timestamp + 5 * TIME_INTERVAL_NANOS
             )
         )
 
@@ -260,6 +273,76 @@ class MeanAveragingFilterTest {
             output[2],
             ABSOLUTE_ERROR
         )
+
+        // filter 7th time
+        val valueX7 = randomizer.nextDouble()
+        val valueY7 = randomizer.nextDouble()
+        val valueZ7 = randomizer.nextDouble()
+        assertTrue(
+            filter.filter(
+                valueX7,
+                valueY7,
+                valueZ7,
+                output,
+                timestamp + 6 * TIME_INTERVAL_NANOS
+            )
+        )
+
+        // check
+        assertEquals(
+            (valueX3 + valueX4 + valueX5 + valueX6  + valueX7) / 5.0,
+            output[0],
+            ABSOLUTE_ERROR
+        )
+        assertEquals(
+            (valueY3 + valueY4 + valueY5 + valueY6 + valueY7) / 5.0,
+            output[1],
+            ABSOLUTE_ERROR
+        )
+        assertEquals(
+            (valueZ3 + valueZ4 + valueZ5 + valueZ6 + valueZ7) / 5.0,
+            output[2],
+            ABSOLUTE_ERROR
+        )
+    }
+
+    @Test
+    fun filter_whenZeroTimeInterval_returnsFalse() {
+        val filter = MeanAveragingFilter()
+
+        val randomizer = UniformRandomizer()
+        val valueX1 = randomizer.nextDouble()
+        val valueY1 = randomizer.nextDouble()
+        val valueZ1 = randomizer.nextDouble()
+        val output = DoubleArray(AveragingFilter.OUTPUT_LENGTH)
+        val timestamp = SystemClock.elapsedRealtimeNanos()
+
+        // filter one time
+        assertFalse(filter.filter(valueX1, valueY1, valueZ1, output, timestamp))
+
+        // check
+        assertEquals(0.0, output[0], 0.0)
+        assertEquals(0.0, output[1], 0.0)
+        assertEquals(0.0, output[2], 0.0)
+
+        // filter second time
+        val valueX2 = randomizer.nextDouble()
+        val valueY2 = randomizer.nextDouble()
+        val valueZ2 = randomizer.nextDouble()
+        assertFalse(
+            filter.filter(
+                valueX2,
+                valueY2,
+                valueZ2,
+                output,
+                timestamp
+            )
+        )
+
+        // check
+        assertEquals(0.0, output[0], 0.0)
+        assertEquals(0.0, output[1], 0.0)
+        assertEquals(0.0, output[2], 0.0)
     }
 
     @Test
@@ -270,7 +353,7 @@ class MeanAveragingFilterTest {
         setPrivateProperty(
             AveragingFilter::class,
             filter,
-            "initialTimestamp",
+            "previousTimestamp",
             timestamp
         )
         val values: ArrayDeque<DoubleArray>? = filter.getPrivateProperty("values")
@@ -281,25 +364,15 @@ class MeanAveragingFilterTest {
         // check
         assertEquals(
             timestamp,
-            getPrivateProperty(AveragingFilter::class, filter, "initialTimestamp")
-        )
-
-        val timeIntervalEstimator = mockk<TimeIntervalEstimator>()
-        every { timeIntervalEstimator.reset() }.returns(true)
-        setPrivateProperty(
-            AveragingFilter::class,
-            filter,
-            "timeIntervalEstimator",
-            timeIntervalEstimator
+            getPrivateProperty(AveragingFilter::class, filter, "previousTimestamp")
         )
 
         filter.reset()
 
         // check
-        verify(exactly = 1) { timeIntervalEstimator.reset() }
         assertEquals(
-            0L,
-            getPrivateProperty(AveragingFilter::class, filter, "initialTimestamp")
+            -1L,
+            getPrivateProperty(AveragingFilter::class, filter, "previousTimestamp")
         )
         verify(exactly = 1) { valuesSpy.clear() }
     }
@@ -312,23 +385,14 @@ class MeanAveragingFilterTest {
         setPrivateProperty(
             AveragingFilter::class,
             filter1,
-            "initialTimestamp",
+            "previousTimestamp",
             timestamp
         )
 
         // check
         assertEquals(
             timestamp,
-            getPrivateProperty(AveragingFilter::class, filter1, "initialTimestamp")
-        )
-
-        val timeIntervalEstimator1 = mockk<TimeIntervalEstimator>()
-        justRun { timeIntervalEstimator1.copyFrom(any()) }
-        setPrivateProperty(
-            AveragingFilter::class,
-            filter1,
-            "timeIntervalEstimator",
-            timeIntervalEstimator1
+            getPrivateProperty(AveragingFilter::class, filter1, "previousTimestamp")
         )
 
         val randomizer = UniformRandomizer()
@@ -343,22 +407,12 @@ class MeanAveragingFilterTest {
 
         val filter2 = MeanAveragingFilter()
 
-        val timeIntervalEstimator2 = mockk<TimeIntervalEstimator>()
-        justRun { timeIntervalEstimator2.copyFrom(any()) }
-        setPrivateProperty(
-            AveragingFilter::class,
-            filter2,
-            "timeIntervalEstimator",
-            timeIntervalEstimator2
-        )
-
         filter2.copyFrom(filter1)
 
         // check
-        verify(exactly = 1) { timeIntervalEstimator2.copyFrom(timeIntervalEstimator1) }
         assertEquals(
             timestamp,
-            getPrivateProperty(AveragingFilter::class, filter2, "initialTimestamp")
+            getPrivateProperty(AveragingFilter::class, filter2, "previousTimestamp")
         )
         assertEquals(filter1.timeConstant, filter2.timeConstant, 0.0)
 
@@ -382,23 +436,14 @@ class MeanAveragingFilterTest {
         setPrivateProperty(
             AveragingFilter::class,
             filter1,
-            "initialTimestamp",
+            "previousTimestamp",
             timestamp
         )
 
         // check
         assertEquals(
             timestamp,
-            getPrivateProperty(AveragingFilter::class, filter1, "initialTimestamp")
-        )
-
-        val timeIntervalEstimator1 = mockk<TimeIntervalEstimator>()
-        justRun { timeIntervalEstimator1.copyFrom(any()) }
-        setPrivateProperty(
-            AveragingFilter::class,
-            filter1,
-            "timeIntervalEstimator",
-            timeIntervalEstimator1
+            getPrivateProperty(AveragingFilter::class, filter1, "previousTimestamp")
         )
 
         val randomizer = UniformRandomizer()
@@ -413,22 +458,12 @@ class MeanAveragingFilterTest {
 
         val filter2 = MeanAveragingFilter()
 
-        val timeIntervalEstimator2 = mockk<TimeIntervalEstimator>()
-        justRun { timeIntervalEstimator2.copyFrom(any()) }
-        setPrivateProperty(
-            AveragingFilter::class,
-            filter2,
-            "timeIntervalEstimator",
-            timeIntervalEstimator2
-        )
-
         filter1.copyTo(filter2)
 
         // check
-        verify(exactly = 1) { timeIntervalEstimator2.copyFrom(timeIntervalEstimator1) }
         assertEquals(
             timestamp,
-            getPrivateProperty(AveragingFilter::class, filter2, "initialTimestamp")
+            getPrivateProperty(AveragingFilter::class, filter2, "previousTimestamp")
         )
         assertEquals(filter1.timeConstant, filter2.timeConstant, 0.0)
 
@@ -445,7 +480,6 @@ class MeanAveragingFilterTest {
     }
 
     private companion object {
-        const val TIME_INTERVAL = 0.02
         const val TIME_INTERVAL_NANOS = 20000000
 
         const val ABSOLUTE_ERROR = 1e-12

@@ -68,7 +68,7 @@ class AccelerometerLeveledRelativeAttitudeProcessorTest {
             processor.indirectInterpolationWeight,
             0.0
         )
-        assertEquals(0.0, processor.gyroscopeAverageTimeInterval, 0.0)
+        assertEquals(0.0, processor.timeIntervalSeconds, 0.0)
         assertEquals(
             BaseLeveledRelativeAttitudeProcessor.DEFAULT_OUTLIER_THRESHOLD,
             processor.outlierThreshold,
@@ -122,7 +122,7 @@ class AccelerometerLeveledRelativeAttitudeProcessorTest {
             processor.indirectInterpolationWeight,
             0.0
         )
-        assertEquals(0.0, processor.gyroscopeAverageTimeInterval, 0.0)
+        assertEquals(0.0, processor.timeIntervalSeconds, 0.0)
         assertEquals(
             BaseLeveledRelativeAttitudeProcessor.DEFAULT_OUTLIER_THRESHOLD,
             processor.outlierThreshold,
@@ -420,7 +420,7 @@ class AccelerometerLeveledRelativeAttitudeProcessorTest {
         )
         requireNotNull(relativeAttitudeProcessor)
         val relativeAttitudeProcessorSpy = spyk(relativeAttitudeProcessor)
-        every { relativeAttitudeProcessorSpy.averageTimeInterval }.returns(TIME_INTERVAL)
+        every { relativeAttitudeProcessorSpy.timeIntervalSeconds }.returns(TIME_INTERVAL)
         setPrivateProperty(
             BaseLeveledRelativeAttitudeProcessor::class,
             processor,
@@ -428,8 +428,8 @@ class AccelerometerLeveledRelativeAttitudeProcessorTest {
             relativeAttitudeProcessorSpy
         )
 
-        assertEquals(TIME_INTERVAL, processor.gyroscopeAverageTimeInterval, 0.0)
-        verify(exactly = 1) { relativeAttitudeProcessorSpy.averageTimeInterval }
+        assertEquals(TIME_INTERVAL, processor.timeIntervalSeconds, 0.0)
+        verify(exactly = 1) { relativeAttitudeProcessorSpy.timeIntervalSeconds }
     }
 
     @Test
@@ -1708,7 +1708,7 @@ class AccelerometerLeveledRelativeAttitudeProcessorTest {
         every { relativeAttitudeProcessorSpy.process(any(), any()) }.returns(true)
         val relativeAttitude = getAttitude()
         every { relativeAttitudeProcessorSpy.attitude }.returns(relativeAttitude)
-        every { relativeAttitudeProcessorSpy.averageTimeInterval }.returns(TIME_INTERVAL)
+        every { relativeAttitudeProcessorSpy.timeIntervalSeconds }.returns(TIME_INTERVAL)
         setPrivateProperty(
             BaseLeveledRelativeAttitudeProcessor::class,
             processor,

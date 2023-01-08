@@ -169,7 +169,7 @@ class AccurateRelativeGyroscopeAttitudeEstimator2Test {
     }
 
     @Test
-    fun averageTimeInterval_returnsExpectedValue() {
+    fun timeIntervalSeconds_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = AccurateRelativeGyroscopeAttitudeEstimator2(context)
 
@@ -177,11 +177,11 @@ class AccurateRelativeGyroscopeAttitudeEstimator2Test {
             estimator.getPrivateProperty("processor")
         requireNotNull(processor)
         val processorSpy = spyk(processor)
-        every { processorSpy.averageTimeInterval }.returns(INTERVAL_SECONDS)
+        every { processorSpy.timeIntervalSeconds }.returns(INTERVAL_SECONDS)
         estimator.setPrivateProperty("processor", processorSpy)
 
-        assertEquals(INTERVAL_SECONDS, estimator.averageTimeInterval, 0.0)
-        verify(exactly = 1) { processorSpy.averageTimeInterval }
+        assertEquals(INTERVAL_SECONDS, estimator.timeIntervalSeconds, 0.0)
+        verify(exactly = 1) { processorSpy.timeIntervalSeconds }
     }
 
     @Test
@@ -364,7 +364,7 @@ class AccurateRelativeGyroscopeAttitudeEstimator2Test {
             estimator.getPrivateProperty("processor")
         requireNotNull(processor)
         val processorSpy = spyk(processor)
-        every { processorSpy.process(any()) }.returns(true)
+        every { processorSpy.process(any(), any()) }.returns(true)
 
         val randomizer = UniformRandomizer()
         val roll = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
@@ -419,7 +419,7 @@ class AccurateRelativeGyroscopeAttitudeEstimator2Test {
             estimator.getPrivateProperty("processor")
         requireNotNull(processor)
         val processorSpy = spyk(processor)
-        every { processorSpy.process(any()) }.returns(true)
+        every { processorSpy.process(any(), any()) }.returns(true)
 
         val randomizer = UniformRandomizer()
         val roll = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
@@ -482,7 +482,7 @@ class AccurateRelativeGyroscopeAttitudeEstimator2Test {
             estimator.getPrivateProperty("processor")
         requireNotNull(processor)
         val processorSpy = spyk(processor)
-        every { processorSpy.process(any()) }.returns(true)
+        every { processorSpy.process(any(), any()) }.returns(true)
 
         val randomizer = UniformRandomizer()
         val roll = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))

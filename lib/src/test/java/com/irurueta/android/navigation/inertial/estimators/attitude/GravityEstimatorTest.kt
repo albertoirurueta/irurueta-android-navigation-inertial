@@ -428,16 +428,25 @@ class GravityEstimatorTest {
         verify { estimationListener wasNot Called }
 
         // receive 2nd measurement
-        measurementListener.onMeasurement(ax, ay, az, bx, by, bz, timestamp, SensorAccuracy.HIGH)
+        measurementListener.onMeasurement(
+            ax,
+            ay,
+            az,
+            bx,
+            by,
+            bz,
+            timestamp + INTERVAL_NANOS,
+            SensorAccuracy.HIGH
+        )
 
         val filterOutputList = mutableListOf<DoubleArray>()
-        verify(exactly = 2) {
+        verify(exactly = 1) {
             accelerometerAveragingFilterSpy.filter(
                 ax.toDouble() - bx.toDouble(),
                 ay.toDouble() - by.toDouble(),
                 az.toDouble() - bz.toDouble(),
                 capture(filterOutputList),
-                timestamp
+                timestamp + INTERVAL_NANOS
             )
         }
 
@@ -448,7 +457,7 @@ class GravityEstimatorTest {
                 filterOutput[1],
                 filterOutput[0],
                 -filterOutput[2],
-                timestamp
+                timestamp + INTERVAL_NANOS
             )
         }
     }
@@ -540,5 +549,9 @@ class GravityEstimatorTest {
                 SensorAccuracy.HIGH
             )
         }
+    }
+
+    private companion object {
+        const val INTERVAL_NANOS = 20_000_000L
     }
 }

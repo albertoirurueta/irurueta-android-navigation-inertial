@@ -208,10 +208,10 @@ abstract class BaseLeveledRelativeAttitudeProcessor<M : SensorMeasurement<M>,
         }
 
     /**
-     * Gets average time interval between gyroscope samples expressed in seconds.
+     * Time interval expressed in seconds between consecutive gyroscope measurements
      */
-    val gyroscopeAverageTimeInterval
-        get() = relativeAttitudeProcessor.averageTimeInterval
+    val timeIntervalSeconds
+        get() = relativeAttitudeProcessor.timeIntervalSeconds
 
     /**
      * Threshold to determine that current leveling appears to be an outlier respect
@@ -458,7 +458,7 @@ abstract class BaseLeveledRelativeAttitudeProcessor<M : SensorMeasurement<M>,
     private fun getSlerpFactor(): Double {
         return if (useIndirectInterpolation) {
             val rotationVelocity =
-                deltaRelativeAttitude.rotationAngle / gyroscopeAverageTimeInterval
+                deltaRelativeAttitude.rotationAngle / timeIntervalSeconds
             min(interpolationValue + indirectInterpolationWeight * abs(rotationVelocity), 1.0)
         } else {
             interpolationValue

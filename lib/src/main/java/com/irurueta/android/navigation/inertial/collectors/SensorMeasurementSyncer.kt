@@ -158,9 +158,9 @@ abstract class SensorMeasurementSyncer<M : SyncedSensorMeasurement, S : SensorMe
             staleDetectedMeasurementsListener: OnStaleDetectedMeasurementsListener<M, S>?
         ) {
             measurementsToDelete.clear()
-            for (accelerometerMeasurement in measurements) {
-                if (accelerometerMeasurement.timestamp < staleTimestamp) {
-                    measurementsToDelete.add(accelerometerMeasurement)
+            for (measurement in measurements) {
+                if (measurement.timestamp < staleTimestamp) {
+                    measurementsToDelete.add(measurement)
                 }
             }
 

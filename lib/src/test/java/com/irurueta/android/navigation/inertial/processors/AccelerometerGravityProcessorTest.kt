@@ -148,31 +148,49 @@ class AccelerometerGravityProcessorTest {
         val bx = randomizer.nextFloat()
         val by = randomizer.nextFloat()
         val bz = randomizer.nextFloat()
-        val timestamp = System.nanoTime()
-        val measurement =
-            AccelerometerSensorMeasurement(ax, ay, az, bx, by, bz, timestamp, SensorAccuracy.HIGH)
+        val timestamp1 = System.nanoTime()
+        val measurement1 =
+            AccelerometerSensorMeasurement(ax, ay, az, bx, by, bz, timestamp1, SensorAccuracy.HIGH)
 
-        assertTrue(processor.process(measurement))
+        // first measurement returns false because averaging filter need to initialize
+        assertFalse(processor.process(measurement1))
 
-        val slot = slot<DoubleArray>()
+        // seconds measurement already has an initialized averaging filter
+        val timestamp2 = System.nanoTime() + TIME_INTERVAL_NANOS
+        val measurement2 =
+            AccelerometerSensorMeasurement(ax, ay, az, bx, by, bz, timestamp2, SensorAccuracy.HIGH)
+
+        assertTrue(processor.process(measurement2, timestamp2))
+
+        verify(exactly = 1) {
+            averagingFilter.filter(
+                ax.toDouble() - bx.toDouble(),
+                ay.toDouble() - by.toDouble(),
+                az.toDouble() - bz.toDouble(),
+                any(),
+                timestamp1
+            )
+        }
+
+        val slot = MutableList(size = 2) { DoubleArray(3) }
         verify(exactly = 1) {
             averagingFilter.filter(
                 ax.toDouble() - bx.toDouble(),
                 ay.toDouble() - by.toDouble(),
                 az.toDouble() - bz.toDouble(),
                 capture(slot),
-                timestamp
+                timestamp2
             )
         }
 
-        val array = slot.captured
+        val array = slot.last()
         verify(exactly = 1) {
             listener.onProcessed(
                 processor,
                 array[1],
                 array[0],
                 -array[2],
-                timestamp,
+                timestamp2,
                 SensorAccuracy.HIGH
             )
         }
@@ -181,7 +199,7 @@ class AccelerometerGravityProcessorTest {
         assertEquals(array[1], processor.gx, 0.0)
         assertEquals(array[0], processor.gy, 0.0)
         assertEquals(-array[2], processor.gz, 0.0)
-        assertEquals(timestamp, processor.timestamp)
+        assertEquals(timestamp2, processor.timestamp)
         assertEquals(SensorAccuracy.HIGH, processor.accuracy)
 
         val gravity1 = processor.gravity
@@ -208,39 +226,65 @@ class AccelerometerGravityProcessorTest {
         val ax = randomizer.nextFloat()
         val ay = randomizer.nextFloat()
         val az = randomizer.nextFloat()
-        val timestamp = System.nanoTime()
-        val measurement = AccelerometerSensorMeasurement(
+        val timestamp1 = System.nanoTime()
+        val measurement1 = AccelerometerSensorMeasurement(
             ax,
             ay,
             az,
             null,
             null,
             null,
-            timestamp,
+            timestamp1,
             SensorAccuracy.HIGH
         )
 
-        assertTrue(processor.process(measurement))
+        // first measurement returns false because averaging filter need to initialize
+        assertFalse(processor.process(measurement1))
 
-        val slot = slot<DoubleArray>()
+        // seconds measurement already has an initialized averaging filter
+        val timestamp2 = System.nanoTime() + TIME_INTERVAL_NANOS
+        val measurement2 = AccelerometerSensorMeasurement(
+            ax,
+            ay,
+            az,
+            null,
+            null,
+            null,
+            timestamp2,
+            SensorAccuracy.HIGH
+        )
+
+        assertTrue(processor.process(measurement2))
+
+        verify(exactly = 1) {
+            averagingFilter.filter(
+                ax.toDouble(),
+                ay.toDouble(),
+                az.toDouble(),
+                any(),
+                timestamp1
+            )
+        }
+
+        val slot = MutableList(size = 2) { DoubleArray(3) }
         verify(exactly = 1) {
             averagingFilter.filter(
                 ax.toDouble(),
                 ay.toDouble(),
                 az.toDouble(),
                 capture(slot),
-                timestamp
+                timestamp2
             )
         }
 
-        val array = slot.captured
+        val array = slot.last()
         verify(exactly = 1) {
             listener.onProcessed(
                 processor,
                 array[1],
                 array[0],
                 -array[2],
-                timestamp,
+                timestamp2,
                 SensorAccuracy.HIGH
             )
         }
@@ -249,7 +293,7 @@ class AccelerometerGravityProcessorTest {
         assertEquals(array[1], processor.gx, 0.0)
         assertEquals(array[0], processor.gy, 0.0)
         assertEquals(-array[2], processor.gz, 0.0)
-        assertEquals(timestamp, processor.timestamp)
+        assertEquals(timestamp2, processor.timestamp)
         assertEquals(SensorAccuracy.HIGH, processor.accuracy)
 
         val gravity1 = processor.gravity
@@ -279,31 +323,49 @@ class AccelerometerGravityProcessorTest {
         val bx = randomizer.nextFloat()
         val by = randomizer.nextFloat()
         val bz = randomizer.nextFloat()
-        val timestamp = System.nanoTime()
-        val measurement =
-            AccelerometerSensorMeasurement(ax, ay, az, bx, by, bz, timestamp, SensorAccuracy.HIGH)
+        val timestamp1 = System.nanoTime()
+        val measurement1 =
+            AccelerometerSensorMeasurement(ax, ay, az, bx, by, bz, timestamp1, SensorAccuracy.HIGH)
 
-        assertTrue(processor.process(measurement, timestamp))
+        // first measurement returns false because averaging filter need to initialize
+        assertFalse(processor.process(measurement1, timestamp1))
 
-        val slot = slot<DoubleArray>()
+        // seconds measurement already has an initialized averaging filter
+        val timestamp2 = System.nanoTime() + TIME_INTERVAL_NANOS
+        val measurement2 =
+            AccelerometerSensorMeasurement(ax, ay, az, bx, by, bz, timestamp2, SensorAccuracy.HIGH)
+
+        assertTrue(processor.process(measurement2, timestamp2))
+
+        verify(exactly = 1) {
+            averagingFilter.filter(
+                ax.toDouble() - bx.toDouble(),
+                ay.toDouble() - by.toDouble(),
+                az.toDouble() - bz.toDouble(),
+                any(),
+                timestamp1
+            )
+        }
+
+        val slot = MutableList(size = 2) { DoubleArray(3) }
         verify(exactly = 1) {
             averagingFilter.filter(
                 ax.toDouble() - bx.toDouble(),
                 ay.toDouble() - by.toDouble(),
                 az.toDouble() - bz.toDouble(),
                 capture(slot),
-                timestamp
+                timestamp2
             )
         }
 
-        val array = slot.captured
+        val array = slot.last()
         verify(exactly = 1) {
             listener.onProcessed(
                 processor,
                 array[1],
                 array[0],
                 -array[2],
-                timestamp,
+                timestamp2,
                 SensorAccuracy.HIGH
             )
         }
@@ -312,7 +374,7 @@ class AccelerometerGravityProcessorTest {
         assertEquals(array[1], processor.gx, 0.0)
         assertEquals(array[0], processor.gy, 0.0)
         assertEquals(-array[2], processor.gz, 0.0)
-        assertEquals(timestamp, processor.timestamp)
+        assertEquals(timestamp2, processor.timestamp)
         assertEquals(SensorAccuracy.HIGH, processor.accuracy)
 
         val gravity1 = processor.gravity
@@ -339,39 +401,65 @@ class AccelerometerGravityProcessorTest {
         val ax = randomizer.nextFloat()
         val ay = randomizer.nextFloat()
         val az = randomizer.nextFloat()
-        val timestamp = System.nanoTime()
-        val measurement = AccelerometerSensorMeasurement(
+        val timestamp1 = System.nanoTime()
+        val measurement1 = AccelerometerSensorMeasurement(
             ax,
             ay,
             az,
             null,
             null,
             null,
-            timestamp,
+            timestamp1,
             SensorAccuracy.HIGH
         )
 
-        assertTrue(processor.process(measurement))
+        // first measurement returns false because averaging filter need to initialize
+        assertFalse(processor.process(measurement1))
 
-        val slot = slot<DoubleArray>()
+        // seconds measurement already has an initialized averaging filter
+        val timestamp2 = System.nanoTime() + TIME_INTERVAL_NANOS
+        val measurement2 = AccelerometerSensorMeasurement(
+            ax,
+            ay,
+            az,
+            null,
+            null,
+            null,
+            timestamp2,
+            SensorAccuracy.HIGH
+        )
+
+        assertTrue(processor.process(measurement2, timestamp2))
+
+        verify(exactly = 1) {
+            averagingFilter.filter(
+                ax.toDouble(),
+                ay.toDouble(),
+                az.toDouble(),
+                any(),
+                timestamp1
+            )
+        }
+
+        val slot = MutableList(size = 2) { DoubleArray(3) }
         verify(exactly = 1) {
             averagingFilter.filter(
                 ax.toDouble(),
                 ay.toDouble(),
                 az.toDouble(),
                 capture(slot),
-                timestamp
+                timestamp2
             )
         }
 
-        val array = slot.captured
+        val array = slot.last()
         verify(exactly = 1) {
             listener.onProcessed(
                 processor,
                 array[1],
                 array[0],
                 -array[2],
-                timestamp,
+                timestamp2,
                 SensorAccuracy.HIGH
             )
         }
@@ -380,7 +468,7 @@ class AccelerometerGravityProcessorTest {
         assertEquals(array[1], processor.gx, 0.0)
         assertEquals(array[0], processor.gy, 0.0)
         assertEquals(-array[2], processor.gz, 0.0)
-        assertEquals(timestamp, processor.timestamp)
+        assertEquals(timestamp2, processor.timestamp)
         assertEquals(SensorAccuracy.HIGH, processor.accuracy)
 
         // reset
@@ -402,5 +490,9 @@ class AccelerometerGravityProcessorTest {
         val gravity2 = AccelerationTriad()
         processor.getGravity(gravity2)
         assertEquals(gravity1, gravity2)
+    }
+
+    private companion object {
+        const val TIME_INTERVAL_NANOS = 20_000_000
     }
 }

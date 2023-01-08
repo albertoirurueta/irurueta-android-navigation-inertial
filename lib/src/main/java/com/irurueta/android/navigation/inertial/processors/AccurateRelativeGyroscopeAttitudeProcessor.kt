@@ -68,7 +68,7 @@ class AccurateRelativeGyroscopeAttitudeProcessor(processorListener: OnProcessedL
         val result = if (!isFirst) {
             updateTriad(measurement)
 
-            val dt = timeIntervalEstimator.averageTimeInterval
+            val dt = timeIntervalSeconds
 
             quaternionStepIntegrator.integrate(
                 internalAttitude,

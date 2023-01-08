@@ -17,12 +17,8 @@ package com.irurueta.android.navigation.inertial.estimators.filter
 
 import android.os.SystemClock
 import com.irurueta.android.navigation.inertial.getPrivateProperty
-import com.irurueta.navigation.inertial.calibration.TimeIntervalEstimator
+import com.irurueta.android.navigation.inertial.setPrivateProperty
 import com.irurueta.statistics.UniformRandomizer
-import io.mockk.every
-import io.mockk.justRun
-import io.mockk.mockk
-import io.mockk.verify
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -39,6 +35,11 @@ class LowPassAveragingFilterTest {
 
         // check
         assertEquals(timeConstant, filter.timeConstant, 0.0)
+
+        val previousTimestamp: Long? =
+            getPrivateProperty(AveragingFilter::class, filter, "previousTimestamp")
+        requireNotNull(previousTimestamp)
+        assertEquals(-1L, previousTimestamp)
     }
 
     @Test
@@ -47,6 +48,11 @@ class LowPassAveragingFilterTest {
 
         // check
         assertEquals(AveragingFilter.DEFAULT_TIME_CONSTANT, filter.timeConstant, 0.0)
+
+        val previousTimestamp: Long? =
+            getPrivateProperty(AveragingFilter::class, filter, "previousTimestamp")
+        requireNotNull(previousTimestamp)
+        assertEquals(-1L, previousTimestamp)
     }
 
     @Test
@@ -56,17 +62,12 @@ class LowPassAveragingFilterTest {
         val filter1 = LowPassAveragingFilter(timeConstant)
 
         val timestamp = SystemClock.elapsedRealtimeNanos()
-        com.irurueta.android.navigation.inertial.setPrivateProperty(
-            AveragingFilter::class,
-            filter1,
-            "initialTimestamp",
-            timestamp
-        )
+        setPrivateProperty(AveragingFilter::class, filter1, "previousTimestamp", timestamp)
 
         // check
         assertEquals(
             timestamp,
-            getPrivateProperty(AveragingFilter::class, filter1, "initialTimestamp")
+            getPrivateProperty(AveragingFilter::class, filter1, "previousTimestamp")
         )
 
         val filter2 = LowPassAveragingFilter(filter1)
@@ -77,7 +78,7 @@ class LowPassAveragingFilterTest {
 
         assertEquals(
             timestamp,
-            getPrivateProperty(AveragingFilter::class, filter2, "initialTimestamp")
+            getPrivateProperty(AveragingFilter::class, filter2, "previousTimestamp")
         )
     }
 
@@ -95,19 +96,28 @@ class LowPassAveragingFilterTest {
     }
 
     @Test
-    fun filter_whenValidLength_returnsExpectedValues() {
+    fun filter_whenFirstMeasurement_returnsFalse() {
         val filter = LowPassAveragingFilter()
 
-        val timeIntervalEstimator = mockk<TimeIntervalEstimator>()
-        every { timeIntervalEstimator.averageTimeInterval }.returns(TIME_INTERVAL)
-        every { timeIntervalEstimator.addTimestamp(any<Double>()) }.returns(true)
-        every { timeIntervalEstimator.numberOfProcessedSamples }.returnsMany(0, 1, 2)
-        com.irurueta.android.navigation.inertial.setPrivateProperty(
-            AveragingFilter::class,
-            filter,
-            "timeIntervalEstimator",
-            timeIntervalEstimator
-        )
+        val previousTimestamp: Long? =
+            getPrivateProperty(AveragingFilter::class, filter, "previousTimestamp")
+        requireNotNull(previousTimestamp)
+        assertEquals(-1L, previousTimestamp)
+
+        val randomizer = UniformRandomizer()
+        val valueX1 = randomizer.nextDouble()
+        val valueY1 = randomizer.nextDouble()
+        val valueZ1 = randomizer.nextDouble()
+        val output = DoubleArray(AveragingFilter.OUTPUT_LENGTH)
+        val timestamp = SystemClock.elapsedRealtimeNanos()
+
+        // filter one time
+        assertFalse(filter.filter(valueX1, valueY1, valueZ1, output, timestamp))
+    }
+
+    @Test
+    fun filter_whenValidLengthAndNotFirstTime_returnsExpectedValues() {
+        val filter = LowPassAveragingFilter()
 
         val alpha =
             AveragingFilter.DEFAULT_TIME_CONSTANT / (AveragingFilter.DEFAULT_TIME_CONSTANT + TIME_INTERVAL)
@@ -124,9 +134,9 @@ class LowPassAveragingFilterTest {
         assertFalse(filter.filter(valueX1, valueY1, valueZ1, output, timestamp))
 
         // check
-        assertEquals(beta * valueX1, output[0], 0.0)
-        assertEquals(beta * valueY1, output[1], 0.0)
-        assertEquals(beta * valueZ1, output[2], 0.0)
+        assertEquals(0.0, output[0], 0.0)
+        assertEquals(0.0, output[1], 0.0)
+        assertEquals(0.0, output[2], 0.0)
 
         // filter second time
         val outputX1 = output[0]
@@ -152,39 +162,97 @@ class LowPassAveragingFilterTest {
     }
 
     @Test
-    fun reset_resetsTimeInterval() {
+    fun filter_whenZeroTimeInterval_returnsFalse() {
+        val filter = LowPassAveragingFilter()
+
+        val alpha =
+            AveragingFilter.DEFAULT_TIME_CONSTANT / (AveragingFilter.DEFAULT_TIME_CONSTANT + TIME_INTERVAL)
+        val beta = 1.0 - alpha
+
+        val randomizer = UniformRandomizer()
+        val valueX1 = randomizer.nextDouble()
+        val valueY1 = randomizer.nextDouble()
+        val valueZ1 = randomizer.nextDouble()
+        val output = DoubleArray(AveragingFilter.OUTPUT_LENGTH)
+        val timestamp = SystemClock.elapsedRealtimeNanos()
+
+        // filter one time
+        assertFalse(filter.filter(valueX1, valueY1, valueZ1, output, timestamp))
+
+        // check
+        assertEquals(0.0, output[0], 0.0)
+        assertEquals(0.0, output[1], 0.0)
+        assertEquals(0.0, output[2], 0.0)
+
+        // filter second time
+        val outputX1 = output[0]
+        val outputY1 = output[1]
+        val outputZ1 = output[2]
+        val valueX2 = randomizer.nextDouble()
+        val valueY2 = randomizer.nextDouble()
+        val valueZ2 = randomizer.nextDouble()
+        assertTrue(
+            filter.filter(
+                valueX2,
+                valueY2,
+                valueZ2,
+                output,
+                timestamp + TIME_INTERVAL_NANOS
+            )
+        )
+
+        // check
+        assertEquals(alpha * outputX1 + beta * valueX2, output[0], 0.0)
+        assertEquals(alpha * outputY1 + beta * valueY2, output[1], 0.0)
+        assertEquals(alpha * outputZ1 + beta * valueZ2, output[2], 0.0)
+
+        // filter third time (with zero time interval respect previous one sample)
+        val outputX2 = output[0]
+        val outputY2 = output[1]
+        val outputZ2 = output[2]
+        val valueX3 = randomizer.nextDouble()
+        val valueY3 = randomizer.nextDouble()
+        val valueZ3 = randomizer.nextDouble()
+        assertFalse(
+            filter.filter(
+                valueX3,
+                valueY3,
+                valueZ3,
+                output,
+                timestamp + TIME_INTERVAL_NANOS
+            )
+        )
+
+        // check
+        assertEquals(outputX2, output[0], 0.0)
+        assertEquals(outputY2, output[1], 0.0)
+        assertEquals(outputZ2, output[2], 0.0)
+    }
+
+    @Test
+    fun reset_resetsPreviousTimestamp() {
         val filter = LowPassAveragingFilter()
 
         val timestamp = SystemClock.elapsedRealtimeNanos()
-        com.irurueta.android.navigation.inertial.setPrivateProperty(
+        setPrivateProperty(
             AveragingFilter::class,
             filter,
-            "initialTimestamp",
+            "previousTimestamp",
             timestamp
         )
 
         // check
         assertEquals(
             timestamp,
-            getPrivateProperty(AveragingFilter::class, filter, "initialTimestamp")
-        )
-
-        val timeIntervalEstimator = mockk<TimeIntervalEstimator>()
-        every { timeIntervalEstimator.reset() }.returns(true)
-        com.irurueta.android.navigation.inertial.setPrivateProperty(
-            AveragingFilter::class,
-            filter,
-            "timeIntervalEstimator",
-            timeIntervalEstimator
+            getPrivateProperty(AveragingFilter::class, filter, "previousTimestamp")
         )
 
         filter.reset()
 
         // check
-        verify(exactly = 1) { timeIntervalEstimator.reset() }
         assertEquals(
-            0L,
-            getPrivateProperty(AveragingFilter::class, filter, "initialTimestamp")
+            -1L,
+            getPrivateProperty(AveragingFilter::class, filter, "previousTimestamp")
         )
     }
 
@@ -193,46 +261,27 @@ class LowPassAveragingFilterTest {
         val filter1 = LowPassAveragingFilter()
 
         val timestamp = SystemClock.elapsedRealtimeNanos()
-        com.irurueta.android.navigation.inertial.setPrivateProperty(
+        setPrivateProperty(
             AveragingFilter::class,
             filter1,
-            "initialTimestamp",
+            "previousTimestamp",
             timestamp
         )
 
         // check
         assertEquals(
             timestamp,
-            getPrivateProperty(AveragingFilter::class, filter1, "initialTimestamp")
-        )
-
-        val timeIntervalEstimator1 = mockk<TimeIntervalEstimator>()
-        justRun { timeIntervalEstimator1.copyFrom(any()) }
-        com.irurueta.android.navigation.inertial.setPrivateProperty(
-            AveragingFilter::class,
-            filter1,
-            "timeIntervalEstimator",
-            timeIntervalEstimator1
+            getPrivateProperty(AveragingFilter::class, filter1, "previousTimestamp")
         )
 
         val filter2 = LowPassAveragingFilter()
 
-        val timeIntervalEstimator2 = mockk<TimeIntervalEstimator>()
-        justRun { timeIntervalEstimator2.copyFrom(any()) }
-        com.irurueta.android.navigation.inertial.setPrivateProperty(
-            AveragingFilter::class,
-            filter2,
-            "timeIntervalEstimator",
-            timeIntervalEstimator2
-        )
-
         filter2.copyFrom(filter1)
 
         // check
-        verify(exactly = 1) { timeIntervalEstimator2.copyFrom(timeIntervalEstimator1) }
         assertEquals(
             timestamp,
-            getPrivateProperty(AveragingFilter::class, filter2, "initialTimestamp")
+            getPrivateProperty(AveragingFilter::class, filter2, "previousTimestamp")
         )
         assertEquals(filter1.timeConstant, filter2.timeConstant, 0.0)
     }
@@ -242,52 +291,33 @@ class LowPassAveragingFilterTest {
         val filter1 = LowPassAveragingFilter()
 
         val timestamp = SystemClock.elapsedRealtimeNanos()
-        com.irurueta.android.navigation.inertial.setPrivateProperty(
+        setPrivateProperty(
             AveragingFilter::class,
             filter1,
-            "initialTimestamp",
+            "previousTimestamp",
             timestamp
         )
 
         // check
         assertEquals(
             timestamp,
-            getPrivateProperty(AveragingFilter::class, filter1, "initialTimestamp")
-        )
-
-        val timeIntervalEstimator1 = mockk<TimeIntervalEstimator>()
-        justRun { timeIntervalEstimator1.copyFrom(any()) }
-        com.irurueta.android.navigation.inertial.setPrivateProperty(
-            AveragingFilter::class,
-            filter1,
-            "timeIntervalEstimator",
-            timeIntervalEstimator1
+            getPrivateProperty(AveragingFilter::class, filter1, "previousTimestamp")
         )
 
         val filter2 = LowPassAveragingFilter()
 
-        val timeIntervalEstimator2 = mockk<TimeIntervalEstimator>()
-        justRun { timeIntervalEstimator2.copyFrom(any()) }
-        com.irurueta.android.navigation.inertial.setPrivateProperty(
-            AveragingFilter::class,
-            filter2,
-            "timeIntervalEstimator",
-            timeIntervalEstimator2
-        )
-
         filter1.copyTo(filter2)
 
         // check
-        verify(exactly = 1) { timeIntervalEstimator2.copyFrom(timeIntervalEstimator1) }
         assertEquals(
             timestamp,
-            getPrivateProperty(AveragingFilter::class, filter2, "initialTimestamp")
+            getPrivateProperty(AveragingFilter::class, filter2, "previousTimestamp")
         )
         assertEquals(filter1.timeConstant, filter2.timeConstant, 0.0)
     }
 
     private companion object {
         const val TIME_INTERVAL = 0.02
-        const val TIME_INTERVAL_NANOS = 20000000
+        const val TIME_INTERVAL_NANOS = 20_000_000
     }
 }

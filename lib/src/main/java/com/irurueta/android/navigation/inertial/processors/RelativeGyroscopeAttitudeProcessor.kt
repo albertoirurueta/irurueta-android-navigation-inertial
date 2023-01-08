@@ -48,7 +48,7 @@ class RelativeGyroscopeAttitudeProcessor(processorListener: OnProcessedListener?
         return if (!isFirst) {
             updateTriad(measurement)
 
-            val dt = timeIntervalEstimator.averageTimeInterval
+            val dt = timeIntervalSeconds
 
             val roll = triad.valueX * dt
             val pitch = triad.valueY * dt
