@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2023 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,53 +19,53 @@ import com.irurueta.statistics.UniformRandomizer
 import org.junit.Assert.*
 import org.junit.Test
 
-class AccelerometerAndMagnetometerSyncedSensorMeasurementTest {
+class GravityAndMagnetometerSyncedSensorMeasurementTest {
 
     @Test
     fun constructor_whenNoParameters_setsExpectedValues() {
-        val syncedMeasurement = AccelerometerAndMagnetometerSyncedSensorMeasurement()
+        val syncedMeasurement = GravityAndMagnetometerSyncedSensorMeasurement()
 
         // check
-        assertNull(syncedMeasurement.accelerometerMeasurement)
+        assertNull(syncedMeasurement.gravityMeasurement)
         assertNull(syncedMeasurement.magnetometerMeasurement)
         assertEquals(0L, syncedMeasurement.timestamp)
     }
 
     @Test
     fun constructor_whenAllParameters_setsExpectedValues() {
-        val accelerometerMeasurement = AccelerometerSensorMeasurement()
+        val gravityMeasurement = GravitySensorMeasurement()
         val magnetometerMeasurement = MagnetometerSensorMeasurement()
-        val timestamp = UniformRandomizer().nextLong()
-        val syncedMeasurement = AccelerometerAndMagnetometerSyncedSensorMeasurement(
-            accelerometerMeasurement,
+        val timestamp = System.nanoTime()
+        val syncedMeasurement = GravityAndMagnetometerSyncedSensorMeasurement(
+            gravityMeasurement,
             magnetometerMeasurement,
             timestamp
         )
 
         // check
-        assertSame(accelerometerMeasurement, syncedMeasurement.accelerometerMeasurement)
+        assertSame(gravityMeasurement, syncedMeasurement.gravityMeasurement)
         assertSame(magnetometerMeasurement, syncedMeasurement.magnetometerMeasurement)
         assertEquals(timestamp, syncedMeasurement.timestamp)
     }
 
     @Test
-    fun accelerometerMeasurement_setsExpectedValue() {
-        val syncedMeasurement = AccelerometerAndMagnetometerSyncedSensorMeasurement()
+    fun gravityMeasurement_setsExpectedValue() {
+        val syncedMeasurement = GravityAndMagnetometerSyncedSensorMeasurement()
 
         // check default value
-        assertNull(syncedMeasurement.accelerometerMeasurement)
+        assertNull(syncedMeasurement.gravityMeasurement)
 
         // set new value
-        val accelerometerMeasurement = AccelerometerSensorMeasurement()
-        syncedMeasurement.accelerometerMeasurement = accelerometerMeasurement
+        val gravityMeasurement = GravitySensorMeasurement()
+        syncedMeasurement.gravityMeasurement = gravityMeasurement
 
         // check
-        assertSame(accelerometerMeasurement, syncedMeasurement.accelerometerMeasurement)
+        assertSame(gravityMeasurement, syncedMeasurement.gravityMeasurement)
     }
 
     @Test
     fun magnetometerMeasurement_setsExpectedValue() {
-        val syncedMeasurement = AccelerometerAndMagnetometerSyncedSensorMeasurement()
+        val syncedMeasurement = GravityAndMagnetometerSyncedSensorMeasurement()
 
         // check default value
         assertNull(syncedMeasurement.magnetometerMeasurement)
@@ -80,7 +80,7 @@ class AccelerometerAndMagnetometerSyncedSensorMeasurementTest {
 
     @Test
     fun timestamp_setsExpectedValue() {
-        val syncedMeasurement = AccelerometerAndMagnetometerSyncedSensorMeasurement()
+        val syncedMeasurement = GravityAndMagnetometerSyncedSensorMeasurement()
 
         // check default value
         assertEquals(0L, syncedMeasurement.timestamp)

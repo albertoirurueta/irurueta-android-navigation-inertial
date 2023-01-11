@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2023 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,23 +16,23 @@
 package com.irurueta.android.navigation.inertial.collectors
 
 /**
- * Contains synced gravity and gyroscope measurements, which are assumed to belong to
- * the same timestamp.
+ * Contains synced gravity and magnetometer measurements, which are assumed to belong to the
+ * same timestamp.
  *
  * @property gravityMeasurement a gravity measurement. Notice that this instance might be reused
- * between consecutive [GravityAndGyroscopeSyncedSensorMeasurement] measurements, and
+ * between consecutive [GravityAndMagnetometerSyncedSensorMeasurement] measurements, and
  * that its timestamp might differ from the global [timestamp] property of this
  * [SyncedSensorMeasurement].
- * @property gyroscopeMeasurement a gyroscope measurement. Notice that this instance might be reused
- * between consecutive [GravityAndGyroscopeSyncedSensorMeasurement] measurements, and
+ * @property magnetometerMeasurement a magnetometer measurement. Notice that this instance might be
+ * reused between consecutive [GravityAndMagnetometerSyncedSensorMeasurement] measurements, and
  * that its timestamp might differ from the global [timestamp] property of this
  * [SyncedSensorMeasurement].
  * @property timestamp timestamp expressed in nanoseconds following
  * [android.os.SystemClock.elapsedRealtimeNanos] monotonic clock when synced [SensorMeasurement] are
  * assumed to occur.
  */
-class GravityAndGyroscopeSyncedSensorMeasurement(
+class GravityAndMagnetometerSyncedSensorMeasurement(
     var gravityMeasurement: GravitySensorMeasurement? = null,
-    var gyroscopeMeasurement: GyroscopeSensorMeasurement? = null,
+    var magnetometerMeasurement: MagnetometerSensorMeasurement? = null,
     timestamp: Long = 0L
 ) : SyncedSensorMeasurement(timestamp)

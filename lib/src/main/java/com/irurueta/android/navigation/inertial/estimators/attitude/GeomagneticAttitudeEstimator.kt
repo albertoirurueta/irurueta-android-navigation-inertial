@@ -48,8 +48,7 @@ import java.util.*
  * @property magnetometerSensorType One of the supported magnetometer sensor types.
  * @property accelerometerAveragingFilter an averaging filter for accelerometer samples to obtain
  * sensed gravity component of specific force. (Only used if [useAccelerometer] is true).
- * @property timestamp Timestamp when World Magnetic Model will be evaluated to obtain current.
- * Only taken into account if [useWorldMagneticModel] is tue.
+ * @property timestamp Timestamp when World Magnetic Model will be evaluated to obtain current
  * magnetic declination. Only taken into account if [useWorldMagneticModel] is true.
  * @property estimateCoordinateTransformation true to estimate coordinate transformation, false
  * otherwise. If not needed, it can be disabled to improve performance and decrease cpu load.
@@ -89,7 +88,7 @@ class GeomagneticAttitudeEstimator private constructor(
      * @param worldMagneticModel Earth's magnetic model. Null to use default model
      * when [useWorldMagneticModel] is true. If [useWorldMagneticModel] is false, this is ignored.
      * @param timestamp Timestamp when World Magnetic Model will be evaluated to obtain current.
-     * Only taken into account if [useWorldMagneticModel] is tue.
+     * Only taken into account if [useWorldMagneticModel] is true.
      * @param useWorldMagneticModel true so that world magnetic model is taken into account to
      * adjust attitude yaw angle by current magnetic declination based on current World Magnetic
      * Model, location and timestamp, false to ignore declination.
@@ -281,6 +280,8 @@ class GeomagneticAttitudeEstimator private constructor(
     /**
      * Indicates whether world magnetic model is taken into account to adjust attitude yaw angle by
      * current magnetic declination based on current World Magnetic Model, location and timestamp.
+     *
+     * @throws IllegalStateException if estimator is running.
      */
     var useWorldMagneticModel: Boolean = false
         @Throws(IllegalStateException::class)

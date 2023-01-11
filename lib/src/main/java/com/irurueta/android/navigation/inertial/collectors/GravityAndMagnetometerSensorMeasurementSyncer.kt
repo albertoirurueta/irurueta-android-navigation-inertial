@@ -21,30 +21,23 @@ import android.os.SystemClock
 import java.util.*
 
 /**
- * Syncs gravity and gyroscope sensor measurements in case they arrive with certain delay.
+ * Syncs gravity and magnetometer sensor measurements in case they arrive with certain delay.
  *
  * Typically when synchronization is needed is for correct pose estimation, for attitude estimation,
  * not synced sensor measurements can also be used to achieve a reasonable estimation.
  *
  * @property context Android context.
- * @property gyroscopeSensorType One of the supported gyroscope sensor types.
+ * @property magnetometerSensorType One of the supported magnetometer sensor types.
  * @property gravitySensorDelay Delay of gravity sensor between samples.
- * @property gyroscopeSensorDelay Delay of gyroscope sensor between samples.
+ * @property magnetometerSensorDelay Delay of magnetometer sensor between samples.
  * @property gravityCapacity capacity of gravity buffer.
- * @property gyroscopeCapacity capacity of gyroscope buffer.
- * @property staleOffsetNanos offset respect most recent received timestamp of a measurement to
- * consider the measurement as stale so that it is skipped from synced measurement processing and
- * returned back from buffer to cache of measurements.
- * @property staleDetectionEnabled true to enable stale measurement detection, false otherwise.
+ * @property magnetometerCapacity capacity of magnetometer buffer.
  * @property gravityStartOffsetEnabled indicates whether gravity start offset will be
  * computed when first measurement is received. True indicates that offset is computed, false
  * assumes that offset is null.
- * @property gyroscopeStartOffsetEnabled indicates whether gyroscope start offset will be computed
- * when first measurement is received. True indicates that offset is computed, false assumes that
- * offset is null.
- * @property stopWhenFilledBuffer true to stop syncer when any buffer completely fills, false to
- * continue processing measurements at the expense of loosing old data. This will be notified using
- * [bufferFilledListener].
+ * @property magnetometerStartOffsetEnabled indicates whether magnetometer start offset will be
+ * computed when first measurement is received. True indicates that offset is computed, false
+ * assumes that offset is null.
  * @property staleOffsetNanos offset respect most recent received timestamp of a measurement to
  * consider the measurement as stale so that it is skipped from synced measurement processing and
  * returned back from buffer to cache of measurements.
@@ -58,23 +51,23 @@ import java.util.*
  * @property staleDetectedMeasurementsListener listener to notify when stale measurements are found.
  * This might indicate that buffers are too small and data is not being properly synced.
  */
-class GravityAndGyroscopeSensorMeasurementSyncer(
+class GravityAndMagnetometerSensorMeasurementSyncer(
     context: Context,
-    val gyroscopeSensorType: GyroscopeSensorType = GyroscopeSensorType.GYROSCOPE_UNCALIBRATED,
+    val magnetometerSensorType: MagnetometerSensorType = MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED,
     val gravitySensorDelay: SensorDelay = SensorDelay.FASTEST,
-    val gyroscopeSensorDelay: SensorDelay = SensorDelay.FASTEST,
+    val magnetometerSensorDelay: SensorDelay = SensorDelay.FASTEST,
     val gravityCapacity: Int = DEFAULT_GRAVITY_CAPACITY,
-    val gyroscopeCapacity: Int = DEFAULT_GYROSCOPE_CAPACITY,
+    val magnetometerCapacity: Int = DEFAULT_MAGNETOMETER_CAPACITY,
     val gravityStartOffsetEnabled: Boolean = false,
-    val gyroscopeStartOffsetEnabled: Boolean = false,
+    val magnetometerStartOffsetEnabled: Boolean = false,
     stopWhenFilledBuffer: Boolean = true,
     staleOffsetNanos: Long = DEFAULT_STALE_OFFSET_NANOS,
     staleDetectionEnabled: Boolean = true,
-    accuracyChangedListener: OnAccuracyChangedListener<GravityAndGyroscopeSyncedSensorMeasurement, GravityAndGyroscopeSensorMeasurementSyncer>? = null,
-    bufferFilledListener: OnBufferFilledListener<GravityAndGyroscopeSyncedSensorMeasurement, GravityAndGyroscopeSensorMeasurementSyncer>? = null,
-    syncedMeasurementListener: OnSyncedMeasurementsListener<GravityAndGyroscopeSyncedSensorMeasurement, GravityAndGyroscopeSensorMeasurementSyncer>? = null,
-    staleDetectedMeasurementsListener: OnStaleDetectedMeasurementsListener<GravityAndGyroscopeSyncedSensorMeasurement, GravityAndGyroscopeSensorMeasurementSyncer>? = null
-) : SensorMeasurementSyncer<GravityAndGyroscopeSyncedSensorMeasurement, GravityAndGyroscopeSensorMeasurementSyncer>(
+    accuracyChangedListener: OnAccuracyChangedListener<GravityAndMagnetometerSyncedSensorMeasurement, GravityAndMagnetometerSensorMeasurementSyncer>? = null,
+    bufferFilledListener: OnBufferFilledListener<GravityAndMagnetometerSyncedSensorMeasurement, GravityAndMagnetometerSensorMeasurementSyncer>? = null,
+    syncedMeasurementListener: OnSyncedMeasurementsListener<GravityAndMagnetometerSyncedSensorMeasurement, GravityAndMagnetometerSensorMeasurementSyncer>? = null,
+    staleDetectedMeasurementsListener: OnStaleDetectedMeasurementsListener<GravityAndMagnetometerSyncedSensorMeasurement, GravityAndMagnetometerSensorMeasurementSyncer>? = null
+) : SensorMeasurementSyncer<GravityAndMagnetometerSyncedSensorMeasurement, GravityAndMagnetometerSensorMeasurementSyncer>(
     context,
     stopWhenFilledBuffer,
     staleOffsetNanos,
@@ -84,6 +77,7 @@ class GravityAndGyroscopeSensorMeasurementSyncer(
     syncedMeasurementListener,
     staleDetectedMeasurementsListener
 ) {
+
     /**
      * Gravity measurements to be processed in next batch.
      */
@@ -91,10 +85,10 @@ class GravityAndGyroscopeSensorMeasurementSyncer(
         ArrayDeque<GravitySensorMeasurement>(gravityCapacity)
 
     /**
-     * Gyroscope measurements to be processed in next batch.
+     * Magnetometer measurements to be processed in next batch.
      */
-    private val gyroscopeMeasurements =
-        ArrayDeque<GyroscopeSensorMeasurement>(gyroscopeCapacity)
+    private val magnetometerMeasurements =
+        ArrayDeque<MagnetometerSensorMeasurement>(magnetometerCapacity)
 
     /**
      * List of gravity measurements that have already been processed and can be returned back
@@ -104,16 +98,17 @@ class GravityAndGyroscopeSensorMeasurementSyncer(
         ArrayDeque<GravitySensorMeasurement>(gravityCapacity)
 
     /**
-     * List of gyroscope measurements that have already been processed and can be returned back to
-     * the cache af available measurements.
+     * List of magnetometer measurements that have already been processed and can be returned back
+     * to the cache of available measurements.
      */
-    private val alreadyProcessedGyroscopeMeasurements =
-        ArrayDeque<GyroscopeSensorMeasurement>(gyroscopeCapacity)
+    private val alreadyProcessedMagnetometerMeasurements =
+        ArrayDeque<MagnetometerSensorMeasurement>(magnetometerCapacity)
 
     /**
-     * List of found gyroscope measurements.
+     * List of found magnetometer measurements.
      */
-    private val foundGyroscopeMeasurements = ArrayDeque<GyroscopeSensorMeasurement>()
+    private val foundMagnetometerMeasurements =
+        ArrayDeque<MagnetometerSensorMeasurement>(magnetometerCapacity)
 
     /**
      * Previous gravity measurement. This instance is reused for efficiency reasons.
@@ -121,9 +116,9 @@ class GravityAndGyroscopeSensorMeasurementSyncer(
     private val previousGravityMeasurement = GravitySensorMeasurement()
 
     /**
-     * Previous gyroscope measurement. This instance is reused for efficiency reasons.
+     * Previous magnetometer measurement. This instance is reused for efficiency reasons.
      */
-    private val previousGyroscopeMeasurement = GyroscopeSensorMeasurement()
+    private val previousMagnetometerMeasurement = MagnetometerSensorMeasurement()
 
     /**
      * Flag indicating whether a previous gravity measurement has been processed.
@@ -131,9 +126,9 @@ class GravityAndGyroscopeSensorMeasurementSyncer(
     private var hasPreviousGravityMeasurement = false
 
     /**
-     * Flag indicating whether a previous gyroscope measurement has been processed.
+     * Flag indicating whether a previous magnetometer measurement has been processed.
      */
-    private var hasPreviousGyroscopeMeasurement = false
+    private var hasPreviousMagnetometerMeasurement = false
 
     /**
      * Timestamp of last notified synced measurement. This is used to ensure that synced
@@ -147,9 +142,9 @@ class GravityAndGyroscopeSensorMeasurementSyncer(
     private var lastNotifiedGravityTimestamp = 0L
 
     /**
-     * Timestamp of last gyroscope measurement that was processed and notified.
+     * Timestamp of last magnetometer measurement that was processed and notified.
      */
-    private var lastNotifiedGyroscopeTimestamp = 0L
+    private var lastNotifiedMagnetometerTimestamp = 0L
 
     /**
      * Internal buffered gravity sensor collector.
@@ -163,14 +158,14 @@ class GravityAndGyroscopeSensorMeasurementSyncer(
         stopWhenFilledBuffer,
         accuracyChangedListener = { _, accuracy ->
             accuracyChangedListener?.onAccuracyChanged(
-                this@GravityAndGyroscopeSensorMeasurementSyncer,
+                this@GravityAndMagnetometerSensorMeasurementSyncer,
                 SensorType.GRAVITY,
                 accuracy
             )
         },
         bufferFilledListener = {
             bufferFilledListener?.onBufferFilled(
-                this@GravityAndGyroscopeSensorMeasurementSyncer,
+                this@GravityAndMagnetometerSensorMeasurementSyncer,
                 SensorType.GRAVITY
             )
             if (stopWhenFilledBuffer) {
@@ -178,7 +173,7 @@ class GravityAndGyroscopeSensorMeasurementSyncer(
             }
         },
         measurementListener = { collector, _, bufferPosition ->
-            synchronized(this@GravityAndGyroscopeSensorMeasurementSyncer) {
+            synchronized(this@GravityAndMagnetometerSensorMeasurementSyncer) {
                 val measurementsBeforePosition =
                     collector.getMeasurementsBeforePosition(bufferPosition)
                 val lastTimestamp = measurementsBeforePosition.lastOrNull()?.timestamp
@@ -194,42 +189,42 @@ class GravityAndGyroscopeSensorMeasurementSyncer(
     )
 
     /**
-     * Internal buffered gyroscope sensor collector.
-     * Collects and buffers gyroscope data.
+     * Internal buffered magnetometer sensor collector.
+     * Collects and buffers magnetometer data.
      */
-    private val gyroscopeSensorCollector = BufferedGyroscopeSensorCollector(
+    private val magnetometerSensorCollector = BufferedMagnetometerSensorCollector(
         context,
-        gyroscopeSensorType,
-        gyroscopeSensorDelay,
-        gyroscopeCapacity,
-        gyroscopeStartOffsetEnabled,
+        magnetometerSensorType,
+        magnetometerSensorDelay,
+        magnetometerCapacity,
+        magnetometerStartOffsetEnabled,
         stopWhenFilledBuffer,
         accuracyChangedListener = { _, accuracy ->
             accuracyChangedListener?.onAccuracyChanged(
-                this@GravityAndGyroscopeSensorMeasurementSyncer,
-                SensorType.from(gyroscopeSensorType),
+                this@GravityAndMagnetometerSensorMeasurementSyncer,
+                SensorType.from(magnetometerSensorType),
                 accuracy
             )
         },
         bufferFilledListener = {
             bufferFilledListener?.onBufferFilled(
-                this@GravityAndGyroscopeSensorMeasurementSyncer,
-                SensorType.from(gyroscopeSensorType)
+                this@GravityAndMagnetometerSensorMeasurementSyncer,
+                SensorType.from(magnetometerSensorType)
             )
             if (stopWhenFilledBuffer) {
                 stop()
             }
         },
         measurementListener = { collector, _, _ ->
-            synchronized(this@GravityAndGyroscopeSensorMeasurementSyncer) {
+            synchronized(this@GravityAndMagnetometerSensorMeasurementSyncer) {
                 val mostRecentTimestamp =
-                    this@GravityAndGyroscopeSensorMeasurementSyncer.mostRecentTimestamp
+                    this@GravityAndMagnetometerSensorMeasurementSyncer.mostRecentTimestamp
                 if (mostRecentTimestamp != null) {
                     val measurementsBeforeTimestamp =
                         collector.getMeasurementsBeforeTimestamp(mostRecentTimestamp)
                     if (measurementsBeforeTimestamp.isNotEmpty()) {
                         // copy measurements
-                        copyToGyroscopeMeasurements(measurementsBeforeTimestamp)
+                        copyToMagnetometerMeasurements(measurementsBeforeTimestamp)
                     }
                 }
             }
@@ -239,14 +234,14 @@ class GravityAndGyroscopeSensorMeasurementSyncer(
     /**
      * Synced measurement to be reused for efficiency purposes.
      */
-    override val syncedMeasurement = GravityAndGyroscopeSyncedSensorMeasurement(
+    override val syncedMeasurement = GravityAndMagnetometerSyncedSensorMeasurement(
         GravitySensorMeasurement(),
-        GyroscopeSensorMeasurement(),
+        MagnetometerSensorMeasurement(),
         0L
     )
 
     /**
-     * Gets gravity sensor being used to obtain measurements or null if not available.
+     * Gets magnetometer sensor being used to obtain measurements or null if not available.
      * This can be used to obtain additional information about the sensor.
      * @see gravitySensorAvailable
      */
@@ -254,12 +249,12 @@ class GravityAndGyroscopeSensorMeasurementSyncer(
         get() = gravitySensorCollector.sensor
 
     /**
-     * Gets gyroscope sensor being used to obtain measurements or null if not available.
+     * Gets magnetometer sensor being used to obtain measurements or null if not available.
      * This can be used to obtain additional information about the sensor.
-     * @see gyroscopeSensorAvailable
+     * @see magnetometerSensorAvailable
      */
-    val gyroscopeSensor: Sensor?
-        get() = gyroscopeSensorCollector.sensor
+    val magnetometerSensor: Sensor?
+        get() = magnetometerSensorCollector.sensor
 
     /**
      * Indicates whether requested gravity sensor is available or not.
@@ -268,42 +263,42 @@ class GravityAndGyroscopeSensorMeasurementSyncer(
         get() = gravitySensorCollector.sensorAvailable
 
     /**
-     * Indicates whether requested gyroscope sensor is available or not.
+     * Indicates whether requested magnetometer sensor is available or not.
      */
-    val gyroscopeSensorAvailable: Boolean
-        get() = gyroscopeSensorCollector.sensorAvailable
+    val magnetometerSensorAvailable: Boolean
+        get() = magnetometerSensorCollector.sensorAvailable
 
     /**
      * Gets initial gravity offset expressed in nano seconds between first received
-     * measurement timestamp and start time expressed in the monotonically increasing system clock
+     * measurement timestamp and start time expressed in monotonically increasing system clock
      * obtained by [SystemClock.elapsedRealtimeNanos].
      */
     val gravityStartOffset: Long?
         get() = gravitySensorCollector.startOffset
 
     /**
-     * Gets initial gyroscope offset expressed in nano seconds between first received
+     * Gets initial magnetometer offset expressed in nano seconds between first received
      * measurement timestamp and start time expressed in the monotonically increasing system clock
-     * obtained by [SystemClock.elapsedRealtimeNanos].
+     * obtained by [SystemClock.elapsedRealtimeNanos]
      */
-    val gyroscopeStartOffset: Long?
-        get() = gyroscopeSensorCollector.startOffset
+    val magnetometerStartOffset: Long?
+        get() = magnetometerSensorCollector.startOffset
 
     /**
      * Gets gravity collector current usage as a value between 0.0 and 1.0.
-     * 0.0 indicates that collector buffer is empty and no measurement has yet been received.
-     * 1.0 indicates that collector buffer is full.
+     * 0.0 indicates that buffer is empty and no measurement has yet been received.
+     * 1.0 indicates that buffer is full.
      */
     val gravityCollectorUsage: Float
         get() = gravitySensorCollector.usage
 
     /**
-     * Gets gyroscope collector current usage as a value between 0.0 and 1.0.
-     * 0.0 indicates that collector buffer is empty and no measurement has yet been received.
-     * 1.0 indicates that collector buffer is full.
+     * Gets magnetometer collector current usage as a value between 0.0 and 1.0.
+     * 0.0 indicates that buffer is empty and no measurement has yet been received.
+     * 1.0 indicates that buffer is full.
      */
-    val gyroscopeCollectorUsage: Float
-        get() = gyroscopeSensorCollector.usage
+    val magnetometerCollectorUsage: Float
+        get() = magnetometerSensorCollector.usage
 
     /**
      * Gets gravity buffer current usage as a value between 0.0 and 1.0.
@@ -314,12 +309,12 @@ class GravityAndGyroscopeSensorMeasurementSyncer(
         get() = gravityMeasurements.size.toFloat() / gravityCapacity.toFloat()
 
     /**
-     * Gets gyroscope buffer current usage as a value between 0.0 and 1.0.
-     * 0.0 indicates that buffer is empty and no measurement has yet been received.
+     * Gets magnetometer buffer current usage as a value between 0.0 and 1.0.
+     * 0.0 indicates that buffer is empty and no measurement has yet ben received.
      * 1.0 indicates that buffer is full.
      */
-    val gyroscopeUsage: Float
-        get() = gyroscopeMeasurements.size.toFloat() / gyroscopeCapacity.toFloat()
+    val magnetometerUsage: Float
+        get() = magnetometerMeasurements.size.toFloat() / magnetometerCapacity.toFloat()
 
     /**
      * Starts collecting and syncing sensor measurements.
@@ -336,7 +331,7 @@ class GravityAndGyroscopeSensorMeasurementSyncer(
 
         this.startTimestamp = startTimestamp
         running = if (gravitySensorCollector.start(startTimestamp)
-            && gyroscopeSensorCollector.start(startTimestamp)
+            && magnetometerSensorCollector.start(startTimestamp)
         ) {
             true
         } else {
@@ -353,10 +348,10 @@ class GravityAndGyroscopeSensorMeasurementSyncer(
     @Synchronized
     override fun stop() {
         gravitySensorCollector.stop()
-        gyroscopeSensorCollector.stop()
+        magnetometerSensorCollector.stop()
 
         gravityMeasurements.clear()
-        gyroscopeMeasurements.clear()
+        magnetometerMeasurements.clear()
 
         numberOfProcessedMeasurements = 0
         mostRecentTimestamp = null
@@ -364,10 +359,10 @@ class GravityAndGyroscopeSensorMeasurementSyncer(
         running = false
 
         hasPreviousGravityMeasurement = false
-        hasPreviousGyroscopeMeasurement = false
+        hasPreviousMagnetometerMeasurement = false
         lastNotifiedTimestamp = 0L
         lastNotifiedGravityTimestamp = 0L
-        lastNotifiedGyroscopeTimestamp = 0L
+        lastNotifiedMagnetometerTimestamp = 0L
     }
 
     /**
@@ -388,9 +383,9 @@ class GravityAndGyroscopeSensorMeasurementSyncer(
      * Measurements are moved from a collection of cached available measurements to a new list
      * to avoid inadvertently reusing measurements by internal collector.
      */
-    private fun copyToGyroscopeMeasurements(measurements: Collection<GyroscopeSensorMeasurement>) {
+    private fun copyToMagnetometerMeasurements(measurements: Collection<MagnetometerSensorMeasurement>) {
         for (measurement in measurements) {
-            gyroscopeMeasurements.add(GyroscopeSensorMeasurement(measurement))
+            magnetometerMeasurements.add(MagnetometerSensorMeasurement(measurement))
         }
     }
 
@@ -410,73 +405,73 @@ class GravityAndGyroscopeSensorMeasurementSyncer(
             }
             val gravityTimestamp = gravityMeasurement.timestamp
 
-            findGyroscopeMeasurementsBetween(
+            findMagnetometerMeasurementsBetween(
                 previousGravityTimestamp,
                 gravityTimestamp
             )
 
-            var processedAccelerometer = false
-            if (foundGyroscopeMeasurements.isEmpty()) {
-                if (hasPreviousGyroscopeMeasurement
+            var processedGravity = false
+            if (foundMagnetometerMeasurements.isEmpty()) {
+                if (hasPreviousMagnetometerMeasurement
                     && gravityTimestamp > lastNotifiedTimestamp
                     && gravityTimestamp >= lastNotifiedGravityTimestamp
-                    && previousGyroscopeMeasurement.timestamp > lastNotifiedGyroscopeTimestamp
+                    && previousMagnetometerMeasurement.timestamp > lastNotifiedMagnetometerTimestamp
                 ) {
                     // generate synchronized measurement when rate of gravity is greater
-                    // than gyroscope one
+                    // than magnetometer one
                     syncedMeasurement.timestamp = gravityTimestamp
                     syncedMeasurement.gravityMeasurement?.copyFrom(gravityMeasurement)
-                    syncedMeasurement.gyroscopeMeasurement?.copyFrom(
-                        previousGyroscopeMeasurement
+                    syncedMeasurement.magnetometerMeasurement?.copyFrom(
+                        previousMagnetometerMeasurement
                     )
 
                     numberOfProcessedMeasurements++
 
                     syncedMeasurementListener?.onSyncedMeasurements(
-                        this@GravityAndGyroscopeSensorMeasurementSyncer,
+                        this@GravityAndMagnetometerSensorMeasurementSyncer,
                         syncedMeasurement
                     )
                     lastNotifiedTimestamp = gravityTimestamp
                     lastNotifiedGravityTimestamp = gravityTimestamp
-                    lastNotifiedGyroscopeTimestamp = previousGyroscopeMeasurement.timestamp
+                    lastNotifiedMagnetometerTimestamp = previousMagnetometerMeasurement.timestamp
 
-                    processedAccelerometer = true
+                    processedGravity = true
                 }
             } else {
-                for (gyroscopeMeasurement in foundGyroscopeMeasurements) {
-                    val gyroscopeTimestamp = gyroscopeMeasurement.timestamp
-                    if (gyroscopeTimestamp > lastNotifiedTimestamp
+                for (magnetometerMeasurement in foundMagnetometerMeasurements) {
+                    val magnetometerTimestamp = magnetometerMeasurement.timestamp
+                    if (magnetometerTimestamp > lastNotifiedTimestamp
                         && gravityTimestamp >= lastNotifiedGravityTimestamp
-                        && gyroscopeTimestamp >= lastNotifiedGyroscopeTimestamp
+                        && magnetometerTimestamp >= lastNotifiedMagnetometerTimestamp
                     ) {
-                        // generate synchronized measurement when rate of gyroscope is greater than
+                        // generate synchronized measurement when rate of magnetometer is greater than
                         // gravity one
-                        syncedMeasurement.timestamp = gyroscopeTimestamp
+                        syncedMeasurement.timestamp = magnetometerTimestamp
                         syncedMeasurement.gravityMeasurement?.copyFrom(gravityMeasurement)
-                        syncedMeasurement.gyroscopeMeasurement?.copyFrom(gyroscopeMeasurement)
+                        syncedMeasurement.magnetometerMeasurement?.copyFrom(magnetometerMeasurement)
 
                         numberOfProcessedMeasurements++
 
                         syncedMeasurementListener?.onSyncedMeasurements(
-                            this@GravityAndGyroscopeSensorMeasurementSyncer,
+                            this@GravityAndMagnetometerSensorMeasurementSyncer,
                             syncedMeasurement
                         )
-                        lastNotifiedTimestamp = gyroscopeTimestamp
+                        lastNotifiedTimestamp = magnetometerTimestamp
                         lastNotifiedGravityTimestamp = gravityTimestamp
-                        lastNotifiedGyroscopeTimestamp = gyroscopeTimestamp
+                        lastNotifiedMagnetometerTimestamp = magnetometerTimestamp
                     }
                 }
-                processedAccelerometer = true
+                processedGravity = true
 
-                previousGyroscopeMeasurement.copyFrom(foundGyroscopeMeasurements.last())
-                hasPreviousGyroscopeMeasurement = true
+                previousMagnetometerMeasurement.copyFrom(foundMagnetometerMeasurements.last())
+                hasPreviousMagnetometerMeasurement = true
             }
 
-            if (processedAccelerometer) {
+            if (processedGravity) {
                 alreadyProcessedGravityMeasurements.add(gravityMeasurement)
 
-                // remove processed gyroscope measurements
-                gyroscopeMeasurements.removeAll(foundGyroscopeMeasurements)
+                // remove processed magnetometer measurements
+                magnetometerMeasurements.removeAll(foundMagnetometerMeasurements)
             }
 
             previousGravityMeasurement.copyFrom(gravityMeasurement)
@@ -484,31 +479,31 @@ class GravityAndGyroscopeSensorMeasurementSyncer(
         }
 
         if (alreadyProcessedGravityMeasurements.size > 0) {
-            // return processed gravity measurements
+            // remove processed gravity measurements
             gravityMeasurements.removeAll(alreadyProcessedGravityMeasurements)
         }
 
-        foundGyroscopeMeasurements.clear()
+        foundMagnetometerMeasurements.clear()
 
         cleanupStaleMeasurements()
     }
 
     /**
-     * Finds gyroscope measurements in the buffer within provided minimum and maximum timestamp.
+     * Finds magnetometer measurements in the buffer within provided minimum and maximum timestamps.
      *
      * @param minTimestamp minimum timestamp.
      * @param maxTimestamp maximum timestamp.
-     * @return found gyroscope measurements or empty.
+     * @return found magnetometer measurements or empty.
      */
-    private fun findGyroscopeMeasurementsBetween(
+    private fun findMagnetometerMeasurementsBetween(
         minTimestamp: Long,
         maxTimestamp: Long
     ) {
         findMeasurementsBetween(
             minTimestamp,
             maxTimestamp,
-            gyroscopeMeasurements,
-            foundGyroscopeMeasurements
+            magnetometerMeasurements,
+            foundMagnetometerMeasurements
         )
     }
 
@@ -535,9 +530,9 @@ class GravityAndGyroscopeSensorMeasurementSyncer(
 
         cleanupStaleMeasurements(
             staleTimestamp,
-            alreadyProcessedGyroscopeMeasurements,
-            gyroscopeMeasurements,
-            SensorType.from(gyroscopeSensorType),
+            alreadyProcessedMagnetometerMeasurements,
+            magnetometerMeasurements,
+            SensorType.from(magnetometerSensorType),
             this,
             staleDetectedMeasurementsListener
         )
@@ -549,19 +544,19 @@ class GravityAndGyroscopeSensorMeasurementSyncer(
     init {
         // check that capacities are larger than zero.
         require(gravityCapacity > 0)
-        require(gyroscopeCapacity > 0)
+        require(magnetometerCapacity > 0)
     }
 
     companion object {
         /**
-         * Default capacity for gravity measurement cache
+         * Default capacity for gravity measurement cache.
          */
         const val DEFAULT_GRAVITY_CAPACITY = 100
 
         /**
-         * Default capacity for gyroscope measurement cache.
+         * Default capacity for magnetometer measurement cache.
          */
-        const val DEFAULT_GYROSCOPE_CAPACITY = 100
+        const val DEFAULT_MAGNETOMETER_CAPACITY = 100
 
         /**
          * Default offset to consider a measurement as stale to be removed from cache.

@@ -33,7 +33,7 @@ import kotlin.math.min
  *
  * @property processorListener listener to notify new leveled relative attitudes.
  *
- * @param M type of sensor measurement.
+ * @param M type of accelerometer or gravity sensor measurement.
  * @param S type of synced sensor measurement.
  */
 abstract class BaseLeveledRelativeAttitudeProcessor<M : SensorMeasurement<M>,
@@ -288,6 +288,7 @@ abstract class BaseLeveledRelativeAttitudeProcessor<M : SensorMeasurement<M>,
      * @param accelerometerOrGravityMeasurement accelerometer or gravity measurement.
      * @param gyroscopeMeasurement gyroscope measurement.
      * @param timestamp timestamp when both measurements are assumed to occur.
+     * @return true if new leveled relative attitude is processed, false otherwise.
      */
     protected fun process(
         accelerometerOrGravityMeasurement: M,
@@ -506,7 +507,7 @@ abstract class BaseLeveledRelativeAttitudeProcessor<M : SensorMeasurement<M>,
     /**
      * Interface to notify when a new leveled relative attitude has been processed.
      *
-     * @param M type of sensor measurement.
+     * @param M type of accelerometer or gravity sensor measurement.
      * @param S type of synced sensor measurement.
      */
     fun interface OnProcessedListener<M : SensorMeasurement<M>, S : SyncedSensorMeasurement> {

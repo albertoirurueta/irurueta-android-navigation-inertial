@@ -33,10 +33,6 @@ import java.util.*
  * @property magnetometerSensorDelay Delay of magnetometer sensor between samples.
  * @property accelerometerCapacity capacity of accelerometer buffer.
  * @property magnetometerCapacity capacity of magnetometer buffer.
- * @property staleOffsetNanos offset respect most recent received timestamp of a measurement to
- * consider the measurement as stale so that it is skipped from synced measurement processing and
- * returned back from buffer to cache of measurements.
- * @property staleDetectionEnabled true to enable stale measurement detection, false otherwise.
  * @property accelerometerStartOffsetEnabled indicates whether accelerometer start offset will be
  * computed when first measurement is received. True indicates that offset is computed, false
  * assumes that offset is null.
@@ -424,7 +420,7 @@ class AccelerometerAndMagnetometerSensorMeasurementSyncer(
                 if (hasPreviousMagnetometerMeasurement
                     && accelerometerTimestamp > lastNotifiedTimestamp
                     && accelerometerTimestamp >= lastNotifiedAccelerometerTimestamp
-                    && previousMagnetometerMeasurement.timestamp >= lastNotifiedMagnetometerTimestamp
+                    && previousMagnetometerMeasurement.timestamp > lastNotifiedMagnetometerTimestamp
                 ) {
                     // generate synchronized measurement when rate of accelerometer is greater
                     // than magnetometer one

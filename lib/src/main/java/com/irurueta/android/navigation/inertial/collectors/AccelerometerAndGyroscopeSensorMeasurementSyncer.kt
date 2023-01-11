@@ -423,7 +423,7 @@ class AccelerometerAndGyroscopeSensorMeasurementSyncer(
                 if (hasPreviousGyroscopeMeasurement
                     && accelerometerTimestamp > lastNotifiedTimestamp
                     && accelerometerTimestamp >= lastNotifiedAccelerometerTimestamp
-                    && previousGyroscopeMeasurement.timestamp >= lastNotifiedGyroscopeTimestamp
+                    && previousGyroscopeMeasurement.timestamp > lastNotifiedGyroscopeTimestamp
                 ) {
                     // generate synchronized measurement when rate of accelerometer is greater
                     // than gyroscope one

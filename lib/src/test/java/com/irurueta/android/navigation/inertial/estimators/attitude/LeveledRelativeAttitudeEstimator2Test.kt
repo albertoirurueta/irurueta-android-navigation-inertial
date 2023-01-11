@@ -125,7 +125,7 @@ class LeveledRelativeAttitudeEstimator2Test {
             GravityAndGyroscopeSensorMeasurementSyncer.DEFAULT_STALE_OFFSET_NANOS,
             gravityAndGyroscopeSyncer.staleOffsetNanos
         )
-        assertFalse(gravityAndGyroscopeSyncer.staleDetectionEnabled)
+        assertTrue(gravityAndGyroscopeSyncer.staleDetectionEnabled)
         assertNotNull(gravityAndGyroscopeSyncer.accuracyChangedListener)
         assertNotNull(gravityAndGyroscopeSyncer.bufferFilledListener)
         assertNotNull(gravityAndGyroscopeSyncer.syncedMeasurementListener)
@@ -165,7 +165,7 @@ class LeveledRelativeAttitudeEstimator2Test {
             AccelerometerAndGyroscopeSensorMeasurementSyncer.DEFAULT_STALE_OFFSET_NANOS,
             accelerometerAndGyroscopeSyncer.staleOffsetNanos
         )
-        assertFalse(accelerometerAndGyroscopeSyncer.staleDetectionEnabled)
+        assertTrue(accelerometerAndGyroscopeSyncer.staleDetectionEnabled)
         assertNotNull(accelerometerAndGyroscopeSyncer.accuracyChangedListener)
         assertNotNull(accelerometerAndGyroscopeSyncer.bufferFilledListener)
         assertNotNull(accelerometerAndGyroscopeSyncer.syncedMeasurementListener)
@@ -279,7 +279,7 @@ class LeveledRelativeAttitudeEstimator2Test {
             GravityAndGyroscopeSensorMeasurementSyncer.DEFAULT_STALE_OFFSET_NANOS,
             gravityAndGyroscopeSyncer.staleOffsetNanos
         )
-        assertFalse(gravityAndGyroscopeSyncer.staleDetectionEnabled)
+        assertTrue(gravityAndGyroscopeSyncer.staleDetectionEnabled)
         assertNotNull(gravityAndGyroscopeSyncer.accuracyChangedListener)
         assertNotNull(gravityAndGyroscopeSyncer.bufferFilledListener)
         assertNotNull(gravityAndGyroscopeSyncer.syncedMeasurementListener)
@@ -319,7 +319,7 @@ class LeveledRelativeAttitudeEstimator2Test {
             AccelerometerAndGyroscopeSensorMeasurementSyncer.DEFAULT_STALE_OFFSET_NANOS,
             accelerometerAndGyroscopeSyncer.staleOffsetNanos
         )
-        assertFalse(accelerometerAndGyroscopeSyncer.staleDetectionEnabled)
+        assertTrue(accelerometerAndGyroscopeSyncer.staleDetectionEnabled)
         assertNotNull(accelerometerAndGyroscopeSyncer.accuracyChangedListener)
         assertNotNull(accelerometerAndGyroscopeSyncer.bufferFilledListener)
         assertNotNull(accelerometerAndGyroscopeSyncer.syncedMeasurementListener)

@@ -17,6 +17,7 @@ package com.irurueta.android.navigation.inertial
 
 import android.annotation.SuppressLint
 import android.location.Location
+import android.os.Build
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatTextView
@@ -25,7 +26,7 @@ import com.irurueta.android.gl.cube.CubeTextureView
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
 import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorType
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
-import com.irurueta.android.navigation.inertial.estimators.attitude.GeomagneticAttitudeEstimator
+import com.irurueta.android.navigation.inertial.estimators.attitude.GeomagneticAttitudeEstimator2
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.MeanAveragingFilter
@@ -46,7 +47,7 @@ class GeomagneticAttitudeEstimatorActivity : AppCompatActivity() {
 
     private var camera: PinholeCamera? = null
 
-    private var attitudeEstimator: GeomagneticAttitudeEstimator? = null
+    private var attitudeEstimator: GeomagneticAttitudeEstimator2? = null
 
     private val conversionRotation = ENUtoNEDTriadConverter.conversionRotation
 
@@ -80,12 +81,22 @@ class GeomagneticAttitudeEstimatorActivity : AppCompatActivity() {
 
         val extras = intent.extras
         useAccelerometer = extras?.getBoolean(USE_ACCELEROMETER, false) ?: false
-        accelerometerSensorType =
+        accelerometerSensorType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            (extras?.getSerializable(ACCELEROMETER_SENSOR_TYPE, AccelerometerSensorType::class.java))
+                ?: AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
+        } else {
+            @Suppress("DEPRECATION")
             (extras?.getSerializable(ACCELEROMETER_SENSOR_TYPE) as AccelerometerSensorType?)
                 ?: AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
-        magnetometerSensorType =
+        }
+        magnetometerSensorType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            (extras?.getSerializable(MAGNETOMETER_SENSOR_TYPE, MagnetometerSensorType::class.java))
+                ?: MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED
+        } else {
+            @Suppress("DEPRECATION")
             (extras?.getSerializable(MAGNETOMETER_SENSOR_TYPE) as MagnetometerSensorType?)
                 ?: MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED
+        }
         averagingFilterType = extras?.getString(ACCELEROMETER_AVERAGING_FILTER_TYPE)
         useWorldMagneticModel = extras?.getBoolean(USE_WORLD_MAGNETIC_MODEL, false) ?: false
 
@@ -158,7 +169,7 @@ class GeomagneticAttitudeEstimatorActivity : AppCompatActivity() {
         } else {
             val averagingFilter = buildAveragingFilter(averagingFilterType)
 
-            attitudeEstimator = GeomagneticAttitudeEstimator(
+            attitudeEstimator = GeomagneticAttitudeEstimator2(
                 this,
                 location,
                 SensorDelay.GAME,

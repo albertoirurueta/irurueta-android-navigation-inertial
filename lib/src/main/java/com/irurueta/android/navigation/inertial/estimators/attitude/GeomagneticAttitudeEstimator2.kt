@@ -21,16 +21,19 @@ import android.os.SystemClock
 import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
-import com.irurueta.android.navigation.inertial.processors.AccelerometerLeveledRelativeAttitudeProcessor
-import com.irurueta.android.navigation.inertial.processors.LeveledRelativeAttitudeProcessor
+import com.irurueta.android.navigation.inertial.processors.AccelerometerGeomagneticAttitudeProcessor
+import com.irurueta.android.navigation.inertial.processors.GeomagneticAttitudeProcessor
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.frames.CoordinateTransformation
 import com.irurueta.navigation.frames.FrameType
+import com.irurueta.navigation.inertial.wmm.WorldMagneticModel
+import java.util.*
 
 /**
- * Estimates a leveled relative attitude, where only yaw Euler angle is relative to the start
- * instant of this estimator.
+ * Estimates a leveled absolute attitude using accelerometer (or gravity) and magnetometer sensors.
+ * Gyroscope is not used in this estimator.
  * Roll and pitch Euler angles are leveled using accelerometer or gravity sensors.
+ * Yaw angle is obtained from magnetometer once the leveling is estimated.
  *
  * @property context Android context.
  * @param location Device location.
@@ -42,12 +45,17 @@ import com.irurueta.navigation.frames.FrameType
  * is null.
  * @property accelerometerSensorType One of the supported accelerometer sensor types.
  * (Only used if [useAccelerometer] is true).
+ * @property magnetometerSensorType One of the supported magnetometer sensor types.
  * @property accelerometerAveragingFilter an averaging filter for accelerometer samples to obtain
  * sensed gravity component of specific force. (Only used if [useAccelerometer] is true).
- * @property gyroscopeSensorType One of the supported gyroscope sensor types.
+ * @param worldMagneticModel Earth's magnetic model. Null to use default model
+ * when [useWorldMagneticModel] is true. If [useWorldMagneticModel] is false, this is ignored.
+ * @param timestamp Timestamp when World Magnetic Model will be evaluated to obtain current magnetic
+ * declination. Only taken into account if [useWorldMagneticModel] is true.
+ * @param useWorldMagneticModel true so that world magnetic model is taken into account to
+ * adjust attitude yaw angle by current magnetic declination based on current World Magnetic
+ * Model, location and timestamp, false to ignore declination.
  * @param useAccurateLevelingEstimator true to use accurate leveling, false to use a normal one.
- * @param useAccurateRelativeGyroscopeAttitudeEstimator true to use accurate relative attitude,
- * false to use a normal one.
  * @property estimateCoordinateTransformation true to estimate coordinate transformation, false
  * otherwise. If not needed, it can be disabled to improve performance and decrease cpu load.
  * @property estimateEulerAngles true to estimate euler angles, false otherwise. If not
@@ -59,7 +67,7 @@ import com.irurueta.navigation.frames.FrameType
  * happens when consumer of measurements cannot keep up with the rate at which measurements are
  * generated.
  */
-class LeveledRelativeAttitudeEstimator2(
+class GeomagneticAttitudeEstimator2(
     val context: Context,
     location: Location? = null,
     val sensorDelay: SensorDelay = SensorDelay.GAME,
@@ -67,10 +75,13 @@ class LeveledRelativeAttitudeEstimator2(
     val startOffsetEnabled: Boolean = true,
     val accelerometerSensorType: AccelerometerSensorType =
         AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
+    val magnetometerSensorType: MagnetometerSensorType =
+        MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED,
     val accelerometerAveragingFilter: AveragingFilter = LowPassAveragingFilter(),
-    val gyroscopeSensorType: GyroscopeSensorType = GyroscopeSensorType.GYROSCOPE_UNCALIBRATED,
+    worldMagneticModel: WorldMagneticModel? = null,
+    timestamp: Date? = null,
+    useWorldMagneticModel: Boolean = false,
     useAccurateLevelingEstimator: Boolean = false,
-    useAccurateRelativeGyroscopeAttitudeEstimator: Boolean = true,
     val estimateCoordinateTransformation: Boolean = false,
     val estimateEulerAngles: Boolean = true,
     var attitudeAvailableListener: OnAttitudeAvailableListener? = null,
@@ -78,14 +89,14 @@ class LeveledRelativeAttitudeEstimator2(
     var bufferFilledListener: OnBufferFilledListener? = null
 ) {
     /**
-     * Processes accelerometer + gyroscope measurements.
+     * Processes accelerometer + magnetometer measurements.
      */
-    private val accelerometerProcessor = AccelerometerLeveledRelativeAttitudeProcessor()
+    private val accelerometerProcessor = AccelerometerGeomagneticAttitudeProcessor()
 
     /**
-     * Processes gravity + gyroscope measurements.
+     * Processes gravity + magnetometer measurements.
      */
-    private val gravityProcessor = LeveledRelativeAttitudeProcessor()
+    private val gravityProcessor = GeomagneticAttitudeProcessor()
 
     /**
      * Instance being reused to externally notify attitudes so that it does not have additional
@@ -105,15 +116,15 @@ class LeveledRelativeAttitudeEstimator2(
         CoordinateTransformation(FrameType.BODY_FRAME, FrameType.LOCAL_NAVIGATION_FRAME)
 
     /**
-     * Internal syncer to collect and sync gravity and gyroscope measurements.
+     * Internal syncer to collect and sync gravity and magnetometer measurements.
      */
-    private val gravityAndGyroscopeSyncer = GravityAndGyroscopeSensorMeasurementSyncer(
+    private val gravityAndMagnetometerSyncer = GravityAndMagnetometerSensorMeasurementSyncer(
         context,
-        gyroscopeSensorType,
+        magnetometerSensorType,
         sensorDelay,
         sensorDelay,
         gravityStartOffsetEnabled = startOffsetEnabled,
-        gyroscopeStartOffsetEnabled = startOffsetEnabled,
+        magnetometerStartOffsetEnabled = startOffsetEnabled,
         stopWhenFilledBuffer = false,
         staleDetectionEnabled = true,
         accuracyChangedListener = { _, sensorType, accuracy ->
@@ -125,9 +136,7 @@ class LeveledRelativeAttitudeEstimator2(
         syncedMeasurementListener = { _, measurement ->
             if (gravityProcessor.process(measurement)) {
                 gravityProcessor.fusedAttitude.copyTo(fusedAttitude)
-
-                val timestamp = measurement.timestamp
-                postProcessAttitudeAndNotify(timestamp)
+                postProcessAttitudeAndNotify(measurement.timestamp)
             }
         }
     )
@@ -135,31 +144,30 @@ class LeveledRelativeAttitudeEstimator2(
     /**
      * Internal syncer to collect and sync accelerometer and magnetometer measurements.
      */
-    private val accelerometerAndGyroscopeSyncer = AccelerometerAndGyroscopeSensorMeasurementSyncer(
-        context,
-        accelerometerSensorType,
-        gyroscopeSensorType,
-        sensorDelay,
-        sensorDelay,
-        accelerometerStartOffsetEnabled = startOffsetEnabled,
-        gyroscopeStartOffsetEnabled = startOffsetEnabled,
-        stopWhenFilledBuffer = false,
-        staleDetectionEnabled = true,
-        accuracyChangedListener = { _, sensorType, accuracy ->
-            notifyAccuracyChanged(sensorType, accuracy)
-        },
-        bufferFilledListener = { _, sensorType ->
-            notifyBufferFilled(sensorType)
-        },
-        syncedMeasurementListener = { _, measurement ->
-            if (accelerometerProcessor.process(measurement)) {
-                accelerometerProcessor.fusedAttitude.copyTo(fusedAttitude)
-
-                val timestamp = measurement.timestamp
-                postProcessAttitudeAndNotify(timestamp)
+    private val accelerometerAndMagnetometerSyncer =
+        AccelerometerAndMagnetometerSensorMeasurementSyncer(
+            context,
+            accelerometerSensorType,
+            magnetometerSensorType,
+            sensorDelay,
+            sensorDelay,
+            accelerometerStartOffsetEnabled = startOffsetEnabled,
+            magnetometerStartOffsetEnabled = startOffsetEnabled,
+            stopWhenFilledBuffer = false,
+            staleDetectionEnabled = true,
+            accuracyChangedListener = { _, sensorType, accuracy ->
+                notifyAccuracyChanged(sensorType, accuracy)
+            },
+            bufferFilledListener = { _, sensorType ->
+                notifyBufferFilled(sensorType)
+            },
+            syncedMeasurementListener = { _, measurement ->
+                if (accelerometerProcessor.process(measurement)) {
+                    accelerometerProcessor.fusedAttitude.copyTo(fusedAttitude)
+                    postProcessAttitudeAndNotify(measurement.timestamp)
+                }
             }
-        }
-    )
+        )
 
     /**
      * Gets or sets device location
@@ -195,74 +203,46 @@ class LeveledRelativeAttitudeEstimator2(
         }
 
     /**
-     * Indicates whether accurate non-leveled relative attitude estimator must be used or not.
+     * Earth's magnetic model. If null, the default model is used if [useWorldMagneticModel] is
+     * true. If [useWorldMagneticModel] is false, this is ignored.
      *
      * @throws IllegalStateException if estimator is running.
      */
-    var useAccurateRelativeGyroscopeAttitudeEstimator: Boolean =
-        useAccurateRelativeGyroscopeAttitudeEstimator
+    var worldMagneticModel: WorldMagneticModel? = worldMagneticModel
         @Throws(IllegalStateException::class)
         set(value) {
             check(!running)
 
-            accelerometerProcessor.useAccurateRelativeGyroscopeAttitudeProcessor = value
-            gravityProcessor.useAccurateRelativeGyroscopeAttitudeProcessor = value
+            accelerometerProcessor.worldMagneticModel = value
+            gravityProcessor.worldMagneticModel = value
             field = value
         }
 
     /**
-     * Indicates whether fusion between leveling and relative attitudes occurs based
-     * on changing interpolation value that depends on actual relative attitude rotation
-     * velocity.
+     * Gets or sets timestamp when World Magnetic Model will be evaluated to obtain current
+     * magnetic declination. Only taken into account if [useWorldMagneticModel] is true.
      */
-    var useIndirectInterpolation: Boolean
-        get() = accelerometerProcessor.useIndirectInterpolation
+    var timestamp: Date? = timestamp
         set(value) {
-            accelerometerProcessor.useIndirectInterpolation = value
-            gravityProcessor.useIndirectInterpolation = value
+            accelerometerProcessor.currentDate = value
+            gravityProcessor.currentDate = value
+            field = value
         }
 
     /**
-     * Interpolation value to be used to combine both leveling and relative attitudes.
-     * Must be between 0.0 and 1.0 (both included).
-     * The closer to 0.0 this value is, the more resemblance the result will have to a pure
-     * leveling (which feels more jerky when using accelerometer). On the contrary, the closer
-     * to 1.0 this value is, the more resemblance the result will have to a pure non-leveled
-     * relative attitude (which feels softer but might have arbitrary roll and pitch Euler angles).
+     * Indicates whether world magnetic model is taken into account to adjust attitude yaw angle by
+     * current magnetic declination based on current World Magnetic Model, location and timestamp.
      *
-     * @throws IllegalArgumentException if value is not between 0.0 and 1.0 (both included).
+     * @throws IllegalStateException if estimator is running.
      */
-    var interpolationValue: Double
-        get() = accelerometerProcessor.interpolationValue
-        @Throws(IllegalArgumentException::class)
+    var useWorldMagneticModel: Boolean = useWorldMagneticModel
+        @Throws(IllegalStateException::class)
         set(value) {
-            accelerometerProcessor.interpolationValue = value
-            gravityProcessor.interpolationValue = value
-        }
+            check(!running)
 
-    /**
-     * Factor to take into account when interpolation value is computed and
-     * [useIndirectInterpolation] is enabled to determine actual interpolation value based
-     * on current relative attitude rotation velocity.
-     *
-     * @throws IllegalArgumentException if value is zero or negative.
-     */
-    var indirectInterpolationWeight: Double
-        get() = accelerometerProcessor.indirectInterpolationWeight
-        @Throws(IllegalArgumentException::class)
-        set(value) {
-            accelerometerProcessor.indirectInterpolationWeight = value
-            gravityProcessor.indirectInterpolationWeight = value
-        }
-
-    /**
-     * Gets time interval between gyroscope samples expressed in seconds.
-     */
-    val gyroscopeTimeIntervalSeconds
-        get() = if (useAccelerometer) {
-            accelerometerProcessor.timeIntervalSeconds
-        } else {
-            gravityProcessor.timeIntervalSeconds
+            accelerometerProcessor.useWorldMagneticModel = value
+            gravityProcessor.useWorldMagneticModel = value
+            field = value
         }
 
     /**
@@ -270,56 +250,6 @@ class LeveledRelativeAttitudeEstimator2(
      */
     var running: Boolean = false
         private set
-
-    /**
-     * Threshold to determine that current leveling appears to be an outlier respect
-     * to estimated fused attitude.
-     * When leveling and fused attitudes diverge, fusion is not performed, and instead
-     * only gyroscope relative attitude is used for fusion estimation.
-     *
-     * @throws IllegalStateException if estimator is already running.
-     * @throws IllegalArgumentException if value is not between 0.0 and 1.0 (both included).
-     */
-    var outlierThreshold: Double
-        get() = accelerometerProcessor.outlierThreshold
-        @Throws(IllegalStateException::class, IllegalArgumentException::class)
-        set(value) {
-            check(!running)
-            accelerometerProcessor.outlierThreshold = value
-            gravityProcessor.outlierThreshold = value
-        }
-
-    /**
-     * Threshold to determine that leveling has largely diverged and if situation is not
-     * reverted soon, attitude will be reset to leveling
-     *
-     * @throws IllegalStateException if estimator is already running.
-     * @throws IllegalArgumentException if value is not between 0.0 and 1.0 (both included).
-     */
-    var outlierPanicThreshold: Double
-        get() = accelerometerProcessor.outlierPanicThreshold
-        @Throws(IllegalStateException::class, IllegalArgumentException::class)
-        set(value) {
-            check(!running)
-            accelerometerProcessor.outlierPanicThreshold = value
-            gravityProcessor.outlierPanicThreshold = value
-        }
-
-    /**
-     * Threshold to determine when fused attitude has largely diverged for a given
-     * number of samples and must be reset.
-     *
-     * @throws IllegalStateException if estimator is already running.
-     * @throws IllegalArgumentException if provided is zero or negative.
-     */
-    var panicCounterThreshold: Int
-        get() = accelerometerProcessor.panicCounterThreshold
-        @Throws(IllegalStateException::class, IllegalArgumentException::class)
-        set(value) {
-            check(!running)
-            accelerometerProcessor.panicCounterThreshold = value
-            gravityProcessor.panicCounterThreshold = value
-        }
 
     /**
      * Starts this estimator.
@@ -336,10 +266,10 @@ class LeveledRelativeAttitudeEstimator2(
 
         running = if (useAccelerometer) {
             accelerometerProcessor.reset()
-            accelerometerAndGyroscopeSyncer.start(startTimestamp)
+            accelerometerAndMagnetometerSyncer.start(startTimestamp)
         } else {
             gravityProcessor.reset()
-            gravityAndGyroscopeSyncer.start(startTimestamp)
+            gravityAndMagnetometerSyncer.start(startTimestamp)
         }
 
         return running
@@ -349,8 +279,8 @@ class LeveledRelativeAttitudeEstimator2(
      * Stops this estimator.
      */
     fun stop() {
-        accelerometerAndGyroscopeSyncer.stop()
-        gravityAndGyroscopeSyncer.stop()
+        accelerometerAndMagnetometerSyncer.stop()
+        gravityAndMagnetometerSyncer.stop()
         running = false
     }
 
@@ -416,13 +346,16 @@ class LeveledRelativeAttitudeEstimator2(
 
     init {
         this.location = location
+        this.worldMagneticModel = worldMagneticModel
+        this.timestamp = timestamp
+        this.useWorldMagneticModel = useWorldMagneticModel
+        this.useAccurateLevelingEstimator = useAccurateLevelingEstimator
     }
 
     /**
      * Interface to notify when a new attitude measurement is available.
      */
     fun interface OnAttitudeAvailableListener {
-
         /**
          * Called when a new attitude measurement is available.
          *
@@ -430,17 +363,18 @@ class LeveledRelativeAttitudeEstimator2(
          * @param attitude attitude expressed in NED coordinates.
          * @param timestamp time in nanoseconds at which the measurement was made. Each measurement
          * wil be monotonically increasing using the same time base as
+         * [android.os.SystemClock.elapsedRealtimeNanos].
          * @param roll roll angle expressed in radians respect to NED coordinate system. Only
          * available if [estimateEulerAngles] is true.
          * @param pitch pitch angle expressed in radians respect to NED coordinate system. Only
          * available if [estimateEulerAngles] is true.
          * @param yaw yaw angle expressed in radians respect to NED coordinate system. Only
          * available if [estimateEulerAngles] is true.
-         * @param coordinateTransformation coordinate transformation containing measured leveling
-         * attitude. Only available if [estimateCoordinateTransformation] is true.
+         * @param coordinateTransformation coordinate transformation containing measured leveled
+         * geomagnetic attitude. Only available if [estimateCoordinateTransformation] is true.
          */
         fun onAttitudeAvailable(
-            estimator: LeveledRelativeAttitudeEstimator2,
+            estimator: GeomagneticAttitudeEstimator2,
             attitude: Quaternion,
             timestamp: Long,
             roll: Double?,
@@ -451,19 +385,19 @@ class LeveledRelativeAttitudeEstimator2(
     }
 
     /**
-     * Interface to notify when sensor (either accelerometer, gravity or gyroscope) accuracy
+     * Interface to notify when sensor (either accelerometer, gravity or magnetometer) accuracy
      * changes.
      */
     fun interface OnAccuracyChangedListener {
         /**
          * Called when accuracy changes.
          *
-         * @param estimator leveled relative attitude estimator that raised this event.
-         * @param sensorType sensor that has changed its accuracy
+         * @param estimator leveled absolute attitude estimator that raised this event.
+         * @param sensorType sensor that has changed its accuracy.
          * @param accuracy new accuracy.
          */
         fun onAccuracyChanged(
-            estimator: LeveledRelativeAttitudeEstimator2,
+            estimator: GeomagneticAttitudeEstimator2,
             sensorType: SensorMeasurementSyncer.SensorType,
             accuracy: SensorAccuracy?
         )
@@ -479,11 +413,11 @@ class LeveledRelativeAttitudeEstimator2(
         /**
          * Called when any buffer gets completely filled.
          *
-         * @param estimator leveled relative attitude estimator that raised this event.
+         * @param estimator leveled absolute attitude estimator that raised this event.
          * @param sensorType sensor that got its buffer filled.
          */
         fun onBufferFilled(
-            estimator: LeveledRelativeAttitudeEstimator2,
+            estimator: GeomagneticAttitudeEstimator2,
             sensorType: SensorMeasurementSyncer.SensorType
         )
     }
