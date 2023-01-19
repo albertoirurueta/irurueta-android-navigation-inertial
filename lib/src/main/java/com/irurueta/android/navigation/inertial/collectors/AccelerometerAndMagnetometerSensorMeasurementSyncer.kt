@@ -334,6 +334,8 @@ class AccelerometerAndMagnetometerSensorMeasurementSyncer(
     override fun start(startTimestamp: Long): Boolean {
         check(!running)
 
+        stopping = false
+        clearCollectionsAndReset()
         this.startTimestamp = startTimestamp
         running = if (accelerometerSensorCollector.start(startTimestamp)
             && magnetometerSensorCollector.start(startTimestamp)
@@ -352,22 +354,11 @@ class AccelerometerAndMagnetometerSensorMeasurementSyncer(
      */
     @Synchronized
     override fun stop() {
+        stopping = true
         accelerometerSensorCollector.stop()
         magnetometerSensorCollector.stop()
 
-        accelerometerMeasurements.clear()
-        magnetometerMeasurements.clear()
-
-        numberOfProcessedMeasurements = 0
-        mostRecentTimestamp = null
-        oldestTimestamp = null
-        running = false
-
-        hasPreviousAccelerometerMeasurement = false
-        hasPreviousMagnetometerMeasurement = false
-        lastNotifiedTimestamp = 0L
-        lastNotifiedAccelerometerTimestamp = 0L
-        lastNotifiedMagnetometerTimestamp = 0L
+        reset()
     }
 
     /**
@@ -495,6 +486,41 @@ class AccelerometerAndMagnetometerSensorMeasurementSyncer(
         foundMagnetometerMeasurements.clear()
 
         cleanupStaleMeasurements()
+
+        if (stopping) {
+            // collections are reset at this point to prevent concurrent modifications
+            clearCollectionsAndReset()
+            stopping = false
+        }
+    }
+
+    /**
+     * Resets syncer status.
+     */
+    private fun reset() {
+        numberOfProcessedMeasurements = 0
+        mostRecentTimestamp = null
+        oldestTimestamp = null
+        running = false
+
+        hasPreviousAccelerometerMeasurement = false
+        hasPreviousMagnetometerMeasurement = false
+        lastNotifiedTimestamp = 0L
+        lastNotifiedAccelerometerTimestamp = 0L
+        lastNotifiedMagnetometerTimestamp = 0L
+    }
+
+    /**
+     * Clears internal collections and resets.
+     */
+    private fun clearCollectionsAndReset() {
+        accelerometerMeasurements.clear()
+        magnetometerMeasurements.clear()
+        alreadyProcessedAccelerometerMeasurements.clear()
+        alreadyProcessedMagnetometerMeasurements.clear()
+        foundMagnetometerMeasurements.clear()
+
+        reset()
     }
 
     /**

@@ -358,7 +358,7 @@ class LeveledRelativeAttitudeEstimator2(
      * Notifies changes in sensor accuracy.
      */
     private fun notifyAccuracyChanged(
-        sensorType: SensorMeasurementSyncer.SensorType,
+        sensorType: SensorType,
         accuracy: SensorAccuracy?
     ) {
         accuracyChangedListener?.onAccuracyChanged(this, sensorType, accuracy)
@@ -367,7 +367,7 @@ class LeveledRelativeAttitudeEstimator2(
     /**
      * Notifies when a sensor buffer becomes full.
      */
-    private fun notifyBufferFilled(sensorType: SensorMeasurementSyncer.SensorType) {
+    private fun notifyBufferFilled(sensorType: SensorType) {
         bufferFilledListener?.onBufferFilled(this, sensorType)
     }
 
@@ -464,7 +464,7 @@ class LeveledRelativeAttitudeEstimator2(
          */
         fun onAccuracyChanged(
             estimator: LeveledRelativeAttitudeEstimator2,
-            sensorType: SensorMeasurementSyncer.SensorType,
+            sensorType: SensorType,
             accuracy: SensorAccuracy?
         )
     }
@@ -484,7 +484,7 @@ class LeveledRelativeAttitudeEstimator2(
          */
         fun onBufferFilled(
             estimator: LeveledRelativeAttitudeEstimator2,
-            sensorType: SensorMeasurementSyncer.SensorType
+            sensorType: SensorType
         )
     }
 }

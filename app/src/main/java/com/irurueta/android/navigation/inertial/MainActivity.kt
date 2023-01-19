@@ -20,6 +20,7 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatButton
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
+import com.irurueta.android.navigation.inertial.collectors.AttitudeSensorType
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorType
 import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorType
 
@@ -211,6 +212,10 @@ class MainActivity : AppCompatActivity() {
         null
 
     private var fusedGeomagneticAttitudeEstimator2WorldMagneticModelButton: AppCompatButton? = null
+
+    private var androidAbsoluteAttitudeEstimatorButton: AppCompatButton? = null
+
+    private var androidRelativeAttitudeEstimatorButton: AppCompatButton? = null
 
     private var poseEstimatorButton: AppCompatButton? = null
 
@@ -1779,6 +1784,28 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra(
                 FusedGeomagneticAttitudeEstimator2Activity.USE_WORLD_MAGNETIC_MODEL,
                 true
+            )
+            startActivity(intent)
+        }
+
+        androidAbsoluteAttitudeEstimatorButton =
+            findViewById(R.id.android_absolute_attitude_estimator_button)
+        androidAbsoluteAttitudeEstimatorButton?.setOnClickListener {
+            val intent = Intent(this@MainActivity, AttitudeEstimatorActivity::class.java)
+            intent.putExtra(
+                AttitudeEstimatorActivity.ATTITUDE_SENSOR_TYPE,
+                AttitudeSensorType.ABSOLUTE_ATTITUDE
+            )
+            startActivity(intent)
+        }
+
+        androidRelativeAttitudeEstimatorButton =
+            findViewById(R.id.android_relative_attitude_estimator_button)
+        androidRelativeAttitudeEstimatorButton?.setOnClickListener {
+            val intent = Intent(this@MainActivity, AttitudeEstimatorActivity::class.java)
+            intent.putExtra(
+                AttitudeEstimatorActivity.ATTITUDE_SENSOR_TYPE,
+                AttitudeSensorType.RELATIVE_ATTITUDE
             )
             startActivity(intent)
         }

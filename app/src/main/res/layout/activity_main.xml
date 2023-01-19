@@ -582,6 +582,27 @@
             <androidx.appcompat.widget.AppCompatTextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:text="@string/android_attitude_estimator"
+                android:layout_marginStart="24dp"
+                android:layout_marginEnd="24dp" />
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/android_absolute_attitude_estimator_button"
+                android:text="@string/absolute_attitude"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_margin="24dp" />
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/android_relative_attitude_estimator_button"
+                android:text="@string/relative_attitude"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_margin="24dp" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:text="@string/pose_estimator_label"
                 android:layout_marginStart="24dp"
                 android:layout_marginEnd="24dp"/>

@@ -20,6 +20,7 @@ import android.hardware.Sensor
 import android.hardware.SensorManager
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
+import com.irurueta.android.navigation.inertial.collectors.SensorType
 import io.mockk.every
 import io.mockk.spyk
 import io.mockk.verify
@@ -83,46 +84,44 @@ class SensorAvailabilityServiceTest {
 
         val service = SensorAvailabilityService(contextSpy)
 
-        assertFalse(service.hasSensor(SensorAvailabilityService.SensorType.ACCELEROMETER))
+        assertFalse(service.hasSensor(SensorType.ACCELEROMETER))
         verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) }
 
-        assertFalse(service.hasSensor(SensorAvailabilityService.SensorType.LINEAR_ACCELERATION))
+        assertFalse(service.hasSensor(SensorType.LINEAR_ACCELERATION))
         verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION) }
 
         assertFalse(
-            service.hasSensor(
-                SensorAvailabilityService.SensorType.ACCELEROMETER_UNCALIBRATED
+            service.hasSensor(SensorType.ACCELEROMETER_UNCALIBRATED
             )
         )
         verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(TYPE_ACCELEROMETER_UNCALIBRATED) }
 
-        assertFalse(service.hasSensor(SensorAvailabilityService.SensorType.GYROSCOPE))
+        assertFalse(service.hasSensor(SensorType.GYROSCOPE))
         verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE) }
 
-        assertFalse(service.hasSensor(SensorAvailabilityService.SensorType.GYROSCOPE_UNCALIBRATED))
+        assertFalse(service.hasSensor(SensorType.GYROSCOPE_UNCALIBRATED))
         verify(exactly = 1) {
             sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED)
         }
 
-        assertFalse(service.hasSensor(SensorAvailabilityService.SensorType.MAGNETOMETER))
+        assertFalse(service.hasSensor(SensorType.MAGNETOMETER))
         verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD) }
 
         assertFalse(
-            service.hasSensor(
-                SensorAvailabilityService.SensorType.MAGNETOMETER_UNCALIBRATED
+            service.hasSensor(SensorType.MAGNETOMETER_UNCALIBRATED
             )
         )
         verify(exactly = 1) {
             sensorManagerSpy.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED)
         }
 
-        assertFalse(service.hasSensor(SensorAvailabilityService.SensorType.GRAVITY))
+        assertFalse(service.hasSensor(SensorType.GRAVITY))
         verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GRAVITY) }
 
-        assertFalse(service.hasSensor(SensorAvailabilityService.SensorType.ABSOLUTE_ATTITUDE))
+        assertFalse(service.hasSensor(SensorType.ABSOLUTE_ATTITUDE))
         verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR) }
 
-        assertFalse(service.hasSensor(SensorAvailabilityService.SensorType.RELATIVE_ATTITUDE))
+        assertFalse(service.hasSensor(SensorType.RELATIVE_ATTITUDE))
         verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GAME_ROTATION_VECTOR) }
 
         verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
@@ -141,142 +140,45 @@ class SensorAvailabilityServiceTest {
 
         val service = SensorAvailabilityService(contextSpy)
 
-        assertFalse(service.hasSensor(SensorAvailabilityService.SensorType.ACCELEROMETER))
+        assertFalse(service.hasSensor(SensorType.ACCELEROMETER))
         verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) }
 
-        assertFalse(service.hasSensor(SensorAvailabilityService.SensorType.LINEAR_ACCELERATION))
+        assertFalse(service.hasSensor(SensorType.LINEAR_ACCELERATION))
         verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION) }
 
         assertFalse(
-            service.hasSensor(
-                SensorAvailabilityService.SensorType.ACCELEROMETER_UNCALIBRATED
-            )
+            service.hasSensor(SensorType.ACCELEROMETER_UNCALIBRATED)
         )
         verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(TYPE_ACCELEROMETER_UNCALIBRATED) }
 
-        assertFalse(service.hasSensor(SensorAvailabilityService.SensorType.GYROSCOPE))
+        assertFalse(service.hasSensor(SensorType.GYROSCOPE))
         verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE) }
 
-        assertFalse(service.hasSensor(SensorAvailabilityService.SensorType.GYROSCOPE_UNCALIBRATED))
+        assertFalse(service.hasSensor(SensorType.GYROSCOPE_UNCALIBRATED))
         verify(exactly = 1) {
             sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED)
         }
 
-        assertFalse(service.hasSensor(SensorAvailabilityService.SensorType.MAGNETOMETER))
+        assertFalse(service.hasSensor(SensorType.MAGNETOMETER))
         verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD) }
 
         assertFalse(
-            service.hasSensor(
-                SensorAvailabilityService.SensorType.MAGNETOMETER_UNCALIBRATED
-            )
+            service.hasSensor(SensorType.MAGNETOMETER_UNCALIBRATED)
         )
         verify(exactly = 1) {
             sensorManagerSpy.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED)
         }
 
-        assertFalse(service.hasSensor(SensorAvailabilityService.SensorType.GRAVITY))
+        assertFalse(service.hasSensor(SensorType.GRAVITY))
         verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GRAVITY) }
 
-        assertFalse(service.hasSensor(SensorAvailabilityService.SensorType.ABSOLUTE_ATTITUDE))
+        assertFalse(service.hasSensor(SensorType.ABSOLUTE_ATTITUDE))
         verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR) }
 
-        assertFalse(service.hasSensor(SensorAvailabilityService.SensorType.RELATIVE_ATTITUDE))
+        assertFalse(service.hasSensor(SensorType.RELATIVE_ATTITUDE))
         verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GAME_ROTATION_VECTOR) }
 
         verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
-    }
-
-    @Config(sdk = [Build.VERSION_CODES.O])
-    @Test
-    fun sensorType_fromValuesSdkO_returnsExpectedValues() {
-        assertEquals(10, SensorAvailabilityService.SensorType.values().size)
-        assertEquals(
-            SensorAvailabilityService.SensorType.ACCELEROMETER,
-            SensorAvailabilityService.SensorType.from(
-                Sensor.TYPE_ACCELEROMETER
-            )
-        )
-        assertEquals(
-            SensorAvailabilityService.SensorType.LINEAR_ACCELERATION,
-            SensorAvailabilityService.SensorType.from(Sensor.TYPE_LINEAR_ACCELERATION)
-        )
-        assertEquals(
-            SensorAvailabilityService.SensorType.ACCELEROMETER_UNCALIBRATED,
-            SensorAvailabilityService.SensorType.from(TYPE_ACCELEROMETER_UNCALIBRATED)
-        )
-        assertEquals(
-            SensorAvailabilityService.SensorType.GYROSCOPE,
-            SensorAvailabilityService.SensorType.from(Sensor.TYPE_GYROSCOPE)
-        )
-        assertEquals(
-            SensorAvailabilityService.SensorType.GYROSCOPE_UNCALIBRATED,
-            SensorAvailabilityService.SensorType.from(Sensor.TYPE_GYROSCOPE_UNCALIBRATED)
-        )
-        assertEquals(
-            SensorAvailabilityService.SensorType.MAGNETOMETER,
-            SensorAvailabilityService.SensorType.from(Sensor.TYPE_MAGNETIC_FIELD)
-        )
-        assertEquals(
-            SensorAvailabilityService.SensorType.MAGNETOMETER_UNCALIBRATED,
-            SensorAvailabilityService.SensorType.from(Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED)
-        )
-        assertEquals(
-            SensorAvailabilityService.SensorType.GRAVITY,
-            SensorAvailabilityService.SensorType.from(Sensor.TYPE_GRAVITY)
-        )
-        assertEquals(
-            SensorAvailabilityService.SensorType.ABSOLUTE_ATTITUDE,
-            SensorAvailabilityService.SensorType.from(Sensor.TYPE_ROTATION_VECTOR)
-        )
-        assertEquals(
-            SensorAvailabilityService.SensorType.RELATIVE_ATTITUDE,
-            SensorAvailabilityService.SensorType.from(Sensor.TYPE_GAME_ROTATION_VECTOR)
-        )
-    }
-
-    @Config(sdk = [Build.VERSION_CODES.N])
-    @Test
-    fun sensorType_fromValuesSdkN_returnsExpectedValues() {
-        assertEquals(10, SensorAvailabilityService.SensorType.values().size)
-        assertEquals(
-            SensorAvailabilityService.SensorType.ACCELEROMETER,
-            SensorAvailabilityService.SensorType.from(
-                Sensor.TYPE_ACCELEROMETER
-            )
-        )
-        assertEquals(
-            SensorAvailabilityService.SensorType.LINEAR_ACCELERATION,
-            SensorAvailabilityService.SensorType.from(Sensor.TYPE_LINEAR_ACCELERATION)
-        )
-        assertNull(SensorAvailabilityService.SensorType.from(TYPE_ACCELEROMETER_UNCALIBRATED))
-        assertEquals(
-            SensorAvailabilityService.SensorType.GYROSCOPE,
-            SensorAvailabilityService.SensorType.from(Sensor.TYPE_GYROSCOPE)
-        )
-        assertEquals(
-            SensorAvailabilityService.SensorType.GYROSCOPE_UNCALIBRATED,
-            SensorAvailabilityService.SensorType.from(Sensor.TYPE_GYROSCOPE_UNCALIBRATED)
-        )
-        assertEquals(
-            SensorAvailabilityService.SensorType.MAGNETOMETER,
-            SensorAvailabilityService.SensorType.from(Sensor.TYPE_MAGNETIC_FIELD)
-        )
-        assertEquals(
-            SensorAvailabilityService.SensorType.MAGNETOMETER_UNCALIBRATED,
-            SensorAvailabilityService.SensorType.from(Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED)
-        )
-        assertEquals(
-            SensorAvailabilityService.SensorType.GRAVITY,
-            SensorAvailabilityService.SensorType.from(Sensor.TYPE_GRAVITY)
-        )
-        assertEquals(
-            SensorAvailabilityService.SensorType.ABSOLUTE_ATTITUDE,
-            SensorAvailabilityService.SensorType.from(Sensor.TYPE_ROTATION_VECTOR)
-        )
-        assertEquals(
-            SensorAvailabilityService.SensorType.RELATIVE_ATTITUDE,
-            SensorAvailabilityService.SensorType.from(Sensor.TYPE_GAME_ROTATION_VECTOR)
-        )
     }
 
     companion object {

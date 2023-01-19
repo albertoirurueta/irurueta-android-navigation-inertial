@@ -17,7 +17,6 @@ package com.irurueta.android.navigation.inertial.estimators.attitude
 
 import android.content.Context
 import android.os.SystemClock
-import com.irurueta.android.navigation.inertial.SensorAvailabilityService
 import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
 import com.irurueta.android.navigation.inertial.processors.AccelerometerGravityProcessor
@@ -240,9 +239,9 @@ abstract class BaseLevelingEstimator2<T : BaseLevelingEstimator2<T, L1, L2>,
      */
     private fun notifyAccuracyChanged(accuracy: SensorAccuracy?) {
         val sensorType = if (useAccelerometer) {
-            SensorAvailabilityService.SensorType.from(accelerometerSensorType.value)
+            SensorType.from(accelerometerSensorType.value)
         } else {
-            SensorAvailabilityService.SensorType.GRAVITY
+            SensorType.GRAVITY
         }
 
         @Suppress("UNCHECKED_CAST")
@@ -295,7 +294,7 @@ abstract class BaseLevelingEstimator2<T : BaseLevelingEstimator2<T, L1, L2>,
          */
         fun onAccuracyChanged(
             estimator: T,
-            sensorType: SensorAvailabilityService.SensorType?,
+            sensorType: SensorType?,
             accuracy: SensorAccuracy?
         )
     }

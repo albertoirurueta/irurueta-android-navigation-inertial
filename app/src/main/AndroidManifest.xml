@@ -30,6 +30,7 @@
         <activity android:name=".PoseEstimatorActivity"/>
         <activity android:name=".LocalPoseEstimatorActivity"/>
         <activity android:name=".RelativePoseEstimatorActivity"/>
+        <activity android:name=".AttitudeEstimatorActivity"/>
     </application>
 
 </manifest>

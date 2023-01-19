@@ -394,7 +394,7 @@ class AccelerometerAndMagnetometerSensorMeasurementSyncerTest {
 
     private fun logAccuracyChanged(
         syncer: AccelerometerAndMagnetometerSensorMeasurementSyncer,
-        sensorType: SensorMeasurementSyncer.SensorType,
+        sensorType: SensorType,
         accuracy: SensorAccuracy?
     ) {
         val startTime = syncer.startTimestamp
@@ -449,7 +449,7 @@ class AccelerometerAndMagnetometerSensorMeasurementSyncerTest {
 
     private fun logBufferFilled(
         syncer: AccelerometerAndMagnetometerSensorMeasurementSyncer,
-        sensorType: SensorMeasurementSyncer.SensorType
+        sensorType: SensorType
     ) {
         val startTime = syncer.startTimestamp
         val running = syncer.running
@@ -503,7 +503,7 @@ class AccelerometerAndMagnetometerSensorMeasurementSyncerTest {
 
     private fun logStaleMeasurements(
         syncer: AccelerometerAndMagnetometerSensorMeasurementSyncer,
-        sensorType: SensorMeasurementSyncer.SensorType,
+        sensorType: SensorType,
         measurements: Collection<SensorMeasurement<*>>
     ) {
         val startTime = syncer.startTimestamp

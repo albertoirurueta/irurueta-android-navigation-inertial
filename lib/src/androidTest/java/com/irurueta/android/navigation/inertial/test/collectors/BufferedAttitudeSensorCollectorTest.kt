@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2023 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,18 +18,17 @@ package com.irurueta.android.navigation.inertial.test.collectors
 import android.hardware.Sensor
 import android.hardware.SensorDirectChannel
 import android.util.Log
-import androidx.test.filters.RequiresDevice
 import androidx.test.platform.app.InstrumentationRegistry
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorMeasurement
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
-import com.irurueta.android.navigation.inertial.collectors.BufferedAccelerometerSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.AttitudeSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.AttitudeSensorType
+import com.irurueta.android.navigation.inertial.collectors.BufferedAttitudeSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 
-class BufferedAccelerometerSensorCollectorTest {
+class BufferedAttitudeSensorCollectorTest {
 
     private val syncHelper = ThreadSyncHelper()
 
@@ -42,26 +41,10 @@ class BufferedAccelerometerSensorCollectorTest {
     }
 
     @Test
-    fun sensor_whenAccelerometerSensorType_returnsSensor() {
+    fun sensor_whenAbsoluteAttitudeSensorType_returnsSensor() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val collector =
-            BufferedAccelerometerSensorCollector(context, AccelerometerSensorType.ACCELEROMETER)
-
-        val sensor = collector.sensor
-        requireNotNull(sensor)
-
-        logSensor(sensor)
-    }
-
-    @RequiresDevice
-    @Test
-    fun sensor_whenAccelerometerUncalibratedSensorType_returnsSensor() {
-        val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val collector =
-            BufferedAccelerometerSensorCollector(
-                context,
-                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
-            )
+            BufferedAttitudeSensorCollector(context, AttitudeSensorType.ABSOLUTE_ATTITUDE)
 
         val sensor = collector.sensor
         requireNotNull(sensor)
@@ -70,54 +53,102 @@ class BufferedAccelerometerSensorCollectorTest {
     }
 
     @Test
-    fun sensorAvailable_whenAccelerometerSensorType_returnsTrue() {
+    fun sensor_whenRelativeAttitudeSensorType_returnsSensor() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val collector =
-            BufferedAccelerometerSensorCollector(context, AccelerometerSensorType.ACCELEROMETER)
+            BufferedAttitudeSensorCollector(context, AttitudeSensorType.RELATIVE_ATTITUDE)
+
+        val sensor = collector.sensor
+        requireNotNull(sensor)
+
+        logSensor(sensor)
+    }
+
+    @Test
+    fun sensorAvailable_whenAbsoluteSensorType_returnsTrue() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val collector =
+            BufferedAttitudeSensorCollector(context, AttitudeSensorType.ABSOLUTE_ATTITUDE)
 
         assertTrue(collector.sensorAvailable)
     }
 
-    @RequiresDevice
     @Test
-    fun sensorAvailable_whenAccelerometerUncalibratedSensorType_returnsTrue() {
+    fun sensorAvailable_whenRelativeSensorType_returnsTrue() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val collector =
-            BufferedAccelerometerSensorCollector(
+            BufferedAttitudeSensorCollector(context, AttitudeSensorType.RELATIVE_ATTITUDE)
+
+        assertTrue(collector.sensorAvailable)
+    }
+
+    @Test
+    fun startAndStop_whenAbsoluteAttitudeSensorTypeStartOffsetEnabledAndStopWhenFilledBuffer_stopsWhenBufferFills() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val collector =
+            BufferedAttitudeSensorCollector(
                 context,
-                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
+                AttitudeSensorType.ABSOLUTE_ATTITUDE,
+                SensorDelay.FASTEST,
+                startOffsetEnabled = true,
+                stopWhenFilledBuffer = true,
+                accuracyChangedListener = { _, accuracy ->
+                    Log.d(
+                        "BufferedAttitudeSensorCollectorTest",
+                        "onAccuracyChanged - accuracy: $accuracy"
+                    )
+                },
+                bufferFilledListener = { collector ->
+                    assertTrue(collector.running)
+
+                    Log.d("BufferedAttitudeSensorCollectorTest", "onBufferFilled")
+
+                    syncHelper.notifyAll { completed++ }
+                },
+                measurementListener = { collector, measurement, bufferPosition ->
+                    assertTrue(collector.running)
+                    logMeasurement(collector, measurement, bufferPosition)
+                }
             )
 
-        assertTrue(collector.sensorAvailable)
+        collector.start()
+
+        syncHelper.waitOnCondition({ completed < 1 })
+
+        assertTrue(completed > 0)
+        Thread.sleep(SLEEP)
+
+        assertFalse(collector.running)
     }
 
     @Test
-    fun startAndStop_whenAccelerometerSensorTypeStartOffsetEnabledAndStopWhenFilledBuffer_stopsWhenBufferFills() {
+    fun startAndStop_whenRelativeAttitudeSensorTypeStartOffsetEnabledAndStopWhenFilledBuffer_stopsWhenBufferFills() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val collector = BufferedAccelerometerSensorCollector(
-            context,
-            AccelerometerSensorType.ACCELEROMETER,
-            SensorDelay.FASTEST,
-            startOffsetEnabled = true,
-            stopWhenFilledBuffer = true,
-            accuracyChangedListener = { _, accuracy ->
-                Log.d(
-                    "BufferedAccelerometerSensorCollectorTest",
-                    "onAccuracyChanged - accuracy: $accuracy"
-                )
-            },
-            bufferFilledListener = { collector ->
-                assertTrue(collector.running)
+        val collector =
+            BufferedAttitudeSensorCollector(
+                context,
+                AttitudeSensorType.ABSOLUTE_ATTITUDE,
+                SensorDelay.FASTEST,
+                startOffsetEnabled = true,
+                stopWhenFilledBuffer = true,
+                accuracyChangedListener = { _, accuracy ->
+                    Log.d(
+                        "BufferedAttitudeSensorCollectorTest",
+                        "onAccuracyChanged - accuracy: $accuracy"
+                    )
+                },
+                bufferFilledListener = { collector ->
+                    assertTrue(collector.running)
 
-                Log.d("BufferedAccelerometerSensorCollectorTest", "onBufferFilled")
+                    Log.d("BufferedAttitudeSensorCollectorTest", "onBufferFilled")
 
-                syncHelper.notifyAll { completed++ }
-            },
-            measurementListener = { collector, measurement, bufferPosition ->
-                assertTrue(collector.running)
-                logMeasurement(collector, measurement, bufferPosition)
-            }
-        )
+                    syncHelper.notifyAll { completed++ }
+                },
+                measurementListener = { collector, measurement, bufferPosition ->
+                    assertTrue(collector.running)
+                    logMeasurement(collector, measurement, bufferPosition)
+                }
+            )
 
         collector.start()
 
@@ -129,65 +160,25 @@ class BufferedAccelerometerSensorCollectorTest {
         assertFalse(collector.running)
     }
 
-    @RequiresDevice
     @Test
-    fun startAndStop_whenAccelerometerUncalibratedSensorTypeStartOffsetEnabledAndStopWhenFilledBuffer_stopsWhenBufferFills() {
+    fun startAndStop_whenAbsoluteAttitudeSensorTypeStartOffsetDisabledAndStopWhenFilledBuffer_stopsWhenBufferFills() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val collector = BufferedAccelerometerSensorCollector(
+        val collector = BufferedAttitudeSensorCollector(
             context,
-            AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
-            SensorDelay.FASTEST,
-            startOffsetEnabled = true,
-            stopWhenFilledBuffer = true,
-            accuracyChangedListener = { _, accuracy ->
-                Log.d(
-                    "BufferedAccelerometerSensorCollectorTest",
-                    "onAccuracyChanged - accuracy: $accuracy"
-                )
-            },
-            bufferFilledListener = { collector ->
-                assertTrue(collector.running)
-
-                Log.d("BufferedAccelerometerSensorCollectorTest", "onBufferFilled")
-
-                syncHelper.notifyAll { completed++ }
-            },
-            measurementListener = { collector, measurement, bufferPosition ->
-                assertTrue(collector.running)
-                logMeasurement(collector, measurement, bufferPosition)
-            }
-        )
-
-        collector.start()
-
-        syncHelper.waitOnCondition({ completed < 1 })
-
-        assertTrue(completed > 0)
-        Thread.sleep(SLEEP)
-
-        assertFalse(collector.running)
-    }
-
-    @RequiresDevice
-    @Test
-    fun startAndStop_whenAccelerometerSensorTypeStartOffsetDisabledAndStopWhenFilledBuffer_stopsWhenBufferFills() {
-        val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val collector = BufferedAccelerometerSensorCollector(
-            context,
-            AccelerometerSensorType.ACCELEROMETER,
+            AttitudeSensorType.ABSOLUTE_ATTITUDE,
             SensorDelay.FASTEST,
             startOffsetEnabled = false,
             stopWhenFilledBuffer = true,
             accuracyChangedListener = { _, accuracy ->
                 Log.d(
-                    "BufferedAccelerometerSensorCollectorTest",
+                    "BufferedAttitudeSensorCollectorTest",
                     "onAccuracyChanged - accuracy: $accuracy"
                 )
             },
             bufferFilledListener = { collector ->
                 assertTrue(collector.running)
 
-                Log.d("BufferedAccelerometerSensorCollectorTest", "onBufferFilled")
+                Log.d("BufferedAttitudeSensorCollectorTest", "onBufferFilled")
 
                 syncHelper.notifyAll { completed++ }
             },
@@ -207,26 +198,25 @@ class BufferedAccelerometerSensorCollectorTest {
         assertFalse(collector.running)
     }
 
-    @RequiresDevice
     @Test
-    fun startAndStop_whenAccelerometerUncalibratedSensorTypeStartOffsetDisabledAndStopWhenFilledBuffer_stopsWhenBufferFills() {
+    fun startAndStop_whenRelativeAttitudeSensorTypeStartOffsetDisabledAndStopWhenFilledBuffer_stopsWhenBufferFills() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val collector = BufferedAccelerometerSensorCollector(
+        val collector = BufferedAttitudeSensorCollector(
             context,
-            AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
+            AttitudeSensorType.RELATIVE_ATTITUDE,
             SensorDelay.FASTEST,
             startOffsetEnabled = false,
             stopWhenFilledBuffer = true,
             accuracyChangedListener = { _, accuracy ->
                 Log.d(
-                    "BufferedAccelerometerSensorCollectorTest",
+                    "BufferedAttitudeSensorCollectorTest",
                     "onAccuracyChanged - accuracy: $accuracy"
                 )
             },
             bufferFilledListener = { collector ->
                 assertTrue(collector.running)
 
-                Log.d("BufferedAccelerometerSensorCollectorTest", "onBufferFilled")
+                Log.d("BufferedAttitudeSensorCollectorTest", "onBufferFilled")
 
                 syncHelper.notifyAll { completed++ }
             },
@@ -246,26 +236,27 @@ class BufferedAccelerometerSensorCollectorTest {
         assertFalse(collector.running)
     }
 
-    @RequiresDevice
     @Test
     fun startAndStop_whenStopWhenFilledBufferDisabled_collectsMeasurementsUntilStopped() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val collector = BufferedAccelerometerSensorCollector(
+        val collector = BufferedAttitudeSensorCollector(
             context,
-            AccelerometerSensorType.ACCELEROMETER,
+            AttitudeSensorType.ABSOLUTE_ATTITUDE,
             SensorDelay.FASTEST,
             startOffsetEnabled = false,
             stopWhenFilledBuffer = false,
             accuracyChangedListener = { _, accuracy ->
                 Log.d(
-                    "BufferedAccelerometerSensorCollectorTest",
+                    "BufferedAttitudeSensorCollectorTest",
                     "onAccuracyChanged - accuracy: $accuracy"
                 )
             },
             bufferFilledListener = { collector ->
                 assertTrue(collector.running)
 
-                Log.d("BufferedAccelerometerSensorCollectorTest", "onBufferFilled")
+                Log.d("BufferedAttitudeSensorCollectorTest", "onBufferFilled")
+
+                syncHelper.notifyAll { completed++ }
             },
             measurementListener = { collector, measurement, bufferPosition ->
                 assertTrue(collector.running)
@@ -284,17 +275,17 @@ class BufferedAccelerometerSensorCollectorTest {
         syncHelper.waitOnCondition({ completed < 1 })
 
         assertTrue(completed > 0)
+        Thread.sleep(SLEEP)
 
         assertFalse(collector.running)
     }
 
-    @RequiresDevice
     @Test
     fun getMeasurementsBefore_obtainsExpectedMeasurements() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val collector = BufferedAccelerometerSensorCollector(
+        val collector = BufferedAttitudeSensorCollector(
             context,
-            AccelerometerSensorType.ACCELEROMETER,
+            AttitudeSensorType.ABSOLUTE_ATTITUDE,
             SensorDelay.FASTEST,
             startOffsetEnabled = false,
             stopWhenFilledBuffer = true,
@@ -323,8 +314,8 @@ class BufferedAccelerometerSensorCollectorTest {
     }
 
     private fun assertEqualAndValidMeasurements(
-        list1: List<AccelerometerSensorMeasurement>,
-        list2: List<AccelerometerSensorMeasurement>
+        list1: List<AttitudeSensorMeasurement>,
+        list2: List<AttitudeSensorMeasurement>
     ) {
         var previousTimestamp = -1L
         assertEquals(list1.size, list2.size)
@@ -338,17 +329,13 @@ class BufferedAccelerometerSensorCollectorTest {
     }
 
     private fun assertEqualMeasurement(
-        measurement1: AccelerometerSensorMeasurement,
-        measurement2: AccelerometerSensorMeasurement
+        measurement1: AttitudeSensorMeasurement,
+        measurement2: AttitudeSensorMeasurement
     ) {
         assertEquals(measurement1.timestamp, measurement2.timestamp)
         assertEquals(measurement1.accuracy, measurement2.accuracy)
-        assertEquals(measurement1.ax, measurement2.ax)
-        assertEquals(measurement1.ay, measurement2.ay)
-        assertEquals(measurement1.az, measurement2.az)
-        assertEquals(measurement1.bx, measurement2.bx)
-        assertEquals(measurement1.by, measurement2.by)
-        assertEquals(measurement1.bz, measurement2.bz)
+        assertEquals(measurement1.attitude, measurement2.attitude)
+        assertEquals(measurement1.headingAccuracy, measurement2.headingAccuracy)
     }
 
     private fun logSensor(sensor: Sensor) {
@@ -364,7 +351,7 @@ class BufferedAccelerometerSensorCollectorTest {
         }
         val id = sensor.id
         val maxDelay = sensor.maxDelay // microseconds (µs)
-        val maximumRange = sensor.maximumRange // m/s^2
+        val maximumRange = sensor.maximumRange // unitless
         val minDelay = sensor.minDelay // microseconds (µs)
         val name = sensor.name
         val power = sensor.power // milli-amperes (mA)
@@ -376,7 +363,7 @@ class BufferedAccelerometerSensorCollectorTest {
             Sensor.REPORTING_MODE_SPECIAL_TRIGGER -> "REPORTING_MODE_SPECIAL_TRIGGER"
             else -> ""
         }
-        val resolution = sensor.resolution // m/s^2
+        val resolution = sensor.resolution // unitless
         val stringType = sensor.stringType
         val type = sensor.type
         val vendor = sensor.vendor
@@ -386,20 +373,20 @@ class BufferedAccelerometerSensorCollectorTest {
         val wakeUpSensor = sensor.isWakeUpSensor
 
         Log.d(
-            "BufferedAccelerometerSensorCollectorTest",
+            "BufferedAttitudeSensorCollectorTest",
             "Sensor - fifoMaxEventCount: $fifoMaxEventCount, "
                     + "fifoReversedEventCount: $fifoReversedEventCount, "
                     + "highestDirectReportRateLevel: $highestDirectReportRateLevel, "
                     + "highestDirectReportRateLevelName: $highestDirectReportRateLevelName, "
                     + "id: $id, "
                     + "maxDelay: $maxDelay µs, "
-                    + "maximumRange: $maximumRange m/s^2, "
+                    + "maximumRange: $maximumRange unitless, "
                     + "minDelay: $minDelay µs, "
                     + "name: $name, "
                     + "power: $power mA, "
                     + "reportingMode: $reportingMode, "
                     + "reportingModeName: $reportingModeName, "
-                    + "resolution: $resolution m/s^2, "
+                    + "resolution: $resolution unitless, "
                     + "stringType: $stringType, "
                     + "type: $type, "
                     + "vendor: $vendor, "
@@ -411,8 +398,8 @@ class BufferedAccelerometerSensorCollectorTest {
     }
 
     private fun logMeasurement(
-        collector: BufferedAccelerometerSensorCollector,
-        measurement: AccelerometerSensorMeasurement,
+        collector: BufferedAttitudeSensorCollector,
+        measurement: AttitudeSensorMeasurement,
         bufferPosition: Int
     ) {
         val startTimestamp = collector.startTimestamp
@@ -420,25 +407,19 @@ class BufferedAccelerometerSensorCollectorTest {
         val usage = collector.usage
         val numberOfProcessedMeasurements = collector.numberOfProcessedMeasurements
         val mostRecentTimestamp = collector.mostRecentTimestamp
-        val ax = measurement.ax
-        val ay = measurement.ay
-        val az = measurement.az
-        val bx = measurement.bx
-        val by = measurement.by
-        val bz = measurement.bz
+        val attitude = measurement.attitude
         val timestamp = measurement.timestamp
         val accuracy = measurement.accuracy
 
         Log.d(
-            "BufferedAccelerometerSensorCollectorTest",
+            "BufferedAttitudeSensorCollectorTest",
             "onMeasurement - startTimestamp: $startTimestamp, startOffset: $startOffset, " +
                     "buffer position: $bufferPosition, " +
                     "usage: $usage, " +
                     "numberOfProcessedMeasurements: $numberOfProcessedMeasurements, " +
                     "mostRecentTimestamp: $mostRecentTimestamp, " +
-                    "ax: $ax m/s^2, ay: $ay m/s^2, az: $az m/s^2, " +
-                    "bx: $bx m/s^2, by: $by m/s^2, bz: $bz m/s^2, " +
-                    "timestamp: $timestamp, accuracy: $accuracy"
+                    "a: ${attitude.a}, b: ${attitude.b}, c: ${attitude.c}, " +
+                    "d: ${attitude.d}, timestamp: $timestamp, accuracy: $accuracy"
         )
     }
 

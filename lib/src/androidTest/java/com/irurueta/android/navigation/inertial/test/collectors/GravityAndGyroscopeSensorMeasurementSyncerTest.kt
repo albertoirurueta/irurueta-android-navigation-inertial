@@ -360,7 +360,7 @@ class GravityAndGyroscopeSensorMeasurementSyncerTest {
 
     private fun logAccuracyChanged(
         syncer: GravityAndGyroscopeSensorMeasurementSyncer,
-        sensorType: SensorMeasurementSyncer.SensorType,
+        sensorType: SensorType,
         accuracy: SensorAccuracy?
     ) {
         val startTime = syncer.startTimestamp
@@ -413,7 +413,7 @@ class GravityAndGyroscopeSensorMeasurementSyncerTest {
 
     private fun logBufferFilled(
         syncer: GravityAndGyroscopeSensorMeasurementSyncer,
-        sensorType: SensorMeasurementSyncer.SensorType
+        sensorType: SensorType
     ) {
         val startTime = syncer.startTimestamp
         val running = syncer.running
@@ -465,7 +465,7 @@ class GravityAndGyroscopeSensorMeasurementSyncerTest {
 
     private fun logStaleMeasurements(
         syncer: GravityAndGyroscopeSensorMeasurementSyncer,
-        sensorType: SensorMeasurementSyncer.SensorType,
+        sensorType: SensorType,
         measurements: Collection<SensorMeasurement<*>>
     ) {
         val startTime = syncer.startTimestamp

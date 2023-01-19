@@ -44,4 +44,7 @@
     <string name="pose_estimator_button">Pose Estimator</string>
     <string name="local_pose_estimator_button">Local Pose Estimator</string>
     <string name="relative_pose_estimator_button">Relative Pose Estimator</string>
+    <string name="android_attitude_estimator">Android attitude estimator:</string>
+    <string name="absolute_attitude">Absolute attitude</string>
+    <string name="relative_attitude">Relative attitude</string>
 </resources>

@@ -20,7 +20,6 @@ import android.location.Location
 import android.os.SystemClock
 import androidx.test.core.app.ApplicationProvider
 import com.irurueta.algebra.Matrix
-import com.irurueta.android.navigation.inertial.SensorAvailabilityService
 import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.estimators.filter.MeanAveragingFilter
 import com.irurueta.android.navigation.inertial.getPrivateProperty
@@ -420,7 +419,7 @@ class AccurateLevelingEstimator2Test {
         verify(exactly = 1) {
             accuracyChangedListener.onAccuracyChanged(
                 estimator,
-                SensorAvailabilityService.SensorType.GRAVITY,
+                SensorType.GRAVITY,
                 SensorAccuracy.HIGH
             )
         }
@@ -869,7 +868,7 @@ class AccurateLevelingEstimator2Test {
         verify(exactly = 1) {
             accuracyChangedListener.onAccuracyChanged(
                 estimator,
-                SensorAvailabilityService.SensorType.ACCELEROMETER_UNCALIBRATED,
+                SensorType.ACCELEROMETER_UNCALIBRATED,
                 SensorAccuracy.HIGH
             )
         }

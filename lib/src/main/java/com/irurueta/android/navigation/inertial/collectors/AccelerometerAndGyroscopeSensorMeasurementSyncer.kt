@@ -337,6 +337,8 @@ class AccelerometerAndGyroscopeSensorMeasurementSyncer(
     override fun start(startTimestamp: Long): Boolean {
         check(!running)
 
+        stopping = false
+        clearCollectionsAndReset()
         this.startTimestamp = startTimestamp
         running = if (accelerometerSensorCollector.start(startTimestamp)
             && gyroscopeSensorCollector.start(startTimestamp)
@@ -355,22 +357,11 @@ class AccelerometerAndGyroscopeSensorMeasurementSyncer(
      */
     @Synchronized
     override fun stop() {
+        stopping = true
         accelerometerSensorCollector.stop()
         gyroscopeSensorCollector.stop()
 
-        accelerometerMeasurements.clear()
-        gyroscopeMeasurements.clear()
-
-        numberOfProcessedMeasurements = 0
-        mostRecentTimestamp = null
-        oldestTimestamp = null
-        running = false
-
-        hasPreviousAccelerometerMeasurement = false
-        hasPreviousGyroscopeMeasurement = false
-        lastNotifiedTimestamp = 0L
-        lastNotifiedAccelerometerTimestamp = 0L
-        lastNotifiedGyroscopeTimestamp = 0L
+        reset()
     }
 
     /**
@@ -498,6 +489,41 @@ class AccelerometerAndGyroscopeSensorMeasurementSyncer(
         foundGyroscopeMeasurements.clear()
 
         cleanupStaleMeasurements()
+
+        if (stopping) {
+            // collections are reset at this point to prevent concurrent modifications
+            clearCollectionsAndReset()
+            stopping = false
+        }
+    }
+
+    /**
+     * Resets syncer status.
+     */
+    private fun reset() {
+        numberOfProcessedMeasurements = 0
+        mostRecentTimestamp = null
+        oldestTimestamp = null
+        running = false
+
+        hasPreviousAccelerometerMeasurement = false
+        hasPreviousGyroscopeMeasurement = false
+        lastNotifiedTimestamp = 0L
+        lastNotifiedAccelerometerTimestamp = 0L
+        lastNotifiedGyroscopeTimestamp = 0L
+    }
+
+    /**
+     * Clears internal collections and resets.
+     */
+    private fun clearCollectionsAndReset() {
+        accelerometerMeasurements.clear()
+        gyroscopeMeasurements.clear()
+        alreadyProcessedAccelerometerMeasurements.clear()
+        alreadyProcessedGyroscopeMeasurements.clear()
+        foundGyroscopeMeasurements.clear()
+
+        reset()
     }
 
     /**

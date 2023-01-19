@@ -456,6 +456,8 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
     override fun start(startTimestamp: Long): Boolean {
         check(!running)
 
+        stopping = false
+        clearCollectionsAndReset()
         this.startTimestamp = startTimestamp
         running = if (accelerometerSensorCollector.start(startTimestamp)
             && gravitySensorCollector.start(startTimestamp)
@@ -475,26 +477,12 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
      */
     @Synchronized
     override fun stop() {
+        stopping = true
         accelerometerSensorCollector.stop()
         gravitySensorCollector.stop()
         gyroscopeSensorCollector.stop()
 
-        accelerometerMeasurements.clear()
-        gravityMeasurements.clear()
-        gyroscopeMeasurements.clear()
-
-        numberOfProcessedMeasurements = 0
-        mostRecentTimestamp = null
-        oldestTimestamp = null
-        running = false
-
-        hasPreviousAccelerometerMeasurement = false
-        hasPreviousGravityMeasurement = false
-        hasPreviousGyroscopeMeasurement = false
-        lastNotifiedTimestamp = 0L
-        lastNotifiedAccelerometerTimestamp = 0L
-        lastNotifiedGravityTimestamp = 0L
-        lastNotifiedGyroscopeTimestamp = 0L
+        reset()
     }
 
     /**
@@ -559,8 +547,8 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
                 if (hasPreviousGravityMeasurement && hasPreviousGyroscopeMeasurement
                     && accelerometerTimestamp > lastNotifiedTimestamp
                     && accelerometerTimestamp >= lastNotifiedAccelerometerTimestamp
-                    && previousGravityMeasurement.timestamp >= lastNotifiedGravityTimestamp
-                    && previousGyroscopeMeasurement.timestamp >= lastNotifiedGyroscopeTimestamp
+                    && previousGravityMeasurement.timestamp > lastNotifiedGravityTimestamp
+                    && previousGyroscopeMeasurement.timestamp > lastNotifiedGyroscopeTimestamp
                 ) {
                     // generate synchronized measurement when rate of accelerometer is grater
                     // than gravity one
@@ -603,7 +591,7 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
                             && gravityTimestamp > lastNotifiedTimestamp
                             && accelerometerTimestamp >= lastNotifiedAccelerometerTimestamp
                             && gravityTimestamp >= lastNotifiedGravityTimestamp
-                            && previousGyroscopeMeasurement.timestamp >= lastNotifiedGyroscopeTimestamp
+                            && previousGyroscopeMeasurement.timestamp > lastNotifiedGyroscopeTimestamp
                         ) {
                             // generate synchronized measurement when rate of gravity is greater
                             // than gyroscope one
@@ -701,6 +689,46 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
         foundGyroscopeMeasurements.clear()
 
         cleanupStaleMeasurements()
+
+        if (stopping) {
+            // collections are reset at this point to prevent concurrent modifications
+            clearCollectionsAndReset()
+            stopping = false
+        }
+    }
+
+    /**
+     * Resets syncer status.
+     */
+    private fun reset() {
+        numberOfProcessedMeasurements = 0
+        mostRecentTimestamp = null
+        oldestTimestamp = null
+        running = false
+
+        hasPreviousAccelerometerMeasurement = false
+        hasPreviousGravityMeasurement = false
+        hasPreviousGyroscopeMeasurement = false
+        lastNotifiedTimestamp = 0L
+        lastNotifiedAccelerometerTimestamp = 0L
+        lastNotifiedGravityTimestamp = 0L
+        lastNotifiedGyroscopeTimestamp = 0L
+    }
+
+    /**
+     * Clears internal collections and resets
+     */
+    private fun clearCollectionsAndReset() {
+        accelerometerMeasurements.clear()
+        gravityMeasurements.clear()
+        gyroscopeMeasurements.clear()
+        alreadyProcessedAccelerometerMeasurements.clear()
+        alreadyProcessedGravityMeasurements.clear()
+        alreadyProcessedGyroscopeMeasurements.clear()
+        foundGravityMeasurements.clear()
+        foundGyroscopeMeasurements.clear()
+
+        reset()
     }
 
     /**

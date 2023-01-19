@@ -288,7 +288,7 @@ class GeomagneticAttitudeEstimator2(
      * Notifies changes in sensor accuracy.
      */
     private fun notifyAccuracyChanged(
-        sensorType: SensorMeasurementSyncer.SensorType,
+        sensorType: SensorType,
         accuracy: SensorAccuracy?
     ) {
         accuracyChangedListener?.onAccuracyChanged(this, sensorType, accuracy)
@@ -297,7 +297,7 @@ class GeomagneticAttitudeEstimator2(
     /**
      * Notifies when a sensor buffer becomes full.
      */
-    private fun notifyBufferFilled(sensorType: SensorMeasurementSyncer.SensorType) {
+    private fun notifyBufferFilled(sensorType: SensorType) {
         bufferFilledListener?.onBufferFilled(this, sensorType)
     }
 
@@ -398,7 +398,7 @@ class GeomagneticAttitudeEstimator2(
          */
         fun onAccuracyChanged(
             estimator: GeomagneticAttitudeEstimator2,
-            sensorType: SensorMeasurementSyncer.SensorType,
+            sensorType: SensorType,
             accuracy: SensorAccuracy?
         )
     }
@@ -418,7 +418,7 @@ class GeomagneticAttitudeEstimator2(
          */
         fun onBufferFilled(
             estimator: GeomagneticAttitudeEstimator2,
-            sensorType: SensorMeasurementSyncer.SensorType
+            sensorType: SensorType
         )
     }
 }

@@ -1037,7 +1037,7 @@ class LeveledRelativeAttitudeEstimator2Test {
         requireNotNull(listener)
         listener.onAccuracyChanged(
             gravityAndGyroscopeSyncer,
-            SensorMeasurementSyncer.SensorType.GRAVITY,
+            SensorType.GRAVITY,
             SensorAccuracy.MEDIUM
         )
     }
@@ -1060,7 +1060,7 @@ class LeveledRelativeAttitudeEstimator2Test {
         requireNotNull(listener)
         listener.onAccuracyChanged(
             gravityAndGyroscopeSyncer,
-            SensorMeasurementSyncer.SensorType.GRAVITY,
+            SensorType.GRAVITY,
             SensorAccuracy.MEDIUM
         )
 
@@ -1068,7 +1068,7 @@ class LeveledRelativeAttitudeEstimator2Test {
         verify(exactly = 1) {
             accuracyChangedListener.onAccuracyChanged(
                 estimator,
-                SensorMeasurementSyncer.SensorType.GRAVITY,
+                SensorType.GRAVITY,
                 SensorAccuracy.MEDIUM
             )
         }
@@ -1087,7 +1087,7 @@ class LeveledRelativeAttitudeEstimator2Test {
         requireNotNull(listener)
         listener.onBufferFilled(
             gravityAndGyroscopeSyncer,
-            SensorMeasurementSyncer.SensorType.GRAVITY
+            SensorType.GRAVITY
         )
     }
 
@@ -1109,14 +1109,14 @@ class LeveledRelativeAttitudeEstimator2Test {
         requireNotNull(listener)
         listener.onBufferFilled(
             gravityAndGyroscopeSyncer,
-            SensorMeasurementSyncer.SensorType.GRAVITY
+            SensorType.GRAVITY
         )
 
         // check
         verify(exactly = 1) {
             bufferFilledListener.onBufferFilled(
                 estimator,
-                SensorMeasurementSyncer.SensorType.GRAVITY
+                SensorType.GRAVITY
             )
         }
     }
@@ -1307,7 +1307,7 @@ class LeveledRelativeAttitudeEstimator2Test {
         requireNotNull(listener)
         listener.onAccuracyChanged(
             accelerometerAndGyroscopeSyncer,
-            SensorMeasurementSyncer.SensorType.GRAVITY,
+            SensorType.GRAVITY,
             SensorAccuracy.MEDIUM
         )
     }
@@ -1330,7 +1330,7 @@ class LeveledRelativeAttitudeEstimator2Test {
         requireNotNull(listener)
         listener.onAccuracyChanged(
             accelerometerAndGyroscopeSyncer,
-            SensorMeasurementSyncer.SensorType.GRAVITY,
+            SensorType.GRAVITY,
             SensorAccuracy.MEDIUM
         )
 
@@ -1338,7 +1338,7 @@ class LeveledRelativeAttitudeEstimator2Test {
         verify(exactly = 1) {
             accuracyChangedListener.onAccuracyChanged(
                 estimator,
-                SensorMeasurementSyncer.SensorType.GRAVITY,
+                SensorType.GRAVITY,
                 SensorAccuracy.MEDIUM
             )
         }
@@ -1357,7 +1357,7 @@ class LeveledRelativeAttitudeEstimator2Test {
         requireNotNull(listener)
         listener.onBufferFilled(
             accelerometerAndGyroscopeSyncer,
-            SensorMeasurementSyncer.SensorType.GRAVITY
+            SensorType.GRAVITY
         )
     }
 
@@ -1379,14 +1379,14 @@ class LeveledRelativeAttitudeEstimator2Test {
         requireNotNull(listener)
         listener.onBufferFilled(
             accelerometerAndGyroscopeSyncer,
-            SensorMeasurementSyncer.SensorType.GRAVITY
+            SensorType.GRAVITY
         )
 
         // check
         verify(exactly = 1) {
             bufferFilledListener.onBufferFilled(
                 estimator,
-                SensorMeasurementSyncer.SensorType.GRAVITY
+                SensorType.GRAVITY
             )
         }
     }

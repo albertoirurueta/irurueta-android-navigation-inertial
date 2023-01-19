@@ -583,6 +583,8 @@ class AccelerometerGravityGyroscopeAndMagnetometerSensorMeasurementSyncer(
     override fun start(startTimestamp: Long): Boolean {
         check(!running)
 
+        stopping = false
+        clearCollectionsAndReset()
         this.startTimestamp = startTimestamp
         running = if (accelerometerSensorCollector.start(startTimestamp)
             && gravitySensorCollector.start(startTimestamp)
@@ -603,30 +605,13 @@ class AccelerometerGravityGyroscopeAndMagnetometerSensorMeasurementSyncer(
      */
     @Synchronized
     override fun stop() {
+        stopping = true
         accelerometerSensorCollector.stop()
         gravitySensorCollector.stop()
         gyroscopeSensorCollector.stop()
         magnetometerSensorCollector.stop()
 
-        accelerometerMeasurements.clear()
-        gravityMeasurements.clear()
-        gyroscopeMeasurements.clear()
-        magnetometerMeasurements.clear()
-
-        numberOfProcessedMeasurements = 0
-        mostRecentTimestamp = null
-        oldestTimestamp = null
-        running = false
-
-        hasPreviousAccelerometerMeasurement = false
-        hasPreviousGravityMeasurement = false
-        hasPreviousGyroscopeMeasurement = false
-        hasPreviousMagnetometerMeasurement = false
-        lastNotifiedTimestamp = 0L
-        lastNotifiedAccelerometerTimestamp = 0L
-        lastNotifiedGravityTimestamp = 0L
-        lastNotifiedGyroscopeTimestamp = 0L
-        lastNotifiedMagnetometerTimestamp = 0L
+        reset()
     }
 
     /**
@@ -703,9 +688,9 @@ class AccelerometerGravityGyroscopeAndMagnetometerSensorMeasurementSyncer(
                 if (hasPreviousGravityMeasurement && hasPreviousGyroscopeMeasurement
                     && accelerometerTimestamp > lastNotifiedTimestamp
                     && accelerometerTimestamp >= lastNotifiedAccelerometerTimestamp
-                    && previousGravityMeasurement.timestamp >= lastNotifiedGravityTimestamp
-                    && previousGyroscopeMeasurement.timestamp >= lastNotifiedGyroscopeTimestamp
-                    && previousMagnetometerMeasurement.timestamp >= lastNotifiedMagnetometerTimestamp
+                    && previousGravityMeasurement.timestamp > lastNotifiedGravityTimestamp
+                    && previousGyroscopeMeasurement.timestamp > lastNotifiedGyroscopeTimestamp
+                    && previousMagnetometerMeasurement.timestamp > lastNotifiedMagnetometerTimestamp
                 ) {
                     // generate synchronized measurement when rate of accelerometer is grater
                     // than gravity one
@@ -752,8 +737,8 @@ class AccelerometerGravityGyroscopeAndMagnetometerSensorMeasurementSyncer(
                             && gravityTimestamp > lastNotifiedTimestamp
                             && accelerometerTimestamp >= lastNotifiedAccelerometerTimestamp
                             && gravityTimestamp >= lastNotifiedGravityTimestamp
-                            && previousGyroscopeMeasurement.timestamp >= lastNotifiedGyroscopeTimestamp
-                            && previousMagnetometerMeasurement.timestamp >= lastNotifiedMagnetometerTimestamp
+                            && previousGyroscopeMeasurement.timestamp > lastNotifiedGyroscopeTimestamp
+                            && previousMagnetometerMeasurement.timestamp > lastNotifiedMagnetometerTimestamp
                         ) {
                             // generate synchronized measurement when rate of gravity is greater
                             // than gyroscope one
@@ -806,7 +791,7 @@ class AccelerometerGravityGyroscopeAndMagnetometerSensorMeasurementSyncer(
                                     && accelerometerTimestamp >= lastNotifiedAccelerometerTimestamp
                                     && gravityTimestamp >= lastNotifiedGravityTimestamp
                                     && gyroscopeTimestamp >= lastNotifiedGyroscopeTimestamp
-                                    && previousMagnetometerMeasurement.timestamp >= lastNotifiedMagnetometerTimestamp
+                                    && previousMagnetometerMeasurement.timestamp > lastNotifiedMagnetometerTimestamp
                                 ) {
                                     // generate synchronized measurement when rate of gyroscope is
                                     // greater than magnetometer one
@@ -814,7 +799,9 @@ class AccelerometerGravityGyroscopeAndMagnetometerSensorMeasurementSyncer(
                                     syncedMeasurement.accelerometerMeasurement?.copyFrom(
                                         accelerometerMeasurement
                                     )
-                                    syncedMeasurement.gravityMeasurement?.copyFrom(gravityMeasurement)
+                                    syncedMeasurement.gravityMeasurement?.copyFrom(
+                                        gravityMeasurement
+                                    )
                                     syncedMeasurement.gyroscopeMeasurement?.copyFrom(
                                         gyroscopeMeasurement
                                     )
@@ -852,7 +839,9 @@ class AccelerometerGravityGyroscopeAndMagnetometerSensorMeasurementSyncer(
                                         syncedMeasurement.accelerometerMeasurement?.copyFrom(
                                             accelerometerMeasurement
                                         )
-                                        syncedMeasurement.gravityMeasurement?.copyFrom(gravityMeasurement)
+                                        syncedMeasurement.gravityMeasurement?.copyFrom(
+                                            gravityMeasurement
+                                        )
                                         syncedMeasurement.gyroscopeMeasurement?.copyFrom(
                                             gyroscopeMeasurement
                                         )
@@ -875,7 +864,9 @@ class AccelerometerGravityGyroscopeAndMagnetometerSensorMeasurementSyncer(
                                 }
                                 processedGyroscope = true
 
-                                previousMagnetometerMeasurement.copyFrom(foundMagnetometerMeasurements.last())
+                                previousMagnetometerMeasurement.copyFrom(
+                                    foundMagnetometerMeasurements.last()
+                                )
                                 hasPreviousMagnetometerMeasurement = true
                             }
 
@@ -928,6 +919,51 @@ class AccelerometerGravityGyroscopeAndMagnetometerSensorMeasurementSyncer(
         foundMagnetometerMeasurements.clear()
 
         cleanupStaleMeasurements()
+
+        if (stopping) {
+            // collections are reset at this point to prevent concurrent modifications
+            clearCollectionsAndReset()
+            stopping = false
+        }
+    }
+
+    /**
+     * Resets syncer status.
+     */
+    private fun reset() {
+        numberOfProcessedMeasurements = 0
+        mostRecentTimestamp = null
+        oldestTimestamp = null
+        running = false
+
+        hasPreviousAccelerometerMeasurement = false
+        hasPreviousGravityMeasurement = false
+        hasPreviousGyroscopeMeasurement = false
+        hasPreviousMagnetometerMeasurement = false
+        lastNotifiedTimestamp = 0L
+        lastNotifiedAccelerometerTimestamp = 0L
+        lastNotifiedGravityTimestamp = 0L
+        lastNotifiedGyroscopeTimestamp = 0L
+        lastNotifiedMagnetometerTimestamp = 0L
+    }
+
+    /**
+     * Clears internal collections and resets
+     */
+    private fun clearCollectionsAndReset() {
+        accelerometerMeasurements.clear()
+        gravityMeasurements.clear()
+        gyroscopeMeasurements.clear()
+        magnetometerMeasurements.clear()
+        alreadyProcessedAccelerometerMeasurements.clear()
+        alreadyProcessedGravityMeasurements.clear()
+        alreadyProcessedGyroscopeMeasurements.clear()
+        alreadyProcessedMagnetometerMeasurements.clear()
+        foundGravityMeasurements.clear()
+        foundGyroscopeMeasurements.clear()
+        foundMagnetometerMeasurements.clear()
+
+        reset()
     }
 
     /**

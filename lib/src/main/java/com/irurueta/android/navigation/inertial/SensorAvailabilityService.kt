@@ -19,6 +19,7 @@ import android.content.Context
 import android.hardware.Sensor
 import android.hardware.SensorManager
 import android.os.Build
+import com.irurueta.android.navigation.inertial.collectors.SensorType
 
 /**
  * Indicates whether a given sensor is available or not.
@@ -149,101 +150,5 @@ class SensorAvailabilityService(val context: Context) {
      */
     private fun hasSensor(sensorType: Int): Boolean {
         return sensorManager?.getDefaultSensor(sensorType) != null
-    }
-
-    private companion object {
-        /**
-         * Constant defining uncalibrated accelerometer type.
-         */
-        val TYPE_ACCELEROMETER_UNCALIBRATED =
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-                Sensor.TYPE_ACCELEROMETER_UNCALIBRATED
-            else 35
-    }
-
-    /**
-     * Indicates the sensor types supported for inertial navigation.
-     *
-     * @property value numerical value representing sensor type.
-     */
-    enum class SensorType(val value: Int) {
-        /**
-         * Accelerometer sensor.
-         * Returns acceleration including gravity.
-         */
-        ACCELEROMETER(Sensor.TYPE_ACCELEROMETER),
-
-        /**
-         * Linear acceleration.
-         * Returns accelerometer not including gravity.
-         */
-        LINEAR_ACCELERATION(Sensor.TYPE_LINEAR_ACCELERATION),
-
-        /**
-         * Uncalibrated accelerometer sensor.
-         * Returns acceleration including gravity but without bias correction.
-         * This accelerometer is only available for SDK 26 or later.
-         */
-        ACCELEROMETER_UNCALIBRATED(TYPE_ACCELEROMETER_UNCALIBRATED),
-
-        /**
-         * Gyroscope.
-         * Returns angular speed measurements.
-         */
-        GYROSCOPE(Sensor.TYPE_GYROSCOPE),
-
-        /**
-         * Uncalibrated gyroscope.
-         * Returns angular speed measurements without bias correction.
-         */
-        GYROSCOPE_UNCALIBRATED(Sensor.TYPE_GYROSCOPE_UNCALIBRATED),
-
-        /**
-         * Magnetometer.
-         * Returns magnetic field measurements.
-         */
-        MAGNETOMETER(Sensor.TYPE_MAGNETIC_FIELD),
-
-        /**
-         * Uncalibrated magnetometer.
-         * Returns magnetic field measurements without hard-iron bias correction.
-         */
-        MAGNETOMETER_UNCALIBRATED(Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED),
-
-        /**
-         * Gravity.
-         */
-        GRAVITY(Sensor.TYPE_GRAVITY),
-
-        /**
-         * Absolute attitude.
-         * This sensor requires a magnetometer and returns absolute device orientation respect to
-         * Earth.
-         */
-        ABSOLUTE_ATTITUDE(Sensor.TYPE_ROTATION_VECTOR),
-
-        /**
-         * Relative attitude.
-         * This sensor does not require a magnetometer and returns device orientation respect to
-         * an arbitrary initial orientation that might drift over time.
-         */
-        RELATIVE_ATTITUDE(Sensor.TYPE_GAME_ROTATION_VECTOR);
-
-        companion object {
-            /**
-             * Gets sensor type based on provided numerical value.
-             *
-             * @param value code used for sensor types.
-             * @return code expressed as an enum or null if code has no match.
-             */
-            fun from(value: Int): SensorType? {
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O
-                    && value == TYPE_ACCELEROMETER_UNCALIBRATED
-                ) {
-                    return null
-                }
-                return values().find { it.value == value }
-            }
-        }
     }
 }

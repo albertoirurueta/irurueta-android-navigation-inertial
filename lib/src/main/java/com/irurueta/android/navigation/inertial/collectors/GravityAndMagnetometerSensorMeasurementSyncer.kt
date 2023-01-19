@@ -329,6 +329,8 @@ class GravityAndMagnetometerSensorMeasurementSyncer(
     override fun start(startTimestamp: Long): Boolean {
         check(!running)
 
+        stopping = false
+        clearCollectionsAndReset()
         this.startTimestamp = startTimestamp
         running = if (gravitySensorCollector.start(startTimestamp)
             && magnetometerSensorCollector.start(startTimestamp)
@@ -347,22 +349,11 @@ class GravityAndMagnetometerSensorMeasurementSyncer(
      */
     @Synchronized
     override fun stop() {
+        stopping = true
         gravitySensorCollector.stop()
         magnetometerSensorCollector.stop()
 
-        gravityMeasurements.clear()
-        magnetometerMeasurements.clear()
-
-        numberOfProcessedMeasurements = 0
-        mostRecentTimestamp = null
-        oldestTimestamp = null
-        running = false
-
-        hasPreviousGravityMeasurement = false
-        hasPreviousMagnetometerMeasurement = false
-        lastNotifiedTimestamp = 0L
-        lastNotifiedGravityTimestamp = 0L
-        lastNotifiedMagnetometerTimestamp = 0L
+        reset()
     }
 
     /**
@@ -486,6 +477,41 @@ class GravityAndMagnetometerSensorMeasurementSyncer(
         foundMagnetometerMeasurements.clear()
 
         cleanupStaleMeasurements()
+
+        if (stopping) {
+            // collections are reset at this point to prevent concurrent modifications
+            clearCollectionsAndReset()
+            stopping = false
+        }
+    }
+
+    /**
+     * Resets syncer status.
+     */
+    private fun reset() {
+        numberOfProcessedMeasurements = 0
+        mostRecentTimestamp = null
+        oldestTimestamp = null
+        running = false
+
+        hasPreviousGravityMeasurement = false
+        hasPreviousMagnetometerMeasurement = false
+        lastNotifiedTimestamp = 0L
+        lastNotifiedGravityTimestamp = 0L
+        lastNotifiedMagnetometerTimestamp = 0L
+    }
+
+    /**
+     * Clears internal collections and resets
+     */
+    private fun clearCollectionsAndReset() {
+        gravityMeasurements.clear()
+        magnetometerMeasurements.clear()
+        alreadyProcessedGravityMeasurements.clear()
+        alreadyProcessedMagnetometerMeasurements.clear()
+        foundMagnetometerMeasurements.clear()
+
+        reset()
     }
 
     /**

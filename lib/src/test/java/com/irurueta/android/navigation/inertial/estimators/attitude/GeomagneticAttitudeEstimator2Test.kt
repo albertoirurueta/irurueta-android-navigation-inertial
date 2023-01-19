@@ -649,7 +649,7 @@ class GeomagneticAttitudeEstimator2Test {
         requireNotNull(listener)
         listener.onAccuracyChanged(
             gravityAndMagnetometerSyncer,
-            SensorMeasurementSyncer.SensorType.GRAVITY,
+            SensorType.GRAVITY,
             SensorAccuracy.MEDIUM
         )
     }
@@ -672,7 +672,7 @@ class GeomagneticAttitudeEstimator2Test {
         requireNotNull(listener)
         listener.onAccuracyChanged(
             gravityAndMagnetometerSyncer,
-            SensorMeasurementSyncer.SensorType.GRAVITY,
+            SensorType.GRAVITY,
             SensorAccuracy.MEDIUM
         )
 
@@ -680,7 +680,7 @@ class GeomagneticAttitudeEstimator2Test {
         verify(exactly = 1) {
             accuracyChangedListener.onAccuracyChanged(
                 estimator,
-                SensorMeasurementSyncer.SensorType.GRAVITY,
+                SensorType.GRAVITY,
                 SensorAccuracy.MEDIUM
             )
         }
@@ -699,7 +699,7 @@ class GeomagneticAttitudeEstimator2Test {
         requireNotNull(listener)
         listener.onBufferFilled(
             gravityAndMagnetometerSyncer,
-            SensorMeasurementSyncer.SensorType.GRAVITY
+            SensorType.GRAVITY
         )
     }
 
@@ -721,14 +721,14 @@ class GeomagneticAttitudeEstimator2Test {
         requireNotNull(listener)
         listener.onBufferFilled(
             gravityAndMagnetometerSyncer,
-            SensorMeasurementSyncer.SensorType.GRAVITY
+            SensorType.GRAVITY
         )
 
         // check
         verify(exactly = 1) {
             bufferFilledListener.onBufferFilled(
                 estimator,
-                SensorMeasurementSyncer.SensorType.GRAVITY
+                SensorType.GRAVITY
             )
         }
     }
@@ -919,7 +919,7 @@ class GeomagneticAttitudeEstimator2Test {
         requireNotNull(listener)
         listener.onAccuracyChanged(
             accelerometerAndMagnetometerSyncer,
-            SensorMeasurementSyncer.SensorType.GRAVITY,
+            SensorType.GRAVITY,
             SensorAccuracy.MEDIUM
         )
     }
@@ -942,7 +942,7 @@ class GeomagneticAttitudeEstimator2Test {
         requireNotNull(listener)
         listener.onAccuracyChanged(
             accelerometerAndMagnetometerSyncer,
-            SensorMeasurementSyncer.SensorType.GRAVITY,
+            SensorType.GRAVITY,
             SensorAccuracy.MEDIUM
         )
 
@@ -950,7 +950,7 @@ class GeomagneticAttitudeEstimator2Test {
         verify(exactly = 1) {
             accuracyChangedListener.onAccuracyChanged(
                 estimator,
-                SensorMeasurementSyncer.SensorType.GRAVITY,
+                SensorType.GRAVITY,
                 SensorAccuracy.MEDIUM
             )
         }
@@ -969,7 +969,7 @@ class GeomagneticAttitudeEstimator2Test {
         requireNotNull(listener)
         listener.onBufferFilled(
             accelerometerAndMagnetometerSyncer,
-            SensorMeasurementSyncer.SensorType.GRAVITY
+            SensorType.GRAVITY
         )
     }
 
@@ -991,14 +991,14 @@ class GeomagneticAttitudeEstimator2Test {
         requireNotNull(listener)
         listener.onBufferFilled(
             accelerometerAndMagnetometerSyncer,
-            SensorMeasurementSyncer.SensorType.GRAVITY
+            SensorType.GRAVITY
         )
 
         // check
         verify(exactly = 1) {
             bufferFilledListener.onBufferFilled(
                 estimator,
-                SensorMeasurementSyncer.SensorType.GRAVITY
+                SensorType.GRAVITY
             )
         }
     }
