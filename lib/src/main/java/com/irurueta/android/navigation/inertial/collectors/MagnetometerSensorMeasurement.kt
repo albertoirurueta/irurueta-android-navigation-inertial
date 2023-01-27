@@ -37,6 +37,7 @@ package com.irurueta.android.navigation.inertial.collectors
  * measurement will be monotonically increasing using the same time base as
  * [android.os.SystemClock.elapsedRealtimeNanos].
  * @property accuracy sensor accuracy.
+ * @property sensorType magnetometer sensor type.
  */
 class MagnetometerSensorMeasurement(
     var bx: Float = 0.0f,
@@ -46,7 +47,8 @@ class MagnetometerSensorMeasurement(
     var hardIronY: Float? = null,
     var hardIronZ: Float? = null,
     timestamp: Long = 0L,
-    accuracy: SensorAccuracy? = null
+    accuracy: SensorAccuracy? = null,
+    var sensorType: MagnetometerSensorType = MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED
 ) : SensorMeasurement<MagnetometerSensorMeasurement>(timestamp, accuracy) {
 
     /**
@@ -71,6 +73,7 @@ class MagnetometerSensorMeasurement(
         hardIronX = other.hardIronX
         hardIronY = other.hardIronY
         hardIronZ = other.hardIronZ
+        sensorType = other.sensorType
     }
 
     /**

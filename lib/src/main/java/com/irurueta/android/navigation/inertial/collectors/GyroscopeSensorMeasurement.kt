@@ -40,6 +40,7 @@ package com.irurueta.android.navigation.inertial.collectors
  * measurement will be monotonically increasing using the same time base as
  * [android.os.SystemClock.elapsedRealtimeNanos].
  * @property accuracy sensor accuracy.
+ * @property sensorType gyroscope sensor type.
  */
 class GyroscopeSensorMeasurement(
     var wx: Float = 0.0f,
@@ -49,7 +50,8 @@ class GyroscopeSensorMeasurement(
     var by: Float? = null,
     var bz: Float? = null,
     timestamp: Long = 0L,
-    accuracy: SensorAccuracy? = null
+    accuracy: SensorAccuracy? = null,
+    var sensorType: GyroscopeSensorType = GyroscopeSensorType.GYROSCOPE_UNCALIBRATED
 ) : SensorMeasurement<GyroscopeSensorMeasurement>(timestamp, accuracy) {
 
     /**
@@ -74,6 +76,7 @@ class GyroscopeSensorMeasurement(
         bx = other.bx
         by = other.by
         bz = other.bz
+        sensorType = other.sensorType
     }
 
     /**

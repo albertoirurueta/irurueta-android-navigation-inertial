@@ -42,9 +42,7 @@ object AttitudeSensorMeasurementConverter {
             return false
         }
 
-        if (AttitudeSensorType.from(event.sensor.type) == null) {
-            return false
-        }
+        val sensorType = AttitudeSensorType.from(event.sensor.type) ?: return false
 
         val sensorAccuracy = SensorAccuracy.from(event.accuracy)
         val timestamp = event.timestamp
@@ -61,6 +59,7 @@ object AttitudeSensorMeasurementConverter {
 
         result.timestamp = timestamp + (startOffset ?: 0L)
         result.accuracy = sensorAccuracy
+        result.sensorType = sensorType
         return true
     }
 }

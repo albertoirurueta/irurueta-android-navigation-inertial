@@ -1074,6 +1074,7 @@ class BufferedGyroscopeSensorCollectorTest {
         assertEquals(6.0f, measurement.bz)
         assertEquals(event.timestamp, measurement.timestamp)
         assertEquals(SensorAccuracy.HIGH, measurement.accuracy)
+        assertEquals(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED, measurement.sensorType)
 
         assertEquals(BufferedSensorCollector.DEFAULT_CAPACITY, buffer.size)
         assertTrue(availableMeasurements.isEmpty())

@@ -167,7 +167,7 @@ class AccelerometerSensorCollectorTest {
 
     private fun logSensor(sensor: Sensor) {
         val fifoMaxEventCount = sensor.fifoMaxEventCount
-        val fifoReversedEventCount = sensor.fifoReservedEventCount
+        val fifoReservedEventCount = sensor.fifoReservedEventCount
         val highestDirectReportRateLevel = sensor.highestDirectReportRateLevel
         val highestDirectReportRateLevelName = when (highestDirectReportRateLevel) {
             SensorDirectChannel.RATE_STOP -> "RATE_STOP"
@@ -201,7 +201,7 @@ class AccelerometerSensorCollectorTest {
 
         Log.d(
             "AccelerometerSensorCollectorTest", "Sensor - fifoMaxEventCount: $fifoMaxEventCount, "
-                    + "fifoReversedEventCount: $fifoReversedEventCount, "
+                    + "fifoReservedEventCount: $fifoReservedEventCount, "
                     + "highestDirectReportRateLevel: $highestDirectReportRateLevel, "
                     + "highestDirectReportRateLevelName: $highestDirectReportRateLevelName, "
                     + "id: $id, "

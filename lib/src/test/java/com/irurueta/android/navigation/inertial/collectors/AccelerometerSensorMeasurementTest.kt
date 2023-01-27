@@ -39,6 +39,7 @@ class AccelerometerSensorMeasurementTest {
         assertNull(measurement.bz)
         assertEquals(0L, measurement.timestamp)
         assertNull(measurement.accuracy)
+        assertEquals(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED, measurement.sensorType)
     }
 
     @Test
@@ -50,7 +51,17 @@ class AccelerometerSensorMeasurementTest {
         val timestamp = SystemClock.elapsedRealtimeNanos()
 
         val measurement =
-            AccelerometerSensorMeasurement(ax, ay, az, null, null, null, timestamp, null)
+            AccelerometerSensorMeasurement(
+                ax,
+                ay,
+                az,
+                null,
+                null,
+                null,
+                timestamp,
+                null,
+                AccelerometerSensorType.ACCELEROMETER
+            )
 
         // check
         assertEquals(ax, measurement.ax, 0.0f)
@@ -61,6 +72,7 @@ class AccelerometerSensorMeasurementTest {
         assertNull(measurement.bz)
         assertEquals(timestamp, measurement.timestamp)
         assertNull(measurement.accuracy)
+        assertEquals(AccelerometerSensorType.ACCELEROMETER, measurement.sensorType)
     }
 
     @Test
@@ -82,7 +94,8 @@ class AccelerometerSensorMeasurementTest {
             by,
             bz,
             timestamp,
-            SensorAccuracy.HIGH
+            SensorAccuracy.HIGH,
+            AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
         )
 
         // check
@@ -94,6 +107,7 @@ class AccelerometerSensorMeasurementTest {
         assertEquals(bz, measurement.bz)
         assertEquals(timestamp, measurement.timestamp)
         assertEquals(SensorAccuracy.HIGH, measurement.accuracy)
+        assertEquals(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED, measurement.sensorType)
     }
 
     @Test
@@ -115,7 +129,8 @@ class AccelerometerSensorMeasurementTest {
             by,
             bz,
             timestamp,
-            SensorAccuracy.HIGH
+            SensorAccuracy.HIGH,
+            AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
         )
 
         val measurement2 = AccelerometerSensorMeasurement(measurement1)
@@ -129,6 +144,7 @@ class AccelerometerSensorMeasurementTest {
         assertEquals(bz, measurement1.bz)
         assertEquals(timestamp, measurement1.timestamp)
         assertEquals(SensorAccuracy.HIGH, measurement1.accuracy)
+        assertEquals(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED, measurement1.sensorType)
 
         assertEquals(measurement1.ax, measurement2.ax, 0.0f)
         assertEquals(measurement1.ay, measurement2.ay, 0.0f)
@@ -138,6 +154,7 @@ class AccelerometerSensorMeasurementTest {
         assertEquals(measurement1.bz, measurement2.bz)
         assertEquals(measurement1.timestamp, measurement2.timestamp)
         assertEquals(measurement1.accuracy, measurement2.accuracy)
+        assertEquals(measurement1.sensorType, measurement2.sensorType)
     }
 
     @Test
@@ -294,6 +311,20 @@ class AccelerometerSensorMeasurementTest {
     }
 
     @Test
+    fun sensorType_setsExpectedValue() {
+        val measurement = AccelerometerSensorMeasurement()
+
+        // check default value
+        assertEquals(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED, measurement.sensorType)
+
+        // set new value
+        measurement.sensorType = AccelerometerSensorType.ACCELEROMETER
+
+        // check
+        assertEquals(AccelerometerSensorType.ACCELEROMETER, measurement.sensorType)
+    }
+
+    @Test
     fun copyFrom_makesExpectedCopy() {
         val randomizer = UniformRandomizer()
         val ax = randomizer.nextFloat()
@@ -312,7 +343,8 @@ class AccelerometerSensorMeasurementTest {
             by,
             bz,
             timestamp,
-            SensorAccuracy.HIGH
+            SensorAccuracy.HIGH,
+            AccelerometerSensorType.ACCELEROMETER
         )
 
         val measurement2 = AccelerometerSensorMeasurement()
@@ -327,6 +359,7 @@ class AccelerometerSensorMeasurementTest {
         assertEquals(bz, measurement1.bz)
         assertEquals(timestamp, measurement1.timestamp)
         assertEquals(SensorAccuracy.HIGH, measurement1.accuracy)
+        assertEquals(AccelerometerSensorType.ACCELEROMETER, measurement1.sensorType)
 
         assertEquals(measurement1.ax, measurement2.ax, 0.0f)
         assertEquals(measurement1.ay, measurement2.ay, 0.0f)
@@ -336,6 +369,7 @@ class AccelerometerSensorMeasurementTest {
         assertEquals(measurement1.bz, measurement2.bz)
         assertEquals(measurement1.timestamp, measurement2.timestamp)
         assertEquals(measurement1.accuracy, measurement2.accuracy)
+        assertEquals(measurement1.sensorType, measurement2.sensorType)
     }
 
     @Test
@@ -357,7 +391,8 @@ class AccelerometerSensorMeasurementTest {
             by,
             bz,
             timestamp,
-            SensorAccuracy.HIGH
+            SensorAccuracy.HIGH,
+            AccelerometerSensorType.ACCELEROMETER
         )
 
         val measurement2 = AccelerometerSensorMeasurement()
@@ -372,6 +407,7 @@ class AccelerometerSensorMeasurementTest {
         assertEquals(bz, measurement1.bz)
         assertEquals(timestamp, measurement1.timestamp)
         assertEquals(SensorAccuracy.HIGH, measurement1.accuracy)
+        assertEquals(AccelerometerSensorType.ACCELEROMETER, measurement1.sensorType)
 
         assertEquals(measurement1.ax, measurement2.ax, 0.0f)
         assertEquals(measurement1.ay, measurement2.ay, 0.0f)
@@ -381,6 +417,7 @@ class AccelerometerSensorMeasurementTest {
         assertEquals(measurement1.bz, measurement2.bz)
         assertEquals(measurement1.timestamp, measurement2.timestamp)
         assertEquals(measurement1.accuracy, measurement2.accuracy)
+        assertEquals(measurement1.sensorType, measurement2.sensorType)
     }
 
     @Test
@@ -402,7 +439,8 @@ class AccelerometerSensorMeasurementTest {
             by,
             bz,
             timestamp,
-            SensorAccuracy.HIGH
+            SensorAccuracy.HIGH,
+            AccelerometerSensorType.ACCELEROMETER
         )
 
         val measurement2 = measurement1.copy()
@@ -416,6 +454,7 @@ class AccelerometerSensorMeasurementTest {
         assertEquals(bz, measurement1.bz)
         assertEquals(timestamp, measurement1.timestamp)
         assertEquals(SensorAccuracy.HIGH, measurement1.accuracy)
+        assertEquals(AccelerometerSensorType.ACCELEROMETER, measurement1.sensorType)
 
         assertEquals(measurement1.ax, measurement2.ax, 0.0f)
         assertEquals(measurement1.ay, measurement2.ay, 0.0f)
@@ -425,6 +464,7 @@ class AccelerometerSensorMeasurementTest {
         assertEquals(measurement1.bz, measurement2.bz)
         assertEquals(measurement1.timestamp, measurement2.timestamp)
         assertEquals(measurement1.accuracy, measurement2.accuracy)
+        assertEquals(measurement1.sensorType, measurement2.sensorType)
     }
 }
 

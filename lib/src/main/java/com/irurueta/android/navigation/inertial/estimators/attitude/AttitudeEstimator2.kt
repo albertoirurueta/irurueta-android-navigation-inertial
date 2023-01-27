@@ -99,7 +99,8 @@ class AttitudeEstimator2(
             attitudeProcessor.process(measurement)
             attitude.fromQuaternion(attitudeProcessor.nedAttitude)
             val timestamp = measurement.timestamp
-            postProcessAttitudeAndNotify(timestamp)
+            val headingAccuracy = measurement.headingAccuracy
+            postProcessAttitudeAndNotify(timestamp, headingAccuracy)
         }
     )
 
@@ -141,8 +142,9 @@ class AttitudeEstimator2(
      * @param timestamp time in nanoseconds at which the measurement was made. Each measurement
      * wil be monotonically increasing using the same time base as
      * [android.os.SystemClock.elapsedRealtimeNanos].
+     * @param headingAccuracy heading accuracy expressed in radians or null if not available.
      */
-    private fun postProcessAttitudeAndNotify(timestamp: Long) {
+    private fun postProcessAttitudeAndNotify(timestamp: Long, headingAccuracy: Float?) {
         val c: CoordinateTransformation? =
             if (estimateCoordinateTransformation) {
                 coordinateTransformation.fromRotation(attitude)
@@ -170,6 +172,7 @@ class AttitudeEstimator2(
             this@AttitudeEstimator2,
             attitude,
             timestamp,
+            headingAccuracy,
             displayRoll,
             displayPitch,
             displayYaw,
@@ -201,6 +204,7 @@ class AttitudeEstimator2(
             estimator: AttitudeEstimator2,
             attitude: Quaternion,
             timestamp: Long,
+            headingAccuracy: Float?,
             roll: Double?,
             pitch: Double?,
             yaw: Double?,

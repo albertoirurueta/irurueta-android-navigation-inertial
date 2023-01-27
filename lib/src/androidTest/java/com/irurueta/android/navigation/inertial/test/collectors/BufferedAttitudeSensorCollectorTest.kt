@@ -336,11 +336,12 @@ class BufferedAttitudeSensorCollectorTest {
         assertEquals(measurement1.accuracy, measurement2.accuracy)
         assertEquals(measurement1.attitude, measurement2.attitude)
         assertEquals(measurement1.headingAccuracy, measurement2.headingAccuracy)
+        assertEquals(measurement1.sensorType, measurement2.sensorType)
     }
 
     private fun logSensor(sensor: Sensor) {
         val fifoMaxEventCount = sensor.fifoMaxEventCount
-        val fifoReversedEventCount = sensor.fifoReservedEventCount
+        val fifoReservedEventCount = sensor.fifoReservedEventCount
         val highestDirectReportRateLevel = sensor.highestDirectReportRateLevel
         val highestDirectReportRateLevelName = when (highestDirectReportRateLevel) {
             SensorDirectChannel.RATE_STOP -> "RATE_STOP"
@@ -375,7 +376,7 @@ class BufferedAttitudeSensorCollectorTest {
         Log.d(
             "BufferedAttitudeSensorCollectorTest",
             "Sensor - fifoMaxEventCount: $fifoMaxEventCount, "
-                    + "fifoReversedEventCount: $fifoReversedEventCount, "
+                    + "fifoReservedEventCount: $fifoReservedEventCount, "
                     + "highestDirectReportRateLevel: $highestDirectReportRateLevel, "
                     + "highestDirectReportRateLevelName: $highestDirectReportRateLevelName, "
                     + "id: $id, "
@@ -410,6 +411,7 @@ class BufferedAttitudeSensorCollectorTest {
         val attitude = measurement.attitude
         val timestamp = measurement.timestamp
         val accuracy = measurement.accuracy
+        val sensorType = measurement.sensorType
 
         Log.d(
             "BufferedAttitudeSensorCollectorTest",
@@ -419,7 +421,8 @@ class BufferedAttitudeSensorCollectorTest {
                     "numberOfProcessedMeasurements: $numberOfProcessedMeasurements, " +
                     "mostRecentTimestamp: $mostRecentTimestamp, " +
                     "a: ${attitude.a}, b: ${attitude.b}, c: ${attitude.c}, " +
-                    "d: ${attitude.d}, timestamp: $timestamp, accuracy: $accuracy"
+                    "d: ${attitude.d}, timestamp: $timestamp, accuracy: $accuracy, " +
+                    "sensorType: $sensorType"
         )
     }
 

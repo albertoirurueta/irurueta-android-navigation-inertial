@@ -587,6 +587,7 @@ class MagnetometerSensorCollector2Test {
         assertEquals(6.0f, measurement.hardIronZ)
         assertEquals(event.timestamp + startOffset, measurement.timestamp)
         assertEquals(SensorAccuracy.HIGH, measurement.accuracy)
+        assertEquals(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED, measurement.sensorType)
 
         assertEquals(1, collector.numberOfProcessedMeasurements)
         assertEquals(measurement.timestamp, collector.mostRecentTimestamp)

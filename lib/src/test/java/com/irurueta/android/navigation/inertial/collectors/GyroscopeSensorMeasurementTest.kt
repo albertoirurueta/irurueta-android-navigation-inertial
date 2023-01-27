@@ -38,6 +38,7 @@ class GyroscopeSensorMeasurementTest {
         assertNull(measurement.bz)
         assertEquals(0L, measurement.timestamp)
         assertNull(measurement.accuracy)
+        assertEquals(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED, measurement.sensorType)
     }
 
     @Test
@@ -49,7 +50,17 @@ class GyroscopeSensorMeasurementTest {
         val timestamp = SystemClock.elapsedRealtimeNanos()
 
         val measurement =
-            GyroscopeSensorMeasurement(wx, wy, wz, null, null, null, timestamp, null)
+            GyroscopeSensorMeasurement(
+                wx,
+                wy,
+                wz,
+                null,
+                null,
+                null,
+                timestamp,
+                null,
+                GyroscopeSensorType.GYROSCOPE
+            )
 
         // check
         assertEquals(wx, measurement.wx, 0.0f)
@@ -60,6 +71,7 @@ class GyroscopeSensorMeasurementTest {
         assertNull(measurement.bz)
         assertEquals(timestamp, measurement.timestamp)
         assertNull(measurement.accuracy)
+        assertEquals(GyroscopeSensorType.GYROSCOPE, measurement.sensorType)
     }
 
     @Test
@@ -81,7 +93,8 @@ class GyroscopeSensorMeasurementTest {
             by,
             bz,
             timestamp,
-            SensorAccuracy.HIGH
+            SensorAccuracy.HIGH,
+            GyroscopeSensorType.GYROSCOPE_UNCALIBRATED
         )
 
         // check
@@ -93,6 +106,7 @@ class GyroscopeSensorMeasurementTest {
         assertEquals(bz, measurement.bz)
         assertEquals(timestamp, measurement.timestamp)
         assertEquals(SensorAccuracy.HIGH, measurement.accuracy)
+        assertEquals(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED, measurement.sensorType)
     }
 
     @Test
@@ -114,7 +128,8 @@ class GyroscopeSensorMeasurementTest {
             by,
             bz,
             timestamp,
-            SensorAccuracy.HIGH
+            SensorAccuracy.HIGH,
+            GyroscopeSensorType.GYROSCOPE_UNCALIBRATED
         )
 
         val measurement2 = GyroscopeSensorMeasurement(measurement1)
@@ -128,6 +143,7 @@ class GyroscopeSensorMeasurementTest {
         assertEquals(bz, measurement1.bz)
         assertEquals(timestamp, measurement1.timestamp)
         assertEquals(SensorAccuracy.HIGH, measurement1.accuracy)
+        assertEquals(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED, measurement1.sensorType)
 
         assertEquals(measurement1.wx, measurement2.wx, 0.0f)
         assertEquals(measurement1.wy, measurement2.wy, 0.0f)
@@ -137,6 +153,7 @@ class GyroscopeSensorMeasurementTest {
         assertEquals(measurement1.bz, measurement2.bz)
         assertEquals(measurement1.timestamp, measurement2.timestamp)
         assertEquals(measurement1.accuracy, measurement2.accuracy)
+        assertEquals(measurement1.sensorType, measurement2.sensorType)
     }
 
     @Test
@@ -293,6 +310,20 @@ class GyroscopeSensorMeasurementTest {
     }
 
     @Test
+    fun sensorType_setsExpectedValue() {
+        val measurement = GyroscopeSensorMeasurement()
+
+        // check default value
+        assertEquals(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED, measurement.sensorType)
+
+        // set new value
+        measurement.sensorType = GyroscopeSensorType.GYROSCOPE
+
+        // check
+        assertEquals(GyroscopeSensorType.GYROSCOPE, measurement.sensorType)
+    }
+
+    @Test
     fun copyFrom_makesExpectedCopy() {
         val randomizer = UniformRandomizer()
         val wx = randomizer.nextFloat()
@@ -311,7 +342,8 @@ class GyroscopeSensorMeasurementTest {
             by,
             bz,
             timestamp,
-            SensorAccuracy.HIGH
+            SensorAccuracy.HIGH,
+            GyroscopeSensorType.GYROSCOPE
         )
 
         val measurement2 = GyroscopeSensorMeasurement()
@@ -326,6 +358,7 @@ class GyroscopeSensorMeasurementTest {
         assertEquals(bz, measurement1.bz)
         assertEquals(timestamp, measurement1.timestamp)
         assertEquals(SensorAccuracy.HIGH, measurement1.accuracy)
+        assertEquals(GyroscopeSensorType.GYROSCOPE, measurement1.sensorType)
 
         assertEquals(measurement1.wx, measurement2.wx, 0.0f)
         assertEquals(measurement1.wy, measurement2.wy, 0.0f)
@@ -335,6 +368,7 @@ class GyroscopeSensorMeasurementTest {
         assertEquals(measurement1.bz, measurement2.bz)
         assertEquals(measurement1.timestamp, measurement2.timestamp)
         assertEquals(measurement1.accuracy, measurement2.accuracy)
+        assertEquals(measurement1.sensorType, measurement2.sensorType)
     }
 
     @Test
@@ -356,7 +390,8 @@ class GyroscopeSensorMeasurementTest {
             by,
             bz,
             timestamp,
-            SensorAccuracy.HIGH
+            SensorAccuracy.HIGH,
+            GyroscopeSensorType.GYROSCOPE
         )
 
         val measurement2 = GyroscopeSensorMeasurement()
@@ -371,6 +406,7 @@ class GyroscopeSensorMeasurementTest {
         assertEquals(bz, measurement1.bz)
         assertEquals(timestamp, measurement1.timestamp)
         assertEquals(SensorAccuracy.HIGH, measurement1.accuracy)
+        assertEquals(GyroscopeSensorType.GYROSCOPE, measurement1.sensorType)
 
         assertEquals(measurement1.wx, measurement2.wx, 0.0f)
         assertEquals(measurement1.wy, measurement2.wy, 0.0f)
@@ -380,6 +416,7 @@ class GyroscopeSensorMeasurementTest {
         assertEquals(measurement1.bz, measurement2.bz)
         assertEquals(measurement1.timestamp, measurement2.timestamp)
         assertEquals(measurement1.accuracy, measurement2.accuracy)
+        assertEquals(measurement1.sensorType, measurement2.sensorType)
     }
 
     @Test
@@ -401,7 +438,8 @@ class GyroscopeSensorMeasurementTest {
             by,
             bz,
             timestamp,
-            SensorAccuracy.HIGH
+            SensorAccuracy.HIGH,
+            GyroscopeSensorType.GYROSCOPE
         )
 
         val measurement2 = measurement1.copy()
@@ -415,6 +453,7 @@ class GyroscopeSensorMeasurementTest {
         assertEquals(bz, measurement1.bz)
         assertEquals(timestamp, measurement1.timestamp)
         assertEquals(SensorAccuracy.HIGH, measurement1.accuracy)
+        assertEquals(GyroscopeSensorType.GYROSCOPE, measurement1.sensorType)
 
         assertEquals(measurement1.wx, measurement2.wx, 0.0f)
         assertEquals(measurement1.wy, measurement2.wy, 0.0f)
@@ -424,5 +463,6 @@ class GyroscopeSensorMeasurementTest {
         assertEquals(measurement1.bz, measurement2.bz)
         assertEquals(measurement1.timestamp, measurement2.timestamp)
         assertEquals(measurement1.accuracy, measurement2.accuracy)
+        assertEquals(measurement1.sensorType, measurement2.sensorType)
     }
 }

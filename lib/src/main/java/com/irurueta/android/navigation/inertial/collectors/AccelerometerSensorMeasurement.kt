@@ -40,6 +40,7 @@ package com.irurueta.android.navigation.inertial.collectors
  * measurement received from a given sensor will be monotonically increasing using the same time
  * base as [android.os.SystemClock.elapsedRealtimeNanos].
  * @property accuracy sensor accuracy.
+ * @property sensorType accelerometer sensor type.
  */
 class AccelerometerSensorMeasurement(
     var ax: Float = 0.0f,
@@ -49,7 +50,8 @@ class AccelerometerSensorMeasurement(
     var by: Float? = null,
     var bz: Float? = null,
     timestamp: Long = 0L,
-    accuracy: SensorAccuracy? = null
+    accuracy: SensorAccuracy? = null,
+    var sensorType: AccelerometerSensorType = AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
 ) : SensorMeasurement<AccelerometerSensorMeasurement>(timestamp, accuracy) {
 
     /**
@@ -74,6 +76,7 @@ class AccelerometerSensorMeasurement(
         bx = other.bx
         by = other.by
         bz = other.bz
+        sensorType = other.sensorType
     }
 
     /**

@@ -242,7 +242,7 @@ class GravityAndGyroscopeSensorMeasurementSyncerTest {
 
     private fun logGravitySensor(sensor: Sensor) {
         val fifoMaxEventCount = sensor.fifoMaxEventCount
-        val fifoReversedEventCount = sensor.fifoReservedEventCount
+        val fifoReservedEventCount = sensor.fifoReservedEventCount
         val highestDirectReportRateLevel = sensor.highestDirectReportRateLevel
         val highestDirectReportRateLevelName = when (highestDirectReportRateLevel) {
             SensorDirectChannel.RATE_STOP -> "RATE_STOP"
@@ -277,7 +277,7 @@ class GravityAndGyroscopeSensorMeasurementSyncerTest {
         Log.d(
             "GravityAndGyroscopeSensorMeasurementSyncerTest",
             "Sensor - fifoMaxEventCount: $fifoMaxEventCount, "
-                    + "fifoReversedEventCount: $fifoReversedEventCount, "
+                    + "fifoReservedEventCount: $fifoReservedEventCount, "
                     + "highestDirectReportRateLevel: $highestDirectReportRateLevel, "
                     + "highestDirectReportRateLevelName: $highestDirectReportRateLevelName, "
                     + "id: $id, "
@@ -301,7 +301,7 @@ class GravityAndGyroscopeSensorMeasurementSyncerTest {
 
     private fun logGyroscopeSensor(sensor: Sensor) {
         val fifoMaxEventCount = sensor.fifoMaxEventCount
-        val fifoReversedEventCount = sensor.fifoReservedEventCount
+        val fifoReservedEventCount = sensor.fifoReservedEventCount
         val highestDirectReportRateLevel = sensor.highestDirectReportRateLevel
         val highestDirectReportRateLevelName = when (highestDirectReportRateLevel) {
             SensorDirectChannel.RATE_STOP -> "RATE_STOP"
@@ -336,7 +336,7 @@ class GravityAndGyroscopeSensorMeasurementSyncerTest {
         Log.d(
             "GravityAndGyroscopeSensorMeasurementSyncerTest",
             "Sensor - fifoMaxEventCount: $fifoMaxEventCount, "
-                    + "fifoReversedEventCount: $fifoReversedEventCount, "
+                    + "fifoReservedEventCount: $fifoReservedEventCount, "
                     + "highestDirectReportRateLevel: $highestDirectReportRateLevel, "
                     + "highestDirectReportRateLevelName: $highestDirectReportRateLevelName, "
                     + "id: $id, "

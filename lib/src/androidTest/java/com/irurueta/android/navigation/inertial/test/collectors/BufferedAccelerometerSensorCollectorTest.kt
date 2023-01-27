@@ -349,11 +349,12 @@ class BufferedAccelerometerSensorCollectorTest {
         assertEquals(measurement1.bx, measurement2.bx)
         assertEquals(measurement1.by, measurement2.by)
         assertEquals(measurement1.bz, measurement2.bz)
+        assertEquals(measurement1.sensorType, measurement2.sensorType)
     }
 
     private fun logSensor(sensor: Sensor) {
         val fifoMaxEventCount = sensor.fifoMaxEventCount
-        val fifoReversedEventCount = sensor.fifoReservedEventCount
+        val fifoReservedEventCount = sensor.fifoReservedEventCount
         val highestDirectReportRateLevel = sensor.highestDirectReportRateLevel
         val highestDirectReportRateLevelName = when (highestDirectReportRateLevel) {
             SensorDirectChannel.RATE_STOP -> "RATE_STOP"
@@ -388,7 +389,7 @@ class BufferedAccelerometerSensorCollectorTest {
         Log.d(
             "BufferedAccelerometerSensorCollectorTest",
             "Sensor - fifoMaxEventCount: $fifoMaxEventCount, "
-                    + "fifoReversedEventCount: $fifoReversedEventCount, "
+                    + "fifoReservedEventCount: $fifoReservedEventCount, "
                     + "highestDirectReportRateLevel: $highestDirectReportRateLevel, "
                     + "highestDirectReportRateLevelName: $highestDirectReportRateLevelName, "
                     + "id: $id, "
@@ -428,6 +429,7 @@ class BufferedAccelerometerSensorCollectorTest {
         val bz = measurement.bz
         val timestamp = measurement.timestamp
         val accuracy = measurement.accuracy
+        val sensorType = measurement.sensorType
 
         Log.d(
             "BufferedAccelerometerSensorCollectorTest",
@@ -438,7 +440,7 @@ class BufferedAccelerometerSensorCollectorTest {
                     "mostRecentTimestamp: $mostRecentTimestamp, " +
                     "ax: $ax m/s^2, ay: $ay m/s^2, az: $az m/s^2, " +
                     "bx: $bx m/s^2, by: $by m/s^2, bz: $bz m/s^2, " +
-                    "timestamp: $timestamp, accuracy: $accuracy"
+                    "timestamp: $timestamp, accuracy: $accuracy, sensorType: $sensorType"
         )
     }
 

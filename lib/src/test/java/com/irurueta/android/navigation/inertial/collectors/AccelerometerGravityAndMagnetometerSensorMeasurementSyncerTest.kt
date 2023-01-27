@@ -1152,8 +1152,17 @@ class AccelerometerGravityAndMagnetometerSensorMeasurementSyncerTest {
         val by = randomizer.nextFloat()
         val bz = randomizer.nextFloat()
         val timestamp = System.nanoTime()
-        val accelerometerMeasurement =
-            AccelerometerSensorMeasurement(ax, ay, az, bx, by, bz, timestamp, SensorAccuracy.HIGH)
+        val accelerometerMeasurement = AccelerometerSensorMeasurement(
+            ax,
+            ay,
+            az,
+            bx,
+            by,
+            bz,
+            timestamp,
+            SensorAccuracy.HIGH,
+            syncer.accelerometerSensorType
+        )
         val measurementsBeforePosition = ArrayDeque<AccelerometerSensorMeasurement>()
         measurementsBeforePosition.add(accelerometerMeasurement)
         every { accelerometerSensorCollectorSpy.getMeasurementsBeforePosition(any()) }.returns(
@@ -1184,6 +1193,7 @@ class AccelerometerGravityAndMagnetometerSensorMeasurementSyncerTest {
         assertEquals(bz, accelerometerMeasurement2.bz)
         assertEquals(timestamp, accelerometerMeasurement2.timestamp)
         assertEquals(SensorAccuracy.HIGH, accelerometerMeasurement2.accuracy)
+        assertEquals(syncer.accelerometerSensorType, accelerometerMeasurement2.sensorType)
 
         assertEquals(timestamp, syncer.oldestTimestamp)
         assertEquals(0, syncer.numberOfProcessedMeasurements)
@@ -1671,7 +1681,8 @@ class AccelerometerGravityAndMagnetometerSensorMeasurementSyncerTest {
             hardIronY,
             hardIronZ,
             timestamp,
-            SensorAccuracy.HIGH
+            SensorAccuracy.HIGH,
+            syncer.magnetometerSensorType
         )
         val measurementsBeforeTimestamp = ArrayDeque<MagnetometerSensorMeasurement>()
         measurementsBeforeTimestamp.add(magnetometerMeasurement)
@@ -1716,6 +1727,7 @@ class AccelerometerGravityAndMagnetometerSensorMeasurementSyncerTest {
         assertEquals(hardIronZ, magnetometerMeasurement2.hardIronZ)
         assertEquals(timestamp, magnetometerMeasurement2.timestamp)
         assertEquals(SensorAccuracy.HIGH, magnetometerMeasurement2.accuracy)
+        assertEquals(syncer.magnetometerSensorType, magnetometerMeasurement2.sensorType)
 
         assertEquals(mostRecentTimestamp, syncer.mostRecentTimestamp)
         assertNull(syncer.oldestTimestamp)
@@ -1785,7 +1797,8 @@ class AccelerometerGravityAndMagnetometerSensorMeasurementSyncerTest {
             hardIronY,
             hardIronZ,
             magnetometerTimestamp,
-            SensorAccuracy.MEDIUM
+            SensorAccuracy.MEDIUM,
+            syncer.magnetometerSensorType
         )
         val magnetometerMeasurementsBeforeTimestamp = ArrayDeque<MagnetometerSensorMeasurement>()
         magnetometerMeasurementsBeforeTimestamp.add(magnetometerMeasurement1)
@@ -1831,7 +1844,8 @@ class AccelerometerGravityAndMagnetometerSensorMeasurementSyncerTest {
             aby,
             abz,
             accelerometerTimestamp,
-            SensorAccuracy.HIGH
+            SensorAccuracy.HIGH,
+            syncer.accelerometerSensorType
         )
         val measurementsBeforePosition = ArrayDeque<AccelerometerSensorMeasurement>()
         measurementsBeforePosition.add(accelerometerMeasurement1)
@@ -1876,6 +1890,7 @@ class AccelerometerGravityAndMagnetometerSensorMeasurementSyncerTest {
         assertEquals(hardIronZ, magnetometerMeasurement2.hardIronZ)
         assertEquals(magnetometerTimestamp, magnetometerMeasurement2.timestamp)
         assertEquals(SensorAccuracy.MEDIUM, magnetometerMeasurement2.accuracy)
+        assertEquals(syncer.magnetometerSensorType, magnetometerMeasurement2.sensorType)
 
         val alreadyProcessedMagnetometerMeasurements: ArrayDeque<MagnetometerSensorMeasurement>? =
             syncer.getPrivateProperty("alreadyProcessedMagnetometerMeasurements")
@@ -1953,6 +1968,7 @@ class AccelerometerGravityAndMagnetometerSensorMeasurementSyncerTest {
         assertEquals(abz, syncedAccelerometerMeasurement.bz)
         assertEquals(accelerometerTimestamp, syncedAccelerometerMeasurement.timestamp)
         assertEquals(SensorAccuracy.HIGH, syncedAccelerometerMeasurement.accuracy)
+        assertEquals(syncer.accelerometerSensorType, syncedAccelerometerMeasurement.sensorType)
         val syncedGravityMeasurement = syncedMeasurement.gravityMeasurement
         requireNotNull(syncedGravityMeasurement)
         assertEquals(gx, syncedGravityMeasurement.gx, 0.0f)
@@ -1970,6 +1986,7 @@ class AccelerometerGravityAndMagnetometerSensorMeasurementSyncerTest {
         assertEquals(hardIronZ, syncedMagnetometerMeasurement.hardIronZ)
         assertEquals(magnetometerTimestamp, syncedMagnetometerMeasurement.timestamp)
         assertEquals(SensorAccuracy.MEDIUM, syncedMagnetometerMeasurement.accuracy)
+        assertEquals(syncer.magnetometerSensorType, syncedMagnetometerMeasurement.sensorType)
     }
 
     @Test
@@ -2028,7 +2045,8 @@ class AccelerometerGravityAndMagnetometerSensorMeasurementSyncerTest {
             hardIronY,
             hardIronZ,
             staleTimestamp,
-            SensorAccuracy.MEDIUM
+            SensorAccuracy.MEDIUM,
+            syncer.magnetometerSensorType
         )
         magnetometerMeasurements.add(staleMagnetometerMeasurement)
 
@@ -2059,7 +2077,8 @@ class AccelerometerGravityAndMagnetometerSensorMeasurementSyncerTest {
             aby,
             abz,
             staleTimestamp,
-            SensorAccuracy.HIGH
+            SensorAccuracy.HIGH,
+            syncer.accelerometerSensorType
         )
         accelerometerMeasurements.add(staleAccelerometerMeasurement)
 
@@ -2080,7 +2099,8 @@ class AccelerometerGravityAndMagnetometerSensorMeasurementSyncerTest {
             hardIronY,
             hardIronZ,
             magnetometerTimestamp,
-            SensorAccuracy.MEDIUM
+            SensorAccuracy.MEDIUM,
+            syncer.magnetometerSensorType
         )
         val magnetometerMeasurementsBeforeTimestamp = ArrayDeque<MagnetometerSensorMeasurement>()
         magnetometerMeasurementsBeforeTimestamp.add(magnetometerMeasurement1)
@@ -2123,7 +2143,8 @@ class AccelerometerGravityAndMagnetometerSensorMeasurementSyncerTest {
             aby,
             abz,
             accelerometerTimestamp,
-            SensorAccuracy.HIGH
+            SensorAccuracy.HIGH,
+            syncer.accelerometerSensorType
         )
         val measurementsBeforePosition = ArrayDeque<AccelerometerSensorMeasurement>()
         measurementsBeforePosition.add(accelerometerMeasurement1)
@@ -2306,7 +2327,8 @@ class AccelerometerGravityAndMagnetometerSensorMeasurementSyncerTest {
             hardIronY,
             hardIronZ,
             staleTimestamp,
-            SensorAccuracy.MEDIUM
+            SensorAccuracy.MEDIUM,
+            syncer.magnetometerSensorType
         )
         magnetometerMeasurements.add(staleMagnetometerMeasurement)
 
@@ -2337,7 +2359,8 @@ class AccelerometerGravityAndMagnetometerSensorMeasurementSyncerTest {
             aby,
             abz,
             staleTimestamp,
-            SensorAccuracy.HIGH
+            SensorAccuracy.HIGH,
+            syncer.accelerometerSensorType
         )
         accelerometerMeasurements.add(staleAccelerometerMeasurement)
 
@@ -2358,7 +2381,8 @@ class AccelerometerGravityAndMagnetometerSensorMeasurementSyncerTest {
             hardIronY,
             hardIronZ,
             magnetometerTimestamp,
-            SensorAccuracy.MEDIUM
+            SensorAccuracy.MEDIUM,
+            syncer.magnetometerSensorType
         )
         val magnetometerMeasurementsBeforeTimestamp = ArrayDeque<MagnetometerSensorMeasurement>()
         magnetometerMeasurementsBeforeTimestamp.add(magnetometerMeasurement1)
@@ -2401,7 +2425,8 @@ class AccelerometerGravityAndMagnetometerSensorMeasurementSyncerTest {
             aby,
             abz,
             accelerometerTimestamp,
-            SensorAccuracy.HIGH
+            SensorAccuracy.HIGH,
+            syncer.accelerometerSensorType
         )
         val measurementsBeforePosition = ArrayDeque<AccelerometerSensorMeasurement>()
         measurementsBeforePosition.add(accelerometerMeasurement1)
@@ -2612,6 +2637,7 @@ class AccelerometerGravityAndMagnetometerSensorMeasurementSyncerTest {
         previousMagnetometerMeasurement.hardIronZ = hardIronZ
         previousMagnetometerMeasurement.timestamp = accelerometerTimestamp - 1
         previousMagnetometerMeasurement.accuracy = SensorAccuracy.MEDIUM
+        previousMagnetometerMeasurement.sensorType = syncer.magnetometerSensorType
 
         val magnetometerSensorCollector: BufferedMagnetometerSensorCollector? =
             syncer.getPrivateProperty("magnetometerSensorCollector")
@@ -2630,7 +2656,8 @@ class AccelerometerGravityAndMagnetometerSensorMeasurementSyncerTest {
             hardIronY,
             hardIronZ,
             gyroscopeTimestamp,
-            SensorAccuracy.MEDIUM
+            SensorAccuracy.MEDIUM,
+            syncer.magnetometerSensorType
         )
         val magnetometerMeasurementsBeforeTimestamp = ArrayDeque<MagnetometerSensorMeasurement>()
         magnetometerMeasurementsBeforeTimestamp.add(magnetometerMeasurement1)
@@ -2658,7 +2685,8 @@ class AccelerometerGravityAndMagnetometerSensorMeasurementSyncerTest {
             aby,
             abz,
             accelerometerTimestamp,
-            SensorAccuracy.HIGH
+            SensorAccuracy.HIGH,
+            syncer.accelerometerSensorType
         )
         val measurementsBeforePosition = ArrayDeque<AccelerometerSensorMeasurement>()
         measurementsBeforePosition.add(accelerometerMeasurement1)
@@ -2703,6 +2731,7 @@ class AccelerometerGravityAndMagnetometerSensorMeasurementSyncerTest {
         assertEquals(hardIronZ, magnetometerMeasurement2.hardIronZ)
         assertEquals(gyroscopeTimestamp, magnetometerMeasurement2.timestamp)
         assertEquals(SensorAccuracy.MEDIUM, magnetometerMeasurement2.accuracy)
+        assertEquals(syncer.magnetometerSensorType, magnetometerMeasurement2.sensorType)
 
         val alreadyProcessedMagnetometerMeasurements: ArrayDeque<MagnetometerSensorMeasurement>? =
             syncer.getPrivateProperty("alreadyProcessedMagnetometerMeasurements")
@@ -2781,6 +2810,7 @@ class AccelerometerGravityAndMagnetometerSensorMeasurementSyncerTest {
         assertEquals(abz, syncedAccelerometerMeasurement.bz)
         assertEquals(accelerometerTimestamp, syncedAccelerometerMeasurement.timestamp)
         assertEquals(SensorAccuracy.HIGH, syncedAccelerometerMeasurement.accuracy)
+        assertEquals(syncer.accelerometerSensorType, syncedAccelerometerMeasurement.sensorType)
         val syncedGravityMeasurement = syncedMeasurement.gravityMeasurement
         requireNotNull(syncedGravityMeasurement)
         assertEquals(gx1, syncedGravityMeasurement.gx, 0.0f)
@@ -2798,6 +2828,7 @@ class AccelerometerGravityAndMagnetometerSensorMeasurementSyncerTest {
         assertEquals(hardIronZ, syncedMagnetometerMeasurement.hardIronZ)
         assertEquals(gyroscopeTimestamp, syncedMagnetometerMeasurement.timestamp)
         assertEquals(SensorAccuracy.MEDIUM, syncedMagnetometerMeasurement.accuracy)
+        assertEquals(syncer.magnetometerSensorType, syncedMagnetometerMeasurement.sensorType)
     }
 
     @Test
@@ -2887,6 +2918,7 @@ class AccelerometerGravityAndMagnetometerSensorMeasurementSyncerTest {
         previousMagnetometerMeasurement.hardIronZ = hardIronZ
         previousMagnetometerMeasurement.timestamp = accelerometerTimestamp - 1
         previousMagnetometerMeasurement.accuracy = SensorAccuracy.MEDIUM
+        previousMagnetometerMeasurement.sensorType = syncer.magnetometerSensorType
 
         val magnetometerSensorCollector: BufferedMagnetometerSensorCollector? =
             syncer.getPrivateProperty("magnetometerSensorCollector")
@@ -2905,7 +2937,8 @@ class AccelerometerGravityAndMagnetometerSensorMeasurementSyncerTest {
             hardIronY,
             hardIronZ,
             magnetometerTimestamp,
-            SensorAccuracy.MEDIUM
+            SensorAccuracy.MEDIUM,
+            syncer.magnetometerSensorType
         )
         val magnetometerMeasurementsBeforeTimestamp = ArrayDeque<MagnetometerSensorMeasurement>()
         magnetometerMeasurementsBeforeTimestamp.add(magnetometerMeasurement1)
@@ -2933,7 +2966,8 @@ class AccelerometerGravityAndMagnetometerSensorMeasurementSyncerTest {
             aby,
             abz,
             accelerometerTimestamp,
-            SensorAccuracy.HIGH
+            SensorAccuracy.HIGH,
+            syncer.accelerometerSensorType
         )
         val measurementsBeforePosition = ArrayDeque<AccelerometerSensorMeasurement>()
         measurementsBeforePosition.add(accelerometerMeasurement1)
@@ -2978,6 +3012,7 @@ class AccelerometerGravityAndMagnetometerSensorMeasurementSyncerTest {
         assertEquals(hardIronZ, magnetometerMeasurement2.hardIronZ)
         assertEquals(magnetometerTimestamp, magnetometerMeasurement2.timestamp)
         assertEquals(SensorAccuracy.MEDIUM, magnetometerMeasurement2.accuracy)
+        assertEquals(syncer.magnetometerSensorType, magnetometerMeasurement2.sensorType)
 
         val alreadyProcessedMagnetometerMeasurements: ArrayDeque<MagnetometerSensorMeasurement>? =
             syncer.getPrivateProperty("alreadyProcessedMagnetometerMeasurements")
@@ -3056,6 +3091,7 @@ class AccelerometerGravityAndMagnetometerSensorMeasurementSyncerTest {
         assertEquals(abz, syncedAccelerometerMeasurement.bz)
         assertEquals(accelerometerTimestamp, syncedAccelerometerMeasurement.timestamp)
         assertEquals(SensorAccuracy.HIGH, syncedAccelerometerMeasurement.accuracy)
+        assertEquals(syncer.accelerometerSensorType, syncedAccelerometerMeasurement.sensorType)
         val syncedGravityMeasurement = syncedMeasurement.gravityMeasurement
         requireNotNull(syncedGravityMeasurement)
         assertEquals(gx2, syncedGravityMeasurement.gx, 0.0f)
@@ -3073,6 +3109,7 @@ class AccelerometerGravityAndMagnetometerSensorMeasurementSyncerTest {
         assertEquals(hardIronZ, syncedMagnetometerMeasurement.hardIronZ)
         assertEquals(accelerometerTimestamp - 1, syncedMagnetometerMeasurement.timestamp)
         assertEquals(SensorAccuracy.MEDIUM, syncedMagnetometerMeasurement.accuracy)
+        assertEquals(syncer.magnetometerSensorType, syncedMagnetometerMeasurement.sensorType)
     }
 
     @Test
@@ -3126,7 +3163,8 @@ class AccelerometerGravityAndMagnetometerSensorMeasurementSyncerTest {
             hardIronY,
             hardIronZ,
             magnetometerTimestamp,
-            SensorAccuracy.MEDIUM
+            SensorAccuracy.MEDIUM,
+            syncer.magnetometerSensorType
         )
         val magnetometerMeasurementsBeforeTimestamp = ArrayDeque<MagnetometerSensorMeasurement>()
         magnetometerMeasurementsBeforeTimestamp.add(magnetometerMeasurement1)
@@ -3172,7 +3210,8 @@ class AccelerometerGravityAndMagnetometerSensorMeasurementSyncerTest {
             aby,
             abz,
             accelerometerTimestamp,
-            SensorAccuracy.HIGH
+            SensorAccuracy.HIGH,
+            syncer.accelerometerSensorType
         )
         val measurementsBeforePosition = ArrayDeque<AccelerometerSensorMeasurement>()
         measurementsBeforePosition.add(accelerometerMeasurement1)
@@ -3217,6 +3256,7 @@ class AccelerometerGravityAndMagnetometerSensorMeasurementSyncerTest {
         assertEquals(hardIronZ, magnetometerMeasurement2.hardIronZ)
         assertEquals(magnetometerTimestamp, magnetometerMeasurement2.timestamp)
         assertEquals(SensorAccuracy.MEDIUM, magnetometerMeasurement2.accuracy)
+        assertEquals(syncer.magnetometerSensorType, magnetometerMeasurement2.sensorType)
 
         val alreadyProcessedMagnetometerMeasurements: ArrayDeque<MagnetometerSensorMeasurement>? =
             syncer.getPrivateProperty("alreadyProcessedMagnetometerMeasurements")
@@ -3304,6 +3344,7 @@ class AccelerometerGravityAndMagnetometerSensorMeasurementSyncerTest {
         assertEquals(abz, syncedAccelerometerMeasurement.bz)
         assertEquals(accelerometerTimestamp, syncedAccelerometerMeasurement.timestamp)
         assertEquals(SensorAccuracy.HIGH, syncedAccelerometerMeasurement.accuracy)
+        assertEquals(syncer.accelerometerSensorType, syncedAccelerometerMeasurement.sensorType)
         val syncedGravityMeasurement = syncedMeasurement.gravityMeasurement
         requireNotNull(syncedGravityMeasurement)
         assertEquals(gx, syncedGravityMeasurement.gx, 0.0f)
@@ -3321,5 +3362,6 @@ class AccelerometerGravityAndMagnetometerSensorMeasurementSyncerTest {
         assertEquals(hardIronZ, syncedMagnetometerMeasurement.hardIronZ)
         assertEquals(magnetometerTimestamp, syncedMagnetometerMeasurement.timestamp)
         assertEquals(SensorAccuracy.MEDIUM, syncedMagnetometerMeasurement.accuracy)
+        assertEquals(syncer.magnetometerSensorType, syncer.magnetometerSensorType)
     }
 }

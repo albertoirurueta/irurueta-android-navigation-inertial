@@ -17,6 +17,7 @@ package com.irurueta.android.navigation.inertial
 
 import android.os.Build
 import android.os.Bundle
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatTextView
 import com.irurueta.android.gl.cube.CubeRenderer
@@ -36,6 +37,8 @@ class AttitudeEstimatorActivity : AppCompatActivity() {
 
     private var yawView: AppCompatTextView? = null
 
+    private var headingAccuracyView: AppCompatTextView? = null
+
     private var rotation = Quaternion()
 
     private var camera: PinholeCamera? = null
@@ -51,8 +54,8 @@ class AttitudeEstimatorActivity : AppCompatActivity() {
 
         val extras = intent.extras
         val attitudeSensorType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            (extras?.getSerializable(ATTITUDE_SENSOR_TYPE, AttitudeSensorType::class.java)
-                ?: AttitudeSensorType.ABSOLUTE_ATTITUDE)
+            extras?.getSerializable(ATTITUDE_SENSOR_TYPE, AttitudeSensorType::class.java)
+                ?: AttitudeSensorType.ABSOLUTE_ATTITUDE
         } else {
             @Suppress("DEPRECATION")
             (extras?.getSerializable(ATTITUDE_SENSOR_TYPE) as AttitudeSensorType?)
@@ -63,6 +66,7 @@ class AttitudeEstimatorActivity : AppCompatActivity() {
         rollView = findViewById(R.id.roll)
         pitchView = findViewById(R.id.pitch)
         yawView = findViewById(R.id.yaw)
+        headingAccuracyView = findViewById(R.id.heading_accuracy)
 
         val cubeView = cubeView ?: return
         cubeView.onSurfaceChangedListener = object : CubeTextureView.OnSurfaceChangedListener {
@@ -80,15 +84,21 @@ class AttitudeEstimatorActivity : AppCompatActivity() {
             attitudeSensorType = attitudeSensorType,
             estimateCoordinateTransformation = false,
             estimateEulerAngles = true,
-            attitudeAvailableListener = { _, attitude, _, roll, pitch, yaw, _ ->
+            attitudeAvailableListener = { _, attitude, _, headingAccuracy, roll, pitch, yaw, _ ->
                 attitude.toQuaternion(rotation)
 
                 rollView?.text = getString(R.string.roll_degrees, Math.toDegrees(roll ?: 0.0))
                 pitchView?.text = getString(R.string.pitch_degrees, Math.toDegrees(pitch ?: 0.0))
                 yawView?.text = getString(R.string.yaw_degrees, Math.toDegrees(yaw ?: 0.0))
-
-                // convert attitude from NED to ENU coordinate system to be displayed using OpenGL
-                //Quaternion.product(conversionRotation, rotation, rotation)
+                if (headingAccuracy != null) {
+                    headingAccuracyView?.text = getString(
+                        R.string.heading_accuracy_degrees,
+                        Math.toDegrees(headingAccuracy.toDouble())
+                    )
+                    headingAccuracyView?.visibility = View.VISIBLE
+                } else {
+                    headingAccuracyView?.visibility = View.INVISIBLE
+                }
 
                 // rotation refers to pinhole camera point of view, to apply rotation to the cube
                 // its inverse must be used.
@@ -99,7 +109,7 @@ class AttitudeEstimatorActivity : AppCompatActivity() {
 
                 // take into account display orientation
                 val displayRotationRadians =
-                    DisplayOrientationHelper.getDisplayRotationRadians(this) //- Math.PI / 2.0
+                    DisplayOrientationHelper.getDisplayRotationRadians(this)
                 displayOrientation.setFromEulerAngles(0.0, 0.0, displayRotationRadians)
                 Quaternion.product(displayOrientation, rotation, rotation)
 

@@ -1076,6 +1076,7 @@ class BufferedMagnetometerSensorCollectorTest {
         assertEquals(6.0f, measurement.hardIronZ)
         assertEquals(event.timestamp, measurement.timestamp)
         assertEquals(SensorAccuracy.HIGH, measurement.accuracy)
+        assertEquals(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED, measurement.sensorType)
 
         assertEquals(BufferedSensorCollector.DEFAULT_CAPACITY, buffer.size)
         assertTrue(availableMeasurements.isEmpty())

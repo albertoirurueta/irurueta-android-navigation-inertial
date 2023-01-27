@@ -114,14 +114,16 @@ class AccelerometerSensorCollector2Test {
                 val bz = measurement.bz
                 val timestamp = measurement.timestamp
                 val accuracy = measurement.accuracy
+                val sensorType = measurement.sensorType
                 assertNull(bx)
                 assertNull(by)
                 assertNull(bz)
+                assertEquals(AccelerometerSensorType.ACCELEROMETER, sensorType)
 
                 Log.d(
                     "AccelerometerSensorCollector2Test",
                     "onMeasurement - ax: $ax, ay: $ay, az: $az, bx: $bx, by: $by, bz: $bz, "
-                            + "timestamp: $timestamp, accuracy: $accuracy"
+                            + "timestamp: $timestamp, accuracy: $accuracy, sensorType: $sensorType"
                 )
 
                 syncHelper.notifyAll { measured++ }
@@ -160,14 +162,16 @@ class AccelerometerSensorCollector2Test {
                 val bz = measurement.bz
                 val timestamp = measurement.timestamp
                 val accuracy = measurement.accuracy
+                val sensorType = measurement.sensorType
                 assertNotNull(bx)
                 assertNotNull(by)
                 assertNotNull(bz)
+                assertEquals(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED, sensorType)
 
                 Log.d(
                     "AccelerometerSensorCollector2Test",
                     "onMeasurement - ax: $ax, ay: $ay, az: $az, bx: $bx, by: $by, bz: $bz, "
-                            + "timestamp: $timestamp, accuracy: $accuracy"
+                            + "timestamp: $timestamp, accuracy: $accuracy, sensorType: $sensorType"
                 )
 
                 syncHelper.notifyAll { measured++ }
@@ -185,7 +189,7 @@ class AccelerometerSensorCollector2Test {
 
     private fun logSensor(sensor: Sensor) {
         val fifoMaxEventCount = sensor.fifoMaxEventCount
-        val fifoReversedEventCount = sensor.fifoReservedEventCount
+        val fifoReservedEventCount = sensor.fifoReservedEventCount
         val highestDirectReportRateLevel = sensor.highestDirectReportRateLevel
         val highestDirectReportRateLevelName = when (highestDirectReportRateLevel) {
             SensorDirectChannel.RATE_STOP -> "RATE_STOP"
@@ -219,7 +223,7 @@ class AccelerometerSensorCollector2Test {
 
         Log.d(
             "AccelerometerSensorCollector2Test", "Sensor - fifoMaxEventCount: $fifoMaxEventCount, "
-                    + "fifoReversedEventCount: $fifoReversedEventCount, "
+                    + "fifoReservedEventCount: $fifoReservedEventCount, "
                     + "highestDirectReportRateLevel: $highestDirectReportRateLevel, "
                     + "highestDirectReportRateLevelName: $highestDirectReportRateLevelName, "
                     + "id: $id, "

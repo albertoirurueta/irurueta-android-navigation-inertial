@@ -1067,6 +1067,7 @@ class BufferedAttitudeSensorCollectorTest {
         )
         assertEquals(event.timestamp, measurement.timestamp)
         assertEquals(SensorAccuracy.HIGH, measurement.accuracy)
+        assertEquals(AttitudeSensorType.ABSOLUTE_ATTITUDE, measurement.sensorType)
 
         assertEquals(BufferedSensorCollector.DEFAULT_CAPACITY, buffer.size)
         assertTrue(availableMeasurements.isEmpty())

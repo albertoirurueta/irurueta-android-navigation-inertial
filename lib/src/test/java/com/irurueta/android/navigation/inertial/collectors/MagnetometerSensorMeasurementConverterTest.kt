@@ -80,6 +80,7 @@ class MagnetometerSensorMeasurementConverterTest {
         assertNull(measurement.hardIronZ)
         assertEquals(timestamp, measurement.timestamp)
         assertEquals(SensorAccuracy.LOW, measurement.accuracy)
+        assertEquals(MagnetometerSensorType.MAGNETOMETER, measurement.sensorType)
     }
 
     @Test
@@ -119,6 +120,7 @@ class MagnetometerSensorMeasurementConverterTest {
         assertEquals(hardIronZ, measurement.hardIronZ)
         assertEquals(timestamp, measurement.timestamp)
         assertEquals(SensorAccuracy.LOW, measurement.accuracy)
+        assertEquals(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED, measurement.sensorType)
     }
 
     @Test
@@ -156,6 +158,7 @@ class MagnetometerSensorMeasurementConverterTest {
         assertNull(measurement.hardIronZ)
         assertEquals(timestamp + startOffset, measurement.timestamp)
         assertEquals(SensorAccuracy.LOW, measurement.accuracy)
+        assertEquals(MagnetometerSensorType.MAGNETOMETER, measurement.sensorType)
     }
 
     @Test
@@ -196,6 +199,7 @@ class MagnetometerSensorMeasurementConverterTest {
         assertEquals(hardIronZ, measurement.hardIronZ)
         assertEquals(timestamp + startOffset, measurement.timestamp)
         assertEquals(SensorAccuracy.LOW, measurement.accuracy)
+        assertEquals(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED, measurement.sensorType)
     }
 
     private companion object {

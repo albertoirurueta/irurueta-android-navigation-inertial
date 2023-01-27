@@ -1148,8 +1148,17 @@ class GravityAndGyroscopeSensorMeasurementSyncerTest {
         val by = randomizer.nextFloat()
         val bz = randomizer.nextFloat()
         val timestamp = System.nanoTime()
-        val gyroscopeMeasurement =
-            GyroscopeSensorMeasurement(wx, wy, wz, bx, by, bz, timestamp, SensorAccuracy.HIGH)
+        val gyroscopeMeasurement = GyroscopeSensorMeasurement(
+            wx,
+            wy,
+            wz,
+            bx,
+            by,
+            bz,
+            timestamp,
+            SensorAccuracy.HIGH,
+            syncer.gyroscopeSensorType
+        )
         val measurementsBeforeTimestamp = ArrayDeque<GyroscopeSensorMeasurement>()
         measurementsBeforeTimestamp.add(gyroscopeMeasurement)
         every { gyroscopeSensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
@@ -1193,6 +1202,7 @@ class GravityAndGyroscopeSensorMeasurementSyncerTest {
         assertEquals(bz, gyroscopeMeasurement2.bz)
         assertEquals(timestamp, gyroscopeMeasurement2.timestamp)
         assertEquals(SensorAccuracy.HIGH, gyroscopeMeasurement2.accuracy)
+        assertEquals(syncer.gyroscopeSensorType, gyroscopeMeasurement2.sensorType)
 
         assertEquals(mostRecentTimestamp, syncer.mostRecentTimestamp)
         assertNull(syncer.oldestTimestamp)
@@ -1254,17 +1264,17 @@ class GravityAndGyroscopeSensorMeasurementSyncerTest {
         val wby = randomizer.nextFloat()
         val wbz = randomizer.nextFloat()
         val gyroscopeTimestamp = gravityTimestamp - 1
-        val gyroscopeMeasurement1 =
-            GyroscopeSensorMeasurement(
-                wx,
-                wy,
-                wz,
-                wbx,
-                wby,
-                wbz,
-                gyroscopeTimestamp,
-                SensorAccuracy.HIGH
-            )
+        val gyroscopeMeasurement1 = GyroscopeSensorMeasurement(
+            wx,
+            wy,
+            wz,
+            wbx,
+            wby,
+            wbz,
+            gyroscopeTimestamp,
+            SensorAccuracy.HIGH,
+            syncer.gyroscopeSensorType
+        )
         val measurementsBeforeTimestamp = ArrayDeque<GyroscopeSensorMeasurement>()
         measurementsBeforeTimestamp.add(gyroscopeMeasurement1)
         every { gyroscopeSensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
@@ -1327,6 +1337,7 @@ class GravityAndGyroscopeSensorMeasurementSyncerTest {
         assertEquals(wbz, gyroscopeMeasurement2.bz)
         assertEquals(gyroscopeTimestamp, gyroscopeMeasurement2.timestamp)
         assertEquals(SensorAccuracy.HIGH, gyroscopeMeasurement2.accuracy)
+        assertEquals(syncer.gyroscopeSensorType, gyroscopeMeasurement2.sensorType)
 
         val alreadyProcessedGyroscopeMeasurements: ArrayDeque<GyroscopeSensorMeasurement>? =
             syncer.getPrivateProperty("alreadyProcessedGyroscopeMeasurements")
@@ -1385,6 +1396,7 @@ class GravityAndGyroscopeSensorMeasurementSyncerTest {
         assertEquals(wbz, syncedGyroscopeMeasurement.bz)
         assertEquals(gyroscopeTimestamp, syncedGyroscopeMeasurement.timestamp)
         assertEquals(SensorAccuracy.HIGH, syncedGyroscopeMeasurement.accuracy)
+        assertEquals(syncer.gyroscopeSensorType, syncedGyroscopeMeasurement.sensorType)
     }
 
     @Test
@@ -1443,7 +1455,8 @@ class GravityAndGyroscopeSensorMeasurementSyncerTest {
             wby,
             wbz,
             staleTimestamp,
-            SensorAccuracy.HIGH
+            SensorAccuracy.HIGH,
+            syncer.gyroscopeSensorType
         )
         gyroscopeMeasurements.add(staleGyroscopeMeasurement)
 
@@ -1479,7 +1492,8 @@ class GravityAndGyroscopeSensorMeasurementSyncerTest {
             wby,
             wbz,
             gyroscopeTimestamp,
-            SensorAccuracy.HIGH
+            SensorAccuracy.HIGH,
+            syncer.gyroscopeSensorType
         )
         val measurementsBeforeTimestamp = ArrayDeque<GyroscopeSensorMeasurement>()
         measurementsBeforeTimestamp.add(gyroscopeMeasurement1)
@@ -1546,6 +1560,7 @@ class GravityAndGyroscopeSensorMeasurementSyncerTest {
         assertEquals(wbz, gyroscopeMeasurement2.bz)
         assertEquals(staleTimestamp, gyroscopeMeasurement2.timestamp)
         assertEquals(SensorAccuracy.HIGH, gyroscopeMeasurement2.accuracy)
+        assertEquals(syncer.gyroscopeSensorType, gyroscopeMeasurement2.sensorType)
         val gyroscopeMeasurement3 = gyroscopeMeasurements.last
         requireNotNull(gyroscopeMeasurement3)
         assertEquals(wx, gyroscopeMeasurement3.wx, 0.0f)
@@ -1556,6 +1571,7 @@ class GravityAndGyroscopeSensorMeasurementSyncerTest {
         assertEquals(wbz, gyroscopeMeasurement3.bz)
         assertEquals(gyroscopeTimestamp, gyroscopeMeasurement3.timestamp)
         assertEquals(SensorAccuracy.HIGH, gyroscopeMeasurement3.accuracy)
+        assertEquals(syncer.gyroscopeSensorType, gyroscopeMeasurement3.sensorType)
 
         val alreadyProcessedGyroscopeMeasurements: ArrayDeque<AccelerometerSensorMeasurement>? =
             syncer.getPrivateProperty("alreadyProcessedGyroscopeMeasurements")
@@ -1650,7 +1666,8 @@ class GravityAndGyroscopeSensorMeasurementSyncerTest {
             wby,
             wbz,
             staleTimestamp,
-            SensorAccuracy.HIGH
+            SensorAccuracy.HIGH,
+            syncer.gyroscopeSensorType
         )
         gyroscopeMeasurements.add(staleGyroscopeMeasurement)
 
@@ -1686,7 +1703,8 @@ class GravityAndGyroscopeSensorMeasurementSyncerTest {
             wby,
             wbz,
             gyroscopeTimestamp,
-            SensorAccuracy.HIGH
+            SensorAccuracy.HIGH,
+            syncer.gyroscopeSensorType
         )
         val measurementsBeforeTimestamp = ArrayDeque<GyroscopeSensorMeasurement>()
         measurementsBeforeTimestamp.add(gyroscopeMeasurement1)
@@ -1854,6 +1872,7 @@ class GravityAndGyroscopeSensorMeasurementSyncerTest {
         previousGyroscopeMeasurement.bz = wbz
         previousGyroscopeMeasurement.timestamp = gravityTimestamp - 1
         previousGyroscopeMeasurement.accuracy = SensorAccuracy.HIGH
+        previousGyroscopeMeasurement.sensorType = syncer.gyroscopeSensorType
 
         val gyroscopeSensorCollector: BufferedGyroscopeSensorCollector? =
             syncer.getPrivateProperty("gyroscopeSensorCollector")
@@ -1872,7 +1891,8 @@ class GravityAndGyroscopeSensorMeasurementSyncerTest {
             wby,
             wbz,
             gyroscopeTimestamp,
-            SensorAccuracy.HIGH
+            SensorAccuracy.HIGH,
+            syncer.gyroscopeSensorType
         )
         val measurementsBeforeTimestamp = ArrayDeque<GyroscopeSensorMeasurement>()
         measurementsBeforeTimestamp.add(gyroscopeMeasurement1)
@@ -1936,6 +1956,7 @@ class GravityAndGyroscopeSensorMeasurementSyncerTest {
         assertEquals(wbz, gyroscopeMeasurement2.bz)
         assertEquals(gyroscopeTimestamp, gyroscopeMeasurement2.timestamp)
         assertEquals(SensorAccuracy.HIGH, gyroscopeMeasurement2.accuracy)
+        assertEquals(syncer.gyroscopeSensorType, gyroscopeMeasurement2.sensorType)
 
         val alreadyProcessedGyroscopeMeasurements: ArrayDeque<GyroscopeSensorMeasurement>? =
             syncer.getPrivateProperty("alreadyProcessedGyroscopeMeasurements")
@@ -1995,6 +2016,7 @@ class GravityAndGyroscopeSensorMeasurementSyncerTest {
         assertEquals(wbz, syncedGyroscopeMeasurement.bz)
         assertEquals(gyroscopeTimestamp, syncedGyroscopeMeasurement.timestamp)
         assertEquals(SensorAccuracy.HIGH, syncedGyroscopeMeasurement.accuracy)
+        assertEquals(syncer.gyroscopeSensorType, syncedGyroscopeMeasurement.sensorType)
     }
 
     @Test
@@ -2040,17 +2062,17 @@ class GravityAndGyroscopeSensorMeasurementSyncerTest {
         val wby = randomizer.nextFloat()
         val wbz = randomizer.nextFloat()
         val gyroscopeTimestamp = gravityTimestamp - 1
-        val gyroscopeMeasurement1 =
-            GyroscopeSensorMeasurement(
-                wx,
-                wy,
-                wz,
-                wbx,
-                wby,
-                wbz,
-                gyroscopeTimestamp,
-                SensorAccuracy.HIGH
-            )
+        val gyroscopeMeasurement1 = GyroscopeSensorMeasurement(
+            wx,
+            wy,
+            wz,
+            wbx,
+            wby,
+            wbz,
+            gyroscopeTimestamp,
+            SensorAccuracy.HIGH,
+            syncer.gyroscopeSensorType
+        )
         val measurementsBeforeTimestamp = ArrayDeque<GyroscopeSensorMeasurement>()
         measurementsBeforeTimestamp.add(gyroscopeMeasurement1)
         every { gyroscopeSensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
@@ -2113,6 +2135,7 @@ class GravityAndGyroscopeSensorMeasurementSyncerTest {
         assertEquals(wbz, gyroscopeMeasurement2.bz)
         assertEquals(gyroscopeTimestamp, gyroscopeMeasurement2.timestamp)
         assertEquals(SensorAccuracy.HIGH, gyroscopeMeasurement2.accuracy)
+        assertEquals(syncer.gyroscopeSensorType, gyroscopeMeasurement2.sensorType)
 
         val alreadyProcessedGyroscopeMeasurements: ArrayDeque<GyroscopeSensorMeasurement>? =
             syncer.getPrivateProperty("alreadyProcessedGyroscopeMeasurements")
@@ -2175,5 +2198,6 @@ class GravityAndGyroscopeSensorMeasurementSyncerTest {
         assertEquals(wbz, syncedGyroscopeMeasurement.bz)
         assertEquals(gyroscopeTimestamp, syncedGyroscopeMeasurement.timestamp)
         assertEquals(SensorAccuracy.HIGH, syncedGyroscopeMeasurement.accuracy)
+        assertEquals(syncer.gyroscopeSensorType, syncedGyroscopeMeasurement.sensorType)
     }
 }

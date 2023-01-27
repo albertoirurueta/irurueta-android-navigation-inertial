@@ -68,6 +68,7 @@ object AccelerometerSensorMeasurementConverter {
         result.bz = bz
         result.timestamp = timestamp + (startOffset ?: 0L)
         result.accuracy = sensorAccuracy
+        result.sensorType = sensorType
         return true
     }
 }

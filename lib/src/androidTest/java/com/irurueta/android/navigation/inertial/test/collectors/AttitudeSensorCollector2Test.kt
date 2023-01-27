@@ -24,6 +24,7 @@ import com.irurueta.android.navigation.inertial.ThreadSyncHelper
 import com.irurueta.android.navigation.inertial.collectors.AttitudeSensorCollector2
 import com.irurueta.android.navigation.inertial.collectors.AttitudeSensorType
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -108,12 +109,15 @@ class AttitudeSensorCollector2Test {
                 val attitude = measurement.attitude
                 val timestamp = measurement.timestamp
                 val accuracy = measurement.accuracy
+                val sensorType = measurement.sensorType
+                assertEquals(AttitudeSensorType.ABSOLUTE_ATTITUDE, sensorType)
 
                 Log.d(
                     "AttitudeSensorCollector2Test",
                     "onMeasurement - attitude.a: ${attitude.a}, attitude.b: ${attitude.b}"
                             + ", attitude.c: ${attitude.c}, attitude.d: ${attitude.d}"
                             + ", timestamp: $timestamp, accuracy: $accuracy"
+                            + ", sensorType: $sensorType"
                 )
 
                 syncHelper.notifyAll { measured++ }
@@ -146,12 +150,15 @@ class AttitudeSensorCollector2Test {
                 val attitude = measurement.attitude
                 val timestamp = measurement.timestamp
                 val accuracy = measurement.accuracy
+                val sensorType = measurement.sensorType
+                assertEquals(AttitudeSensorType.RELATIVE_ATTITUDE, sensorType)
 
                 Log.d(
                     "AttitudeSensorCollector2Test",
                     "onMeasurement - attitude.a: ${attitude.a}, attitude.b: ${attitude.b}"
                             + ", attitude.c: ${attitude.c}, attitude.d: ${attitude.d}"
                             + ", timestamp: $timestamp, accuracy: $accuracy"
+                            + ", sensorType: $sensorType"
                 )
 
                 syncHelper.notifyAll { measured++ }
@@ -169,7 +176,7 @@ class AttitudeSensorCollector2Test {
 
     private fun logSensor(sensor: Sensor) {
         val fifoMaxEventCount = sensor.fifoMaxEventCount
-        val fifoReversedEventCount = sensor.fifoReservedEventCount
+        val fifoReservedEventCount = sensor.fifoReservedEventCount
         val highestDirectReportRateLevel = sensor.highestDirectReportRateLevel
         val highestDirectReportRateLevelName = when (highestDirectReportRateLevel) {
             SensorDirectChannel.RATE_STOP -> "RATE_STOP"
@@ -203,7 +210,7 @@ class AttitudeSensorCollector2Test {
 
         Log.d(
             "AttitudeSensorCollector2Test", "Sensor - fifoMaxEventCount: $fifoMaxEventCount, "
-                    + "fifoReversedEventCount: $fifoReversedEventCount, "
+                    + "fifoReservedEventCount: $fifoReservedEventCount, "
                     + "highestDirectReportRateLevel: $highestDirectReportRateLevel, "
                     + "highestDirectReportRateLevelName: $highestDirectReportRateLevelName, "
                     + "id: $id, "

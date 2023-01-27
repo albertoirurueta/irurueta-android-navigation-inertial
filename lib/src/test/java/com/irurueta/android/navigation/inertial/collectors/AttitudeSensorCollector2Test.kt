@@ -567,6 +567,7 @@ class AttitudeSensorCollector2Test {
         assertEquals(5.0f, headingAccuracy, 0.0f)
         assertEquals(event.timestamp + startOffst, measurement.timestamp)
         assertEquals(SensorAccuracy.HIGH, measurement.accuracy)
+        assertEquals(AttitudeSensorType.ABSOLUTE_ATTITUDE, measurement.sensorType)
 
         assertEquals(1, collector.numberOfProcessedMeasurements)
         assertEquals(measurement.timestamp, collector.mostRecentTimestamp)

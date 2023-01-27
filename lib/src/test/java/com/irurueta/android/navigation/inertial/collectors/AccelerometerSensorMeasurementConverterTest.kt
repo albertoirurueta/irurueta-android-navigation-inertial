@@ -80,6 +80,7 @@ class AccelerometerSensorMeasurementConverterTest {
         assertNull(measurement.bz)
         assertEquals(timestamp, measurement.timestamp)
         assertEquals(SensorAccuracy.HIGH, measurement.accuracy)
+        assertEquals(AccelerometerSensorType.ACCELEROMETER, measurement.sensorType)
     }
 
     @Test
@@ -119,6 +120,7 @@ class AccelerometerSensorMeasurementConverterTest {
         assertEquals(bz, measurement.bz)
         assertEquals(timestamp, measurement.timestamp)
         assertEquals(SensorAccuracy.HIGH, measurement.accuracy)
+        assertEquals(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED, measurement.sensorType)
     }
 
     @Test
@@ -156,6 +158,7 @@ class AccelerometerSensorMeasurementConverterTest {
         assertNull(measurement.bz)
         assertEquals(timestamp + startOffset, measurement.timestamp)
         assertEquals(SensorAccuracy.HIGH, measurement.accuracy)
+        assertEquals(AccelerometerSensorType.ACCELEROMETER, measurement.sensorType)
     }
 
     @Test
@@ -196,6 +199,7 @@ class AccelerometerSensorMeasurementConverterTest {
         assertEquals(bz, measurement.bz)
         assertEquals(timestamp + startOffset, measurement.timestamp)
         assertEquals(SensorAccuracy.HIGH, measurement.accuracy)
+        assertEquals(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED, measurement.sensorType)
     }
 
     private companion object {

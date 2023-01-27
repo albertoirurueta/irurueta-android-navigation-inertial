@@ -26,12 +26,14 @@ import com.irurueta.geometry.Quaternion
  * measurement will be monotonically increasing using the same time base as
  * [android.os.SystemClock.elapsedRealtimeNanos].
  * @property accuracy sensor accuracy.
+ * @property sensorType attitude sensor type.
  */
 class AttitudeSensorMeasurement(
     var attitude: Quaternion = Quaternion(),
     var headingAccuracy: Float? = null,
     timestamp: Long = 0L,
-    accuracy: SensorAccuracy? = null
+    accuracy: SensorAccuracy? = null,
+    var sensorType: AttitudeSensorType = AttitudeSensorType.ABSOLUTE_ATTITUDE
 ) : SensorMeasurement<AttitudeSensorMeasurement>(timestamp, accuracy) {
 
     /**
@@ -52,6 +54,7 @@ class AttitudeSensorMeasurement(
         super.copyFrom(other)
         attitude.fromRotation(other.attitude)
         headingAccuracy = other.headingAccuracy
+        sensorType = other.sensorType
     }
 
     /**

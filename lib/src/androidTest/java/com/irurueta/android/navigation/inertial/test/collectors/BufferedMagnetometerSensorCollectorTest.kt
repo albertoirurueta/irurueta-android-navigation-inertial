@@ -337,11 +337,12 @@ class BufferedMagnetometerSensorCollectorTest {
         assertEquals(measurement1.hardIronX, measurement2.hardIronX)
         assertEquals(measurement1.hardIronY, measurement2.hardIronY)
         assertEquals(measurement1.hardIronY, measurement2.hardIronY)
+        assertEquals(measurement1.sensorType, measurement2.sensorType)
     }
 
     private fun logSensor(sensor: Sensor) {
         val fifoMaxEventCount = sensor.fifoMaxEventCount
-        val fifoReversedEventCount = sensor.fifoReservedEventCount
+        val fifoReservedEventCount = sensor.fifoReservedEventCount
         val highestDirectReportRateLevel = sensor.highestDirectReportRateLevel
         val highestDirectReportRateLevelName = when (highestDirectReportRateLevel) {
             SensorDirectChannel.RATE_STOP -> "RATE_STOP"
@@ -376,7 +377,7 @@ class BufferedMagnetometerSensorCollectorTest {
         Log.d(
             "BufferedMagnetometerSensorCollectorTest",
             "Sensor - fifoMaxEventCount: $fifoMaxEventCount, "
-                    + "fifoReversedEventCount: $fifoReversedEventCount, "
+                    + "fifoReservedEventCount: $fifoReservedEventCount, "
                     + "highestDirectReportRateLevel: $highestDirectReportRateLevel, "
                     + "highestDirectReportRateLevelName: $highestDirectReportRateLevelName, "
                     + "id: $id, "
@@ -416,6 +417,7 @@ class BufferedMagnetometerSensorCollectorTest {
         val hardIronZ = measurement.hardIronZ
         val timestamp = measurement.timestamp
         val accuracy = measurement.accuracy
+        val sensorType = measurement.sensorType
 
         Log.d(
             "BufferedMagnetometerSensorCollectorTest",
@@ -426,7 +428,7 @@ class BufferedMagnetometerSensorCollectorTest {
                     "mostRecentTimestamp: $mostRecentTimestamp, " +
                     "bx: $bx µT, by: $by µT, bz: $bz µT, " +
                     "hardIronX: $hardIronX µT, hardIronY: $hardIronY µT, hardIronZ: $hardIronZ µT, " +
-                    "timestamp: $timestamp, accuracy: $accuracy"
+                    "timestamp: $timestamp, accuracy: $accuracy, sensorType: $sensorType"
         )
     }
 

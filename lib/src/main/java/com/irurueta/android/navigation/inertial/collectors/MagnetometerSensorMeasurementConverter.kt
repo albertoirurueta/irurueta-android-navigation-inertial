@@ -67,6 +67,7 @@ object MagnetometerSensorMeasurementConverter {
         result.hardIronZ = hardIronZ
         result.timestamp = timestamp + (startOffset ?: 0L)
         result.accuracy = sensorAccuracy
+        result.sensorType = sensorType
         return true
     }
 }

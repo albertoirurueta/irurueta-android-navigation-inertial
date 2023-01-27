@@ -331,11 +331,12 @@ class BufferedGyroscopeSensorCollectorTest {
         assertEquals(measurement1.bx, measurement2.bx)
         assertEquals(measurement1.by, measurement2.by)
         assertEquals(measurement1.bz, measurement2.bz)
+        assertEquals(measurement1.sensorType, measurement2.sensorType)
     }
 
     private fun logSensor(sensor: Sensor) {
         val fifoMaxEventCount = sensor.fifoMaxEventCount
-        val fifoReversedEventCount = sensor.fifoReservedEventCount
+        val fifoReservedEventCount = sensor.fifoReservedEventCount
         val highestDirectReportRateLevel = sensor.highestDirectReportRateLevel
         val highestDirectReportRateLevelName = when (highestDirectReportRateLevel) {
             SensorDirectChannel.RATE_STOP -> "RATE_STOP"
@@ -370,7 +371,7 @@ class BufferedGyroscopeSensorCollectorTest {
         Log.d(
             "BufferedGyroscopeSensorCollectorTest",
             "Sensor - fifoMaxEventCount: $fifoMaxEventCount, "
-                    + "fifoReversedEventCount: $fifoReversedEventCount, "
+                    + "fifoReservedEventCount: $fifoReservedEventCount, "
                     + "highestDirectReportRateLevel: $highestDirectReportRateLevel, "
                     + "highestDirectReportRateLevelName: $highestDirectReportRateLevelName, "
                     + "id: $id, "

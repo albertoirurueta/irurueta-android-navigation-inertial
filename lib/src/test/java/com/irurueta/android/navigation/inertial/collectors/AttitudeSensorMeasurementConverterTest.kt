@@ -84,6 +84,7 @@ class AttitudeSensorMeasurementConverterTest {
         assertNull(measurement.headingAccuracy)
         assertEquals(timestamp, measurement.timestamp)
         assertEquals(SensorAccuracy.HIGH, measurement.accuracy)
+        assertEquals(AttitudeSensorType.ABSOLUTE_ATTITUDE, measurement.sensorType)
     }
 
     @Test
@@ -125,6 +126,7 @@ class AttitudeSensorMeasurementConverterTest {
         assertEquals(headingAccuracy, measurement.headingAccuracy)
         assertEquals(timestamp, measurement.timestamp)
         assertEquals(SensorAccuracy.HIGH, measurement.accuracy)
+        assertEquals(AttitudeSensorType.ABSOLUTE_ATTITUDE, measurement.sensorType)
     }
 
     @Test
@@ -165,6 +167,7 @@ class AttitudeSensorMeasurementConverterTest {
         assertNull(measurement.headingAccuracy)
         assertEquals(timestamp + startOffset, measurement.timestamp)
         assertEquals(SensorAccuracy.HIGH, measurement.accuracy)
+        assertEquals(AttitudeSensorType.ABSOLUTE_ATTITUDE, measurement.sensorType)
     }
 
     @Test
@@ -207,6 +210,7 @@ class AttitudeSensorMeasurementConverterTest {
         assertEquals(headingAccuracy, measurement.headingAccuracy)
         assertEquals(timestamp + startOffset, measurement.timestamp)
         assertEquals(SensorAccuracy.HIGH, measurement.accuracy)
+        assertEquals(AttitudeSensorType.ABSOLUTE_ATTITUDE, measurement.sensorType)
     }
 
     @Test
@@ -246,6 +250,7 @@ class AttitudeSensorMeasurementConverterTest {
         assertNull(measurement.headingAccuracy)
         assertEquals(timestamp, measurement.timestamp)
         assertEquals(SensorAccuracy.HIGH, measurement.accuracy)
+        assertEquals(AttitudeSensorType.RELATIVE_ATTITUDE, measurement.sensorType)
     }
 
     @Test
@@ -287,6 +292,7 @@ class AttitudeSensorMeasurementConverterTest {
         assertEquals(headingAccuracy, measurement.headingAccuracy)
         assertEquals(timestamp, measurement.timestamp)
         assertEquals(SensorAccuracy.HIGH, measurement.accuracy)
+        assertEquals(AttitudeSensorType.RELATIVE_ATTITUDE, measurement.sensorType)
     }
 
     @Test
@@ -327,6 +333,7 @@ class AttitudeSensorMeasurementConverterTest {
         assertNull(measurement.headingAccuracy)
         assertEquals(timestamp + startOffset, measurement.timestamp)
         assertEquals(SensorAccuracy.HIGH, measurement.accuracy)
+        assertEquals(AttitudeSensorType.RELATIVE_ATTITUDE, measurement.sensorType)
     }
 
     @Test
@@ -369,6 +376,7 @@ class AttitudeSensorMeasurementConverterTest {
         assertEquals(headingAccuracy, measurement.headingAccuracy)
         assertEquals(timestamp + startOffset, measurement.timestamp)
         assertEquals(SensorAccuracy.HIGH, measurement.accuracy)
+        assertEquals(AttitudeSensorType.RELATIVE_ATTITUDE, measurement.sensorType)
     }
 
     private companion object {

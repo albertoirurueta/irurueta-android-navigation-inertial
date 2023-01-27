@@ -80,6 +80,7 @@ class GyroscopeSensorMeasurementConverterTest {
         assertNull(measurement.bz)
         assertEquals(timestamp, measurement.timestamp)
         assertEquals(SensorAccuracy.HIGH, measurement.accuracy)
+        assertEquals(GyroscopeSensorType.GYROSCOPE, measurement.sensorType)
     }
 
     @Test
@@ -119,6 +120,7 @@ class GyroscopeSensorMeasurementConverterTest {
         assertEquals(bz, measurement.bz)
         assertEquals(timestamp, measurement.timestamp)
         assertEquals(SensorAccuracy.HIGH, measurement.accuracy)
+        assertEquals(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED, measurement.sensorType)
     }
 
     @Test
@@ -156,6 +158,7 @@ class GyroscopeSensorMeasurementConverterTest {
         assertNull(measurement.bz)
         assertEquals(timestamp + startOffset, measurement.timestamp)
         assertEquals(SensorAccuracy.HIGH, measurement.accuracy)
+        assertEquals(GyroscopeSensorType.GYROSCOPE, measurement.sensorType)
     }
 
     @Test
@@ -196,6 +199,7 @@ class GyroscopeSensorMeasurementConverterTest {
         assertEquals(bz, measurement.bz)
         assertEquals(timestamp + startOffset, measurement.timestamp)
         assertEquals(SensorAccuracy.HIGH, measurement.accuracy)
+        assertEquals(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED, measurement.sensorType)
     }
 
     private companion object {

@@ -6,6 +6,7 @@
     <string name="roll_degrees">Roll: %1$.2f º</string>
     <string name="pitch_degrees">Pitch: %1$.2f º</string>
     <string name="yaw_degrees">Yaw: %1$.2f º</string>
+    <string name="heading_accuracy_degrees">Heading accuracy: %1$.2f º</string>
     <string name="x_pos_meters">X: %1$.2f m</string>
     <string name="y_pos_meters">Y: %1$.2f m</string>
     <string name="z_pos_meters">Z: %1$.2f m</string>

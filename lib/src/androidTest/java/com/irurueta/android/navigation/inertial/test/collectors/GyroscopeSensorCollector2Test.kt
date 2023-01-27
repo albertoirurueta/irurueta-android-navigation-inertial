@@ -108,15 +108,17 @@ class GyroscopeSensorCollector2Test {
                 val bz = measurement.bz
                 val timestamp = measurement.timestamp
                 val accuracy = measurement.accuracy
+                val sensorType = measurement.sensorType
 
                 assertNull(bx)
                 assertNull(by)
                 assertNull(bz)
+                assertEquals(GyroscopeSensorType.GYROSCOPE, sensorType)
 
                 Log.d(
                     "GyroscopeSensorCollector2Test",
                     "onMeasurement - wx: $wx, wy: $wy, wz: $wz, bx: $bx, by: $by, bz: $bz, "
-                            + "timestamp: $timestamp, accuracy: $accuracy"
+                            + "timestamp: $timestamp, accuracy: $accuracy, sensorType: $sensorType"
                 )
 
                 syncHelper.notifyAll { measured++ }
@@ -155,15 +157,17 @@ class GyroscopeSensorCollector2Test {
                 val bz = measurement.bz
                 val timestamp = measurement.timestamp
                 val accuracy = measurement.accuracy
+                val sensorType = measurement.sensorType
 
                 assertNotNull(bx)
                 assertNotNull(by)
                 assertNotNull(bz)
+                assertEquals(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED, sensorType)
 
                 Log.d(
                     "GyroscopeSensorCollector2Test",
                     "onMeasurement - wx: $wx, wy: $wy, wz: $wz, bx: $bx, by: $by, bz: $bz, "
-                            + "timestamp: $timestamp, accuracy: $accuracy"
+                            + "timestamp: $timestamp, accuracy: $accuracy, sensorType: $sensorType"
                 )
 
                 syncHelper.notifyAll { measured++ }
@@ -181,7 +185,7 @@ class GyroscopeSensorCollector2Test {
 
     private fun logSensor(sensor: Sensor) {
         val fifoMaxEventCount = sensor.fifoMaxEventCount
-        val fifoReversedEventCount = sensor.fifoReservedEventCount
+        val fifoReservedEventCount = sensor.fifoReservedEventCount
         val highestDirectReportRateLevel = sensor.highestDirectReportRateLevel
         val highestDirectReportRateLevelName = when (highestDirectReportRateLevel) {
             SensorDirectChannel.RATE_STOP -> "RATE_STOP"
@@ -215,7 +219,7 @@ class GyroscopeSensorCollector2Test {
 
         Log.d(
             "GyroscopeSensorCollector2Test", "Sensor - fifoMaxEventCount: $fifoMaxEventCount, "
-                    + "fifoReversedEventCount: $fifoReversedEventCount, "
+                    + "fifoReservedEventCount: $fifoReservedEventCount, "
                     + "highestDirectReportRateLevel: $highestDirectReportRateLevel, "
                     + "highestDirectReportRateLevelName: $highestDirectReportRateLevelName, "
                     + "id: $id, "

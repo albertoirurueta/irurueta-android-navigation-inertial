@@ -686,6 +686,7 @@ class AccelerometerGravityGyroscopeAndMagnetometerSensorMeasurementSyncer(
             var processedAccelerometer = false
             if (foundGravityMeasurements.isEmpty()) {
                 if (hasPreviousGravityMeasurement && hasPreviousGyroscopeMeasurement
+                    && hasPreviousMagnetometerMeasurement
                     && accelerometerTimestamp > lastNotifiedTimestamp
                     && accelerometerTimestamp >= lastNotifiedAccelerometerTimestamp
                     && previousGravityMeasurement.timestamp > lastNotifiedGravityTimestamp
@@ -733,7 +734,7 @@ class AccelerometerGravityGyroscopeAndMagnetometerSensorMeasurementSyncer(
 
                     var processedGravity = false
                     if (foundGyroscopeMeasurements.isEmpty()) {
-                        if (hasPreviousGyroscopeMeasurement
+                        if (hasPreviousGyroscopeMeasurement && hasPreviousMagnetometerMeasurement
                             && gravityTimestamp > lastNotifiedTimestamp
                             && accelerometerTimestamp >= lastNotifiedAccelerometerTimestamp
                             && gravityTimestamp >= lastNotifiedGravityTimestamp
@@ -787,7 +788,7 @@ class AccelerometerGravityGyroscopeAndMagnetometerSensorMeasurementSyncer(
                             var processedGyroscope = false
                             if (foundMagnetometerMeasurements.isEmpty()) {
                                 if (hasPreviousMagnetometerMeasurement
-                                    && gravityTimestamp > lastNotifiedTimestamp
+                                    && gyroscopeTimestamp > lastNotifiedTimestamp
                                     && accelerometerTimestamp >= lastNotifiedAccelerometerTimestamp
                                     && gravityTimestamp >= lastNotifiedGravityTimestamp
                                     && gyroscopeTimestamp >= lastNotifiedGyroscopeTimestamp
@@ -795,7 +796,7 @@ class AccelerometerGravityGyroscopeAndMagnetometerSensorMeasurementSyncer(
                                 ) {
                                     // generate synchronized measurement when rate of gyroscope is
                                     // greater than magnetometer one
-                                    syncedMeasurement.timestamp = gravityTimestamp
+                                    syncedMeasurement.timestamp = gyroscopeTimestamp
                                     syncedMeasurement.accelerometerMeasurement?.copyFrom(
                                         accelerometerMeasurement
                                     )

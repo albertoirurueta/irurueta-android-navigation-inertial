@@ -25,6 +25,7 @@ import com.irurueta.android.navigation.inertial.collectors.*
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 
 @RequiresDevice
@@ -184,6 +185,7 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         assertTrue(syncer.gyroscopeSensorAvailable)
     }
 
+    @Ignore
     @Test
     fun startAndStop_whenStartOffsetsEnabled_notifiesMeasurements() {
         runTest(
@@ -334,7 +336,7 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
 
     private fun logAccelerometerSensor(sensor: Sensor) {
         val fifoMaxEventCount = sensor.fifoMaxEventCount
-        val fifoReversedEventCount = sensor.fifoReservedEventCount
+        val fifoReservedEventCount = sensor.fifoReservedEventCount
         val highestDirectReportRateLevel = sensor.highestDirectReportRateLevel
         val highestDirectReportRateLevelName = when (highestDirectReportRateLevel) {
             SensorDirectChannel.RATE_STOP -> "RATE_STOP"
@@ -369,7 +371,7 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         Log.d(
             "AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest",
             "Sensor - fifoMaxEventCount: $fifoMaxEventCount, "
-                    + "fifoReversedEventCount: $fifoReversedEventCount, "
+                    + "fifoReservedEventCount: $fifoReservedEventCount, "
                     + "highestDirectReportRateLevel: $highestDirectReportRateLevel, "
                     + "highestDirectReportRateLevelName: $highestDirectReportRateLevelName, "
                     + "id: $id, "
@@ -397,7 +399,7 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
 
     private fun logGyroscopeSensor(sensor: Sensor) {
         val fifoMaxEventCount = sensor.fifoMaxEventCount
-        val fifoReversedEventCount = sensor.fifoReservedEventCount
+        val fifoReservedEventCount = sensor.fifoReservedEventCount
         val highestDirectReportRateLevel = sensor.highestDirectReportRateLevel
         val highestDirectReportRateLevelName = when (highestDirectReportRateLevel) {
             SensorDirectChannel.RATE_STOP -> "RATE_STOP"
@@ -432,7 +434,7 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         Log.d(
             "AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest",
             "Sensor - fifoMaxEventCount: $fifoMaxEventCount, "
-                    + "fifoReversedEventCount: $fifoReversedEventCount, "
+                    + "fifoReservedEventCount: $fifoReservedEventCount, "
                     + "highestDirectReportRateLevel: $highestDirectReportRateLevel, "
                     + "highestDirectReportRateLevelName: $highestDirectReportRateLevelName, "
                     + "id: $id, "

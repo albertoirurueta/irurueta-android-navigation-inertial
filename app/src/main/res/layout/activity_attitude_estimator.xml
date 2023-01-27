@@ -34,5 +34,13 @@
         tools:text="@string/yaw_degrees"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/pitch" />
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/heading_accuracy"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        tools:text="@string/heading_accuracy_degrees"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/yaw" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

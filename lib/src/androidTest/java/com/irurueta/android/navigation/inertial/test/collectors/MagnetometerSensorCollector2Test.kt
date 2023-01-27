@@ -21,11 +21,9 @@ import android.util.Log
 import androidx.test.filters.RequiresDevice
 import androidx.test.platform.app.InstrumentationRegistry
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
-import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector2
 import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorType
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
-import org.junit.Assert
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
@@ -115,16 +113,18 @@ class MagnetometerSensorCollector2Test {
                 val hardIronZ = measurement.hardIronZ
                 val timestamp = measurement.timestamp
                 val accuracy = measurement.accuracy
+                val sensorType = measurement.sensorType
 
                 assertNull(hardIronX)
                 assertNull(hardIronY)
                 assertNull(hardIronZ)
+                assertEquals(MagnetometerSensorType.MAGNETOMETER, measurement.sensorType)
 
                 Log.d(
                     "MagnetometerSensorCollector2Test",
                     "onMeasurement - bx: $bx, by: $by, bz: $bz, hardIronX: $hardIronX, "
                             + "hardIronY: $hardIronY, hardIronZ: $hardIronZ, "
-                            + "timestamp: $timestamp, accuracy: $accuracy"
+                            + "timestamp: $timestamp, accuracy: $accuracy, sensorType: $sensorType"
                 )
 
                 syncHelper.notifyAll { measured++ }
@@ -189,7 +189,7 @@ class MagnetometerSensorCollector2Test {
 
     private fun logSensor(sensor: Sensor) {
         val fifoMaxEventCount = sensor.fifoMaxEventCount
-        val fifoReversedEventCount = sensor.fifoReservedEventCount
+        val fifoReservedEventCount = sensor.fifoReservedEventCount
         val highestDirectReportRateLevel = sensor.highestDirectReportRateLevel
         val highestDirectReportRateLevelName = when (highestDirectReportRateLevel) {
             SensorDirectChannel.RATE_STOP -> "RATE_STOP"
@@ -223,7 +223,7 @@ class MagnetometerSensorCollector2Test {
 
         Log.d(
             "MagnetometerSensorCollector2Test", "Sensor - fifoMaxEventCount: $fifoMaxEventCount, "
-                    + "fifoReversedEventCount: $fifoReversedEventCount, "
+                    + "fifoReservedEventCount: $fifoReservedEventCount, "
                     + "highestDirectReportRateLevel: $highestDirectReportRateLevel, "
                     + "highestDirectReportRateLevelName: $highestDirectReportRateLevelName, "
                     + "id: $id, "

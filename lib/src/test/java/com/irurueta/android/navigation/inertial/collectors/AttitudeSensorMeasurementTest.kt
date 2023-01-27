@@ -35,6 +35,7 @@ class AttitudeSensorMeasurementTest {
         assertNull(measurement.headingAccuracy)
         assertEquals(0L, measurement.timestamp)
         assertNull(measurement.accuracy)
+        assertEquals(AttitudeSensorType.ABSOLUTE_ATTITUDE, measurement.sensorType)
     }
 
     @Test
@@ -47,13 +48,20 @@ class AttitudeSensorMeasurementTest {
         val timestamp = SystemClock.elapsedRealtimeNanos()
 
         val measurement =
-            AttitudeSensorMeasurement(attitude, null, timestamp, null)
+            AttitudeSensorMeasurement(
+                attitude,
+                null,
+                timestamp,
+                null,
+                AttitudeSensorType.RELATIVE_ATTITUDE
+            )
 
         // check
         assertSame(attitude, measurement.attitude)
         assertNull(measurement.headingAccuracy)
         assertEquals(timestamp, measurement.timestamp)
         assertNull(measurement.accuracy)
+        assertEquals(AttitudeSensorType.RELATIVE_ATTITUDE, measurement.sensorType)
     }
 
     @Test
@@ -67,13 +75,20 @@ class AttitudeSensorMeasurementTest {
         val timestamp = SystemClock.elapsedRealtimeNanos()
 
         val measurement =
-            AttitudeSensorMeasurement(attitude, headingAccuracy, timestamp, SensorAccuracy.HIGH)
+            AttitudeSensorMeasurement(
+                attitude,
+                headingAccuracy,
+                timestamp,
+                SensorAccuracy.HIGH,
+                AttitudeSensorType.RELATIVE_ATTITUDE
+            )
 
         // check
         assertSame(attitude, measurement.attitude)
         assertEquals(headingAccuracy, measurement.headingAccuracy)
         assertEquals(timestamp, measurement.timestamp)
         assertEquals(SensorAccuracy.HIGH, measurement.accuracy)
+        assertEquals(AttitudeSensorType.RELATIVE_ATTITUDE, measurement.sensorType)
     }
 
     @Test
@@ -87,7 +102,13 @@ class AttitudeSensorMeasurementTest {
         val timestamp = SystemClock.elapsedRealtimeNanos()
 
         val measurement1 =
-            AttitudeSensorMeasurement(attitude, headingAccuracy, timestamp, SensorAccuracy.HIGH)
+            AttitudeSensorMeasurement(
+                attitude,
+                headingAccuracy,
+                timestamp,
+                SensorAccuracy.HIGH,
+                AttitudeSensorType.ABSOLUTE_ATTITUDE
+            )
 
         val measurement2 = AttitudeSensorMeasurement(measurement1)
 
@@ -96,11 +117,13 @@ class AttitudeSensorMeasurementTest {
         assertEquals(headingAccuracy, measurement1.headingAccuracy)
         assertEquals(timestamp, measurement1.timestamp)
         assertEquals(SensorAccuracy.HIGH, measurement1.accuracy)
+        assertEquals(AttitudeSensorType.ABSOLUTE_ATTITUDE, measurement1.sensorType)
 
         assertEquals(measurement1.attitude, measurement2.attitude)
         assertEquals(measurement1.headingAccuracy, measurement2.headingAccuracy)
         assertEquals(measurement1.timestamp, measurement2.timestamp)
         assertEquals(measurement1.accuracy, measurement2.accuracy)
+        assertEquals(measurement1.sensorType, measurement2.sensorType)
     }
 
     @Test
@@ -175,6 +198,20 @@ class AttitudeSensorMeasurementTest {
     }
 
     @Test
+    fun sensorType_setsExpectedValue() {
+        val measurement = AttitudeSensorMeasurement()
+
+        // check default value
+        assertEquals(AttitudeSensorType.ABSOLUTE_ATTITUDE, measurement.sensorType)
+
+        // set new value
+        measurement.sensorType = AttitudeSensorType.RELATIVE_ATTITUDE
+
+        // check
+        assertEquals(AttitudeSensorType.RELATIVE_ATTITUDE, measurement.sensorType)
+    }
+
+    @Test
     fun copyFrom_makesExpectedCopy() {
         val randomizer = UniformRandomizer()
         val roll = Math.toRadians(randomizer.nextDouble(MIN_DEGREES, MAX_DEGREES))
@@ -185,7 +222,13 @@ class AttitudeSensorMeasurementTest {
         val timestamp = SystemClock.elapsedRealtimeNanos()
 
         val measurement1 =
-            AttitudeSensorMeasurement(attitude, headingAccuracy, timestamp, SensorAccuracy.HIGH)
+            AttitudeSensorMeasurement(
+                attitude,
+                headingAccuracy,
+                timestamp,
+                SensorAccuracy.HIGH,
+                AttitudeSensorType.ABSOLUTE_ATTITUDE
+            )
 
         val measurement2 = AttitudeSensorMeasurement()
         measurement2.copyFrom(measurement1)
@@ -195,11 +238,13 @@ class AttitudeSensorMeasurementTest {
         assertEquals(headingAccuracy, measurement1.headingAccuracy)
         assertEquals(timestamp, measurement1.timestamp)
         assertEquals(SensorAccuracy.HIGH, measurement1.accuracy)
+        assertEquals(AttitudeSensorType.ABSOLUTE_ATTITUDE, measurement1.sensorType)
 
         assertEquals(measurement1.attitude, measurement2.attitude)
         assertEquals(measurement1.headingAccuracy, measurement2.headingAccuracy)
         assertEquals(measurement1.timestamp, measurement2.timestamp)
         assertEquals(measurement1.accuracy, measurement2.accuracy)
+        assertEquals(measurement1.sensorType, measurement2.sensorType)
     }
 
     @Test
@@ -213,7 +258,13 @@ class AttitudeSensorMeasurementTest {
         val timestamp = SystemClock.elapsedRealtimeNanos()
 
         val measurement1 =
-            AttitudeSensorMeasurement(attitude, headingAccuracy, timestamp, SensorAccuracy.HIGH)
+            AttitudeSensorMeasurement(
+                attitude,
+                headingAccuracy,
+                timestamp,
+                SensorAccuracy.HIGH,
+                AttitudeSensorType.RELATIVE_ATTITUDE
+            )
 
         val measurement2 = AttitudeSensorMeasurement()
         measurement1.copyTo(measurement2)
@@ -223,11 +274,13 @@ class AttitudeSensorMeasurementTest {
         assertEquals(headingAccuracy, measurement1.headingAccuracy)
         assertEquals(timestamp, measurement1.timestamp)
         assertEquals(SensorAccuracy.HIGH, measurement1.accuracy)
+        assertEquals(AttitudeSensorType.RELATIVE_ATTITUDE, measurement1.sensorType)
 
         assertEquals(measurement1.attitude, measurement2.attitude)
         assertEquals(measurement1.headingAccuracy, measurement2.headingAccuracy)
         assertEquals(measurement1.timestamp, measurement2.timestamp)
         assertEquals(measurement1.accuracy, measurement2.accuracy)
+        assertEquals(measurement1.sensorType, measurement2.sensorType)
     }
 
     @Test
@@ -241,7 +294,13 @@ class AttitudeSensorMeasurementTest {
         val timestamp = SystemClock.elapsedRealtimeNanos()
 
         val measurement1 =
-            AttitudeSensorMeasurement(attitude, headingAccuracy, timestamp, SensorAccuracy.HIGH)
+            AttitudeSensorMeasurement(
+                attitude,
+                headingAccuracy,
+                timestamp,
+                SensorAccuracy.HIGH,
+                AttitudeSensorType.ABSOLUTE_ATTITUDE
+            )
 
         val measurement2 = measurement1.copy()
 
@@ -250,11 +309,13 @@ class AttitudeSensorMeasurementTest {
         assertEquals(headingAccuracy, measurement1.headingAccuracy)
         assertEquals(timestamp, measurement1.timestamp)
         assertEquals(SensorAccuracy.HIGH, measurement1.accuracy)
+        assertEquals(AttitudeSensorType.ABSOLUTE_ATTITUDE, measurement1.sensorType)
 
         assertEquals(measurement1.attitude, measurement2.attitude)
         assertEquals(measurement1.headingAccuracy, measurement2.headingAccuracy)
         assertEquals(measurement1.timestamp, measurement2.timestamp)
         assertEquals(measurement1.accuracy, measurement2.accuracy)
+        assertEquals(measurement1.sensorType, measurement2.sensorType)
     }
 
     private companion object {

@@ -38,6 +38,7 @@ class MagnetometerSensorMeasurementTest {
         assertNull(measurement.hardIronZ)
         assertEquals(0L, measurement.timestamp)
         assertNull(measurement.accuracy)
+        assertEquals(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED, measurement.sensorType)
     }
 
     @Test
@@ -49,7 +50,17 @@ class MagnetometerSensorMeasurementTest {
         val timestamp = SystemClock.elapsedRealtimeNanos()
 
         val measurement =
-            MagnetometerSensorMeasurement(bx, by, bz, null, null, null, timestamp, null)
+            MagnetometerSensorMeasurement(
+                bx,
+                by,
+                bz,
+                null,
+                null,
+                null,
+                timestamp,
+                null,
+                MagnetometerSensorType.MAGNETOMETER
+            )
 
         // check
         assertEquals(bx, measurement.bx, 0.0f)
@@ -60,6 +71,7 @@ class MagnetometerSensorMeasurementTest {
         assertNull(measurement.hardIronZ)
         assertEquals(timestamp, measurement.timestamp)
         assertNull(measurement.accuracy)
+        assertEquals(MagnetometerSensorType.MAGNETOMETER, measurement.sensorType)
     }
 
     @Test
@@ -82,7 +94,8 @@ class MagnetometerSensorMeasurementTest {
                 hardIronY,
                 hardIronZ,
                 timestamp,
-                SensorAccuracy.LOW
+                SensorAccuracy.LOW,
+                MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED
             )
 
         // check
@@ -94,6 +107,7 @@ class MagnetometerSensorMeasurementTest {
         assertEquals(hardIronZ, measurement.hardIronZ)
         assertEquals(timestamp, measurement.timestamp)
         assertEquals(SensorAccuracy.LOW, measurement.accuracy)
+        assertEquals(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED, measurement.sensorType)
     }
 
     @Test
@@ -116,7 +130,8 @@ class MagnetometerSensorMeasurementTest {
                 hardIronY,
                 hardIronZ,
                 timestamp,
-                SensorAccuracy.LOW
+                SensorAccuracy.LOW,
+                MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED
             )
 
         val measurement2 = MagnetometerSensorMeasurement(measurement1)
@@ -130,6 +145,7 @@ class MagnetometerSensorMeasurementTest {
         assertEquals(hardIronZ, measurement1.hardIronZ)
         assertEquals(timestamp, measurement1.timestamp)
         assertEquals(SensorAccuracy.LOW, measurement1.accuracy)
+        assertEquals(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED, measurement1.sensorType)
 
         assertEquals(measurement1.bx, measurement2.bx, 0.0f)
         assertEquals(measurement1.by, measurement2.by, 0.0f)
@@ -139,6 +155,7 @@ class MagnetometerSensorMeasurementTest {
         assertEquals(measurement1.hardIronZ, measurement2.hardIronZ)
         assertEquals(measurement1.timestamp, measurement2.timestamp)
         assertEquals(measurement1.accuracy, measurement2.accuracy)
+        assertEquals(measurement1.sensorType, measurement2.sensorType)
     }
 
     @Test
@@ -292,6 +309,20 @@ class MagnetometerSensorMeasurementTest {
     }
 
     @Test
+    fun sensorType_setsExpectedValue() {
+        val measurement = MagnetometerSensorMeasurement()
+
+        // check default value
+        assertEquals(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED, measurement.sensorType)
+
+        // set new value
+        measurement.sensorType = MagnetometerSensorType.MAGNETOMETER
+
+        // check
+        assertEquals(MagnetometerSensorType.MAGNETOMETER, measurement.sensorType)
+    }
+
+    @Test
     fun copyFrom_makesExpectedCopy() {
         val randomizer = UniformRandomizer()
         val bx = randomizer.nextFloat()
@@ -311,7 +342,8 @@ class MagnetometerSensorMeasurementTest {
                 hardIronY,
                 hardIronZ,
                 timestamp,
-                SensorAccuracy.LOW
+                SensorAccuracy.LOW,
+                MagnetometerSensorType.MAGNETOMETER
             )
 
         val measurement2 = MagnetometerSensorMeasurement()
@@ -326,6 +358,7 @@ class MagnetometerSensorMeasurementTest {
         assertEquals(hardIronZ, measurement1.hardIronZ)
         assertEquals(timestamp, measurement1.timestamp)
         assertEquals(SensorAccuracy.LOW, measurement1.accuracy)
+        assertEquals(MagnetometerSensorType.MAGNETOMETER, measurement1.sensorType)
 
         assertEquals(measurement1.bx, measurement2.bx, 0.0f)
         assertEquals(measurement1.by, measurement2.by, 0.0f)
@@ -335,6 +368,7 @@ class MagnetometerSensorMeasurementTest {
         assertEquals(measurement1.hardIronZ, measurement2.hardIronZ)
         assertEquals(measurement1.timestamp, measurement2.timestamp)
         assertEquals(measurement1.accuracy, measurement2.accuracy)
+        assertEquals(measurement1.sensorType, measurement2.sensorType)
     }
 
     @Test
@@ -357,7 +391,8 @@ class MagnetometerSensorMeasurementTest {
                 hardIronY,
                 hardIronZ,
                 timestamp,
-                SensorAccuracy.LOW
+                SensorAccuracy.LOW,
+                MagnetometerSensorType.MAGNETOMETER
             )
 
         val measurement2 = MagnetometerSensorMeasurement()
@@ -372,6 +407,7 @@ class MagnetometerSensorMeasurementTest {
         assertEquals(hardIronZ, measurement1.hardIronZ)
         assertEquals(timestamp, measurement1.timestamp)
         assertEquals(SensorAccuracy.LOW, measurement1.accuracy)
+        assertEquals(MagnetometerSensorType.MAGNETOMETER, measurement1.sensorType)
 
         assertEquals(measurement1.bx, measurement2.bx, 0.0f)
         assertEquals(measurement1.by, measurement2.by, 0.0f)
@@ -381,6 +417,7 @@ class MagnetometerSensorMeasurementTest {
         assertEquals(measurement1.hardIronZ, measurement2.hardIronZ)
         assertEquals(measurement1.timestamp, measurement2.timestamp)
         assertEquals(measurement1.accuracy, measurement2.accuracy)
+        assertEquals(measurement1.sensorType, measurement2.sensorType)
     }
 
     @Test
@@ -403,7 +440,8 @@ class MagnetometerSensorMeasurementTest {
                 hardIronY,
                 hardIronZ,
                 timestamp,
-                SensorAccuracy.LOW
+                SensorAccuracy.LOW,
+                MagnetometerSensorType.MAGNETOMETER
             )
 
         val measurement2 = measurement1.copy()
@@ -417,6 +455,7 @@ class MagnetometerSensorMeasurementTest {
         assertEquals(hardIronZ, measurement1.hardIronZ)
         assertEquals(timestamp, measurement1.timestamp)
         assertEquals(SensorAccuracy.LOW, measurement1.accuracy)
+        assertEquals(MagnetometerSensorType.MAGNETOMETER, measurement1.sensorType)
 
         assertEquals(measurement1.bx, measurement2.bx, 0.0f)
         assertEquals(measurement1.by, measurement2.by, 0.0f)
@@ -426,5 +465,6 @@ class MagnetometerSensorMeasurementTest {
         assertEquals(measurement1.hardIronZ, measurement2.hardIronZ)
         assertEquals(measurement1.timestamp, measurement2.timestamp)
         assertEquals(measurement1.accuracy, measurement2.accuracy)
+        assertEquals(measurement1.sensorType, measurement2.sensorType)
     }
 }

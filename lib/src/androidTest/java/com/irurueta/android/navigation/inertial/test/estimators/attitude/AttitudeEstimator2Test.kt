@@ -64,7 +64,7 @@ class AttitudeEstimator2Test {
             activity,
             attitudeSensorType = AttitudeSensorType.ABSOLUTE_ATTITUDE,
             estimateEulerAngles = true,
-            attitudeAvailableListener = { _, _, _, roll, pitch, yaw, _ ->
+            attitudeAvailableListener = { _, _, _, _, roll, pitch, yaw, _ ->
                 logAttitude(roll, pitch, yaw)
                 syncHelper.notifyAll { completed++ }
             }
@@ -87,7 +87,7 @@ class AttitudeEstimator2Test {
             activity,
             attitudeSensorType = AttitudeSensorType.RELATIVE_ATTITUDE,
             estimateEulerAngles = true,
-            attitudeAvailableListener = { _, _, _, roll, pitch, yaw, _ ->
+            attitudeAvailableListener = { _, _, _, _, roll, pitch, yaw, _ ->
                 logAttitude(roll, pitch, yaw)
                 syncHelper.notifyAll { completed++ }
             }
