@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2023 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ import org.junit.Before
 import org.junit.Test
 
 @RequiresDevice
-class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
+class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
 
     private val syncHelper = ThreadSyncHelper()
 
@@ -36,12 +36,15 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
     private var completed = 0
 
     private var timestamp = 0L
+    private var attitudeTimestamp = 0L
     private var accelerometerTimestamp = 0L
     private var gravityTimestamp = 0L
     private var gyroscopeTimestamp = 0L
+    private var maxAttitudeUsage = -1.0f
     private var maxAccelerometerUsage = -1.0f
     private var maxGravityUsage = -1.0f
     private var maxGyroscopeUsage = -1.0f
+    private var maxAttitudeCollectorUsage = -1.0f
     private var maxAccelerometerCollectorUsage = -1.0f
     private var maxGravityCollectorUsage = -1.0f
     private var maxGyroscopeCollectorUsage = -1.0f
@@ -51,26 +54,57 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         completed = 0
 
         timestamp = 0L
+        attitudeTimestamp = 0L
         accelerometerTimestamp = 0L
         gravityTimestamp = 0L
         gyroscopeTimestamp = 0L
+        maxAttitudeUsage = -1.0f
         maxAccelerometerUsage = -1.0f
         maxGravityUsage = -1.0f
         maxGyroscopeUsage = -1.0f
+        maxAttitudeCollectorUsage = -1.0f
         maxAccelerometerCollectorUsage = -1.0f
         maxGravityCollectorUsage = -1.0f
         maxGyroscopeCollectorUsage = -1.0f
     }
 
     @Test
+    fun attitudeSensor_whenAbsoluteSensorType_returnsSensor() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val syncer = AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
+            context,
+            attitudeSensorType = AttitudeSensorType.ABSOLUTE_ATTITUDE
+        )
+
+        val sensor = syncer.attitudeSensor
+        requireNotNull(sensor)
+
+        logAttitudeSensor(sensor)
+    }
+
+    @Test
+    fun attitudeSensor_whenRelativeSensorType_returnsSensor() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val syncer = AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
+            context,
+            attitudeSensorType = AttitudeSensorType.RELATIVE_ATTITUDE
+        )
+
+        val sensor = syncer.attitudeSensor
+        requireNotNull(sensor)
+
+        logAttitudeSensor(sensor)
+    }
+
+    @Test
     fun accelerometerSensor_whenAccelerometerSensorType_returnsSensor() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
+        val syncer = AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
             context,
             accelerometerSensorType = AccelerometerSensorType.ACCELEROMETER
         )
 
-        val sensor = syncer.accelerometerSensor
+        val sensor = syncer.attitudeSensor
         requireNotNull(sensor)
 
         logAccelerometerSensor(sensor)
@@ -79,12 +113,12 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
     @Test
     fun accelerometerSensor_whenAccelerometerUncalibratedSensorType_returnsSensor() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
+        val syncer = AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
             context,
             accelerometerSensorType = AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
         )
 
-        val sensor = syncer.accelerometerSensor
+        val sensor = syncer.attitudeSensor
         requireNotNull(sensor)
 
         logAccelerometerSensor(sensor)
@@ -93,9 +127,8 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
     @Test
     fun gravitySensor_returnsSensor() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
+        val syncer = AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
             context,
-            accelerometerSensorType = AccelerometerSensorType.ACCELEROMETER
         )
 
         val sensor = syncer.gravitySensor
@@ -107,7 +140,7 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
     @Test
     fun gyroscopeSensor_whenGyroscopeSensorType_returnsSensor() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val syncer = AccelerometerAndGyroscopeSensorMeasurementSyncer(
+        val syncer = AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
             context,
             gyroscopeSensorType = GyroscopeSensorType.GYROSCOPE
         )
@@ -121,7 +154,7 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
     @Test
     fun gyroscopeSensor_whenGyroscopeUncalibratedSensorType_returnsSensor() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val syncer = AccelerometerAndGyroscopeSensorMeasurementSyncer(
+        val syncer = AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
             context,
             gyroscopeSensorType = GyroscopeSensorType.GYROSCOPE_UNCALIBRATED
         )
@@ -133,9 +166,31 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
     }
 
     @Test
+    fun attitudeSensorAvailable_whenAbsoluteSensorType_returnsTrue() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val syncer = AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
+            context,
+            attitudeSensorType = AttitudeSensorType.ABSOLUTE_ATTITUDE
+        )
+
+        assertTrue(syncer.attitudeSensorAvailable)
+    }
+
+    @Test
+    fun attitudeSensorAvailable_whenRelativeSensorType_returnsTrue() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val syncer = AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
+            context,
+            attitudeSensorType = AttitudeSensorType.RELATIVE_ATTITUDE
+        )
+
+        assertTrue(syncer.attitudeSensorAvailable)
+    }
+
+    @Test
     fun accelerometerSensorAvailable_whenAccelerometerSensorType_returnsTrue() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
+        val syncer = AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
             context,
             accelerometerSensorType = AccelerometerSensorType.ACCELEROMETER
         )
@@ -146,7 +201,7 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
     @Test
     fun accelerometerSensorAvailable_whenAccelerometerUncalibratedSensorType_returnsTrue() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
+        val syncer = AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
             context,
             accelerometerSensorType = AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
         )
@@ -157,7 +212,7 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
     @Test
     fun gravitySensorAvailable_returnsTrue() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(context)
+        val syncer = AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncer(context)
 
         assertTrue(syncer.gravitySensorAvailable)
     }
@@ -165,7 +220,7 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
     @Test
     fun gyroscopeSensorAvailable_whenGyroscopeSensorType_returnsTrue() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
+        val syncer = AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
             context,
             gyroscopeSensorType = GyroscopeSensorType.GYROSCOPE
         )
@@ -176,7 +231,7 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
     @Test
     fun gyroscopeSensorAvailable_whenGyroscopeUncalibratedSensorType_returnsTrue() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
+        val syncer = AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
             context,
             gyroscopeSensorType = GyroscopeSensorType.GYROSCOPE_UNCALIBRATED
         )
@@ -187,6 +242,7 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
     @Test
     fun startAndStop_whenStartOffsetsEnabled_notifiesMeasurements() {
         runTest(
+            attitudeStartOffsetEnabled = true,
             accelerometerStartOffsetEnabled = true,
             gravityStartOffsetEnabled = true,
             gyroscopeStartOffsetEnabled = true,
@@ -197,6 +253,7 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
     @Test
     fun startAndStop_whenFilledBufferEnabled_notifiesMeasurements() {
         runTest(
+            attitudeStartOffsetEnabled = false,
             accelerometerStartOffsetEnabled = false,
             gravityStartOffsetEnabled = false,
             gyroscopeStartOffsetEnabled = false,
@@ -207,6 +264,7 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
     @Test
     fun startAndStop_whenAllFlagsDisabled_notifiesMeasurements() {
         runTest(
+            attitudeStartOffsetEnabled = false,
             accelerometerStartOffsetEnabled = false,
             gravityStartOffsetEnabled = false,
             gyroscopeStartOffsetEnabled = false,
@@ -215,14 +273,16 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
     }
 
     private fun runTest(
+        attitudeStartOffsetEnabled: Boolean,
         accelerometerStartOffsetEnabled: Boolean,
         gravityStartOffsetEnabled: Boolean,
         gyroscopeStartOffsetEnabled: Boolean,
         stopWhenFilledBuffer: Boolean
     ) {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
+        val syncer = AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
             context,
+            attitudeStartOffsetEnabled = attitudeStartOffsetEnabled,
             accelerometerStartOffsetEnabled = accelerometerStartOffsetEnabled,
             gravityStartOffsetEnabled = gravityStartOffsetEnabled,
             gyroscopeStartOffsetEnabled = gyroscopeStartOffsetEnabled,
@@ -242,6 +302,7 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
                 requireNotNull(measurement.gyroscopeMeasurement)
                 requireNotNull(measurement.gravityMeasurement)
                 requireNotNull(measurement.accelerometerMeasurement)
+                requireNotNull(measurement.attitudeMeasurement)
 
                 val currentGyroscopeTimestamp = measurement.gyroscopeMeasurement?.timestamp
                 requireNotNull(currentGyroscopeTimestamp)
@@ -253,24 +314,35 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
 
                 val currentAccelerometerTimestamp = measurement.accelerometerMeasurement?.timestamp
                 requireNotNull(currentAccelerometerTimestamp)
-                if (currentAccelerometerTimestamp < accelerometerTimestamp) {
+                assertTrue(currentAccelerometerTimestamp >= accelerometerTimestamp)
+
+                val currentAttitudeTimestamp = measurement.attitudeMeasurement?.timestamp
+                requireNotNull(currentAttitudeTimestamp)
+                if (currentAttitudeTimestamp < attitudeTimestamp) {
                     Log.d(
-                        AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest::class.simpleName,
-                        "Max accelerometer usage: $maxAccelerometerUsage, " +
+                        AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest::class.simpleName,
+                        "Max attitude usage: $maxAttitudeUsage, " +
+                                "max accelerometer usage: $maxAccelerometerUsage, " +
                                 "max gravity usage: $maxGravityUsage, " +
                                 "max gyroscope usage: $maxGyroscopeUsage, " +
+                                "max attitude collector usage: $maxAttitudeCollectorUsage, " +
                                 "max accelerometer collector usage: $maxAccelerometerCollectorUsage, " +
                                 "max gravity collector usage: $maxGravityCollectorUsage, " +
                                 "max gyroscope collector usage: $maxGyroscopeCollectorUsage"
                     )
                 }
-                assertTrue(currentAccelerometerTimestamp >= accelerometerTimestamp)
+                assertTrue(currentAttitudeTimestamp >= attitudeTimestamp)
 
                 timestamp = measurement.timestamp
                 gyroscopeTimestamp = currentGyroscopeTimestamp
-                gravityTimestamp = currentGravityTimestamp
                 accelerometerTimestamp = currentAccelerometerTimestamp
+                gravityTimestamp = currentGravityTimestamp
+                attitudeTimestamp = currentAttitudeTimestamp
 
+                val attitudeCollectorUsage = syncer.attitudeCollectorUsage
+                if (attitudeCollectorUsage > maxAttitudeCollectorUsage) {
+                    maxAttitudeCollectorUsage = attitudeCollectorUsage
+                }
                 val accelerometerCollectorUsage = syncer.accelerometerCollectorUsage
                 if (accelerometerCollectorUsage > maxAccelerometerCollectorUsage) {
                     maxAccelerometerCollectorUsage = accelerometerCollectorUsage
@@ -282,6 +354,10 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
                 val gyroscopeCollectorUsage = syncer.gyroscopeCollectorUsage
                 if (gyroscopeCollectorUsage > maxGyroscopeCollectorUsage) {
                     maxGyroscopeCollectorUsage = gyroscopeCollectorUsage
+                }
+                val attitudeUsage = syncer.attitudeUsage
+                if (attitudeUsage > maxAttitudeUsage) {
+                    maxAttitudeUsage = attitudeUsage
                 }
                 val accelerometerUsage = syncer.accelerometerUsage
                 if (accelerometerUsage > maxAccelerometerUsage) {
@@ -322,13 +398,74 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         assertFalse(syncer.running)
 
         Log.d(
-            AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest::class.simpleName,
-            "Max accelerometer usage: $maxAccelerometerUsage, " +
+            AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest::class.simpleName,
+            "Max attitude usage: $maxAttitudeUsage, " +
+                    "max accelerometer usage: $maxAccelerometerUsage, " +
                     "max gravity usage: $maxGravityUsage, " +
                     "max gyroscope usage: $maxGyroscopeUsage, " +
+                    "max attitude collector usage: $maxAttitudeCollectorUsage, " +
                     "max accelerometer collector usage: $maxAccelerometerCollectorUsage, " +
                     "max gravity collector usage: $maxGravityCollectorUsage, " +
                     "max gyroscope collector usage: $maxGyroscopeCollectorUsage"
+        )
+    }
+
+    private fun logAttitudeSensor(sensor: Sensor) {
+        val fifoMaxEventCount = sensor.fifoMaxEventCount
+        val fifoReservedEventCount = sensor.fifoReservedEventCount
+        val highestDirectReportRateLevel = sensor.highestDirectReportRateLevel
+        val highestDirectReportRateLevelName = when (highestDirectReportRateLevel) {
+            SensorDirectChannel.RATE_STOP -> "RATE_STOP"
+            SensorDirectChannel.RATE_NORMAL -> "RATE_NORMAL"
+            SensorDirectChannel.RATE_FAST -> "RATE_FAST"
+            SensorDirectChannel.RATE_VERY_FAST -> "RATE_VERY_FAST"
+            else -> ""
+        }
+        val id = sensor.id
+        val maxDelay = sensor.maxDelay // microseconds (µs)
+        val maximumRange = sensor.maximumRange // unitless
+        val minDelay = sensor.minDelay // microseconds (µs)
+        val name = sensor.name
+        val power = sensor.power // milli-amperes (mA)
+        val reportingMode = sensor.reportingMode
+        val reportingModeName = when (reportingMode) {
+            Sensor.REPORTING_MODE_CONTINUOUS -> "REPORTING_MODE_CONTINUOUS"
+            Sensor.REPORTING_MODE_ON_CHANGE -> "REPORTING_MODE_ON_CHANGE"
+            Sensor.REPORTING_MODE_ONE_SHOT -> "REPORTING_MODE_ONE_SHOT"
+            Sensor.REPORTING_MODE_SPECIAL_TRIGGER -> "REPORTING_MODE_SPECIAL_TRIGGER"
+            else -> ""
+        }
+        val resolution = sensor.resolution // unitless
+        val stringType = sensor.stringType
+        val type = sensor.type
+        val vendor = sensor.vendor
+        val version = sensor.version
+        val additionInfoSupported = sensor.isAdditionalInfoSupported
+        val dynamicSensor = sensor.isDynamicSensor
+        val wakeUpSensor = sensor.isWakeUpSensor
+
+        Log.d(
+            "AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncerTest",
+            "Sensor - fifoMaxEventCount: $fifoMaxEventCount, "
+                    + "fifoReservedEventCount: $fifoReservedEventCount, "
+                    + "highestDirectReportRateLevel: $highestDirectReportRateLevel, "
+                    + "highestDirectReportRateLevelName: $highestDirectReportRateLevelName, "
+                    + "id: $id, "
+                    + "maxDelay: $maxDelay µs, "
+                    + "maximumRange: $maximumRange unitless, "
+                    + "minDelay: $minDelay µs, "
+                    + "name: $name, "
+                    + "power: $power mA, "
+                    + "reportingMode: $reportingMode, "
+                    + "reportingModeName: $reportingModeName, "
+                    + "resolution: $resolution unitless, "
+                    + "stringType: $stringType, "
+                    + "type: $type, "
+                    + "vendor: $vendor, "
+                    + "version: $version, "
+                    + "additionInfoSupported: $additionInfoSupported, "
+                    + "dynamicSensor: $dynamicSensor, "
+                    + "wakeUpSensor: $wakeUpSensor"
         )
     }
 
@@ -367,7 +504,7 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val wakeUpSensor = sensor.isWakeUpSensor
 
         Log.d(
-            "AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest",
+            "AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncerTest",
             "Sensor - fifoMaxEventCount: $fifoMaxEventCount, "
                     + "fifoReservedEventCount: $fifoReservedEventCount, "
                     + "highestDirectReportRateLevel: $highestDirectReportRateLevel, "
@@ -430,7 +567,7 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val wakeUpSensor = sensor.isWakeUpSensor
 
         Log.d(
-            "AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest",
+            "AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncerTest",
             "Sensor - fifoMaxEventCount: $fifoMaxEventCount, "
                     + "fifoReservedEventCount: $fifoReservedEventCount, "
                     + "highestDirectReportRateLevel: $highestDirectReportRateLevel, "
@@ -455,7 +592,7 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
     }
 
     private fun logAccuracyChanged(
-        syncer: AccelerometerGravityAndGyroscopeSensorMeasurementSyncer,
+        syncer: AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncer,
         sensorType: SensorType,
         accuracy: SensorAccuracy?
     ) {
@@ -464,59 +601,75 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val numberOfProcessedMeasurements = syncer.numberOfProcessedMeasurements
         val mostRecentTimestamp = syncer.mostRecentTimestamp
         val oldestTimestamp = syncer.oldestTimestamp
+        val attitudeSensorType = syncer.attitudeSensorType
         val accelerometerSensorType = syncer.accelerometerSensorType
         val gyroscopeSensorType = syncer.gyroscopeSensorType
+        val attitudeSensorDelay = syncer.attitudeSensorDelay
         val accelerometerSensorDelay = syncer.accelerometerSensorDelay
         val gravitySensorDelay = syncer.gravitySensorDelay
         val gyroscopeSensorDelay = syncer.gyroscopeSensorDelay
+        val attitudeCapacity = syncer.attitudeCapacity
         val accelerometerCapacity = syncer.accelerometerCapacity
         val gravityCapacity = syncer.gravityCapacity
         val gyroscopeCapacity = syncer.gyroscopeCapacity
+        val attitudeStartOffsetEnabled = syncer.attitudeStartOffsetEnabled
         val accelerometerStartOffsetEnabled = syncer.accelerometerStartOffsetEnabled
         val gravityStartOffsetEnabled = syncer.gravityStartOffsetEnabled
         val gyroscopeStartOffsetEnabled = syncer.gyroscopeStartOffsetEnabled
         val stopWhenFilledBuffer = syncer.stopWhenFilledBuffer
+        val attitudeSensorAvailable = syncer.attitudeSensorAvailable
         val accelerometerSensorAvailable = syncer.accelerometerSensorAvailable
         val gravitySensorAvailable = syncer.gravitySensorAvailable
         val gyroscopeSensorAvailable = syncer.gyroscopeSensorAvailable
+        val attitudeStartOffset = syncer.attitudeStartOffset
         val accelerometerStartOffset = syncer.accelerometerStartOffset
         val gravityStartOffset = syncer.gravityStartOffset
         val gyroscopeStartOffset = syncer.gyroscopeStartOffset
+        val attitudeCollectorUsage = syncer.attitudeCollectorUsage
         val accelerometerCollectorUsage = syncer.accelerometerCollectorUsage
         val gravityCollectorUsage = syncer.gravityCollectorUsage
         val gyroscopeCollectorUsage = syncer.gyroscopeCollectorUsage
+        val attitudeUsage = syncer.attitudeUsage
         val accelerometerUsage = syncer.accelerometerUsage
         val gravityUsage = syncer.gravityUsage
         val gyroscopeUsage = syncer.gyroscopeUsage
 
         Log.d(
-            "AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest",
+            "AttitudeAccelerometerGravityAndGyroscopeSyncedSensorMeasurementTest",
             "accuracyChanged - sensorType: $sensorType, accuracy: $accuracy, " +
                     "startTime: $startTime, running: $running, " +
                     "numberOfProcessedMeasurements: $numberOfProcessedMeasurements, " +
                     "mostRecentTimestamp: $mostRecentTimestamp, " +
                     "oldestTimestamp: $oldestTimestamp, " +
+                    "attitudeSensorType: $attitudeSensorType, " +
                     "accelerometerSensorType: $accelerometerSensorType, " +
                     "gyroscopeSensorType: $gyroscopeSensorType, " +
+                    "attitudeSensorDelay: $attitudeSensorDelay, " +
                     "accelerometerSensorDelay: $accelerometerSensorDelay, " +
                     "gravitySensorDelay: $gravitySensorDelay, " +
                     "gyroscopeSensorDelay: $gyroscopeSensorDelay, " +
+                    "attitudeCapacity: $attitudeCapacity, " +
                     "accelerometerCapacity: $accelerometerCapacity," +
                     "gravityCapacity: $gravityCapacity, " +
                     "gyroscopeCapacity: $gyroscopeCapacity, " +
+                    "attitudeStartOffsetEnabled: $attitudeStartOffsetEnabled, " +
                     "accelerometerStartOffsetEnabled: $accelerometerStartOffsetEnabled, " +
                     "gravityStartOffsetEnabled: $gravityStartOffsetEnabled, " +
                     "gyroscopeStartOffsetEnabled: $gyroscopeStartOffsetEnabled, " +
                     "stopWhenFilledBuffer: $stopWhenFilledBuffer, " +
+                    "attitudeSensorAvailable: $attitudeSensorAvailable, " +
                     "accelerometerSensorAvailable: $accelerometerSensorAvailable, " +
                     "gravitySensorAvailable: $gravitySensorAvailable, " +
                     "gyroscopeSensorAvailable: $gyroscopeSensorAvailable, " +
+                    "attitudeStartOffset: $attitudeStartOffset, " +
                     "accelerometerStartOffset: $accelerometerStartOffset, " +
-                    "gravityStartOffset: $gravityStartOffset, " +
+                    "gravityStartOffset:$gravityStartOffset, " +
                     "gyroscopeStartOffset: $gyroscopeStartOffset, " +
+                    "attitudeCollectorUsage: $attitudeCollectorUsage, " +
                     "accelerometerCollectorUsage: $accelerometerCollectorUsage, " +
                     "gravityCollectorUsage: $gravityCollectorUsage, " +
                     "gyroscopeCollectorUsage: $gyroscopeCollectorUsage, " +
+                    "attitudeUsage: $attitudeUsage, " +
                     "accelerometerUsage: $accelerometerUsage, " +
                     "gravityUsage: $gravityUsage, " +
                     "gyroscopeUsage: $gyroscopeUsage"
@@ -524,7 +677,7 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
     }
 
     private fun logBufferFilled(
-        syncer: AccelerometerGravityAndGyroscopeSensorMeasurementSyncer,
+        syncer: AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncer,
         sensorType: SensorType
     ) {
         val startTime = syncer.startTimestamp
@@ -532,59 +685,75 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val numberOfProcessedMeasurements = syncer.numberOfProcessedMeasurements
         val mostRecentTimestamp = syncer.mostRecentTimestamp
         val oldestTimestamp = syncer.oldestTimestamp
+        val attitudeSensorType = syncer.attitudeSensorType
         val accelerometerSensorType = syncer.accelerometerSensorType
         val gyroscopeSensorType = syncer.gyroscopeSensorType
+        val attitudeSensorDelay = syncer.attitudeSensorDelay
         val accelerometerSensorDelay = syncer.accelerometerSensorDelay
         val gravitySensorDelay = syncer.gravitySensorDelay
         val gyroscopeSensorDelay = syncer.gyroscopeSensorDelay
+        val attitudeCapacity = syncer.attitudeCapacity
         val accelerometerCapacity = syncer.accelerometerCapacity
         val gravityCapacity = syncer.gravityCapacity
         val gyroscopeCapacity = syncer.gyroscopeCapacity
+        val attitudeStartOffsetEnabled = syncer.attitudeStartOffsetEnabled
         val accelerometerStartOffsetEnabled = syncer.accelerometerStartOffsetEnabled
         val gravityStartOffsetEnabled = syncer.gravityStartOffsetEnabled
         val gyroscopeStartOffsetEnabled = syncer.gyroscopeStartOffsetEnabled
         val stopWhenFilledBuffer = syncer.stopWhenFilledBuffer
         val accelerometerSensorAvailable = syncer.accelerometerSensorAvailable
+        val attitudeSensorAvailable = syncer.attitudeSensorAvailable
         val gravitySensorAvailable = syncer.gravitySensorAvailable
         val gyroscopeSensorAvailable = syncer.gyroscopeSensorAvailable
+        val attitudeStartOffset = syncer.attitudeStartOffset
         val accelerometerStartOffset = syncer.accelerometerStartOffset
         val gravityStartOffset = syncer.gravityStartOffset
         val gyroscopeStartOffset = syncer.gyroscopeStartOffset
+        val attitudeCollectorUsage = syncer.attitudeCollectorUsage
         val accelerometerCollectorUsage = syncer.accelerometerCollectorUsage
         val gravityCollectorUsage = syncer.gravityCollectorUsage
         val gyroscopeCollectorUsage = syncer.gyroscopeCollectorUsage
+        val attitudeUsage = syncer.attitudeUsage
         val accelerometerUsage = syncer.accelerometerUsage
         val gravityUsage = syncer.gravityUsage
         val gyroscopeUsage = syncer.gyroscopeUsage
 
         Log.d(
-            "AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest",
+            "AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest",
             "bufferFilled - sensorType: $sensorType, " +
                     "startTime: $startTime, running: $running, " +
                     "numberOfProcessedMeasurements: $numberOfProcessedMeasurements, " +
                     "mostRecentTimestamp: $mostRecentTimestamp, " +
                     "oldestTimestamp: $oldestTimestamp, " +
+                    "attitudeSensorType: $attitudeSensorType, " +
                     "accelerometerSensorType: $accelerometerSensorType, " +
                     "gyroscopeSensorType: $gyroscopeSensorType, " +
+                    "attitudeSensorDelay: $attitudeSensorDelay, " +
                     "accelerometerSensorDelay: $accelerometerSensorDelay, " +
                     "gravitySensorDelay: $gravitySensorDelay, " +
                     "gyroscopeSensorDelay: $gyroscopeSensorDelay, " +
+                    "attitudeCapacity: $attitudeCapacity, " +
                     "accelerometerCapacity: $accelerometerCapacity," +
                     "gravityCapacity: $gravityCapacity, " +
                     "gyroscopeCapacity: $gyroscopeCapacity, " +
+                    "attitudeStartOffsetEnabled: $attitudeStartOffsetEnabled, " +
                     "accelerometerStartOffsetEnabled: $accelerometerStartOffsetEnabled, " +
+                    "gravityStartOffsetEnabled: $gravityStartOffsetEnabled, " +
                     "gyroscopeStartOffsetEnabled: $gyroscopeStartOffsetEnabled, " +
                     "stopWhenFilledBuffer: $stopWhenFilledBuffer, " +
+                    "attitudeSensorAvailable: $attitudeSensorAvailable, " +
                     "accelerometerSensorAvailable: $accelerometerSensorAvailable, " +
                     "gravitySensorAvailable: $gravitySensorAvailable, " +
                     "gyroscopeSensorAvailable: $gyroscopeSensorAvailable, " +
+                    "attitudeStartOffset: $attitudeStartOffset, " +
                     "accelerometerStartOffset: $accelerometerStartOffset, " +
                     "gravityStartOffset: $gravityStartOffset, " +
-                    "gravityStartOffsetEnabled: $gravityStartOffsetEnabled, " +
                     "gyroscopeStartOffset: $gyroscopeStartOffset, " +
+                    "attitudeCollectorUsage: $attitudeCollectorUsage, " +
                     "accelerometerCollectorUsage: $accelerometerCollectorUsage, " +
                     "gravityCollectorUsage: $gravityCollectorUsage, " +
                     "gyroscopeCollectorUsage: $gyroscopeCollectorUsage, " +
+                    "attitudeUsage: $attitudeUsage, " +
                     "accelerometerUsage: $accelerometerUsage, " +
                     "gravityUsage: $gravityUsage, " +
                     "gyroscopeUsage: $gyroscopeUsage"
@@ -592,7 +761,7 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
     }
 
     private fun logStaleMeasurements(
-        syncer: AccelerometerGravityAndGyroscopeSensorMeasurementSyncer,
+        syncer: AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncer,
         sensorType: SensorType,
         measurements: Collection<SensorMeasurement<*>>
     ) {
@@ -601,27 +770,35 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val numberOfProcessedMeasurements = syncer.numberOfProcessedMeasurements
         val mostRecentTimestamp = syncer.mostRecentTimestamp
         val oldestTimestamp = syncer.oldestTimestamp
+        val attitudeSensorType = syncer.attitudeSensorType
         val accelerometerSensorType = syncer.accelerometerSensorType
         val gyroscopeSensorType = syncer.gyroscopeSensorType
+        val attitudeSensorDelay = syncer.attitudeSensorDelay
         val accelerometerSensorDelay = syncer.accelerometerSensorDelay
         val gravitySensorDelay = syncer.gravitySensorDelay
         val gyroscopeSensorDelay = syncer.gyroscopeSensorDelay
+        val attitudeCapacity = syncer.attitudeCapacity
         val accelerometerCapacity = syncer.accelerometerCapacity
         val gravityCapacity = syncer.gravityCapacity
         val gyroscopeCapacity = syncer.gyroscopeCapacity
+        val attitudeStartOffsetEnabled = syncer.attitudeStartOffsetEnabled
         val accelerometerStartOffsetEnabled = syncer.accelerometerStartOffsetEnabled
         val gravityStartOffsetEnabled = syncer.gravityStartOffsetEnabled
         val gyroscopeStartOffsetEnabled = syncer.gyroscopeStartOffsetEnabled
         val stopWhenFilledBuffer = syncer.stopWhenFilledBuffer
+        val attitudeSensorAvailable = syncer.attitudeSensorAvailable
         val accelerometerSensorAvailable = syncer.accelerometerSensorAvailable
         val gravitySensorAvailable = syncer.gravitySensorAvailable
         val gyroscopeSensorAvailable = syncer.gyroscopeSensorAvailable
+        val attitudeStartOffset = syncer.attitudeStartOffset
         val accelerometerStartOffset = syncer.accelerometerStartOffset
         val gravityStartOffset = syncer.gravityStartOffset
         val gyroscopeStartOffset = syncer.gyroscopeStartOffset
+        val attitudeCollectorUsage = syncer.attitudeCollectorUsage
         val accelerometerCollectorUsage = syncer.accelerometerCollectorUsage
         val gravityCollectorUsage = syncer.gravityCollectorUsage
         val gyroscopeCollectorUsage = syncer.gyroscopeCollectorUsage
+        val attitudeUsage = syncer.attitudeUsage
         val accelerometerUsage = syncer.accelerometerUsage
         val gravityUsage = syncer.gravityUsage
         val gyroscopeUsage = syncer.gyroscopeUsage
@@ -629,33 +806,41 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val numberOfStaleMeasurements = measurements.size
 
         Log.d(
-            "AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest",
+            "AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest",
             "staleMeasurements - sensorType: $sensorType, " +
                     "startTime: $startTime, running: $running, " +
                     "numberOfProcessedMeasurements: $numberOfProcessedMeasurements, " +
                     "mostRecentTimestamp: $mostRecentTimestamp, " +
                     "oldestTimestamp: $oldestTimestamp, " +
+                    "attitudeSensorType: $attitudeSensorType, " +
                     "accelerometerSensorType: $accelerometerSensorType, " +
                     "gyroscopeSensorType: $gyroscopeSensorType, " +
+                    "attitudeSensorDelay: $attitudeSensorDelay, " +
                     "accelerometerSensorDelay: $accelerometerSensorDelay, " +
                     "gravitySensorDelay: $gravitySensorDelay, " +
                     "gyroscopeSensorDelay: $gyroscopeSensorDelay, " +
+                    "attitudeCapacity: $attitudeCapacity, " +
                     "accelerometerCapacity: $accelerometerCapacity, " +
                     "gravityCapacity: $gravityCapacity, " +
                     "gyroscopeCapacity: $gyroscopeCapacity, " +
+                    "attitudeStartOffsetEnabled: $attitudeStartOffsetEnabled, " +
                     "accelerometerStartOffsetEnabled: $accelerometerStartOffsetEnabled, " +
                     "gravityStartOffsetEnabled: $gravityStartOffsetEnabled, " +
                     "gyroscopeStartOffsetEnabled: $gyroscopeStartOffsetEnabled, " +
                     "stopWhenFilledBuffer: $stopWhenFilledBuffer, " +
+                    "attitudeSensorAvailable: $attitudeSensorAvailable, " +
                     "accelerometerSensorAvailable: $accelerometerSensorAvailable, " +
                     "gravitySensorAvailable: $gravitySensorAvailable, " +
                     "gyroscopeSensorAvailable: $gyroscopeSensorAvailable, " +
+                    "attitudeStartOffset: $attitudeStartOffset, " +
                     "accelerometerStartOffset: $accelerometerStartOffset, " +
                     "gravityStartOffset: $gravityStartOffset, " +
                     "gyroscopeStartOffset: $gyroscopeStartOffset, " +
+                    "attitudeCollectorUsage: $attitudeCollectorUsage, " +
                     "accelerometerCollectorUsage: $accelerometerCollectorUsage, " +
                     "gravityCollectorUsage: $gravityCollectorUsage, " +
                     "gyroscopeCollectorUsage: $gyroscopeCollectorUsage, " +
+                    "attitudeUsage: $attitudeUsage, " +
                     "accelerometerUsage: $accelerometerUsage, " +
                     "gravityUsage: $gravityUsage, " +
                     "gyroscopeUsage: $gyroscopeUsage, " +
@@ -664,40 +849,54 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
     }
 
     private fun logSyncedMeasurement(
-        syncer: AccelerometerGravityAndGyroscopeSensorMeasurementSyncer,
-        measurement: AccelerometerGravityAndGyroscopeSyncedSensorMeasurement
+        syncer: AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncer,
+        measurement: AttitudeAccelerometerGravityAndGyroscopeSyncedSensorMeasurement
     ) {
         val startTime = syncer.startTimestamp
         val running = syncer.running
         val numberOfProcessedMeasurements = syncer.numberOfProcessedMeasurements
         val mostRecentTimestamp = syncer.mostRecentTimestamp
         val oldestTimestamp = syncer.oldestTimestamp
+        val attitudeSensorType = syncer.attitudeSensorType
         val accelerometerSensorType = syncer.accelerometerSensorType
         val gyroscopeSensorType = syncer.gyroscopeSensorType
+        val attitudeSensorDelay = syncer.attitudeSensorDelay
         val accelerometerSensorDelay = syncer.accelerometerSensorDelay
         val gravitySensorDelay = syncer.gravitySensorDelay
         val gyroscopeSensorDelay = syncer.gyroscopeSensorDelay
+        val attitudeCapacity = syncer.attitudeCapacity
         val accelerometerCapacity = syncer.accelerometerCapacity
         val gravityCapacity = syncer.gravityCapacity
         val gyroscopeCapacity = syncer.gyroscopeCapacity
+        val attitudeStartOffsetEnabled = syncer.attitudeStartOffsetEnabled
         val accelerometerStartOffsetEnabled = syncer.accelerometerStartOffsetEnabled
         val gravityStartOffsetEnabled = syncer.gravityStartOffsetEnabled
         val gyroscopeStartOffsetEnabled = syncer.gyroscopeStartOffsetEnabled
         val stopWhenFilledBuffer = syncer.stopWhenFilledBuffer
+        val attitudeSensorAvailable = syncer.attitudeSensorAvailable
         val accelerometerSensorAvailable = syncer.accelerometerSensorAvailable
         val gravitySensorAvailable = syncer.gravitySensorAvailable
         val gyroscopeSensorAvailable = syncer.gyroscopeSensorAvailable
+        val attitudeStartOffset = syncer.attitudeStartOffset
         val accelerometerStartOffset = syncer.accelerometerStartOffset
         val gravityStartOffset = syncer.gravityStartOffset
-        val accelerometerCollectorUsage = syncer.accelerometerCollectorUsage
-        val gyroscopeCollectorUsage = syncer.gyroscopeCollectorUsage
-        val gravityCollectorUsage = syncer.gravityCollectorUsage
         val gyroscopeStartOffset = syncer.gyroscopeStartOffset
+        val attitudeCollectorUsage = syncer.attitudeCollectorUsage
+        val accelerometerCollectorUsage = syncer.accelerometerCollectorUsage
+        val gravityCollectorUsage = syncer.gravityCollectorUsage
+        val gyroscopeCollectorUsage = syncer.gyroscopeCollectorUsage
+        val attitudeUsage = syncer.attitudeUsage
         val accelerometerUsage = syncer.accelerometerUsage
         val gravityUsage = syncer.gravityUsage
         val gyroscopeUsage = syncer.gyroscopeUsage
 
         val timestamp = measurement.timestamp
+        val a = measurement.attitudeMeasurement?.attitude?.a
+        val b = measurement.attitudeMeasurement?.attitude?.b
+        val c = measurement.attitudeMeasurement?.attitude?.c
+        val d = measurement.attitudeMeasurement?.attitude?.d
+        val headingAccuracy = measurement.attitudeMeasurement?.headingAccuracy
+        val attitudeTimestamp = measurement.attitudeMeasurement?.timestamp
         val ax = measurement.accelerometerMeasurement?.ax
         val ay = measurement.accelerometerMeasurement?.ay
         val az = measurement.accelerometerMeasurement?.az
@@ -718,36 +917,46 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val gyroscopeTimestamp = measurement.gyroscopeMeasurement?.timestamp
 
         Log.d(
-            "AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest",
+            "AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest",
             "syncedMeasurement - startTime: $startTime, running: $running, " +
                     "numberOfProcessedMeasurements: $numberOfProcessedMeasurements, " +
                     "mostRecentTimestamp: $mostRecentTimestamp, " +
                     "oldestTimestamp: $oldestTimestamp, " +
+                    "attitudeSensorType: $attitudeSensorType, " +
                     "accelerometerSensorType: $accelerometerSensorType, " +
                     "gyroscopeSensorType: $gyroscopeSensorType, " +
+                    "attitudeSensorDelay: $attitudeSensorDelay, " +
                     "accelerometerSensorDelay: $accelerometerSensorDelay, " +
                     "gravitySensorDelay: $gravitySensorDelay, " +
                     "gyroscopeSensorDelay: $gyroscopeSensorDelay, " +
+                    "attitudeCapacity: $attitudeCapacity, " +
                     "accelerometerCapacity: $accelerometerCapacity," +
-                    "gyroscopeCapacity: $gyroscopeCapacity, " +
                     "gravityCapacity: $gravityCapacity, " +
+                    "gyroscopeCapacity: $gyroscopeCapacity, " +
+                    "attitudeStartOffsetEnabled: $attitudeStartOffsetEnabled, " +
                     "accelerometerStartOffsetEnabled: $accelerometerStartOffsetEnabled, " +
                     "gravityStartOffsetEnabled: $gravityStartOffsetEnabled, " +
                     "gyroscopeStartOffsetEnabled: $gyroscopeStartOffsetEnabled, " +
                     "stopWhenFilledBuffer: $stopWhenFilledBuffer, " +
+                    "attitudeSensorAvailable: $attitudeSensorAvailable, " +
                     "accelerometerSensorAvailable: $accelerometerSensorAvailable, " +
-                    "gyroscopeSensorAvailable: $gyroscopeSensorAvailable, " +
                     "gravitySensorAvailable: $gravitySensorAvailable, " +
+                    "gyroscopeSensorAvailable: $gyroscopeSensorAvailable, " +
+                    "attitudeStartOffset: $attitudeStartOffset, " +
                     "accelerometerStartOffset: $accelerometerStartOffset, " +
                     "gravityStartOffset: $gravityStartOffset, " +
                     "gyroscopeStartOffset: $gyroscopeStartOffset, " +
+                    "attitudeCollectorUsage: $attitudeCollectorUsage, " +
                     "accelerometerCollectorUsage: $accelerometerCollectorUsage, " +
                     "gravityCollectorUsage: $gravityCollectorUsage, " +
                     "gyroscopeCollectorUsage: $gyroscopeCollectorUsage, " +
+                    "attitudeUsage: $attitudeUsage, " +
                     "accelerometerUsage: $accelerometerUsage, " +
                     "gravityUsage: $gravityUsage, " +
                     "gyroscopeUsage: $gyroscopeUsage, " +
-                    "timestamp: $timestamp, ax: $ax, ay: $ay, az: $az, " +
+                    "timestamp: $timestamp, a: $a, b: $b, c: $c, d: $d, " +
+                    "headingAccuracy: $headingAccuracy, attitudeTimestamp: $attitudeTimestamp" +
+                    "ax: $ax, ay: $ay, az: $az, " +
                     "abx: $abx, aby: $aby, abz: $abz, " +
                     "accelerometerTimestamp: $accelerometerTimestamp, " +
                     "gx: $gx, gy: $gy, gz: $gz, " +
