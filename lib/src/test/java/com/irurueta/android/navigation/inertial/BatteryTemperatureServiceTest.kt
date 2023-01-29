@@ -24,6 +24,7 @@ import androidx.test.core.app.ApplicationProvider
 import com.irurueta.units.Temperature
 import com.irurueta.units.TemperatureUnit
 import io.mockk.*
+import org.junit.After
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -31,6 +32,11 @@ import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class BatteryTemperatureServiceTest {
+
+    @After
+    fun tearDown() {
+        clearAllMocks()
+    }
 
     @Test
     fun constructor_whenRequiredParameters_setsDefaultValues() {

@@ -32,10 +32,8 @@ import com.irurueta.navigation.inertial.wmm.NEDMagneticFluxDensity
 import com.irurueta.navigation.inertial.wmm.WMMEarthMagneticFluxDensityEstimator
 import com.irurueta.statistics.UniformRandomizer
 import com.irurueta.units.*
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.spyk
-import io.mockk.verify
+import io.mockk.*
+import org.junit.After
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -46,6 +44,11 @@ import kotlin.math.sqrt
 
 @RunWith(RobolectricTestRunner::class)
 class MagnetometerNormEstimatorTest {
+
+    @After
+    fun tearDown() {
+        clearAllMocks()
+    }
 
     @Test
     fun constructor_whenContext_setsDefaultValues() {

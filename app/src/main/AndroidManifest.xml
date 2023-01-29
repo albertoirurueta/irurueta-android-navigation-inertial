@@ -26,7 +26,7 @@
         <activity android:name=".LeveledRelativeAttitudeEstimatorActivity"/>
         <activity android:name=".GeomagneticAttitudeEstimatorActivity"/>
         <activity android:name=".FusedGeomagneticAttitudeEstimatorActivity"/>
-        <activity android:name=".FusedGeomagneticAttitudeEstimator2Activity"/>
+        <activity android:name=".DoubleFusedGeomagneticAttitudeEstimatorActivity"/>
         <activity android:name=".PoseEstimatorActivity"/>
         <activity android:name=".LocalPoseEstimatorActivity"/>
         <activity android:name=".RelativePoseEstimatorActivity"/>

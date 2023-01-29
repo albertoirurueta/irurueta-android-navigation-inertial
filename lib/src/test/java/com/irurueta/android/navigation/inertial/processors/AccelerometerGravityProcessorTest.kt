@@ -23,10 +23,16 @@ import com.irurueta.navigation.inertial.calibration.AccelerationTriad
 import com.irurueta.statistics.UniformRandomizer
 import com.irurueta.units.AccelerationUnit
 import io.mockk.*
+import org.junit.After
 import org.junit.Assert.*
 import org.junit.Test
 
 class AccelerometerGravityProcessorTest {
+
+    @After
+    fun tearDown() {
+        clearAllMocks()
+    }
 
     @Test
     fun constructor_whenNoParameters_returnsExpectedValues() {

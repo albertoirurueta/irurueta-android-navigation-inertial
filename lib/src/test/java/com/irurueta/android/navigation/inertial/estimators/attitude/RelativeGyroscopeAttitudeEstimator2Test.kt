@@ -27,6 +27,7 @@ import com.irurueta.navigation.frames.CoordinateTransformation
 import com.irurueta.navigation.frames.FrameType
 import com.irurueta.statistics.UniformRandomizer
 import io.mockk.*
+import org.junit.After
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -34,6 +35,11 @@ import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class RelativeGyroscopeAttitudeEstimator2Test {
+
+    @After
+    fun tearDown() {
+        clearAllMocks()
+    }
 
     @Test
     fun constructor_whenRequiredProperties_setsDefaultValues() {

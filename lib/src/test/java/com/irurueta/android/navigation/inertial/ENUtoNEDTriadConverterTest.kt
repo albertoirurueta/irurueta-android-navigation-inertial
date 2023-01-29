@@ -22,11 +22,18 @@ import com.irurueta.navigation.inertial.calibration.AccelerationTriad
 import com.irurueta.navigation.inertial.calibration.AngularSpeedTriad
 import com.irurueta.navigation.inertial.calibration.MagneticFluxDensityTriad
 import com.irurueta.statistics.UniformRandomizer
+import io.mockk.clearAllMocks
+import org.junit.After
 import org.junit.Assert.*
 import org.junit.Test
 import kotlin.math.sqrt
 
 class ENUtoNEDTriadConverterTest {
+
+    @After
+    fun tearDown() {
+        clearAllMocks()
+    }
 
     @Test
     fun convert_whenAccelerationTriad_returnsExpectedResult() {

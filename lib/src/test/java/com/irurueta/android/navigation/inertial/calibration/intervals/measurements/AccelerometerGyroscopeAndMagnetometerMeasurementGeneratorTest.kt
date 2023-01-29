@@ -38,6 +38,7 @@ import com.irurueta.navigation.inertial.calibration.noise.AccumulatedMagneticFlu
 import com.irurueta.statistics.UniformRandomizer
 import com.irurueta.units.*
 import io.mockk.*
+import org.junit.After
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -45,6 +46,11 @@ import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
+
+    @After
+    fun tearDown() {
+        clearAllMocks()
+    }
 
     @Test
     fun constructor_whenContext_setsDefaultValues() {

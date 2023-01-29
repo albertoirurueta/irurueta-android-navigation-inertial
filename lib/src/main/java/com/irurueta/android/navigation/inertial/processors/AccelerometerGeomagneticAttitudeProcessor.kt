@@ -22,6 +22,8 @@ import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorMe
  * Estimates leveled absolute attitude using accelerometer and magnetometer sensors.
  * Roll and pitch Euler angles are leveled using accelerometer sensor.
  * Yaw angle is obtained from magnetometer once the leveling is estimated.
+ *
+ * @property processorListener listener to notify new leveled absolute attitudes.
  */
 class AccelerometerGeomagneticAttitudeProcessor(
     processorListener: OnProcessedListener<AccelerometerSensorMeasurement,

@@ -19,8 +19,10 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorManager
 import com.irurueta.statistics.UniformRandomizer
+import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
+import org.junit.After
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -28,6 +30,11 @@ import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class AccelerometerSensorMeasurementConverterTest {
+
+    @After
+    fun tearDown() {
+        clearAllMocks()
+    }
 
     @Test
     fun convert_whenNoSensorEvent_returnsFalse() {

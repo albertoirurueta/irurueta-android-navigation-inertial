@@ -17,6 +17,8 @@ package com.irurueta.android.navigation.inertial.collectors
 
 import android.hardware.Sensor
 import android.os.Build
+import io.mockk.clearAllMocks
+import org.junit.After
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -25,6 +27,11 @@ import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
 class AccelerometerSensorTypeTest {
+
+    @After
+    fun tearDown() {
+        clearAllMocks()
+    }
 
     @Config(sdk = [Build.VERSION_CODES.O])
     @Test

@@ -24,10 +24,16 @@ import com.irurueta.navigation.inertial.calibration.AngularSpeedTriad
 import com.irurueta.navigation.inertial.calibration.gyroscope.QuaternionStepIntegrator
 import com.irurueta.statistics.UniformRandomizer
 import io.mockk.*
+import org.junit.After
 import org.junit.Assert.*
 import org.junit.Test
 
 class AccurateRelativeGyroscopeAttitudeProcessorTest {
+
+    @After
+    fun tearDown() {
+        clearAllMocks()
+    }
 
     @Test
     fun constructor_whenNoParameters_setsDefaultValues() {

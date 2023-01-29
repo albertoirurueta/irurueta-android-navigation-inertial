@@ -26,6 +26,7 @@ import com.irurueta.android.navigation.inertial.getPrivateProperty
 import com.irurueta.android.navigation.inertial.setPrivateProperty
 import com.irurueta.statistics.UniformRandomizer
 import io.mockk.*
+import org.junit.After
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -33,6 +34,11 @@ import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class GravityEstimatorTest {
+
+    @After
+    fun tearDown() {
+        clearAllMocks()
+    }
 
     @Test
     fun constructor_whenRequiredProperties_setsDefaultValues() {
@@ -439,18 +445,18 @@ class GravityEstimatorTest {
             SensorAccuracy.HIGH
         )
 
-        val filterOutputList = mutableListOf<DoubleArray>()
+        val filterOutputSlot = slot<DoubleArray>()
         verify(exactly = 1) {
             accelerometerAveragingFilterSpy.filter(
                 ax.toDouble() - bx.toDouble(),
                 ay.toDouble() - by.toDouble(),
                 az.toDouble() - bz.toDouble(),
-                capture(filterOutputList),
+                capture(filterOutputSlot),
                 timestamp + INTERVAL_NANOS
             )
         }
 
-        val filterOutput = filterOutputList[1]
+        val filterOutput = filterOutputSlot.captured
         verify(exactly = 1) {
             estimationListener.onEstimation(
                 estimator,

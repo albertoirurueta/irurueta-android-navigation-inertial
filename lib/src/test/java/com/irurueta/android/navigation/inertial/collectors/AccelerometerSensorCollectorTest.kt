@@ -24,6 +24,7 @@ import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import com.irurueta.android.navigation.inertial.getPrivateProperty
 import io.mockk.*
+import org.junit.After
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -32,6 +33,11 @@ import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
 class AccelerometerSensorCollectorTest {
+
+    @After
+    fun tearDown() {
+        clearAllMocks()
+    }
 
     @Test
     fun constructor_whenContext_setsDefaultValues() {

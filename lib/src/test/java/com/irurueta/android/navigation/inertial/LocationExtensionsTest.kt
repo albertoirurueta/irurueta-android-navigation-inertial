@@ -18,12 +18,19 @@ package com.irurueta.android.navigation.inertial
 import android.location.Location
 import com.irurueta.navigation.frames.NEDPosition
 import com.irurueta.statistics.UniformRandomizer
+import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class LocationExtensionsTest {
+
+    @After
+    fun tearDown() {
+        clearAllMocks()
+    }
 
     @Test
     fun toNEDPosition_returnsExpectedValue() {

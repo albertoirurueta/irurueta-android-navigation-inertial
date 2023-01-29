@@ -18,6 +18,8 @@ package com.irurueta.android.navigation.inertial.collectors
 import android.os.SystemClock
 import com.irurueta.geometry.Quaternion
 import com.irurueta.statistics.UniformRandomizer
+import io.mockk.clearAllMocks
+import org.junit.After
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -25,6 +27,11 @@ import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class AttitudeSensorMeasurementTest {
+
+    @After
+    fun tearDown() {
+        clearAllMocks()
+    }
 
     @Test
     fun constructor_whenDefault_setsExpectedValues() {

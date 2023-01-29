@@ -16,10 +16,17 @@
 package com.irurueta.android.navigation.inertial.collectors
 
 import com.irurueta.statistics.UniformRandomizer
+import io.mockk.clearAllMocks
+import org.junit.After
 import org.junit.Assert.*
 import org.junit.Test
 
 class AccelerometerGravityAndMagnetometerSyncedSensorMeasurementTest {
+
+    @After
+    fun tearDown() {
+        clearAllMocks()
+    }
 
     @Test
     fun constructor_whenNoParameters_setsExpectedValues() {

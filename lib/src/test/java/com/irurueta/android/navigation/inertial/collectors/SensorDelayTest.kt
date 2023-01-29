@@ -16,6 +16,8 @@
 package com.irurueta.android.navigation.inertial.collectors
 
 import android.hardware.SensorManager
+import io.mockk.clearAllMocks
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -23,6 +25,11 @@ import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class SensorDelayTest {
+
+    @After
+    fun tearDown() {
+        clearAllMocks()
+    }
 
     @Test
     fun sensorDelay_fromValues_returnsExpectedValues() {

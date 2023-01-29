@@ -16,6 +16,8 @@
 package com.irurueta.android.navigation.inertial.collectors
 
 import android.hardware.Sensor
+import io.mockk.clearAllMocks
+import org.junit.After
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -23,6 +25,11 @@ import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class GyroscopeSensorTypeTest {
+
+    @After
+    fun tearDown() {
+        clearAllMocks()
+    }
 
     @Test
     fun fromValues_returnsExpected() {

@@ -16,10 +16,17 @@
 package com.irurueta.android.navigation.inertial.calibration.intervals
 
 import com.irurueta.navigation.inertial.calibration.intervals.TriadStaticIntervalDetector
+import io.mockk.clearAllMocks
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class ErrorReasonTest {
+
+    @After
+    fun tearDown() {
+        clearAllMocks()
+    }
 
     @Test
     fun mapErrorReason_returnsExpectedValue() {

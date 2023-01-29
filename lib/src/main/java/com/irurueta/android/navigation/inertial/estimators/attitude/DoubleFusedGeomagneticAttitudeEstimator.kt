@@ -53,7 +53,7 @@ import kotlin.math.min
  * @property attitudeAvailableListener listener to notify when a new attitude measurement is
  * available.
  */
-class FusedGeomagneticAttitudeEstimator2 private constructor(
+class DoubleFusedGeomagneticAttitudeEstimator private constructor(
     override val context: Context,
     override val sensorDelay: SensorDelay,
     override val useAccelerometer: Boolean,
@@ -64,7 +64,7 @@ class FusedGeomagneticAttitudeEstimator2 private constructor(
     override val estimateCoordinateTransformation: Boolean,
     override val estimateEulerAngles: Boolean,
     override var attitudeAvailableListener: OnAttitudeAvailableListener?
-) : AbsoluteAttitudeEstimator<FusedGeomagneticAttitudeEstimator2, FusedGeomagneticAttitudeEstimator2.OnAttitudeAvailableListener> {
+) : AbsoluteAttitudeEstimator<DoubleFusedGeomagneticAttitudeEstimator, DoubleFusedGeomagneticAttitudeEstimator.OnAttitudeAvailableListener> {
 
     /**
      * Constructor.
@@ -679,7 +679,7 @@ class FusedGeomagneticAttitudeEstimator2 private constructor(
 
             internalFusedAttitude.copyTo(fusedAttitude)
             attitudeAvailableListener?.onAttitudeAvailable(
-                this@FusedGeomagneticAttitudeEstimator2,
+                this@DoubleFusedGeomagneticAttitudeEstimator,
                 fusedAttitude,
                 relativeAttitudeTimestamp,
                 displayRoll,
@@ -740,5 +740,5 @@ class FusedGeomagneticAttitudeEstimator2 private constructor(
      * Interface to notify when a new attitude measurement is available.
      */
     fun interface OnAttitudeAvailableListener :
-        AbsoluteAttitudeEstimator.OnAttitudeAvailableListener<FusedGeomagneticAttitudeEstimator2>
+        AbsoluteAttitudeEstimator.OnAttitudeAvailableListener<DoubleFusedGeomagneticAttitudeEstimator>
 }

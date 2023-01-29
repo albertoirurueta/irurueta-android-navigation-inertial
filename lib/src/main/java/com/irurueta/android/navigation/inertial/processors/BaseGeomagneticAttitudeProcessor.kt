@@ -197,7 +197,7 @@ abstract class BaseGeomagneticAttitudeProcessor<M : SensorMeasurement<M>, S : Sy
      * @param magnetometerMeasurement magnetometer measurement.
      * @return true if new leveled absolute attitude is processed, false otherwise.
      */
-    protected fun process(
+    internal fun process(
         accelerometerOrGravityMeasurement: M,
         magnetometerMeasurement: MagnetometerSensorMeasurement,
     ): Boolean {

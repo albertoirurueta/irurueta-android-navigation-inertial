@@ -37,10 +37,8 @@ import com.irurueta.navigation.inertial.estimators.BodyMagneticFluxDensityEstima
 import com.irurueta.navigation.inertial.wmm.WMMEarthMagneticFluxDensityEstimator
 import com.irurueta.statistics.UniformRandomizer
 import com.irurueta.units.*
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.spyk
-import io.mockk.verify
+import io.mockk.*
+import org.junit.After
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -50,6 +48,11 @@ import java.util.*
 
 @RunWith(RobolectricTestRunner::class)
 class MagnetometerIntervalDetectorTest {
+
+    @After
+    fun tearDown() {
+        clearAllMocks()
+    }
 
     @Test
     fun constructor_whenContext_setsDefaultValues() {

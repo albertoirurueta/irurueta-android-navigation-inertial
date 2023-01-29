@@ -6,9 +6,11 @@ import android.view.Display
 import android.view.Surface
 import android.view.WindowManager
 import androidx.test.core.app.ApplicationProvider
+import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -18,6 +20,12 @@ import org.robolectric.annotation.Config
 @Suppress("DEPRECATION")
 @RunWith(RobolectricTestRunner::class)
 class DisplayOrientationHelperTest {
+
+    @After
+    fun tearDown() {
+        clearAllMocks()
+    }
+
     @Config(sdk = [Build.VERSION_CODES.R])
     @Test
     fun getDisplayRotationDegrees_whenSdkRAndNoDisplay_returns0() {

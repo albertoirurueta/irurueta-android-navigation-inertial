@@ -15,10 +15,17 @@
  */
 package com.irurueta.android.navigation.inertial.calibration.noise
 
+import io.mockk.clearAllMocks
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class StopModeTest {
+
+    @After
+    fun tearDown() {
+        clearAllMocks()
+    }
 
     @Test
     fun stopMode_hasExpectedNumberOfElements() {

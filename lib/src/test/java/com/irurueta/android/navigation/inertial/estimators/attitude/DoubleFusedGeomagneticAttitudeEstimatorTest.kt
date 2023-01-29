@@ -31,6 +31,7 @@ import com.irurueta.navigation.frames.FrameType
 import com.irurueta.navigation.inertial.wmm.WorldMagneticModel
 import com.irurueta.statistics.UniformRandomizer
 import io.mockk.*
+import org.junit.After
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -39,12 +40,17 @@ import java.util.*
 import kotlin.math.abs
 
 @RunWith(RobolectricTestRunner::class)
-class FusedGeomagneticAttitudeEstimator2Test {
+class DoubleFusedGeomagneticAttitudeEstimatorTest {
+
+    @After
+    fun tearDown() {
+        clearAllMocks()
+    }
 
     @Test
     fun constructor_whenRequiredProperties_setsDefaultValues() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(context)
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(context)
 
         // check
         assertSame(context, estimator.context)
@@ -88,7 +94,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
         val accelerometerAveragingFilter = MedianAveragingFilter()
         val worldMagneticModel = WorldMagneticModel()
         val timestamp = Date()
-        val listener = mockk<FusedGeomagneticAttitudeEstimator2.OnAttitudeAvailableListener>()
+        val listener = mockk<DoubleFusedGeomagneticAttitudeEstimator.OnAttitudeAvailableListener>()
         val accelerometerMeasurementListener =
             mockk<AccelerometerSensorCollector.OnMeasurementListener>()
         val gravityMeasurementListener = mockk<GravitySensorCollector.OnMeasurementListener>()
@@ -96,7 +102,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
         val magnetometerMeasurementListener =
             mockk<MagnetometerSensorCollector.OnMeasurementListener>()
         val gravityEstimationListener = mockk<GravityEstimator.OnEstimationListener>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(
             context,
             location,
             SensorDelay.NORMAL,
@@ -157,7 +163,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
     @Test
     fun location_whenNotRunning_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(context)
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(context)
 
         assertFalse(estimator.running)
         assertNull(estimator.location)
@@ -179,7 +185,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
     @Test
     fun location_whenRunningAndNotNull_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(context)
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(context)
 
         assertFalse(estimator.running)
         assertNull(estimator.location)
@@ -200,7 +206,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
     fun location_whenRunningAndNull_throwsIllegalStateException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val location = getLocation()
-        val estimator = FusedGeomagneticAttitudeEstimator2(context, location)
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(context, location)
 
         assertFalse(estimator.running)
         assertSame(location, estimator.location)
@@ -217,7 +223,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
     @Test
     fun worldMagneticModel_whenNotRunning_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(context)
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(context)
 
         // check default value
         assertFalse(estimator.running)
@@ -242,7 +248,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
     @Test(expected = IllegalStateException::class)
     fun worldMagneticModel_whenRunning_throwsIllegalStateException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(context)
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(context)
 
         // set as running
         estimator.setPrivateProperty("running", true)
@@ -253,7 +259,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
     @Test
     fun timestamp_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(context)
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(context)
 
         // check default value
         assertNotNull(estimator.timestamp)
@@ -269,13 +275,13 @@ class FusedGeomagneticAttitudeEstimator2Test {
     @Test
     fun attitudeAvailableListener_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(context)
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(context)
 
         // check default value
         assertNull(estimator.attitudeAvailableListener)
 
         // set new value
-        val listener = mockk<FusedGeomagneticAttitudeEstimator2.OnAttitudeAvailableListener>()
+        val listener = mockk<DoubleFusedGeomagneticAttitudeEstimator.OnAttitudeAvailableListener>()
         estimator.attitudeAvailableListener = listener
 
         // check
@@ -285,7 +291,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
     @Test
     fun accelerometerMeasurementListener_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(context)
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(context)
 
         // check default value
         assertNull(estimator.accelerometerMeasurementListener)
@@ -310,7 +316,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
     @Test
     fun gravityMeasurementListener_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(context)
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(context)
 
         // check default value
         assertNull(estimator.gravityMeasurementListener)
@@ -331,7 +337,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
     @Test
     fun gyroscopeMeasurementListener_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(context)
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(context)
 
         // check default value
         assertNull(estimator.gyroscopeMeasurementListener)
@@ -355,7 +361,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
     @Test
     fun magnetometerMeasurementListener_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(context)
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(context)
 
         // check default value
         val magnetometerMeasurementListener =
@@ -377,7 +383,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
     @Test
     fun gravityEstimationListener_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(context)
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(context)
 
         // check default value
         assertNull(estimator.gyroscopeMeasurementListener)
@@ -398,7 +404,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
     @Test
     fun useWorldMagneticModel_whenNotRunning_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(context)
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(context)
 
         // check
         assertFalse(estimator.running)
@@ -422,7 +428,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
     @Test(expected = IllegalStateException::class)
     fun useWorldMagneticModel_whenRunning_throwsIllegalStateException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(context)
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(context)
 
         // set as running
         estimator.setPrivateProperty("running", true)
@@ -434,7 +440,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
     @Test(expected = IllegalStateException::class)
     fun useAccurateLevelingEstimator_whenRunning_throwsIllegalStateException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(context)
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(context)
 
         assertFalse(estimator.useAccurateLevelingEstimator)
         assertFalse(estimator.running)
@@ -450,7 +456,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
     @Test
     fun useAccurateLevelingEstimator_whenNotRunningNoLocationAndSetToFalse_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(context)
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(context)
 
         assertFalse(estimator.useAccurateLevelingEstimator)
         assertNull(estimator.location)
@@ -473,7 +479,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
     @Test(expected = IllegalStateException::class)
     fun useAccurateLevelingEstimator_whenNotRunningNoLocationAndSetToTrue_throwsIllegalStateException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(context)
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(context)
 
         assertFalse(estimator.useAccurateLevelingEstimator)
         assertNull(estimator.location)
@@ -486,7 +492,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
     fun useAccurateLevelingEstimator_whenNotRunningAndLocationAndSetToTrue_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val location = getLocation()
-        val estimator = FusedGeomagneticAttitudeEstimator2(context, location)
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(context, location)
 
         // check default value
         assertFalse(estimator.running)
@@ -511,7 +517,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
     @Test(expected = IllegalStateException::class)
     fun useAccurateRelativeGyroscopeAttitudeEstimator_whenRunning_throwsIllegalStateException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(context)
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(context)
 
         assertFalse(estimator.running)
 
@@ -526,7 +532,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
     @Test
     fun useAccurateRelativeGyroscopeAttitudeEstimator_whenNotRunning_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(context)
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(context)
 
         assertFalse(estimator.running)
         assertTrue(estimator.useAccurateRelativeGyroscopeAttitudeEstimator)
@@ -541,7 +547,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
     @Test
     fun useIndirectInterpolation_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(context)
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(context)
 
         // check default value
         assertTrue(estimator.useIndirectInterpolation)
@@ -557,10 +563,10 @@ class FusedGeomagneticAttitudeEstimator2Test {
     @Test
     fun interpolationValue_whenOutOfRange_throwsIllegalArgumentException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(context)
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(context)
 
         assertEquals(
-            FusedGeomagneticAttitudeEstimator2.DEFAULT_INTERPOLATION_VALUE,
+            DoubleFusedGeomagneticAttitudeEstimator.DEFAULT_INTERPOLATION_VALUE,
             estimator.interpolationValue,
             0.0
         )
@@ -576,10 +582,10 @@ class FusedGeomagneticAttitudeEstimator2Test {
     @Test
     fun interpolationValue_whenValid_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(context)
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(context)
 
         assertEquals(
-            FusedGeomagneticAttitudeEstimator2.DEFAULT_INTERPOLATION_VALUE,
+            DoubleFusedGeomagneticAttitudeEstimator.DEFAULT_INTERPOLATION_VALUE,
             estimator.interpolationValue,
             0.0
         )
@@ -595,7 +601,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
     @Test(expected = IllegalArgumentException::class)
     fun indirectInterpolationWeight_whenInvalid_throwsIllegalArgumentException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(context)
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(context)
 
         estimator.indirectInterpolationWeight = 0.0
     }
@@ -603,11 +609,11 @@ class FusedGeomagneticAttitudeEstimator2Test {
     @Test
     fun indirectInterpolationWeight_whenValid_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(context)
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(context)
 
         // check default value
         assertEquals(
-            FusedGeomagneticAttitudeEstimator2.DEFAULT_INDIRECT_INTERPOLATION_WEIGHT,
+            DoubleFusedGeomagneticAttitudeEstimator.DEFAULT_INDIRECT_INTERPOLATION_WEIGHT,
             estimator.indirectInterpolationWeight,
             0.0
         )
@@ -624,7 +630,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
     @Test
     fun gyroscopeAverageTimeInterval_returnsInternalAttitudeEstimatorAverageTimeInterval() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(context)
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(context)
 
         val relativeAttitudeEstimator: LeveledRelativeAttitudeEstimator? =
             estimator.getPrivateProperty("relativeAttitudeEstimator")
@@ -640,7 +646,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
     @Test
     fun running_whenInternalEstimatorsAreNotRunning_returnsFalse() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(context)
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(context)
 
         assertFalse(estimator.running)
     }
@@ -648,7 +654,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
     @Test
     fun running_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(context)
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(context)
 
         assertFalse(estimator.running)
 
@@ -661,7 +667,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
     @Test(expected = IllegalStateException::class)
     fun outlierThreshold_whenRunning_throwsIllegalStateException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(context)
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(context)
 
         // set as running
         estimator.setPrivateProperty("running", true)
@@ -675,11 +681,11 @@ class FusedGeomagneticAttitudeEstimator2Test {
     @Test
     fun outlierThreshold_whenOutOfRange_throwsIllegalArgumentException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(context)
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(context)
 
         // check default value
         assertEquals(
-            FusedGeomagneticAttitudeEstimator2.DEFAULT_OUTLIER_THRESHOLD,
+            DoubleFusedGeomagneticAttitudeEstimator.DEFAULT_OUTLIER_THRESHOLD,
             estimator.outlierThreshold,
             0.0
         )
@@ -693,11 +699,11 @@ class FusedGeomagneticAttitudeEstimator2Test {
     @Test
     fun outlierThreshold_whenValid_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(context)
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(context)
 
         // check default value
         assertEquals(
-            FusedGeomagneticAttitudeEstimator2.DEFAULT_OUTLIER_THRESHOLD,
+            DoubleFusedGeomagneticAttitudeEstimator.DEFAULT_OUTLIER_THRESHOLD,
             estimator.outlierThreshold,
             0.0
         )
@@ -716,7 +722,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
     @Test(expected = IllegalStateException::class)
     fun outlierPanicThreshold_whenRunning_throwsIllegalStateException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(context)
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(context)
 
         // set as running
         estimator.setPrivateProperty("running", true)
@@ -730,11 +736,11 @@ class FusedGeomagneticAttitudeEstimator2Test {
     @Test
     fun outlierPanicThreshold_whenOutOfRange_throwsIllegalArgumentException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(context)
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(context)
 
         // check default value
         assertEquals(
-            FusedGeomagneticAttitudeEstimator2.DEFAULT_OUTLIER_PANIC_THRESHOLD,
+            DoubleFusedGeomagneticAttitudeEstimator.DEFAULT_OUTLIER_PANIC_THRESHOLD,
             estimator.outlierPanicThreshold,
             0.0
         )
@@ -750,11 +756,11 @@ class FusedGeomagneticAttitudeEstimator2Test {
     @Test
     fun outlierPanicThreshold_whenValid_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(context)
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(context)
 
         // check default value
         assertEquals(
-            FusedGeomagneticAttitudeEstimator2.DEFAULT_OUTLIER_PANIC_THRESHOLD,
+            DoubleFusedGeomagneticAttitudeEstimator.DEFAULT_OUTLIER_PANIC_THRESHOLD,
             estimator.outlierPanicThreshold,
             0.0
         )
@@ -772,7 +778,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
     @Test(expected = IllegalStateException::class)
     fun panicCounterThreshold_whenRunning_throwsIllegalStateException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(context)
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(context)
 
         // set as running
         estimator.setPrivateProperty("running", true)
@@ -784,7 +790,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
     @Test(expected = IllegalArgumentException::class)
     fun panicCounterThreshold_whenInvalid_throwsIllegalArgumentException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(context)
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(context)
 
         assertFalse(estimator.running)
 
@@ -794,11 +800,11 @@ class FusedGeomagneticAttitudeEstimator2Test {
     @Test
     fun panicCounterThreshold_whenValid_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(context)
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(context)
 
         assertFalse(estimator.running)
         assertEquals(
-            FusedGeomagneticAttitudeEstimator2.DEFAULT_PANIC_COUNTER_THRESHOLD,
+            DoubleFusedGeomagneticAttitudeEstimator.DEFAULT_PANIC_COUNTER_THRESHOLD,
             estimator.panicCounterThreshold
         )
 
@@ -811,7 +817,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
     @Test(expected = IllegalStateException::class)
     fun start_whenRunning_throwsIllegalStateException() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(context)
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(context)
 
         assertFalse(estimator.running)
 
@@ -826,7 +832,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
     @Test
     fun start_whenNotRunningAndInternalGeomagneticEstimatorFails_returnsFalse() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(context)
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(context)
 
         assertFalse(estimator.running)
 
@@ -857,7 +863,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
     @Test
     fun start_whenNotRunningAndInternalRelativeEstimatorFails_returnsFalse() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(context)
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(context)
 
         assertFalse(estimator.running)
 
@@ -889,7 +895,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
     @Test
     fun start_whenNotRunningAndInternalEstimatorSucceeds_returnsTrue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(context)
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(context)
 
         assertFalse(estimator.running)
 
@@ -921,7 +927,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
     @Test
     fun stop_stopsInternalEstimators() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(context)
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(context)
 
         // set as running
         estimator.setPrivateProperty("running", true)
@@ -954,7 +960,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
     @Test
     fun processRelativeAttitude_whenFirstAndNonAccurateRelativeAttitudeEstimator_copiesAttitudeAndSetsPreviousRelativeAttitude() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(
             context,
             useAccurateRelativeGyroscopeAttitudeEstimator = false
         )
@@ -1010,7 +1016,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
     @Test
     fun processRelativeAttitude_whenFirstAndAccurateRelativeAttitudeEstimator_copiesAttitudeAndSetsPreviousRelativeAttitude() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(
             context,
             useAccurateRelativeGyroscopeAttitudeEstimator = true
         )
@@ -1066,7 +1072,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
     @Test
     fun processRelativeAttitude_whenNotFirstAndNonAccurateRelativeAttitudeEstimator_copiesAttitudeAndSetsPreviousRelativeAttitude() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(
             context,
             useAccurateRelativeGyroscopeAttitudeEstimator = false
         )
@@ -1161,7 +1167,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
     @Test
     fun processRelativeAttitude_whenNotFirstAndAccurateRelativeAttitudeEstimator_copiesAttitudeAndSetsPreviousRelativeAttitude() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(
             context,
             useAccurateRelativeGyroscopeAttitudeEstimator = true
         )
@@ -1256,9 +1262,9 @@ class FusedGeomagneticAttitudeEstimator2Test {
     @Test
     fun processGeomagneticAttitude_whenNoRelativeAttitudeAndNonAccurateLeveling_makesNoAction() {
         val attitudeAvailableListener =
-            mockk<FusedGeomagneticAttitudeEstimator2.OnAttitudeAvailableListener>()
+            mockk<DoubleFusedGeomagneticAttitudeEstimator.OnAttitudeAvailableListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(
             context,
             useAccurateLevelingEstimator = false,
             attitudeAvailableListener = attitudeAvailableListener
@@ -1306,10 +1312,10 @@ class FusedGeomagneticAttitudeEstimator2Test {
     @Test
     fun processGeomagneticAttitude_whenNoRelativeAttitudeAndAccurateLeveling_makesNoAction() {
         val attitudeAvailableListener =
-            mockk<FusedGeomagneticAttitudeEstimator2.OnAttitudeAvailableListener>()
+            mockk<DoubleFusedGeomagneticAttitudeEstimator.OnAttitudeAvailableListener>()
         val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(
             context,
             location,
             useAccurateLevelingEstimator = true,
@@ -1358,9 +1364,9 @@ class FusedGeomagneticAttitudeEstimator2Test {
     @Test
     fun processGeomagneticAttitude_whenRelativeAttitudeAndNonAccurateLeveling_copiesAttitude() {
         val attitudeAvailableListener =
-            mockk<FusedGeomagneticAttitudeEstimator2.OnAttitudeAvailableListener>()
+            mockk<DoubleFusedGeomagneticAttitudeEstimator.OnAttitudeAvailableListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(
             context,
             useAccurateLevelingEstimator = false,
             attitudeAvailableListener = attitudeAvailableListener
@@ -1410,10 +1416,10 @@ class FusedGeomagneticAttitudeEstimator2Test {
     @Test
     fun processGeomagneticAttitude_whenRelativeAttitudeAndAccurateLeveling_copiesAttitude() {
         val attitudeAvailableListener =
-            mockk<FusedGeomagneticAttitudeEstimator2.OnAttitudeAvailableListener>()
+            mockk<DoubleFusedGeomagneticAttitudeEstimator.OnAttitudeAvailableListener>()
         val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(
             context,
             location,
             useAccurateLevelingEstimator = true,
@@ -1464,9 +1470,9 @@ class FusedGeomagneticAttitudeEstimator2Test {
     @Test
     fun processGeomagneticAttitude_whenDeltaRelativeAttitudeAndResetLeveling_resets() {
         val attitudeAvailableListener =
-            mockk<FusedGeomagneticAttitudeEstimator2.OnAttitudeAvailableListener>()
+            mockk<DoubleFusedGeomagneticAttitudeEstimator.OnAttitudeAvailableListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(
             context,
             useAccurateLevelingEstimator = false,
             attitudeAvailableListener = attitudeAvailableListener
@@ -1555,9 +1561,9 @@ class FusedGeomagneticAttitudeEstimator2Test {
     @Test
     fun processGeomagneticAttitude_whenDeltaRelativeAttitudeSmallDivergenceAndDirectInterpolation_updatesFusedAttitudeAndNotifies() {
         val attitudeAvailableListener =
-            mockk<FusedGeomagneticAttitudeEstimator2.OnAttitudeAvailableListener>(relaxUnitFun = true)
+            mockk<DoubleFusedGeomagneticAttitudeEstimator.OnAttitudeAvailableListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(
             context,
             useAccurateLevelingEstimator = false,
             estimateCoordinateTransformation = false,
@@ -1712,9 +1718,9 @@ class FusedGeomagneticAttitudeEstimator2Test {
     @Test
     fun processGeomagneticAttitude_whenDeltaRelativeAttitudeMediumDivergenceAndDirectInterpolation_updatesFusedAttitudeAndNotifies() {
         val attitudeAvailableListener =
-            mockk<FusedGeomagneticAttitudeEstimator2.OnAttitudeAvailableListener>(relaxUnitFun = true)
+            mockk<DoubleFusedGeomagneticAttitudeEstimator.OnAttitudeAvailableListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(
             context,
             useAccurateLevelingEstimator = false,
             estimateCoordinateTransformation = false,
@@ -1862,9 +1868,9 @@ class FusedGeomagneticAttitudeEstimator2Test {
     @Test
     fun processGeomagneticAttitude_whenDeltaRelativeAttitudeLargeDivergenceAndDirectInterpolation_updatesFusedAttitudeAndNotifies() {
         val attitudeAvailableListener =
-            mockk<FusedGeomagneticAttitudeEstimator2.OnAttitudeAvailableListener>(relaxUnitFun = true)
+            mockk<DoubleFusedGeomagneticAttitudeEstimator.OnAttitudeAvailableListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(
             context,
             useAccurateLevelingEstimator = false,
             estimateCoordinateTransformation = false,
@@ -2012,9 +2018,9 @@ class FusedGeomagneticAttitudeEstimator2Test {
     @Test
     fun processGeomagneticAttitude_whenIndirectInterpolation_updatesFusedAttitudeAndNotifies() {
         val attitudeAvailableListener =
-            mockk<FusedGeomagneticAttitudeEstimator2.OnAttitudeAvailableListener>(relaxUnitFun = true)
+            mockk<DoubleFusedGeomagneticAttitudeEstimator.OnAttitudeAvailableListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(
             context,
             useAccurateRelativeGyroscopeAttitudeEstimator = false,
             useAccurateLevelingEstimator = false,
@@ -2180,9 +2186,9 @@ class FusedGeomagneticAttitudeEstimator2Test {
     @Test
     fun processGeomagneticAttitude_whenEstimateEulerAnglesAndCoordinateTransformationEnabled_notifies() {
         val attitudeAvailableListener =
-            mockk<FusedGeomagneticAttitudeEstimator2.OnAttitudeAvailableListener>(relaxUnitFun = true)
+            mockk<DoubleFusedGeomagneticAttitudeEstimator.OnAttitudeAvailableListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = FusedGeomagneticAttitudeEstimator2(
+        val estimator = DoubleFusedGeomagneticAttitudeEstimator(
             context,
             useAccurateLevelingEstimator = false,
             estimateCoordinateTransformation = true,

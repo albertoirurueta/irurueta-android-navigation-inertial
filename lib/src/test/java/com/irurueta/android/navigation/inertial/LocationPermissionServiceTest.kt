@@ -27,6 +27,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.test.core.app.ApplicationProvider
 import io.mockk.*
+import org.junit.After
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -36,6 +37,11 @@ import org.robolectric.annotation.Config
 @Suppress("UseCheckPermission")
 @RunWith(RobolectricTestRunner::class)
 class LocationPermissionServiceTest {
+
+    @After
+    fun tearDown() {
+        clearAllMocks()
+    }
 
     @Test
     fun constructor_whenActivity_setsBothContextAndActivity() {

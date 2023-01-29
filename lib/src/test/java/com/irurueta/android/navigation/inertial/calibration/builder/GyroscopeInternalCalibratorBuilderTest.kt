@@ -24,6 +24,8 @@ import com.irurueta.navigation.inertial.calibration.gyroscope.*
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.DefaultGyroscopeQualityScoreMapper
 import com.irurueta.numerical.robust.RobustEstimatorMethod
 import com.irurueta.statistics.UniformRandomizer
+import io.mockk.clearAllMocks
+import org.junit.After
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -32,6 +34,11 @@ import kotlin.math.max
 
 @RunWith(RobolectricTestRunner::class)
 class GyroscopeInternalCalibratorBuilderTest {
+
+    @After
+    fun tearDown() {
+        clearAllMocks()
+    }
 
     @Test
     fun constructor_whenRequiredValues_setsExpectedValues() {

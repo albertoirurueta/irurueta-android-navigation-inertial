@@ -24,8 +24,10 @@ import com.irurueta.navigation.inertial.calibration.accelerometer.*
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.DefaultAccelerometerQualityScoreMapper
 import com.irurueta.numerical.robust.RobustEstimatorMethod
 import com.irurueta.statistics.UniformRandomizer
+import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
+import org.junit.After
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -34,6 +36,12 @@ import kotlin.math.max
 
 @RunWith(RobolectricTestRunner::class)
 class AccelerometerInternalCalibratorBuilderTest {
+
+    @After
+    fun tearDown() {
+        clearAllMocks()
+    }
+
     @Test
     fun constructor_whenRequiredValues_setsExpectedValues() {
         val randomizer = UniformRandomizer()

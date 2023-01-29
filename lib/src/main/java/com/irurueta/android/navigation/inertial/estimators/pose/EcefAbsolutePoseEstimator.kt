@@ -21,7 +21,7 @@ import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
 import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.estimators.attitude.AbsoluteAttitudeEstimator
 import com.irurueta.android.navigation.inertial.estimators.attitude.FusedGeomagneticAttitudeEstimator
-import com.irurueta.android.navigation.inertial.estimators.attitude.FusedGeomagneticAttitudeEstimator2
+import com.irurueta.android.navigation.inertial.estimators.attitude.DoubleFusedGeomagneticAttitudeEstimator
 import com.irurueta.android.navigation.inertial.estimators.attitude.GravityEstimator
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
@@ -579,7 +579,7 @@ class EcefAbsolutePoseEstimator private constructor(
     /**
      * Estimates device absolute attitude using accelerometer, gyroscope and magnetometer sensors.
      */
-    private val absoluteAttitudeEstimator2 = FusedGeomagneticAttitudeEstimator2(
+    private val absoluteAttitudeEstimator2 = DoubleFusedGeomagneticAttitudeEstimator(
         context,
         this.initialLocation,
         sensorDelay,

@@ -51,6 +51,7 @@ import com.irurueta.units.AccelerationUnit
 import com.irurueta.units.Time
 import com.irurueta.units.TimeUnit
 import io.mockk.*
+import org.junit.After
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -62,6 +63,11 @@ import kotlin.math.sqrt
 
 @RunWith(RobolectricTestRunner::class)
 class SingleSensorStaticIntervalAccelerometerCalibratorTest {
+
+    @After
+    fun tearDown() {
+        clearAllMocks()
+    }
 
     @Test
     fun constructor_whenContext_returnsDefaultValues() {

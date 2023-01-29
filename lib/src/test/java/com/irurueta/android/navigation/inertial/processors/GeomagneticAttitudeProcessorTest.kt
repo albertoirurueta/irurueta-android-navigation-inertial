@@ -33,15 +33,18 @@ import com.irurueta.statistics.UniformRandomizer
 import com.irurueta.units.AccelerationUnit
 import com.irurueta.units.MagneticFluxDensityConverter
 import com.irurueta.units.MagneticFluxDensityUnit
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.spyk
-import io.mockk.verify
+import io.mockk.*
+import org.junit.After
 import org.junit.Assert.*
 import org.junit.Test
 import java.util.*
 
 class GeomagneticAttitudeProcessorTest {
+
+    @After
+    fun tearDown() {
+        clearAllMocks()
+    }
 
     @Test
     fun constructor_whenNoParameters_returnsExpectedValues() {

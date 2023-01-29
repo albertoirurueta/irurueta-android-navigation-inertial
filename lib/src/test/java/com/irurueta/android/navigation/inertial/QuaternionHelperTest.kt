@@ -2,10 +2,17 @@ package com.irurueta.android.navigation.inertial
 
 import com.irurueta.geometry.Quaternion
 import com.irurueta.statistics.UniformRandomizer
+import io.mockk.clearAllMocks
+import org.junit.After
 import org.junit.Assert.*
 import org.junit.Test
 
 class QuaternionHelperTest {
+
+    @After
+    fun tearDown() {
+        clearAllMocks()
+    }
 
     @Test
     fun dotProduct_normalizesAndComputesDotProduct() {

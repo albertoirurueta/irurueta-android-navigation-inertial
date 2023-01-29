@@ -24,14 +24,14 @@ import androidx.appcompat.widget.AppCompatTextView
 import com.irurueta.android.gl.cube.CubeRenderer
 import com.irurueta.android.gl.cube.CubeTextureView
 import com.irurueta.android.navigation.inertial.collectors.*
-import com.irurueta.android.navigation.inertial.estimators.attitude.FusedGeomagneticAttitudeEstimator2
+import com.irurueta.android.navigation.inertial.estimators.attitude.DoubleFusedGeomagneticAttitudeEstimator
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.MeanAveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.MedianAveragingFilter
 import com.irurueta.geometry.*
 
-class FusedGeomagneticAttitudeEstimator2Activity : AppCompatActivity() {
+class DoubleFusedGeomagneticAttitudeEstimatorActivity : AppCompatActivity() {
 
     private var cubeView: CubeTextureView? = null
 
@@ -45,7 +45,7 @@ class FusedGeomagneticAttitudeEstimator2Activity : AppCompatActivity() {
 
     private var camera: PinholeCamera? = null
 
-    private var attitudeEstimator: FusedGeomagneticAttitudeEstimator2? = null
+    private var attitudeEstimator: DoubleFusedGeomagneticAttitudeEstimator? = null
 
     private val conversionRotation = ENUtoNEDTriadConverter.conversionRotation
 
@@ -176,7 +176,7 @@ class FusedGeomagneticAttitudeEstimator2Activity : AppCompatActivity() {
                 buildEstimatorAndStart()
             } else {
                 locationService?.getCurrentLocation { currentLocation ->
-                    this@FusedGeomagneticAttitudeEstimator2Activity.location = currentLocation
+                    this@DoubleFusedGeomagneticAttitudeEstimatorActivity.location = currentLocation
                     buildEstimatorAndStart()
                 }
             }
@@ -193,7 +193,7 @@ class FusedGeomagneticAttitudeEstimator2Activity : AppCompatActivity() {
             val accelerometerAveragingFilter =
                 buildAveragingFilter(accelerometerAveragingFilterType)
 
-            attitudeEstimator = FusedGeomagneticAttitudeEstimator2(
+            attitudeEstimator = DoubleFusedGeomagneticAttitudeEstimator(
                 this,
                 location,
                 SensorDelay.GAME,

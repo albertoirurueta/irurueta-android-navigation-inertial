@@ -21,6 +21,7 @@ import com.irurueta.android.navigation.inertial.getPrivateProperty
 import com.irurueta.android.navigation.inertial.setPrivateProperty
 import com.irurueta.statistics.UniformRandomizer
 import io.mockk.*
+import org.junit.After
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -29,6 +30,11 @@ import java.util.*
 
 @RunWith(RobolectricTestRunner::class)
 class AccelerometerAndMagnetometerSensorMeasurementSyncerTest {
+
+    @After
+    fun tearDown() {
+        clearAllMocks()
+    }
 
     @Test
     fun constructor_whenRequiredParameters_setsDefaultValues() {

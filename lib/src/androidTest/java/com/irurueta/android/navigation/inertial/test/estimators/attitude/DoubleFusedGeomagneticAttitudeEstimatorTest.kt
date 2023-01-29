@@ -29,7 +29,7 @@ import org.junit.Before
 import org.junit.Test
 
 @RequiresDevice
-class FusedGeomagneticAttitudeEstimator2Test {
+class DoubleFusedGeomagneticAttitudeEstimatorTest {
 
     private val syncHelper = ThreadSyncHelper()
 
@@ -156,7 +156,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
     private fun getCurrentLocation(): Location {
         val scenario = ActivityScenario.launch(LocationActivity::class.java).use {
             it.onActivity { activity ->
-                this@FusedGeomagneticAttitudeEstimator2Test.activity = activity
+                this@DoubleFusedGeomagneticAttitudeEstimatorTest.activity = activity
                 val service = LocationService(activity)
 
                 val enabled = service.locationEnabled

@@ -23,8 +23,10 @@ import com.irurueta.navigation.frames.NEDVelocity
 import com.irurueta.navigation.frames.converters.NEDtoECEFPositionVelocityConverter
 import com.irurueta.navigation.inertial.estimators.ECEFGravityEstimator
 import com.irurueta.statistics.UniformRandomizer
+import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotSame
 import org.junit.Test
@@ -33,6 +35,11 @@ import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class GravityHelperTest {
+
+    @After
+    fun tearDown() {
+        clearAllMocks()
+    }
 
     @Test
     fun getGravityForLocation_returnsExpectedValue() {

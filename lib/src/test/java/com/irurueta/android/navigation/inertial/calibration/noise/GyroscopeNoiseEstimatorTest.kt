@@ -34,10 +34,8 @@ import com.irurueta.units.AngularSpeed
 import com.irurueta.units.AngularSpeedUnit
 import com.irurueta.units.Time
 import com.irurueta.units.TimeUnit
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.spyk
-import io.mockk.verify
+import io.mockk.*
+import org.junit.After
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -45,6 +43,11 @@ import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class GyroscopeNoiseEstimatorTest {
+
+    @After
+    fun tearDown() {
+        clearAllMocks()
+    }
 
     @Test
     fun constructor_whenContext_setsDefaultValues() {
