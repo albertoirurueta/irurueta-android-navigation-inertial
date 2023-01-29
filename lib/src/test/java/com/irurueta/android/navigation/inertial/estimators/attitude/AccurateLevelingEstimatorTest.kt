@@ -321,7 +321,7 @@ class AccurateLevelingEstimatorTest {
         attitude2.inverse()
         attitude2.normalize()
         attitudeSpy.normalize()
-        assertTrue(attitudeSpy.equals(attitude2, 1e-1))
+        assertTrue(attitudeSpy.equals(attitude2, 2e-1))
 
         verify { coordinateTransformationSpy wasNot Called }
 

@@ -723,7 +723,13 @@ class LocationServiceTest {
         service.setPrivateProperty("fusedLocationClient", fusedLocationClientSpy)
 
         val requestTask = mockk<Task<Void>>()
-        every { fusedLocationClientSpy.requestLocationUpdates(any(), any(), any()) }.returns(
+        every {
+            fusedLocationClientSpy.requestLocationUpdates(
+                any(),
+                any<LocationCallback>(),
+                any()
+            )
+        }.returns(
             requestTask
         )
 
@@ -786,8 +792,13 @@ class LocationServiceTest {
         service.setPrivateProperty("fusedLocationClient", fusedLocationClientSpy)
 
         val requestTask = mockk<Task<Void>>()
-        every { fusedLocationClientSpy.requestLocationUpdates(any(), any(), any()) }
-            .returns(requestTask)
+        every {
+            fusedLocationClientSpy.requestLocationUpdates(
+                any(),
+                any<LocationCallback>(),
+                any()
+            )
+        }.returns(requestTask)
 
         service.requestLocationUpdates()
 

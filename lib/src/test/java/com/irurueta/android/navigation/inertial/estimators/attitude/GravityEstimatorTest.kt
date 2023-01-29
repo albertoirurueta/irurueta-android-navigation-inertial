@@ -445,18 +445,18 @@ class GravityEstimatorTest {
             SensorAccuracy.HIGH
         )
 
-        val filterOutputSlot = slot<DoubleArray>()
+        val filterOutputs = mutableListOf<DoubleArray>()
         verify(exactly = 1) {
             accelerometerAveragingFilterSpy.filter(
                 ax.toDouble() - bx.toDouble(),
                 ay.toDouble() - by.toDouble(),
                 az.toDouble() - bz.toDouble(),
-                capture(filterOutputSlot),
+                capture(filterOutputs),
                 timestamp + INTERVAL_NANOS
             )
         }
 
-        val filterOutput = filterOutputSlot.captured
+        val filterOutput = filterOutputs[1]
         verify(exactly = 1) {
             estimationListener.onEstimation(
                 estimator,

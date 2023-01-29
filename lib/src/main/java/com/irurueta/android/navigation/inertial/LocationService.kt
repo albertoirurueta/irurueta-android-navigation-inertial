@@ -71,7 +71,10 @@ class LocationService(val context: Context) {
          * @param result obtained location result.
          */
         override fun onLocationResult(result: LocationResult) {
-            locationUpdateListener?.onLocationChanged(result.lastLocation)
+            val lastLocation = result.lastLocation
+            if (lastLocation != null) {
+                locationUpdateListener?.onLocationChanged(lastLocation)
+            }
         }
 
         /**
