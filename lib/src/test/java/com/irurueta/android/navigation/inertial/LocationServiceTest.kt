@@ -756,6 +756,7 @@ class LocationServiceTest {
         callback.onLocationAvailability(locationAvailability)
 
         val locationResult = mockk<LocationResult>()
+        every { locationResult.lastLocation }.returns(null)
         callback.onLocationResult(locationResult)
 
         unmockkStatic(GoogleApiAvailability::class)
