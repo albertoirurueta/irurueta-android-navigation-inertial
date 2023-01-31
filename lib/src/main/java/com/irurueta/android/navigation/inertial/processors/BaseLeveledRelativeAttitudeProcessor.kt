@@ -295,27 +295,26 @@ abstract class BaseLeveledRelativeAttitudeProcessor<M : SensorMeasurement<M>,
         gyroscopeMeasurement: GyroscopeSensorMeasurement,
         timestamp: Long
     ): Boolean {
-        if (relativeAttitudeProcessor.process(gyroscopeMeasurement, timestamp)) {
-            if (processRelativeAttitude(relativeAttitudeProcessor.attitude, timestamp)
-                && gravityProcessor.process(accelerometerOrGravityMeasurement, timestamp)
-            ) {
-                val gx = gravityProcessor.gx
-                val gy = gravityProcessor.gy
-                val gz = gravityProcessor.gz
-                levelingProcessor.process(gx, gy, gz)
+        if (relativeAttitudeProcessor.process(gyroscopeMeasurement, timestamp)
+            && processRelativeAttitude(relativeAttitudeProcessor.attitude, timestamp)
+            && gravityProcessor.process(accelerometerOrGravityMeasurement, timestamp)
+        ) {
+            val gx = gravityProcessor.gx
+            val gy = gravityProcessor.gy
+            val gz = gravityProcessor.gz
+            levelingProcessor.process(gx, gy, gz)
 
-                processLeveling(levelingProcessor.attitude)
+            processLeveling(levelingProcessor.attitude)
 
-                // notify
-                processorListener?.onProcessed(
-                    this,
-                    fusedAttitude,
-                    accelerometerOrGravityMeasurement.accuracy,
-                    gyroscopeMeasurement.accuracy
-                )
+            // notify
+            processorListener?.onProcessed(
+                this,
+                fusedAttitude,
+                accelerometerOrGravityMeasurement.accuracy,
+                gyroscopeMeasurement.accuracy
+            )
 
-                return true
-            }
+            return true
         }
 
         return false
