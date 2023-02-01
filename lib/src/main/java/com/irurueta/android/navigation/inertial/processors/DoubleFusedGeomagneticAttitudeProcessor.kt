@@ -19,20 +19,23 @@ import com.irurueta.android.navigation.inertial.collectors.GravityGyroscopeAndMa
 import com.irurueta.android.navigation.inertial.collectors.GravitySensorMeasurement
 
 /**
- * Estimates absolute attitude by fusing absolute leveled attitude and relative attitude.
+ * Estimates absolute attitude by fusing absolute leveled geomagnetic attitude and leveled relative
+ * attitude.
  *
- * @property processorListener listener to notify new fused absolute attitudes.
+ * @property processorListener listener to notify new fused absolute attitude.
  */
-class FusedGeomagneticAttitudeProcessor(
-    processorListener: OnProcessedListener<GravitySensorMeasurement, GravityGyroscopeAndMagnetometerSyncedSensorMeasurement>? = null
-) : BaseFusedGeomagneticAttitudeProcessor<GravitySensorMeasurement, GravityGyroscopeAndMagnetometerSyncedSensorMeasurement>(
-    processorListener
-) {
+class DoubleFusedGeomagneticAttitudeProcessor(processorListener: OnProcessedListener<GravitySensorMeasurement, GravityGyroscopeAndMagnetometerSyncedSensorMeasurement>? = null
+) : BaseDoubleFusedGeomagneticAttitudeProcessor<GravitySensorMeasurement, GravityGyroscopeAndMagnetometerSyncedSensorMeasurement>(processorListener) {
 
     /**
      * Internal processor to estimate leveled absolute attitude.
      */
     override val geomagneticProcessor = GeomagneticAttitudeProcessor()
+
+    /**
+     * Internal processor to estimate leveled relative attitude.
+     */
+    override val relativeGyroscopeProcessor = LeveledRelativeAttitudeProcessor()
 
     /**
      * Processes provided synced measurement to estimate current fused absolute attitude.

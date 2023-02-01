@@ -19,7 +19,6 @@ import android.location.Location
 import android.util.Log
 import com.irurueta.android.navigation.inertial.QuaternionHelper
 import com.irurueta.android.navigation.inertial.collectors.*
-import com.irurueta.android.navigation.inertial.estimators.attitude.FusedGeomagneticAttitudeEstimator
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.inertial.calibration.AccelerationTriad
 import com.irurueta.navigation.inertial.wmm.WorldMagneticModel
@@ -28,8 +27,8 @@ import kotlin.math.abs
 import kotlin.math.min
 
 /**
- * Base class to estimate absolute attitude by fusing absolute leveled attitude and relative
- * attitude.
+ * Base class to estimate absolute attitude by fusing absolute leveled geomagnetic attitude and
+ * relative attitude.
  *
  * @property processorListener listener to notify new fused absolute attitudes.
  */
@@ -391,7 +390,7 @@ abstract class BaseFusedGeomagneticAttitudeProcessor<M : SensorMeasurement<M>, S
             internalFusedAttitude.copyTo(fusedAttitude)
             panicCounter = 0
             Log.d(
-                FusedGeomagneticAttitudeEstimator::class.simpleName,
+                BaseFusedGeomagneticAttitudeProcessor::class.simpleName,
                 "Attitude reset to geomagnetic one"
             )
             return true
@@ -406,14 +405,14 @@ abstract class BaseFusedGeomagneticAttitudeProcessor<M : SensorMeasurement<M>, S
         // check if fused attitude and leveling attitude have diverged
         if (absDot < outlierThreshold) {
             Log.i(
-                FusedGeomagneticAttitudeEstimator::class.simpleName,
+                BaseFusedGeomagneticAttitudeProcessor::class.simpleName,
                 "Threshold exceeded: $absDot"
             )
             // increase panic counter
             if (absDot < outlierPanicThreshold) {
                 panicCounter++
                 Log.i(
-                    FusedGeomagneticAttitudeEstimator::class.simpleName,
+                    BaseFusedGeomagneticAttitudeProcessor::class.simpleName,
                     "Panic counter increased: $panicCounter"
                 )
             }
@@ -492,6 +491,15 @@ abstract class BaseFusedGeomagneticAttitudeProcessor<M : SensorMeasurement<M>, S
      */
     fun interface OnProcessedListener<M : SensorMeasurement<M>, S : SyncedSensorMeasurement> {
 
+        /**
+         * Called when a new fused attitude is processed.
+         *
+         * @param processor processor that raised this event.
+         * @param fusedAttitude resulting fused attitude expressed in NED coordinates.
+         * @param accelerometerOrGravityAccuracy accuracy of accelerometer or gravity measurement.
+         * @param gyroscopeAccuracy accuracy of gyroscope measurement.
+         * @param magnetometerAccuracy accuracy of magnetometer measurement.
+         */
         fun onProcessed(
             processor: BaseFusedGeomagneticAttitudeProcessor<M, S>,
             fusedAttitude: Quaternion,

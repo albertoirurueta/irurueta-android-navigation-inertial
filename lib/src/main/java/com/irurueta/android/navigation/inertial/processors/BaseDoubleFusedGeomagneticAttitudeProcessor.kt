@@ -18,56 +18,42 @@ package com.irurueta.android.navigation.inertial.processors
 import android.location.Location
 import android.util.Log
 import com.irurueta.android.navigation.inertial.QuaternionHelper
-import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorMeasurement
-import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
-import com.irurueta.android.navigation.inertial.collectors.SensorMeasurement
-import com.irurueta.android.navigation.inertial.collectors.SyncedSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.inertial.calibration.AccelerationTriad
+import com.irurueta.navigation.inertial.wmm.WorldMagneticModel
+import java.util.*
 import kotlin.math.abs
 import kotlin.math.min
 
 /**
- * Base class to estimate leveled relative attitude by fusing leveling attitude obtained
- * from accelerometer or gravity sensors, and relative attitude obtained from gyroscope sensor.
+ * Base class to estimate absolute attitude by fusing absolute leveled geomagnetic attitude and
+ * leveled relative attitude.
  *
- * @property processorListener listener to notify new leveled relative attitudes.
- *
- * @param M type of accelerometer or gravity sensor measurement.
- * @param S type of synced sensor measurement.
+ * @property processorListener listener to notify new fused absolute attitude.
  */
-abstract class BaseLeveledRelativeAttitudeProcessor<M : SensorMeasurement<M>,
-        S : SyncedSensorMeasurement>(
+abstract class BaseDoubleFusedGeomagneticAttitudeProcessor<M : SensorMeasurement<M>, S : SyncedSensorMeasurement>(
     var processorListener: OnProcessedListener<M, S>?
 ) {
-    /**
-     * Internal processor to estimate gravity from accelerometer or gravity sensor measurements.
-     */
-    protected abstract val gravityProcessor: BaseGravityProcessor<M>
 
     /**
-     * Internal processor to estimate leveling attitude from estimated gravity.
+     * Internal processor to estimate leveled absolute attitude.
      */
-    private lateinit var levelingProcessor: BaseLevelingProcessor
+    protected abstract val geomagneticProcessor: BaseGeomagneticAttitudeProcessor<M, *>
 
     /**
-     * Internal processor to estimate relative attitude from an arbitrary initial attitude using
-     * gyroscope sensor measurements.
+     * Internal processor to estimate leveled relative attitude.
      */
-    private lateinit var relativeAttitudeProcessor: BaseRelativeGyroscopeAttitudeProcessor
+    protected abstract val relativeGyroscopeProcessor: BaseLeveledRelativeAttitudeProcessor<M, *>
 
     /**
-     * Timestamp of last attitude estimation.
+     * Instance to be reused which contains geomagnetic absolute attitude.
      */
-    private var timestamp = 0L
+    private val geomagneticAttitude = Quaternion()
 
     /**
-     * Instance to be reused which contains attitude of internal leveling processor.
-     */
-    private val levelingAttitude = Quaternion()
-
-    /**
-     * Instance to be reused which contains attitude of internal relative attitude processor.
+     * Instance to be reused which contains attitude of internal leveled relative attitude
+     * estimator.
      */
     private val relativeAttitude = Quaternion()
 
@@ -82,24 +68,30 @@ abstract class BaseLeveledRelativeAttitudeProcessor<M : SensorMeasurement<M>,
     private var inversePreviousRelativeAttitude = Quaternion()
 
     /**
-     * Delta attitude of relative attitude, which only uses gyroscope sensor.
+     * Delta attitude of relative attitude estimator, which only uses gyroscope sensor.
      */
     private val deltaRelativeAttitude = Quaternion()
 
     /**
-     * Array to be reused containing euler angles of leveling attitude.
+     * Instance to be reused which contains merged attitudes of both the internal leveling
+     * estimator and the relative attitude estimator taking into account display orientation.
      */
-    private val eulerAngles = DoubleArray(Quaternion.N_ANGLES)
+    private val internalFusedAttitude = Quaternion()
 
     /**
-     * Indicates whether fused attitude must be reset to leveling one.
+     * Indicates whether fused attitude must be reset to geomagnetic one.
      */
-    private val resetToLeveling
+    private val resetToGeomagnetic
         get() = panicCounter >= panicCounterThreshold
 
     /**
-     * Instance to be reused which contains merged attitudes of both the internal leveling
-     * processor and the relative attitude processor.
+     * Indicates whether a delta relative attitude has been computed.
+     */
+    private var hasDeltaRelativeAttitude = false
+
+    /**
+     * Instance being reused to externally notify attitudes so that it does not have additional
+     * effects if it is modified.
      */
     val fusedAttitude = Quaternion()
 
@@ -108,65 +100,96 @@ abstract class BaseLeveledRelativeAttitudeProcessor<M : SensorMeasurement<M>,
      * and in meters per squared second (m/s^2).
      */
     val gx: Double
-        get() = gravityProcessor.gx
+        get() = geomagneticProcessor.gx
 
     /**
      * Y-coordinate of last sensed gravity component of specific force expressed in NED coordinates
      * and in meters per squared second (m/s^2).
      */
     val gy: Double
-        get() = gravityProcessor.gy
+        get() = geomagneticProcessor.gy
 
     /**
      * Z-coordinate of last sensed gravity component of specific force expressed in NED coordinates
      * and in meters per squared second (m/s^2).
      */
     val gz: Double
-        get() = gravityProcessor.gz
+        get() = geomagneticProcessor.gz
 
     /**
      * Gets a new triad containing gravity component of specific force expressed in NED coordinates
      * and in meters per squared second (m/s^2).
      */
     val gravity: AccelerationTriad
-        get() = gravityProcessor.gravity
+        get() = geomagneticProcessor.gravity
 
     /**
      * Updates provided triad to contain gravity component of specific force expressed in NED
      * coordinates and in meters per squared second (m/s^2).
      */
     fun getGravity(result: AccelerationTriad) {
-        gravityProcessor.getGravity(result)
+        geomagneticProcessor.getGravity(result)
     }
 
     /**
      * Gets or sets device location
      */
-    var location: Location? = null
+    var location: Location?
+        get() = geomagneticProcessor.location
+        set(value) {
+            geomagneticProcessor.location = value
+        }
+
+    /**
+     * Timestamp being used when World Magnetic Model is evaluated to obtain current magnetic
+     * declination. This is only taken into account if [useWorldMagneticModel] is true.
+     * If not defined, current date is assumed.
+     */
+    var currentDate: Date?
+        get() = geomagneticProcessor.currentDate
+        set(value) {
+            geomagneticProcessor.currentDate = value
+        }
 
     /**
      * Indicates whether accurate leveling must be used or not.
      *
      * @throws IllegalStateException if set to true and no location is available.
      */
-    var useAccurateLevelingProcessor: Boolean = false
+    var useAccurateLevelingProcessor: Boolean
+        get() = geomagneticProcessor.useAccurateLevelingProcessor
         @Throws(IllegalStateException::class)
         set(value) {
-            if (value) {
-                checkNotNull(location)
-            }
-
-            field = value
-            buildLevelingProcessor()
+            geomagneticProcessor.useAccurateLevelingProcessor = value
         }
 
     /**
-     * Indicates whether accurate non-leveled relative attitude must be used or not.
+     * Earth's magnetic model. If null, the default model is used if [useWorldMagneticModel] is
+     * true. If [useWorldMagneticModel] is false, this is ignored.
      */
-    var useAccurateRelativeGyroscopeAttitudeProcessor: Boolean = true
+    var worldMagneticModel: WorldMagneticModel?
+        get() = geomagneticProcessor.worldMagneticModel
         set(value) {
-            field = value
-            buildRelativeAttitudeProcessor()
+            geomagneticProcessor.worldMagneticModel = value
+        }
+
+    /**
+     * Indicates whether world magnetic model is taken into account to adjust attitude yaw angle by
+     * current magnetic declination based on current World Magnetic Model, location and timestamp.
+     */
+    var useWorldMagneticModel: Boolean
+        get() = geomagneticProcessor.useWorldMagneticModel
+        set(value) {
+            geomagneticProcessor.useWorldMagneticModel = value
+        }
+
+    /**
+     * Indicates whether accurate non-leveled relative attitude processor must be used or not.
+     */
+    var useAccurateRelativeGyroscopeAttitudeProcessor: Boolean
+        get() = relativeGyroscopeProcessor.useAccurateRelativeGyroscopeAttitudeProcessor
+        set(value) {
+            relativeGyroscopeProcessor.useAccurateRelativeGyroscopeAttitudeProcessor = value
         }
 
     /**
@@ -177,17 +200,17 @@ abstract class BaseLeveledRelativeAttitudeProcessor<M : SensorMeasurement<M>,
     var useIndirectInterpolation = true
 
     /**
-     * Interpolation value to be used to combine both leveling and relative attitudes.
+     * Interpolation value to be used to combine both geomagnetic and relative attitudes.
      * Must be between 0.0 and 1.0 (both included).
      * The closer to 0.0 this value is, the more resemblance the result will have to a pure
-     * leveling (which feels more jerky when using accelerometer). On the contrary, the closer
+     * geomagnetic (which feels more jerky when using accelerometer). On the contrary, the closer
      * to 1.0 this value is, the more resemblance the result will have to a pure non-leveled
-     * relative attitude (which feels softer but might have arbitrary roll and pitch Euler angles).
+     * relative attitude (which feels softer but might have arbitrary roll pitch and yaw Euler
+     * angles).
      *
      * @throws IllegalArgumentException if value is not between 0.0 and 1.0 (both included).
      */
     var interpolationValue = DEFAULT_INTERPOLATION_VALUE
-        @Throws(IllegalArgumentException::class)
         set(value) {
             require(value in 0.0..1.0)
             field = value
@@ -201,7 +224,6 @@ abstract class BaseLeveledRelativeAttitudeProcessor<M : SensorMeasurement<M>,
      * @throws IllegalArgumentException if value is zero or negative.
      */
     var indirectInterpolationWeight = DEFAULT_INDIRECT_INTERPOLATION_WEIGHT
-        @Throws(IllegalArgumentException::class)
         set(value) {
             require(value > 0.0)
             field = value
@@ -210,19 +232,18 @@ abstract class BaseLeveledRelativeAttitudeProcessor<M : SensorMeasurement<M>,
     /**
      * Time interval expressed in seconds between consecutive gyroscope measurements
      */
-    val timeIntervalSeconds
-        get() = relativeAttitudeProcessor.timeIntervalSeconds
+    val gyroscopeTimeIntervalSeconds
+        get() = relativeGyroscopeProcessor.timeIntervalSeconds
 
     /**
-     * Threshold to determine that current leveling appears to be an outlier respect
+     * Threshold to determine that current geomagnetic attitude appears to be an outlier respect
      * to estimated fused attitude.
-     * When leveling and fused attitudes diverge, fusion is not performed, and instead
+     * When geomagnetic attitude and fused attitudes diverge, fusion is not performed, and instead
      * only gyroscope relative attitude is used for fusion estimation.
      *
      * @throws IllegalArgumentException if value is not between 0.0 and 1.0 (both included).
      */
     var outlierThreshold = DEFAULT_OUTLIER_THRESHOLD
-        @Throws(IllegalArgumentException::class)
         set(value) {
             require(value in 0.0..1.0)
 
@@ -230,13 +251,12 @@ abstract class BaseLeveledRelativeAttitudeProcessor<M : SensorMeasurement<M>,
         }
 
     /**
-     * Threshold to determine that leveling has largely diverged and if situation is not
-     * reverted soon, attitude will be reset to leveling
+     * Threshold to determine that geomagnetic attitude has largely diverged and if situation is not
+     * reverted soon, attitude will be reset to geomagnetic one.
      *
      * @throws IllegalArgumentException if value is not between 0.0 and 1.0 (both included).
      */
     var outlierPanicThreshold = DEFAULT_OUTLIER_PANIC_THRESHOLD
-        @Throws(IllegalArgumentException::class)
         set(value) {
             require(value in 0.0..1.0)
 
@@ -247,10 +267,9 @@ abstract class BaseLeveledRelativeAttitudeProcessor<M : SensorMeasurement<M>,
      * Threshold to determine when fused attitude has largely diverged for a given
      * number of samples and must be reset.
      *
-     * @throws IllegalArgumentException if provided is zero or negative.
+     * @throws IllegalStateException if estimator is already running.
      */
     var panicCounterThreshold = DEFAULT_PANIC_COUNTER_THRESHOLD
-        @Throws(IllegalArgumentException::class)
         set(value) {
             require(value > 0)
 
@@ -264,93 +283,66 @@ abstract class BaseLeveledRelativeAttitudeProcessor<M : SensorMeasurement<M>,
     private var panicCounter = panicCounterThreshold
 
     /**
-     * Processes provided synced measurement to estimate current leveled relative attitude.
+     * Resets internal parameters.
+     */
+    fun reset() {
+        geomagneticProcessor.reset()
+        relativeGyroscopeProcessor.reset()
+
+        previousRelativeAttitude = null
+        hasDeltaRelativeAttitude = false
+        panicCounter = panicCounterThreshold
+    }
+
+    /**
+     * Processes provided synced measurement to estimate current fused absolute attitude.
      *
      * @param syncedMeasurement synced measurement to be processed.
-     * @return true if a new leveled relative attitude has been estimated, false otherwise.
+     * @return true if a new fused absolute attitude has been estimated, false otherwise.
      */
     abstract fun process(syncedMeasurement: S): Boolean
 
     /**
-     * Resets internal parameters.
-     */
-    fun reset() {
-        panicCounter = panicCounterThreshold
-
-        gravityProcessor.reset()
-        levelingProcessor.reset()
-        relativeAttitudeProcessor.reset()
-    }
-
-    /**
-     * Processes provided measurements to estimate fused leveled relative attitude.
+     * Processes provided measurements to estimate current fused absolute attitude.
      *
      * @param accelerometerOrGravityMeasurement accelerometer or gravity measurement.
      * @param gyroscopeMeasurement gyroscope measurement.
-     * @param timestamp timestamp when both measurements are assumed to occur.
-     * @return true if new leveled relative attitude is processed, false otherwise.
+     * @param magnetometerMeasurement magnetometer measurement.
+     * @param timestamp timestamp when all measurements are assumed to occur.
+     * @return true if new fused absolute attitude is processed, false otherwise.
      */
-    internal fun process(
+    protected fun process(
         accelerometerOrGravityMeasurement: M,
         gyroscopeMeasurement: GyroscopeSensorMeasurement,
-        timestamp: Long
+        magnetometerMeasurement: MagnetometerSensorMeasurement,
+        timestamp: Long = gyroscopeMeasurement.timestamp
     ): Boolean {
-        if (relativeAttitudeProcessor.process(gyroscopeMeasurement, timestamp)
-            && processRelativeAttitude(relativeAttitudeProcessor.attitude, timestamp)
-            && gravityProcessor.process(accelerometerOrGravityMeasurement, timestamp)
-        ) {
-            val gx = gravityProcessor.gx
-            val gy = gravityProcessor.gy
-            val gz = gravityProcessor.gz
-            levelingProcessor.process(gx, gy, gz)
-
-            processLeveling(levelingProcessor.attitude)
-
-            // notify
-            processorListener?.onProcessed(
-                this,
-                fusedAttitude,
-                accelerometerOrGravityMeasurement.accuracy,
-                gyroscopeMeasurement.accuracy
+        if (geomagneticProcessor.process(
+                accelerometerOrGravityMeasurement,
+                magnetometerMeasurement
             )
+        ) {
+            geomagneticProcessor.fusedAttitude.copyTo(geomagneticAttitude)
 
-            return true
+            if (relativeGyroscopeProcessor.process(
+                    accelerometerOrGravityMeasurement,
+                    gyroscopeMeasurement,
+                    timestamp
+                )
+            ) {
+                return processRelativeAttitude(relativeGyroscopeProcessor.fusedAttitude)
+            }
         }
 
         return false
     }
 
     /**
-     * Builds the internal leveling processor.
-     */
-    private fun buildLevelingProcessor() {
-        levelingProcessor = if (useAccurateLevelingProcessor) {
-            val location = this.location
-            checkNotNull(location)
-
-            AccurateLevelingProcessor(location)
-        } else {
-            LevelingProcessor()
-        }
-    }
-
-    /**
-     * Builds the internal relative attitude processor.
-     */
-    private fun buildRelativeAttitudeProcessor() {
-        relativeAttitudeProcessor = if (useAccurateRelativeGyroscopeAttitudeProcessor) {
-            AccurateRelativeGyroscopeAttitudeProcessor()
-        } else {
-            RelativeGyroscopeAttitudeProcessor()
-        }
-    }
-
-    /**
      * Computes variation of relative attitude between samples.
      * Relative attitude only depends on gyroscope and is usually smoother and has
-     * less interferences than leveling attitude.
+     * less interferences than geomagnetic attitude.
      *
-     * @return true if processor already has a fully initialized delta relative attitude, false
+     * @return true if estimator already has a fully initialized delta relative attitude, false
      * otherwise.
      */
     private fun computeDeltaRelativeAttitude(): Boolean {
@@ -374,48 +366,48 @@ abstract class BaseLeveledRelativeAttitudeProcessor<M : SensorMeasurement<M>,
     }
 
     /**
-     * Processes last received leveling attitude to estimate a fused attitude containing
-     * leveled relative attitude, where only yaw is kept relative to the start of this processor.
+     * Processes last received internal relative attitude to estimate attitude variation
+     * between samples and fuse it with geomagnetic absolute attitude.
+     *
+     * @param attitude estimated absolute attitude respect NED coordinate system.
+     * @return true if relative attitude was processed, false otherwise.
      */
-    private fun processLeveling(attitude: Quaternion) {
-        attitude.copyTo(levelingAttitude)
+    private fun processRelativeAttitude(attitude: Quaternion): Boolean {
+        attitude.copyTo(relativeAttitude)
+        hasDeltaRelativeAttitude = computeDeltaRelativeAttitude()
 
-        // set yaw angle into leveled attitude
-        levelingAttitude.toEulerAngles(eulerAngles)
-        val levelingRoll = eulerAngles[0]
-        val levelingPitch = eulerAngles[1]
+        if (!hasDeltaRelativeAttitude) {
+            return false
+        }
 
-        relativeAttitude.toEulerAngles(eulerAngles)
-        val yaw = eulerAngles[2]
-        levelingAttitude.setFromEulerAngles(levelingRoll, levelingPitch, yaw)
-
-        if (resetToLeveling) {
-            levelingAttitude.copyTo(fusedAttitude)
-            relativeAttitude.copyTo(previousRelativeAttitude)
+        if (resetToGeomagnetic) {
+            geomagneticAttitude.copyTo(internalFusedAttitude)
+            internalFusedAttitude.copyTo(fusedAttitude)
             panicCounter = 0
             Log.d(
-                BaseLeveledRelativeAttitudeProcessor::class.simpleName,
-                "Attitude reset to leveling"
+                BaseDoubleFusedGeomagneticAttitudeProcessor::class.simpleName,
+                "Attitude reset to geomagnetic one"
             )
-            return
+            return true
         }
 
         // change attitude by the delta obtained from relative attitude (gyroscope)
-        Quaternion.product(deltaRelativeAttitude, fusedAttitude, fusedAttitude)
+        Quaternion.product(deltaRelativeAttitude, internalFusedAttitude, internalFusedAttitude)
 
-        val absDot = abs(QuaternionHelper.dotProduct(fusedAttitude, levelingAttitude))
+        val absDot =
+            abs(QuaternionHelper.dotProduct(internalFusedAttitude, geomagneticAttitude))
 
         // check if fused attitude and leveling attitude have diverged
         if (absDot < outlierThreshold) {
             Log.i(
-                BaseLeveledRelativeAttitudeProcessor::class.simpleName,
+                BaseDoubleFusedGeomagneticAttitudeProcessor::class.simpleName,
                 "Threshold exceeded: $absDot"
             )
             // increase panic counter
             if (absDot < outlierPanicThreshold) {
                 panicCounter++
                 Log.i(
-                    BaseLeveledRelativeAttitudeProcessor::class.simpleName,
+                    BaseDoubleFusedGeomagneticAttitudeProcessor::class.simpleName,
                     "Panic counter increased: $panicCounter"
                 )
             }
@@ -424,50 +416,32 @@ abstract class BaseLeveledRelativeAttitudeProcessor<M : SensorMeasurement<M>,
         } else {
             // both are nearly the same. Perform normal fusion
             Quaternion.slerp(
-                fusedAttitude,
-                levelingAttitude,
+                internalFusedAttitude,
+                geomagneticAttitude,
                 getSlerpFactor(),
-                fusedAttitude
+                internalFusedAttitude
             )
             panicCounter = 0
         }
 
         relativeAttitude.copyTo(previousRelativeAttitude)
+
+        internalFusedAttitude.copyTo(fusedAttitude)
+
+        return true
     }
 
     /**
-     * Processes last received internal relative attitude to estimate attitude variation
-     * between samples.
-     *
-     * @param attitude attitude expressed in NED coordinates.
-     * @param timestamp time in nanoseconds at which the measurement was made. Each measurement
-     * wil be monotonically increasing using the same time base as
-     * [android.os.SystemClock.elapsedRealtimeNanos].
-     * @return true if delta relative attitude is fully estimated when two or more gyroscope
-     * measurements have been processed, false otherwise.
-     */
-    private fun processRelativeAttitude(attitude: Quaternion, timestamp: Long): Boolean {
-        attitude.copyTo(relativeAttitude)
-        this.timestamp = timestamp
-        return computeDeltaRelativeAttitude()
-    }
-
-    /**
-     * Computes factor to be used to compute fusion between relative and leveling attitudes.
+     * Computes factor to be used to compute fusion between relative and geomagnetic attitudes.
      */
     private fun getSlerpFactor(): Double {
         return if (useIndirectInterpolation) {
             val rotationVelocity =
-                deltaRelativeAttitude.rotationAngle / timeIntervalSeconds
+                deltaRelativeAttitude.rotationAngle / gyroscopeTimeIntervalSeconds
             min(interpolationValue + indirectInterpolationWeight * abs(rotationVelocity), 1.0)
         } else {
             interpolationValue
         }
-    }
-
-    init {
-        buildLevelingProcessor()
-        buildRelativeAttitudeProcessor()
     }
 
     companion object {
@@ -504,26 +478,26 @@ abstract class BaseLeveledRelativeAttitudeProcessor<M : SensorMeasurement<M>,
     }
 
     /**
-     * Interface to notify when a new leveled relative attitude has been processed.
-     *
-     * @param M type of accelerometer or gravity sensor measurement.
-     * @param S type of synced sensor measurement.
+     * Interface to notify when a new relative attitude has been processed.
      */
     fun interface OnProcessedListener<M : SensorMeasurement<M>, S : SyncedSensorMeasurement> {
+
         /**
-         * Called when a new leveled relative attitude is processed.
+         * Called when a new fused attitude is processed.
          *
          * @param processor processor that raised this event.
-         * @param fusedAttitude estimated fused attitude.
-         * @param accelerometerOrGravityAccuracy accuracy of accelerometer or gravity sensor used
-         * for leveling.
-         * @param gyroscopeAccuracy accuracy of gyroscope sensor used for relative attitude.
+         * @param fusedAttitude resulting fused attitude expressed in NED coordinates.
+         * @param accelerometerOrGravityAccuracy accuracy of accelerometer or gravity measurement.
+         * @param gyroscopeAccuracy accuracy of gyroscope measurement.
+         * @param magnetometerAccuracy accuracy of magnetometer measurement.
          */
         fun onProcessed(
-            processor: BaseLeveledRelativeAttitudeProcessor<M, S>,
+            processor: BaseFusedGeomagneticAttitudeProcessor<M, S>,
             fusedAttitude: Quaternion,
             accelerometerOrGravityAccuracy: SensorAccuracy?,
-            gyroscopeAccuracy: SensorAccuracy?
+            gyroscopeAccuracy: SensorAccuracy?,
+            magnetometerAccuracy: SensorAccuracy?
         )
     }
+
 }

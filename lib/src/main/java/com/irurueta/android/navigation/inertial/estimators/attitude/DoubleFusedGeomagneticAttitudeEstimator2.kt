@@ -21,9 +21,7 @@ import android.os.SystemClock
 import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
-import com.irurueta.android.navigation.inertial.processors.AccelerometerFusedGeomagneticAttitudeProcessor
-import com.irurueta.android.navigation.inertial.processors.BaseFusedGeomagneticAttitudeProcessor
-import com.irurueta.android.navigation.inertial.processors.FusedGeomagneticAttitudeProcessor
+import com.irurueta.android.navigation.inertial.processors.*
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.frames.CoordinateTransformation
 import com.irurueta.navigation.frames.FrameType
@@ -31,8 +29,8 @@ import com.irurueta.navigation.inertial.wmm.WorldMagneticModel
 import java.util.*
 
 /**
- * Estimates a fused absolute attitude, where accelerometer + magnetometer measurements are fused
- * with relative attitude obtained from gyroscope ones.
+ * Estimates a double fused absolute attitude, where accelerometer + magnetometer measurements are
+ * fused with leveled relative attitude obtained from gyroscope ones.
  *
  * @property context Android context.
  * @param location Device location.
@@ -67,7 +65,7 @@ import java.util.*
  * happens when consumer of measurements cannot keep up with the rate at which measurements are
  * generated.
  */
-class FusedGeomagneticAttitudeEstimator2(
+class DoubleFusedGeomagneticAttitudeEstimator2(
     val context: Context,
     location: Location? = null,
     val sensorDelay: SensorDelay = SensorDelay.GAME,
@@ -93,12 +91,12 @@ class FusedGeomagneticAttitudeEstimator2(
     /**
      * Processes accelerometer + gyroscope + magnetometer measurements.
      */
-    private val accelerometerProcessor = AccelerometerFusedGeomagneticAttitudeProcessor()
+    private val accelerometerProcessor = AccelerometerDoubleFusedGeomagneticAttitudeProcessor()
 
     /**
      * Processes gravity + gyroscope + magnetometer measurements.
      */
-    private val gravityProcessor = FusedGeomagneticAttitudeProcessor()
+    private val gravityProcessor = DoubleFusedGeomagneticAttitudeProcessor()
 
     /**
      * Instance being reused to externally notify attitudes so that it does not have additional
@@ -293,7 +291,7 @@ class FusedGeomagneticAttitudeEstimator2(
      *
      * @throws IllegalArgumentException if value is not between 0.0 and 1.0 (both included).
      */
-    var interpolationValue = BaseFusedGeomagneticAttitudeProcessor.DEFAULT_INTERPOLATION_VALUE
+    var interpolationValue = BaseDoubleFusedGeomagneticAttitudeProcessor.DEFAULT_INTERPOLATION_VALUE
         set(value) {
             accelerometerProcessor.interpolationValue = value
             gravityProcessor.interpolationValue = value
@@ -308,7 +306,7 @@ class FusedGeomagneticAttitudeEstimator2(
      * @throws IllegalArgumentException if value is zero or negative.
      */
     var indirectInterpolationWeight =
-        BaseFusedGeomagneticAttitudeProcessor.DEFAULT_INDIRECT_INTERPOLATION_WEIGHT
+        BaseDoubleFusedGeomagneticAttitudeProcessor.DEFAULT_INDIRECT_INTERPOLATION_WEIGHT
         set(value) {
             accelerometerProcessor.indirectInterpolationWeight = value
             gravityProcessor.indirectInterpolationWeight = value
@@ -334,7 +332,7 @@ class FusedGeomagneticAttitudeEstimator2(
      * @throws IllegalStateException if estimator is already running.
      * @throws IllegalArgumentException if value is not between 0.0 and 1.0 (both included).
      */
-    var outlierThreshold = BaseFusedGeomagneticAttitudeProcessor.DEFAULT_OUTLIER_THRESHOLD
+    var outlierThreshold = BaseDoubleFusedGeomagneticAttitudeProcessor.DEFAULT_OUTLIER_THRESHOLD
         set(value) {
             check(!running)
 
@@ -352,7 +350,7 @@ class FusedGeomagneticAttitudeEstimator2(
      * @throws IllegalArgumentException if value is not between 0.0 and 1.0 (both included).
      */
     var outlierPanicThreshold =
-        BaseFusedGeomagneticAttitudeProcessor.DEFAULT_OUTLIER_PANIC_THRESHOLD
+        BaseDoubleFusedGeomagneticAttitudeProcessor.DEFAULT_OUTLIER_PANIC_THRESHOLD
         set(value) {
             check(!running)
 
@@ -369,7 +367,7 @@ class FusedGeomagneticAttitudeEstimator2(
      * @throws IllegalStateException if estimator is already running.
      */
     var panicCounterThreshold =
-        BaseFusedGeomagneticAttitudeProcessor.DEFAULT_PANIC_COUNTER_THRESHOLD
+        BaseDoubleFusedGeomagneticAttitudeProcessor.DEFAULT_PANIC_COUNTER_THRESHOLD
         set(value) {
             check(!running)
 
@@ -478,6 +476,7 @@ class FusedGeomagneticAttitudeEstimator2(
         )
     }
 
+
     /**
      * Interface to notify when a new attitude measurement is available.
      */
@@ -500,7 +499,7 @@ class FusedGeomagneticAttitudeEstimator2(
          * geomagnetic attitude. Only available if [estimateCoordinateTransformation] is true.
          */
         fun onAttitudeAvailable(
-            estimator: FusedGeomagneticAttitudeEstimator2,
+            estimator: DoubleFusedGeomagneticAttitudeEstimator2,
             attitude: Quaternion,
             timestamp: Long,
             roll: Double?,
@@ -523,7 +522,7 @@ class FusedGeomagneticAttitudeEstimator2(
          * @param accuracy new accuracy.
          */
         fun onAccuracyChanged(
-            estimator: FusedGeomagneticAttitudeEstimator2,
+            estimator: DoubleFusedGeomagneticAttitudeEstimator2,
             sensorType: SensorType,
             accuracy: SensorAccuracy?
         )
@@ -553,7 +552,7 @@ class FusedGeomagneticAttitudeEstimator2(
          * @param sensorType sensor that got its buffer filled.
          */
         fun onBufferFilled(
-            estimator: FusedGeomagneticAttitudeEstimator2,
+            estimator: DoubleFusedGeomagneticAttitudeEstimator2,
             sensorType: SensorType
         )
     }
