@@ -185,7 +185,7 @@ abstract class BaseFusedGeomagneticAttitudeProcessor<M : SensorMeasurement<M>, S
     /**
      * Indicates whether accurate non-leveled relative attitude processor must be used or not.
      */
-    var useAccurateRelativeGyroscopeAttitudeProcessor: Boolean = false
+    var useAccurateRelativeGyroscopeAttitudeProcessor: Boolean = true
         set(value) {
             field = value
             buildRelativeGyroscopeProcessor()

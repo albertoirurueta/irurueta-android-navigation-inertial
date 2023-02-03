@@ -24,7 +24,7 @@ import androidx.appcompat.widget.AppCompatTextView
 import com.irurueta.android.gl.cube.CubeRenderer
 import com.irurueta.android.gl.cube.CubeTextureView
 import com.irurueta.android.navigation.inertial.collectors.*
-import com.irurueta.android.navigation.inertial.estimators.attitude.DoubleFusedGeomagneticAttitudeEstimator
+import com.irurueta.android.navigation.inertial.estimators.attitude.DoubleFusedGeomagneticAttitudeEstimator2
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.MeanAveragingFilter
@@ -45,7 +45,7 @@ class DoubleFusedGeomagneticAttitudeEstimatorActivity : AppCompatActivity() {
 
     private var camera: PinholeCamera? = null
 
-    private var attitudeEstimator: DoubleFusedGeomagneticAttitudeEstimator? = null
+    private var attitudeEstimator: DoubleFusedGeomagneticAttitudeEstimator2? = null
 
     private val conversionRotation = ENUtoNEDTriadConverter.conversionRotation
 
@@ -193,7 +193,7 @@ class DoubleFusedGeomagneticAttitudeEstimatorActivity : AppCompatActivity() {
             val accelerometerAveragingFilter =
                 buildAveragingFilter(accelerometerAveragingFilterType)
 
-            attitudeEstimator = DoubleFusedGeomagneticAttitudeEstimator(
+            attitudeEstimator = DoubleFusedGeomagneticAttitudeEstimator2(
                 this,
                 location,
                 SensorDelay.GAME,

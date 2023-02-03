@@ -205,6 +205,8 @@ class FusedGeomagneticAttitudeEstimatorActivity : AppCompatActivity() {
                 useAccurateLevelingEstimator = useAccurateLevelingEstimator,
                 useAccurateRelativeGyroscopeAttitudeEstimator = useAccurateRelativeGyroscopeAttitudeEstimator,
                 useWorldMagneticModel = useWorldMagneticModel,
+                estimateCoordinateTransformation = false,
+                estimateEulerAngles = true,
                 attitudeAvailableListener = { _, attitude, _, roll, pitch, yaw, _ ->
                     attitude.toQuaternion(rotation)
 

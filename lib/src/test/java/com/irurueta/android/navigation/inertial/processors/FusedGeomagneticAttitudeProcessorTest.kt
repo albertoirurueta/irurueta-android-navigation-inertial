@@ -64,7 +64,7 @@ class FusedGeomagneticAttitudeProcessorTest {
         assertFalse(processor.useAccurateLevelingProcessor)
         assertNull(processor.worldMagneticModel)
         assertFalse(processor.useWorldMagneticModel)
-        assertFalse(processor.useAccurateRelativeGyroscopeAttitudeProcessor)
+        assertTrue(processor.useAccurateRelativeGyroscopeAttitudeProcessor)
         assertTrue(processor.useIndirectInterpolation)
         assertEquals(
             BaseFusedGeomagneticAttitudeProcessor.DEFAULT_INTERPOLATION_VALUE,
@@ -114,7 +114,7 @@ class FusedGeomagneticAttitudeProcessorTest {
         assertFalse(processor.useAccurateLevelingProcessor)
         assertNull(processor.worldMagneticModel)
         assertFalse(processor.useWorldMagneticModel)
-        assertFalse(processor.useAccurateRelativeGyroscopeAttitudeProcessor)
+        assertTrue(processor.useAccurateRelativeGyroscopeAttitudeProcessor)
         assertTrue(processor.useIndirectInterpolation)
         assertEquals(
             BaseFusedGeomagneticAttitudeProcessor.DEFAULT_INTERPOLATION_VALUE,
@@ -406,7 +406,7 @@ class FusedGeomagneticAttitudeProcessorTest {
         val processor = FusedGeomagneticAttitudeProcessor()
 
         // check default value
-        assertFalse(processor.useAccurateRelativeGyroscopeAttitudeProcessor)
+        assertTrue(processor.useAccurateRelativeGyroscopeAttitudeProcessor)
 
         val relativeGyroscopeProcessor1: BaseRelativeGyroscopeAttitudeProcessor? =
             getPrivateProperty(
@@ -415,13 +415,13 @@ class FusedGeomagneticAttitudeProcessorTest {
                 "relativeGyroscopeProcessor"
             )
         requireNotNull(relativeGyroscopeProcessor1)
-        assertTrue(relativeGyroscopeProcessor1 is RelativeGyroscopeAttitudeProcessor)
+        assertTrue(relativeGyroscopeProcessor1 is AccurateRelativeGyroscopeAttitudeProcessor)
 
         // set new value
-        processor.useAccurateRelativeGyroscopeAttitudeProcessor = true
+        processor.useAccurateRelativeGyroscopeAttitudeProcessor = false
 
         // check
-        assertTrue(processor.useAccurateRelativeGyroscopeAttitudeProcessor)
+        assertFalse(processor.useAccurateRelativeGyroscopeAttitudeProcessor)
 
         val relativeGyroscopeProcessor2: BaseRelativeGyroscopeAttitudeProcessor? =
             getPrivateProperty(
@@ -430,7 +430,7 @@ class FusedGeomagneticAttitudeProcessorTest {
                 "relativeGyroscopeProcessor"
             )
         requireNotNull(relativeGyroscopeProcessor2)
-        assertTrue(relativeGyroscopeProcessor2 is AccurateRelativeGyroscopeAttitudeProcessor)
+        assertTrue(relativeGyroscopeProcessor2 is RelativeGyroscopeAttitudeProcessor)
     }
 
     @Test

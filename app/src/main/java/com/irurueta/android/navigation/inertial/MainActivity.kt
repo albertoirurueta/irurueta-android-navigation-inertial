@@ -211,7 +211,8 @@ class MainActivity : AppCompatActivity() {
     private var doubleFusedGeomagneticAttitudeEstimatorUncalibratedGyroscopeButton: AppCompatButton? =
         null
 
-    private var doubleFusedGeomagneticAttitudeEstimatorWorldMagneticModelButton: AppCompatButton? = null
+    private var doubleFusedGeomagneticAttitudeEstimatorWorldMagneticModelButton: AppCompatButton? =
+        null
 
     private var androidAbsoluteAttitudeEstimatorButton: AppCompatButton? = null
 
@@ -1374,6 +1375,10 @@ class MainActivity : AppCompatActivity() {
                 Intent(this@MainActivity, FusedGeomagneticAttitudeEstimatorActivity::class.java)
             intent.putExtra(FusedGeomagneticAttitudeEstimatorActivity.USE_ACCELEROMETER, false)
             intent.putExtra(
+                FusedGeomagneticAttitudeEstimatorActivity.USE_ACCURATE_RELATIVE_GYROSCOPE_ATTITUDE_ESTIMATOR,
+                true
+            )
+            intent.putExtra(
                 FusedGeomagneticAttitudeEstimatorActivity.MAGNETOMETER_SENSOR_TYPE,
                 MagnetometerSensorType.MAGNETOMETER
             )
@@ -1581,8 +1586,18 @@ class MainActivity : AppCompatActivity() {
             findViewById(R.id.double_fused_geomagnetic_attitude_estimator_gravity_button)
         doubleFusedGeomagneticAttitudeEstimatorButton?.setOnClickListener {
             val intent =
-                Intent(this@MainActivity, DoubleFusedGeomagneticAttitudeEstimatorActivity::class.java)
-            intent.putExtra(DoubleFusedGeomagneticAttitudeEstimatorActivity.USE_ACCELEROMETER, false)
+                Intent(
+                    this@MainActivity,
+                    DoubleFusedGeomagneticAttitudeEstimatorActivity::class.java
+                )
+            intent.putExtra(
+                DoubleFusedGeomagneticAttitudeEstimatorActivity.USE_ACCELEROMETER,
+                false
+            )
+            intent.putExtra(
+                DoubleFusedGeomagneticAttitudeEstimatorActivity.USE_ACCURATE_RELATIVE_GYROSCOPE_ATTITUDE_ESTIMATOR,
+                true
+            )
             intent.putExtra(
                 DoubleFusedGeomagneticAttitudeEstimatorActivity.MAGNETOMETER_SENSOR_TYPE,
                 MagnetometerSensorType.MAGNETOMETER
@@ -1594,7 +1609,10 @@ class MainActivity : AppCompatActivity() {
             findViewById(R.id.double_fused_geomagnetic_attitude_estimator_accelerometer_low_pass_filter_button)
         doubleFusedGeomagneticAttitudeEstimatorAccelerometerLowPassFilterButton?.setOnClickListener {
             val intent =
-                Intent(this@MainActivity, DoubleFusedGeomagneticAttitudeEstimatorActivity::class.java)
+                Intent(
+                    this@MainActivity,
+                    DoubleFusedGeomagneticAttitudeEstimatorActivity::class.java
+                )
             intent.putExtra(DoubleFusedGeomagneticAttitudeEstimatorActivity.USE_ACCELEROMETER, true)
             intent.putExtra(
                 DoubleFusedGeomagneticAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
@@ -1615,7 +1633,10 @@ class MainActivity : AppCompatActivity() {
             findViewById(R.id.double_fused_geomagnetic_attitude_estimator_accelerometer_mean_filter_button)
         doubleFusedGeomagneticAttitudeEstimatorAccelerometerMeanFilterButton?.setOnClickListener {
             val intent =
-                Intent(this@MainActivity, DoubleFusedGeomagneticAttitudeEstimatorActivity::class.java)
+                Intent(
+                    this@MainActivity,
+                    DoubleFusedGeomagneticAttitudeEstimatorActivity::class.java
+                )
             intent.putExtra(DoubleFusedGeomagneticAttitudeEstimatorActivity.USE_ACCELEROMETER, true)
             intent.putExtra(
                 DoubleFusedGeomagneticAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
@@ -1636,7 +1657,10 @@ class MainActivity : AppCompatActivity() {
             findViewById(R.id.double_fused_geomagnetic_attitude_estimator_accelerometer_median_filter_button)
         doubleFusedGeomagneticAttitudeEstimatorAccelerometerMedianFilterButton?.setOnClickListener {
             val intent =
-                Intent(this@MainActivity, DoubleFusedGeomagneticAttitudeEstimatorActivity::class.java)
+                Intent(
+                    this@MainActivity,
+                    DoubleFusedGeomagneticAttitudeEstimatorActivity::class.java
+                )
             intent.putExtra(DoubleFusedGeomagneticAttitudeEstimatorActivity.USE_ACCELEROMETER, true)
             intent.putExtra(
                 DoubleFusedGeomagneticAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
@@ -1657,7 +1681,10 @@ class MainActivity : AppCompatActivity() {
             findViewById(R.id.double_fused_geomagnetic_attitude_estimator_accelerometer_uncalibrated_low_pass_filter_button)
         doubleFusedGeomagneticAttitudeEstimatorAccelerometerUncalibratedLowPassButton?.setOnClickListener {
             val intent =
-                Intent(this@MainActivity, DoubleFusedGeomagneticAttitudeEstimatorActivity::class.java)
+                Intent(
+                    this@MainActivity,
+                    DoubleFusedGeomagneticAttitudeEstimatorActivity::class.java
+                )
             intent.putExtra(DoubleFusedGeomagneticAttitudeEstimatorActivity.USE_ACCELEROMETER, true)
             intent.putExtra(
                 DoubleFusedGeomagneticAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
@@ -1678,7 +1705,10 @@ class MainActivity : AppCompatActivity() {
             findViewById(R.id.double_fused_geomagnetic_attitude_estimator_accelerometer_uncalibrated_mean_filter_button)
         doubleFusedGeomagneticAttitudeEstimatorAccelerometerUncalibratedMeanFilterButton?.setOnClickListener {
             val intent =
-                Intent(this@MainActivity, DoubleFusedGeomagneticAttitudeEstimatorActivity::class.java)
+                Intent(
+                    this@MainActivity,
+                    DoubleFusedGeomagneticAttitudeEstimatorActivity::class.java
+                )
             intent.putExtra(DoubleFusedGeomagneticAttitudeEstimatorActivity.USE_ACCELEROMETER, true)
             intent.putExtra(
                 DoubleFusedGeomagneticAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
@@ -1699,7 +1729,10 @@ class MainActivity : AppCompatActivity() {
             findViewById(R.id.double_fused_geomagnetic_attitude_estimator_accelerometer_uncalibrated_median_filter_button)
         doubleFusedGeomagneticAttitudeEstimatorAccelerometerUncalibratedMedianFilterButton?.setOnClickListener {
             val intent =
-                Intent(this@MainActivity, DoubleFusedGeomagneticAttitudeEstimatorActivity::class.java)
+                Intent(
+                    this@MainActivity,
+                    DoubleFusedGeomagneticAttitudeEstimatorActivity::class.java
+                )
             intent.putExtra(DoubleFusedGeomagneticAttitudeEstimatorActivity.USE_ACCELEROMETER, true)
             intent.putExtra(
                 DoubleFusedGeomagneticAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
@@ -1720,7 +1753,10 @@ class MainActivity : AppCompatActivity() {
             findViewById(R.id.double_fused_geomagnetic_attitude_estimator_uncalibrated_magnetometer_accurate_attitude_button)
         doubleFusedGeomagneticAttitudeEstimatorUncalibratedMagnetometerButton?.setOnClickListener {
             val intent =
-                Intent(this@MainActivity, DoubleFusedGeomagneticAttitudeEstimatorActivity::class.java)
+                Intent(
+                    this@MainActivity,
+                    DoubleFusedGeomagneticAttitudeEstimatorActivity::class.java
+                )
             intent.putExtra(DoubleFusedGeomagneticAttitudeEstimatorActivity.USE_ACCELEROMETER, true)
             intent.putExtra(
                 DoubleFusedGeomagneticAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
@@ -1741,7 +1777,10 @@ class MainActivity : AppCompatActivity() {
             findViewById(R.id.double_fused_geomagnetic_attitude_estimator_uncalibrated_gyroscope_accurate_attitude_button)
         doubleFusedGeomagneticAttitudeEstimatorUncalibratedGyroscopeButton?.setOnClickListener {
             val intent =
-                Intent(this@MainActivity, DoubleFusedGeomagneticAttitudeEstimatorActivity::class.java)
+                Intent(
+                    this@MainActivity,
+                    DoubleFusedGeomagneticAttitudeEstimatorActivity::class.java
+                )
             intent.putExtra(DoubleFusedGeomagneticAttitudeEstimatorActivity.USE_ACCELEROMETER, true)
             intent.putExtra(
                 DoubleFusedGeomagneticAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,
@@ -1767,7 +1806,10 @@ class MainActivity : AppCompatActivity() {
             findViewById(R.id.double_fused_geomagnetic_attitude_estimator_world_magnetic_model_button)
         doubleFusedGeomagneticAttitudeEstimatorWorldMagneticModelButton?.setOnClickListener {
             val intent =
-                Intent(this@MainActivity, DoubleFusedGeomagneticAttitudeEstimatorActivity::class.java)
+                Intent(
+                    this@MainActivity,
+                    DoubleFusedGeomagneticAttitudeEstimatorActivity::class.java
+                )
             intent.putExtra(DoubleFusedGeomagneticAttitudeEstimatorActivity.USE_ACCELEROMETER, true)
             intent.putExtra(
                 DoubleFusedGeomagneticAttitudeEstimatorActivity.ACCELEROMETER_SENSOR_TYPE,

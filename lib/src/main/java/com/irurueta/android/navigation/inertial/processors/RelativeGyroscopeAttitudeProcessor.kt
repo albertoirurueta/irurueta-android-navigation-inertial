@@ -55,7 +55,7 @@ class RelativeGyroscopeAttitudeProcessor(processorListener: OnProcessedListener?
             val yaw = triad.valueZ * dt
             deltaAttitude.setFromEulerAngles(roll, pitch, yaw)
 
-            internalAttitude.combine(deltaAttitude)
+            Quaternion.product(deltaAttitude, internalAttitude, internalAttitude)
             internalAttitude.normalize()
 
             internalAttitude.copyTo(attitude)
