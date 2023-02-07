@@ -491,8 +491,11 @@ class EcefAbsolutePoseEstimator private constructor(
     /**
      * True indicates that attitude is leveled and expressed respect to estimator start.
      * False indicates that attitude is absolute.
+     *
+     * @throws IllegalStateException if estimator is running
      */
     override var useLeveledRelativeAttitudeRespectStart = true
+        @Throws(IllegalStateException::class)
         set(value) {
             check(!running)
             field = value
@@ -801,7 +804,7 @@ class EcefAbsolutePoseEstimator private constructor(
     }
 
     /**
-     * Computes 3D metric transformation between procided ECEF frames and local attitudes.
+     * Computes 3D metric transformation between provided ECEF frames and local attitudes.
      *
      * @param initialEcefFrame starting frame.
      * @param currentEcefFrame end frame.

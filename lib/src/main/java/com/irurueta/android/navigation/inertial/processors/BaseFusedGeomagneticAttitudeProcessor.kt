@@ -175,6 +175,8 @@ abstract class BaseFusedGeomagneticAttitudeProcessor<M : SensorMeasurement<M>, S
     /**
      * Indicates whether world magnetic model is taken into account to adjust attitude yaw angle by
      * current magnetic declination based on current World Magnetic Model, location and timestamp.
+     * If null, the default model is used if [useWorldMagneticModel] is
+     * true. If [useWorldMagneticModel] is false, this is ignored.
      */
     var useWorldMagneticModel: Boolean
         get() = geomagneticProcessor.useWorldMagneticModel
@@ -210,6 +212,7 @@ abstract class BaseFusedGeomagneticAttitudeProcessor<M : SensorMeasurement<M>, S
      * @throws IllegalArgumentException if value is not between 0.0 and 1.0 (both included).
      */
     var interpolationValue = DEFAULT_INTERPOLATION_VALUE
+        @Throws(IllegalArgumentException::class)
         set(value) {
             require(value in 0.0..1.0)
             field = value
@@ -223,6 +226,7 @@ abstract class BaseFusedGeomagneticAttitudeProcessor<M : SensorMeasurement<M>, S
      * @throws IllegalArgumentException if value is zero or negative.
      */
     var indirectInterpolationWeight = DEFAULT_INDIRECT_INTERPOLATION_WEIGHT
+        @Throws(IllegalArgumentException::class)
         set(value) {
             require(value > 0.0)
             field = value
@@ -243,6 +247,7 @@ abstract class BaseFusedGeomagneticAttitudeProcessor<M : SensorMeasurement<M>, S
      * @throws IllegalArgumentException if value is not between 0.0 and 1.0 (both included).
      */
     var outlierThreshold = DEFAULT_OUTLIER_THRESHOLD
+        @Throws(IllegalArgumentException::class)
         set(value) {
             require(value in 0.0..1.0)
 
@@ -256,6 +261,7 @@ abstract class BaseFusedGeomagneticAttitudeProcessor<M : SensorMeasurement<M>, S
      * @throws IllegalArgumentException if value is not between 0.0 and 1.0 (both included).
      */
     var outlierPanicThreshold = DEFAULT_OUTLIER_PANIC_THRESHOLD
+        @Throws(IllegalArgumentException::class)
         set(value) {
             require(value in 0.0..1.0)
 
@@ -266,9 +272,10 @@ abstract class BaseFusedGeomagneticAttitudeProcessor<M : SensorMeasurement<M>, S
      * Threshold to determine when fused attitude has largely diverged for a given
      * number of samples and must be reset.
      *
-     * @throws IllegalStateException if estimator is already running.
+     * @throws IllegalArgumentException if provided value is zero or negative.
      */
     var panicCounterThreshold = DEFAULT_PANIC_COUNTER_THRESHOLD
+        @Throws(IllegalArgumentException::class)
         set(value) {
             require(value > 0)
 
@@ -310,7 +317,7 @@ abstract class BaseFusedGeomagneticAttitudeProcessor<M : SensorMeasurement<M>, S
      * @param timestamp timestamp when all measurements are assumed to occur.
      * @return true if new fused absolute attitude is processed, false otherwise.
      */
-    protected fun process(
+    internal fun process(
         accelerometerOrGravityMeasurement: M,
         gyroscopeMeasurement: GyroscopeSensorMeasurement,
         magnetometerMeasurement: MagnetometerSensorMeasurement,

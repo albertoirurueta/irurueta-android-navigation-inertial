@@ -311,7 +311,7 @@ abstract class BaseDoubleFusedGeomagneticAttitudeProcessor<M : SensorMeasurement
      * @param timestamp timestamp when all measurements are assumed to occur.
      * @return true if new fused absolute attitude is processed, false otherwise.
      */
-    protected fun process(
+    internal fun process(
         accelerometerOrGravityMeasurement: M,
         gyroscopeMeasurement: GyroscopeSensorMeasurement,
         magnetometerMeasurement: MagnetometerSensorMeasurement,
