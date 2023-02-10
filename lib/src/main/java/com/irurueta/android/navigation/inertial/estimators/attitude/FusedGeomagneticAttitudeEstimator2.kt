@@ -478,6 +478,16 @@ class FusedGeomagneticAttitudeEstimator2(
         )
     }
 
+    init {
+        this.location = location
+        this.worldMagneticModel = worldMagneticModel
+        this.timestamp = timestamp
+        this.useWorldMagneticModel = useWorldMagneticModel
+        this.useAccurateLevelingEstimator = useAccurateLevelingEstimator
+        this.useAccurateRelativeGyroscopeAttitudeEstimator =
+            useAccurateRelativeGyroscopeAttitudeEstimator
+    }
+
     /**
      * Interface to notify when a new attitude measurement is available.
      */
@@ -527,16 +537,6 @@ class FusedGeomagneticAttitudeEstimator2(
             sensorType: SensorType,
             accuracy: SensorAccuracy?
         )
-    }
-
-    init {
-        this.location = location
-        this.worldMagneticModel = worldMagneticModel
-        this.timestamp = timestamp
-        this.useWorldMagneticModel = useWorldMagneticModel
-        this.useAccurateLevelingEstimator = useAccurateLevelingEstimator
-        this.useAccurateRelativeGyroscopeAttitudeEstimator =
-            useAccurateRelativeGyroscopeAttitudeEstimator
     }
 
     /**

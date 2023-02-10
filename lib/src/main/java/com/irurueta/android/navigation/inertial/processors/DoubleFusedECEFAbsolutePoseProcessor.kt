@@ -20,8 +20,8 @@ import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.navigation.frames.NEDVelocity
 
 /**
- * Estimates absolute pose expressed in ECEF coordinates.
- * This class estimates device attitude by fusing accelerometer, gyroscope and magnetometer
+ * Estimate absolute pose expressed in ECEF coordinates.
+ * This class estimated device attitude by double fusing gravity, gyroscope and magnetometer
  * measurements.
  * Accelerometer and gyroscope are then taken into account to update device position.
  *
@@ -30,22 +30,19 @@ import com.irurueta.navigation.frames.NEDVelocity
  * @property estimatePoseTransformation true to estimate 3D metric pose transformation.
  * @property processorListener listener to notify new poses.
  */
-class AccelerometerFusedECEFAbsolutePoseProcessor(
+class DoubleFusedECEFAbsolutePoseProcessor(
     initialLocation: Location,
     initialVelocity: NEDVelocity = NEDVelocity(),
     estimatePoseTransformation: Boolean = false,
     processorListener: OnProcessedListener? = null
-) : BaseFusedECEFAbsolutePoseProcessor<AccelerometerSensorMeasurement, AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement>(
+) : BaseDoubleFusedECEFAbsolutePoseProcessor<GravitySensorMeasurement, AccelerometerGravityGyroscopeAndMagnetometerSyncedSensorMeasurement>(
     initialLocation,
     initialVelocity,
     estimatePoseTransformation,
     processorListener
 ) {
-    /**
-     * Attitude processor in charge of fusing accelerometer + gyroscope and magnetometer
-     * measurements to estimate current device attitude.
-     */
-    override val attitudeProcessor = AccelerometerFusedGeomagneticAttitudeProcessor()
+
+    override val attitudeProcessor = DoubleFusedGeomagneticAttitudeProcessor()
 
     /**
      * Processes provided synced measurement to estimate current attitude and position.
@@ -53,16 +50,17 @@ class AccelerometerFusedECEFAbsolutePoseProcessor(
      * @param syncedMeasurement synced measurement to be processed.
      * @return true if new pose is estimated, false otherwise.
      */
-    fun process(syncedMeasurement: AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement): Boolean {
+    fun process(syncedMeasurement: AccelerometerGravityGyroscopeAndMagnetometerSyncedSensorMeasurement): Boolean {
         val accelerometerMeasurement = syncedMeasurement.accelerometerMeasurement
+        val gravityMeasurement = syncedMeasurement.gravityMeasurement
         val gyroscopeMeasurement = syncedMeasurement.gyroscopeMeasurement
         val magnetometerMeasurement = syncedMeasurement.magnetometerMeasurement
         val timestamp = syncedMeasurement.timestamp
-        return if (accelerometerMeasurement != null && gyroscopeMeasurement != null
-            && magnetometerMeasurement != null
-        ) {
+        return if (accelerometerMeasurement != null && gravityMeasurement != null
+            && gyroscopeMeasurement != null && magnetometerMeasurement != null) {
             process(
                 accelerometerMeasurement,
+                gravityMeasurement,
                 gyroscopeMeasurement,
                 magnetometerMeasurement,
                 timestamp
@@ -76,6 +74,7 @@ class AccelerometerFusedECEFAbsolutePoseProcessor(
      * Processes provided measurements to estimate current attitude and position.
      *
      * @param accelerometerMeasurement accelerometer measurement.
+     * @param gravityMeasurement gravity measurement.
      * @param gyroscopeMeasurement gyroscope measurement.
      * @param magnetometerMeasurement magnetometer measurement.
      * @param timestamp timestamp when all measurements are assumed to occur.
@@ -83,12 +82,13 @@ class AccelerometerFusedECEFAbsolutePoseProcessor(
      */
     private fun process(
         accelerometerMeasurement: AccelerometerSensorMeasurement,
+        gravityMeasurement: GravitySensorMeasurement,
         gyroscopeMeasurement: GyroscopeSensorMeasurement,
         magnetometerMeasurement: MagnetometerSensorMeasurement,
         timestamp: Long
     ): Boolean {
         return if (processAttitude(
-                accelerometerMeasurement,
+                gravityMeasurement,
                 gyroscopeMeasurement,
                 magnetometerMeasurement,
                 timestamp

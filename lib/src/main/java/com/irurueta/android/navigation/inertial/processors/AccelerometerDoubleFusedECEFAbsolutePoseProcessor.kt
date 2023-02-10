@@ -16,12 +16,15 @@
 package com.irurueta.android.navigation.inertial.processors
 
 import android.location.Location
-import com.irurueta.android.navigation.inertial.collectors.*
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorMeasurement
 import com.irurueta.navigation.frames.NEDVelocity
 
 /**
  * Estimates absolute pose expressed in ECEF coordinates.
- * This class estimates device attitude by fusing accelerometer, gyroscope and magnetometer
+ * This class estimates device attitude by double fusing accelerometer, gyroscope and magnetometer
  * measurements.
  * Accelerometer and gyroscope are then taken into account to update device position.
  *
@@ -30,12 +33,12 @@ import com.irurueta.navigation.frames.NEDVelocity
  * @property estimatePoseTransformation true to estimate 3D metric pose transformation.
  * @property processorListener listener to notify new poses.
  */
-class AccelerometerFusedECEFAbsolutePoseProcessor(
+class AccelerometerDoubleFusedECEFAbsolutePoseProcessor(
     initialLocation: Location,
     initialVelocity: NEDVelocity = NEDVelocity(),
     estimatePoseTransformation: Boolean = false,
     processorListener: OnProcessedListener? = null
-) : BaseFusedECEFAbsolutePoseProcessor<AccelerometerSensorMeasurement, AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement>(
+) : BaseDoubleFusedECEFAbsolutePoseProcessor<AccelerometerSensorMeasurement, AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement>(
     initialLocation,
     initialVelocity,
     estimatePoseTransformation,
@@ -45,7 +48,7 @@ class AccelerometerFusedECEFAbsolutePoseProcessor(
      * Attitude processor in charge of fusing accelerometer + gyroscope and magnetometer
      * measurements to estimate current device attitude.
      */
-    override val attitudeProcessor = AccelerometerFusedGeomagneticAttitudeProcessor()
+    override val attitudeProcessor = AccelerometerDoubleFusedGeomagneticAttitudeProcessor()
 
     /**
      * Processes provided synced measurement to estimate current attitude and position.

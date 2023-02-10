@@ -16,7 +16,10 @@
 package com.irurueta.android.navigation.inertial.processors
 
 import android.location.Location
-import com.irurueta.android.navigation.inertial.collectors.*
+import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.SensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.SyncedSensorMeasurement
 import com.irurueta.navigation.frames.NEDVelocity
 import com.irurueta.navigation.inertial.calibration.AccelerationTriad
 import com.irurueta.navigation.inertial.wmm.WorldMagneticModel
@@ -24,8 +27,8 @@ import java.util.*
 
 /**
  * Base class to estimate absolute pose expressed in ECEF coordinates.
- * This class estimated device attitude by fusing gravity/accelerometer, gyroscope and magnetometer
- * measurements.
+ * This class estimated device attitude by double fusing gravity/accelerometer, gyroscope and
+ * magnetometer measurements.
  * Accelerometer and gyroscope is then taken into account to update device position.
  *
  * @property initialLocation initial device location.
@@ -33,7 +36,7 @@ import java.util.*
  * @property estimatePoseTransformation true to estimate 3D metric pose transformation.
  * @property processorListener listener to notify new poses.
  */
-abstract class BaseFusedECEFAbsolutePoseProcessor<M : SensorMeasurement<M>, S : SyncedSensorMeasurement>(
+abstract class BaseDoubleFusedECEFAbsolutePoseProcessor<M : SensorMeasurement<M>, S : SyncedSensorMeasurement>(
     initialLocation: Location,
     initialVelocity: NEDVelocity,
     estimatePoseTransformation: Boolean,
@@ -48,7 +51,7 @@ abstract class BaseFusedECEFAbsolutePoseProcessor<M : SensorMeasurement<M>, S : 
      * Attitude processor in charge of fusing accelerometer/gravity + gyroscope and magnetometer
      * measurements to estimate current device attitude.
      */
-    protected abstract val attitudeProcessor: BaseFusedGeomagneticAttitudeProcessor<M, *>
+    protected abstract val attitudeProcessor: BaseDoubleFusedGeomagneticAttitudeProcessor<M, *>
 
     /**
      * X-coordinates of last sensed gravity component of specific force expressed in NED coordinates
