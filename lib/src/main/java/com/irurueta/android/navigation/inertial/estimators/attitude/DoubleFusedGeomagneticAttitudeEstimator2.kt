@@ -37,6 +37,9 @@ import java.util.*
  * @property sensorDelay Delay of sensors between samples.
  * @property useAccelerometer true to use accelerometer sensor, false to use system gravity sensor
  * for leveling purposes.
+ * @property startOffsetEnabled indicates whether start offsets will be computed when first
+ * measurement is received or not. True indicates that offset is computed, false assumes that offset
+ * is null.
  * @property accelerometerSensorType One of the supported accelerometer sensor types.
  * (Only used if [useAccelerometer] is true).
  * @property magnetometerSensorType One of the supported magnetometer sensor types.
