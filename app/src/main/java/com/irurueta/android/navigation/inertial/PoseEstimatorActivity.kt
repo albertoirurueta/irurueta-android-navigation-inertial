@@ -28,7 +28,7 @@ import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilte
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.MeanAveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.MedianAveragingFilter
-import com.irurueta.android.navigation.inertial.estimators.pose.EcefAbsolutePoseEstimator
+import com.irurueta.android.navigation.inertial.estimators.pose.EcefAbsolutePoseEstimator2
 import com.irurueta.geometry.*
 
 class PoseEstimatorActivity : AppCompatActivity() {
@@ -55,7 +55,7 @@ class PoseEstimatorActivity : AppCompatActivity() {
 
     private var camera: PinholeCamera? = null
 
-    private var poseEstimator: EcefAbsolutePoseEstimator? = null
+    private var poseEstimator: EcefAbsolutePoseEstimator2? = null
 
     private val conversionRotation = ENUtoNEDTriadConverter.conversionRotation
 
@@ -201,7 +201,7 @@ class PoseEstimatorActivity : AppCompatActivity() {
         if (poseEstimator?.running == true) return
 
         if (poseEstimator != null) {
-            poseEstimator?.initialLocation = location
+            //TODO: poseEstimator?.initialLocation = location
         } else {
             val accelerometerAveragingFilter =
                 buildAveragingFilter(accelerometerAveragingFilterType)
@@ -213,18 +213,19 @@ class PoseEstimatorActivity : AppCompatActivity() {
             }
             val refreshIntervalNanos = (1.0f / refreshRate * 1e9).toLong()
 
-            poseEstimator = EcefAbsolutePoseEstimator(
+            poseEstimator = EcefAbsolutePoseEstimator2(
                 this,
                 location,
                 sensorDelay = SensorDelay.FASTEST,
+                useAttitudeSensor = true,
                 useAccelerometerForAttitudeEstimation = false,
                 accelerometerSensorType = accelerometerSensorType,
                 gyroscopeSensorType = gyroscopeSensorType,
                 magnetometerSensorType = magnetometerSensorType,
                 accelerometerAveragingFilter = accelerometerAveragingFilter,
                 useWorldMagneticModel = useWorldMagneticModel,
-                useAccurateLevelingEstimator = true,
-                useAccurateRelativeGyroscopeAttitudeEstimator = true,
+                useAccurateLevelingProcessor = true,
+                useDoubleFusedAttitudeProcessor = true,
                 estimatePoseTransformation = true,
                 poseAvailableListener = { _, _, _, _, timestamp, initialTransformation ->
 

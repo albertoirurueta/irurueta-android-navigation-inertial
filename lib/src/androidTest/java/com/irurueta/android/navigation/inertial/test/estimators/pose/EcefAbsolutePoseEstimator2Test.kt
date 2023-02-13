@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2023 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,17 +22,19 @@ import androidx.test.filters.RequiresDevice
 import com.irurueta.android.navigation.inertial.LocationService
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
-import com.irurueta.android.navigation.inertial.estimators.pose.EcefAbsolutePoseEstimator
+import com.irurueta.android.navigation.inertial.estimators.pose.EcefAbsolutePoseEstimator2
 import com.irurueta.android.navigation.inertial.test.LocationActivity
 import com.irurueta.geometry.Point3D
 import com.irurueta.navigation.frames.ECEFFrame
 import io.mockk.spyk
-import org.junit.Assert.*
+import org.junit.Assert
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
 
 @RequiresDevice
-class EcefAbsolutePoseEstimatorTest {
+class EcefAbsolutePoseEstimator2Test {
 
     private val syncHelper = ThreadSyncHelper()
 
@@ -63,18 +65,19 @@ class EcefAbsolutePoseEstimatorTest {
         val refreshRate = activity.display?.mode?.refreshRate ?: 60.0f
         val refreshIntervalNanos = (1.0f / refreshRate * 1e9).toLong()
 
-        val estimator = EcefAbsolutePoseEstimator(
+        val estimator = EcefAbsolutePoseEstimator2(
             activity,
             location,
             sensorDelay = SensorDelay.FASTEST,
+            useAttitudeSensor = true,
             useWorldMagneticModel = true,
-            useAccurateLevelingEstimator = true,
-            useAccurateRelativeGyroscopeAttitudeEstimator = true,
+            useAccurateLevelingProcessor = true,
+            useDoubleFusedAttitudeProcessor = true,
             estimatePoseTransformation = true,
             poseAvailableListener = { _, currentEcefFrame, _, initialEcefFrame, timestamp, _ ->
                 if (previousTimestamp < 0) {
                     previousTimestamp = timestamp
-                    return@EcefAbsolutePoseEstimator
+                    return@EcefAbsolutePoseEstimator2
                 }
 
                 // refresh only as much as display allows even though sensors might run at higher refresh rates
@@ -93,18 +96,18 @@ class EcefAbsolutePoseEstimatorTest {
 
         estimator.stop()
 
-        assertTrue(completed > 0)
+        Assert.assertTrue(completed > 0)
     }
 
     private fun getCurrentLocation(): Location {
         val scenario = ActivityScenario.launch(LocationActivity::class.java).use {
             it.onActivity { activity ->
-                this@EcefAbsolutePoseEstimatorTest.activity = activity
+                this@EcefAbsolutePoseEstimator2Test.activity = activity
                 val service = LocationService(activity)
 
                 val enabled = service.locationEnabled
                 requireNotNull(enabled)
-                assertTrue(enabled)
+                Assert.assertTrue(enabled)
 
                 val currentLocationListener =
                     spyk(object : LocationService.OnCurrentLocationListener {
@@ -133,6 +136,7 @@ class EcefAbsolutePoseEstimatorTest {
         currentEcefFrame.getPosition(translation)
         initialEcefFrame.getPosition(origin)
         val distance = translation.distanceTo(origin)
-        Log.d("EcefAbsolutePoseEstimatorTest", "Translation: $distance meters")
+        Log.d("EcefAbsolutePoseEstimator2Test", "Translation: $distance meters")
     }
+
 }
