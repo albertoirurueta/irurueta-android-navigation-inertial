@@ -21,9 +21,9 @@ import android.os.SystemClock
 import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
-import com.irurueta.android.navigation.inertial.processors.AccelerometerFusedGeomagneticAttitudeProcessor
-import com.irurueta.android.navigation.inertial.processors.BaseFusedGeomagneticAttitudeProcessor
-import com.irurueta.android.navigation.inertial.processors.FusedGeomagneticAttitudeProcessor
+import com.irurueta.android.navigation.inertial.processors.attitude.AccelerometerFusedGeomagneticAttitudeProcessor
+import com.irurueta.android.navigation.inertial.processors.attitude.BaseFusedGeomagneticAttitudeProcessor
+import com.irurueta.android.navigation.inertial.processors.attitude.FusedGeomagneticAttitudeProcessor
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.frames.CoordinateTransformation
 import com.irurueta.navigation.frames.FrameType

@@ -20,7 +20,7 @@ import android.os.SystemClock
 import androidx.test.core.app.ApplicationProvider
 import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.getPrivateProperty
-import com.irurueta.android.navigation.inertial.processors.AccurateRelativeGyroscopeAttitudeProcessor
+import com.irurueta.android.navigation.inertial.processors.attitude.AccurateRelativeGyroscopeAttitudeProcessor
 import com.irurueta.android.navigation.inertial.setPrivateProperty
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.frames.CoordinateTransformation

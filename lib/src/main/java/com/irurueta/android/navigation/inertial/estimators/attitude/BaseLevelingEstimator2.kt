@@ -19,9 +19,9 @@ import android.content.Context
 import android.os.SystemClock
 import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
-import com.irurueta.android.navigation.inertial.processors.AccelerometerGravityProcessor
-import com.irurueta.android.navigation.inertial.processors.BaseLevelingProcessor
-import com.irurueta.android.navigation.inertial.processors.GravityProcessor
+import com.irurueta.android.navigation.inertial.processors.attitude.AccelerometerGravityProcessor
+import com.irurueta.android.navigation.inertial.processors.attitude.BaseLevelingProcessor
+import com.irurueta.android.navigation.inertial.processors.attitude.GravityProcessor
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.frames.CoordinateTransformation
 import com.irurueta.navigation.frames.FrameType

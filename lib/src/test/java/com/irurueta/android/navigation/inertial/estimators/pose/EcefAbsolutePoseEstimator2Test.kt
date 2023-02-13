@@ -23,6 +23,9 @@ import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragi
 import com.irurueta.android.navigation.inertial.estimators.filter.MedianAveragingFilter
 import com.irurueta.android.navigation.inertial.getPrivateProperty
 import com.irurueta.android.navigation.inertial.processors.*
+import com.irurueta.android.navigation.inertial.processors.attitude.BaseDoubleFusedGeomagneticAttitudeProcessor
+import com.irurueta.android.navigation.inertial.processors.attitude.BaseFusedGeomagneticAttitudeProcessor
+import com.irurueta.android.navigation.inertial.processors.pose.*
 import com.irurueta.android.navigation.inertial.setPrivateProperty
 import com.irurueta.geometry.EuclideanTransformation3D
 import com.irurueta.navigation.frames.ECEFFrame

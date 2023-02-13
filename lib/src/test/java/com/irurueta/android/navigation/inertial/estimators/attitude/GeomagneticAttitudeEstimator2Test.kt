@@ -7,8 +7,8 @@ import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.MeanAveragingFilter
 import com.irurueta.android.navigation.inertial.getPrivateProperty
-import com.irurueta.android.navigation.inertial.processors.AccelerometerGeomagneticAttitudeProcessor
-import com.irurueta.android.navigation.inertial.processors.GeomagneticAttitudeProcessor
+import com.irurueta.android.navigation.inertial.processors.attitude.AccelerometerGeomagneticAttitudeProcessor
+import com.irurueta.android.navigation.inertial.processors.attitude.GeomagneticAttitudeProcessor
 import com.irurueta.android.navigation.inertial.setPrivateProperty
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.frames.CoordinateTransformation

@@ -21,7 +21,7 @@ import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollec
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorType
 import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
-import com.irurueta.android.navigation.inertial.processors.BaseRelativeGyroscopeAttitudeProcessor
+import com.irurueta.android.navigation.inertial.processors.attitude.BaseRelativeGyroscopeAttitudeProcessor
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.frames.CoordinateTransformation
 import com.irurueta.navigation.frames.FrameType

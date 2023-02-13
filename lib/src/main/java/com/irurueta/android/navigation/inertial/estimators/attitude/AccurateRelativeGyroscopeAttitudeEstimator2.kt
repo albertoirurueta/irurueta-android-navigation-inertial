@@ -18,7 +18,7 @@ package com.irurueta.android.navigation.inertial.estimators.attitude
 import android.content.Context
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorType
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
-import com.irurueta.android.navigation.inertial.processors.AccurateRelativeGyroscopeAttitudeProcessor
+import com.irurueta.android.navigation.inertial.processors.attitude.AccurateRelativeGyroscopeAttitudeProcessor
 
 /**
  * Estimates relative attitude respect to start attitude by integrating gyroscope sensor data

@@ -20,7 +20,7 @@ import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorTy
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
-import com.irurueta.android.navigation.inertial.processors.LevelingProcessor
+import com.irurueta.android.navigation.inertial.processors.attitude.LevelingProcessor
 
 /**
  * Estimates leveling of device (roll and pitch angle) by estimating gravity vector using

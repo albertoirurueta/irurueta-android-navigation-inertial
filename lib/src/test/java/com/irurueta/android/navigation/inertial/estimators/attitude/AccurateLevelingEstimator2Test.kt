@@ -23,9 +23,9 @@ import com.irurueta.algebra.Matrix
 import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.estimators.filter.MeanAveragingFilter
 import com.irurueta.android.navigation.inertial.getPrivateProperty
-import com.irurueta.android.navigation.inertial.processors.AccelerometerGravityProcessor
-import com.irurueta.android.navigation.inertial.processors.BaseLevelingProcessor
-import com.irurueta.android.navigation.inertial.processors.GravityProcessor
+import com.irurueta.android.navigation.inertial.processors.attitude.AccelerometerGravityProcessor
+import com.irurueta.android.navigation.inertial.processors.attitude.BaseLevelingProcessor
+import com.irurueta.android.navigation.inertial.processors.attitude.GravityProcessor
 import com.irurueta.android.navigation.inertial.setPrivateProperty
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.frames.CoordinateTransformation

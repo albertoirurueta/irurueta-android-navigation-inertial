@@ -22,6 +22,7 @@ import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
 import com.irurueta.android.navigation.inertial.processors.*
+import com.irurueta.android.navigation.inertial.processors.pose.*
 import com.irurueta.geometry.EuclideanTransformation3D
 import com.irurueta.navigation.frames.ECEFFrame
 import com.irurueta.navigation.frames.NEDVelocity
