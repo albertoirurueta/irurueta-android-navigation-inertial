@@ -6,6 +6,7 @@ plugins {
     id 'org.jetbrains.dokka'
     id 'jacoco'
     id 'org.sonarqube'
+    id 'org.jetbrains.kotlin.android'
     //id("org.jetbrains.kotlinx.kover") version "0.6.1"
 }
 
@@ -106,6 +107,7 @@ dependencies {
     api "com.irurueta:irurueta-android-glutils:$irurueta_android_glutils_version"
     api "com.irurueta:irurueta-android-gl-cube:$irurueta_android_gl_cube"
     implementation project(path: ':lib')
+    implementation 'androidx.core:core-ktx:+'
     //implementation project(':lib')
     testImplementation "junit:junit:$junit_version"
     androidTestImplementation "androidx.test.ext:junit:$ext_junit_version"

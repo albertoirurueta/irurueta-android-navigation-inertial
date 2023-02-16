@@ -16,14 +16,16 @@
 package com.irurueta.android.navigation.inertial.processors.pose
 
 import android.location.Location
-import com.irurueta.android.navigation.inertial.collectors.*
-import com.irurueta.android.navigation.inertial.processors.attitude.DoubleFusedGeomagneticAttitudeProcessor
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.AttitudeSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorMeasurement
+import com.irurueta.android.navigation.inertial.processors.attitude.AttitudeProcessor
 import com.irurueta.navigation.frames.NEDVelocity
 
 /**
- * Estimate absolute pose expressed in ECEF coordinates.
- * This class estimated device attitude by double fusing gravity, gyroscope and magnetometer
- * measurements.
+ * Estimates absolute pose using local plane navigation.
+ * This class estimates attitude by using Android's absolute attitude sensor.
  * Accelerometer and gyroscope are then taken into account to update device position.
  *
  * @property initialLocation initial device location.
@@ -31,23 +33,21 @@ import com.irurueta.navigation.frames.NEDVelocity
  * @property estimatePoseTransformation true to estimate 3D metric pose transformation.
  * @property processorListener listener to notify new poses.
  */
-class DoubleFusedECEFAbsolutePoseProcessor(
+class AttitudeLocalPoseProcessor(
     initialLocation: Location,
     initialVelocity: NEDVelocity = NEDVelocity(),
     estimatePoseTransformation: Boolean = false,
     processorListener: OnProcessedListener? = null
-) : BaseDoubleFusedECEFAbsolutePoseProcessor<GravitySensorMeasurement, AccelerometerGravityGyroscopeAndMagnetometerSyncedSensorMeasurement>(
+) : BaseLocalPoseProcessor(
     initialLocation,
     initialVelocity,
     estimatePoseTransformation,
     processorListener
 ) {
-
     /**
-     * Attitude processor in charge of fusing gravity + gyroscope and magnetometer
-     * measurements to estimate current device attitude.
+     * Absolute attitude processor.
      */
-    override val attitudeProcessor = DoubleFusedGeomagneticAttitudeProcessor()
+    private val attitudeProcessor = AttitudeProcessor()
 
     /**
      * Processes provided synced measurement to estimate current attitude and position.
@@ -55,21 +55,17 @@ class DoubleFusedECEFAbsolutePoseProcessor(
      * @param syncedMeasurement synced measurement to be processed.
      * @return true if new pose is estimated, false otherwise.
      */
-    fun process(syncedMeasurement: AccelerometerGravityGyroscopeAndMagnetometerSyncedSensorMeasurement): Boolean {
+    fun process(
+        syncedMeasurement: AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement
+    ): Boolean {
+        val attitudeMeasurement = syncedMeasurement.attitudeMeasurement
         val accelerometerMeasurement = syncedMeasurement.accelerometerMeasurement
-        val gravityMeasurement = syncedMeasurement.gravityMeasurement
         val gyroscopeMeasurement = syncedMeasurement.gyroscopeMeasurement
-        val magnetometerMeasurement = syncedMeasurement.magnetometerMeasurement
         val timestamp = syncedMeasurement.timestamp
-        return if (accelerometerMeasurement != null && gravityMeasurement != null
-            && gyroscopeMeasurement != null && magnetometerMeasurement != null) {
-            process(
-                accelerometerMeasurement,
-                gravityMeasurement,
-                gyroscopeMeasurement,
-                magnetometerMeasurement,
-                timestamp
-            )
+        return if (attitudeMeasurement != null && accelerometerMeasurement != null
+            && gyroscopeMeasurement != null
+        ) {
+            process(attitudeMeasurement, accelerometerMeasurement, gyroscopeMeasurement, timestamp)
         } else {
             false
         }
@@ -78,35 +74,19 @@ class DoubleFusedECEFAbsolutePoseProcessor(
     /**
      * Processes provided measurements to estimate current attitude and position.
      *
+     * @param attitudeMeasurement attitude measurement.
      * @param accelerometerMeasurement accelerometer measurement.
-     * @param gravityMeasurement gravity measurement.
      * @param gyroscopeMeasurement gyroscope measurement.
-     * @param magnetometerMeasurement magnetometer measurement.
      * @param timestamp timestamp when all measurements are assumed to occur.
      * @return true if new pose is estimated, false otherwise.
      */
     private fun process(
+        attitudeMeasurement: AttitudeSensorMeasurement,
         accelerometerMeasurement: AccelerometerSensorMeasurement,
-        gravityMeasurement: GravitySensorMeasurement,
         gyroscopeMeasurement: GyroscopeSensorMeasurement,
-        magnetometerMeasurement: MagnetometerSensorMeasurement,
         timestamp: Long
     ): Boolean {
-        return if (processAttitude(
-                gravityMeasurement,
-                gyroscopeMeasurement,
-                magnetometerMeasurement,
-                timestamp
-            )
-        ) {
-            processPose(accelerometerMeasurement, gyroscopeMeasurement, timestamp)
-        } else {
-            false
-        }
-    }
-
-    init {
-        // initialize attitude processor location
-        attitudeProcessor.location = initialLocation
+        attitudeProcessor.process(attitudeMeasurement).copyTo(currentAttitude)
+        return processPose(accelerometerMeasurement, gyroscopeMeasurement, timestamp)
     }
 }

@@ -21,7 +21,7 @@ import com.irurueta.android.navigation.inertial.processors.attitude.DoubleFusedG
 import com.irurueta.navigation.frames.NEDVelocity
 
 /**
- * Estimate absolute pose expressed in ECEF coordinates.
+ * Estimates absolute pose using local plane navigation.
  * This class estimated device attitude by double fusing gravity, gyroscope and magnetometer
  * measurements.
  * Accelerometer and gyroscope are then taken into account to update device position.
@@ -31,18 +31,17 @@ import com.irurueta.navigation.frames.NEDVelocity
  * @property estimatePoseTransformation true to estimate 3D metric pose transformation.
  * @property processorListener listener to notify new poses.
  */
-class DoubleFusedECEFAbsolutePoseProcessor(
+class DoubleFusedLocalPoseProcessor(
     initialLocation: Location,
     initialVelocity: NEDVelocity = NEDVelocity(),
     estimatePoseTransformation: Boolean = false,
     processorListener: OnProcessedListener? = null
-) : BaseDoubleFusedECEFAbsolutePoseProcessor<GravitySensorMeasurement, AccelerometerGravityGyroscopeAndMagnetometerSyncedSensorMeasurement>(
+) : BaseDoubleFusedLocalPoseProcessor<GravitySensorMeasurement, AccelerometerGravityGyroscopeAndMagnetometerSyncedSensorMeasurement>(
     initialLocation,
     initialVelocity,
     estimatePoseTransformation,
     processorListener
 ) {
-
     /**
      * Attitude processor in charge of fusing gravity + gyroscope and magnetometer
      * measurements to estimate current device attitude.

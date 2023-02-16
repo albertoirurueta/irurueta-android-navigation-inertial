@@ -20,8 +20,8 @@ import com.irurueta.algebra.Utils
 import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
 import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.getPrivateProperty
-import com.irurueta.android.navigation.inertial.processors.attitude.AccelerometerDoubleFusedGeomagneticAttitudeProcessor
-import com.irurueta.android.navigation.inertial.processors.attitude.BaseDoubleFusedGeomagneticAttitudeProcessor
+import com.irurueta.android.navigation.inertial.processors.attitude.BaseFusedGeomagneticAttitudeProcessor
+import com.irurueta.android.navigation.inertial.processors.attitude.FusedGeomagneticAttitudeProcessor
 import com.irurueta.android.navigation.inertial.setPrivateProperty
 import com.irurueta.android.navigation.inertial.toNEDPosition
 import com.irurueta.geometry.EuclideanTransformation3D
@@ -46,7 +46,7 @@ import org.robolectric.RobolectricTestRunner
 import java.util.*
 
 @RunWith(RobolectricTestRunner::class)
-class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
+class FusedLocalPoseProcessorTest {
 
     @After
     fun tearDown() {
@@ -56,7 +56,7 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
     @Test
     fun constructor_whenRequiredParameters_returnsExpectedValues() {
         val initialLocation = getLocation()
-        val processor = AccelerometerDoubleFusedECEFAbsolutePoseProcessor(initialLocation)
+        val processor = FusedLocalPoseProcessor(initialLocation)
 
         // check
         assertSame(initialLocation, processor.initialLocation)
@@ -86,28 +86,28 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
         assertTrue(processor.useAccurateRelativeGyroscopeAttitudeProcessor)
         assertTrue(processor.useIndirectAttitudeInterpolation)
         assertEquals(
-            BaseDoubleFusedGeomagneticAttitudeProcessor.DEFAULT_INTERPOLATION_VALUE,
+            BaseFusedGeomagneticAttitudeProcessor.DEFAULT_INTERPOLATION_VALUE,
             processor.attitudeInterpolationValue,
             0.0
         )
         assertEquals(
-            BaseDoubleFusedGeomagneticAttitudeProcessor.DEFAULT_INDIRECT_INTERPOLATION_WEIGHT,
+            BaseFusedGeomagneticAttitudeProcessor.DEFAULT_INDIRECT_INTERPOLATION_WEIGHT,
             processor.attitudeIndirectInterpolationWeight,
             0.0
         )
         assertEquals(0.0, processor.gyroscopeTimeIntervalSeconds, 0.0)
         assertEquals(
-            BaseDoubleFusedGeomagneticAttitudeProcessor.DEFAULT_OUTLIER_THRESHOLD,
+            BaseFusedGeomagneticAttitudeProcessor.DEFAULT_OUTLIER_THRESHOLD,
             processor.attitudeOutlierThreshold,
             0.0
         )
         assertEquals(
-            BaseDoubleFusedGeomagneticAttitudeProcessor.DEFAULT_OUTLIER_PANIC_THRESHOLD,
+            BaseFusedGeomagneticAttitudeProcessor.DEFAULT_OUTLIER_PANIC_THRESHOLD,
             processor.attitudeOutlierPanicThreshold,
             0.0
         )
         assertEquals(
-            BaseDoubleFusedGeomagneticAttitudeProcessor.DEFAULT_PANIC_COUNTER_THRESHOLD,
+            BaseFusedGeomagneticAttitudeProcessor.DEFAULT_PANIC_COUNTER_THRESHOLD,
             processor.attitudePanicCounterThreshold
         )
     }
@@ -116,8 +116,8 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
     fun constructor_whenAllParameters_returnsExpectedValues() {
         val initialLocation = getLocation()
         val initialVelocity = getVelocity()
-        val processorListener = mockk<BaseECEFAbsolutePoseProcessor.OnProcessedListener>()
-        val processor = AccelerometerDoubleFusedECEFAbsolutePoseProcessor(
+        val processorListener = mockk<BaseLocalPoseProcessor.OnProcessedListener>()
+        val processor = FusedLocalPoseProcessor(
             initialLocation,
             initialVelocity,
             estimatePoseTransformation = true,
@@ -152,28 +152,28 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
         assertTrue(processor.useAccurateRelativeGyroscopeAttitudeProcessor)
         assertTrue(processor.useIndirectAttitudeInterpolation)
         assertEquals(
-            BaseDoubleFusedGeomagneticAttitudeProcessor.DEFAULT_INTERPOLATION_VALUE,
+            BaseFusedGeomagneticAttitudeProcessor.DEFAULT_INTERPOLATION_VALUE,
             processor.attitudeInterpolationValue,
             0.0
         )
         assertEquals(
-            BaseDoubleFusedGeomagneticAttitudeProcessor.DEFAULT_INDIRECT_INTERPOLATION_WEIGHT,
+            BaseFusedGeomagneticAttitudeProcessor.DEFAULT_INDIRECT_INTERPOLATION_WEIGHT,
             processor.attitudeIndirectInterpolationWeight,
             0.0
         )
         assertEquals(0.0, processor.gyroscopeTimeIntervalSeconds, 0.0)
         assertEquals(
-            BaseDoubleFusedGeomagneticAttitudeProcessor.DEFAULT_OUTLIER_THRESHOLD,
+            BaseFusedGeomagneticAttitudeProcessor.DEFAULT_OUTLIER_THRESHOLD,
             processor.attitudeOutlierThreshold,
             0.0
         )
         assertEquals(
-            BaseDoubleFusedGeomagneticAttitudeProcessor.DEFAULT_OUTLIER_PANIC_THRESHOLD,
+            BaseFusedGeomagneticAttitudeProcessor.DEFAULT_OUTLIER_PANIC_THRESHOLD,
             processor.attitudeOutlierPanicThreshold,
             0.0
         )
         assertEquals(
-            BaseDoubleFusedGeomagneticAttitudeProcessor.DEFAULT_PANIC_COUNTER_THRESHOLD,
+            BaseFusedGeomagneticAttitudeProcessor.DEFAULT_PANIC_COUNTER_THRESHOLD,
             processor.attitudePanicCounterThreshold
         )
     }
@@ -181,11 +181,11 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
     @Test
     fun initialLocation_setsExpectedValue() {
         val initialLocation = getLocation()
-        val processor = AccelerometerDoubleFusedECEFAbsolutePoseProcessor(initialLocation)
+        val processor = FusedLocalPoseProcessor(initialLocation)
 
-        val attitudeProcessor: BaseDoubleFusedGeomagneticAttitudeProcessor<GravitySensorMeasurement, *>? =
+        val attitudeProcessor: BaseFusedGeomagneticAttitudeProcessor<GravitySensorMeasurement, *>? =
             getPrivateProperty(
-                BaseDoubleFusedECEFAbsolutePoseProcessor::class,
+                BaseFusedLocalPoseProcessor::class,
                 processor,
                 "attitudeProcessor"
             )
@@ -199,13 +199,13 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
     @Test
     fun processorListener_setsExpectedValue() {
         val initialLocation = getLocation()
-        val processor = AccelerometerDoubleFusedECEFAbsolutePoseProcessor(initialLocation)
+        val processor = FusedLocalPoseProcessor(initialLocation)
 
         // check default value
         assertNull(processor.processorListener)
 
         // set new value
-        val processorListener = mockk<BaseECEFAbsolutePoseProcessor.OnProcessedListener>()
+        val processorListener = mockk<BaseLocalPoseProcessor.OnProcessedListener>()
         processor.processorListener = processorListener
 
         // check
@@ -215,10 +215,10 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
     @Test
     fun gx_returnsExpectedValue() {
         val initialLocation = getLocation()
-        val processor = AccelerometerDoubleFusedECEFAbsolutePoseProcessor(initialLocation)
+        val processor = FusedLocalPoseProcessor(initialLocation)
 
         // setup spy
-        val attitudeProcessor: AccelerometerDoubleFusedGeomagneticAttitudeProcessor? =
+        val attitudeProcessor: FusedGeomagneticAttitudeProcessor? =
             processor.getPrivateProperty(
                 "attitudeProcessor"
             )
@@ -239,10 +239,10 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
     @Test
     fun gy_returnsExpectedValue() {
         val initialLocation = getLocation()
-        val processor = AccelerometerDoubleFusedECEFAbsolutePoseProcessor(initialLocation)
+        val processor = FusedLocalPoseProcessor(initialLocation)
 
         // setup spy
-        val attitudeProcessor: AccelerometerDoubleFusedGeomagneticAttitudeProcessor? =
+        val attitudeProcessor: FusedGeomagneticAttitudeProcessor? =
             processor.getPrivateProperty(
                 "attitudeProcessor"
             )
@@ -263,10 +263,10 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
     @Test
     fun gz_returnsExpectedValue() {
         val initialLocation = getLocation()
-        val processor = AccelerometerDoubleFusedECEFAbsolutePoseProcessor(initialLocation)
+        val processor = FusedLocalPoseProcessor(initialLocation)
 
         // setup spy
-        val attitudeProcessor: AccelerometerDoubleFusedGeomagneticAttitudeProcessor? =
+        val attitudeProcessor: FusedGeomagneticAttitudeProcessor? =
             processor.getPrivateProperty(
                 "attitudeProcessor"
             )
@@ -287,10 +287,10 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
     @Test
     fun gravity_returnsExpectedValue() {
         val initialLocation = getLocation()
-        val processor = AccelerometerDoubleFusedECEFAbsolutePoseProcessor(initialLocation)
+        val processor = FusedLocalPoseProcessor(initialLocation)
 
         // setup spy
-        val attitudeProcessor: AccelerometerDoubleFusedGeomagneticAttitudeProcessor? =
+        val attitudeProcessor: FusedGeomagneticAttitudeProcessor? =
             processor.getPrivateProperty(
                 "attitudeProcessor"
             )
@@ -310,10 +310,10 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
     @Test
     fun getGravity_returnsExpectedValue() {
         val initialLocation = getLocation()
-        val processor = AccelerometerDoubleFusedECEFAbsolutePoseProcessor(initialLocation)
+        val processor = FusedLocalPoseProcessor(initialLocation)
 
         // setup spy
-        val attitudeProcessor: AccelerometerDoubleFusedGeomagneticAttitudeProcessor? =
+        val attitudeProcessor: FusedGeomagneticAttitudeProcessor? =
             processor.getPrivateProperty(
                 "attitudeProcessor"
             )
@@ -343,10 +343,10 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
     @Test
     fun currentDate_setsExpectedValue() {
         val initialLocation = getLocation()
-        val processor = AccelerometerDoubleFusedECEFAbsolutePoseProcessor(initialLocation)
+        val processor = FusedLocalPoseProcessor(initialLocation)
 
         // setup spy
-        val attitudeProcessor: AccelerometerDoubleFusedGeomagneticAttitudeProcessor? =
+        val attitudeProcessor: FusedGeomagneticAttitudeProcessor? =
             processor.getPrivateProperty(
                 "attitudeProcessor"
             )
@@ -373,10 +373,10 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
     @Test
     fun useAccurateLevelingProcessor_setsExpectedValue() {
         val initialLocation = getLocation()
-        val processor = AccelerometerDoubleFusedECEFAbsolutePoseProcessor(initialLocation)
+        val processor = FusedLocalPoseProcessor(initialLocation)
 
         // setup spy
-        val attitudeProcessor: AccelerometerDoubleFusedGeomagneticAttitudeProcessor? =
+        val attitudeProcessor: FusedGeomagneticAttitudeProcessor? =
             processor.getPrivateProperty(
                 "attitudeProcessor"
             )
@@ -402,10 +402,10 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
     @Test
     fun worldMagneticModel_setsExpectedValue() {
         val initialLocation = getLocation()
-        val processor = AccelerometerDoubleFusedECEFAbsolutePoseProcessor(initialLocation)
+        val processor = FusedLocalPoseProcessor(initialLocation)
 
         // setup spy
-        val attitudeProcessor: AccelerometerDoubleFusedGeomagneticAttitudeProcessor? =
+        val attitudeProcessor: FusedGeomagneticAttitudeProcessor? =
             processor.getPrivateProperty(
                 "attitudeProcessor"
             )
@@ -432,10 +432,10 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
     @Test
     fun useWorldMagneticModel_setsExpectedValue() {
         val initialLocation = getLocation()
-        val processor = AccelerometerDoubleFusedECEFAbsolutePoseProcessor(initialLocation)
+        val processor = FusedLocalPoseProcessor(initialLocation)
 
         // setup spy
-        val attitudeProcessor: AccelerometerDoubleFusedGeomagneticAttitudeProcessor? =
+        val attitudeProcessor: FusedGeomagneticAttitudeProcessor? =
             processor.getPrivateProperty(
                 "attitudeProcessor"
             )
@@ -461,10 +461,10 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
     @Test
     fun useAccurateRelativeGyroscopeAttitudeProcessor_setsExpectedValue() {
         val initialLocation = getLocation()
-        val processor = AccelerometerDoubleFusedECEFAbsolutePoseProcessor(initialLocation)
+        val processor = FusedLocalPoseProcessor(initialLocation)
 
         // setup spy
-        val attitudeProcessor: AccelerometerDoubleFusedGeomagneticAttitudeProcessor? =
+        val attitudeProcessor: FusedGeomagneticAttitudeProcessor? =
             processor.getPrivateProperty(
                 "attitudeProcessor"
             )
@@ -492,10 +492,10 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
     @Test
     fun useIndirectAttitudeInterpolation_setsExpectedValue() {
         val initialLocation = getLocation()
-        val processor = AccelerometerDoubleFusedECEFAbsolutePoseProcessor(initialLocation)
+        val processor = FusedLocalPoseProcessor(initialLocation)
 
         // setup spy
-        val attitudeProcessor: AccelerometerDoubleFusedGeomagneticAttitudeProcessor? =
+        val attitudeProcessor: FusedGeomagneticAttitudeProcessor? =
             processor.getPrivateProperty(
                 "attitudeProcessor"
             )
@@ -521,10 +521,10 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
     @Test
     fun attitudeInterpolationValue_setsExpectedValue() {
         val initialLocation = getLocation()
-        val processor = AccelerometerDoubleFusedECEFAbsolutePoseProcessor(initialLocation)
+        val processor = FusedLocalPoseProcessor(initialLocation)
 
         // setup spy
-        val attitudeProcessor: AccelerometerDoubleFusedGeomagneticAttitudeProcessor? =
+        val attitudeProcessor: FusedGeomagneticAttitudeProcessor? =
             processor.getPrivateProperty(
                 "attitudeProcessor"
             )
@@ -537,7 +537,7 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
 
         // check
         assertEquals(
-            BaseDoubleFusedGeomagneticAttitudeProcessor.DEFAULT_INTERPOLATION_VALUE,
+            BaseFusedGeomagneticAttitudeProcessor.DEFAULT_INTERPOLATION_VALUE,
             processor.attitudeInterpolationValue,
             0.0
         )
@@ -556,10 +556,10 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
     @Test
     fun attitudeIndirectInterpolationWeight_setsExpectedValue() {
         val initialLocation = getLocation()
-        val processor = AccelerometerDoubleFusedECEFAbsolutePoseProcessor(initialLocation)
+        val processor = FusedLocalPoseProcessor(initialLocation)
 
         // setup spy
-        val attitudeProcessor: AccelerometerDoubleFusedGeomagneticAttitudeProcessor? =
+        val attitudeProcessor: FusedGeomagneticAttitudeProcessor? =
             processor.getPrivateProperty(
                 "attitudeProcessor"
             )
@@ -572,7 +572,7 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
 
         // check
         assertEquals(
-            BaseDoubleFusedGeomagneticAttitudeProcessor.DEFAULT_INDIRECT_INTERPOLATION_WEIGHT,
+            BaseFusedGeomagneticAttitudeProcessor.DEFAULT_INDIRECT_INTERPOLATION_WEIGHT,
             processor.attitudeIndirectInterpolationWeight,
             0.0
         )
@@ -597,18 +597,16 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
     @Test
     fun gyroscopeTimeIntervalSeconds_callsInternalAttitudeProcessor() {
         val initialLocation = getLocation()
-        val processor = AccelerometerDoubleFusedECEFAbsolutePoseProcessor(initialLocation)
+        val processor = FusedLocalPoseProcessor(initialLocation)
 
         // setup spy
-        val attitudeProcessor: AccelerometerDoubleFusedGeomagneticAttitudeProcessor? =
+        val attitudeProcessor: FusedGeomagneticAttitudeProcessor? =
             processor.getPrivateProperty(
                 "attitudeProcessor"
             )
         requireNotNull(attitudeProcessor)
         val attitudeProcessorSpy = spyk(attitudeProcessor)
-        every { attitudeProcessorSpy.gyroscopeTimeIntervalSeconds }.returns(
-            TIME_INTERVAL_SECONDS
-        )
+        every { attitudeProcessorSpy.gyroscopeTimeIntervalSeconds }.returns(TIME_INTERVAL_SECONDS)
         processor.setPrivateProperty(
             "attitudeProcessor",
             attitudeProcessorSpy
@@ -622,10 +620,10 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
     @Test
     fun attitudeOutlierThreshold_setsExpectedValue() {
         val initialLocation = getLocation()
-        val processor = AccelerometerDoubleFusedECEFAbsolutePoseProcessor(initialLocation)
+        val processor = FusedLocalPoseProcessor(initialLocation)
 
         // setup spy
-        val attitudeProcessor: AccelerometerDoubleFusedGeomagneticAttitudeProcessor? =
+        val attitudeProcessor: FusedGeomagneticAttitudeProcessor? =
             processor.getPrivateProperty(
                 "attitudeProcessor"
             )
@@ -638,7 +636,7 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
 
         // check
         assertEquals(
-            BaseDoubleFusedGeomagneticAttitudeProcessor.DEFAULT_OUTLIER_THRESHOLD,
+            BaseFusedGeomagneticAttitudeProcessor.DEFAULT_OUTLIER_THRESHOLD,
             processor.attitudeOutlierThreshold,
             0.0
         )
@@ -657,10 +655,10 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
     @Test
     fun attitudeOutlierPanicThreshold_setsExpectedValue() {
         val initialLocation = getLocation()
-        val processor = AccelerometerDoubleFusedECEFAbsolutePoseProcessor(initialLocation)
+        val processor = FusedLocalPoseProcessor(initialLocation)
 
         // setup spy
-        val attitudeProcessor: AccelerometerDoubleFusedGeomagneticAttitudeProcessor? =
+        val attitudeProcessor: FusedGeomagneticAttitudeProcessor? =
             processor.getPrivateProperty(
                 "attitudeProcessor"
             )
@@ -673,7 +671,7 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
 
         // check
         assertEquals(
-            BaseDoubleFusedGeomagneticAttitudeProcessor.DEFAULT_OUTLIER_PANIC_THRESHOLD,
+            BaseFusedGeomagneticAttitudeProcessor.DEFAULT_OUTLIER_PANIC_THRESHOLD,
             processor.attitudeOutlierPanicThreshold,
             0.0
         )
@@ -694,10 +692,10 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
     @Test
     fun attitudePanicCounterThreshold_setsExpectedValue() {
         val initialLocation = getLocation()
-        val processor = AccelerometerDoubleFusedECEFAbsolutePoseProcessor(initialLocation)
+        val processor = FusedLocalPoseProcessor(initialLocation)
 
         // setup spy
-        val attitudeProcessor: AccelerometerDoubleFusedGeomagneticAttitudeProcessor? =
+        val attitudeProcessor: FusedGeomagneticAttitudeProcessor? =
             processor.getPrivateProperty(
                 "attitudeProcessor"
             )
@@ -710,7 +708,7 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
 
         // check
         assertEquals(
-            BaseDoubleFusedGeomagneticAttitudeProcessor.DEFAULT_PANIC_COUNTER_THRESHOLD,
+            BaseFusedGeomagneticAttitudeProcessor.DEFAULT_PANIC_COUNTER_THRESHOLD,
             processor.attitudePanicCounterThreshold
         )
         verify(exactly = 1) { attitudeProcessorSpy.panicCounterThreshold }
@@ -730,29 +728,29 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
     @Test
     fun reset_initializesInternalParameters() {
         val initialLocation = getLocation()
-        val processor = AccelerometerDoubleFusedECEFAbsolutePoseProcessor(initialLocation)
+        val processor = FusedLocalPoseProcessor(initialLocation)
 
         setPrivateProperty(
-            BaseECEFAbsolutePoseProcessor::class,
+            BaseLocalPoseProcessor::class,
             processor,
             "initializedFrame",
             true
         )
         val previousTimestamp = System.nanoTime()
         setPrivateProperty(
-            BaseECEFAbsolutePoseProcessor::class,
+            BaseLocalPoseProcessor::class,
             processor,
             "previousTimestamp",
             previousTimestamp
         )
         setPrivateProperty(
-            BaseECEFAbsolutePoseProcessor::class,
+            BaseLocalPoseProcessor::class,
             processor,
             "timeIntervalSeconds",
             TIME_INTERVAL_SECONDS
         )
 
-        val attitudeProcessor: AccelerometerDoubleFusedGeomagneticAttitudeProcessor? =
+        val attitudeProcessor: FusedGeomagneticAttitudeProcessor? =
             processor.getPrivateProperty(
                 "attitudeProcessor"
             )
@@ -765,18 +763,18 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
 
         // check initial values
         val initializedFrame1: Boolean? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "initializedFrame")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "initializedFrame")
         requireNotNull(initializedFrame1)
         assertTrue(initializedFrame1)
 
         val previousTimestamp1: Long? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "previousTimestamp")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "previousTimestamp")
         requireNotNull(previousTimestamp1)
         assertEquals(previousTimestamp, previousTimestamp1)
 
         val timeIntervalSeconds1: Double? =
             getPrivateProperty(
-                BaseECEFAbsolutePoseProcessor::class,
+                BaseLocalPoseProcessor::class,
                 processor,
                 "timeIntervalSeconds"
             )
@@ -788,18 +786,18 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
 
         // check
         val initializedFrame2: Boolean? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "initializedFrame")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "initializedFrame")
         requireNotNull(initializedFrame2)
         assertFalse(initializedFrame2)
 
         val previousTimestamp2: Long? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "previousTimestamp")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "previousTimestamp")
         requireNotNull(previousTimestamp2)
         assertEquals(-1L, previousTimestamp2)
 
         val timeIntervalSeconds2: Double? =
             getPrivateProperty(
-                BaseECEFAbsolutePoseProcessor::class,
+                BaseLocalPoseProcessor::class,
                 processor,
                 "timeIntervalSeconds"
             )
@@ -812,21 +810,38 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
     @Test
     fun process_whenEmpty_returnsFalse() {
         val initialLocation = getLocation()
-        val processor = AccelerometerDoubleFusedECEFAbsolutePoseProcessor(initialLocation)
+        val processor = FusedLocalPoseProcessor(initialLocation)
 
         val syncedMeasurement =
-            AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement()
+            AccelerometerGravityGyroscopeAndMagnetometerSyncedSensorMeasurement()
         assertFalse(processor.process(syncedMeasurement))
     }
 
     @Test
     fun process_whenNoAccelerometerMeasurement_returnsFalse() {
         val initialLocation = getLocation()
-        val processor = AccelerometerDoubleFusedECEFAbsolutePoseProcessor(initialLocation)
+        val processor = FusedLocalPoseProcessor(initialLocation)
 
         val syncedMeasurement =
-            AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement(
+            AccelerometerGravityGyroscopeAndMagnetometerSyncedSensorMeasurement(
                 accelerometerMeasurement = null,
+                gravityMeasurement = GravitySensorMeasurement(),
+                gyroscopeMeasurement = GyroscopeSensorMeasurement(),
+                magnetometerMeasurement = MagnetometerSensorMeasurement(),
+                timestamp = System.nanoTime()
+            )
+        assertFalse(processor.process(syncedMeasurement))
+    }
+
+    @Test
+    fun process_whenNoGravityMeasurement_returnsFalse() {
+        val initialLocation = getLocation()
+        val processor = FusedLocalPoseProcessor(initialLocation)
+
+        val syncedMeasurement =
+            AccelerometerGravityGyroscopeAndMagnetometerSyncedSensorMeasurement(
+                accelerometerMeasurement = AccelerometerSensorMeasurement(),
+                gravityMeasurement = null,
                 gyroscopeMeasurement = GyroscopeSensorMeasurement(),
                 magnetometerMeasurement = MagnetometerSensorMeasurement(),
                 timestamp = System.nanoTime()
@@ -837,11 +852,12 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
     @Test
     fun process_whenNoGyroscopeMeasurement_returnsFalse() {
         val initialLocation = getLocation()
-        val processor = AccelerometerDoubleFusedECEFAbsolutePoseProcessor(initialLocation)
+        val processor = FusedLocalPoseProcessor(initialLocation)
 
         val syncedMeasurement =
-            AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement(
+            AccelerometerGravityGyroscopeAndMagnetometerSyncedSensorMeasurement(
                 accelerometerMeasurement = AccelerometerSensorMeasurement(),
+                gravityMeasurement = GravitySensorMeasurement(),
                 gyroscopeMeasurement = null,
                 magnetometerMeasurement = MagnetometerSensorMeasurement(),
                 timestamp = System.nanoTime()
@@ -852,11 +868,12 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
     @Test
     fun process_whenNoMagnetometerMeasurement_returnsFalse() {
         val initialLocation = getLocation()
-        val processor = AccelerometerDoubleFusedECEFAbsolutePoseProcessor(initialLocation)
+        val processor = FusedLocalPoseProcessor(initialLocation)
 
         val syncedMeasurement =
-            AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement(
+            AccelerometerGravityGyroscopeAndMagnetometerSyncedSensorMeasurement(
                 accelerometerMeasurement = AccelerometerSensorMeasurement(),
+                gravityMeasurement = GravitySensorMeasurement(),
                 gyroscopeMeasurement = GyroscopeSensorMeasurement(),
                 magnetometerMeasurement = null,
                 timestamp = System.nanoTime()
@@ -867,21 +884,23 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
     @Test
     fun process_whenAttitudeNotProcessed_returnsFalse() {
         val initialLocation = getLocation()
-        val processor = AccelerometerDoubleFusedECEFAbsolutePoseProcessor(initialLocation)
+        val processor = FusedLocalPoseProcessor(initialLocation)
 
         val accelerometerMeasurement = AccelerometerSensorMeasurement()
+        val gravityMeasurement = GravitySensorMeasurement()
         val gyroscopeMeasurement = GyroscopeSensorMeasurement()
         val magnetometerMeasurement = MagnetometerSensorMeasurement()
         val timestamp = System.nanoTime()
         val syncedMeasurement =
-            AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement(
+            AccelerometerGravityGyroscopeAndMagnetometerSyncedSensorMeasurement(
                 accelerometerMeasurement,
+                gravityMeasurement,
                 gyroscopeMeasurement,
                 magnetometerMeasurement,
                 timestamp
             )
 
-        val attitudeProcessor: AccelerometerDoubleFusedGeomagneticAttitudeProcessor? =
+        val attitudeProcessor: FusedGeomagneticAttitudeProcessor? =
             processor.getPrivateProperty(
                 "attitudeProcessor"
             )
@@ -889,7 +908,7 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
         val attitudeProcessorSpy = spyk(attitudeProcessor)
         every {
             attitudeProcessorSpy.process(
-                accelerometerMeasurement,
+                gravityMeasurement,
                 gyroscopeMeasurement,
                 magnetometerMeasurement,
                 timestamp
@@ -903,7 +922,7 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
         assertFalse(processor.process(syncedMeasurement))
         verify(exactly = 1) {
             attitudeProcessorSpy.process(
-                accelerometerMeasurement,
+                gravityMeasurement,
                 gyroscopeMeasurement,
                 magnetometerMeasurement,
                 timestamp
@@ -914,21 +933,23 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
     @Test
     fun process_whenAttitudeProcessedAnTimeIntervalNotProcessed_returnsFalse() {
         val initialLocation = getLocation()
-        val processor = AccelerometerDoubleFusedECEFAbsolutePoseProcessor(initialLocation)
+        val processor = FusedLocalPoseProcessor(initialLocation)
 
         val accelerometerMeasurement = AccelerometerSensorMeasurement()
+        val gravityMeasurement = GravitySensorMeasurement()
         val gyroscopeMeasurement = GyroscopeSensorMeasurement()
         val magnetometerMeasurement = MagnetometerSensorMeasurement()
         val timestamp = System.nanoTime()
         val syncedMeasurement =
-            AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement(
+            AccelerometerGravityGyroscopeAndMagnetometerSyncedSensorMeasurement(
                 accelerometerMeasurement,
+                gravityMeasurement,
                 gyroscopeMeasurement,
                 magnetometerMeasurement,
                 timestamp
             )
 
-        val attitudeProcessor: AccelerometerDoubleFusedGeomagneticAttitudeProcessor? =
+        val attitudeProcessor: FusedGeomagneticAttitudeProcessor? =
             processor.getPrivateProperty(
                 "attitudeProcessor"
             )
@@ -936,7 +957,7 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
         val attitudeProcessorSpy = spyk(attitudeProcessor)
         every {
             attitudeProcessorSpy.process(
-                accelerometerMeasurement,
+                gravityMeasurement,
                 gyroscopeMeasurement,
                 magnetometerMeasurement,
                 timestamp
@@ -951,13 +972,13 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
 
         // check
         val previousTimestamp1: Long? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "previousTimestamp")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "previousTimestamp")
         requireNotNull(previousTimestamp1)
         assertEquals(-1L, previousTimestamp1)
 
         val timeIntervalSeconds1: Double? =
             getPrivateProperty(
-                BaseECEFAbsolutePoseProcessor::class,
+                BaseLocalPoseProcessor::class,
                 processor,
                 "timeIntervalSeconds"
             )
@@ -970,7 +991,7 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
         // check
         verify(exactly = 1) {
             attitudeProcessorSpy.process(
-                accelerometerMeasurement,
+                gravityMeasurement,
                 gyroscopeMeasurement,
                 magnetometerMeasurement,
                 timestamp
@@ -979,19 +1000,19 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
         verify(exactly = 1) { attitudeProcessorSpy.fusedAttitude }
 
         val currentAttitude: Quaternion? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "currentAttitude")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "currentAttitude")
         requireNotNull(currentAttitude)
         assertEquals(fusedAttitude, currentAttitude)
         assertNotSame(fusedAttitude, currentAttitude)
 
         val previousTimestamp2: Long? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "previousTimestamp")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "previousTimestamp")
         requireNotNull(previousTimestamp2)
         assertEquals(timestamp, previousTimestamp2)
 
         val timeIntervalSeconds2: Double? =
             getPrivateProperty(
-                BaseECEFAbsolutePoseProcessor::class,
+                BaseLocalPoseProcessor::class,
                 processor,
                 "timeIntervalSeconds"
             )
@@ -1003,7 +1024,7 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
     fun process_whenAttitudeTimeIntervalProcessedAndPoseTransformationNotEstimated_returnsTrue() {
         val initialLocation = getLocation()
         val initialVelocity = getVelocity()
-        val processor = AccelerometerDoubleFusedECEFAbsolutePoseProcessor(
+        val processor = FusedLocalPoseProcessor(
             initialLocation,
             initialVelocity,
             estimatePoseTransformation = false
@@ -1015,6 +1036,10 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
         val az = randomizer.nextFloat()
         val specificForce = AccelerationTriad(ay.toDouble(), ax.toDouble(), -az.toDouble())
 
+        val gx = randomizer.nextFloat()
+        val gy = randomizer.nextFloat()
+        val gz = randomizer.nextFloat()
+
         val wx = randomizer.nextFloat()
         val wy = randomizer.nextFloat()
         val wz = randomizer.nextFloat()
@@ -1023,18 +1048,19 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
         val timestamp = System.nanoTime()
         val accelerometerMeasurement =
             AccelerometerSensorMeasurement(ax, ay, az, timestamp = timestamp)
+        val gravityMeasurement = GravitySensorMeasurement(gx, gy, gz, timestamp = timestamp)
         val gyroscopeMeasurement = GyroscopeSensorMeasurement(wx, wy, wz, timestamp = timestamp)
         val magnetometerMeasurement = MagnetometerSensorMeasurement()
 
         val previousTimestamp = timestamp - TIME_INTERVAL_NANOS
         setPrivateProperty(
-            BaseECEFAbsolutePoseProcessor::class,
+            BaseLocalPoseProcessor::class,
             processor,
             "previousTimestamp",
             previousTimestamp
         )
 
-        val attitudeProcessor: AccelerometerDoubleFusedGeomagneticAttitudeProcessor? =
+        val attitudeProcessor: FusedGeomagneticAttitudeProcessor? =
             processor.getPrivateProperty(
                 "attitudeProcessor"
             )
@@ -1042,7 +1068,7 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
         val attitudeProcessorSpy = spyk(attitudeProcessor)
         every {
             attitudeProcessorSpy.process(
-                accelerometerMeasurement,
+                gravityMeasurement,
                 gyroscopeMeasurement,
                 magnetometerMeasurement,
                 timestamp
@@ -1057,13 +1083,13 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
 
         // check
         val previousTimestamp1: Long? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "previousTimestamp")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "previousTimestamp")
         requireNotNull(previousTimestamp1)
         assertEquals(previousTimestamp, previousTimestamp1)
 
         val timeIntervalSeconds1: Double? =
             getPrivateProperty(
-                BaseECEFAbsolutePoseProcessor::class,
+                BaseLocalPoseProcessor::class,
                 processor,
                 "timeIntervalSeconds"
             )
@@ -1071,14 +1097,15 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
         assertEquals(0.0, timeIntervalSeconds1, 0.0)
 
         val initializedFrame1: Boolean? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "initializedFrame")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "initializedFrame")
         requireNotNull(initializedFrame1)
         assertFalse(initializedFrame1)
 
         // process
         val syncedMeasurement =
-            AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement(
+            AccelerometerGravityGyroscopeAndMagnetometerSyncedSensorMeasurement(
                 accelerometerMeasurement,
+                gravityMeasurement,
                 gyroscopeMeasurement,
                 magnetometerMeasurement,
                 timestamp
@@ -1089,7 +1116,7 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
         // check
         verify(exactly = 1) {
             attitudeProcessorSpy.process(
-                accelerometerMeasurement,
+                gravityMeasurement,
                 gyroscopeMeasurement,
                 magnetometerMeasurement,
                 timestamp
@@ -1098,19 +1125,29 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
         verify(exactly = 1) { attitudeProcessorSpy.fusedAttitude }
 
         val currentAttitude: Quaternion? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "currentAttitude")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "currentAttitude")
         requireNotNull(currentAttitude)
         assertEquals(initialNedAttitude, currentAttitude)
         assertNotSame(initialNedAttitude, currentAttitude)
 
+        val previousAttitude: Quaternion? =
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "previousAttitude")
+        requireNotNull(previousAttitude)
+        assertEquals(currentAttitude, previousAttitude)
+
+        val averageAttitude: Quaternion? =
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "averageAttitude")
+        requireNotNull(averageAttitude)
+        assertEquals(currentAttitude, averageAttitude)
+
         val previousTimestamp2: Long? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "previousTimestamp")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "previousTimestamp")
         requireNotNull(previousTimestamp2)
         assertEquals(timestamp, previousTimestamp2)
 
         val timeIntervalSeconds2: Double? =
             getPrivateProperty(
-                BaseECEFAbsolutePoseProcessor::class,
+                BaseLocalPoseProcessor::class,
                 processor,
                 "timeIntervalSeconds"
             )
@@ -1118,7 +1155,7 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
         assertEquals(TIME_INTERVAL_SECONDS, timeIntervalSeconds2, 0.0)
 
         val initializedFrame2: Boolean? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "initializedFrame")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "initializedFrame")
         requireNotNull(initializedFrame2)
         assertTrue(initializedFrame2)
 
@@ -1135,7 +1172,7 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
 
         val coordinateTransformation: CoordinateTransformation? =
             getPrivateProperty(
-                BaseECEFAbsolutePoseProcessor::class,
+                BaseLocalPoseProcessor::class,
                 processor,
                 "coordinateTransformation"
             )
@@ -1143,35 +1180,31 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
         assertEquals(initialC, coordinateTransformation)
 
         val initialNedFrame2: NEDFrame? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "initialNedFrame")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "initialNedFrame")
         requireNotNull(initialNedFrame2)
         assertEquals(initialNedFrame, initialNedFrame2)
 
         val initialEcefFrame2: ECEFFrame? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "initialEcefFrame")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "initialEcefFrame")
         requireNotNull(initialEcefFrame2)
         assertEquals(initialEcefFrame, initialEcefFrame2)
 
         val initialAttitude: Quaternion? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "initialAttitude")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "initialAttitude")
         requireNotNull(initialAttitude)
         assertEquals(initialNedAttitude, initialAttitude)
 
         val specificForce2: AccelerationTriad? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "specificForce")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "specificForce")
         requireNotNull(specificForce2)
         assertEquals(specificForce, specificForce2)
 
         val angularSpeed2: AngularSpeedTriad? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "angularSpeed")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "angularSpeed")
         requireNotNull(angularSpeed2)
         assertEquals(angularSpeed, angularSpeed2)
 
         val bodyKinematics = BodyKinematics(specificForce, angularSpeed)
-        val bodyKinematics2: BodyKinematics? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "bodyKinematics")
-        requireNotNull(bodyKinematics2)
-        assertEquals(bodyKinematics, bodyKinematics2)
 
         val currentEcefFrame: ECEFFrame = ECEFInertialNavigator.navigateECEFAndReturnNew(
             TIME_INTERVAL_SECONDS,
@@ -1183,27 +1216,48 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
             ECEFtoNEDFrameConverter.convertECEFtoNEDAndReturnNew(currentEcefFrame)
         currentNedFrame.coordinateTransformationRotation = currentAttitude
         val currentNedFrame2: NEDFrame? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "currentNedFrame")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "currentNedFrame")
         requireNotNull(currentNedFrame2)
-        assertEquals(currentNedFrame, currentNedFrame2)
+        assertEquals(
+            currentNedFrame.coordinateTransformation,
+            currentNedFrame2.coordinateTransformation
+        )
+        assertEquals(currentNedFrame.latitude, currentNedFrame2.latitude, ABSOLUTE_ERROR)
+        assertEquals(currentNedFrame.longitude, currentNedFrame2.longitude, ABSOLUTE_ERROR)
+        assertEquals(currentNedFrame.height, currentNedFrame2.height, LARGE_ABSOLUTE_ERROR)
+        assertEquals(currentNedFrame.vn, currentNedFrame2.vn, LARGE_ABSOLUTE_ERROR)
+        assertEquals(currentNedFrame.ve, currentNedFrame2.ve, LARGE_ABSOLUTE_ERROR)
+        assertEquals(currentNedFrame.vd, currentNedFrame2.vd, VERY_LARGE_ABSOLUTE_ERROR)
 
         val currentEcefFrame2 =
             NEDtoECEFFrameConverter.convertNEDtoECEFAndReturnNew(currentNedFrame)
 
         val currentEcefFrame3: ECEFFrame? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "currentEcefFrame")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "currentEcefFrame")
         requireNotNull(currentEcefFrame3)
-        assertEquals(currentEcefFrame2, currentEcefFrame3)
+
+        assertTrue(
+            currentEcefFrame2.coordinateTransformation.equals(
+                currentEcefFrame3.coordinateTransformation,
+                ABSOLUTE_ERROR
+            )
+        )
+        assertEquals(currentEcefFrame2.x, currentEcefFrame3.x, LARGE_ABSOLUTE_ERROR)
+        assertEquals(currentEcefFrame2.y, currentEcefFrame3.y, LARGE_ABSOLUTE_ERROR)
+        assertEquals(currentEcefFrame2.z, currentEcefFrame3.z, LARGE_ABSOLUTE_ERROR)
+        assertEquals(currentEcefFrame2.vx, currentEcefFrame3.vx, VERY_LARGE_ABSOLUTE_ERROR)
+        assertEquals(currentEcefFrame2.vy, currentEcefFrame3.vy, VERY_LARGE_ABSOLUTE_ERROR)
+        assertEquals(currentEcefFrame2.vz, currentEcefFrame3.vz, VERY_LARGE_ABSOLUTE_ERROR)
 
         val previousEcefFrame3: ECEFFrame? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "previousEcefFrame")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "previousEcefFrame")
         requireNotNull(previousEcefFrame3)
-        assertEquals(currentEcefFrame2, previousEcefFrame3)
+        assertEquals(currentEcefFrame3, previousEcefFrame3)
 
         val previousNedFrame: NEDFrame? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "previousNedFrame")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "previousNedFrame")
         requireNotNull(previousNedFrame)
-        assertEquals(currentNedFrame, previousNedFrame)
+        assertEquals(currentNedFrame2, previousNedFrame)
     }
 
     @Test
@@ -1211,8 +1265,8 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
         val initialLocation = getLocation()
         val initialVelocity = getVelocity()
         val processorListener =
-            mockk<BaseECEFAbsolutePoseProcessor.OnProcessedListener>(relaxUnitFun = true)
-        val processor = AccelerometerDoubleFusedECEFAbsolutePoseProcessor(
+            mockk<BaseLocalPoseProcessor.OnProcessedListener>(relaxUnitFun = true)
+        val processor = FusedLocalPoseProcessor(
             initialLocation,
             initialVelocity,
             estimatePoseTransformation = false,
@@ -1225,6 +1279,10 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
         val az = randomizer.nextFloat()
         val specificForce = AccelerationTriad(ay.toDouble(), ax.toDouble(), -az.toDouble())
 
+        val gx = randomizer.nextFloat()
+        val gy = randomizer.nextFloat()
+        val gz = randomizer.nextFloat()
+
         val wx = randomizer.nextFloat()
         val wy = randomizer.nextFloat()
         val wz = randomizer.nextFloat()
@@ -1233,18 +1291,19 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
         val timestamp = System.nanoTime()
         val accelerometerMeasurement =
             AccelerometerSensorMeasurement(ax, ay, az, timestamp = timestamp)
+        val gravityMeasurement = GravitySensorMeasurement(gx, gy, gz, timestamp = timestamp)
         val gyroscopeMeasurement = GyroscopeSensorMeasurement(wx, wy, wz, timestamp = timestamp)
         val magnetometerMeasurement = MagnetometerSensorMeasurement()
 
         val previousTimestamp = timestamp - TIME_INTERVAL_NANOS
         setPrivateProperty(
-            BaseECEFAbsolutePoseProcessor::class,
+            BaseLocalPoseProcessor::class,
             processor,
             "previousTimestamp",
             previousTimestamp
         )
 
-        val attitudeProcessor: AccelerometerDoubleFusedGeomagneticAttitudeProcessor? =
+        val attitudeProcessor: FusedGeomagneticAttitudeProcessor? =
             processor.getPrivateProperty(
                 "attitudeProcessor"
             )
@@ -1252,7 +1311,7 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
         val attitudeProcessorSpy = spyk(attitudeProcessor)
         every {
             attitudeProcessorSpy.process(
-                accelerometerMeasurement,
+                gravityMeasurement,
                 gyroscopeMeasurement,
                 magnetometerMeasurement,
                 timestamp
@@ -1267,13 +1326,13 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
 
         // check
         val previousTimestamp1: Long? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "previousTimestamp")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "previousTimestamp")
         requireNotNull(previousTimestamp1)
         assertEquals(previousTimestamp, previousTimestamp1)
 
         val timeIntervalSeconds1: Double? =
             getPrivateProperty(
-                BaseECEFAbsolutePoseProcessor::class,
+                BaseLocalPoseProcessor::class,
                 processor,
                 "timeIntervalSeconds"
             )
@@ -1281,14 +1340,15 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
         assertEquals(0.0, timeIntervalSeconds1, 0.0)
 
         val initializedFrame1: Boolean? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "initializedFrame")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "initializedFrame")
         requireNotNull(initializedFrame1)
         assertFalse(initializedFrame1)
 
         // process
         val syncedMeasurement =
-            AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement(
+            AccelerometerGravityGyroscopeAndMagnetometerSyncedSensorMeasurement(
                 accelerometerMeasurement,
+                gravityMeasurement,
                 gyroscopeMeasurement,
                 magnetometerMeasurement,
                 timestamp
@@ -1299,7 +1359,7 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
         // check
         verify(exactly = 1) {
             attitudeProcessorSpy.process(
-                accelerometerMeasurement,
+                gravityMeasurement,
                 gyroscopeMeasurement,
                 magnetometerMeasurement,
                 timestamp
@@ -1308,19 +1368,19 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
         verify(exactly = 1) { attitudeProcessorSpy.fusedAttitude }
 
         val currentAttitude: Quaternion? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "currentAttitude")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "currentAttitude")
         requireNotNull(currentAttitude)
         assertEquals(initialNedAttitude, currentAttitude)
         assertNotSame(initialNedAttitude, currentAttitude)
 
         val previousTimestamp2: Long? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "previousTimestamp")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "previousTimestamp")
         requireNotNull(previousTimestamp2)
         assertEquals(timestamp, previousTimestamp2)
 
         val timeIntervalSeconds2: Double? =
             getPrivateProperty(
-                BaseECEFAbsolutePoseProcessor::class,
+                BaseLocalPoseProcessor::class,
                 processor,
                 "timeIntervalSeconds"
             )
@@ -1328,7 +1388,7 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
         assertEquals(TIME_INTERVAL_SECONDS, timeIntervalSeconds2, 0.0)
 
         val initializedFrame2: Boolean? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "initializedFrame")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "initializedFrame")
         requireNotNull(initializedFrame2)
         assertTrue(initializedFrame2)
 
@@ -1345,7 +1405,7 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
 
         val coordinateTransformation: CoordinateTransformation? =
             getPrivateProperty(
-                BaseECEFAbsolutePoseProcessor::class,
+                BaseLocalPoseProcessor::class,
                 processor,
                 "coordinateTransformation"
             )
@@ -1353,35 +1413,31 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
         assertEquals(initialC, coordinateTransformation)
 
         val initialNedFrame2: NEDFrame? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "initialNedFrame")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "initialNedFrame")
         requireNotNull(initialNedFrame2)
         assertEquals(initialNedFrame, initialNedFrame2)
 
         val initialEcefFrame2: ECEFFrame? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "initialEcefFrame")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "initialEcefFrame")
         requireNotNull(initialEcefFrame2)
         assertEquals(initialEcefFrame, initialEcefFrame2)
 
         val initialAttitude: Quaternion? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "initialAttitude")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "initialAttitude")
         requireNotNull(initialAttitude)
         assertEquals(initialNedAttitude, initialAttitude)
 
         val specificForce2: AccelerationTriad? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "specificForce")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "specificForce")
         requireNotNull(specificForce2)
         assertEquals(specificForce, specificForce2)
 
         val angularSpeed2: AngularSpeedTriad? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "angularSpeed")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "angularSpeed")
         requireNotNull(angularSpeed2)
         assertEquals(angularSpeed, angularSpeed2)
 
         val bodyKinematics = BodyKinematics(specificForce, angularSpeed)
-        val bodyKinematics2: BodyKinematics? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "bodyKinematics")
-        requireNotNull(bodyKinematics2)
-        assertEquals(bodyKinematics, bodyKinematics2)
 
         val currentEcefFrame: ECEFFrame = ECEFInertialNavigator.navigateECEFAndReturnNew(
             TIME_INTERVAL_SECONDS,
@@ -1393,27 +1449,48 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
             ECEFtoNEDFrameConverter.convertECEFtoNEDAndReturnNew(currentEcefFrame)
         currentNedFrame.coordinateTransformationRotation = currentAttitude
         val currentNedFrame2: NEDFrame? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "currentNedFrame")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "currentNedFrame")
         requireNotNull(currentNedFrame2)
-        assertEquals(currentNedFrame, currentNedFrame2)
+        assertEquals(
+            currentNedFrame.coordinateTransformation,
+            currentNedFrame2.coordinateTransformation
+        )
+        assertEquals(currentNedFrame.latitude, currentNedFrame2.latitude, ABSOLUTE_ERROR)
+        assertEquals(currentNedFrame.longitude, currentNedFrame2.longitude, ABSOLUTE_ERROR)
+        assertEquals(currentNedFrame.height, currentNedFrame2.height, LARGE_ABSOLUTE_ERROR)
+        assertEquals(currentNedFrame.vn, currentNedFrame2.vn, LARGE_ABSOLUTE_ERROR)
+        assertEquals(currentNedFrame.ve, currentNedFrame2.ve, LARGE_ABSOLUTE_ERROR)
+        assertEquals(currentNedFrame.vd, currentNedFrame2.vd, VERY_LARGE_ABSOLUTE_ERROR)
 
         val currentEcefFrame2 =
             NEDtoECEFFrameConverter.convertNEDtoECEFAndReturnNew(currentNedFrame)
 
         val currentEcefFrame3: ECEFFrame? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "currentEcefFrame")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "currentEcefFrame")
         requireNotNull(currentEcefFrame3)
-        assertEquals(currentEcefFrame2, currentEcefFrame3)
+
+        assertTrue(
+            currentEcefFrame2.coordinateTransformation.equals(
+                currentEcefFrame3.coordinateTransformation,
+                ABSOLUTE_ERROR
+            )
+        )
+        assertEquals(currentEcefFrame2.x, currentEcefFrame3.x, LARGE_ABSOLUTE_ERROR)
+        assertEquals(currentEcefFrame2.y, currentEcefFrame3.y, LARGE_ABSOLUTE_ERROR)
+        assertEquals(currentEcefFrame2.z, currentEcefFrame3.z, LARGE_ABSOLUTE_ERROR)
+        assertEquals(currentEcefFrame2.vx, currentEcefFrame3.vx, VERY_LARGE_ABSOLUTE_ERROR)
+        assertEquals(currentEcefFrame2.vy, currentEcefFrame3.vy, VERY_LARGE_ABSOLUTE_ERROR)
+        assertEquals(currentEcefFrame2.vz, currentEcefFrame3.vz, VERY_LARGE_ABSOLUTE_ERROR)
 
         val previousEcefFrame3: ECEFFrame? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "previousEcefFrame")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "previousEcefFrame")
         requireNotNull(previousEcefFrame3)
-        assertEquals(currentEcefFrame2, previousEcefFrame3)
+        assertEquals(currentEcefFrame3, previousEcefFrame3)
 
         val previousNedFrame: NEDFrame? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "previousNedFrame")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "previousNedFrame")
         requireNotNull(previousNedFrame)
-        assertEquals(currentNedFrame, previousNedFrame)
+        assertEquals(currentNedFrame2, previousNedFrame)
 
         verify(exactly = 1) {
             processorListener.onProcessed(
@@ -1432,8 +1509,8 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
         val initialLocation = getLocation()
         val initialVelocity = getVelocity()
         val processorListener =
-            mockk<BaseECEFAbsolutePoseProcessor.OnProcessedListener>(relaxUnitFun = true)
-        val processor = AccelerometerDoubleFusedECEFAbsolutePoseProcessor(
+            mockk<BaseLocalPoseProcessor.OnProcessedListener>(relaxUnitFun = true)
+        val processor = FusedLocalPoseProcessor(
             initialLocation,
             initialVelocity,
             estimatePoseTransformation = true,
@@ -1447,6 +1524,10 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
         val az = randomizer.nextFloat()
         val specificForce = AccelerationTriad(ay.toDouble(), ax.toDouble(), -az.toDouble())
 
+        val gx = randomizer.nextFloat()
+        val gy = randomizer.nextFloat()
+        val gz = randomizer.nextFloat()
+
         val wx = randomizer.nextFloat()
         val wy = randomizer.nextFloat()
         val wz = randomizer.nextFloat()
@@ -1455,18 +1536,19 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
         val timestamp = System.nanoTime()
         val accelerometerMeasurement =
             AccelerometerSensorMeasurement(ax, ay, az, timestamp = timestamp)
+        val gravityMeasurement = GravitySensorMeasurement(gx, gy, gz, timestamp = timestamp)
         val gyroscopeMeasurement = GyroscopeSensorMeasurement(wx, wy, wz, timestamp = timestamp)
         val magnetometerMeasurement = MagnetometerSensorMeasurement()
 
         val previousTimestamp = timestamp - TIME_INTERVAL_NANOS
         setPrivateProperty(
-            BaseECEFAbsolutePoseProcessor::class,
+            BaseLocalPoseProcessor::class,
             processor,
             "previousTimestamp",
             previousTimestamp
         )
 
-        val attitudeProcessor: AccelerometerDoubleFusedGeomagneticAttitudeProcessor? =
+        val attitudeProcessor: FusedGeomagneticAttitudeProcessor? =
             processor.getPrivateProperty(
                 "attitudeProcessor"
             )
@@ -1474,7 +1556,7 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
         val attitudeProcessorSpy = spyk(attitudeProcessor)
         every {
             attitudeProcessorSpy.process(
-                accelerometerMeasurement,
+                gravityMeasurement,
                 gyroscopeMeasurement,
                 magnetometerMeasurement,
                 timestamp
@@ -1489,13 +1571,13 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
 
         // check
         val previousTimestamp1: Long? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "previousTimestamp")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "previousTimestamp")
         requireNotNull(previousTimestamp1)
         assertEquals(previousTimestamp, previousTimestamp1)
 
         val timeIntervalSeconds1: Double? =
             getPrivateProperty(
-                BaseECEFAbsolutePoseProcessor::class,
+                BaseLocalPoseProcessor::class,
                 processor,
                 "timeIntervalSeconds"
             )
@@ -1503,14 +1585,15 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
         assertEquals(0.0, timeIntervalSeconds1, 0.0)
 
         val initializedFrame1: Boolean? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "initializedFrame")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "initializedFrame")
         requireNotNull(initializedFrame1)
         assertFalse(initializedFrame1)
 
         // process
         val syncedMeasurement =
-            AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement(
+            AccelerometerGravityGyroscopeAndMagnetometerSyncedSensorMeasurement(
                 accelerometerMeasurement,
+                gravityMeasurement,
                 gyroscopeMeasurement,
                 magnetometerMeasurement,
                 timestamp
@@ -1521,7 +1604,7 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
         // check
         verify(exactly = 1) {
             attitudeProcessorSpy.process(
-                accelerometerMeasurement,
+                gravityMeasurement,
                 gyroscopeMeasurement,
                 magnetometerMeasurement,
                 timestamp
@@ -1530,19 +1613,19 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
         verify(exactly = 1) { attitudeProcessorSpy.fusedAttitude }
 
         val currentAttitude: Quaternion? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "currentAttitude")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "currentAttitude")
         requireNotNull(currentAttitude)
         assertEquals(initialNedAttitude, currentAttitude)
         assertNotSame(initialNedAttitude, currentAttitude)
 
         val previousTimestamp2: Long? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "previousTimestamp")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "previousTimestamp")
         requireNotNull(previousTimestamp2)
         assertEquals(timestamp, previousTimestamp2)
 
         val timeIntervalSeconds2: Double? =
             getPrivateProperty(
-                BaseECEFAbsolutePoseProcessor::class,
+                BaseLocalPoseProcessor::class,
                 processor,
                 "timeIntervalSeconds"
             )
@@ -1550,7 +1633,7 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
         assertEquals(TIME_INTERVAL_SECONDS, timeIntervalSeconds2, 0.0)
 
         val initializedFrame2: Boolean? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "initializedFrame")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "initializedFrame")
         requireNotNull(initializedFrame2)
         assertTrue(initializedFrame2)
 
@@ -1567,7 +1650,7 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
 
         val coordinateTransformation: CoordinateTransformation? =
             getPrivateProperty(
-                BaseECEFAbsolutePoseProcessor::class,
+                BaseLocalPoseProcessor::class,
                 processor,
                 "coordinateTransformation"
             )
@@ -1575,35 +1658,31 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
         assertEquals(initialC, coordinateTransformation)
 
         val initialNedFrame2: NEDFrame? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "initialNedFrame")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "initialNedFrame")
         requireNotNull(initialNedFrame2)
         assertEquals(initialNedFrame, initialNedFrame2)
 
         val initialEcefFrame2: ECEFFrame? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "initialEcefFrame")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "initialEcefFrame")
         requireNotNull(initialEcefFrame2)
         assertEquals(initialEcefFrame, initialEcefFrame2)
 
         val initialAttitude: Quaternion? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "initialAttitude")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "initialAttitude")
         requireNotNull(initialAttitude)
         assertEquals(initialNedAttitude, initialAttitude)
 
         val specificForce2: AccelerationTriad? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "specificForce")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "specificForce")
         requireNotNull(specificForce2)
         assertEquals(specificForce, specificForce2)
 
         val angularSpeed2: AngularSpeedTriad? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "angularSpeed")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "angularSpeed")
         requireNotNull(angularSpeed2)
         assertEquals(angularSpeed, angularSpeed2)
 
         val bodyKinematics = BodyKinematics(specificForce, angularSpeed)
-        val bodyKinematics2: BodyKinematics? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "bodyKinematics")
-        requireNotNull(bodyKinematics2)
-        assertEquals(bodyKinematics, bodyKinematics2)
 
         val currentEcefFrame: ECEFFrame = ECEFInertialNavigator.navigateECEFAndReturnNew(
             TIME_INTERVAL_SECONDS,
@@ -1615,33 +1694,54 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
             ECEFtoNEDFrameConverter.convertECEFtoNEDAndReturnNew(currentEcefFrame)
         currentNedFrame.coordinateTransformationRotation = currentAttitude
         val currentNedFrame2: NEDFrame? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "currentNedFrame")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "currentNedFrame")
         requireNotNull(currentNedFrame2)
-        assertEquals(currentNedFrame, currentNedFrame2)
+        assertEquals(
+            currentNedFrame.coordinateTransformation,
+            currentNedFrame2.coordinateTransformation
+        )
+        assertEquals(currentNedFrame.latitude, currentNedFrame2.latitude, ABSOLUTE_ERROR)
+        assertEquals(currentNedFrame.longitude, currentNedFrame2.longitude, ABSOLUTE_ERROR)
+        assertEquals(currentNedFrame.height, currentNedFrame2.height, LARGE_ABSOLUTE_ERROR)
+        assertEquals(currentNedFrame.vn, currentNedFrame2.vn, LARGE_ABSOLUTE_ERROR)
+        assertEquals(currentNedFrame.ve, currentNedFrame2.ve, LARGE_ABSOLUTE_ERROR)
+        assertEquals(currentNedFrame.vd, currentNedFrame2.vd, VERY_LARGE_ABSOLUTE_ERROR)
 
         val currentEcefFrame2 =
             NEDtoECEFFrameConverter.convertNEDtoECEFAndReturnNew(currentNedFrame)
 
         val currentEcefFrame3: ECEFFrame? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "currentEcefFrame")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "currentEcefFrame")
         requireNotNull(currentEcefFrame3)
-        assertEquals(currentEcefFrame2, currentEcefFrame3)
+
+        assertTrue(
+            currentEcefFrame2.coordinateTransformation.equals(
+                currentEcefFrame3.coordinateTransformation,
+                ABSOLUTE_ERROR
+            )
+        )
+        assertEquals(currentEcefFrame2.x, currentEcefFrame3.x, LARGE_ABSOLUTE_ERROR)
+        assertEquals(currentEcefFrame2.y, currentEcefFrame3.y, LARGE_ABSOLUTE_ERROR)
+        assertEquals(currentEcefFrame2.z, currentEcefFrame3.z, LARGE_ABSOLUTE_ERROR)
+        assertEquals(currentEcefFrame2.vx, currentEcefFrame3.vx, VERY_LARGE_ABSOLUTE_ERROR)
+        assertEquals(currentEcefFrame2.vy, currentEcefFrame3.vy, VERY_LARGE_ABSOLUTE_ERROR)
+        assertEquals(currentEcefFrame2.vz, currentEcefFrame3.vz, VERY_LARGE_ABSOLUTE_ERROR)
 
         val previousEcefFrame3: ECEFFrame? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "previousEcefFrame")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "previousEcefFrame")
         requireNotNull(previousEcefFrame3)
-        assertEquals(currentEcefFrame2, previousEcefFrame3)
+        assertEquals(currentEcefFrame3, previousEcefFrame3)
 
         val previousNedFrame: NEDFrame? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "previousNedFrame")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "previousNedFrame")
         requireNotNull(previousNedFrame)
-        assertEquals(currentNedFrame, previousNedFrame)
+        assertEquals(currentNedFrame2, previousNedFrame)
 
         val conversionRotation = ENUtoNEDTriadConverter.conversionRotation
         val transformationRotation = Quaternion()
         Quaternion.product(currentAttitude, conversionRotation, transformationRotation)
         val transformationRotation2: Quaternion? = getPrivateProperty(
-            BaseECEFAbsolutePoseProcessor::class,
+            BaseLocalPoseProcessor::class,
             processor,
             "transformationRotation"
         )
@@ -1654,19 +1754,19 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
             currentEcefFrame3.z - initialEcefFrame2.z
         )
         val ecefDiffPosition2: InhomogeneousPoint3D? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "ecefDiffPosition")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "ecefDiffPosition")
         requireNotNull(ecefDiffPosition2)
         assertEquals(ecefDiffPosition, ecefDiffPosition2)
 
         val startEcefRotation = initialEcefFrame.coordinateTransformationRotation
         val startEcefRotation2: Rotation3D? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "startEcefRotation")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "startEcefRotation")
         requireNotNull(startEcefRotation2)
         assertEquals(startEcefRotation, startEcefRotation2)
 
         val inverseEcefRotation = startEcefRotation.inverseRotationAndReturnNew()
         val inverseEcefRotation2: Rotation3D? = getPrivateProperty(
-            BaseECEFAbsolutePoseProcessor::class,
+            BaseLocalPoseProcessor::class,
             processor,
             "inverseEcefRotation"
         )
@@ -1681,14 +1781,14 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
             -localDiffPosition.inhomZ
         )
         val localDiffPosition2: InhomogeneousPoint3D? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "localDiffPosition")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "localDiffPosition")
         requireNotNull(localDiffPosition2)
         assertEquals(localDiffPosition, localDiffPosition2)
 
         val poseTransformation =
             EuclideanTransformation3D(transformationRotation, localDiffPosition.asArray())
         val poseTransformation2: EuclideanTransformation3D? = getPrivateProperty(
-            BaseECEFAbsolutePoseProcessor::class,
+            BaseLocalPoseProcessor::class,
             processor,
             "poseTransformation"
         )
@@ -1721,8 +1821,8 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
         val initialLocation = getLocation()
         val initialVelocity = getVelocity()
         val processorListener =
-            mockk<BaseECEFAbsolutePoseProcessor.OnProcessedListener>(relaxUnitFun = true)
-        val processor = AccelerometerDoubleFusedECEFAbsolutePoseProcessor(
+            mockk<BaseLocalPoseProcessor.OnProcessedListener>(relaxUnitFun = true)
+        val processor = FusedLocalPoseProcessor(
             initialLocation,
             initialVelocity,
             estimatePoseTransformation = true,
@@ -1736,6 +1836,10 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
         val az = randomizer.nextFloat()
         val specificForce = AccelerationTriad(ay.toDouble(), ax.toDouble(), -az.toDouble())
 
+        val gx = randomizer.nextFloat()
+        val gy = randomizer.nextFloat()
+        val gz = randomizer.nextFloat()
+
         val wx = randomizer.nextFloat()
         val wy = randomizer.nextFloat()
         val wz = randomizer.nextFloat()
@@ -1744,18 +1848,19 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
         val timestamp = System.nanoTime()
         val accelerometerMeasurement =
             AccelerometerSensorMeasurement(ax, ay, az, timestamp = timestamp)
+        val gravityMeasurement = GravitySensorMeasurement(gx, gy, gz, timestamp = timestamp)
         val gyroscopeMeasurement = GyroscopeSensorMeasurement(wx, wy, wz, timestamp = timestamp)
         val magnetometerMeasurement = MagnetometerSensorMeasurement()
 
         val previousTimestamp = timestamp - TIME_INTERVAL_NANOS
         setPrivateProperty(
-            BaseECEFAbsolutePoseProcessor::class,
+            BaseLocalPoseProcessor::class,
             processor,
             "previousTimestamp",
             previousTimestamp
         )
 
-        val attitudeProcessor: AccelerometerDoubleFusedGeomagneticAttitudeProcessor? =
+        val attitudeProcessor: FusedGeomagneticAttitudeProcessor? =
             processor.getPrivateProperty(
                 "attitudeProcessor"
             )
@@ -1763,7 +1868,7 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
         val attitudeProcessorSpy = spyk(attitudeProcessor)
         every {
             attitudeProcessorSpy.process(
-                accelerometerMeasurement,
+                gravityMeasurement,
                 gyroscopeMeasurement,
                 magnetometerMeasurement,
                 timestamp
@@ -1778,13 +1883,13 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
 
         // check
         val previousTimestamp1: Long? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "previousTimestamp")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "previousTimestamp")
         requireNotNull(previousTimestamp1)
         assertEquals(previousTimestamp, previousTimestamp1)
 
         val timeIntervalSeconds1: Double? =
             getPrivateProperty(
-                BaseECEFAbsolutePoseProcessor::class,
+                BaseLocalPoseProcessor::class,
                 processor,
                 "timeIntervalSeconds"
             )
@@ -1792,14 +1897,15 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
         assertEquals(0.0, timeIntervalSeconds1, 0.0)
 
         val initializedFrame1: Boolean? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "initializedFrame")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "initializedFrame")
         requireNotNull(initializedFrame1)
         assertFalse(initializedFrame1)
 
         // process
         val syncedMeasurement =
-            AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement(
+            AccelerometerGravityGyroscopeAndMagnetometerSyncedSensorMeasurement(
                 accelerometerMeasurement,
+                gravityMeasurement,
                 gyroscopeMeasurement,
                 magnetometerMeasurement,
                 timestamp
@@ -1810,7 +1916,7 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
         // check
         verify(exactly = 1) {
             attitudeProcessorSpy.process(
-                accelerometerMeasurement,
+                gravityMeasurement,
                 gyroscopeMeasurement,
                 magnetometerMeasurement,
                 timestamp
@@ -1819,19 +1925,19 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
         verify(exactly = 1) { attitudeProcessorSpy.fusedAttitude }
 
         val currentAttitude: Quaternion? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "currentAttitude")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "currentAttitude")
         requireNotNull(currentAttitude)
         assertEquals(initialNedAttitude, currentAttitude)
         assertNotSame(initialNedAttitude, currentAttitude)
 
         val previousTimestamp2: Long? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "previousTimestamp")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "previousTimestamp")
         requireNotNull(previousTimestamp2)
         assertEquals(timestamp, previousTimestamp2)
 
         val timeIntervalSeconds2: Double? =
             getPrivateProperty(
-                BaseECEFAbsolutePoseProcessor::class,
+                BaseLocalPoseProcessor::class,
                 processor,
                 "timeIntervalSeconds"
             )
@@ -1839,7 +1945,7 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
         assertEquals(TIME_INTERVAL_SECONDS, timeIntervalSeconds2, 0.0)
 
         val initializedFrame2: Boolean? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "initializedFrame")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "initializedFrame")
         requireNotNull(initializedFrame2)
         assertTrue(initializedFrame2)
 
@@ -1856,7 +1962,7 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
 
         val coordinateTransformation: CoordinateTransformation? =
             getPrivateProperty(
-                BaseECEFAbsolutePoseProcessor::class,
+                BaseLocalPoseProcessor::class,
                 processor,
                 "coordinateTransformation"
             )
@@ -1864,35 +1970,31 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
         assertEquals(initialC, coordinateTransformation)
 
         val initialNedFrame2: NEDFrame? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "initialNedFrame")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "initialNedFrame")
         requireNotNull(initialNedFrame2)
         assertEquals(initialNedFrame, initialNedFrame2)
 
         val initialEcefFrame2: ECEFFrame? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "initialEcefFrame")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "initialEcefFrame")
         requireNotNull(initialEcefFrame2)
         assertEquals(initialEcefFrame, initialEcefFrame2)
 
         val initialAttitude: Quaternion? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "initialAttitude")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "initialAttitude")
         requireNotNull(initialAttitude)
         assertEquals(initialNedAttitude, initialAttitude)
 
         val specificForce2: AccelerationTriad? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "specificForce")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "specificForce")
         requireNotNull(specificForce2)
         assertEquals(specificForce, specificForce2)
 
         val angularSpeed2: AngularSpeedTriad? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "angularSpeed")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "angularSpeed")
         requireNotNull(angularSpeed2)
         assertEquals(angularSpeed, angularSpeed2)
 
         val bodyKinematics = BodyKinematics(specificForce, angularSpeed)
-        val bodyKinematics2: BodyKinematics? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "bodyKinematics")
-        requireNotNull(bodyKinematics2)
-        assertEquals(bodyKinematics, bodyKinematics2)
 
         val currentEcefFrame: ECEFFrame = ECEFInertialNavigator.navigateECEFAndReturnNew(
             TIME_INTERVAL_SECONDS,
@@ -1904,27 +2006,48 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
             ECEFtoNEDFrameConverter.convertECEFtoNEDAndReturnNew(currentEcefFrame)
         currentNedFrame.coordinateTransformationRotation = currentAttitude
         val currentNedFrame2: NEDFrame? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "currentNedFrame")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "currentNedFrame")
         requireNotNull(currentNedFrame2)
-        assertEquals(currentNedFrame, currentNedFrame2)
+        assertEquals(
+            currentNedFrame.coordinateTransformation,
+            currentNedFrame2.coordinateTransformation
+        )
+        assertEquals(currentNedFrame.latitude, currentNedFrame2.latitude, ABSOLUTE_ERROR)
+        assertEquals(currentNedFrame.longitude, currentNedFrame2.longitude, ABSOLUTE_ERROR)
+        assertEquals(currentNedFrame.height, currentNedFrame2.height, LARGE_ABSOLUTE_ERROR)
+        assertEquals(currentNedFrame.vn, currentNedFrame2.vn, LARGE_ABSOLUTE_ERROR)
+        assertEquals(currentNedFrame.ve, currentNedFrame2.ve, LARGE_ABSOLUTE_ERROR)
+        assertEquals(currentNedFrame.vd, currentNedFrame2.vd, VERY_LARGE_ABSOLUTE_ERROR)
 
         val currentEcefFrame2 =
             NEDtoECEFFrameConverter.convertNEDtoECEFAndReturnNew(currentNedFrame)
 
         val currentEcefFrame3: ECEFFrame? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "currentEcefFrame")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "currentEcefFrame")
         requireNotNull(currentEcefFrame3)
-        assertEquals(currentEcefFrame2, currentEcefFrame3)
+
+        assertTrue(
+            currentEcefFrame2.coordinateTransformation.equals(
+                currentEcefFrame3.coordinateTransformation,
+                ABSOLUTE_ERROR
+            )
+        )
+        assertEquals(currentEcefFrame2.x, currentEcefFrame3.x, LARGE_ABSOLUTE_ERROR)
+        assertEquals(currentEcefFrame2.y, currentEcefFrame3.y, LARGE_ABSOLUTE_ERROR)
+        assertEquals(currentEcefFrame2.z, currentEcefFrame3.z, LARGE_ABSOLUTE_ERROR)
+        assertEquals(currentEcefFrame2.vx, currentEcefFrame3.vx, VERY_LARGE_ABSOLUTE_ERROR)
+        assertEquals(currentEcefFrame2.vy, currentEcefFrame3.vy, VERY_LARGE_ABSOLUTE_ERROR)
+        assertEquals(currentEcefFrame2.vz, currentEcefFrame3.vz, VERY_LARGE_ABSOLUTE_ERROR)
 
         val previousEcefFrame3: ECEFFrame? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "previousEcefFrame")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "previousEcefFrame")
         requireNotNull(previousEcefFrame3)
-        assertEquals(currentEcefFrame2, previousEcefFrame3)
+        assertEquals(currentEcefFrame3, previousEcefFrame3)
 
         val previousNedFrame: NEDFrame? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "previousNedFrame")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "previousNedFrame")
         requireNotNull(previousNedFrame)
-        assertEquals(currentNedFrame, previousNedFrame)
+        assertEquals(currentNedFrame2, previousNedFrame)
 
         val conversionRotation = ENUtoNEDTriadConverter.conversionRotation
         val initYaw = initialAttitude.toEulerAngles()[2]
@@ -1933,7 +2056,7 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
             Quaternion(eulerAngles[0], eulerAngles[1], eulerAngles[2] - initYaw)
         Quaternion.product(transformationRotation, conversionRotation, transformationRotation)
         val transformationRotation2: Quaternion? = getPrivateProperty(
-            BaseECEFAbsolutePoseProcessor::class,
+            BaseLocalPoseProcessor::class,
             processor,
             "transformationRotation"
         )
@@ -1946,19 +2069,19 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
             currentEcefFrame3.z - initialEcefFrame2.z
         )
         val ecefDiffPosition2: InhomogeneousPoint3D? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "ecefDiffPosition")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "ecefDiffPosition")
         requireNotNull(ecefDiffPosition2)
         assertEquals(ecefDiffPosition, ecefDiffPosition2)
 
         val startEcefRotation = initialEcefFrame.coordinateTransformationRotation
         val startEcefRotation2: Rotation3D? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "startEcefRotation")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "startEcefRotation")
         requireNotNull(startEcefRotation2)
         assertEquals(startEcefRotation, startEcefRotation2)
 
         val inverseEcefRotation = startEcefRotation.inverseRotationAndReturnNew()
         val inverseEcefRotation2: Rotation3D? = getPrivateProperty(
-            BaseECEFAbsolutePoseProcessor::class,
+            BaseLocalPoseProcessor::class,
             processor,
             "inverseEcefRotation"
         )
@@ -1973,14 +2096,14 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
             -localDiffPosition.inhomZ
         )
         val localDiffPosition2: InhomogeneousPoint3D? =
-            getPrivateProperty(BaseECEFAbsolutePoseProcessor::class, processor, "localDiffPosition")
+            getPrivateProperty(BaseLocalPoseProcessor::class, processor, "localDiffPosition")
         requireNotNull(localDiffPosition2)
         assertEquals(localDiffPosition, localDiffPosition2)
 
         val poseTransformation =
             EuclideanTransformation3D(transformationRotation, localDiffPosition.asArray())
         val poseTransformation2: EuclideanTransformation3D? = getPrivateProperty(
-            BaseECEFAbsolutePoseProcessor::class,
+            BaseLocalPoseProcessor::class,
             processor,
             "poseTransformation"
         )
@@ -2029,6 +2152,10 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
         const val TIME_INTERVAL_NANOS = 10_000_000L
 
         const val ABSOLUTE_ERROR = 1e-8
+
+        const val LARGE_ABSOLUTE_ERROR = 1e-4
+
+        const val VERY_LARGE_ABSOLUTE_ERROR = 1e-3
 
         fun getLocation(): Location {
             val randomizer = UniformRandomizer()

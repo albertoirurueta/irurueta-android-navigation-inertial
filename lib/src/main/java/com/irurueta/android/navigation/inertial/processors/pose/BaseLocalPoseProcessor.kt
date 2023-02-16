@@ -16,24 +16,31 @@
 package com.irurueta.android.navigation.inertial.processors.pose
 
 import android.location.Location
+import com.irurueta.algebra.Matrix
+import com.irurueta.algebra.Utils
 import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
-import com.irurueta.android.navigation.inertial.collectors.*
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorMeasurement
+import com.irurueta.android.navigation.inertial.estimators.pose.LocalPoseEstimator
 import com.irurueta.android.navigation.inertial.toNEDPosition
 import com.irurueta.geometry.EuclideanTransformation3D
 import com.irurueta.geometry.InhomogeneousPoint3D
 import com.irurueta.geometry.Quaternion
 import com.irurueta.geometry.Rotation3D
 import com.irurueta.navigation.frames.*
-import com.irurueta.navigation.frames.converters.ECEFtoNEDFrameConverter
 import com.irurueta.navigation.frames.converters.NEDtoECEFFrameConverter
-import com.irurueta.navigation.inertial.BodyKinematics
 import com.irurueta.navigation.inertial.calibration.AccelerationTriad
 import com.irurueta.navigation.inertial.calibration.AngularSpeedTriad
-import com.irurueta.navigation.inertial.navigators.ECEFInertialNavigator
+import com.irurueta.navigation.inertial.estimators.NEDGravityEstimator
+import com.irurueta.navigation.inertial.estimators.RadiiOfCurvatureEstimator
+import com.irurueta.navigation.inertial.navigators.NEDInertialNavigator
 import com.irurueta.units.TimeConverter
+import kotlin.math.cos
+import kotlin.math.sin
+import kotlin.math.tan
 
 /**
- * Base class to estimate absolute pose expressed in ECEF coordinates.
+ * Base class to estimate absolute pose using local plane navigation.
  * Implementations of this subclass might use a combination of: accelerometer, gyroscope,
  * magnetometer, gravity or attitude measurements.
  *
@@ -42,7 +49,7 @@ import com.irurueta.units.TimeConverter
  * @property estimatePoseTransformation true to estimate 3D metric pose transformation.
  * @property processorListener listener to notify new poses.
  */
-abstract class BaseECEFAbsolutePoseProcessor(
+abstract class BaseLocalPoseProcessor(
     val initialLocation: Location,
     val initialVelocity: NEDVelocity,
     val estimatePoseTransformation: Boolean,
@@ -91,35 +98,6 @@ abstract class BaseECEFAbsolutePoseProcessor(
     val poseTransformation = EuclideanTransformation3D()
 
     /**
-     * True indicates that attitude is leveled and expressed respect to estimator start.
-     * False indicates that attitude is absolute.
-     */
-    var useLeveledRelativeAttitudeRespectStart = true
-
-    /**
-     * Time interval expressed in seconds between consecutive gyroscope measurements
-     */
-    var timeIntervalSeconds = 0.0
-        private set
-
-    /**
-     * Attitude of current sample.
-     */
-    protected val currentAttitude = Quaternion()
-
-    /**
-     * Initial attitude when estimator starts. This is used to obtain a relative leveled pose
-     * respect to the initial attitude.
-     */
-    private val initialAttitude = Quaternion()
-
-    /**
-     * Body kinematics containing las accelerometer and gyroscope measurements.
-     * This is reused for performance reasons.
-     */
-    private val bodyKinematics = BodyKinematics()
-
-    /**
      * Specific force measured by accelerometer sensor containing both device acceleration and
      * gravity component expressed in NED coordinates.
      */
@@ -135,6 +113,39 @@ abstract class BaseECEFAbsolutePoseProcessor(
      * containing estimated absolute attitude and current device location (if available).
      */
     private var initializedFrame = false
+
+    /**
+     * Attitude of previous sample.
+     */
+    private val previousAttitude = Quaternion()
+
+    /**
+     * Attitude of current sample.
+     */
+    protected val currentAttitude = Quaternion()
+
+    /**
+     * True indicates that attitude is leveled and expressed respect to estimator start.
+     * False indicates that attitude is absolute.
+     */
+    var useLeveledRelativeAttitudeRespectStart = true
+
+    /**
+     * Time interval expressed in seconds between consecutive gyroscope measurements
+     */
+    var timeIntervalSeconds = 0.0
+        private set
+
+    /**
+     * Initial attitude when estimator starts. This is used to obtain a relative leveled pose
+     * respect to the initial attitude.
+     */
+    private val initialAttitude = Quaternion()
+
+    /**
+     * Average attitude between current and previous attitudes.
+     */
+    private val averageAttitude = Quaternion()
 
     /**
      * Rotation to be reused for ENU / NED coordinates conversion during pose transformation
@@ -221,27 +232,94 @@ abstract class BaseECEFAbsolutePoseProcessor(
         processAccelerometer(accelerometerMeasurement)
         processGyroscope(gyroscopeMeasurement)
 
-        // compensate measured gravity respect theoretical gravity
-        bodyKinematics.fx = specificForce.valueX
-        bodyKinematics.fy = specificForce.valueY
-        bodyKinematics.fz = specificForce.valueZ
+        // obtain average attitude between current and previous attitude
+        Quaternion.slerp(previousAttitude, currentAttitude, 0.5, averageAttitude)
 
-        // compensate measured angular speed respect theoretical Earth rotation
-        bodyKinematics.angularRateX = angularSpeed.valueX
-        bodyKinematics.angularRateY = angularSpeed.valueY
-        bodyKinematics.angularRateZ = angularSpeed.valueZ
+        // Transform specific force to NED frame
+        val fibb = specificForce.valuesAsMatrix
+        val fibn = averageAttitude.asInhomogeneousMatrix().multiplyAndReturnNew(fibb)
 
-        ECEFInertialNavigator.navigateECEF(
-            timeIntervalSeconds,
-            previousEcefFrame,
-            bodyKinematics,
-            currentEcefFrame
+        val gravity = NEDGravityEstimator.estimateGravityAndReturnNew(currentNedFrame)
+        val g = gravity.asMatrix()
+
+        val oldVelocity = previousNedFrame.velocity
+        val oldVn = oldVelocity.vn
+        val oldVe = oldVelocity.ve
+        val oldVd = oldVelocity.vd
+        val oldVebn = Matrix(ROWS, 1)
+        oldVebn.setElementAtIndex(0, oldVn)
+        oldVebn.setElementAtIndex(1, oldVe)
+        oldVebn.setElementAtIndex(2, oldVd)
+
+        // From (2.123), determine the angular rate of the ECEF frame with respect
+        // the ECI frame, resolved about NED
+        val oldLatitude = previousNedFrame.latitude
+        val omegaIen = Matrix(ROWS, 1)
+        omegaIen.setElementAtIndex(
+            0,
+            cos(oldLatitude) * NEDInertialNavigator.EARTH_ROTATION_RATE
+        )
+        omegaIen.setElementAtIndex(
+            2,
+            -sin(oldLatitude) * NEDInertialNavigator.EARTH_ROTATION_RATE
         )
 
-        // Ensure that attitude does not drift by resetting current local attitude in NED
-        // coordinates and converting back to ECEF coordinates
-        ECEFtoNEDFrameConverter.convertECEFtoNED(currentEcefFrame, currentNedFrame)
+        // From (5.44), determine the angular rate of the NED frame with respect
+        // the ECEF frame, resolved about NED
+        val oldRadiiOfCurvature = RadiiOfCurvatureEstimator
+            .estimateRadiiOfCurvatureAndReturnNew(oldLatitude)
+        val oldRe = oldRadiiOfCurvature.re
+        val oldRn = oldRadiiOfCurvature.rn
+
+        val oldHeight = previousNedFrame.height
+
+        val oldOmegaEnN = Matrix(ROWS, 1)
+        oldOmegaEnN.setElementAtIndex(0, oldVe / (oldRe + oldHeight))
+        oldOmegaEnN.setElementAtIndex(1, -oldVn / (oldRn + oldHeight))
+        oldOmegaEnN.setElementAtIndex(2, -oldVe * tan(oldLatitude) / (oldRe + oldHeight))
+
+        val skewOmega2 = Utils.skewMatrix(
+            oldOmegaEnN.addAndReturnNew(
+                omegaIen.multiplyByScalarAndReturnNew(2.0)
+            )
+        )
+
+        // Update velocity
+        // From (5.54),
+        val vEbn = oldVebn.addAndReturnNew(
+            fibn.addAndReturnNew(g).subtractAndReturnNew(
+                skewOmega2.multiplyAndReturnNew(oldVebn)
+            )
+                .multiplyByScalarAndReturnNew(timeIntervalSeconds)
+        )
+
+        val vn = vEbn.getElementAtIndex(0)
+        val ve = vEbn.getElementAtIndex(1)
+        val vd = vEbn.getElementAtIndex(2)
+
+        // Update curvilinear position
+        // Update height using (5.56)
+        val height: Double = oldHeight - 0.5 * timeIntervalSeconds * (oldVd + vd)
+
+        // Update latitude using (5.56)
+        val latitude: Double = (oldLatitude
+                + 0.5 * timeIntervalSeconds * (oldVn / (oldRn + oldHeight) + vn / (oldRn + height)))
+
+        // Calculate meridian and transverse radii of curvature
+        val radiiOfCurvature = RadiiOfCurvatureEstimator
+            .estimateRadiiOfCurvatureAndReturnNew(latitude)
+        val re = radiiOfCurvature.re
+
+        // Update longitude using (5.56)
+        val oldLongitude = previousNedFrame.longitude
+        val longitude: Double = (oldLongitude
+                + 0.5 * timeIntervalSeconds * (oldVe / ((oldRe + oldHeight) * cos(oldLatitude))
+                + ve / ((re + height) * cos(latitude))))
+
+        currentNedFrame.setPosition(latitude, longitude, height)
+        currentNedFrame.setVelocityCoordinates(vn, ve, vd)
         currentNedFrame.coordinateTransformationRotation = currentAttitude
+
         NEDtoECEFFrameConverter.convertNEDtoECEF(currentNedFrame, currentEcefFrame)
 
         // compute transformation between initial and current frame and previous and current frame
@@ -271,6 +349,7 @@ abstract class BaseECEFAbsolutePoseProcessor(
         // update previous frame
         previousEcefFrame.copyFrom(currentEcefFrame)
         previousNedFrame.copyFrom(currentNedFrame)
+        currentAttitude.copyTo(previousAttitude)
 
         return true
     }
@@ -354,8 +433,10 @@ abstract class BaseECEFAbsolutePoseProcessor(
             NEDtoECEFFrameConverter.convertNEDtoECEF(initialNedFrame, initialEcefFrame)
 
             initialEcefFrame.copyTo(previousEcefFrame)
+            initialNedFrame.copyTo(previousNedFrame)
 
             initialAttitude.fromQuaternion(attitude)
+            previousAttitude.fromQuaternion(attitude)
 
             initializedFrame = true
         }
@@ -420,12 +501,20 @@ abstract class BaseECEFAbsolutePoseProcessor(
         result.setTranslation(localDiffPosition)
     }
 
+    private companion object {
+
+        /**
+         * Number of rows in a matrix representation of triads.
+         */
+        const val ROWS = 3
+    }
+
     /**
      * Interface to notify when a new pose has been processed.
      */
     fun interface OnProcessedListener {
         /**
-         * Called whe a new pose is processed.
+         * Called when a new pose is processed.
          *
          * @param processor processor that raised this event.
          * @param currentFrame current ECEF frame containing device position, velocity and attitude.
@@ -439,7 +528,7 @@ abstract class BaseECEFAbsolutePoseProcessor(
          * coordinates.
          */
         fun onProcessed(
-            processor: BaseECEFAbsolutePoseProcessor,
+            processor: BaseLocalPoseProcessor,
             currentFrame: ECEFFrame,
             previousFrame: ECEFFrame,
             initialFrame: ECEFFrame,

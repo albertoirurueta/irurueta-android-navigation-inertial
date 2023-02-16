@@ -4,6 +4,7 @@ plugins {
     id 'org.jetbrains.dokka'
     id 'jacoco'
     id 'org.sonarqube'
+    id 'org.jetbrains.kotlin.android'
     //id("org.jetbrains.kotlinx.kover") version "0.6.1"
 }
 
@@ -132,6 +133,7 @@ dependencies {
     api "com.irurueta:irurueta-navigation:$irurueta_navigation"
     api "com.irurueta:irurueta-navigation-inertial:$irurueta_navigation_inertial"
     api "com.irurueta:irurueta-navigation-inertial-extra:$irurueta_navigation_inertial_extra"
+    implementation 'androidx.core:core-ktx:1.9.0'
     testImplementation "androidx.test:core-ktx:$test_core_ktx_version"
     testImplementation "junit:junit:$junit_version"
     testImplementation "io.mockk:mockk:$mockk_version"
