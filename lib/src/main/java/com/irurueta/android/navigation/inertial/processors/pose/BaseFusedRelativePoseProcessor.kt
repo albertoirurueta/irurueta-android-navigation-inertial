@@ -15,44 +15,33 @@
  */
 package com.irurueta.android.navigation.inertial.processors.pose
 
-import android.location.Location
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorMeasurement
-import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.SensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.SyncedSensorMeasurement
-import com.irurueta.android.navigation.inertial.processors.attitude.BaseFusedGeomagneticAttitudeProcessor
-import com.irurueta.navigation.frames.NEDVelocity
+import com.irurueta.android.navigation.inertial.estimators.pose.SpeedTriad
+import com.irurueta.android.navigation.inertial.processors.attitude.BaseLeveledRelativeAttitudeProcessor
 import com.irurueta.navigation.inertial.calibration.AccelerationTriad
-import com.irurueta.navigation.inertial.wmm.WorldMagneticModel
 import java.util.*
 
 /**
- * Base class to estimate absolute pose using local plane navigation.
+ * Base class to estimate relative pose from an unknown location.
  * This class estimates device attitude by fusing gravity/accelerometer, gyroscope and magnetometer
  * measurements.
  * Accelerometer and gyroscope are then taken into account to update device position.
  *
- * @property initialLocation initial device location.
- * @property initialVelocity initial velocity of device expressed in NED coordinates.
- * @property estimatePoseTransformation true to estimate 3D metric pose transformation.
+ * @property initialSpeed initial device speed in body coordinates.
  * @property processorListener listener to notify new poses.
  */
-abstract class BaseFusedLocalPoseProcessor<M : SensorMeasurement<M>, S : SyncedSensorMeasurement>(
-    initialLocation: Location,
-    initialVelocity: NEDVelocity,
-    estimatePoseTransformation: Boolean,
+abstract class BaseFusedRelativePoseProcessor<M : SensorMeasurement<M>, S : SyncedSensorMeasurement>(
+    initialSpeed: SpeedTriad,
     processorListener: OnProcessedListener?
-) : BaseLocalPoseProcessor(
-    initialLocation,
-    initialVelocity,
-    estimatePoseTransformation,
-    processorListener
-) {
+) : BaseRelativePoseProcessor(initialSpeed, processorListener) {
+
     /**
      * Attitude processor in charge of fusing accelerometer/gravity + gyroscope and magnetometer
      * measurements to estimate current device attitude.
      */
-    protected abstract val attitudeProcessor: BaseFusedGeomagneticAttitudeProcessor<M, *>
+    protected abstract val attitudeProcessor: BaseLeveledRelativeAttitudeProcessor<M, *>
 
     /**
      * X-coordinates of last sensed gravity component of specific force expressed in NED coordinates
@@ -75,12 +64,6 @@ abstract class BaseFusedLocalPoseProcessor<M : SensorMeasurement<M>, S : SyncedS
     val gz: Double
         get() = attitudeProcessor.gz
 
-    /**
-     * Gets a new triad containing gravity component of specific force expressed in NED coordinates
-     * and in meters per squared second (m/s^2).
-     */
-    val gravity: AccelerationTriad
-        get() = attitudeProcessor.gravity
 
     /**
      * Updates provided triad to contain gravity component of specific force expressed in NED
@@ -91,51 +74,10 @@ abstract class BaseFusedLocalPoseProcessor<M : SensorMeasurement<M>, S : SyncedS
     }
 
     /**
-     * Timestamp being used when World Magnetic Model is evaluated to obtain current magnetic
-     * declination. This is only taken into account if [useWorldMagneticModel] is true.
-     * If not defined, current date is assumed.
+     * Indicates whether accurate leveling is used or not.
      */
-    var currentDate: Date?
-        get() = attitudeProcessor.currentDate
-        set(value) {
-            attitudeProcessor.currentDate = value
-        }
-
-    /**
-     * Indicates whether accurate leveling must be used or not.
-     *
-     * @throws IllegalStateException if set to true and no location is available.
-     */
-    var useAccurateLevelingProcessor: Boolean
+    val useAccurateLevelingProcessor: Boolean
         get() = attitudeProcessor.useAccurateLevelingProcessor
-        @Throws(IllegalStateException::class)
-        set(value) {
-            attitudeProcessor.useAccurateLevelingProcessor = value
-        }
-
-    /**
-     * Indicates whether world magnetic model is taken into account to adjust attitude yaw angle by
-     * current magnetic declination based on current World Magnetic Model, location and timestamp.
-     * If null, the default model is used if [useWorldMagneticModel] is
-     * true. If [useWorldMagneticModel] is false, this is ignored.
-     */
-    var worldMagneticModel: WorldMagneticModel?
-        get() = attitudeProcessor.worldMagneticModel
-        set(value) {
-            attitudeProcessor.worldMagneticModel = value
-        }
-
-    /**
-     * Indicates whether world magnetic model is taken into account to adjust attitude yaw angle by
-     * current magnetic declination based on current World Magnetic Model, location and timestamp.
-     * If null, the default model is used if [useWorldMagneticModel] is
-     * true. If [useWorldMagneticModel] is false, this is ignored.
-     */
-    var useWorldMagneticModel: Boolean
-        get() = attitudeProcessor.useWorldMagneticModel
-        set(value) {
-            attitudeProcessor.useWorldMagneticModel = value
-        }
 
     /**
      * Indicates whether accurate non-leveled relative attitude processor must be used or not.
@@ -187,12 +129,6 @@ abstract class BaseFusedLocalPoseProcessor<M : SensorMeasurement<M>, S : SyncedS
         set(value) {
             attitudeProcessor.indirectInterpolationWeight = value
         }
-
-    /**
-     * Time interval expressed in seconds between consecutive gyroscope measurements
-     */
-    val gyroscopeTimeIntervalSeconds
-        get() = attitudeProcessor.gyroscopeTimeIntervalSeconds
 
     /**
      * Threshold to determine that current geomagnetic attitude appears to be an outlier respect
@@ -248,24 +184,22 @@ abstract class BaseFusedLocalPoseProcessor<M : SensorMeasurement<M>, S : SyncedS
      *
      * @param accelerometerOrGravityMeasurement accelerometer or gravity measurement.
      * @param gyroscopeMeasurement gyroscope measurement.
-     * @param magnetometerMeasurement magnetometer measurement.
      * @param timestamp timestamp when all measurements are assume to occur.
      * @return true if new fused absolute attitude is processed, false otherwise.
      */
     protected fun processAttitude(
         accelerometerOrGravityMeasurement: M,
         gyroscopeMeasurement: GyroscopeSensorMeasurement,
-        magnetometerMeasurement: MagnetometerSensorMeasurement,
         timestamp: Long
     ): Boolean {
         return if (attitudeProcessor.process(
                 accelerometerOrGravityMeasurement,
                 gyroscopeMeasurement,
-                magnetometerMeasurement,
                 timestamp
             )
         ) {
             attitudeProcessor.fusedAttitude.copyTo(currentAttitude)
+            attitudeProcessor.getGravity(gravity)
             true
         } else {
             false

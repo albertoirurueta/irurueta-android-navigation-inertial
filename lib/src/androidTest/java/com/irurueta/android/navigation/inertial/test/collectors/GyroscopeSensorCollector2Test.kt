@@ -28,6 +28,7 @@ import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 
+@RequiresDevice
 class GyroscopeSensorCollector2Test {
     private val syncHelper = ThreadSyncHelper()
 
@@ -50,7 +51,6 @@ class GyroscopeSensorCollector2Test {
         logSensor(sensor)
     }
 
-    @RequiresDevice
     @Test
     fun sensor_whenGyroscopeUncalibratedSensorType_returnsSensor() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -74,7 +74,6 @@ class GyroscopeSensorCollector2Test {
         assertTrue(collector.sensorAvailable)
     }
 
-    @RequiresDevice
     @Test
     fun sensorAvailable_whenGyroscopeUncalibratedSensorType_returnsTrue() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -134,7 +133,6 @@ class GyroscopeSensorCollector2Test {
         assertTrue(measured > 0)
     }
 
-    @RequiresDevice
     @Test
     fun startAndStop_whenGyroscopeUncalibratedSensorType_collectsMeasurements() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext

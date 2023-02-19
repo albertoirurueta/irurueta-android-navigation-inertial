@@ -21,7 +21,6 @@ import com.irurueta.algebra.Utils
 import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorMeasurement
-import com.irurueta.android.navigation.inertial.estimators.pose.LocalPoseEstimator
 import com.irurueta.android.navigation.inertial.toNEDPosition
 import com.irurueta.geometry.EuclideanTransformation3D
 import com.irurueta.geometry.InhomogeneousPoint3D
@@ -420,9 +419,7 @@ abstract class BaseLocalPoseProcessor(
      *
      * @param attitude first obtained attitude.
      */
-    private fun initializeFrameIfNeeded(
-        attitude: Quaternion,
-    ) {
+    private fun initializeFrameIfNeeded(attitude: Quaternion) {
         if (!initializedFrame) {
             coordinateTransformation.fromRotation(attitude)
 

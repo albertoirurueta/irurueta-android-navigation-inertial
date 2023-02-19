@@ -252,7 +252,7 @@ class AttitudeLocalPoseProcessorTest {
     }
 
     @Test
-    fun process_whenAttitudeProcessedAnTimeIntervalNotProcessed_returnsFalse() {
+    fun process_whenAttitudeProcessedAndTimeIntervalNotProcessed_returnsFalse() {
         val initialLocation = getLocation()
         val processor = AttitudeLocalPoseProcessor(initialLocation)
 

@@ -25,6 +25,8 @@ import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragi
  * filter to assume it is the gravity component of specific force and converts it to NED coordinates
  * system.
  *
+ * @property averagingFilter an averaging filter for accelerometer samples to obtain
+ * sensed gravity component of specific force.
  * @property processorListener listener to notify new gravity measurements.
  */
 class AccelerometerGravityProcessor(
