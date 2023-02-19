@@ -36,6 +36,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.util.*
 import kotlin.math.abs
+import kotlin.math.min
 
 @RunWith(RobolectricTestRunner::class)
 class DoubleFusedGeomagneticAttitudeProcessorTest {
@@ -1410,8 +1411,10 @@ class DoubleFusedGeomagneticAttitudeProcessorTest {
             "internalFusedAttitude"
         )
         requireNotNull(internalFusedAttitude1)
-        val t = processor.interpolationValue + processor.indirectInterpolationWeight * abs(
-            deltaRelativeAttitude2.rotationAngle / TIME_INTERVAL
+        val t = min(
+            processor.interpolationValue + processor.indirectInterpolationWeight * abs(
+                deltaRelativeAttitude2.rotationAngle / TIME_INTERVAL
+            ), 1.0
         )
         val internalFusedAttitude2 = Quaternion.slerpAndReturnNew(
             deltaRelativeAttitude2.multiplyAndReturnNew(internalFusedAttitudeCopy),
