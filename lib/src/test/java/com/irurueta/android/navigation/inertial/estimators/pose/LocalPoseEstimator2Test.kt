@@ -2119,6 +2119,8 @@ class LocalPoseEstimator2Test {
         assertTrue(estimator.running)
 
         estimator.start()
+
+        assertFalse(estimator.running)
     }
 
     @Test
@@ -2186,6 +2188,7 @@ class LocalPoseEstimator2Test {
         estimator.setPrivateProperty("attitudeSyncer", attitudeSyncerSpy)
 
         assertTrue(estimator.start(startTimestamp))
+        assertTrue(estimator.running)
 
         verify { attitudeProcessorSpy.reset() }
         verify(exactly = 1) { attitudeSyncerSpy.start(startTimestamp) }
@@ -2264,6 +2267,7 @@ class LocalPoseEstimator2Test {
         estimator.setPrivateProperty("attitudeSyncer", attitudeSyncerSpy)
 
         assertTrue(estimator.start(startTimestamp))
+        assertTrue(estimator.running)
 
         verify { accelerometerDoubleFusedProcessorSpy.reset() }
         verify(exactly = 1) { accelerometerFusedSyncerSpy.start(startTimestamp) }
@@ -2342,6 +2346,7 @@ class LocalPoseEstimator2Test {
         estimator.setPrivateProperty("attitudeSyncer", attitudeSyncerSpy)
 
         assertTrue(estimator.start(startTimestamp))
+        assertTrue(estimator.running)
 
         verify { accelerometerFusedProcessorSpy.reset() }
         verify(exactly = 1) { accelerometerFusedSyncerSpy.start(startTimestamp) }
@@ -2420,6 +2425,7 @@ class LocalPoseEstimator2Test {
         estimator.setPrivateProperty("attitudeSyncer", attitudeSyncerSpy)
 
         assertTrue(estimator.start(startTimestamp))
+        assertTrue(estimator.running)
 
         verify { doubleFusedProcessorSpy.reset() }
         verify(exactly = 1) { fusedSyncerSpy.start(startTimestamp) }
@@ -2498,6 +2504,7 @@ class LocalPoseEstimator2Test {
         estimator.setPrivateProperty("attitudeSyncer", attitudeSyncerSpy)
 
         assertTrue(estimator.start(startTimestamp))
+        assertTrue(estimator.running)
 
         verify { fusedProcessorSpy.reset() }
         verify(exactly = 1) { fusedSyncerSpy.start(startTimestamp) }
