@@ -30,7 +30,7 @@ import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilte
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.MeanAveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.MedianAveragingFilter
-import com.irurueta.android.navigation.inertial.estimators.pose.RelativePoseEstimator
+import com.irurueta.android.navigation.inertial.estimators.pose.RelativePoseEstimator2
 import com.irurueta.geometry.*
 
 class RelativePoseEstimatorActivity : AppCompatActivity() {
@@ -57,7 +57,7 @@ class RelativePoseEstimatorActivity : AppCompatActivity() {
 
     private var camera: PinholeCamera? = null
 
-    private var poseEstimator: RelativePoseEstimator? = null
+    private var poseEstimator: RelativePoseEstimator2? = null
 
     private val conversionRotation = ENUtoNEDTriadConverter.conversionRotation
 
@@ -187,7 +187,7 @@ class RelativePoseEstimatorActivity : AppCompatActivity() {
         if (poseEstimator?.running == true) return
 
         if (poseEstimator != null) {
-            poseEstimator?.initialLocation = location
+            // TODO: poseEstimator?.initialLocation = location
         } else {
             val accelerometerAveragingFilter =
                 buildAveragingFilter(accelerometerAveragingFilterType)
@@ -199,16 +199,15 @@ class RelativePoseEstimatorActivity : AppCompatActivity() {
             }
             val refreshIntervalNanos = (1.0f / refreshRate * 1e9).toLong()
 
-            poseEstimator = RelativePoseEstimator(
+            poseEstimator = RelativePoseEstimator2(
                 this,
                 sensorDelay = SensorDelay.FASTEST,
+                useAttitudeSensor = true,
                 useAccelerometerForAttitudeEstimation = false,
+                startOffsetEnabled = false,
                 accelerometerSensorType = accelerometerSensorType,
                 gyroscopeSensorType = gyroscopeSensorType,
                 accelerometerAveragingFilter = accelerometerAveragingFilter,
-                useAccurateLevelingEstimator = true,
-                useAccurateRelativeGyroscopeAttitudeEstimator = true,
-                initialLocation = location,
                 poseAvailableListener = { _, timestamp, poseTransformation ->
 
                     if (!initialAttitudeAvailable) {

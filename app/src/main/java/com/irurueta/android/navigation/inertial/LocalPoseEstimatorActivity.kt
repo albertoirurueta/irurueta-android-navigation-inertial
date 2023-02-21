@@ -219,6 +219,7 @@ class LocalPoseEstimatorActivity : AppCompatActivity() {
                 sensorDelay = SensorDelay.FASTEST,
                 useAttitudeSensor = true,
                 useAccelerometerForAttitudeEstimation = false,
+                startOffsetEnabled = false,
                 accelerometerSensorType = accelerometerSensorType,
                 gyroscopeSensorType = gyroscopeSensorType,
                 magnetometerSensorType = magnetometerSensorType,

@@ -16,7 +16,6 @@
 package com.irurueta.android.navigation.inertial.estimators.pose
 
 import android.content.Context
-import android.location.Location
 import androidx.test.core.app.ApplicationProvider
 import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
@@ -26,7 +25,6 @@ import com.irurueta.android.navigation.inertial.processors.attitude.BaseFusedGeo
 import com.irurueta.android.navigation.inertial.processors.pose.*
 import com.irurueta.android.navigation.inertial.setPrivateProperty
 import com.irurueta.geometry.EuclideanTransformation3D
-import com.irurueta.navigation.frames.ECEFFrame
 import com.irurueta.statistics.UniformRandomizer
 import io.mockk.*
 import org.junit.After
@@ -1513,38 +1511,6 @@ class RelativePoseEstimator2Test {
     }
 
     private companion object {
-        const val MIN_LATITUDE_DEGREES = -90.0
-        const val MAX_LATITUDE_DEGREES = 90.0
-
-        const val MIN_LONGITUDE_DEGREES = -180.0
-        const val MAX_LONGITUDE_DEGREES = 180.0
-
-        const val MIN_HEIGHT = -100.0
-        const val MAX_HEIGHT = 4000.0
-
         const val TIME_INTERVAL = 0.02
-
-        fun getLocation(): Location {
-            val randomizer = UniformRandomizer()
-            val latitudeDegrees = randomizer.nextDouble(
-                MIN_LATITUDE_DEGREES,
-                MAX_LATITUDE_DEGREES
-            )
-            val longitudeDegrees = randomizer.nextDouble(
-                MIN_LONGITUDE_DEGREES,
-                MAX_LONGITUDE_DEGREES
-            )
-            val height = randomizer.nextDouble(
-                MIN_HEIGHT,
-                MAX_HEIGHT
-            )
-
-            val location = mockk<Location>()
-            every { location.latitude }.returns(latitudeDegrees)
-            every { location.longitude }.returns(longitudeDegrees)
-            every { location.altitude }.returns(height)
-
-            return location
-        }
     }
 }

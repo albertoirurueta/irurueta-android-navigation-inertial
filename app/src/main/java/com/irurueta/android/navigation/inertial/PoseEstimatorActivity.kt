@@ -219,6 +219,7 @@ class PoseEstimatorActivity : AppCompatActivity() {
                 sensorDelay = SensorDelay.FASTEST,
                 useAttitudeSensor = true,
                 useAccelerometerForAttitudeEstimation = false,
+                startOffsetEnabled = false,
                 accelerometerSensorType = accelerometerSensorType,
                 gyroscopeSensorType = gyroscopeSensorType,
                 magnetometerSensorType = magnetometerSensorType,

@@ -377,7 +377,7 @@ class RelativePoseEstimator2(
      */
     private fun notifyPose(
         timestamp: Long,
-        poseTransformation: EuclideanTransformation3D?
+        poseTransformation: EuclideanTransformation3D
     ) {
         poseAvailableListener?.onPoseAvailable(
             this,
@@ -409,7 +409,7 @@ class RelativePoseEstimator2(
         fun onPoseAvailable(
             estimator: RelativePoseEstimator2,
             timestamp: Long,
-            poseTransformation: EuclideanTransformation3D?
+            poseTransformation: EuclideanTransformation3D
         )
     }
 

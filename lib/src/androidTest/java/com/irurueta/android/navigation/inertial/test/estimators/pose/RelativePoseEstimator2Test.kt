@@ -1,18 +1,18 @@
 /*
- * Copyright (C) 2023 Alberto Irurueta Carro (alberto@irurueta.com)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *         http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+* Copyright (C) 2023 Alberto Irurueta Carro (alberto@irurueta.com)
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*         http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
 package com.irurueta.android.navigation.inertial.test.estimators.pose
 
 import android.location.Location
@@ -22,19 +22,17 @@ import androidx.test.filters.RequiresDevice
 import com.irurueta.android.navigation.inertial.LocationService
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
-import com.irurueta.android.navigation.inertial.estimators.pose.LocalPoseEstimator2
+import com.irurueta.android.navigation.inertial.estimators.pose.RelativePoseEstimator2
 import com.irurueta.android.navigation.inertial.test.LocationActivity
+import com.irurueta.geometry.EuclideanTransformation3D
 import com.irurueta.geometry.Point3D
-import com.irurueta.navigation.frames.ECEFFrame
 import io.mockk.spyk
 import org.junit.Assert
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
 @RequiresDevice
-class LocalPoseEstimator2Test {
+class RelativePoseEstimator2Test {
 
     private val syncHelper = ThreadSyncHelper()
 
@@ -61,31 +59,27 @@ class LocalPoseEstimator2Test {
     @Test
     fun startAndStop_estimatesCurrentPose() {
         val location = getCurrentLocation()
+        requireNotNull(location)
         val activity = this.activity
         requireNotNull(activity)
 
         val refreshRate = activity.display?.mode?.refreshRate ?: 60.0f
         val refreshIntervalNanos = (1.0f / refreshRate * 1e9).toLong()
 
-        val estimator = LocalPoseEstimator2(
+        val estimator = RelativePoseEstimator2(
             activity,
-            location,
             sensorDelay = SensorDelay.FASTEST,
             useAttitudeSensor = true,
             startOffsetEnabled = false,
-            useWorldMagneticModel = true,
-            useAccurateLevelingProcessor = true,
-            useDoubleFusedAttitudeProcessor = true,
-            estimatePoseTransformation = true,
-            poseAvailableListener = { _, currentEcefFrame, _, initialEcefFrame, timestamp, _ ->
+            poseAvailableListener = { _, timestamp, poseTransformation ->
                 if (previousTimestamp < 0) {
                     previousTimestamp = timestamp
-                    return@LocalPoseEstimator2
+                    return@RelativePoseEstimator2
                 }
 
                 // refresh only as much as display allows even though sensors might run at higher refresh rates
                 if (timestamp - previousTimestamp >= refreshIntervalNanos) {
-                    logTranslation(currentEcefFrame, initialEcefFrame)
+                    logTranslation(poseTransformation)
                     previousTimestamp = timestamp
 
                     syncHelper.notifyAll { completed++ }
@@ -99,18 +93,18 @@ class LocalPoseEstimator2Test {
 
         estimator.stop()
 
-        assertTrue(completed > 0)
+        Assert.assertTrue(completed > 0)
     }
 
     private fun getCurrentLocation(): Location {
         val scenario = ActivityScenario.launch(LocationActivity::class.java).use {
             it.onActivity { activity ->
-                this@LocalPoseEstimator2Test.activity = activity
+                this@RelativePoseEstimator2Test.activity = activity
                 val service = LocationService(activity)
 
                 val enabled = service.locationEnabled
                 requireNotNull(enabled)
-                assertTrue(enabled)
+                Assert.assertTrue(enabled)
 
                 val currentLocationListener =
                     spyk(object : LocationService.OnCurrentLocationListener {
@@ -124,7 +118,7 @@ class LocalPoseEstimator2Test {
                 service.getCurrentLocation(currentLocationListener)
             }
         }
-        assertNotNull(scenario)
+        Assert.assertNotNull(scenario)
 
         syncHelper.waitOnCondition({ completed < 1 })
         Assert.assertEquals(1, completed)
@@ -135,10 +129,9 @@ class LocalPoseEstimator2Test {
         return currentLocation
     }
 
-    private fun logTranslation(currentEcefFrame: ECEFFrame, initialEcefFrame: ECEFFrame) {
-        currentEcefFrame.getPosition(translation)
-        initialEcefFrame.getPosition(origin)
+    private fun logTranslation(poseTransformation: EuclideanTransformation3D) {
+        poseTransformation.getTranslationPoint(translation)
         val distance = translation.distanceTo(origin)
-        Log.d("LocalPoseEstimator2Test", "Translation: $distance meters")
+        Log.d("RelativePoseEstimator2Test", "Translation: $distance meters")
     }
 }
