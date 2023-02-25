@@ -153,17 +153,14 @@ class RelativePoseEstimator2(
     /**
      * Measurement syncer for internal [attitudeProcessor].
      */
-    private val attitudeSyncer = AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer(
+    private val attitudeSyncer = AttitudeAndAccelerometerSensorMeasurementSyncer(
         context,
         attitudeSensorType = AttitudeSensorType.ABSOLUTE_ATTITUDE,
         accelerometerSensorType,
-        gyroscopeSensorType,
-        sensorDelay,
         sensorDelay,
         sensorDelay,
         attitudeStartOffsetEnabled = startOffsetEnabled,
         accelerometerStartOffsetEnabled = startOffsetEnabled,
-        gyroscopeStartOffsetEnabled = startOffsetEnabled,
         stopWhenFilledBuffer = false,
         staleDetectionEnabled = true,
         accuracyChangedListener = { _, sensorType, accuracy ->

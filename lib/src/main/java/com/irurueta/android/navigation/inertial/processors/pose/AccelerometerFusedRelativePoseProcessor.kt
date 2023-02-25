@@ -82,7 +82,7 @@ class AccelerometerFusedRelativePoseProcessor(
                 timestamp
             )
         ) {
-            processPose(accelerometerMeasurement, gyroscopeMeasurement, timestamp)
+            processPose(accelerometerMeasurement, /*gyroscopeMeasurement,*/ timestamp)
         } else {
             false
         }

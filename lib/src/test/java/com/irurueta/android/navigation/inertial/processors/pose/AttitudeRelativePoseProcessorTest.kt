@@ -16,10 +16,7 @@
 package com.irurueta.android.navigation.inertial.processors.pose
 
 import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorMeasurement
-import com.irurueta.android.navigation.inertial.collectors.AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement
-import com.irurueta.android.navigation.inertial.collectors.AttitudeSensorMeasurement
-import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.MeanAveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.pose.SpeedTriad
@@ -167,7 +164,7 @@ class AttitudeRelativePoseProcessorTest {
     fun process_whenEmpty_returnsFalse() {
         val processor = AttitudeRelativePoseProcessor()
 
-        val syncedMeasurement = AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement()
+        val syncedMeasurement = AttitudeAndAccelerometerSyncedSensorMeasurement()
         assertFalse(processor.process(syncedMeasurement))
     }
 
@@ -175,10 +172,9 @@ class AttitudeRelativePoseProcessorTest {
     fun process_whenNoAttitudeMeasurement_returnsFalse() {
         val processor = AttitudeRelativePoseProcessor()
 
-        val syncedMeasurement = AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement(
+        val syncedMeasurement = AttitudeAndAccelerometerSyncedSensorMeasurement(
             attitudeMeasurement = null,
             accelerometerMeasurement = AccelerometerSensorMeasurement(),
-            gyroscopeMeasurement = GyroscopeSensorMeasurement(),
             timestamp = System.nanoTime()
         )
         assertFalse(processor.process(syncedMeasurement))
@@ -188,23 +184,9 @@ class AttitudeRelativePoseProcessorTest {
     fun process_whenNoAccelerometerMeasurement_returnsFalse() {
         val processor = AttitudeRelativePoseProcessor()
 
-        val syncedMeasurement = AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement(
+        val syncedMeasurement = AttitudeAndAccelerometerSyncedSensorMeasurement(
             attitudeMeasurement = AttitudeSensorMeasurement(),
             accelerometerMeasurement = null,
-            gyroscopeMeasurement = GyroscopeSensorMeasurement(),
-            timestamp = System.nanoTime()
-        )
-        assertFalse(processor.process(syncedMeasurement))
-    }
-
-    @Test
-    fun process_whenNoGyroscopeMeasurement_returnsFalse() {
-        val processor = AttitudeRelativePoseProcessor()
-
-        val syncedMeasurement = AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement(
-            attitudeMeasurement = AttitudeSensorMeasurement(),
-            accelerometerMeasurement = AccelerometerSensorMeasurement(),
-            gyroscopeMeasurement = null,
             timestamp = System.nanoTime()
         )
         assertFalse(processor.process(syncedMeasurement))
@@ -219,11 +201,9 @@ class AttitudeRelativePoseProcessorTest {
         val attitudeMeasurement =
             AttitudeSensorMeasurement(attitude = enuAttitude, timestamp = timestamp)
         val accelerometerMeasurement = AccelerometerSensorMeasurement()
-        val gyroscopeMeasurement = GyroscopeSensorMeasurement()
-        val syncedMeasurement = AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement(
+        val syncedMeasurement = AttitudeAndAccelerometerSyncedSensorMeasurement(
             attitudeMeasurement,
             accelerometerMeasurement,
-            gyroscopeMeasurement,
             timestamp
         )
 
@@ -320,16 +300,9 @@ class AttitudeRelativePoseProcessorTest {
             az = accelerometerEnu.valueZ.toFloat(),
             timestamp = timestamp
         )
-        val gyroscopeMeasurement = GyroscopeSensorMeasurement(
-            wx = gyroscopeEnu.valueX.toFloat(),
-            wy = gyroscopeEnu.valueY.toFloat(),
-            wz = gyroscopeEnu.valueZ.toFloat(),
-            timestamp = timestamp
-        )
-        val syncedMeasurement = AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement(
+        val syncedMeasurement = AttitudeAndAccelerometerSyncedSensorMeasurement(
             attitudeMeasurement,
             accelerometerMeasurement,
-            gyroscopeMeasurement,
             timestamp
         )
 
@@ -461,16 +434,9 @@ class AttitudeRelativePoseProcessorTest {
             az = accelerometerEnu.valueZ.toFloat(),
             timestamp = timestamp
         )
-        val gyroscopeMeasurement = GyroscopeSensorMeasurement(
-            wx = gyroscopeEnu.valueX.toFloat(),
-            wy = gyroscopeEnu.valueY.toFloat(),
-            wz = gyroscopeEnu.valueZ.toFloat(),
-            timestamp = timestamp
-        )
-        val syncedMeasurement = AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement(
+        val syncedMeasurement = AttitudeAndAccelerometerSyncedSensorMeasurement(
             attitudeMeasurement,
             accelerometerMeasurement,
-            gyroscopeMeasurement,
             timestamp
         )
 
@@ -619,16 +585,9 @@ class AttitudeRelativePoseProcessorTest {
             az = accelerometerEnu.valueZ.toFloat(),
             timestamp = timestamp
         )
-        val gyroscopeMeasurement = GyroscopeSensorMeasurement(
-            wx = gyroscopeEnu.valueX.toFloat(),
-            wy = gyroscopeEnu.valueY.toFloat(),
-            wz = gyroscopeEnu.valueZ.toFloat(),
-            timestamp = timestamp
-        )
-        val syncedMeasurement = AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement(
+        val syncedMeasurement = AttitudeAndAccelerometerSyncedSensorMeasurement(
             attitudeMeasurement,
             accelerometerMeasurement,
-            gyroscopeMeasurement,
             timestamp
         )
 

@@ -15,10 +15,7 @@
  */
 package com.irurueta.android.navigation.inertial.processors.pose
 
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorMeasurement
-import com.irurueta.android.navigation.inertial.collectors.AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement
-import com.irurueta.android.navigation.inertial.collectors.AttitudeSensorMeasurement
-import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.pose.SpeedTriad
@@ -58,16 +55,13 @@ class AttitudeRelativePoseProcessor(
      * @return true if new pose is estimated, false otherwise.
      */
     fun process(
-        syncedMeasurement: AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement
+        syncedMeasurement: AttitudeAndAccelerometerSyncedSensorMeasurement
     ): Boolean {
         val attitudeMeasurement = syncedMeasurement.attitudeMeasurement
         val accelerometerMeasurement = syncedMeasurement.accelerometerMeasurement
-        val gyroscopeMeasurement = syncedMeasurement.gyroscopeMeasurement
         val timestamp = syncedMeasurement.timestamp
-        return if (attitudeMeasurement != null && accelerometerMeasurement != null
-            && gyroscopeMeasurement != null
-        ) {
-            process(attitudeMeasurement, accelerometerMeasurement, gyroscopeMeasurement, timestamp)
+        return if (attitudeMeasurement != null && accelerometerMeasurement != null) {
+            process(attitudeMeasurement, accelerometerMeasurement, timestamp)
         } else {
             false
         }
@@ -78,14 +72,12 @@ class AttitudeRelativePoseProcessor(
      *
      * @param attitudeMeasurement attitude measurement.
      * @param accelerometerMeasurement accelerometer measurement.
-     * @param gyroscopeMeasurement gyroscope measurement.
      * @param timestamp timestamp when all measurements are assumed to occur.
      * @return true if new pose is estimated, false otherwise.
      */
     private fun process(
         attitudeMeasurement: AttitudeSensorMeasurement,
         accelerometerMeasurement: AccelerometerSensorMeasurement,
-        gyroscopeMeasurement: GyroscopeSensorMeasurement,
         timestamp: Long
     ): Boolean {
         attitudeProcessor.process(attitudeMeasurement).copyTo(currentAttitude)
@@ -96,6 +88,6 @@ class AttitudeRelativePoseProcessor(
 
         gravityProcessor.getGravity(gravity)
 
-        return processPose(accelerometerMeasurement, gyroscopeMeasurement, timestamp)
+        return processPose(accelerometerMeasurement, timestamp)
     }
 }

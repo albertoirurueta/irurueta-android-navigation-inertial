@@ -18,13 +18,11 @@ package com.irurueta.android.navigation.inertial.processors.pose
 import com.irurueta.algebra.Matrix
 import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorMeasurement
-import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorMeasurement
 import com.irurueta.android.navigation.inertial.estimators.pose.SpeedTriad
 import com.irurueta.geometry.EuclideanTransformation3D
 import com.irurueta.geometry.InhomogeneousPoint3D
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.inertial.calibration.AccelerationTriad
-import com.irurueta.navigation.inertial.calibration.AngularSpeedTriad
 import com.irurueta.units.TimeConverter
 
 /**
@@ -42,11 +40,6 @@ abstract class BaseRelativePoseProcessor(
      * gravity component.
      */
     private val specificForce = AccelerationTriad()
-
-    /**
-     * Angular speed measured by gyroscope sensor.
-     */
-    private val angularSpeed = AngularSpeedTriad()
 
     /**
      * Indicates whether estimator has been initialized.
@@ -158,13 +151,11 @@ abstract class BaseRelativePoseProcessor(
      * gyroscope measurements to estimate new position and velocity from previous ones.
      *
      * @param accelerometerMeasurement accelerometer measurement.
-     * @param gyroscopeMeasurement gyroscope measurement.
      * @param timestamp timestamp when all measurements are assumed to occur.
      * @return true if new pose is processed, false otherwise.
      */
     protected fun processPose(
         accelerometerMeasurement: AccelerometerSensorMeasurement,
-        gyroscopeMeasurement: GyroscopeSensorMeasurement,
         timestamp: Long
     ): Boolean {
         if (!processTimeInterval(timestamp)) {
@@ -174,7 +165,6 @@ abstract class BaseRelativePoseProcessor(
         initializeIfNeeded(currentAttitude)
 
         processAccelerometer(accelerometerMeasurement)
-        processGyroscope(gyroscopeMeasurement)
 
         // obtain average attitude between current and previous attitude
         Quaternion.slerp(previousAttitude, currentAttitude, 0.5, averageAttitude)
@@ -257,27 +247,6 @@ abstract class BaseRelativePoseProcessor(
         val currentAz = if (bz != null) az - bz else az
 
         ENUtoNEDTriadConverter.convert(currentAx, currentAy, currentAz, specificForce)
-    }
-
-    /**
-     * Processes current gyroscope measurement to obtain angular speed expressed in NED
-     * coordinates.
-     *
-     * @param measurement gyroscope measurement to be processed.
-     */
-    private fun processGyroscope(measurement: GyroscopeSensorMeasurement) {
-        val wx = measurement.wx.toDouble()
-        val wy = measurement.wy.toDouble()
-        val wz = measurement.wz.toDouble()
-        val bx = measurement.bx?.toDouble()
-        val by = measurement.by?.toDouble()
-        val bz = measurement.bz?.toDouble()
-
-        val currentWx = if (bx != null) wx - bx else wx
-        val currentWy = if (by != null) wy - by else wy
-        val currentWz = if (bz != null) wz - bz else wz
-
-        ENUtoNEDTriadConverter.convert(currentWx, currentWy, currentWz, angularSpeed)
     }
 
     /**

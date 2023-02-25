@@ -757,7 +757,7 @@ class RelativePoseEstimator2Test {
         val accelerometerFusedSyncerSpy = spyk(accelerometerFusedSyncer)
         estimator.setPrivateProperty("accelerometerFusedSyncer", accelerometerFusedSyncerSpy)
 
-        val attitudeSyncer: AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer? =
+        val attitudeSyncer: AttitudeAndAccelerometerSensorMeasurementSyncer? =
             estimator.getPrivateProperty("attitudeSyncer")
         requireNotNull(attitudeSyncer)
         val attitudeSyncerSpy = spyk(attitudeSyncer)
@@ -817,7 +817,7 @@ class RelativePoseEstimator2Test {
         every { accelerometerFusedSyncerSpy.start(startTimestamp) }.returns(true)
         estimator.setPrivateProperty("accelerometerFusedSyncer", accelerometerFusedSyncerSpy)
 
-        val attitudeSyncer: AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer? =
+        val attitudeSyncer: AttitudeAndAccelerometerSensorMeasurementSyncer? =
             estimator.getPrivateProperty("attitudeSyncer")
         requireNotNull(attitudeSyncer)
         val attitudeSyncerSpy = spyk(attitudeSyncer)
@@ -876,7 +876,7 @@ class RelativePoseEstimator2Test {
         val accelerometerFusedSyncerSpy = spyk(accelerometerFusedSyncer)
         estimator.setPrivateProperty("accelerometerFusedSyncer", accelerometerFusedSyncerSpy)
 
-        val attitudeSyncer: AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer? =
+        val attitudeSyncer: AttitudeAndAccelerometerSensorMeasurementSyncer? =
             estimator.getPrivateProperty("attitudeSyncer")
         requireNotNull(attitudeSyncer)
         val attitudeSyncerSpy = spyk(attitudeSyncer)
@@ -913,7 +913,7 @@ class RelativePoseEstimator2Test {
         val accelerometerFusedSyncerSpy = spyk(accelerometerFusedSyncer)
         estimator.setPrivateProperty("accelerometerFusedSyncer", accelerometerFusedSyncerSpy)
 
-        val attitudeSyncer: AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer? =
+        val attitudeSyncer: AttitudeAndAccelerometerSensorMeasurementSyncer? =
             estimator.getPrivateProperty("attitudeSyncer")
         requireNotNull(attitudeSyncer)
         val attitudeSyncerSpy = spyk(attitudeSyncer)
@@ -1319,7 +1319,7 @@ class RelativePoseEstimator2Test {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = RelativePoseEstimator2(context)
 
-        val attitudeSyncer: AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer? =
+        val attitudeSyncer: AttitudeAndAccelerometerSensorMeasurementSyncer? =
             estimator.getPrivateProperty("attitudeSyncer")
         requireNotNull(attitudeSyncer)
         val listener = attitudeSyncer.accuracyChangedListener
@@ -1343,7 +1343,7 @@ class RelativePoseEstimator2Test {
             accuracyChangedListener = accuracyChangedListener
         )
 
-        val attitudeSyncer: AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer? =
+        val attitudeSyncer: AttitudeAndAccelerometerSensorMeasurementSyncer? =
             estimator.getPrivateProperty("attitudeSyncer")
         requireNotNull(attitudeSyncer)
         val listener = attitudeSyncer.accuracyChangedListener
@@ -1371,7 +1371,7 @@ class RelativePoseEstimator2Test {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = RelativePoseEstimator2(context)
 
-        val attitudeSyncer: AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer? =
+        val attitudeSyncer: AttitudeAndAccelerometerSensorMeasurementSyncer? =
             estimator.getPrivateProperty("attitudeSyncer")
         requireNotNull(attitudeSyncer)
         val listener = attitudeSyncer.bufferFilledListener
@@ -1391,7 +1391,7 @@ class RelativePoseEstimator2Test {
             bufferFilledListener = bufferFilledListener
         )
 
-        val attitudeSyncer: AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer? =
+        val attitudeSyncer: AttitudeAndAccelerometerSensorMeasurementSyncer? =
             estimator.getPrivateProperty("attitudeSyncer")
         requireNotNull(attitudeSyncer)
         val listener = attitudeSyncer.bufferFilledListener
@@ -1418,7 +1418,7 @@ class RelativePoseEstimator2Test {
             poseAvailableListener = poseAvailableListener
         )
 
-        val attitudeSyncer: AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer? =
+        val attitudeSyncer: AttitudeAndAccelerometerSensorMeasurementSyncer? =
             estimator.getPrivateProperty("attitudeSyncer")
         requireNotNull(attitudeSyncer)
         val listener = attitudeSyncer.syncedMeasurementListener
@@ -1432,7 +1432,7 @@ class RelativePoseEstimator2Test {
         estimator.setPrivateProperty("attitudeProcessor", attitudeProcessorSpy)
 
         // notify measurement
-        val measurement = AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement()
+        val measurement = AttitudeAndAccelerometerSyncedSensorMeasurement()
         listener.onSyncedMeasurements(attitudeSyncer, measurement)
 
         // check
@@ -1445,7 +1445,7 @@ class RelativePoseEstimator2Test {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = RelativePoseEstimator2(context)
 
-        val attitudeSyncer: AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer? =
+        val attitudeSyncer: AttitudeAndAccelerometerSensorMeasurementSyncer? =
             estimator.getPrivateProperty("attitudeSyncer")
         requireNotNull(attitudeSyncer)
         val listener = attitudeSyncer.syncedMeasurementListener
@@ -1459,7 +1459,7 @@ class RelativePoseEstimator2Test {
         estimator.setPrivateProperty("attitudeProcessor", attitudeProcessorSpy)
 
         // notify measurement
-        val measurement = AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement()
+        val measurement = AttitudeAndAccelerometerSyncedSensorMeasurement()
         listener.onSyncedMeasurements(attitudeSyncer, measurement)
 
         // check
@@ -1477,7 +1477,7 @@ class RelativePoseEstimator2Test {
             poseAvailableListener = poseAvailableListener
         )
 
-        val attitudeSyncer: AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer? =
+        val attitudeSyncer: AttitudeAndAccelerometerSensorMeasurementSyncer? =
             estimator.getPrivateProperty("attitudeSyncer")
         requireNotNull(attitudeSyncer)
         val listener = attitudeSyncer.syncedMeasurementListener
@@ -1495,7 +1495,7 @@ class RelativePoseEstimator2Test {
         // notify measurement
         val timestamp = System.nanoTime()
         val measurement =
-            AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement(timestamp = timestamp)
+            AttitudeAndAccelerometerSyncedSensorMeasurement(timestamp = timestamp)
         listener.onSyncedMeasurements(attitudeSyncer, measurement)
 
         // check

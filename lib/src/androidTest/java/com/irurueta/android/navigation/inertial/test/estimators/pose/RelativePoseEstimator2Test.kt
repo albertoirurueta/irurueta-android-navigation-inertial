@@ -27,7 +27,7 @@ import com.irurueta.android.navigation.inertial.test.LocationActivity
 import com.irurueta.geometry.EuclideanTransformation3D
 import com.irurueta.geometry.Point3D
 import io.mockk.spyk
-import org.junit.Assert
+import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 
@@ -59,7 +59,7 @@ class RelativePoseEstimator2Test {
     @Test
     fun startAndStop_estimatesCurrentPose() {
         val location = getCurrentLocation()
-        requireNotNull(location)
+        assertNotNull(location)
         val activity = this.activity
         requireNotNull(activity)
 
@@ -93,7 +93,7 @@ class RelativePoseEstimator2Test {
 
         estimator.stop()
 
-        Assert.assertTrue(completed > 0)
+        assertTrue(completed > 0)
     }
 
     private fun getCurrentLocation(): Location {
@@ -104,7 +104,7 @@ class RelativePoseEstimator2Test {
 
                 val enabled = service.locationEnabled
                 requireNotNull(enabled)
-                Assert.assertTrue(enabled)
+                assertTrue(enabled)
 
                 val currentLocationListener =
                     spyk(object : LocationService.OnCurrentLocationListener {
@@ -118,10 +118,10 @@ class RelativePoseEstimator2Test {
                 service.getCurrentLocation(currentLocationListener)
             }
         }
-        Assert.assertNotNull(scenario)
+        assertNotNull(scenario)
 
         syncHelper.waitOnCondition({ completed < 1 })
-        Assert.assertEquals(1, completed)
+        assertEquals(1, completed)
         completed = 0
 
         val currentLocation = this.currentLocation
