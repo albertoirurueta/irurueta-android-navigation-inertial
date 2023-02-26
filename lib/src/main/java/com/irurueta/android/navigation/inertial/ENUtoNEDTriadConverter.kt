@@ -16,8 +16,13 @@
 package com.irurueta.android.navigation.inertial
 
 import com.irurueta.algebra.Matrix
+import com.irurueta.geometry.EuclideanTransformation3D
+import com.irurueta.geometry.Point3D
 import com.irurueta.geometry.Quaternion
 import com.irurueta.geometry.Rotation3D
+import com.irurueta.navigation.inertial.calibration.AccelerationTriad
+import com.irurueta.navigation.inertial.calibration.AngularSpeedTriad
+import com.irurueta.navigation.inertial.calibration.MagneticFluxDensityTriad
 import com.irurueta.navigation.inertial.calibration.Triad
 import com.irurueta.units.Measurement
 import kotlin.math.sqrt
@@ -74,6 +79,42 @@ object ENUtoNEDTriadConverter {
     }
 
     /**
+     * Converts provided acceleration triad from ENU to NED or from NED to ENU.
+     *
+     * @param input acceleration triad to be converted.
+     * @return new acceleration triad containing result of conversion.
+     */
+    fun convertAndReturnNew(input: AccelerationTriad) : AccelerationTriad {
+        val result = AccelerationTriad()
+        convert(input, result)
+        return result
+    }
+
+    /**
+     * Converts provided angular speed triad from ENU to NED or from NED to ENU.
+     *
+     * @param input angular speed triad to be converted.
+     * @return new angular speed triad containing result of conversion.
+     */
+    fun convertAndReturnNew(input: AngularSpeedTriad) : AngularSpeedTriad {
+        val result = AngularSpeedTriad()
+        convert(input, result)
+        return result
+    }
+
+    /**
+     * Converts provided magnetic flux density triad from ENU to NED or from NED to ENU.
+     *
+     * @param input magnetic flux density to be converted.
+     * @return new magnetic flux density triad containing result of conversion.
+     */
+    fun convertAndReturnNew(input: MagneticFluxDensityTriad) : MagneticFluxDensityTriad {
+        val result = MagneticFluxDensityTriad()
+        convert(input, result)
+        return result
+    }
+
+    /**
      * Converts a rotation from ENU to NED or from NED to ENU, taking into account that:
      * Renu = CONVERSION_ROTATION * Rned * CONVERSION_ROTATION
      * And also:
@@ -83,10 +124,32 @@ object ENUtoNEDTriadConverter {
      * @param output Instance where result will be stored.
      */
     fun convert(input: Quaternion, output: Quaternion) {
+        // Xenu =  [0   1   0 ] * Xned
+        //         [1   0   0 ]
+        //	       [0   0   -1]
+
+        // Xned =  [0   1   0 ] * Xenu
+        //         [1   0   0 ]
+        //         [0   0   -1]
+
+        // C = 	[0  1   0 ]
+        //      [1  0   0 ]
+        //      [0  0   -1]
+
+        // Notice that	conversion = C, and C * C = I -> C = C^-1
+
+        // Xrotated_ned = Rned * Xned = Rned * C * Xenu
+        // Xrotated_enu = Renu * Xenu = Renu * C * Xned
+
+        // Xrotated_enu = C * Xrotated_ned = C * Rned * C * Xenu = Renu * Xenu
+        // Xrotated_ned = C * Xrotated_enu = C * Renu * C * Xned = Rned * Xned
+
+        // Hence:
+        // Renu = C * Rned * C
+        // Rned = C * Renu * C
+
         Quaternion.product(CONVERSION_ROTATION, input, output)
-        output.normalize()
         Quaternion.product(output, CONVERSION_ROTATION, output)
-        output.normalize()
     }
 
     /**
@@ -101,6 +164,138 @@ object ENUtoNEDTriadConverter {
     fun convertAndReturnNew(value: Quaternion): Quaternion {
         val result = Quaternion()
         convert(value, result)
+        return result
+    }
+
+    /**
+     * Converts an euclidean 3D transformation from ENU to NED or from NED to ENU, taking into
+     * account that:
+     * Tenu = Chom * Tned * Chom
+     * Tned = Chom * Tenu * Chom
+     *
+     * @param input Input euclidean 3D transformation to be converted.
+     * @param output Instance where result will be stored.
+     */
+    fun convert(input: EuclideanTransformation3D, output: EuclideanTransformation3D) {
+        // T =  [R  t] is an euclidean 3D transformation
+        //      [0  1]
+
+        // Given a point X = [x y z 1]^T = [Xinhom 1]^T, then it's transformation becomes:
+        // X' = T * X = [R  t][Xinhom] = [R*Xinhom + t]
+        //              [0  1][1     ]   [1           ]
+
+        // A transformed point in ENU coordinates can be expressed as:
+        // Xenu' = Tenu * Xenu
+        // where Tenu is
+        // Tenu =   [Renu   tenu]
+        //          [0      1   ]
+        // A transformed point in NED coordinates can be expressed as:
+        // Xned' = Tned * Xned
+        // where Tned is
+        // Tned = [Rned     tned]
+        //        [0        1   ]
+
+        // we know that:
+        // Rned = C * Renu * C
+        // Where C is the conversion matrix
+        // and likewise, the converted translation term is:
+        // tned = C * tenu
+
+        // Consequently:
+        // Tned = [Rned     tned] = [C * Renu * C   C *tenu ] = [C * Renu   C * tenu] * [C  0] =
+        //        [0        1   ]   [0              1       ]   [0          1       ]   [0  1]
+
+        // [C   0] *[Renu tenu] * [C    0]
+        // [0   1]  [0    1   ]   [0    1]
+
+        // Tned = [C    0] * Tenu * [C  0]
+        //        [0    1]          [0  1]
+
+        // Finally, if we consider Chom as an extended version of C in homogeneous coordinates:
+        // Chom = [C    0]
+        //        [0    1]
+
+        // Then transformation becomes
+        // Tned = Chom * Tenu * Chom
+
+        val inputRotation = if (input.rotation is Quaternion) {
+            input.rotation as Quaternion
+        } else {
+            input.rotation.toQuaternion()
+        }
+
+        val inputTranslation = input.translation
+
+        val outputRotation = if (output.rotation is Quaternion) {
+            output.rotation as Quaternion
+        } else {
+            output.rotation.toQuaternion()
+        }
+
+        val outputTranslation = output.translation
+
+        convert(inputRotation, outputRotation)
+        convertPoint(inputTranslation, outputTranslation)
+    }
+
+    /**
+     * Converts an euclidean 3D transformation from ENU to NED or from NED to ENU, taking into
+     * account that:
+     * Tenu = Chom * Tned * Chom
+     * Tned = Chom * Tenu * Chom
+     *
+     * @param input Input euclidean 3D transformation t be converted.
+     * @return converted euclidean 3D transformation.
+     */
+    fun convertAndReturnNew(input: EuclideanTransformation3D): EuclideanTransformation3D {
+        val result = EuclideanTransformation3D()
+        convert(input, result)
+        return result
+    }
+
+    /**
+     * Converts 3D inhomogeneous point from ENU to NED or from NED to ENU.
+     *
+     * @param valueX x-coordinate of inhomogeneous 3D input point to be converted
+     * @param valueY y-coordinate of inhomogeneous 3D input point to be converted.
+     * @param valueZ z-coordinate of inhomogeneous 3D input point to be converted.
+     * @param output array instance where result of conversion will be stored.
+     * @throws IllegalArgumentException if provided output array does not have length 3.
+     */
+    @Throws(IllegalArgumentException::class)
+    fun convertPoint(valueX: Double, valueY: Double, valueZ: Double, output: DoubleArray) {
+        require(output.size == Point3D.POINT3D_INHOMOGENEOUS_COORDINATES_LENGTH)
+
+        output[0] = valueY
+        output[1] = valueX
+        output[2] = -valueZ
+    }
+
+    /**
+     * Converts 3D inhomogeneous point from ENU to NED or from NED to ENU.
+     *
+     * @param input array containing point coordinates of 3D inhomogeneous point to be converted.
+     * @param output array instance where result of conversion will be stored.
+     * @throws IllegalArgumentException if provided arrays do not have length 3.
+     */
+    @Throws(IllegalArgumentException::class)
+    fun convertPoint(input: DoubleArray, output: DoubleArray) {
+        require(input.size == Point3D.POINT3D_INHOMOGENEOUS_COORDINATES_LENGTH)
+
+        convertPoint(input[0], input[1], input[2], output)
+    }
+
+    /**
+     * Converts 3D inhomogeneous point from ENU to NED or from NED to ENU.
+     *
+     * @param input array containing point coordinates of 3D inhomogeneous point to be converted.
+     * @return array containing converted point coordinates.
+     * @throws IllegalArgumentException if provided input array does not have length 3.
+     */
+    @Throws(IllegalArgumentException::class)
+    fun convertPointAndReturnNew(input: DoubleArray): DoubleArray {
+        val result = DoubleArray(Point3D.POINT3D_INHOMOGENEOUS_COORDINATES_LENGTH)
+        convertPoint(input, result)
         return result
     }
 

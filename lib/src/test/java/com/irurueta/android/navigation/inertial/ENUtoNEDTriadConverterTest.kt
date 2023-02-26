@@ -16,11 +16,15 @@
 package com.irurueta.android.navigation.inertial
 
 import com.irurueta.algebra.Matrix
+import com.irurueta.geometry.EuclideanTransformation3D
+import com.irurueta.geometry.Point3D
 import com.irurueta.geometry.Quaternion
 import com.irurueta.geometry.Rotation3D
 import com.irurueta.navigation.inertial.calibration.AccelerationTriad
 import com.irurueta.navigation.inertial.calibration.AngularSpeedTriad
 import com.irurueta.navigation.inertial.calibration.MagneticFluxDensityTriad
+import com.irurueta.navigation.inertial.calibration.gyroscope.QuaternionStepIntegrator
+import com.irurueta.navigation.inertial.calibration.gyroscope.QuaternionStepIntegratorType
 import com.irurueta.statistics.UniformRandomizer
 import io.mockk.clearAllMocks
 import io.mockk.unmockkAll
@@ -81,17 +85,17 @@ class ENUtoNEDTriadConverterTest {
 
         // convert from ENU to NED
         val enuTriad1 = AngularSpeedTriad(valueX, valueY, valueZ)
-        val nedTriad = AngularSpeedTriad()
-        ENUtoNEDTriadConverter.convert(enuTriad1, nedTriad)
+        val nedTriad1 = AngularSpeedTriad()
+        ENUtoNEDTriadConverter.convert(enuTriad1, nedTriad1)
 
         // check
-        assertEquals(nedTriad.valueX, enuTriad1.valueY, 0.0)
-        assertEquals(nedTriad.valueY, enuTriad1.valueX, 0.0)
-        assertEquals(nedTriad.valueZ, -enuTriad1.valueZ, 0.0)
+        assertEquals(nedTriad1.valueX, enuTriad1.valueY, 0.0)
+        assertEquals(nedTriad1.valueY, enuTriad1.valueX, 0.0)
+        assertEquals(nedTriad1.valueZ, -enuTriad1.valueZ, 0.0)
 
         // convert back from NED to ENU
         val enuTriad2 = AngularSpeedTriad()
-        ENUtoNEDTriadConverter.convert(nedTriad, enuTriad2)
+        ENUtoNEDTriadConverter.convert(nedTriad1, enuTriad2)
 
         // check
         assertEquals(enuTriad1, enuTriad2)
@@ -100,11 +104,7 @@ class ENUtoNEDTriadConverterTest {
         val values = enuTriad1.valuesAsMatrix
         val rotation = ENUtoNEDTriadConverter.conversionRotationMatrix
         val expected = rotation.multiplyAndReturnNew(values)
-        assertTrue(expected.equals(nedTriad.valuesAsMatrix, ABSOLUTE_ERROR))
-
-        // convert back
-        val values2 = rotation.multiplyAndReturnNew(expected)
-        assertTrue(values2.equals(values, ABSOLUTE_ERROR))
+        assertTrue(expected.equals(nedTriad1.valuesAsMatrix, ABSOLUTE_ERROR))
     }
 
     @Test
@@ -186,17 +186,17 @@ class ENUtoNEDTriadConverterTest {
 
         // convert from ENU to NED
         val enuTriad1 = AngularSpeedTriad(valueX, valueY, valueZ)
-        val nedTriad = AngularSpeedTriad()
-        ENUtoNEDTriadConverter.convert(valueX, valueY, valueZ, nedTriad)
+        val nedTriad1 = AngularSpeedTriad()
+        ENUtoNEDTriadConverter.convert(valueX, valueY, valueZ, nedTriad1)
 
         // check
-        assertEquals(nedTriad.valueX, enuTriad1.valueY, 0.0)
-        assertEquals(nedTriad.valueY, enuTriad1.valueX, 0.0)
-        assertEquals(nedTriad.valueZ, -enuTriad1.valueZ, 0.0)
+        assertEquals(nedTriad1.valueX, enuTriad1.valueY, 0.0)
+        assertEquals(nedTriad1.valueY, enuTriad1.valueX, 0.0)
+        assertEquals(nedTriad1.valueZ, -enuTriad1.valueZ, 0.0)
 
         // convert back from NED to ENU
         val enuTriad2 = AngularSpeedTriad()
-        ENUtoNEDTriadConverter.convert(nedTriad, enuTriad2)
+        ENUtoNEDTriadConverter.convert(nedTriad1, enuTriad2)
 
         // check
         assertEquals(enuTriad1, enuTriad2)
@@ -205,11 +205,7 @@ class ENUtoNEDTriadConverterTest {
         val values = enuTriad1.valuesAsMatrix
         val rotation = ENUtoNEDTriadConverter.conversionRotationMatrix
         val expected = rotation.multiplyAndReturnNew(values)
-        assertTrue(expected.equals(nedTriad.valuesAsMatrix, ABSOLUTE_ERROR))
-
-        // convert back
-        val values2 = rotation.multiplyAndReturnNew(expected)
-        assertTrue(values2.equals(values, ABSOLUTE_ERROR))
+        assertTrue(expected.equals(nedTriad1.valuesAsMatrix, ABSOLUTE_ERROR))
     }
 
     @Test
@@ -232,6 +228,101 @@ class ENUtoNEDTriadConverterTest {
         // convert back from NED to ENU
         val enuTriad2 = MagneticFluxDensityTriad()
         ENUtoNEDTriadConverter.convert(nedTriad, enuTriad2)
+
+        // check
+        assertEquals(enuTriad1, enuTriad2)
+
+        // convert using rotation matrix
+        val values = enuTriad1.valuesAsMatrix
+        val rotation = ENUtoNEDTriadConverter.conversionRotationMatrix
+        val expected = rotation.multiplyAndReturnNew(values)
+        assertTrue(expected.equals(nedTriad.valuesAsMatrix, ABSOLUTE_ERROR))
+
+        // convert back
+        val values2 = rotation.multiplyAndReturnNew(expected)
+        assertTrue(values2.equals(values, ABSOLUTE_ERROR))
+    }
+
+    @Test
+    fun convertAndReturn_whenAccelerationTriad_returnsExpectedResult() {
+        val randomizer = UniformRandomizer()
+        val valueX = randomizer.nextDouble()
+        val valueY = randomizer.nextDouble()
+        val valueZ = randomizer.nextDouble()
+
+        // convert from ENU to NED
+        val enuTriad1 = AccelerationTriad(valueX, valueY, valueZ)
+        val nedTriad = ENUtoNEDTriadConverter.convertAndReturnNew(enuTriad1)
+
+        // check
+        assertEquals(nedTriad.valueX, enuTriad1.valueY, 0.0)
+        assertEquals(nedTriad.valueY, enuTriad1.valueX, 0.0)
+        assertEquals(nedTriad.valueZ, -enuTriad1.valueZ, 0.0)
+
+        // convert back from NED to ENU
+        val enuTriad2 = ENUtoNEDTriadConverter.convertAndReturnNew(nedTriad)
+
+        // check
+        assertEquals(enuTriad1, enuTriad2)
+
+        // convert using rotation matrix
+        val values = enuTriad1.valuesAsMatrix
+        val rotation = ENUtoNEDTriadConverter.conversionRotationMatrix
+        val expected = rotation.multiplyAndReturnNew(values)
+        assertTrue(expected.equals(nedTriad.valuesAsMatrix, ABSOLUTE_ERROR))
+
+        // convert back
+        val values2 = rotation.multiplyAndReturnNew(expected)
+        assertTrue(values2.equals(values, ABSOLUTE_ERROR))
+    }
+
+    @Test
+    fun convertAndReturn_whenAngularSpeedTriad_returnsExpectedResult() {
+        val randomizer = UniformRandomizer()
+        val valueX = randomizer.nextDouble()
+        val valueY = randomizer.nextDouble()
+        val valueZ = randomizer.nextDouble()
+
+        // convert from ENU to NED
+        val enuTriad1 = AngularSpeedTriad(valueX, valueY, valueZ)
+        val nedTriad1 = ENUtoNEDTriadConverter.convertAndReturnNew(enuTriad1)
+
+        // check
+        assertEquals(nedTriad1.valueX, enuTriad1.valueY, 0.0)
+        assertEquals(nedTriad1.valueY, enuTriad1.valueX, 0.0)
+        assertEquals(nedTriad1.valueZ, -enuTriad1.valueZ, 0.0)
+
+        // convert back from NED to ENU
+        val enuTriad2 = ENUtoNEDTriadConverter.convertAndReturnNew(nedTriad1)
+
+        // check
+        assertEquals(enuTriad1, enuTriad2)
+
+        // convert using rotation matrix
+        val values = enuTriad1.valuesAsMatrix
+        val rotation = ENUtoNEDTriadConverter.conversionRotationMatrix
+        val expected = rotation.multiplyAndReturnNew(values)
+        assertTrue(expected.equals(nedTriad1.valuesAsMatrix, ABSOLUTE_ERROR))
+    }
+
+    @Test
+    fun convertAndReturn_whenMagneticFluxDensityTriad_returnsExpectedResult() {
+        val randomizer = UniformRandomizer()
+        val valueX = randomizer.nextDouble()
+        val valueY = randomizer.nextDouble()
+        val valueZ = randomizer.nextDouble()
+
+        // convert from ENU to NED
+        val enuTriad1 = MagneticFluxDensityTriad(valueX, valueY, valueZ)
+        val nedTriad = ENUtoNEDTriadConverter.convertAndReturnNew(enuTriad1)
+
+        // check
+        assertEquals(nedTriad.valueX, enuTriad1.valueY, 0.0)
+        assertEquals(nedTriad.valueY, enuTriad1.valueX, 0.0)
+        assertEquals(nedTriad.valueZ, -enuTriad1.valueZ, 0.0)
+
+        // convert back from NED to ENU
+        val enuTriad2 = ENUtoNEDTriadConverter.convertAndReturnNew(nedTriad)
 
         // check
         assertEquals(enuTriad1, enuTriad2)
@@ -388,21 +479,21 @@ class ENUtoNEDTriadConverterTest {
             conversionQ.multiplyAndReturnNew(enuDeltaQ).multiplyAndReturnNew(conversionQ)
         nedDeltaQ2.normalize()
 
-        val enuFinalQ = enuDeltaQ.multiplyAndReturnNew(enuInitQ)
-        enuFinalQ.normalize()
+        val enuFinalQ1 = enuDeltaQ.multiplyAndReturnNew(enuInitQ)
+        enuFinalQ1.normalize()
 
         val nedFinalQ1 = nedDeltaQ1.multiplyAndReturnNew(nedInitQ1)
         nedFinalQ1.normalize()
 
         val nedFinalQ2 =
-            conversionQ.multiplyAndReturnNew(enuFinalQ).multiplyAndReturnNew(conversionQ)
+            conversionQ.multiplyAndReturnNew(enuFinalQ1).multiplyAndReturnNew(conversionQ)
         nedFinalQ2.normalize()
 
         val nedFinalQ3 = nedDeltaQ2.multiplyAndReturnNew(nedInitQ1)
         nedFinalQ3.normalize()
 
         val nedFinalQ4 = Quaternion()
-        ENUtoNEDTriadConverter.convert(enuFinalQ, nedFinalQ4)
+        ENUtoNEDTriadConverter.convert(enuFinalQ1, nedFinalQ4)
 
         assertFalse(nedFinalQ1.equals(nedFinalQ2, ABSOLUTE_ERROR))
         assertFalse(nedFinalQ1.equals(nedFinalQ3, ABSOLUTE_ERROR))
@@ -410,6 +501,12 @@ class ENUtoNEDTriadConverterTest {
 
         assertTrue(nedFinalQ2.equals(nedFinalQ4, ABSOLUTE_ERROR))
         assertTrue(nedFinalQ3.equals(nedFinalQ4, ABSOLUTE_ERROR))
+
+        // convert back
+        val enuFinalQ2 = Quaternion()
+        ENUtoNEDTriadConverter.convert(nedFinalQ4, enuFinalQ2)
+
+        assertTrue(enuFinalQ1.equals(enuFinalQ2, ABSOLUTE_ERROR))
     }
 
     @Test
@@ -468,20 +565,20 @@ class ENUtoNEDTriadConverterTest {
             conversionQ.multiplyAndReturnNew(enuDeltaQ).multiplyAndReturnNew(conversionQ)
         nedDeltaQ2.normalize()
 
-        val enuFinalQ = enuDeltaQ.multiplyAndReturnNew(enuInitQ)
-        enuFinalQ.normalize()
+        val enuFinalQ1 = enuDeltaQ.multiplyAndReturnNew(enuInitQ)
+        enuFinalQ1.normalize()
 
         val nedFinalQ1 = nedDeltaQ1.multiplyAndReturnNew(nedInitQ1)
         nedFinalQ1.normalize()
 
         val nedFinalQ2 =
-            conversionQ.multiplyAndReturnNew(enuFinalQ).multiplyAndReturnNew(conversionQ)
+            conversionQ.multiplyAndReturnNew(enuFinalQ1).multiplyAndReturnNew(conversionQ)
         nedFinalQ2.normalize()
 
         val nedFinalQ3 = nedDeltaQ2.multiplyAndReturnNew(nedInitQ1)
         nedFinalQ3.normalize()
 
-        val nedFinalQ4 = ENUtoNEDTriadConverter.convertAndReturnNew(enuFinalQ)
+        val nedFinalQ4 = ENUtoNEDTriadConverter.convertAndReturnNew(enuFinalQ1)
 
         assertFalse(nedFinalQ1.equals(nedFinalQ2, ABSOLUTE_ERROR))
         assertFalse(nedFinalQ1.equals(nedFinalQ3, ABSOLUTE_ERROR))
@@ -489,6 +586,224 @@ class ENUtoNEDTriadConverterTest {
 
         assertTrue(nedFinalQ2.equals(nedFinalQ4, ABSOLUTE_ERROR))
         assertTrue(nedFinalQ3.equals(nedFinalQ4, ABSOLUTE_ERROR))
+
+        // convert back
+        val enuFinalQ2 = ENUtoNEDTriadConverter.convertAndReturnNew(nedFinalQ4)
+
+        assertTrue(enuFinalQ1.equals(enuFinalQ2, ABSOLUTE_ERROR))
+    }
+
+    @Test
+    fun convert_whenRotationUsingStepIntegrator_returnsExpectedValue() {
+        val integrator = QuaternionStepIntegrator.create(QuaternionStepIntegratorType.EULER_METHOD)
+
+        val randomizer = UniformRandomizer()
+        val wx = randomizer.nextDouble()
+        val wy = randomizer.nextDouble()
+        val wz = randomizer.nextDouble()
+        val dt = randomizer.nextDouble()
+        val enuW = AngularSpeedTriad(wx, wy, wz)
+        val enuInitialQ = getQuaternion()
+
+        // integrate in ENU coordinates
+        val enuEndQ = Quaternion()
+        integrator.integrate(
+            enuInitialQ,
+            enuW.valueX,
+            enuW.valueY,
+            enuW.valueZ,
+            enuW.valueX,
+            enuW.valueY,
+            enuW.valueZ,
+            dt,
+            enuEndQ
+        )
+
+        // and then convert to NED coordinates
+        val nedEndQ1 = ENUtoNEDTriadConverter.convertAndReturnNew(enuEndQ)
+
+        //Or convert first to NED coordinates
+        val nedW = ENUtoNEDTriadConverter.convertAndReturnNew(enuW)
+        val nedInitialQ = ENUtoNEDTriadConverter.convertAndReturnNew(enuInitialQ)
+
+        // and then integrate in NED coordinates
+        val nedEndQ2 = Quaternion()
+        integrator.integrate(
+            nedInitialQ,
+            nedW.valueX,
+            nedW.valueY,
+            nedW.valueZ,
+            nedW.valueX,
+            nedW.valueY,
+            nedW.valueZ,
+            dt,
+            nedEndQ2
+        )
+
+        nedEndQ1.normalize()
+        nedEndQ2.normalize()
+        assertTrue(nedEndQ1.equals(nedEndQ2, ABSOLUTE_ERROR))
+    }
+
+    @Test
+    fun convertPoint_whenPointCoordinates_returnsExpectedResult() {
+        val randomizer = UniformRandomizer()
+        val valueX = randomizer.nextDouble()
+        val valueY = randomizer.nextDouble()
+        val valueZ = randomizer.nextDouble()
+
+        val result = DoubleArray(Point3D.POINT3D_INHOMOGENEOUS_COORDINATES_LENGTH)
+        ENUtoNEDTriadConverter.convertPoint(valueX, valueY, valueZ, result)
+
+        // check
+        assertEquals(valueY, result[0], 0.0)
+        assertEquals(valueX, result[1], 0.0)
+        assertEquals(-valueZ, result[2], 0.0)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun convertPoint_whenPointCoordinatesAndInvalidArrayLength_throwsIllegalArgumentException() {
+        val randomizer = UniformRandomizer()
+        val valueX = randomizer.nextDouble()
+        val valueY = randomizer.nextDouble()
+        val valueZ = randomizer.nextDouble()
+
+        val result = DoubleArray(1)
+        ENUtoNEDTriadConverter.convertPoint(valueX, valueY, valueZ, result)
+    }
+
+    @Test
+    fun convertPoint_whenArray_returnsExpectedValue() {
+        val randomizer = UniformRandomizer()
+        val valueX = randomizer.nextDouble()
+        val valueY = randomizer.nextDouble()
+        val valueZ = randomizer.nextDouble()
+
+        val input = doubleArrayOf(valueX, valueY, valueZ)
+
+        val result1 = DoubleArray(Point3D.POINT3D_INHOMOGENEOUS_COORDINATES_LENGTH)
+        ENUtoNEDTriadConverter.convertPoint(input, result1)
+
+        // check
+        assertEquals(valueY, result1[0], 0.0)
+        assertEquals(valueX, result1[1], 0.0)
+        assertEquals(-valueZ, result1[2], 0.0)
+
+        // convert back
+        val result2 = DoubleArray(Point3D.POINT3D_INHOMOGENEOUS_COORDINATES_LENGTH)
+        ENUtoNEDTriadConverter.convertPoint(result1, result2)
+
+        assertArrayEquals(input, result2, 0.0)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun convertPoint_whenArrayAndInvalidInputLength_throwsIllegalArgumentException() {
+        val input = DoubleArray(1)
+
+        val result = DoubleArray(Point3D.POINT3D_INHOMOGENEOUS_COORDINATES_LENGTH)
+        ENUtoNEDTriadConverter.convertPoint(input, result)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun convertPoint_whenArrayAndInvalidOutputLength_throwsIllegalArgumentException() {
+        val input = DoubleArray(Point3D.POINT3D_INHOMOGENEOUS_COORDINATES_LENGTH)
+
+        val result = DoubleArray(1)
+        ENUtoNEDTriadConverter.convertPoint(input, result)
+    }
+
+    @Test
+    fun convertPointAndReturnNew_returnsExpectedValue() {
+        val randomizer = UniformRandomizer()
+        val valueX = randomizer.nextDouble()
+        val valueY = randomizer.nextDouble()
+        val valueZ = randomizer.nextDouble()
+
+        val input = doubleArrayOf(valueX, valueY, valueZ)
+
+        val result1 = ENUtoNEDTriadConverter.convertPointAndReturnNew(input)
+
+        // check
+        assertEquals(valueY, result1[0], 0.0)
+        assertEquals(valueX, result1[1], 0.0)
+        assertEquals(-valueZ, result1[2], 0.0)
+
+        // convert back
+        val result2 = ENUtoNEDTriadConverter.convertPointAndReturnNew(result1)
+
+        assertArrayEquals(input, result2, 0.0)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun convertPointAndReturnNew_whenInvalidLength_throwsIllegalArgumentException() {
+        val input = DoubleArray(1)
+        ENUtoNEDTriadConverter.convertPointAndReturnNew(input)
+    }
+
+    @Test
+    fun convert_whenEuclideanTransformation_returnsExpectedValue() {
+        val enuRotation = getQuaternion()
+        val enuTranslation = getTranslation()
+        val enuT1 = EuclideanTransformation3D(enuRotation, enuTranslation)
+
+        // convert
+        val nedT1 = EuclideanTransformation3D()
+        ENUtoNEDTriadConverter.convert(enuT1, nedT1)
+
+        // check
+        val nedRotation = ENUtoNEDTriadConverter.convertAndReturnNew(enuRotation)
+        val nedTranslation = ENUtoNEDTriadConverter.convertPointAndReturnNew(enuTranslation)
+        val nedT2 = EuclideanTransformation3D(nedRotation, nedTranslation)
+
+        assertEquals(nedT1.asMatrix(), nedT2.asMatrix())
+
+        // compute as C * T * C
+        val c = Matrix(EuclideanTransformation3D.HOM_COORDS, EuclideanTransformation3D.HOM_COORDS)
+        c.setSubmatrix(0, 0, 2, 2, ENUtoNEDTriadConverter.conversionRotationMatrix)
+        c.setElementAt(3, 3, 1.0)
+
+        val nedT3 = c.multiplyAndReturnNew(enuT1.asMatrix()).multiplyAndReturnNew(c)
+
+        val m = nedT1.asMatrix()
+        assertTrue(nedT3.equals(m, ABSOLUTE_ERROR))
+
+        // convert back
+        val enuT2 = EuclideanTransformation3D()
+        ENUtoNEDTriadConverter.convert(nedT1, enuT2)
+
+        assertTrue(enuT1.asMatrix().equals(enuT2.asMatrix(), ABSOLUTE_ERROR))
+    }
+
+    @Test
+    fun convertAndReturnNew_whenEuclideanTransformation_returnsExpectedValue() {
+        val enuRotation = getQuaternion()
+        val enuTranslation = getTranslation()
+        val enuT1 = EuclideanTransformation3D(enuRotation, enuTranslation)
+
+        // convert
+        val nedT1 = ENUtoNEDTriadConverter.convertAndReturnNew(enuT1)
+
+        // check
+        val nedRotation = ENUtoNEDTriadConverter.convertAndReturnNew(enuRotation)
+        val nedTranslation = ENUtoNEDTriadConverter.convertPointAndReturnNew(enuTranslation)
+        val nedT2 = EuclideanTransformation3D(nedRotation, nedTranslation)
+
+        assertEquals(nedT1.asMatrix(), nedT2.asMatrix())
+
+        // compute as C * T * C
+        val c = Matrix(EuclideanTransformation3D.HOM_COORDS, EuclideanTransformation3D.HOM_COORDS)
+        c.setSubmatrix(0, 0, 2, 2, ENUtoNEDTriadConverter.conversionRotationMatrix)
+        c.setElementAt(3, 3, 1.0)
+
+        val nedT3 = c.multiplyAndReturnNew(enuT1.asMatrix()).multiplyAndReturnNew(c)
+
+        val m = nedT1.asMatrix()
+        assertTrue(nedT3.equals(m, ABSOLUTE_ERROR))
+
+        // convert back
+        val enuT2 = ENUtoNEDTriadConverter.convertAndReturnNew(nedT1)
+
+        assertTrue(enuT1.asMatrix().equals(enuT2.asMatrix(), ABSOLUTE_ERROR))
     }
 
     private companion object {
@@ -497,12 +812,23 @@ class ENUtoNEDTriadConverterTest {
         const val MIN_DEGREES = -45.0
         const val MAX_DEGREES = 45.0
 
+        const val MIN_TRANSLATION = -100.0
+        const val MAX_TRANSLATION = 100.0
+
         fun getQuaternion(): Quaternion {
             val randomizer = UniformRandomizer()
             val roll = Math.toRadians(randomizer.nextDouble(MIN_DEGREES, MAX_DEGREES))
             val pitch = Math.toRadians(randomizer.nextDouble(MIN_DEGREES, MAX_DEGREES))
             val yaw = Math.toRadians(randomizer.nextDouble(MIN_DEGREES, MAX_DEGREES))
             return Quaternion(roll, pitch, yaw)
+        }
+
+        fun getTranslation(): DoubleArray {
+            val randomizer = UniformRandomizer()
+            val valueX = randomizer.nextDouble(MIN_TRANSLATION, MAX_TRANSLATION)
+            val valueY = randomizer.nextDouble(MIN_TRANSLATION, MAX_TRANSLATION)
+            val valueZ = randomizer.nextDouble(MIN_TRANSLATION, MAX_TRANSLATION)
+            return doubleArrayOf(valueX, valueY, valueZ)
         }
     }
 }
