@@ -42,6 +42,7 @@ class AccelerometerFusedRelativePoseProcessorTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

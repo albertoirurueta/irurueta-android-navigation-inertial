@@ -25,6 +25,7 @@ import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.De
 import com.irurueta.numerical.robust.RobustEstimatorMethod
 import com.irurueta.statistics.UniformRandomizer
 import io.mockk.clearAllMocks
+import io.mockk.unmockkAll
 import org.junit.After
 import org.junit.Assert.*
 import org.junit.Test
@@ -37,6 +38,7 @@ class GyroscopeInternalCalibratorBuilderTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

@@ -47,6 +47,7 @@ class MagnetometerNormEstimatorTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

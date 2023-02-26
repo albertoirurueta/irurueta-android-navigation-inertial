@@ -50,6 +50,7 @@ class AttitudeLocalPoseProcessorTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

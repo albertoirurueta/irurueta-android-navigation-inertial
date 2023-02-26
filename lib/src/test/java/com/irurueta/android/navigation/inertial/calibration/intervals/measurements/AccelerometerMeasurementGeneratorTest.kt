@@ -47,6 +47,7 @@ class AccelerometerMeasurementGeneratorTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

@@ -46,6 +46,7 @@ class GyroscopeNoiseEstimatorTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

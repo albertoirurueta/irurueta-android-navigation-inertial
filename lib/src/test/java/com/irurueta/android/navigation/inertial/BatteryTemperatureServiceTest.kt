@@ -35,6 +35,7 @@ class BatteryTemperatureServiceTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

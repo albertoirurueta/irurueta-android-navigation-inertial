@@ -39,6 +39,7 @@ class BufferedAccelerometerSensorCollectorTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

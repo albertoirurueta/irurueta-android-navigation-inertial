@@ -48,6 +48,7 @@ class AttitudeECEFAbsolutePoseProcessorTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

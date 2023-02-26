@@ -47,6 +47,7 @@ class AccelerometerAndGyroscopeMeasurementGeneratorTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

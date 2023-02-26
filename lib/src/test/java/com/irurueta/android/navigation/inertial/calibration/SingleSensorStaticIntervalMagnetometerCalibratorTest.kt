@@ -70,6 +70,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

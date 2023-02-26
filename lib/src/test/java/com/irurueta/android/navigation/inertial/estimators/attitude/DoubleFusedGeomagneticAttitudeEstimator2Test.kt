@@ -31,6 +31,7 @@ class DoubleFusedGeomagneticAttitudeEstimator2Test {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

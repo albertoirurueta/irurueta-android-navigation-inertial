@@ -6,10 +6,7 @@ import android.view.Display
 import android.view.Surface
 import android.view.WindowManager
 import androidx.test.core.app.ApplicationProvider
-import io.mockk.clearAllMocks
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.spyk
+import io.mockk.*
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -23,6 +20,7 @@ class DisplayOrientationHelperTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

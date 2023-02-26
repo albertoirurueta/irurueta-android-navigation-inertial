@@ -40,6 +40,7 @@ class LocationPermissionServiceTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

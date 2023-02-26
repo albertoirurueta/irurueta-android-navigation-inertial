@@ -37,6 +37,7 @@ class BufferedMagnetometerSensorCollectorTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

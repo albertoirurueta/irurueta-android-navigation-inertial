@@ -33,6 +33,7 @@ class MedianAveragingFilterTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

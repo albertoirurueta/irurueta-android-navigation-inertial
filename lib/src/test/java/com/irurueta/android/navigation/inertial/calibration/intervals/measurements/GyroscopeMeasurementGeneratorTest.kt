@@ -50,6 +50,7 @@ class GyroscopeMeasurementGeneratorTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

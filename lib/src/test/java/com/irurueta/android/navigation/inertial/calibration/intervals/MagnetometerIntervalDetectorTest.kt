@@ -51,6 +51,7 @@ class MagnetometerIntervalDetectorTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

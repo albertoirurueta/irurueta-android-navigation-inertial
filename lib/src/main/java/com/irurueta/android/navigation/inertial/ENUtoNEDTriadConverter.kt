@@ -74,6 +74,37 @@ object ENUtoNEDTriadConverter {
     }
 
     /**
+     * Converts a rotation from ENU to NED or from NED to ENU, taking into account that:
+     * Renu = CONVERSION_ROTATION * Rned * CONVERSION_ROTATION
+     * And also:
+     * Rned = CONVERSION_ROTATION * Renu * CONVERSION_ROTATION
+     *
+     * @param input Input quaternion to be converted.
+     * @param output Instance where result will be stored.
+     */
+    fun convert(input: Quaternion, output: Quaternion) {
+        Quaternion.product(CONVERSION_ROTATION, input, output)
+        output.normalize()
+        Quaternion.product(output, CONVERSION_ROTATION, output)
+        output.normalize()
+    }
+
+    /**
+     * Converts a rotation from ENU to NED or from NED to ENU, taking into account that:
+     * Renu = CONVERSION_ROTATION * Rned * CONVERSION_ROTATION
+     * And also:
+     * Rned = CONVERSION_ROTATION * Renu * CONVERSION_ROTATION
+     *
+     * @param value Input quaternion to be converted.
+     * @return new converted quaternion.
+     */
+    fun convertAndReturnNew(value: Quaternion): Quaternion {
+        val result = Quaternion()
+        convert(value, result)
+        return result
+    }
+
+    /**
      * Obtains a rotation to convert from ENU to NED and from NED to ENU coordinate systems.
      *
      * @param result instance where result will be stored.

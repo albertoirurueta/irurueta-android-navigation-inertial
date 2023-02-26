@@ -43,6 +43,7 @@ class DoubleFusedGeomagneticAttitudeProcessorTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

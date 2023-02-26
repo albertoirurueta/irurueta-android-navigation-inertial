@@ -48,6 +48,7 @@ class LocalPoseEstimatorTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

@@ -32,6 +32,7 @@ class AccurateRelativeGyroscopeAttitudeProcessorTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

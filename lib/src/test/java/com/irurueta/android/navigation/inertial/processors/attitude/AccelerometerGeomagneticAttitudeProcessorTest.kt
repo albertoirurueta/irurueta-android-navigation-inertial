@@ -43,6 +43,7 @@ class AccelerometerGeomagneticAttitudeProcessorTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

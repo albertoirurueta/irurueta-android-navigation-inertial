@@ -37,6 +37,7 @@ class BufferedGyroscopeSensorCollectorTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

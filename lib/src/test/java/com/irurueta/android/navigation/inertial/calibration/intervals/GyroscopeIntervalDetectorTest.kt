@@ -47,6 +47,7 @@ class GyroscopeIntervalDetectorTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

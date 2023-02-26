@@ -66,6 +66,7 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

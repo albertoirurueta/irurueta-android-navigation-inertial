@@ -40,6 +40,7 @@ class LeveledRelativeAttitudeProcessorTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

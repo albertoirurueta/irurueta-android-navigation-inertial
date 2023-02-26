@@ -45,8 +45,6 @@ class AttitudeEstimatorActivity : AppCompatActivity() {
 
     private var attitudeEstimator: AttitudeEstimator2? = null
 
-    private val conversionRotation = ENUtoNEDTriadConverter.conversionRotation
-
     private val displayOrientation = Quaternion()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -105,7 +103,7 @@ class AttitudeEstimatorActivity : AppCompatActivity() {
                 rotation.inverse()
 
                 // convert attitude from NED to ENU coordinate system to be displayed using OpenGL
-                Quaternion.product(conversionRotation, rotation, rotation)
+                ENUtoNEDTriadConverter.convert(rotation, rotation)
 
                 // take into account display orientation
                 val displayRotationRadians =

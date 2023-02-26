@@ -44,6 +44,7 @@ class AttitudeRelativePoseProcessorTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

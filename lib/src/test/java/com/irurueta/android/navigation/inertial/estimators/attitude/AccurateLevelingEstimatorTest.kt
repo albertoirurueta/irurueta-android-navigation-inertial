@@ -46,6 +46,7 @@ class AccurateLevelingEstimatorTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

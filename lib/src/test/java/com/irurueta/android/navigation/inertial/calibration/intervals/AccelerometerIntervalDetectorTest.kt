@@ -49,6 +49,7 @@ class AccelerometerIntervalDetectorTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

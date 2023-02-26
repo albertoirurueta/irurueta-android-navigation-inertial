@@ -19,6 +19,7 @@ class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncerTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

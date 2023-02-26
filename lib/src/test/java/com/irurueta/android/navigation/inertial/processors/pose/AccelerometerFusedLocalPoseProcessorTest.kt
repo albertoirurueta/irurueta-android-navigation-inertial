@@ -50,6 +50,7 @@ class AccelerometerFusedLocalPoseProcessorTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

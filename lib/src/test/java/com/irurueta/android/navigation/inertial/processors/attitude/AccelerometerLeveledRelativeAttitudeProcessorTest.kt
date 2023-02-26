@@ -38,6 +38,7 @@ class AccelerometerLeveledRelativeAttitudeProcessorTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

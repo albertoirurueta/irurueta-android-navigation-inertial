@@ -36,6 +36,7 @@ class AccurateLevelingProcessorTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

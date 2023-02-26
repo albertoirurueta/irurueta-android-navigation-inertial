@@ -188,6 +188,7 @@ class AttitudeEstimator2(
          * Called when a new attitude measurement is available.
          *
          * @param estimator attitude estimator that raised this event.
+         * @param attitude attitude expressed in NED coordinates.
          * @param timestamp time in nanoseconds at which the measurement was made. Each measurement
          * wil be monotonically increasing using the same time base as
          * [android.os.SystemClock.elapsedRealtimeNanos].

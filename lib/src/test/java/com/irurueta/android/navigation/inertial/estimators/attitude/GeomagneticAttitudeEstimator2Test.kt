@@ -28,6 +28,7 @@ class GeomagneticAttitudeEstimator2Test {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

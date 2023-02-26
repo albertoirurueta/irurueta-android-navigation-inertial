@@ -50,6 +50,7 @@ class FusedLocalPoseProcessorTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

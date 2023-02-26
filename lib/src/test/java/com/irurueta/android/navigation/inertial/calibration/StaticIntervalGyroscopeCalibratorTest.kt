@@ -54,6 +54,7 @@ class StaticIntervalGyroscopeCalibratorTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

@@ -22,6 +22,7 @@ import com.irurueta.geometry.Quaternion
 import com.irurueta.statistics.UniformRandomizer
 import io.mockk.clearAllMocks
 import io.mockk.mockk
+import io.mockk.unmockkAll
 import io.mockk.verify
 import org.junit.After
 import org.junit.Assert.*
@@ -31,6 +32,7 @@ class AttitudeProcessorTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 
@@ -68,10 +70,8 @@ class AttitudeProcessorTest {
         val nedAttitude = processor.process(measurement)
 
         // check
-        val expected = ENUtoNEDTriadConverter.conversionRotation.multiplyAndReturnNew(
-            ENUtoNEDTriadConverter.conversionRotation.multiplyAndReturnNew(enuAttitude.inverseAndReturnNew())
-                .inverseAndReturnNew()
-        )
+        val expected = Quaternion()
+        ENUtoNEDTriadConverter.convert(enuAttitude, expected)
         assertEquals(expected, nedAttitude)
         assertSame(nedAttitude, processor.nedAttitude)
     }
@@ -92,10 +92,8 @@ class AttitudeProcessorTest {
         val nedAttitude = processor.process(measurement)
 
         // check
-        val expected = ENUtoNEDTriadConverter.conversionRotation.multiplyAndReturnNew(
-            ENUtoNEDTriadConverter.conversionRotation.multiplyAndReturnNew(enuAttitude.inverseAndReturnNew())
-                .inverseAndReturnNew()
-        )
+        val expected = Quaternion()
+        ENUtoNEDTriadConverter.convert(enuAttitude, expected)
         assertEquals(expected, nedAttitude)
         assertSame(nedAttitude, processor.nedAttitude)
 

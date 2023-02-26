@@ -33,6 +33,7 @@ class GravityAndMagnetometerSensorMeasurementSyncerTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

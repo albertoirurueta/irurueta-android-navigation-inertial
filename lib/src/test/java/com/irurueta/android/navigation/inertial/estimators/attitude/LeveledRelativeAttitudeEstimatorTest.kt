@@ -42,6 +42,7 @@ class LeveledRelativeAttitudeEstimatorTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

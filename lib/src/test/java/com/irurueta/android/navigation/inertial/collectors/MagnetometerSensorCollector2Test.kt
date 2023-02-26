@@ -36,6 +36,7 @@ class MagnetometerSensorCollector2Test {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

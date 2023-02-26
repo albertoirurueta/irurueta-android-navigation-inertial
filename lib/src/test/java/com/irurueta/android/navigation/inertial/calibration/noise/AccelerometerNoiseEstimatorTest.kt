@@ -45,6 +45,7 @@ class AccelerometerNoiseEstimatorTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

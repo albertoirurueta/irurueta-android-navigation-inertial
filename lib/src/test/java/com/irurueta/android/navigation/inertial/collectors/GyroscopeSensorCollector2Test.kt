@@ -36,6 +36,7 @@ class GyroscopeSensorCollector2Test {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

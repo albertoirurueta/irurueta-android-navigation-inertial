@@ -27,11 +27,6 @@ import com.irurueta.geometry.Quaternion
 class AttitudeProcessor(var processorListener: OnProcessedListener? = null) {
 
     /**
-     * Contains conversion to be reused to convert from ENU to NED coordinates.
-     */
-    private val conversionRotation = ENUtoNEDTriadConverter.conversionRotation
-
-    /**
      * Converted absolute or relative attitude in NED coordinates.
      */
     var nedAttitude = Quaternion()
@@ -46,12 +41,13 @@ class AttitudeProcessor(var processorListener: OnProcessedListener? = null) {
      */
     fun process(measurement: AttitudeSensorMeasurement): Quaternion {
         val enuAttitude = measurement.attitude
-        enuAttitude.toQuaternion(nedAttitude)
+        //enuAttitude.toQuaternion(nedAttitude)
 
-        nedAttitude.inverse()
+        ENUtoNEDTriadConverter.convert(enuAttitude, nedAttitude)
+        /*nedAttitude.inverse()
         Quaternion.product(conversionRotation, nedAttitude, nedAttitude)
         nedAttitude.inverse()
-        Quaternion.product(conversionRotation, nedAttitude, nedAttitude)
+        Quaternion.product(conversionRotation, nedAttitude, nedAttitude)*/
 
         processorListener?.onProcessed(
             this,

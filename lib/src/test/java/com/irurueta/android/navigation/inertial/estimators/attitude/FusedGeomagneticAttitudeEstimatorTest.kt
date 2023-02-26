@@ -44,6 +44,7 @@ class FusedGeomagneticAttitudeEstimatorTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

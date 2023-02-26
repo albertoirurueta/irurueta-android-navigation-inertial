@@ -45,6 +45,7 @@ class EcefAbsolutePoseEstimator2Test {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

@@ -51,6 +51,7 @@ class DoubleFusedECEFAbsolutePoseProcessorTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

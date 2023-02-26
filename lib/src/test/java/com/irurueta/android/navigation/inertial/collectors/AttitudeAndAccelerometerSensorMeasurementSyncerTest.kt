@@ -34,6 +34,7 @@ class AttitudeAndAccelerometerSensorMeasurementSyncerTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

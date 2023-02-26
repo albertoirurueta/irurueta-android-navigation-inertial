@@ -36,6 +36,7 @@ class AccelerometerSensorCollectorTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

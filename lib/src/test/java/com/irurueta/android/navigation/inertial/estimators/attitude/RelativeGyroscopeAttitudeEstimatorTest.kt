@@ -43,6 +43,7 @@ class RelativeGyroscopeAttitudeEstimatorTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

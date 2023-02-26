@@ -21,10 +21,7 @@ import android.hardware.SensorManager
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import com.irurueta.android.navigation.inertial.collectors.SensorType
-import io.mockk.clearAllMocks
-import io.mockk.every
-import io.mockk.spyk
-import io.mockk.verify
+import io.mockk.*
 import org.junit.After
 import org.junit.Assert.*
 import org.junit.Test
@@ -37,6 +34,7 @@ class SensorAvailabilityServiceTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

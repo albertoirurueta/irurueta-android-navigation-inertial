@@ -33,6 +33,7 @@ class AccelerometerAndGyroscopeSensorMeasurementSyncerTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

@@ -3,6 +3,7 @@ package com.irurueta.android.navigation.inertial
 import com.irurueta.geometry.Quaternion
 import com.irurueta.statistics.UniformRandomizer
 import io.mockk.clearAllMocks
+import io.mockk.unmockkAll
 import org.junit.After
 import org.junit.Assert.*
 import org.junit.Test
@@ -11,6 +12,7 @@ class QuaternionHelperTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

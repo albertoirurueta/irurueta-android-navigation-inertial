@@ -17,6 +17,7 @@ package com.irurueta.android.navigation.inertial.collectors
 
 import android.os.Build
 import io.mockk.clearAllMocks
+import io.mockk.unmockkAll
 import org.junit.After
 import org.junit.Assert.*
 import org.junit.Test
@@ -29,6 +30,7 @@ class SensorTypeTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

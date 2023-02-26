@@ -31,6 +31,7 @@ class MeanAveragingFilterTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

@@ -22,6 +22,7 @@ import com.irurueta.statistics.UniformRandomizer
 import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.unmockkAll
 import org.junit.After
 import org.junit.Assert.*
 import org.junit.Test
@@ -33,6 +34,7 @@ class GyroscopeSensorMeasurementConverterTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

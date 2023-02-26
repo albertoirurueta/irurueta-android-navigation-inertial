@@ -39,6 +39,7 @@ class RelativePoseEstimator2Test {
     @After
     fun tearDown() {
         clearAllMocks()
+        unmockkAll()
     }
 
     @Test

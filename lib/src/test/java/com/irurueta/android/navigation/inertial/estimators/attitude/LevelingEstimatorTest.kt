@@ -45,6 +45,7 @@ class LevelingEstimatorTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

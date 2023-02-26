@@ -42,6 +42,7 @@ class FusedRelativePoseProcessorTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

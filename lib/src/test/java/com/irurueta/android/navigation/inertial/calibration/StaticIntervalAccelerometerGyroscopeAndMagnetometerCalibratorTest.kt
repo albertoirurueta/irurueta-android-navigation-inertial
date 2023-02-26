@@ -67,6 +67,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

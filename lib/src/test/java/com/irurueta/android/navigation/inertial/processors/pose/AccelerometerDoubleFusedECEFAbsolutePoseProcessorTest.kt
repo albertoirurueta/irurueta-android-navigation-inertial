@@ -50,6 +50,7 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

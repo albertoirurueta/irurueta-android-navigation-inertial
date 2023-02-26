@@ -49,6 +49,7 @@ class MagnetometerMeasurementGeneratorTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

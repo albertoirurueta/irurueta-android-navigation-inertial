@@ -47,6 +47,7 @@ class GravityNormEstimatorTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

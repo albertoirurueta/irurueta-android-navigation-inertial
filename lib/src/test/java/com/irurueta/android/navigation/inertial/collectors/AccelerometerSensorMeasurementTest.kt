@@ -18,6 +18,7 @@ package com.irurueta.android.navigation.inertial.collectors
 import android.os.SystemClock
 import com.irurueta.statistics.UniformRandomizer
 import io.mockk.clearAllMocks
+import io.mockk.unmockkAll
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -30,6 +31,7 @@ class AccelerometerSensorMeasurementTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

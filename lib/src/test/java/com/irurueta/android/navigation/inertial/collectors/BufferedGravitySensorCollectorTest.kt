@@ -37,6 +37,7 @@ class BufferedGravitySensorCollectorTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

@@ -31,6 +31,7 @@ class AccelerometerGravityProcessorTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 

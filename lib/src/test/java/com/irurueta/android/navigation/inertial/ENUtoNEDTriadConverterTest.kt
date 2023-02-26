@@ -23,6 +23,7 @@ import com.irurueta.navigation.inertial.calibration.AngularSpeedTriad
 import com.irurueta.navigation.inertial.calibration.MagneticFluxDensityTriad
 import com.irurueta.statistics.UniformRandomizer
 import io.mockk.clearAllMocks
+import io.mockk.unmockkAll
 import org.junit.After
 import org.junit.Assert.*
 import org.junit.Test
@@ -32,6 +33,7 @@ class ENUtoNEDTriadConverterTest {
 
     @After
     fun tearDown() {
+        unmockkAll()
         clearAllMocks()
     }
 
@@ -329,7 +331,178 @@ class ENUtoNEDTriadConverterTest {
         assertTrue(m1.equals(m4, ABSOLUTE_ERROR))
     }
 
+    @Test
+    fun convert_whenRotation_returnsExpectedResult() {
+        // Xenu =  [0   1   0 ] * Xned
+        //         [1   0   0 ]
+        //	       [0   0   -1]
+
+        // Xned =  [0   1   0 ] * Xenu
+        //         [1   0   0 ]
+        //         [0   0   -1]
+
+        // C = 	[0  1   0 ]
+        //      [1  0   0 ]
+        //      [0  0   -1]
+
+        // Notice that	conversion = C, and C * C = I -> C = C^-1
+
+        // Xrotated_ned = Rned * Xned = Rned * C * Xenu
+        // Xrotated_enu = Renu * Xenu = Renu * C * Xned
+
+        // Xrotated_enu = C * Xrotated_ned = C * Rned * C * Xenu = Renu * Xenu
+        // Xrotated_ned = C * Xrotated_enu = C * Renu * C * Xned = Rned * Xned
+
+        // Hence:
+        // Renu = C * Rned * C
+        // Rned = C * Renu * C
+        // Consequently, angular speed triads should be directly converted, instead only rotations
+        // should be converted
+        val conversionQ = ENUtoNEDTriadConverter.conversionRotation
+
+        val enuInitQ = getQuaternion()
+        val nedInitQ1 = conversionQ.multiplyAndReturnNew(enuInitQ).multiplyAndReturnNew(conversionQ)
+        nedInitQ1.normalize()
+
+        val nedInitQ2 = Quaternion()
+        ENUtoNEDTriadConverter.convert(enuInitQ, nedInitQ2)
+
+        assertEquals(nedInitQ1, nedInitQ2)
+
+        val randomizer = UniformRandomizer()
+        // randomly define angular speed and time interval
+        val wx = randomizer.nextDouble()
+        val wy = randomizer.nextDouble()
+        val wz = randomizer.nextDouble()
+        val dt = randomizer.nextDouble()
+
+        val enuRoll = wx * dt
+        val enuPitch = wy * dt
+        val enuYaw = wz * dt
+        val enuDeltaQ = Quaternion(enuRoll, enuPitch, enuYaw)
+
+        // This is wrong. Conversion cannot be done like this
+        val nedDeltaQ1 = Quaternion(enuPitch, enuRoll, -enuYaw)
+
+        val nedDeltaQ2 =
+            conversionQ.multiplyAndReturnNew(enuDeltaQ).multiplyAndReturnNew(conversionQ)
+        nedDeltaQ2.normalize()
+
+        val enuFinalQ = enuDeltaQ.multiplyAndReturnNew(enuInitQ)
+        enuFinalQ.normalize()
+
+        val nedFinalQ1 = nedDeltaQ1.multiplyAndReturnNew(nedInitQ1)
+        nedFinalQ1.normalize()
+
+        val nedFinalQ2 =
+            conversionQ.multiplyAndReturnNew(enuFinalQ).multiplyAndReturnNew(conversionQ)
+        nedFinalQ2.normalize()
+
+        val nedFinalQ3 = nedDeltaQ2.multiplyAndReturnNew(nedInitQ1)
+        nedFinalQ3.normalize()
+
+        val nedFinalQ4 = Quaternion()
+        ENUtoNEDTriadConverter.convert(enuFinalQ, nedFinalQ4)
+
+        assertFalse(nedFinalQ1.equals(nedFinalQ2, ABSOLUTE_ERROR))
+        assertFalse(nedFinalQ1.equals(nedFinalQ3, ABSOLUTE_ERROR))
+        assertTrue(nedFinalQ2.equals(nedFinalQ3, ABSOLUTE_ERROR))
+
+        assertTrue(nedFinalQ2.equals(nedFinalQ4, ABSOLUTE_ERROR))
+        assertTrue(nedFinalQ3.equals(nedFinalQ4, ABSOLUTE_ERROR))
+    }
+
+    @Test
+    fun convertAndReturnNew_returnsExpectedResult() {
+        // Xenu =  [0   1   0 ] * Xned
+        //         [1   0   0 ]
+        //	       [0   0   -1]
+
+        // Xned =  [0   1   0 ] * Xenu
+        //         [1   0   0 ]
+        //         [0   0   -1]
+
+        // C = 	[0  1   0 ]
+        //      [1  0   0 ]
+        //      [0  0   -1]
+
+        // Notice that	conversion = C, and C * C = I -> C = C^-1
+
+        // Xrotated_ned = Rned * Xned = Rned * C * Xenu
+        // Xrotated_enu = Renu * Xenu = Renu * C * Xned
+
+        // Xrotated_enu = C * Xrotated_ned = C * Rned * C * Xenu = Renu * Xenu
+        // Xrotated_ned = C * Xrotated_enu = C * Renu * C * Xned = Rned * Xned
+
+        // Hence:
+        // Renu = C * Rned * C
+        // Rned = C * Renu * C
+        // Consequently, angular speed triads should be directly converted, instead only rotations
+        // should be converted
+        val conversionQ = ENUtoNEDTriadConverter.conversionRotation
+
+        val enuInitQ = getQuaternion()
+        val nedInitQ1 = conversionQ.multiplyAndReturnNew(enuInitQ).multiplyAndReturnNew(conversionQ)
+        nedInitQ1.normalize()
+
+        val nedInitQ2 = ENUtoNEDTriadConverter.convertAndReturnNew(enuInitQ)
+
+        assertEquals(nedInitQ1, nedInitQ2)
+
+        val randomizer = UniformRandomizer()
+        // randomly define angular speed and time interval
+        val wx = randomizer.nextDouble()
+        val wy = randomizer.nextDouble()
+        val wz = randomizer.nextDouble()
+        val dt = randomizer.nextDouble()
+
+        val enuRoll = wx * dt
+        val enuPitch = wy * dt
+        val enuYaw = wz * dt
+        val enuDeltaQ = Quaternion(enuRoll, enuPitch, enuYaw)
+
+        // This is wrong. Conversion cannot be done like this
+        val nedDeltaQ1 = Quaternion(enuPitch, enuRoll, -enuYaw)
+
+        val nedDeltaQ2 =
+            conversionQ.multiplyAndReturnNew(enuDeltaQ).multiplyAndReturnNew(conversionQ)
+        nedDeltaQ2.normalize()
+
+        val enuFinalQ = enuDeltaQ.multiplyAndReturnNew(enuInitQ)
+        enuFinalQ.normalize()
+
+        val nedFinalQ1 = nedDeltaQ1.multiplyAndReturnNew(nedInitQ1)
+        nedFinalQ1.normalize()
+
+        val nedFinalQ2 =
+            conversionQ.multiplyAndReturnNew(enuFinalQ).multiplyAndReturnNew(conversionQ)
+        nedFinalQ2.normalize()
+
+        val nedFinalQ3 = nedDeltaQ2.multiplyAndReturnNew(nedInitQ1)
+        nedFinalQ3.normalize()
+
+        val nedFinalQ4 = ENUtoNEDTriadConverter.convertAndReturnNew(enuFinalQ)
+
+        assertFalse(nedFinalQ1.equals(nedFinalQ2, ABSOLUTE_ERROR))
+        assertFalse(nedFinalQ1.equals(nedFinalQ3, ABSOLUTE_ERROR))
+        assertTrue(nedFinalQ2.equals(nedFinalQ3, ABSOLUTE_ERROR))
+
+        assertTrue(nedFinalQ2.equals(nedFinalQ4, ABSOLUTE_ERROR))
+        assertTrue(nedFinalQ3.equals(nedFinalQ4, ABSOLUTE_ERROR))
+    }
+
     private companion object {
         const val ABSOLUTE_ERROR = 1e-11
+
+        const val MIN_DEGREES = -45.0
+        const val MAX_DEGREES = 45.0
+
+        fun getQuaternion(): Quaternion {
+            val randomizer = UniformRandomizer()
+            val roll = Math.toRadians(randomizer.nextDouble(MIN_DEGREES, MAX_DEGREES))
+            val pitch = Math.toRadians(randomizer.nextDouble(MIN_DEGREES, MAX_DEGREES))
+            val yaw = Math.toRadians(randomizer.nextDouble(MIN_DEGREES, MAX_DEGREES))
+            return Quaternion(roll, pitch, yaw)
+        }
     }
 }
