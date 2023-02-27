@@ -19,7 +19,7 @@ import android.content.Context
 import android.location.Location
 import android.util.Log
 import com.irurueta.algebra.Matrix
-import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
+import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
 import com.irurueta.android.navigation.inertial.calibration.builder.MagnetometerInternalCalibratorBuilder
 import com.irurueta.android.navigation.inertial.calibration.intervals.measurements.MagnetometerMeasurementGenerator
 import com.irurueta.android.navigation.inertial.calibration.intervals.measurements.SingleSensorCalibrationMeasurementGenerator
@@ -1655,7 +1655,7 @@ class StaticIntervalMagnetometerCalibrator private constructor(
         }
 
         // convert from device ENU coordinates to local plane NED coordinates
-        ENUtoNEDTriadConverter.convert(
+        ENUtoNEDConverter.convert(
             initialHardIronX,
             initialHardIronY,
             initialHardIronZ,

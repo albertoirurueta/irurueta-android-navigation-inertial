@@ -57,7 +57,7 @@ class PoseEstimatorActivity : AppCompatActivity() {
 
     private var poseEstimator: EcefAbsolutePoseEstimator2? = null
 
-    private val conversionRotation = ENUtoNEDTriadConverter.conversionRotation
+    private val conversionRotation = ENUtoNEDConverter.conversionRotation
 
     private var hasLocationPermission = false
 

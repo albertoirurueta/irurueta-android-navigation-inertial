@@ -17,6 +17,7 @@ package com.irurueta.android.navigation.inertial
 
 import com.irurueta.algebra.Matrix
 import com.irurueta.geometry.EuclideanTransformation3D
+import com.irurueta.geometry.InhomogeneousPoint3D
 import com.irurueta.geometry.Point3D
 import com.irurueta.geometry.Quaternion
 import com.irurueta.geometry.Rotation3D
@@ -34,7 +35,7 @@ import kotlin.math.sqrt
  * 3D scenes.
  * This converter can be used to convert from ENU to NED and conversely from NED to ENU.
  */
-object ENUtoNEDTriadConverter {
+object ENUtoNEDConverter {
     /**
      * Minus half of square root of 2.0.
      */
@@ -288,6 +289,16 @@ object ENUtoNEDTriadConverter {
     /**
      * Converts 3D inhomogeneous point from ENU to NED or from NED to ENU.
      *
+     * @param input point to be converted.
+     * @param output instance where result of conversion will be stored.
+     */
+    fun convertPoint(input: Point3D, output: Point3D) {
+        output.setInhomogeneousCoordinates(input.inhomY, input.inhomX, -input.inhomZ)
+    }
+
+    /**
+     * Converts 3D inhomogeneous point from ENU to NED or from NED to ENU.
+     *
      * @param input array containing point coordinates of 3D inhomogeneous point to be converted.
      * @return array containing converted point coordinates.
      * @throws IllegalArgumentException if provided input array does not have length 3.
@@ -295,6 +306,18 @@ object ENUtoNEDTriadConverter {
     @Throws(IllegalArgumentException::class)
     fun convertPointAndReturnNew(input: DoubleArray): DoubleArray {
         val result = DoubleArray(Point3D.POINT3D_INHOMOGENEOUS_COORDINATES_LENGTH)
+        convertPoint(input, result)
+        return result
+    }
+
+    /**
+     * Converts 3D inhomogeneous point from ENU to NED or from NED to ENU.
+     *
+     * @param input point to be converted.
+     * @return new point containing result of conversion.
+     */
+    fun convertPointAndReturnNew(input: Point3D) : InhomogeneousPoint3D {
+        val result = InhomogeneousPoint3D()
         convertPoint(input, result)
         return result
     }

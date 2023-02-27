@@ -48,6 +48,11 @@ android {
         }
     }
     namespace 'com.irurueta.android.navigation.inertial'
+
+    packagingOptions {
+        exclude 'META-INF/LICENSE-notice.md'
+        exclude 'META-INF/LICENSE.md'
+    }
 }
 
 jacoco {
@@ -142,5 +147,5 @@ dependencies {
     androidTestImplementation "androidx.test.ext:junit:$ext_junit_version"
     androidTestImplementation "androidx.test:rules:$rules_version"
     androidTestImplementation "androidx.test.espresso:espresso-core:$espresso_core_version"
-    androidTestImplementation "io.mockk:mockk-android:$mockk_version"
+    androidTestImplementation "io.mockk:mockk-android:$mockk_android_version"
 }

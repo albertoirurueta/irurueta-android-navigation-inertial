@@ -19,7 +19,7 @@ import android.content.Context
 import android.location.Location
 import android.util.Log
 import com.irurueta.algebra.Matrix
-import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
+import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
 import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.estimators.attitude.GravityEstimator
 import com.irurueta.android.navigation.inertial.estimators.attitude.LeveledRelativeAttitudeEstimator
@@ -225,7 +225,7 @@ class RelativePoseEstimator private constructor(
     /**
      * Rotation to convert from NED to ENU coordinates and viceversa.
      */
-    private val conversionRotation = ENUtoNEDTriadConverter.conversionRotation
+    private val conversionRotation = ENUtoNEDConverter.conversionRotation
 
     /**
      * Internal leveled relative attitude estimator.
@@ -600,7 +600,7 @@ class RelativePoseEstimator private constructor(
         else
             az.toDouble()
 
-        ENUtoNEDTriadConverter.convert(currentAx, currentAy, currentAz, specificForce)
+        ENUtoNEDConverter.convert(currentAx, currentAy, currentAz, specificForce)
 
         accelerometerMeasurementListener?.onMeasurement(
             ax,
@@ -656,7 +656,7 @@ class RelativePoseEstimator private constructor(
         else
             wz.toDouble()
 
-        ENUtoNEDTriadConverter.convert(currentWx, currentWy, currentWz, angularSpeed)
+        ENUtoNEDConverter.convert(currentWx, currentWy, currentWz, angularSpeed)
 
         gyroscopeMeasurementListener?.onMeasurement(
             wx,

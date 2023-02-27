@@ -18,7 +18,7 @@ package com.irurueta.android.navigation.inertial.processors.pose
 import android.location.Location
 import com.irurueta.algebra.Matrix
 import com.irurueta.algebra.Utils
-import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
+import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorMeasurement
 import com.irurueta.android.navigation.inertial.toNEDPosition
@@ -145,12 +145,6 @@ abstract class BaseLocalPoseProcessor(
      * Average attitude between current and previous attitudes.
      */
     private val averageAttitude = Quaternion()
-
-    /**
-     * Rotation to be reused for ENU / NED coordinates conversion during pose transformation
-     * computation.
-     */
-    private val conversionRotation = ENUtoNEDTriadConverter.conversionRotation
 
     /**
      * Array containing euler angles. This is reused for performance reasons during pose
@@ -371,7 +365,7 @@ abstract class BaseLocalPoseProcessor(
         val currentAy = if (by != null) ay - by else ay
         val currentAz = if (bz != null) az - bz else az
 
-        ENUtoNEDTriadConverter.convert(currentAx, currentAy, currentAz, specificForce)
+        ENUtoNEDConverter.convert(currentAx, currentAy, currentAz, specificForce)
     }
 
     /**
@@ -392,7 +386,7 @@ abstract class BaseLocalPoseProcessor(
         val currentWy = if (by != null) wy - by else wy
         val currentWz = if (bz != null) wz - bz else wz
 
-        ENUtoNEDTriadConverter.convert(currentWx, currentWy, currentWz, angularSpeed)
+        ENUtoNEDConverter.convert(currentWx, currentWy, currentWz, angularSpeed)
     }
 
     /**
@@ -469,10 +463,10 @@ abstract class BaseLocalPoseProcessor(
             transformationRotation.setFromEulerAngles(currentRoll, currentPitch, deltaYaw)
 
             // convert to ENU coordinates
-            Quaternion.product(transformationRotation, conversionRotation, transformationRotation)
+            ENUtoNEDConverter.convert(transformationRotation, transformationRotation)
         } else {
             // convert to ENU coordinates
-            Quaternion.product(currentAttitude, conversionRotation, transformationRotation)
+            ENUtoNEDConverter.convert(currentAttitude, transformationRotation)
         }
 
         result.rotation.fromRotation(transformationRotation)
@@ -493,7 +487,7 @@ abstract class BaseLocalPoseProcessor(
         inverseEcefRotation.rotate(ecefDiffPosition, localDiffPosition)
 
         // convert from NED to ENU
-        conversionRotation.rotate(localDiffPosition, localDiffPosition)
+        ENUtoNEDConverter.convertPoint(localDiffPosition, localDiffPosition)
 
         result.setTranslation(localDiffPosition)
     }

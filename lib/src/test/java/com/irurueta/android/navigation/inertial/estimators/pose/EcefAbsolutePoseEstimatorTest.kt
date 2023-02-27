@@ -1338,13 +1338,13 @@ class EcefAbsolutePoseEstimatorTest {
             currentEulerAngles[0],
             currentEulerAngles[1],
             currentEulerAngles[2] - initialEulerAngles[2]
-        ).combineAndReturnNew(ENUtoNEDTriadConverter.conversionRotation)
+        ).combineAndReturnNew(ENUtoNEDConverter.conversionRotation)
         assertEquals(expectedRotation, rotation)
 
         val inverseInitialEcefRotation =
             initialEcefFrame.coordinateTransformation.asRotation().inverseRotationAndReturnNew()
         val translation =
-            ENUtoNEDTriadConverter.conversionRotation.combineAndReturnNew(inverseInitialEcefRotation)
+            ENUtoNEDConverter.conversionRotation.combineAndReturnNew(inverseInitialEcefRotation)
                 .rotate(InhomogeneousPoint3D(deltaEcefX, deltaEcefY, deltaEcefZ))
         assertTrue(translation.equals(result.translationPoint, ABSOLUTE_ERROR))
     }
@@ -1407,13 +1407,13 @@ class EcefAbsolutePoseEstimatorTest {
 
         val rotation = result.rotation.toQuaternion()
         val expectedRotation =
-            currentNedAttitude.combineAndReturnNew(ENUtoNEDTriadConverter.conversionRotation)
+            currentNedAttitude.combineAndReturnNew(ENUtoNEDConverter.conversionRotation)
         assertEquals(expectedRotation, rotation)
 
         val inverseInitialEcefRotation =
             initialEcefFrame.coordinateTransformation.asRotation().inverseRotationAndReturnNew()
         val translation =
-            ENUtoNEDTriadConverter.conversionRotation.combineAndReturnNew(inverseInitialEcefRotation)
+            ENUtoNEDConverter.conversionRotation.combineAndReturnNew(inverseInitialEcefRotation)
                 .rotate(InhomogeneousPoint3D(deltaEcefX, deltaEcefY, deltaEcefZ))
         assertTrue(translation.equals(result.translationPoint, ABSOLUTE_ERROR))
     }

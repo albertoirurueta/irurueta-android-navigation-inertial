@@ -16,7 +16,7 @@
 package com.irurueta.android.navigation.inertial.calibration.noise
 
 import android.content.Context
-import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
+import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
 import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
 import com.irurueta.android.navigation.inertial.collectors.SensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
@@ -823,7 +823,7 @@ abstract class AccumulatedTriadEstimator<A : AccumulatedTriadEstimator<A, N, C, 
         }
 
         // convert from device ENU coordinate to local plane NED coordinates
-        ENUtoNEDTriadConverter.convert(valueX, valueY, valueZ, triad)
+        ENUtoNEDConverter.convert(valueX, valueY, valueZ, triad)
 
         noiseEstimator.addTriad(triad.valueX, triad.valueY, triad.valueZ)
 

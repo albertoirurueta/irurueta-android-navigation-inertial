@@ -17,7 +17,7 @@ package com.irurueta.android.navigation.inertial.processors.pose
 
 import android.location.Location
 import com.irurueta.algebra.Utils
-import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
+import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
 import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.getPrivateProperty
 import com.irurueta.android.navigation.inertial.processors.attitude.AccelerometerFusedGeomagneticAttitudeProcessor
@@ -1638,9 +1638,7 @@ class AccelerometerFusedECEFAbsolutePoseProcessorTest {
         requireNotNull(previousNedFrame)
         assertEquals(currentNedFrame, previousNedFrame)
 
-        val conversionRotation = ENUtoNEDTriadConverter.conversionRotation
-        val transformationRotation = Quaternion()
-        Quaternion.product(currentAttitude, conversionRotation, transformationRotation)
+        val transformationRotation = ENUtoNEDConverter.convertAndReturnNew(currentAttitude)
         val transformationRotation2: Quaternion? = getPrivateProperty(
             BaseECEFAbsolutePoseProcessor::class,
             processor,
@@ -1927,12 +1925,11 @@ class AccelerometerFusedECEFAbsolutePoseProcessorTest {
         requireNotNull(previousNedFrame)
         assertEquals(currentNedFrame, previousNedFrame)
 
-        val conversionRotation = ENUtoNEDTriadConverter.conversionRotation
         val initYaw = initialAttitude.toEulerAngles()[2]
         val eulerAngles = currentAttitude.toEulerAngles()
         val transformationRotation =
             Quaternion(eulerAngles[0], eulerAngles[1], eulerAngles[2] - initYaw)
-        Quaternion.product(transformationRotation, conversionRotation, transformationRotation)
+        ENUtoNEDConverter.convert(transformationRotation, transformationRotation)
         val transformationRotation2: Quaternion? = getPrivateProperty(
             BaseECEFAbsolutePoseProcessor::class,
             processor,

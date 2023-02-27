@@ -19,7 +19,7 @@ import android.content.Context
 import android.location.Location
 import android.util.Log
 import com.irurueta.algebra.Matrix
-import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
+import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
 import com.irurueta.android.navigation.inertial.GravityHelper
 import com.irurueta.android.navigation.inertial.calibration.builder.AccelerometerInternalCalibratorBuilder
 import com.irurueta.android.navigation.inertial.calibration.intervals.AccelerometerIntervalDetector
@@ -1298,7 +1298,7 @@ class SingleSensorStaticIntervalAccelerometerCalibrator private constructor(
         }
 
         // convert from device ENU coordinate to local plane NED coordinates
-        ENUtoNEDTriadConverter.convert(initialBiasX, initialBiasY, initialBiasZ, biasTriad)
+        ENUtoNEDConverter.convert(initialBiasX, initialBiasY, initialBiasZ, biasTriad)
 
         this.initialBiasX = biasTriad.valueX
         this.initialBiasY = biasTriad.valueY

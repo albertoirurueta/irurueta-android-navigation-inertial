@@ -17,7 +17,7 @@ package com.irurueta.android.navigation.inertial.estimators.attitude
 
 import android.content.Context
 import android.location.Location
-import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
+import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
 import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
@@ -212,7 +212,7 @@ class GeomagneticAttitudeEstimator private constructor(
                 (bz - (hardIronZ ?: 0.0f)).toDouble()
             )
 
-            ENUtoNEDTriadConverter.convert(sensorBx, sensorBy, sensorBz, triad)
+            ENUtoNEDConverter.convert(sensorBx, sensorBy, sensorBz, triad)
 
             hasMagnetometerValues = true
         })

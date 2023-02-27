@@ -15,7 +15,7 @@
  */
 package com.irurueta.android.navigation.inertial.processors.pose
 
-import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
+import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
 import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.estimators.pose.SpeedTriad
 import com.irurueta.android.navigation.inertial.getPrivateProperty
@@ -589,7 +589,7 @@ class FusedRelativePoseProcessorTest {
         )
 
         val accelerometerEnu = AccelerationTriad()
-        ENUtoNEDTriadConverter.convert(
+        ENUtoNEDConverter.convert(
             kinematics.fx,
             kinematics.fy,
             kinematics.fz,
@@ -597,7 +597,7 @@ class FusedRelativePoseProcessorTest {
         )
 
         val gyroscopeEnu = AngularSpeedTriad()
-        ENUtoNEDTriadConverter.convert(
+        ENUtoNEDConverter.convert(
             kinematics.angularRateX,
             kinematics.angularRateY,
             kinematics.angularRateZ,
@@ -606,7 +606,7 @@ class FusedRelativePoseProcessorTest {
 
         val nedGravity = NEDGravityEstimator.estimateGravityAndReturnNew(nedFrame)
         val enuGravity = AccelerationTriad()
-        ENUtoNEDTriadConverter.convert(nedGravity.gn, nedGravity.ge, nedGravity.gd, enuGravity)
+        ENUtoNEDConverter.convert(nedGravity.gn, nedGravity.ge, nedGravity.gd, enuGravity)
 
         val accelerometerMeasurement = AccelerometerSensorMeasurement(
             ax = accelerometerEnu.valueX.toFloat(),
@@ -689,7 +689,7 @@ class FusedRelativePoseProcessorTest {
         )
 
         val accelerometerEnu = AccelerationTriad()
-        ENUtoNEDTriadConverter.convert(
+        ENUtoNEDConverter.convert(
             kinematics.fx,
             kinematics.fy,
             kinematics.fz,
@@ -697,7 +697,7 @@ class FusedRelativePoseProcessorTest {
         )
 
         val gyroscopeEnu = AngularSpeedTriad()
-        ENUtoNEDTriadConverter.convert(
+        ENUtoNEDConverter.convert(
             kinematics.angularRateX,
             kinematics.angularRateY,
             kinematics.angularRateZ,
@@ -706,7 +706,7 @@ class FusedRelativePoseProcessorTest {
 
         val nedGravity = NEDGravityEstimator.estimateGravityAndReturnNew(nedFrame)
         val enuGravity = AccelerationTriad()
-        ENUtoNEDTriadConverter.convert(nedGravity.gn, nedGravity.ge, nedGravity.gd, enuGravity)
+        ENUtoNEDConverter.convert(nedGravity.gn, nedGravity.ge, nedGravity.gd, enuGravity)
 
         val accelerometerMeasurement = AccelerometerSensorMeasurement(
             ax = accelerometerEnu.valueX.toFloat(),
@@ -828,7 +828,7 @@ class FusedRelativePoseProcessorTest {
         )
 
         val accelerometerEnu = AccelerationTriad()
-        ENUtoNEDTriadConverter.convert(
+        ENUtoNEDConverter.convert(
             kinematics.fx,
             kinematics.fy,
             kinematics.fz,
@@ -836,7 +836,7 @@ class FusedRelativePoseProcessorTest {
         )
 
         val gyroscopeEnu = AngularSpeedTriad()
-        ENUtoNEDTriadConverter.convert(
+        ENUtoNEDConverter.convert(
             kinematics.angularRateX,
             kinematics.angularRateY,
             kinematics.angularRateZ,
@@ -845,7 +845,7 @@ class FusedRelativePoseProcessorTest {
 
         val nedGravity = NEDGravityEstimator.estimateGravityAndReturnNew(nedFrame)
         val enuGravity = AccelerationTriad()
-        ENUtoNEDTriadConverter.convert(nedGravity.gn, nedGravity.ge, nedGravity.gd, enuGravity)
+        ENUtoNEDConverter.convert(nedGravity.gn, nedGravity.ge, nedGravity.gd, enuGravity)
 
         val accelerometerMeasurement = AccelerometerSensorMeasurement(
             ax = accelerometerEnu.valueX.toFloat(),
@@ -953,7 +953,7 @@ class FusedRelativePoseProcessorTest {
         val transformation = processor.poseTransformation
         val transformationRotation = transformation.rotation.toQuaternion()
         transformationRotation.normalize()
-        val conversionRotation = ENUtoNEDTriadConverter.conversionRotation
+        val conversionRotation = ENUtoNEDConverter.conversionRotation
         val transformationRotation2 = nedAttitude.multiplyAndReturnNew(conversionRotation)
         assertTrue(transformationRotation.equals(transformationRotation2))
         assertArrayEquals(DoubleArray(3), transformation.translation, VERY_LARGE_ABSOLUTE_ERROR)
@@ -984,7 +984,7 @@ class FusedRelativePoseProcessorTest {
         )
 
         val accelerometerEnu = AccelerationTriad()
-        ENUtoNEDTriadConverter.convert(
+        ENUtoNEDConverter.convert(
             kinematics.fx,
             kinematics.fy,
             kinematics.fz,
@@ -992,7 +992,7 @@ class FusedRelativePoseProcessorTest {
         )
 
         val gyroscopeEnu = AngularSpeedTriad()
-        ENUtoNEDTriadConverter.convert(
+        ENUtoNEDConverter.convert(
             kinematics.angularRateX,
             kinematics.angularRateY,
             kinematics.angularRateZ,
@@ -1001,7 +1001,7 @@ class FusedRelativePoseProcessorTest {
 
         val nedGravity = NEDGravityEstimator.estimateGravityAndReturnNew(nedFrame)
         val enuGravity = AccelerationTriad()
-        ENUtoNEDTriadConverter.convert(nedGravity.gn, nedGravity.ge, nedGravity.gd, enuGravity)
+        ENUtoNEDConverter.convert(nedGravity.gn, nedGravity.ge, nedGravity.gd, enuGravity)
 
         val accelerometerMeasurement = AccelerometerSensorMeasurement(
             ax = accelerometerEnu.valueX.toFloat(),
@@ -1109,7 +1109,7 @@ class FusedRelativePoseProcessorTest {
         val transformation = processor.poseTransformation
         val transformationRotation = transformation.rotation.toQuaternion()
         transformationRotation.normalize()
-        val conversionRotation = ENUtoNEDTriadConverter.conversionRotation
+        val conversionRotation = ENUtoNEDConverter.conversionRotation
         val transformationRotation2 = nedAttitude.multiplyAndReturnNew(conversionRotation)
         assertTrue(transformationRotation.equals(transformationRotation2))
         assertArrayEquals(DoubleArray(3), transformation.translation, VERY_LARGE_ABSOLUTE_ERROR)

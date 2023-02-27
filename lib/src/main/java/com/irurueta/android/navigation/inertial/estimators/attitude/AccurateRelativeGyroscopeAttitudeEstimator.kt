@@ -16,7 +16,7 @@
 package com.irurueta.android.navigation.inertial.estimators.attitude
 
 import android.content.Context
-import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
+import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorType
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
@@ -113,7 +113,7 @@ class AccurateRelativeGyroscopeAttitudeEstimator(
             else
                 wz.toDouble()
 
-            ENUtoNEDTriadConverter.convert(currentWx, currentWy, currentWz, triad)
+            ENUtoNEDConverter.convert(currentWx, currentWy, currentWz, triad)
 
             if (!isFirst) {
                 val dt = timeIntervalEstimator.averageTimeInterval

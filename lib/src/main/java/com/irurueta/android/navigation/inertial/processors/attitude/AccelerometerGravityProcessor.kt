@@ -15,7 +15,7 @@
  */
 package com.irurueta.android.navigation.inertial.processors.attitude
 
-import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
+import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorMeasurement
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
@@ -75,7 +75,7 @@ class AccelerometerGravityProcessor(
                 timestamp
             )
         ) {
-            ENUtoNEDTriadConverter.convert(
+            ENUtoNEDConverter.convert(
                 accelerometerAveragingFilterOutput[0],
                 accelerometerAveragingFilterOutput[1],
                 accelerometerAveragingFilterOutput[2],

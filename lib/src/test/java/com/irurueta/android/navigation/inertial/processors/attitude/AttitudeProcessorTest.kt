@@ -15,7 +15,7 @@
  */
 package com.irurueta.android.navigation.inertial.processors.attitude
 
-import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
+import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
 import com.irurueta.android.navigation.inertial.collectors.AttitudeSensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
 import com.irurueta.geometry.Quaternion
@@ -71,7 +71,7 @@ class AttitudeProcessorTest {
 
         // check
         val expected = Quaternion()
-        ENUtoNEDTriadConverter.convert(enuAttitude, expected)
+        ENUtoNEDConverter.convert(enuAttitude, expected)
         assertEquals(expected, nedAttitude)
         assertSame(nedAttitude, processor.nedAttitude)
     }
@@ -93,7 +93,7 @@ class AttitudeProcessorTest {
 
         // check
         val expected = Quaternion()
-        ENUtoNEDTriadConverter.convert(enuAttitude, expected)
+        ENUtoNEDConverter.convert(enuAttitude, expected)
         assertEquals(expected, nedAttitude)
         assertSame(nedAttitude, processor.nedAttitude)
 

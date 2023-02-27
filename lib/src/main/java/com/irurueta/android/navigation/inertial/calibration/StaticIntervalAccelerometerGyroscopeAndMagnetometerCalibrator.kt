@@ -19,7 +19,7 @@ import android.content.Context
 import android.location.Location
 import android.util.Log
 import com.irurueta.algebra.Matrix
-import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
+import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
 import com.irurueta.android.navigation.inertial.GravityHelper
 import com.irurueta.android.navigation.inertial.calibration.builder.AccelerometerInternalCalibratorBuilder
 import com.irurueta.android.navigation.inertial.calibration.builder.GyroscopeInternalCalibratorBuilder
@@ -4412,7 +4412,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
         }
 
         // convert from device ENU coordinates to local plane NED coordinates
-        ENUtoNEDTriadConverter.convert(
+        ENUtoNEDConverter.convert(
             initialBiasX,
             initialBiasY,
             initialBiasZ,
@@ -4455,7 +4455,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
         }
 
         // convert from device ENU coordinates to local plane NED coordinates
-        ENUtoNEDTriadConverter.convert(initialBiasX, initialBiasY, initialBiasZ, gyroscopeBiasTriad)
+        ENUtoNEDConverter.convert(initialBiasX, initialBiasY, initialBiasZ, gyroscopeBiasTriad)
 
         gyroscopeInitialBiasX = gyroscopeBiasTriad.valueX
         gyroscopeInitialBiasY = gyroscopeBiasTriad.valueY
@@ -4503,7 +4503,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
         }
 
         // convert from device ENU coordinates to local plane NED coordinates
-        ENUtoNEDTriadConverter.convert(
+        ENUtoNEDConverter.convert(
             initialHardIronX,
             initialHardIronY,
             initialHardIronZ,

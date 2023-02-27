@@ -16,7 +16,7 @@
 package com.irurueta.android.navigation.inertial.estimators.attitude
 
 import android.content.Context
-import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
+import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
 import com.irurueta.android.navigation.inertial.collectors.GravitySensorCollector
@@ -75,7 +75,7 @@ class GravityEstimator(
         context,
         sensorDelay,
         { gx, gy, gz, g, timestamp, accuracy ->
-            ENUtoNEDTriadConverter.convert(gx.toDouble(), gy.toDouble(), gz.toDouble(), triad)
+            ENUtoNEDConverter.convert(gx.toDouble(), gy.toDouble(), gz.toDouble(), triad)
             estimationListener?.onEstimation(
                 this@GravityEstimator,
                 triad.valueX,
@@ -126,7 +126,7 @@ class GravityEstimator(
                     timestamp
                 )
             ) {
-                ENUtoNEDTriadConverter.convert(
+                ENUtoNEDConverter.convert(
                     accelerometerAveragingFilterOutput[0],
                     accelerometerAveragingFilterOutput[1],
                     accelerometerAveragingFilterOutput[2],

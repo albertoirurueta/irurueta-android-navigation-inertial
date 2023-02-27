@@ -15,7 +15,7 @@
  */
 package com.irurueta.android.navigation.inertial.processors.attitude
 
-import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
+import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
 import com.irurueta.android.navigation.inertial.collectors.GravitySensorMeasurement
 
 /**
@@ -42,7 +42,7 @@ class GravityProcessor(
      * @see com.irurueta.android.navigation.inertial.collectors.GravitySensorCollector
      */
     override fun process(measurement: GravitySensorMeasurement, timestamp: Long): Boolean {
-        ENUtoNEDTriadConverter.convert(
+        ENUtoNEDConverter.convert(
             measurement.gx.toDouble(),
             measurement.gy.toDouble(),
             measurement.gz.toDouble(),

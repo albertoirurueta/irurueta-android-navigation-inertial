@@ -44,7 +44,7 @@ class LevelingEstimatorActivity : AppCompatActivity() {
 
     private var levelingEstimator: LevelingEstimator2? = null
 
-    private val conversionRotation = ENUtoNEDTriadConverter.conversionRotation
+    private val conversionRotation = ENUtoNEDConverter.conversionRotation
 
     private val displayOrientation = Quaternion()
 

@@ -16,7 +16,7 @@
 package com.irurueta.android.navigation.inertial.calibration.intervals.measurements
 
 import android.content.Context
-import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
+import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
 import com.irurueta.android.navigation.inertial.calibration.intervals.Status
 import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.navigation.inertial.BodyKinematics
@@ -201,7 +201,7 @@ class GyroscopeMeasurementGenerator(
         result: TimedBodyKinematics
     ) {
         // convert from device ENU coordinates to local plane NED coordinates
-        ENUtoNEDTriadConverter.convert(ax.toDouble(), ay.toDouble(), az.toDouble(), acceleration)
+        ENUtoNEDConverter.convert(ax.toDouble(), ay.toDouble(), az.toDouble(), acceleration)
 
         // set accelerometer information (gyroscope information is filled on the corresponding
         // gyroscope listener)
@@ -236,7 +236,7 @@ class GyroscopeMeasurementGenerator(
     private val gyroscopeCollectorMeasurementListener =
         GyroscopeSensorCollector.OnMeasurementListener { wx, wy, wz, bx, by, bz, timestamp, accuracy ->
             // convert from device ENU coordinates to local plane NED coordinates
-            ENUtoNEDTriadConverter.convert(
+            ENUtoNEDConverter.convert(
                 wx.toDouble(),
                 wy.toDouble(),
                 wz.toDouble(),

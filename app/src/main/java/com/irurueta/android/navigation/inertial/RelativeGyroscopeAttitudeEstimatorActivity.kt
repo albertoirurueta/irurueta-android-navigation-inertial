@@ -42,7 +42,7 @@ class RelativeGyroscopeAttitudeEstimatorActivity : AppCompatActivity() {
 
     private var attitudeEstimator: RelativeGyroscopeAttitudeEstimator2? = null
 
-    private val conversionRotation = ENUtoNEDTriadConverter.conversionRotation
+    private val conversionRotation = ENUtoNEDConverter.conversionRotation
 
     private val displayOrientation = Quaternion()
 

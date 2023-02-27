@@ -16,7 +16,7 @@
 package com.irurueta.android.navigation.inertial.calibration.intervals.measurements
 
 import android.content.Context
-import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
+import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
 import com.irurueta.android.navigation.inertial.collectors.SensorCollector
@@ -194,7 +194,7 @@ class AccelerometerMeasurementGenerator(
         result: BodyKinematics
     ) {
         // convert from device ENU coordinates to local plane NED coordinates
-        ENUtoNEDTriadConverter.convert(ax.toDouble(), ay.toDouble(), az.toDouble(), acceleration)
+        ENUtoNEDConverter.convert(ax.toDouble(), ay.toDouble(), az.toDouble(), acceleration)
 
         // set accelerometer information
         result.fx = acceleration.valueX

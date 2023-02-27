@@ -15,7 +15,7 @@
  */
 package com.irurueta.android.navigation.inertial.processors.pose
 
-import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
+import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
 import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.MeanAveragingFilter
@@ -239,7 +239,7 @@ class AttitudeRelativePoseProcessorTest {
             getPrivateProperty(BaseRelativePoseProcessor::class, processor, "currentAttitude")
         requireNotNull(currentAttitude)
 
-        val conversionRotation = ENUtoNEDTriadConverter.conversionRotation
+        val conversionRotation = ENUtoNEDConverter.conversionRotation
         val nedAttitude = Quaternion(enuAttitude)
         nedAttitude.inverse()
         Quaternion.product(conversionRotation, nedAttitude, nedAttitude)
@@ -259,7 +259,7 @@ class AttitudeRelativePoseProcessorTest {
         val attitudeMeasurement =
             AttitudeSensorMeasurement(attitude = enuAttitude, timestamp = timestamp)
 
-        val conversionRotation = ENUtoNEDTriadConverter.conversionRotation
+        val conversionRotation = ENUtoNEDConverter.conversionRotation
         val nedAttitude = Quaternion(enuAttitude)
         nedAttitude.inverse()
         Quaternion.product(conversionRotation, nedAttitude, nedAttitude)
@@ -280,7 +280,7 @@ class AttitudeRelativePoseProcessorTest {
         )
 
         val accelerometerEnu = AccelerationTriad()
-        ENUtoNEDTriadConverter.convert(
+        ENUtoNEDConverter.convert(
             kinematics.fx,
             kinematics.fy,
             kinematics.fz,
@@ -288,7 +288,7 @@ class AttitudeRelativePoseProcessorTest {
         )
 
         val gyroscopeEnu = AngularSpeedTriad()
-        ENUtoNEDTriadConverter.convert(
+        ENUtoNEDConverter.convert(
             kinematics.angularRateX,
             kinematics.angularRateY,
             kinematics.angularRateZ,
@@ -390,7 +390,7 @@ class AttitudeRelativePoseProcessorTest {
         val attitudeMeasurement =
             AttitudeSensorMeasurement(attitude = enuAttitude, timestamp = timestamp)
 
-        val conversionRotation = ENUtoNEDTriadConverter.conversionRotation
+        val conversionRotation = ENUtoNEDConverter.conversionRotation
         val nedAttitude = Quaternion(enuAttitude)
         nedAttitude.inverse()
         Quaternion.product(conversionRotation, nedAttitude, nedAttitude)
@@ -414,7 +414,7 @@ class AttitudeRelativePoseProcessorTest {
         )
 
         val accelerometerEnu = AccelerationTriad()
-        ENUtoNEDTriadConverter.convert(
+        ENUtoNEDConverter.convert(
             kinematics.fx,
             kinematics.fy,
             kinematics.fz,
@@ -422,7 +422,7 @@ class AttitudeRelativePoseProcessorTest {
         )
 
         val gyroscopeEnu = AngularSpeedTriad()
-        ENUtoNEDTriadConverter.convert(
+        ENUtoNEDConverter.convert(
             kinematics.angularRateX,
             kinematics.angularRateY,
             kinematics.angularRateZ,
@@ -541,7 +541,7 @@ class AttitudeRelativePoseProcessorTest {
         val attitudeMeasurement =
             AttitudeSensorMeasurement(attitude = enuAttitude, timestamp = timestamp)
 
-        val conversionRotation = ENUtoNEDTriadConverter.conversionRotation
+        val conversionRotation = ENUtoNEDConverter.conversionRotation
         val nedAttitude = Quaternion(enuAttitude)
         nedAttitude.inverse()
         Quaternion.product(conversionRotation, nedAttitude, nedAttitude)
@@ -565,7 +565,7 @@ class AttitudeRelativePoseProcessorTest {
         )
 
         val accelerometerEnu = AccelerationTriad()
-        ENUtoNEDTriadConverter.convert(
+        ENUtoNEDConverter.convert(
             kinematics.fx,
             kinematics.fy,
             kinematics.fz,
@@ -573,7 +573,7 @@ class AttitudeRelativePoseProcessorTest {
         )
 
         val gyroscopeEnu = AngularSpeedTriad()
-        ENUtoNEDTriadConverter.convert(
+        ENUtoNEDConverter.convert(
             kinematics.angularRateX,
             kinematics.angularRateY,
             kinematics.angularRateZ,

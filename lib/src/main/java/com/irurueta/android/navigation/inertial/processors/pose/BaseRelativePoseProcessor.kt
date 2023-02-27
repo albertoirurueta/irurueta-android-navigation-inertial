@@ -16,7 +16,7 @@
 package com.irurueta.android.navigation.inertial.processors.pose
 
 import com.irurueta.algebra.Matrix
-import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
+import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorMeasurement
 import com.irurueta.android.navigation.inertial.estimators.pose.SpeedTriad
 import com.irurueta.geometry.EuclideanTransformation3D
@@ -109,7 +109,7 @@ abstract class BaseRelativePoseProcessor(
     /**
      * Rotation to convert from NED to ENU coordinates and viceversa.
      */
-    private val conversionRotation = ENUtoNEDTriadConverter.conversionRotation
+    private val conversionRotation = ENUtoNEDConverter.conversionRotation
 
     /**
      * Timestamp of previous sample expressed in nanoseconds.
@@ -246,7 +246,7 @@ abstract class BaseRelativePoseProcessor(
         val currentAy = if (by != null) ay - by else ay
         val currentAz = if (bz != null) az - bz else az
 
-        ENUtoNEDTriadConverter.convert(currentAx, currentAy, currentAz, specificForce)
+        ENUtoNEDConverter.convert(currentAx, currentAy, currentAz, specificForce)
     }
 
     /**

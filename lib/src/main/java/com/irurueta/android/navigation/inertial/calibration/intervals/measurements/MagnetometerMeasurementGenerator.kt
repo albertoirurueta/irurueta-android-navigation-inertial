@@ -16,7 +16,7 @@
 package com.irurueta.android.navigation.inertial.calibration.intervals.measurements
 
 import android.content.Context
-import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
+import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
 import com.irurueta.android.navigation.inertial.calibration.intervals.Status
 import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.navigation.inertial.BodyKinematics
@@ -212,7 +212,7 @@ class MagnetometerMeasurementGenerator(
         result: BodyKinematicsAndMagneticFluxDensity
     ) {
         // convert from devic ENU coordinates to local plane NED coordinates
-        ENUtoNEDTriadConverter.convert(ax.toDouble(), ay.toDouble(), az.toDouble(), acceleration)
+        ENUtoNEDConverter.convert(ax.toDouble(), ay.toDouble(), az.toDouble(), acceleration)
 
         // set accelerometer information
         kinematics.fx = acceleration.valueX
@@ -258,7 +258,7 @@ class MagnetometerMeasurementGenerator(
             val bzTesla = MagneticFluxDensityConverter.microTeslaToTesla(bz.toDouble())
 
             // convert from device ENU coordinates to local plane NED coordinates
-            ENUtoNEDTriadConverter.convert(bxTesla, byTesla, bzTesla, b)
+            ENUtoNEDConverter.convert(bxTesla, byTesla, bzTesla, b)
 
             magneticFluxDensity.bx = b.valueX
             magneticFluxDensity.by = b.valueY

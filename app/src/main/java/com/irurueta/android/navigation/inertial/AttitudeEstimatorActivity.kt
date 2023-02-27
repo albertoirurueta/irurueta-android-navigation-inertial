@@ -103,7 +103,7 @@ class AttitudeEstimatorActivity : AppCompatActivity() {
                 rotation.inverse()
 
                 // convert attitude from NED to ENU coordinate system to be displayed using OpenGL
-                ENUtoNEDTriadConverter.convert(rotation, rotation)
+                ENUtoNEDConverter.convert(rotation, rotation)
 
                 // take into account display orientation
                 val displayRotationRadians =

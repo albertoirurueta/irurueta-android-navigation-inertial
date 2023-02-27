@@ -963,7 +963,7 @@ class RelativePoseEstimatorTest {
         val transformationRotation2 = Quaternion()
         Quaternion.product(
             currentAttitude,
-            ENUtoNEDTriadConverter.conversionRotation,
+            ENUtoNEDConverter.conversionRotation,
             transformationRotation2
         )
 
@@ -971,7 +971,7 @@ class RelativePoseEstimatorTest {
             estimator.getPrivateProperty("transformationPosition")
         requireNotNull(transformationPosition)
         assertEquals(
-            ENUtoNEDTriadConverter.conversionRotation.rotate(currentPosition),
+            ENUtoNEDConverter.conversionRotation.rotate(currentPosition),
             transformationPosition
         )
 

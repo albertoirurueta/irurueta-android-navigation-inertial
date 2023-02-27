@@ -16,7 +16,7 @@
 package com.irurueta.android.navigation.inertial.calibration.intervals
 
 import android.content.Context
-import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
+import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
 import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorType
 import com.irurueta.android.navigation.inertial.collectors.SensorCollector
@@ -214,7 +214,7 @@ class MagnetometerIntervalDetector(
             val bzT = MagneticFluxDensityConverter.microTeslaToTesla(bz.toDouble())
 
             // convert from device ENU coordinates to local plane NED coordinates
-            ENUtoNEDTriadConverter.convert(bxT, byT, bzT, b)
+            ENUtoNEDConverter.convert(bxT, byT, bzT, b)
 
             internalDetector.process(b.valueX, b.valueY, b.valueZ)
             numberOfProcessedMeasurements++

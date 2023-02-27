@@ -16,7 +16,7 @@
 package com.irurueta.android.navigation.inertial.calibration.intervals
 
 import android.content.Context
-import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
+import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorType
 import com.irurueta.android.navigation.inertial.collectors.SensorCollector
@@ -188,7 +188,7 @@ class GyroscopeIntervalDetector(
             }
 
             // convert from device ENU coordinates to local plane NED coordinates
-            ENUtoNEDTriadConverter.convert(
+            ENUtoNEDConverter.convert(
                 wx.toDouble(),
                 wy.toDouble(),
                 wz.toDouble(),

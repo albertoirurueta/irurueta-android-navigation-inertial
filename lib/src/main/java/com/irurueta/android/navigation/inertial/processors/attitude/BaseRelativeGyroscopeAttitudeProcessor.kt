@@ -15,7 +15,7 @@
  */
 package com.irurueta.android.navigation.inertial.processors.attitude
 
-import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
+import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
 import com.irurueta.geometry.Quaternion
@@ -111,7 +111,7 @@ abstract class BaseRelativeGyroscopeAttitudeProcessor(var processorListener: OnP
         else
             wz.toDouble()
 
-        ENUtoNEDTriadConverter.convert(currentWx, currentWy, currentWz, triad)
+        ENUtoNEDConverter.convert(currentWx, currentWy, currentWz, triad)
     }
 
     /**

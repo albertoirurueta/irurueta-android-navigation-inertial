@@ -15,7 +15,7 @@
  */
 package com.irurueta.android.navigation.inertial.processors.attitude
 
-import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
+import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
 import com.irurueta.android.navigation.inertial.collectors.AttitudeSensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
 import com.irurueta.geometry.Quaternion
@@ -41,13 +41,8 @@ class AttitudeProcessor(var processorListener: OnProcessedListener? = null) {
      */
     fun process(measurement: AttitudeSensorMeasurement): Quaternion {
         val enuAttitude = measurement.attitude
-        //enuAttitude.toQuaternion(nedAttitude)
 
-        ENUtoNEDTriadConverter.convert(enuAttitude, nedAttitude)
-        /*nedAttitude.inverse()
-        Quaternion.product(conversionRotation, nedAttitude, nedAttitude)
-        nedAttitude.inverse()
-        Quaternion.product(conversionRotation, nedAttitude, nedAttitude)*/
+        ENUtoNEDConverter.convert(enuAttitude, nedAttitude)
 
         processorListener?.onProcessed(
             this,

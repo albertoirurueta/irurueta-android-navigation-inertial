@@ -64,7 +64,7 @@ class AccurateLevelingEstimatorActivity : AppCompatActivity() {
 
     private var averagingFilterType: String? = null
 
-    private val conversionRotation = ENUtoNEDTriadConverter.conversionRotation
+    private val conversionRotation = ENUtoNEDConverter.conversionRotation
 
     private val displayOrientation = Quaternion()
 

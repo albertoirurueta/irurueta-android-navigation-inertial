@@ -17,7 +17,7 @@ package com.irurueta.android.navigation.inertial.estimators.attitude
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
+import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
 import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.getPrivateProperty
 import com.irurueta.android.navigation.inertial.processors.attitude.AttitudeProcessor
@@ -261,8 +261,8 @@ class AttitudeEstimator2Test {
 
         // check
         assertEquals(
-            ENUtoNEDTriadConverter.conversionRotation.multiplyAndReturnNew(
-                ENUtoNEDTriadConverter.conversionRotation.multiplyAndReturnNew(
+            ENUtoNEDConverter.conversionRotation.multiplyAndReturnNew(
+                ENUtoNEDConverter.conversionRotation.multiplyAndReturnNew(
                     measurementAttitude.inverseAndReturnNew()
                 ).inverseAndReturnNew()
             ), attitude
@@ -332,8 +332,8 @@ class AttitudeEstimator2Test {
 
         // check
         val expectedAttitude =
-            ENUtoNEDTriadConverter.conversionRotation.multiplyAndReturnNew(
-                ENUtoNEDTriadConverter.conversionRotation.multiplyAndReturnNew(
+            ENUtoNEDConverter.conversionRotation.multiplyAndReturnNew(
+                ENUtoNEDConverter.conversionRotation.multiplyAndReturnNew(
                     measurementAttitude.inverseAndReturnNew()
                 ).inverseAndReturnNew()
             )
@@ -415,12 +415,7 @@ class AttitudeEstimator2Test {
         listener.onMeasurement(attitudeSensorCollector, measurement)
 
         // check
-        val expectedAttitude =
-            ENUtoNEDTriadConverter.conversionRotation.multiplyAndReturnNew(
-                ENUtoNEDTriadConverter.conversionRotation.multiplyAndReturnNew(
-                    measurementAttitude.inverseAndReturnNew()
-                ).inverseAndReturnNew()
-            )
+        val expectedAttitude = ENUtoNEDConverter.convertAndReturnNew(measurementAttitude)
         assertEquals(expectedAttitude, attitude)
 
         verify(exactly = 1) { attitudeProcessorSpy.process(measurement) }

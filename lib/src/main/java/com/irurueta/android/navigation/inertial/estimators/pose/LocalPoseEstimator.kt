@@ -19,7 +19,7 @@ import android.content.Context
 import android.location.Location
 import com.irurueta.algebra.Matrix
 import com.irurueta.algebra.Utils
-import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
+import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
 import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.estimators.attitude.AbsoluteAttitudeEstimator
 import com.irurueta.android.navigation.inertial.estimators.attitude.FusedGeomagneticAttitudeEstimator
@@ -265,7 +265,7 @@ class LocalPoseEstimator private constructor(
      * Rotation to be reused for ENU / NED coordinates conversion during pose transformation
      * computation.
      */
-    private val conversionRotation = ENUtoNEDTriadConverter.conversionRotation
+    private val conversionRotation = ENUtoNEDConverter.conversionRotation
 
     /**
      * Array containing euler angles. This is reused for performance reasons during pose
@@ -784,7 +784,7 @@ class LocalPoseEstimator private constructor(
         else
             az.toDouble()
 
-        ENUtoNEDTriadConverter.convert(currentAx, currentAy, currentAz, specificForce)
+        ENUtoNEDConverter.convert(currentAx, currentAy, currentAz, specificForce)
 
         accelerometerMeasurementListener?.onMeasurement(
             ax,
@@ -823,7 +823,7 @@ class LocalPoseEstimator private constructor(
         else
             wz.toDouble()
 
-        ENUtoNEDTriadConverter.convert(currentWx, currentWy, currentWz, angularSpeed)
+        ENUtoNEDConverter.convert(currentWx, currentWy, currentWz, angularSpeed)
 
         gyroscopeMeasurementListener?.onMeasurement(
             wx,

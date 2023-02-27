@@ -18,7 +18,7 @@ package com.irurueta.android.navigation.inertial.calibration
 import android.content.Context
 import android.util.Log
 import com.irurueta.algebra.Matrix
-import com.irurueta.android.navigation.inertial.ENUtoNEDTriadConverter
+import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
 import com.irurueta.android.navigation.inertial.calibration.builder.GyroscopeInternalCalibratorBuilder
 import com.irurueta.android.navigation.inertial.calibration.intervals.measurements.GyroscopeMeasurementGenerator
 import com.irurueta.android.navigation.inertial.calibration.intervals.measurements.SingleSensorCalibrationMeasurementGenerator
@@ -2444,7 +2444,7 @@ class StaticIntervalGyroscopeCalibrator private constructor(
             }
 
             // convert from device ENU coordinate to local plane NED coordinates
-            ENUtoNEDTriadConverter.convert(biasX, biasY, biasZ, accelerometerBiasTriad)
+            ENUtoNEDConverter.convert(biasX, biasY, biasZ, accelerometerBiasTriad)
 
             estimatedAccelerometerBiasX = accelerometerBiasTriad.valueX
             estimatedAccelerometerBiasY = accelerometerBiasTriad.valueY
@@ -2476,7 +2476,7 @@ class StaticIntervalGyroscopeCalibrator private constructor(
         }
 
         // convert from device ENU coordinate to local plane NED coordinates
-        ENUtoNEDTriadConverter.convert(initialBiasX, initialBiasY, initialBiasZ, gyroscopeBiasTriad)
+        ENUtoNEDConverter.convert(initialBiasX, initialBiasY, initialBiasZ, gyroscopeBiasTriad)
 
         gyroscopeInitialBiasX = gyroscopeBiasTriad.valueX
         gyroscopeInitialBiasY = gyroscopeBiasTriad.valueY

@@ -49,7 +49,7 @@ class GeomagneticAttitudeEstimatorActivity : AppCompatActivity() {
 
     private var attitudeEstimator: GeomagneticAttitudeEstimator2? = null
 
-    private val conversionRotation = ENUtoNEDTriadConverter.conversionRotation
+    private val conversionRotation = ENUtoNEDConverter.conversionRotation
 
     private val displayOrientation = Quaternion()
 
