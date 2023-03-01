@@ -42,8 +42,6 @@ class RelativeGyroscopeAttitudeEstimatorActivity : AppCompatActivity() {
 
     private var attitudeEstimator: RelativeGyroscopeAttitudeEstimator2? = null
 
-    private val conversionRotation = ENUtoNEDConverter.conversionRotation
-
     private val displayOrientation = Quaternion()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -94,7 +92,7 @@ class RelativeGyroscopeAttitudeEstimatorActivity : AppCompatActivity() {
                 rotation.inverse()
 
                 // convert attitude from NED to ENU coordinate system to be displayed using OpenGL
-                Quaternion.product(conversionRotation, rotation, rotation)
+                ENUtoNEDConverter.convert(rotation, rotation)
 
                 // take into account display orientation
                 val displayRotationRadians =

@@ -57,8 +57,6 @@ class PoseEstimatorActivity : AppCompatActivity() {
 
     private var poseEstimator: EcefAbsolutePoseEstimator2? = null
 
-    private val conversionRotation = ENUtoNEDConverter.conversionRotation
-
     private var hasLocationPermission = false
 
     private var location: Location? = null
@@ -244,7 +242,7 @@ class PoseEstimatorActivity : AppCompatActivity() {
                         val enuRotation = Quaternion()
                         initialTransformation?.rotation?.toQuaternion(enuRotation)
                         val nedRotation = Quaternion()
-                        Quaternion.product(enuRotation, conversionRotation, nedRotation)
+                        ENUtoNEDConverter.convert(enuRotation, nedRotation)
                         nedRotation.toEulerAngles(eulerAngles)
                         rollView?.text =
                             getString(R.string.roll_degrees, Math.toDegrees(eulerAngles[0]))

@@ -390,13 +390,7 @@ class AttitudeRelativePoseProcessorTest {
         val attitudeMeasurement =
             AttitudeSensorMeasurement(attitude = enuAttitude, timestamp = timestamp)
 
-        val conversionRotation = ENUtoNEDConverter.conversionRotation
-        val nedAttitude = Quaternion(enuAttitude)
-        nedAttitude.inverse()
-        Quaternion.product(conversionRotation, nedAttitude, nedAttitude)
-        nedAttitude.inverse()
-        Quaternion.product(conversionRotation, nedAttitude, nedAttitude)
-        nedAttitude.normalize()
+        val nedAttitude = ENUtoNEDConverter.convertAndReturnNew(enuAttitude)
 
         val position = getNEDPosition()
         val c = CoordinateTransformation(
@@ -524,7 +518,7 @@ class AttitudeRelativePoseProcessorTest {
         val transformation = processor.poseTransformation
         val transformationRotation = transformation.rotation.toQuaternion()
         transformationRotation.normalize()
-        val transformationRotation2 = nedAttitude.multiplyAndReturnNew(conversionRotation)
+        val transformationRotation2 = ENUtoNEDConverter.convertAndReturnNew(nedAttitude)
         assertTrue(transformationRotation.equals(transformationRotation2))
         assertArrayEquals(DoubleArray(3), transformation.translation, VERY_LARGE_ABSOLUTE_ERROR)
     }
@@ -541,13 +535,7 @@ class AttitudeRelativePoseProcessorTest {
         val attitudeMeasurement =
             AttitudeSensorMeasurement(attitude = enuAttitude, timestamp = timestamp)
 
-        val conversionRotation = ENUtoNEDConverter.conversionRotation
-        val nedAttitude = Quaternion(enuAttitude)
-        nedAttitude.inverse()
-        Quaternion.product(conversionRotation, nedAttitude, nedAttitude)
-        nedAttitude.inverse()
-        Quaternion.product(conversionRotation, nedAttitude, nedAttitude)
-        nedAttitude.normalize()
+        val nedAttitude = ENUtoNEDConverter.convertAndReturnNew(enuAttitude)
 
         val position = getNEDPosition()
         val c = CoordinateTransformation(
@@ -675,7 +663,7 @@ class AttitudeRelativePoseProcessorTest {
         val transformation = processor.poseTransformation
         val transformationRotation = transformation.rotation.toQuaternion()
         transformationRotation.normalize()
-        val transformationRotation2 = nedAttitude.multiplyAndReturnNew(conversionRotation)
+        val transformationRotation2 = ENUtoNEDConverter.convertAndReturnNew(nedAttitude)
         assertTrue(transformationRotation.equals(transformationRotation2))
         assertArrayEquals(DoubleArray(3), transformation.translation, VERY_LARGE_ABSOLUTE_ERROR)
 

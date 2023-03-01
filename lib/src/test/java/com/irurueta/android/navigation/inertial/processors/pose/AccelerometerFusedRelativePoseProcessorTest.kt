@@ -917,8 +917,7 @@ class AccelerometerFusedRelativePoseProcessorTest {
         val transformation = processor.poseTransformation
         val transformationRotation = transformation.rotation.toQuaternion()
         transformationRotation.normalize()
-        val conversionRotation = ENUtoNEDConverter.conversionRotation
-        val transformationRotation2 = nedAttitude.multiplyAndReturnNew(conversionRotation)
+        val transformationRotation2 = ENUtoNEDConverter.convertAndReturnNew(nedAttitude)
         assertTrue(transformationRotation.equals(transformationRotation2))
         assertArrayEquals(DoubleArray(3), transformation.translation, VERY_LARGE_ABSOLUTE_ERROR)
     }
@@ -1067,8 +1066,7 @@ class AccelerometerFusedRelativePoseProcessorTest {
         val transformation = processor.poseTransformation
         val transformationRotation = transformation.rotation.toQuaternion()
         transformationRotation.normalize()
-        val conversionRotation = ENUtoNEDConverter.conversionRotation
-        val transformationRotation2 = nedAttitude.multiplyAndReturnNew(conversionRotation)
+        val transformationRotation2 = ENUtoNEDConverter.convertAndReturnNew(nedAttitude)
         assertTrue(transformationRotation.equals(transformationRotation2))
         assertArrayEquals(DoubleArray(3), transformation.translation, VERY_LARGE_ABSOLUTE_ERROR)
 

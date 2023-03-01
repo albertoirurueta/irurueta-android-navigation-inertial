@@ -151,6 +151,7 @@ object ENUtoNEDConverter {
 
         Quaternion.product(CONVERSION_ROTATION, input, output)
         Quaternion.product(output, CONVERSION_ROTATION, output)
+        output.normalize()
     }
 
     /**

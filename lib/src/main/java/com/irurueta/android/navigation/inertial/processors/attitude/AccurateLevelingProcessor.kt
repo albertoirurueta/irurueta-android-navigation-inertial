@@ -125,6 +125,7 @@ class AccurateLevelingProcessor(
             val alpha = atan2(sinAlpha, cosAlpha)
 
             result.setFromAxisAndRotation(axis, -alpha)
+            result.normalize()
         }
     }
 }

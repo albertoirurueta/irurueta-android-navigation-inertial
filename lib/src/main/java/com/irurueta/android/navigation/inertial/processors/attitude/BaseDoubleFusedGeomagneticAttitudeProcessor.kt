@@ -357,6 +357,7 @@ abstract class BaseDoubleFusedGeomagneticAttitudeProcessor<M : SensorMeasurement
                 inversePreviousRelativeAttitude,
                 deltaRelativeAttitude
             )
+            deltaRelativeAttitude.normalize()
             true
         } else {
             this.previousRelativeAttitude = Quaternion()
@@ -393,6 +394,7 @@ abstract class BaseDoubleFusedGeomagneticAttitudeProcessor<M : SensorMeasurement
 
         // change attitude by the delta obtained from relative attitude (gyroscope)
         Quaternion.product(deltaRelativeAttitude, internalFusedAttitude, internalFusedAttitude)
+        internalFusedAttitude.normalize()
 
         val absDot =
             abs(QuaternionHelper.dotProduct(internalFusedAttitude, geomagneticAttitude))
@@ -421,6 +423,7 @@ abstract class BaseDoubleFusedGeomagneticAttitudeProcessor<M : SensorMeasurement
                 getSlerpFactor(),
                 internalFusedAttitude
             )
+            internalFusedAttitude.normalize()
             panicCounter = 0
         }
 

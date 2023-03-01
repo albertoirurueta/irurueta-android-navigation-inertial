@@ -227,6 +227,7 @@ abstract class BaseLocalPoseProcessor(
 
         // obtain average attitude between current and previous attitude
         Quaternion.slerp(previousAttitude, currentAttitude, 0.5, averageAttitude)
+        averageAttitude.normalize()
 
         // Transform specific force to NED frame
         val fibb = specificForce.valuesAsMatrix

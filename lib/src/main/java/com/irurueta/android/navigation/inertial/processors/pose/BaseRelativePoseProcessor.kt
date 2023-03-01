@@ -97,21 +97,6 @@ abstract class BaseRelativePoseProcessor(
     private val currentPosition = InhomogeneousPoint3D()
 
     /**
-     * Contains rotation in pose transformation.
-     */
-    private val transformationRotation = Quaternion()
-
-    /**
-     * Contains translation in pose transformation.
-     */
-    private val transformationPosition = InhomogeneousPoint3D()
-
-    /**
-     * Rotation to convert from NED to ENU coordinates and viceversa.
-     */
-    private val conversionRotation = ENUtoNEDConverter.conversionRotation
-
-    /**
      * Timestamp of previous sample expressed in nanoseconds.
      */
     private var previousTimestamp: Long = -1L
@@ -168,6 +153,7 @@ abstract class BaseRelativePoseProcessor(
 
         // obtain average attitude between current and previous attitude
         Quaternion.slerp(previousAttitude, currentAttitude, 0.5, averageAttitude)
+        averageAttitude.normalize()
 
         // transform specific force, gravity and acceleration to NED frame
         val fbx = specificForce.valueX
@@ -219,11 +205,7 @@ abstract class BaseRelativePoseProcessor(
         // update previous values
         currentAttitude.copyTo(previousAttitude)
         currentSpeed.copyTo(previousSpeed)
-        previousPosition.setCoordinates(
-            currentPosition.inhomX,
-            currentPosition.inhomY,
-            currentPosition.inhomY
-        )
+        previousPosition.setCoordinates(newX, newY, newZ)
 
         return true
     }
@@ -291,19 +273,12 @@ abstract class BaseRelativePoseProcessor(
      * Computes pose transformation using current attitude and position.
      */
     private fun computeTransformation() {
-        // convert attitude to ENU coordinates
-        Quaternion.product(currentAttitude, conversionRotation, transformationRotation)
-        // convert position to ENU coordinates
-        transformationPosition.setCoordinates(
-            currentPosition.inhomX,
-            currentPosition.inhomY,
-            currentPosition.inhomZ
-        )
-        // (initial position is at zero, consequently we can directly rotate it)
-        conversionRotation.rotate(transformationPosition, transformationPosition)
+        // set transformation in NED coordinates
+        poseTransformation.rotation.fromRotation(currentAttitude)
+        poseTransformation.setTranslation(currentPosition)
 
-        poseTransformation.rotation.fromRotation(transformationRotation)
-        poseTransformation.setTranslation(transformationPosition)
+        // convert transformation to ENU coordinates
+        ENUtoNEDConverter.convert(poseTransformation, poseTransformation)
     }
 
     /**

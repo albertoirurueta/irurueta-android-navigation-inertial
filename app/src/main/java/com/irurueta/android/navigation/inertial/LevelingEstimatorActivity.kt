@@ -44,8 +44,6 @@ class LevelingEstimatorActivity : AppCompatActivity() {
 
     private var levelingEstimator: LevelingEstimator2? = null
 
-    private val conversionRotation = ENUtoNEDConverter.conversionRotation
-
     private val displayOrientation = Quaternion()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -98,7 +96,7 @@ class LevelingEstimatorActivity : AppCompatActivity() {
                 rotation.inverse()
 
                 // convert attitude from NED to ENU coordinate system to be displayed using OpenGL
-                Quaternion.product(conversionRotation, rotation, rotation)
+                ENUtoNEDConverter.convert(rotation, rotation)
 
                 // take into account display orientation
                 val displayRotationRadians =

@@ -365,6 +365,7 @@ abstract class BaseLeveledRelativeAttitudeProcessor<M : SensorMeasurement<M>,
                 inversePreviousRelativeAttitude,
                 deltaRelativeAttitude
             )
+            deltaRelativeAttitude.normalize()
             true
         } else {
             this.previousRelativeAttitude = Quaternion()
@@ -429,6 +430,7 @@ abstract class BaseLeveledRelativeAttitudeProcessor<M : SensorMeasurement<M>,
                 getSlerpFactor(),
                 fusedAttitude
             )
+            fusedAttitude.normalize()
             panicCounter = 0
         }
 
