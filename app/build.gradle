@@ -107,7 +107,7 @@ dependencies {
     api "com.irurueta:irurueta-android-glutils:$irurueta_android_glutils_version"
     api "com.irurueta:irurueta-android-gl-cube:$irurueta_android_gl_cube"
     implementation project(path: ':lib')
-    implementation 'androidx.core:core-ktx:+'
+    implementation "androidx.core:core-ktx:$core_ktx_version"
     //implementation project(':lib')
     testImplementation "junit:junit:$junit_version"
     androidTestImplementation "androidx.test.ext:junit:$ext_junit_version"
