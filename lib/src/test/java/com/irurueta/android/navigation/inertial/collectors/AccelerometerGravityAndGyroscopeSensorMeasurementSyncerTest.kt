@@ -17,6 +17,7 @@ package com.irurueta.android.navigation.inertial.collectors
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import com.irurueta.android.navigation.inertial.collectors.interpolators.*
 import com.irurueta.android.navigation.inertial.getPrivateProperty
 import com.irurueta.android.navigation.inertial.setPrivateProperty
 import com.irurueta.statistics.UniformRandomizer
@@ -77,6 +78,12 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         assertNull(syncer.bufferFilledListener)
         assertNull(syncer.syncedMeasurementListener)
         assertNull(syncer.staleDetectedMeasurementsListener)
+        assertNotNull(syncer.accelerometerInterpolator)
+        assertTrue(syncer.accelerometerInterpolator is AccelerometerQuadraticSensorMeasurementInterpolator)
+        assertNotNull(syncer.gravityInterpolator)
+        assertTrue(syncer.gravityInterpolator is GravityQuadraticSensorMeasurementInterpolator)
+        assertNotNull(syncer.gyroscopeInterpolator)
+        assertTrue(syncer.gyroscopeInterpolator is GyroscopeQuadraticSensorMeasurementInterpolator)
         assertEquals(0L, syncer.startTimestamp)
         assertFalse(syncer.running)
         assertEquals(0, syncer.numberOfProcessedMeasurements)
@@ -128,6 +135,9 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
             mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AccelerometerGravityAndGyroscopeSyncedSensorMeasurement, AccelerometerGravityAndGyroscopeSensorMeasurementSyncer>>()
         val staleDetectedMeasurementsListener =
             mockk<SensorMeasurementSyncer.OnStaleDetectedMeasurementsListener<AccelerometerGravityAndGyroscopeSyncedSensorMeasurement, AccelerometerGravityAndGyroscopeSensorMeasurementSyncer>>()
+        val accelerometerInterpolator = AccelerometerDirectSensorMeasurementInterpolator()
+        val gravityInterpolator = GravityDirectSensorMeasurementInterpolator()
+        val gyroscopeInterpolator = GyroscopeDirectSensorMeasurementInterpolator()
         val syncer = AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
             context,
             AccelerometerSensorType.ACCELEROMETER,
@@ -147,7 +157,10 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
             accuracyChangedListener = accuracyChangedListener,
             bufferFilledListener = bufferFilledListener,
             syncedMeasurementListener = syncedMeasurementListener,
-            staleDetectedMeasurementsListener = staleDetectedMeasurementsListener
+            staleDetectedMeasurementsListener = staleDetectedMeasurementsListener,
+            accelerometerInterpolator = accelerometerInterpolator,
+            gravityInterpolator = gravityInterpolator,
+            gyroscopeInterpolator = gyroscopeInterpolator
         )
 
         // check
@@ -173,6 +186,9 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         assertSame(bufferFilledListener, syncer.bufferFilledListener)
         assertSame(syncedMeasurementListener, syncer.syncedMeasurementListener)
         assertSame(staleDetectedMeasurementsListener, syncer.staleDetectedMeasurementsListener)
+        assertSame(accelerometerInterpolator, syncer.accelerometerInterpolator)
+        assertSame(gravityInterpolator, syncer.gravityInterpolator)
+        assertSame(gyroscopeInterpolator, syncer.gyroscopeInterpolator)
         assertEquals(0L, syncer.startTimestamp)
         assertFalse(syncer.running)
         assertEquals(0, syncer.numberOfProcessedMeasurements)
@@ -1974,7 +1990,7 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         assertEquals(abx, syncedAccelerometerMeasurement.bx)
         assertEquals(aby, syncedAccelerometerMeasurement.by)
         assertEquals(abz, syncedAccelerometerMeasurement.bz)
-        assertEquals(accelerometerTimestamp, syncedAccelerometerMeasurement.timestamp)
+        assertEquals(gyroscopeTimestamp, syncedAccelerometerMeasurement.timestamp)
         assertEquals(SensorAccuracy.HIGH, syncedAccelerometerMeasurement.accuracy)
         assertEquals(syncer.accelerometerSensorType, syncedAccelerometerMeasurement.sensorType)
         val syncedGravityMeasurement = syncedMeasurement.gravityMeasurement
@@ -2823,7 +2839,7 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         assertEquals(gx1, syncedGravityMeasurement.gx, 0.0f)
         assertEquals(gy1, syncedGravityMeasurement.gy, 0.0f)
         assertEquals(gz1, syncedGravityMeasurement.gz, 0.0f)
-        assertEquals(gravityTimestamp, syncedGravityMeasurement.timestamp)
+        assertEquals(accelerometerTimestamp, syncedGravityMeasurement.timestamp)
         assertEquals(SensorAccuracy.HIGH, syncedGravityMeasurement.accuracy)
         val syncedGyroscopeMeasurement = syncedMeasurement.gyroscopeMeasurement
         requireNotNull(syncedGyroscopeMeasurement)
@@ -2833,7 +2849,7 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         assertEquals(wbx, syncedGyroscopeMeasurement.bx)
         assertEquals(wby, syncedGyroscopeMeasurement.by)
         assertEquals(wbz, syncedGyroscopeMeasurement.bz)
-        assertEquals(gyroscopeTimestamp, syncedGyroscopeMeasurement.timestamp)
+        assertEquals(accelerometerTimestamp, syncedGyroscopeMeasurement.timestamp)
         assertEquals(SensorAccuracy.HIGH, syncedGyroscopeMeasurement.accuracy)
         assertEquals(syncer.gyroscopeSensorType, syncedGyroscopeMeasurement.sensorType)
     }
@@ -3114,7 +3130,7 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         assertEquals(wbx, syncedGyroscopeMeasurement.bx)
         assertEquals(wby, syncedGyroscopeMeasurement.by)
         assertEquals(wbz, syncedGyroscopeMeasurement.bz)
-        assertEquals(accelerometerTimestamp - 1, syncedGyroscopeMeasurement.timestamp)
+        assertEquals(accelerometerTimestamp, syncedGyroscopeMeasurement.timestamp)
         assertEquals(SensorAccuracy.HIGH, syncedGyroscopeMeasurement.accuracy)
         assertEquals(syncer.gyroscopeSensorType, syncedGyroscopeMeasurement.sensorType)
     }
@@ -3349,7 +3365,7 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         assertEquals(abx, syncedAccelerometerMeasurement.bx)
         assertEquals(aby, syncedAccelerometerMeasurement.by)
         assertEquals(abz, syncedAccelerometerMeasurement.bz)
-        assertEquals(accelerometerTimestamp, syncedAccelerometerMeasurement.timestamp)
+        assertEquals(gravityTimestamp, syncedAccelerometerMeasurement.timestamp)
         assertEquals(SensorAccuracy.HIGH, syncedAccelerometerMeasurement.accuracy)
         assertEquals(syncer.accelerometerSensorType, syncedAccelerometerMeasurement.sensorType)
         val syncedGravityMeasurement = syncedMeasurement.gravityMeasurement

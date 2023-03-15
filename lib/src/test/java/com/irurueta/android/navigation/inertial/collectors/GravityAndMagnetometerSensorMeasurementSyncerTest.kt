@@ -17,6 +17,10 @@ package com.irurueta.android.navigation.inertial.collectors
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import com.irurueta.android.navigation.inertial.collectors.interpolators.GravityDirectSensorMeasurementInterpolator
+import com.irurueta.android.navigation.inertial.collectors.interpolators.GravityQuadraticSensorMeasurementInterpolator
+import com.irurueta.android.navigation.inertial.collectors.interpolators.MagnetometerDirectSensorMeasurementInterpolator
+import com.irurueta.android.navigation.inertial.collectors.interpolators.MagnetometerQuadraticSensorMeasurementInterpolator
 import com.irurueta.android.navigation.inertial.getPrivateProperty
 import com.irurueta.android.navigation.inertial.setPrivateProperty
 import com.irurueta.statistics.UniformRandomizer
@@ -70,6 +74,10 @@ class GravityAndMagnetometerSensorMeasurementSyncerTest {
         assertNull(syncer.bufferFilledListener)
         assertNull(syncer.syncedMeasurementListener)
         assertNull(syncer.staleDetectedMeasurementsListener)
+        assertNotNull(syncer.gravityInterpolator)
+        assertTrue(syncer.gravityInterpolator is GravityQuadraticSensorMeasurementInterpolator)
+        assertNotNull(syncer.magnetometerInterpolator)
+        assertTrue(syncer.magnetometerInterpolator is MagnetometerQuadraticSensorMeasurementInterpolator)
         assertEquals(0L, syncer.startTimestamp)
         assertFalse(syncer.running)
         assertEquals(0, syncer.numberOfProcessedMeasurements)
@@ -110,6 +118,8 @@ class GravityAndMagnetometerSensorMeasurementSyncerTest {
             mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<GravityAndMagnetometerSyncedSensorMeasurement, GravityAndMagnetometerSensorMeasurementSyncer>>()
         val staleDetectedMeasurementsListener =
             mockk<SensorMeasurementSyncer.OnStaleDetectedMeasurementsListener<GravityAndMagnetometerSyncedSensorMeasurement, GravityAndMagnetometerSensorMeasurementSyncer>>()
+        val gravityInterpolator = GravityDirectSensorMeasurementInterpolator()
+        val magnetometerInterpolator = MagnetometerDirectSensorMeasurementInterpolator()
         val syncer = GravityAndMagnetometerSensorMeasurementSyncer(
             context,
             MagnetometerSensorType.MAGNETOMETER,
@@ -125,7 +135,9 @@ class GravityAndMagnetometerSensorMeasurementSyncerTest {
             accuracyChangedListener = accuracyChangedListener,
             bufferFilledListener = bufferFilledListener,
             syncedMeasurementListener = syncedMeasurementListener,
-            staleDetectedMeasurementsListener = staleDetectedMeasurementsListener
+            staleDetectedMeasurementsListener = staleDetectedMeasurementsListener,
+            gravityInterpolator = gravityInterpolator,
+            magnetometerInterpolator = magnetometerInterpolator
         )
 
         // check
@@ -147,6 +159,8 @@ class GravityAndMagnetometerSensorMeasurementSyncerTest {
         assertSame(bufferFilledListener, syncer.bufferFilledListener)
         assertSame(syncedMeasurementListener, syncer.syncedMeasurementListener)
         assertSame(staleDetectedMeasurementsListener, syncer.staleDetectedMeasurementsListener)
+        assertSame(gravityInterpolator, syncer.gravityInterpolator)
+        assertSame(magnetometerInterpolator, syncer.magnetometerInterpolator)
         assertEquals(0L, syncer.startTimestamp)
         assertFalse(syncer.running)
         assertEquals(0, syncer.numberOfProcessedMeasurements)
@@ -1399,7 +1413,7 @@ class GravityAndMagnetometerSensorMeasurementSyncerTest {
         assertEquals(gx, syncedGravityMeasurement.gx, 0.0f)
         assertEquals(gy, syncedGravityMeasurement.gy, 0.0f)
         assertEquals(gz, syncedGravityMeasurement.gz, 0.0f)
-        assertEquals(gravityTimestamp, syncedGravityMeasurement.timestamp)
+        assertEquals(magnetometerTimestamp, syncedGravityMeasurement.timestamp)
         assertEquals(SensorAccuracy.HIGH, syncedGravityMeasurement.accuracy)
         val syncedMagnetometerMeasurement = syncedMeasurement.magnetometerMeasurement
         requireNotNull(syncedMagnetometerMeasurement)
@@ -2030,7 +2044,7 @@ class GravityAndMagnetometerSensorMeasurementSyncerTest {
         assertEquals(hardIronX, syncedMagnetometerMeasurement.hardIronX)
         assertEquals(hardIronY, syncedMagnetometerMeasurement.hardIronY)
         assertEquals(hardIronZ, syncedMagnetometerMeasurement.hardIronZ)
-        assertEquals(magnetometerTimestamp, syncedMagnetometerMeasurement.timestamp)
+        assertEquals(gravityTimestamp, syncedMagnetometerMeasurement.timestamp)
         assertEquals(SensorAccuracy.MEDIUM, syncedMagnetometerMeasurement.accuracy)
         assertEquals(syncer.magnetometerSensorType, syncedMagnetometerMeasurement.sensorType)
     }
@@ -2202,7 +2216,7 @@ class GravityAndMagnetometerSensorMeasurementSyncerTest {
         assertEquals(gx, syncedGravityMeasurement.gx, 0.0f)
         assertEquals(gy, syncedGravityMeasurement.gy, 0.0f)
         assertEquals(gz, syncedGravityMeasurement.gz, 0.0f)
-        assertEquals(gravityTimestamp, syncedGravityMeasurement.timestamp)
+        assertEquals(magnetometerTimestamp, syncedGravityMeasurement.timestamp)
         assertEquals(SensorAccuracy.HIGH, syncedGravityMeasurement.accuracy)
         val syncedMagnetometerMeasurement = syncedMeasurement.magnetometerMeasurement
         requireNotNull(syncedMagnetometerMeasurement)

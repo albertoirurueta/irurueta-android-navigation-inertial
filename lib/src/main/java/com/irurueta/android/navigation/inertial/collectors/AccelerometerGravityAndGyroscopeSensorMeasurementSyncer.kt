@@ -18,6 +18,7 @@ package com.irurueta.android.navigation.inertial.collectors
 import android.content.Context
 import android.hardware.Sensor
 import android.os.SystemClock
+import com.irurueta.android.navigation.inertial.collectors.interpolators.*
 import java.util.*
 
 /**
@@ -60,6 +61,9 @@ import java.util.*
  * measurement.
  * @property staleDetectedMeasurementsListener listener to notify when stale measurements are found.
  * This might indicate that buffers are too small and data is not being properly synced.
+ * @property accelerometerInterpolator interpolator for accelerometer measurements.
+ * @property gravityInterpolator interpolator for gravity measurements.
+ * @property gyroscopeInterpolator interpolator for gyroscope measurements.
  */
 class AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
     context: Context,
@@ -80,7 +84,10 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
     accuracyChangedListener: OnAccuracyChangedListener<AccelerometerGravityAndGyroscopeSyncedSensorMeasurement, AccelerometerGravityAndGyroscopeSensorMeasurementSyncer>? = null,
     bufferFilledListener: OnBufferFilledListener<AccelerometerGravityAndGyroscopeSyncedSensorMeasurement, AccelerometerGravityAndGyroscopeSensorMeasurementSyncer>? = null,
     syncedMeasurementListener: OnSyncedMeasurementsListener<AccelerometerGravityAndGyroscopeSyncedSensorMeasurement, AccelerometerGravityAndGyroscopeSensorMeasurementSyncer>? = null,
-    staleDetectedMeasurementsListener: OnStaleDetectedMeasurementsListener<AccelerometerGravityAndGyroscopeSyncedSensorMeasurement, AccelerometerGravityAndGyroscopeSensorMeasurementSyncer>? = null
+    staleDetectedMeasurementsListener: OnStaleDetectedMeasurementsListener<AccelerometerGravityAndGyroscopeSyncedSensorMeasurement, AccelerometerGravityAndGyroscopeSensorMeasurementSyncer>? = null,
+    val accelerometerInterpolator: AccelerometerSensorMeasurementInterpolator = AccelerometerQuadraticSensorMeasurementInterpolator(),
+    val gravityInterpolator: GravitySensorMeasurementInterpolator = GravityQuadraticSensorMeasurementInterpolator(),
+    val gyroscopeInterpolator: GyroscopeSensorMeasurementInterpolator = GyroscopeQuadraticSensorMeasurementInterpolator()
 ) : SensorMeasurementSyncer<AccelerometerGravityAndGyroscopeSyncedSensorMeasurement, AccelerometerGravityAndGyroscopeSensorMeasurementSyncer>(
     context,
     stopWhenFilledBuffer,
@@ -154,6 +161,21 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
      * Previous gyroscope measurement. This instance is reused for efficiency reasons.
      */
     private val previousGyroscopeMeasurement = GyroscopeSensorMeasurement()
+
+    /**
+     * Interpolated accelerometer measurement. This instance is reused for efficiency reasons.
+     */
+    private val interpolatedAccelerometerMeasurement = AccelerometerSensorMeasurement()
+
+    /**
+     * Interpolated gravity measurement. This instance is reused for efficiency reasons.
+     */
+    private val interpolatedGravityMeasurement = GravitySensorMeasurement()
+
+    /**
+     * Interpolated gyroscope measurement. This instance is reused for efficiency reasons.
+     */
+    private val interpolatedGyroscopeMeasurement = GyroscopeSensorMeasurement()
 
     /**
      * Flag indicating whether a previous accelerometer measurement has been processed.
@@ -549,6 +571,16 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
                     && accelerometerTimestamp >= lastNotifiedAccelerometerTimestamp
                     && previousGravityMeasurement.timestamp > lastNotifiedGravityTimestamp
                     && previousGyroscopeMeasurement.timestamp > lastNotifiedGyroscopeTimestamp
+                    && gravityInterpolator.interpolate(
+                        previousGravityMeasurement,
+                        accelerometerTimestamp,
+                        interpolatedGravityMeasurement
+                    )
+                    && gyroscopeInterpolator.interpolate(
+                        previousGyroscopeMeasurement,
+                        accelerometerTimestamp,
+                        interpolatedGyroscopeMeasurement
+                    )
                 ) {
                     // generate synchronized measurement when rate of accelerometer is greater
                     // than gravity one
@@ -556,9 +588,10 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
                     syncedMeasurement.accelerometerMeasurement?.copyFrom(
                         accelerometerMeasurement
                     )
-                    syncedMeasurement.gravityMeasurement?.copyFrom(previousGravityMeasurement)
+                    accelerometerInterpolator.push(accelerometerMeasurement)
+                    syncedMeasurement.gravityMeasurement?.copyFrom(interpolatedGravityMeasurement)
                     syncedMeasurement.gyroscopeMeasurement?.copyFrom(
-                        previousGyroscopeMeasurement
+                        interpolatedGyroscopeMeasurement
                     )
 
                     numberOfProcessedMeasurements++
@@ -592,16 +625,27 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
                             && accelerometerTimestamp >= lastNotifiedAccelerometerTimestamp
                             && gravityTimestamp >= lastNotifiedGravityTimestamp
                             && previousGyroscopeMeasurement.timestamp > lastNotifiedGyroscopeTimestamp
+                            && accelerometerInterpolator.interpolate(
+                                accelerometerMeasurement,
+                                gravityTimestamp,
+                                interpolatedAccelerometerMeasurement
+                            )
+                            && gyroscopeInterpolator.interpolate(
+                                previousGyroscopeMeasurement,
+                                gravityTimestamp,
+                                interpolatedGyroscopeMeasurement
+                            )
                         ) {
                             // generate synchronized measurement when rate of gravity is greater
                             // than gyroscope one
                             syncedMeasurement.timestamp = gravityTimestamp
                             syncedMeasurement.accelerometerMeasurement?.copyFrom(
-                                accelerometerMeasurement
+                                interpolatedAccelerometerMeasurement
                             )
                             syncedMeasurement.gravityMeasurement?.copyFrom(gravityMeasurement)
+                            gravityInterpolator.push(gravityMeasurement)
                             syncedMeasurement.gyroscopeMeasurement?.copyFrom(
-                                previousGyroscopeMeasurement
+                                interpolatedGyroscopeMeasurement
                             )
 
                             numberOfProcessedMeasurements++
@@ -625,17 +669,30 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
                                 && accelerometerTimestamp >= lastNotifiedAccelerometerTimestamp
                                 && gravityTimestamp >= lastNotifiedGravityTimestamp
                                 && gyroscopeTimestamp >= lastNotifiedGyroscopeTimestamp
+                                && accelerometerInterpolator.interpolate(
+                                    accelerometerMeasurement,
+                                    gyroscopeTimestamp,
+                                    interpolatedAccelerometerMeasurement
+                                )
+                                && gravityInterpolator.interpolate(
+                                    gravityMeasurement,
+                                    gyroscopeTimestamp,
+                                    interpolatedGravityMeasurement
+                                )
                             ) {
                                 // generate synchronized measurement when rate of gyroscope is
                                 // greater than gravity and accelerometer one
                                 syncedMeasurement.timestamp = gyroscopeTimestamp
                                 syncedMeasurement.accelerometerMeasurement?.copyFrom(
-                                    accelerometerMeasurement
+                                    interpolatedAccelerometerMeasurement
                                 )
-                                syncedMeasurement.gravityMeasurement?.copyFrom(gravityMeasurement)
+                                syncedMeasurement.gravityMeasurement?.copyFrom(
+                                    interpolatedGravityMeasurement
+                                )
                                 syncedMeasurement.gyroscopeMeasurement?.copyFrom(
                                     gyroscopeMeasurement
                                 )
+                                gyroscopeInterpolator.push(gyroscopeMeasurement)
 
                                 numberOfProcessedMeasurements++
 
@@ -713,6 +770,10 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
         lastNotifiedAccelerometerTimestamp = 0L
         lastNotifiedGravityTimestamp = 0L
         lastNotifiedGyroscopeTimestamp = 0L
+
+        accelerometerInterpolator.reset()
+        gravityInterpolator.reset()
+        gyroscopeInterpolator.reset()
     }
 
     /**

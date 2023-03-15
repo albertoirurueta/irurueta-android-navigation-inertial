@@ -17,6 +17,10 @@ package com.irurueta.android.navigation.inertial.collectors
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import com.irurueta.android.navigation.inertial.collectors.interpolators.AccelerometerDirectSensorMeasurementInterpolator
+import com.irurueta.android.navigation.inertial.collectors.interpolators.AccelerometerQuadraticSensorMeasurementInterpolator
+import com.irurueta.android.navigation.inertial.collectors.interpolators.AttitudeDirectSensorMeasurementInterpolator
+import com.irurueta.android.navigation.inertial.collectors.interpolators.AttitudeLinearSensorMeasurementInterpolator
 import com.irurueta.android.navigation.inertial.getPrivateProperty
 import com.irurueta.android.navigation.inertial.setPrivateProperty
 import com.irurueta.geometry.Quaternion
@@ -72,6 +76,10 @@ class AttitudeAndAccelerometerSensorMeasurementSyncerTest {
         assertNull(syncer.bufferFilledListener)
         assertNull(syncer.syncedMeasurementListener)
         assertNull(syncer.staleDetectedMeasurementsListener)
+        assertNotNull(syncer.attitudeInterpolator)
+        assertTrue(syncer.attitudeInterpolator is AttitudeLinearSensorMeasurementInterpolator)
+        assertNotNull(syncer.accelerometerInterpolator)
+        assertTrue(syncer.accelerometerInterpolator is AccelerometerQuadraticSensorMeasurementInterpolator)
         assertEquals(0L, syncer.startTimestamp)
         assertFalse(syncer.running)
         assertEquals(0, syncer.numberOfProcessedMeasurements)
@@ -112,6 +120,8 @@ class AttitudeAndAccelerometerSensorMeasurementSyncerTest {
             mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AttitudeAndAccelerometerSyncedSensorMeasurement, AttitudeAndAccelerometerSensorMeasurementSyncer>>()
         val staleDetectedMeasurementsListener =
             mockk<SensorMeasurementSyncer.OnStaleDetectedMeasurementsListener<AttitudeAndAccelerometerSyncedSensorMeasurement, AttitudeAndAccelerometerSensorMeasurementSyncer>>()
+        val attitudeInterpolator = AttitudeDirectSensorMeasurementInterpolator()
+        val accelerometerInterpolator = AccelerometerDirectSensorMeasurementInterpolator()
         val syncer = AttitudeAndAccelerometerSensorMeasurementSyncer(
             context,
             AttitudeSensorType.RELATIVE_ATTITUDE,
@@ -128,7 +138,9 @@ class AttitudeAndAccelerometerSensorMeasurementSyncerTest {
             accuracyChangedListener = accuracyChangedListener,
             bufferFilledListener = bufferFilledListener,
             syncedMeasurementListener = syncedMeasurementListener,
-            staleDetectedMeasurementsListener = staleDetectedMeasurementsListener
+            staleDetectedMeasurementsListener = staleDetectedMeasurementsListener,
+            attitudeInterpolator = attitudeInterpolator,
+            accelerometerInterpolator = accelerometerInterpolator
         )
 
         // check
@@ -148,6 +160,8 @@ class AttitudeAndAccelerometerSensorMeasurementSyncerTest {
         assertSame(bufferFilledListener, syncer.bufferFilledListener)
         assertSame(syncedMeasurementListener, syncer.syncedMeasurementListener)
         assertSame(staleDetectedMeasurementsListener, syncer.staleDetectedMeasurementsListener)
+        assertSame(attitudeInterpolator, syncer.attitudeInterpolator)
+        assertSame(accelerometerInterpolator, syncer.accelerometerInterpolator)
         assertEquals(0L, syncer.startTimestamp)
         assertFalse(syncer.running)
         assertEquals(0, syncer.numberOfProcessedMeasurements)
@@ -1384,7 +1398,7 @@ class AttitudeAndAccelerometerSensorMeasurementSyncerTest {
         requireNotNull(syncedAttitudeMeasurement)
         assertEquals(attitude, syncedAttitudeMeasurement.attitude)
         assertEquals(headingAccuracyRadians, syncedAttitudeMeasurement.headingAccuracy)
-        assertEquals(attitudeTimestamp, syncedAttitudeMeasurement.timestamp)
+        assertEquals(accelerometerTimestamp, syncedAttitudeMeasurement.timestamp)
         assertEquals(SensorAccuracy.HIGH, syncedAttitudeMeasurement.accuracy)
         assertEquals(syncer.attitudeSensorType, syncedAttitudeMeasurement.sensorType)
         val syncedAccelerometerMeasurement = syncedMeasurement.accelerometerMeasurement
@@ -2005,7 +2019,7 @@ class AttitudeAndAccelerometerSensorMeasurementSyncerTest {
         assertEquals(abx, syncedAccelerometerMeasurement.bx)
         assertEquals(aby, syncedAccelerometerMeasurement.by)
         assertEquals(abz, syncedAccelerometerMeasurement.bz)
-        assertEquals(accelerometerTimestamp, syncedAccelerometerMeasurement.timestamp)
+        assertEquals(attitudeTimestamp, syncedAccelerometerMeasurement.timestamp)
         assertEquals(SensorAccuracy.HIGH, syncedAccelerometerMeasurement.accuracy)
     }
 
@@ -2173,7 +2187,7 @@ class AttitudeAndAccelerometerSensorMeasurementSyncerTest {
         requireNotNull(syncedAttitudeMeasurement)
         assertEquals(attitude, syncedAttitudeMeasurement.attitude)
         assertEquals(headingAccuracyRadians, syncedAttitudeMeasurement.headingAccuracy)
-        assertEquals(attitudeTimestamp, syncedAttitudeMeasurement.timestamp)
+        assertEquals(accelerometerTimestamp, syncedAttitudeMeasurement.timestamp)
         assertEquals(SensorAccuracy.HIGH, syncedAttitudeMeasurement.accuracy)
         assertEquals(syncer.attitudeSensorType, syncedAttitudeMeasurement.sensorType)
         val syncedAccelerometerMeasurement = syncedMeasurement.accelerometerMeasurement

@@ -18,6 +18,7 @@ package com.irurueta.android.navigation.inertial.collectors
 import android.content.Context
 import android.hardware.Sensor
 import android.os.SystemClock
+import com.irurueta.android.navigation.inertial.collectors.interpolators.*
 import java.util.ArrayDeque
 
 /**
@@ -54,6 +55,8 @@ import java.util.ArrayDeque
  * measurement.
  * @property staleDetectedMeasurementsListener listener to notify when stale measurements are found.
  * This might indicate that buffers are too small and data is not being properly synced.
+ * @property attitudeInterpolator interpolator for attitude measurements.
+ * @property accelerometerInterpolator interpolator for accelerometer measurements.
  */
 class AttitudeAndAccelerometerSensorMeasurementSyncer(
     context: Context,
@@ -71,7 +74,9 @@ class AttitudeAndAccelerometerSensorMeasurementSyncer(
     accuracyChangedListener: OnAccuracyChangedListener<AttitudeAndAccelerometerSyncedSensorMeasurement, AttitudeAndAccelerometerSensorMeasurementSyncer>? = null,
     bufferFilledListener: OnBufferFilledListener<AttitudeAndAccelerometerSyncedSensorMeasurement, AttitudeAndAccelerometerSensorMeasurementSyncer>? = null,
     syncedMeasurementListener: OnSyncedMeasurementsListener<AttitudeAndAccelerometerSyncedSensorMeasurement, AttitudeAndAccelerometerSensorMeasurementSyncer>? = null,
-    staleDetectedMeasurementsListener: OnStaleDetectedMeasurementsListener<AttitudeAndAccelerometerSyncedSensorMeasurement, AttitudeAndAccelerometerSensorMeasurementSyncer>? = null
+    staleDetectedMeasurementsListener: OnStaleDetectedMeasurementsListener<AttitudeAndAccelerometerSyncedSensorMeasurement, AttitudeAndAccelerometerSensorMeasurementSyncer>? = null,
+    val attitudeInterpolator: AttitudeSensorMeasurementInterpolator = AttitudeLinearSensorMeasurementInterpolator(),
+    val accelerometerInterpolator: AccelerometerSensorMeasurementInterpolator = AccelerometerQuadraticSensorMeasurementInterpolator(),
 ) : SensorMeasurementSyncer<AttitudeAndAccelerometerSyncedSensorMeasurement, AttitudeAndAccelerometerSensorMeasurementSyncer>(
     context,
     stopWhenFilledBuffer,
@@ -122,6 +127,16 @@ class AttitudeAndAccelerometerSensorMeasurementSyncer(
      * Previous accelerometer measurement. This instance is reused for efficiency reasons.
      */
     private val previousAccelerometerMeasurement = AccelerometerSensorMeasurement()
+
+    /**
+     * Interpolated attitude measurement. This instance is reused for efficiency reasons.
+     */
+    private val interpolatedAttitudeMeasurement = AttitudeSensorMeasurement()
+
+    /**
+     * Interpolated accelerometer measurement. This instance is reused for efficiency reasons.
+     */
+    private val interpolatedAccelerometerMeasurement = AccelerometerSensorMeasurement()
 
     /**
      * Flag indicating whether a previous attitude measurement has been processed.
@@ -408,13 +423,19 @@ class AttitudeAndAccelerometerSensorMeasurementSyncer(
                     && attitudeTimestamp > lastNotifiedTimestamp
                     && attitudeTimestamp >= lastNotifiedAttitudeTimestamp
                     && previousAccelerometerMeasurement.timestamp > lastNotifiedAccelerometerTimestamp
+                    && accelerometerInterpolator.interpolate(
+                        previousAccelerometerMeasurement,
+                        attitudeTimestamp,
+                        interpolatedAccelerometerMeasurement
+                    )
                 ) {
                     // generate synchronized measurement when rate of attitude is greater than
                     // accelerometer one
                     syncedMeasurement.timestamp = attitudeTimestamp
                     syncedMeasurement.attitudeMeasurement?.copyFrom(attitudeMeasurement)
+                    attitudeInterpolator.push(attitudeMeasurement)
                     syncedMeasurement.accelerometerMeasurement?.copyFrom(
-                        previousAccelerometerMeasurement
+                        interpolatedAccelerometerMeasurement
                     )
 
                     numberOfProcessedMeasurements++
@@ -435,14 +456,22 @@ class AttitudeAndAccelerometerSensorMeasurementSyncer(
                     if (accelerometerTimestamp > lastNotifiedTimestamp
                         && attitudeTimestamp >= lastNotifiedAttitudeTimestamp
                         && accelerometerTimestamp >= lastNotifiedAccelerometerTimestamp
+                        && attitudeInterpolator.interpolate(
+                            attitudeMeasurement,
+                            accelerometerTimestamp,
+                            interpolatedAttitudeMeasurement
+                        )
                     ) {
                         // generate synchronized measurement when rate of accelerometer is greater
                         // than attitude one
                         syncedMeasurement.timestamp = accelerometerTimestamp
-                        syncedMeasurement.attitudeMeasurement?.copyFrom(attitudeMeasurement)
+                        syncedMeasurement.attitudeMeasurement?.copyFrom(
+                            interpolatedAttitudeMeasurement
+                        )
                         syncedMeasurement.accelerometerMeasurement?.copyFrom(
                             accelerometerMeasurement
                         )
+                        accelerometerInterpolator.push(accelerometerMeasurement)
 
                         numberOfProcessedMeasurements++
 
@@ -502,6 +531,9 @@ class AttitudeAndAccelerometerSensorMeasurementSyncer(
         lastNotifiedTimestamp = 0L
         lastNotifiedAttitudeTimestamp = 0L
         lastNotifiedAccelerometerTimestamp = 0L
+
+        attitudeInterpolator.reset()
+        accelerometerInterpolator.reset()
     }
 
     /**

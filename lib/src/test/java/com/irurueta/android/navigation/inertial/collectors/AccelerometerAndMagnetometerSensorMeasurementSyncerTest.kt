@@ -17,6 +17,7 @@ package com.irurueta.android.navigation.inertial.collectors
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import com.irurueta.android.navigation.inertial.collectors.interpolators.*
 import com.irurueta.android.navigation.inertial.getPrivateProperty
 import com.irurueta.android.navigation.inertial.setPrivateProperty
 import com.irurueta.statistics.UniformRandomizer
@@ -74,6 +75,10 @@ class AccelerometerAndMagnetometerSensorMeasurementSyncerTest {
         assertNull(syncer.bufferFilledListener)
         assertNull(syncer.syncedMeasurementListener)
         assertNull(syncer.staleDetectedMeasurementsListener)
+        assertNotNull(syncer.accelerometerInterpolator)
+        assertTrue(syncer.accelerometerInterpolator is AccelerometerQuadraticSensorMeasurementInterpolator)
+        assertNotNull(syncer.magnetometerInterpolator)
+        assertTrue(syncer.magnetometerInterpolator is MagnetometerQuadraticSensorMeasurementInterpolator)
         assertEquals(0L, syncer.startTimestamp)
         assertFalse(syncer.running)
         assertEquals(0, syncer.numberOfProcessedMeasurements)
@@ -114,6 +119,8 @@ class AccelerometerAndMagnetometerSensorMeasurementSyncerTest {
             mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AccelerometerAndMagnetometerSyncedSensorMeasurement, AccelerometerAndMagnetometerSensorMeasurementSyncer>>()
         val staleDetectedMeasurementsListener =
             mockk<SensorMeasurementSyncer.OnStaleDetectedMeasurementsListener<AccelerometerAndMagnetometerSyncedSensorMeasurement, AccelerometerAndMagnetometerSensorMeasurementSyncer>>()
+        val accelerometerInterpolator = AccelerometerDirectSensorMeasurementInterpolator()
+        val magnetometerInterpolator = MagnetometerDirectSensorMeasurementInterpolator()
         val syncer = AccelerometerAndMagnetometerSensorMeasurementSyncer(
             context,
             AccelerometerSensorType.ACCELEROMETER,
@@ -130,7 +137,9 @@ class AccelerometerAndMagnetometerSensorMeasurementSyncerTest {
             accuracyChangedListener = accuracyChangedListener,
             bufferFilledListener = bufferFilledListener,
             syncedMeasurementListener = syncedMeasurementListener,
-            staleDetectedMeasurementsListener = staleDetectedMeasurementsListener
+            staleDetectedMeasurementsListener = staleDetectedMeasurementsListener,
+            accelerometerInterpolator = accelerometerInterpolator,
+            magnetometerInterpolator = magnetometerInterpolator
         )
 
         // check
@@ -153,6 +162,8 @@ class AccelerometerAndMagnetometerSensorMeasurementSyncerTest {
         assertSame(bufferFilledListener, syncer.bufferFilledListener)
         assertSame(syncedMeasurementListener, syncer.syncedMeasurementListener)
         assertSame(staleDetectedMeasurementsListener, syncer.staleDetectedMeasurementsListener)
+        assertSame(accelerometerInterpolator, syncer.accelerometerInterpolator)
+        assertSame(magnetometerInterpolator, syncer.magnetometerInterpolator)
         assertEquals(0L, syncer.startTimestamp)
         assertFalse(syncer.running)
         assertEquals(0, syncer.numberOfProcessedMeasurements)
@@ -1431,7 +1442,7 @@ class AccelerometerAndMagnetometerSensorMeasurementSyncerTest {
         assertEquals(abx, syncedAccelerometerMeasurement.bx)
         assertEquals(aby, syncedAccelerometerMeasurement.by)
         assertEquals(abz, syncedAccelerometerMeasurement.bz)
-        assertEquals(accelerometerTimestamp, syncedAccelerometerMeasurement.timestamp)
+        assertEquals(magnetometerTimestamp, syncedAccelerometerMeasurement.timestamp)
         assertEquals(SensorAccuracy.HIGH, syncedAccelerometerMeasurement.accuracy)
         assertEquals(syncer.accelerometerSensorType, syncedAccelerometerMeasurement.sensorType)
         val syncedMagnetometerMeasurement = syncedMeasurement.magnetometerMeasurement
@@ -2095,7 +2106,7 @@ class AccelerometerAndMagnetometerSensorMeasurementSyncerTest {
         assertEquals(hardIronX, syncedMagnetometerMeasurement.hardIronX)
         assertEquals(hardIronY, syncedMagnetometerMeasurement.hardIronY)
         assertEquals(hardIronZ, syncedMagnetometerMeasurement.hardIronZ)
-        assertEquals(magnetometerTimestamp, syncedMagnetometerMeasurement.timestamp)
+        assertEquals(accelerometerTimestamp, syncedMagnetometerMeasurement.timestamp)
         assertEquals(SensorAccuracy.MEDIUM, syncedMagnetometerMeasurement.accuracy)
         assertEquals(syncer.magnetometerSensorType, syncedMagnetometerMeasurement.sensorType)
     }
@@ -2277,7 +2288,7 @@ class AccelerometerAndMagnetometerSensorMeasurementSyncerTest {
         assertEquals(abx, syncedAccelerometerMeasurement.bx)
         assertEquals(aby, syncedAccelerometerMeasurement.by)
         assertEquals(abz, syncedAccelerometerMeasurement.bz)
-        assertEquals(accelerometerTimestamp, syncedAccelerometerMeasurement.timestamp)
+        assertEquals(magnetometerTimestamp, syncedAccelerometerMeasurement.timestamp)
         assertEquals(SensorAccuracy.HIGH, syncedAccelerometerMeasurement.accuracy)
         assertEquals(syncer.accelerometerSensorType, syncedAccelerometerMeasurement.sensorType)
         val syncedMagnetometerMeasurement = syncedMeasurement.magnetometerMeasurement

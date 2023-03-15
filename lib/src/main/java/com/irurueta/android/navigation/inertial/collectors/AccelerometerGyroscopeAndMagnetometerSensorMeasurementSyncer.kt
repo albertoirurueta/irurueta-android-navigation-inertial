@@ -18,6 +18,7 @@ package com.irurueta.android.navigation.inertial.collectors
 import android.content.Context
 import android.hardware.Sensor
 import android.os.SystemClock
+import com.irurueta.android.navigation.inertial.collectors.interpolators.*
 import java.util.*
 
 /**
@@ -61,6 +62,9 @@ import java.util.*
  * measurement.
  * @property staleDetectedMeasurementsListener listener to notify when stale measurements are found.
  * This might indicate that buffers are too small and data is not being properly synced.
+ * @property accelerometerInterpolator interpolator for accelerometer measurements.
+ * @property gyroscopeInterpolator interpolator for gyroscope measurements.
+ * @property magnetometerInterpolator interpolator for magnetometer measurements.
  */
 class AccelerometerGyroscopeAndMagnetometerSensorMeasurementSyncer(
     context: Context,
@@ -82,7 +86,10 @@ class AccelerometerGyroscopeAndMagnetometerSensorMeasurementSyncer(
     accuracyChangedListener: OnAccuracyChangedListener<AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement, AccelerometerGyroscopeAndMagnetometerSensorMeasurementSyncer>? = null,
     bufferFilledListener: OnBufferFilledListener<AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement, AccelerometerGyroscopeAndMagnetometerSensorMeasurementSyncer>? = null,
     syncedMeasurementListener: OnSyncedMeasurementsListener<AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement, AccelerometerGyroscopeAndMagnetometerSensorMeasurementSyncer>? = null,
-    staleDetectedMeasurementsListener: OnStaleDetectedMeasurementsListener<AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement, AccelerometerGyroscopeAndMagnetometerSensorMeasurementSyncer>? = null
+    staleDetectedMeasurementsListener: OnStaleDetectedMeasurementsListener<AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement, AccelerometerGyroscopeAndMagnetometerSensorMeasurementSyncer>? = null,
+    val accelerometerInterpolator: AccelerometerSensorMeasurementInterpolator = AccelerometerQuadraticSensorMeasurementInterpolator(),
+    val gyroscopeInterpolator: GyroscopeSensorMeasurementInterpolator = GyroscopeQuadraticSensorMeasurementInterpolator(),
+    val magnetometerInterpolator: MagnetometerSensorMeasurementInterpolator = MagnetometerQuadraticSensorMeasurementInterpolator()
 ) : SensorMeasurementSyncer<AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement, AccelerometerGyroscopeAndMagnetometerSensorMeasurementSyncer>(
     context,
     stopWhenFilledBuffer,
@@ -157,6 +164,21 @@ class AccelerometerGyroscopeAndMagnetometerSensorMeasurementSyncer(
      * Previous magnetometer measurement. This instance is reused for efficiency reasons.
      */
     private val previousMagnetometerMeasurement = MagnetometerSensorMeasurement()
+
+    /**
+     * Interpolated accelerometer measurement. This instance is reused for efficiency reasons.
+     */
+    private val interpolatedAccelerometerMeasurement = AccelerometerSensorMeasurement()
+
+    /**
+     * Interpolated gyroscope measurement. This instance is reused for efficiency reasons.
+     */
+    private val interpolatedGyroscopeMeasurement = GyroscopeSensorMeasurement()
+
+    /**
+     * Interpolated magnetometer measurement. This instance is reused for efficiency reasons.
+     */
+    private val interpolatedMagnetometerMeasurement = MagnetometerSensorMeasurement()
 
     /**
      * Flag indicating whether a previous accelerometer measurement has been processed.
@@ -553,6 +575,16 @@ class AccelerometerGyroscopeAndMagnetometerSensorMeasurementSyncer(
                     && accelerometerTimestamp >= lastNotifiedAccelerometerTimestamp
                     && previousGyroscopeMeasurement.timestamp > lastNotifiedGyroscopeTimestamp
                     && previousMagnetometerMeasurement.timestamp > lastNotifiedMagnetometerTimestamp
+                    && gyroscopeInterpolator.interpolate(
+                        previousGyroscopeMeasurement,
+                        accelerometerTimestamp,
+                        interpolatedGyroscopeMeasurement
+                    )
+                    && magnetometerInterpolator.interpolate(
+                        previousMagnetometerMeasurement,
+                        accelerometerTimestamp,
+                        interpolatedMagnetometerMeasurement
+                    )
                 ) {
                     // generate synchronized measurement when rate of accelerometer is greater
                     // than gyroscope one
@@ -560,11 +592,12 @@ class AccelerometerGyroscopeAndMagnetometerSensorMeasurementSyncer(
                     syncedMeasurement.accelerometerMeasurement?.copyFrom(
                         accelerometerMeasurement
                     )
+                    accelerometerInterpolator.push(accelerometerMeasurement)
                     syncedMeasurement.gyroscopeMeasurement?.copyFrom(
-                        previousGyroscopeMeasurement
+                        interpolatedGyroscopeMeasurement
                     )
                     syncedMeasurement.magnetometerMeasurement?.copyFrom(
-                        previousMagnetometerMeasurement
+                        interpolatedMagnetometerMeasurement
                     )
 
                     numberOfProcessedMeasurements++
@@ -601,16 +634,27 @@ class AccelerometerGyroscopeAndMagnetometerSensorMeasurementSyncer(
                             && accelerometerTimestamp >= lastNotifiedAccelerometerTimestamp
                             && gyroscopeTimestamp >= lastNotifiedGyroscopeTimestamp
                             && previousMagnetometerMeasurement.timestamp > lastNotifiedMagnetometerTimestamp
+                            && accelerometerInterpolator.interpolate(
+                                accelerometerMeasurement,
+                                gyroscopeTimestamp,
+                                interpolatedAccelerometerMeasurement
+                            )
+                            && magnetometerInterpolator.interpolate(
+                                previousMagnetometerMeasurement,
+                                gyroscopeTimestamp,
+                                interpolatedMagnetometerMeasurement
+                            )
                         ) {
                             // generate synchronized measurement when rate of magnetometer is greater
                             // than gyroscope one
                             syncedMeasurement.timestamp = gyroscopeTimestamp
                             syncedMeasurement.accelerometerMeasurement?.copyFrom(
-                                accelerometerMeasurement
+                                interpolatedAccelerometerMeasurement
                             )
                             syncedMeasurement.gyroscopeMeasurement?.copyFrom(gyroscopeMeasurement)
+                            gyroscopeInterpolator.push(gyroscopeMeasurement)
                             syncedMeasurement.magnetometerMeasurement?.copyFrom(
-                                previousMagnetometerMeasurement
+                                interpolatedMagnetometerMeasurement
                             )
 
                             numberOfProcessedMeasurements++
@@ -633,19 +677,30 @@ class AccelerometerGyroscopeAndMagnetometerSensorMeasurementSyncer(
                             if (magnetometerTimestamp > lastNotifiedTimestamp
                                 && accelerometerTimestamp >= lastNotifiedAccelerometerTimestamp
                                 && magnetometerTimestamp >= lastNotifiedMagnetometerTimestamp
+                                && accelerometerInterpolator.interpolate(
+                                    accelerometerMeasurement,
+                                    magnetometerTimestamp,
+                                    interpolatedAccelerometerMeasurement
+                                )
+                                && gyroscopeInterpolator.interpolate(
+                                    gyroscopeMeasurement,
+                                    magnetometerTimestamp,
+                                    interpolatedGyroscopeMeasurement
+                                )
                             ) {
                                 // generate synchronized measurement when rate of magnetometer is
                                 // greater than gyroscope and accelerometer one
-                                syncedMeasurement.timestamp = gyroscopeTimestamp
+                                syncedMeasurement.timestamp = magnetometerTimestamp
                                 syncedMeasurement.accelerometerMeasurement?.copyFrom(
-                                    accelerometerMeasurement
+                                    interpolatedAccelerometerMeasurement
                                 )
                                 syncedMeasurement.gyroscopeMeasurement?.copyFrom(
-                                    gyroscopeMeasurement
+                                    interpolatedGyroscopeMeasurement
                                 )
                                 syncedMeasurement.magnetometerMeasurement?.copyFrom(
                                     magnetometerMeasurement
                                 )
+                                magnetometerInterpolator.push(magnetometerMeasurement)
 
                                 numberOfProcessedMeasurements++
 
@@ -723,6 +778,10 @@ class AccelerometerGyroscopeAndMagnetometerSensorMeasurementSyncer(
         lastNotifiedAccelerometerTimestamp = 0L
         lastNotifiedGyroscopeTimestamp = 0L
         lastNotifiedMagnetometerTimestamp = 0L
+
+        accelerometerInterpolator.reset()
+        gyroscopeInterpolator.reset()
+        magnetometerInterpolator.reset()
     }
 
     /**
