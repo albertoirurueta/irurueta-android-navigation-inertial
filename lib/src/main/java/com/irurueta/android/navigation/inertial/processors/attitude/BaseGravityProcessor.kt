@@ -15,21 +15,43 @@
  */
 package com.irurueta.android.navigation.inertial.processors.attitude
 
+import android.hardware.SensorManager
+import android.location.Location
 import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
 import com.irurueta.android.navigation.inertial.collectors.SensorMeasurement
+import com.irurueta.android.navigation.inertial.toNEDPosition
+import com.irurueta.navigation.frames.NEDPosition
+import com.irurueta.navigation.inertial.NEDGravity
 import com.irurueta.navigation.inertial.calibration.AccelerationTriad
+import com.irurueta.navigation.inertial.estimators.NEDGravityEstimator
 import com.irurueta.units.AccelerationUnit
+import kotlin.math.sqrt
 
 /**
  * Base class for a gravity processor.
  * Collects accelerometer or gravity sensor measurements and processed them and converts
  * them to NED coordinates.
  *
+ * @property location current device location.
+ * @property adjustGravityNorm indicates whether gravity norm must be adjusted to either Earth
+ * standard norm, or norm at provided location. If no location is provided, this should only be
+ * enabled when device is close to sea level.
  * @property processorListener listener to notify new gravity measurements.
  */
 abstract class BaseGravityProcessor<T : SensorMeasurement<T>>(
+    var location: Location?,
+    var adjustGravityNorm: Boolean,
     var processorListener: OnProcessedListener<T>?
 ) {
+    /**
+     * Gravity expressed in NED coordinates.
+     */
+    private val nedGravity = NEDGravity()
+
+    /**
+     * Position expressed in NED coordinates. Only used if location is provided.
+     */
+    private val nedPosition = NEDPosition()
 
     /**
      * Triad to be reused for ENU to NED coordinates conversion.
@@ -65,11 +87,38 @@ abstract class BaseGravityProcessor<T : SensorMeasurement<T>>(
         get() = AccelerationTriad(gx, gy, gz)
 
     /**
+     * Gets norm of current gravity.
+     */
+    val gravityNorm: Double
+        get() = sqrt(gx * gx + gy * gy + gz * gz)
+
+    /**
+     * Gets NED position from provided location.
+     *
+     * @param result instance where converted location expressed in NED coordinates will be stored.
+     * @return true if location is available and conversion is computed, false otherwise.
+     */
+    fun getNedPosition(result: NEDPosition): Boolean {
+        val location = this.location
+        return if (location != null) {
+            location.toNEDPosition(result)
+            true
+        } else {
+            false
+        }
+    }
+
+    /**
      * Updates provided triad to contain gravity component of specific force expressed in NED
      * coordinates and in meters per squared second (m/s^2).
      */
     fun getGravity(result: AccelerationTriad) {
-        result.setValueCoordinatesAndUnit(gx, gy, gz, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        result.setValueCoordinatesAndUnit(
+            gx,
+            gy,
+            gz,
+            AccelerationUnit.METERS_PER_SQUARED_SECOND
+        )
     }
 
     /**
@@ -84,6 +133,23 @@ abstract class BaseGravityProcessor<T : SensorMeasurement<T>>(
      */
     var accuracy: SensorAccuracy? = null
         protected set
+
+    /**
+     * Gets expected gravity norm at provided location.
+     * If No location is provided, average gravity at sea level is returned instead.
+     * This value will be used to adjust to adjust gravity norm if [adjustGravityNorm] is true.
+     */
+    val expectedGravityNorm: Double
+        get() {
+            val location = this.location
+            return if (location != null) {
+                location.toNEDPosition(nedPosition)
+                NEDGravityEstimator.estimateGravity(nedPosition, nedGravity)
+                nedGravity.norm
+            } else {
+                GRAVITY_EARTH
+            }
+        }
 
     /**
      * Processes a gravity or accelerometer sensor measurement collected by a collector or a syncer.
@@ -109,6 +175,20 @@ abstract class BaseGravityProcessor<T : SensorMeasurement<T>>(
         gz = 0.0
         timestamp = 0L
         accuracy = null
+    }
+
+    /**
+     * Adjusts norm (only if [adjustGravityNorm] is true).
+     */
+    protected fun adjustNorm() {
+        if (!adjustGravityNorm) {
+            return
+        }
+
+        val factor = expectedGravityNorm / gravityNorm
+        gx *= factor
+        gy *= factor
+        gz *= factor
     }
 
     /**
@@ -138,5 +218,13 @@ abstract class BaseGravityProcessor<T : SensorMeasurement<T>>(
             timestamp: Long,
             accuracy: SensorAccuracy?
         )
+    }
+
+    private companion object {
+        /**
+         * Constant defining average acceleration due to gravity at Earth's sea level.
+         * This is roughly 9.81 m/s¨2.
+         */
+        const val GRAVITY_EARTH = SensorManager.GRAVITY_EARTH.toDouble()
     }
 }

@@ -15,6 +15,7 @@
  */
 package com.irurueta.android.navigation.inertial.processors.attitude
 
+import android.location.Location
 import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorMeasurement
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
@@ -27,12 +28,22 @@ import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragi
  *
  * @property averagingFilter an averaging filter for accelerometer samples to obtain
  * sensed gravity component of specific force.
+ * @property location current device location.
+ * @property adjustGravityNorm indicates whether gravity norm must be adjusted to either Earth
+ * standard norm, or norm at provided location. If no location is provided, this should only be
+ * enabled when device is close to sea level.
  * @property processorListener listener to notify new gravity measurements.
  */
 class AccelerometerGravityProcessor(
     val averagingFilter: AveragingFilter = LowPassAveragingFilter(),
+    location: Location? = null,
+    adjustGravityNorm: Boolean = true,
     processorListener: OnProcessedListener<AccelerometerSensorMeasurement>? = null
-) : BaseGravityProcessor<AccelerometerSensorMeasurement>(processorListener) {
+) : BaseGravityProcessor<AccelerometerSensorMeasurement>(
+    location,
+    adjustGravityNorm,
+    processorListener
+) {
 
     /**
      * Array to be reused containing result of averaging filter for accelerometer measurements.
@@ -85,6 +96,9 @@ class AccelerometerGravityProcessor(
             gx = triad.valueX
             gy = triad.valueY
             gz = triad.valueZ
+
+            adjustNorm()
+
             this.timestamp = timestamp
             accuracy = measurement.accuracy
             processorListener?.onProcessed(this, gx, gy, gz, this.timestamp, accuracy)

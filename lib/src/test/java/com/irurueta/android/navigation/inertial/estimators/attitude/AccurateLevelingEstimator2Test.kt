@@ -16,6 +16,7 @@
 package com.irurueta.android.navigation.inertial.estimators.attitude
 
 import android.content.Context
+import android.hardware.SensorManager
 import android.location.Location
 import android.os.SystemClock
 import androidx.test.core.app.ApplicationProvider
@@ -38,6 +39,7 @@ import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import kotlin.math.sqrt
 
 @RunWith(RobolectricTestRunner::class)
 class AccurateLevelingEstimator2Test {
@@ -535,14 +537,17 @@ class AccurateLevelingEstimator2Test {
             timestamp,
             SensorAccuracy.MEDIUM
         )
+        val norm = sqrt(floatFx.toDouble() * floatFx.toDouble()
+                + floatFy.toDouble() * floatFy.toDouble() + floatFz.toDouble() * floatFz.toDouble())
+        val factor = SensorManager.GRAVITY_EARTH / norm
         listener.onMeasurement(gravitySensorCollector, measurement)
 
         verify(exactly = 1) { gravityProcessorSpy.process(measurement) }
         verify(exactly = 1) {
             levelingProcessorSpy.process(
-                floatFx.toDouble(),
-                floatFy.toDouble(),
-                floatFz.toDouble()
+                floatFx.toDouble() * factor,
+                floatFy.toDouble() * factor,
+                floatFz.toDouble() * factor
             )
         }
         verify(exactly = 1) { attitudeSpy.fromQuaternion(levelingProcessor.attitude) }
@@ -665,14 +670,17 @@ class AccurateLevelingEstimator2Test {
             timestamp,
             SensorAccuracy.MEDIUM
         )
+        val norm = sqrt(floatFx.toDouble() * floatFx.toDouble()
+                + floatFy.toDouble() * floatFy.toDouble() + floatFz.toDouble() * floatFz.toDouble())
+        val factor = SensorManager.GRAVITY_EARTH / norm
         listener.onMeasurement(gravitySensorCollector, measurement)
 
         verify(exactly = 1) { gravityProcessorSpy.process(measurement) }
         verify(exactly = 1) {
             levelingProcessorSpy.process(
-                floatFx.toDouble(),
-                floatFy.toDouble(),
-                floatFz.toDouble()
+                floatFx.toDouble() * factor,
+                floatFy.toDouble() * factor,
+                floatFz.toDouble() * factor
             )
         }
         verify(exactly = 1) { attitudeSpy.fromQuaternion(levelingProcessor.attitude) }
@@ -799,14 +807,17 @@ class AccurateLevelingEstimator2Test {
             timestamp,
             SensorAccuracy.MEDIUM
         )
+        val norm = sqrt(floatFx.toDouble() * floatFx.toDouble()
+                + floatFy.toDouble() * floatFy.toDouble() + floatFz.toDouble() * floatFz.toDouble())
+        val factor = SensorManager.GRAVITY_EARTH / norm
         listener.onMeasurement(gravitySensorCollector, measurement)
 
         verify(exactly = 1) { gravityProcessorSpy.process(measurement) }
         verify(exactly = 1) {
             levelingProcessorSpy.process(
-                floatFx.toDouble(),
-                floatFy.toDouble(),
-                floatFz.toDouble()
+                floatFx.toDouble() * factor,
+                floatFy.toDouble() * factor,
+                floatFz.toDouble() * factor
             )
         }
         verify(exactly = 1) { attitudeSpy.fromQuaternion(levelingProcessor.attitude) }

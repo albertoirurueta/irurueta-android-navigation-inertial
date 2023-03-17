@@ -15,6 +15,7 @@
  */
 package com.irurueta.android.navigation.inertial.processors.attitude
 
+import android.location.Location
 import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
 import com.irurueta.android.navigation.inertial.collectors.GravitySensorMeasurement
 
@@ -22,11 +23,17 @@ import com.irurueta.android.navigation.inertial.collectors.GravitySensorMeasurem
  * Collects gravity measurements based on android coordinates system (ENU), and converts them to
  * NED coordinates system.
  *
+ * @property location current device location.
+ * @property adjustGravityNorm indicates whether gravity norm must be adjusted to either Earth
+ * standard norm, or norm at provided location. If no location is provided, this should only be
+ * enabled when device is close to sea level.
  * @property processorListener listener to notify new gravity measurements.
  */
 class GravityProcessor(
+    location: Location? = null,
+    adjustGravityNorm: Boolean = true,
     processorListener: OnProcessedListener<GravitySensorMeasurement>? = null
-) : BaseGravityProcessor<GravitySensorMeasurement>(processorListener) {
+) : BaseGravityProcessor<GravitySensorMeasurement>(location, adjustGravityNorm, processorListener) {
 
     /**
      * Processes a gravity sensor measurement collected by a collector or a syncer.
@@ -51,6 +58,9 @@ class GravityProcessor(
         gx = triad.valueX
         gy = triad.valueY
         gz = triad.valueZ
+
+        adjustNorm()
+
         this.timestamp = timestamp
         accuracy = measurement.accuracy
         processorListener?.onProcessed(this, gx, gy, gz, this.timestamp, accuracy)
