@@ -19,6 +19,7 @@ import android.location.Location
 import android.util.Log
 import androidx.test.core.app.ActivityScenario
 import androidx.test.filters.RequiresDevice
+import androidx.test.rule.GrantPermissionRule
 import com.irurueta.android.navigation.inertial.LocationService
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
@@ -29,10 +30,18 @@ import com.irurueta.geometry.Point3D
 import io.mockk.spyk
 import org.junit.Assert.*
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 
 @RequiresDevice
 class RelativePoseEstimatorTest {
+
+    @get:Rule
+    val permissionRule: GrantPermissionRule = GrantPermissionRule.grant(
+        android.Manifest.permission.ACCESS_COARSE_LOCATION,
+        android.Manifest.permission.ACCESS_FINE_LOCATION,
+        android.Manifest.permission.ACCESS_BACKGROUND_LOCATION
+    )
 
     private val syncHelper = ThreadSyncHelper()
 

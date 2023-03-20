@@ -69,6 +69,9 @@ import java.util.*
  * @property bufferFilledListener listener to notify that some buffer has been filled. This usually
  * happens when consumer of measurements cannot keep up with the rate at which measurements are
  * generated.
+ * @property adjustGravityNorm indicates whether gravity norm must be adjusted to either Earth
+ * standard norm, or norm at provided location. If no location is provided, this should only be
+ * enabled when device is close to sea level.
  */
 class FusedGeomagneticAttitudeEstimator2(
     val context: Context,
@@ -91,7 +94,8 @@ class FusedGeomagneticAttitudeEstimator2(
     val estimateEulerAngles: Boolean = true,
     var attitudeAvailableListener: OnAttitudeAvailableListener? = null,
     var accuracyChangedListener: OnAccuracyChangedListener? = null,
-    var bufferFilledListener: OnBufferFilledListener? = null
+    var bufferFilledListener: OnBufferFilledListener? = null,
+    adjustGravityNorm: Boolean = true
 ) {
     /**
      * Processes accelerometer + gyroscope + magnetometer measurements.
@@ -194,6 +198,18 @@ class FusedGeomagneticAttitudeEstimator2(
             accelerometerProcessor.location = value
             gravityProcessor.location = value
             field = value
+        }
+
+    /**
+     * Indicates whether gravity norm must be adjusted to either Earth standard norm, or norm at
+     * provided location. If no location is provided, this should only be enabled when device is
+     * close to sea level.
+     */
+    var adjustGravityNorm: Boolean = adjustGravityNorm
+        set(value) {
+            field = value
+            gravityProcessor.adjustGravityNorm = value
+            accelerometerProcessor.adjustGravityNorm = value
         }
 
     /**
@@ -489,6 +505,9 @@ class FusedGeomagneticAttitudeEstimator2(
         this.useAccurateLevelingEstimator = useAccurateLevelingEstimator
         this.useAccurateRelativeGyroscopeAttitudeEstimator =
             useAccurateRelativeGyroscopeAttitudeEstimator
+
+        accelerometerProcessor.adjustGravityNorm = adjustGravityNorm
+        gravityProcessor.adjustGravityNorm = adjustGravityNorm
     }
 
     /**

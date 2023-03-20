@@ -19,17 +19,26 @@ import android.location.Location
 import android.util.Log
 import androidx.test.core.app.ActivityScenario
 import androidx.test.filters.RequiresDevice
+import androidx.test.rule.GrantPermissionRule
 import com.irurueta.android.navigation.inertial.LocationService
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
 import com.irurueta.android.navigation.inertial.estimators.attitude.FusedGeomagneticAttitudeEstimator
 import com.irurueta.android.navigation.inertial.test.LocationActivity
 import io.mockk.spyk
-import org.junit.Assert
+import org.junit.Assert.*
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 
 @RequiresDevice
 class FusedGeomagneticAttitudeEstimatorTest {
+
+    @get:Rule
+    val permissionRule: GrantPermissionRule = GrantPermissionRule.grant(
+        android.Manifest.permission.ACCESS_COARSE_LOCATION,
+        android.Manifest.permission.ACCESS_FINE_LOCATION,
+        android.Manifest.permission.ACCESS_BACKGROUND_LOCATION
+    )
 
     private val syncHelper = ThreadSyncHelper()
 
@@ -69,7 +78,7 @@ class FusedGeomagneticAttitudeEstimatorTest {
 
         estimator.stop()
 
-        Assert.assertTrue(completed > 0)
+        assertTrue(completed > 0)
     }
 
     @Test
@@ -96,7 +105,7 @@ class FusedGeomagneticAttitudeEstimatorTest {
 
         estimator.stop()
 
-        Assert.assertTrue(completed > 0)
+        assertTrue(completed > 0)
     }
 
     @Test
@@ -123,7 +132,7 @@ class FusedGeomagneticAttitudeEstimatorTest {
 
         estimator.stop()
 
-        Assert.assertTrue(completed > 0)
+        assertTrue(completed > 0)
     }
 
     @Test
@@ -150,7 +159,7 @@ class FusedGeomagneticAttitudeEstimatorTest {
 
         estimator.stop()
 
-        Assert.assertTrue(completed > 0)
+        assertTrue(completed > 0)
     }
 
     private fun getCurrentLocation(): Location {
@@ -161,7 +170,7 @@ class FusedGeomagneticAttitudeEstimatorTest {
 
                 val enabled = service.locationEnabled
                 requireNotNull(enabled)
-                Assert.assertTrue(enabled)
+                assertTrue(enabled)
 
                 val currentLocationListener =
                     spyk(object : LocationService.OnCurrentLocationListener {
@@ -175,10 +184,10 @@ class FusedGeomagneticAttitudeEstimatorTest {
                 service.getCurrentLocation(currentLocationListener)
             }
         }
-        Assert.assertNotNull(scenario)
+        assertNotNull(scenario)
 
         syncHelper.waitOnCondition({ completed < 1 })
-        Assert.assertEquals(1, completed)
+        assertEquals(1, completed)
         completed = 0
 
         val currentLocation = this.currentLocation

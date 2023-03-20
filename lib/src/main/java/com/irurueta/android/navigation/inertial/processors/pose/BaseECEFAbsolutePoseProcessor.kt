@@ -201,7 +201,7 @@ abstract class BaseECEFAbsolutePoseProcessor(
      * @param timestamp timestamp when all measurements are assumed to occur.
      * @return true if new pose is processed, false otherwise.
      */
-    protected fun processPose(
+    protected open fun processPose(
         accelerometerMeasurement: AccelerometerSensorMeasurement,
         gyroscopeMeasurement: GyroscopeSensorMeasurement,
         timestamp: Long

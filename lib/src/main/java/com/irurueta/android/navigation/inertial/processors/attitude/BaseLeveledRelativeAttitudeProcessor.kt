@@ -142,7 +142,25 @@ abstract class BaseLeveledRelativeAttitudeProcessor<M : SensorMeasurement<M>,
     /**
      * Gets or sets device location
      */
+    /**
+     * Gets or sets device location
+     */
     var location: Location? = null
+        set(value) {
+            field = value
+            gravityProcessor.location = value
+        }
+
+    /**
+     * Indicates whether gravity norm must be adjusted to either Earth
+     * standard norm, or norm at provided location. If no location is provided, this should only be
+     * enabled when device is close to sea level.
+     */
+    var adjustGravityNorm: Boolean
+        get() = gravityProcessor.adjustGravityNorm
+        set(value) {
+            gravityProcessor.adjustGravityNorm = value
+        }
 
     /**
      * Indicates whether accurate leveling must be used or not.

@@ -40,6 +40,7 @@ class GeomagneticAttitudeEstimator2Test {
         // check
         assertSame(context, estimator.context)
         assertNull(estimator.location)
+        assertTrue(estimator.adjustGravityNorm)
         assertEquals(SensorDelay.GAME, estimator.sensorDelay)
         assertTrue(estimator.useAccelerometer)
         assertTrue(estimator.startOffsetEnabled)
@@ -99,6 +100,7 @@ class GeomagneticAttitudeEstimator2Test {
         // check
         assertSame(context, estimator.context)
         assertSame(location, estimator.location)
+        assertTrue(estimator.adjustGravityNorm)
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
         assertFalse(estimator.useAccelerometer)
         assertFalse(estimator.startOffsetEnabled)
@@ -282,6 +284,33 @@ class GeomagneticAttitudeEstimator2Test {
 
         // set new value
         estimator.location = null
+    }
+
+    @Test
+    fun adjustGravityNorm_whenNotRunning_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val estimator = GeomagneticAttitudeEstimator2(context)
+
+        // check default value
+        assertTrue(estimator.adjustGravityNorm)
+
+        val gravityProcessor: GeomagneticAttitudeProcessor? =
+            estimator.getPrivateProperty("gravityProcessor")
+        requireNotNull(gravityProcessor)
+        assertTrue(gravityProcessor.adjustGravityNorm)
+
+        val accelerometerProcessor: AccelerometerGeomagneticAttitudeProcessor? =
+            estimator.getPrivateProperty("accelerometerProcessor")
+        requireNotNull(accelerometerProcessor)
+        assertTrue(accelerometerProcessor.adjustGravityNorm)
+
+        // set new value
+        estimator.adjustGravityNorm = false
+
+        // check
+        assertFalse(estimator.adjustGravityNorm)
+        assertFalse(gravityProcessor.adjustGravityNorm)
+        assertFalse(accelerometerProcessor.adjustGravityNorm)
     }
 
     @Test

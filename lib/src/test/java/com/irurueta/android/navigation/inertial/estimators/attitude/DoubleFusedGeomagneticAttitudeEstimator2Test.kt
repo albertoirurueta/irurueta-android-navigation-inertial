@@ -8,10 +8,7 @@ import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragi
 import com.irurueta.android.navigation.inertial.estimators.filter.MedianAveragingFilter
 import com.irurueta.android.navigation.inertial.getPrivateProperty
 import com.irurueta.android.navigation.inertial.processors.*
-import com.irurueta.android.navigation.inertial.processors.attitude.AccelerometerDoubleFusedGeomagneticAttitudeProcessor
-import com.irurueta.android.navigation.inertial.processors.attitude.BaseDoubleFusedGeomagneticAttitudeProcessor
-import com.irurueta.android.navigation.inertial.processors.attitude.BaseFusedGeomagneticAttitudeProcessor
-import com.irurueta.android.navigation.inertial.processors.attitude.DoubleFusedGeomagneticAttitudeProcessor
+import com.irurueta.android.navigation.inertial.processors.attitude.*
 import com.irurueta.android.navigation.inertial.setPrivateProperty
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.frames.CoordinateTransformation
@@ -43,6 +40,7 @@ class DoubleFusedGeomagneticAttitudeEstimator2Test {
         // check
         assertSame(context, estimator.context)
         assertNull(estimator.location)
+        assertTrue(estimator.adjustGravityNorm)
         assertEquals(SensorDelay.GAME, estimator.sensorDelay)
         assertTrue(estimator.useAccelerometer)
         assertTrue(estimator.startOffsetEnabled)
@@ -131,12 +129,14 @@ class DoubleFusedGeomagneticAttitudeEstimator2Test {
             estimateEulerAngles = false,
             attitudeAvailableListener = attitudeListener,
             accuracyChangedListener = accuracyChangedListener,
-            bufferFilledListener = bufferFilledListener
+            bufferFilledListener = bufferFilledListener,
+            adjustGravityNorm = false
         )
 
         // check
         assertSame(context, estimator.context)
         assertSame(location, estimator.location)
+        assertFalse(estimator.adjustGravityNorm)
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
         assertFalse(estimator.useAccelerometer)
         assertFalse(estimator.startOffsetEnabled)
@@ -250,6 +250,37 @@ class DoubleFusedGeomagneticAttitudeEstimator2Test {
 
         // set new value
         estimator.location = null
+    }
+
+    @Test
+    fun adjustGravityNorm_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val estimator = LevelingEstimator2(context)
+
+        // check default value
+        assertTrue(estimator.adjustGravityNorm)
+
+        val gravityProcessor: GravityProcessor? =
+            getPrivateProperty(BaseLevelingEstimator2::class, estimator, "gravityProcessor")
+        requireNotNull(gravityProcessor)
+        assertTrue(gravityProcessor.adjustGravityNorm)
+
+        val accelerometerGravityProcessor: AccelerometerGravityProcessor? =
+            getPrivateProperty(
+                BaseLevelingEstimator2::class,
+                estimator,
+                "accelerometerGravityProcessor"
+            )
+        requireNotNull(accelerometerGravityProcessor)
+        assertTrue(accelerometerGravityProcessor.adjustGravityNorm)
+
+        // set new value
+        estimator.adjustGravityNorm = false
+
+        // check
+        assertFalse(estimator.adjustGravityNorm)
+        assertFalse(gravityProcessor.adjustGravityNorm)
+        assertFalse(accelerometerGravityProcessor.adjustGravityNorm)
     }
 
     @Test

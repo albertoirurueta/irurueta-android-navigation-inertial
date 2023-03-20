@@ -22,9 +22,7 @@ import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.MeanAveragingFilter
 import com.irurueta.android.navigation.inertial.getPrivateProperty
-import com.irurueta.android.navigation.inertial.processors.attitude.AccelerometerLeveledRelativeAttitudeProcessor
-import com.irurueta.android.navigation.inertial.processors.attitude.BaseLeveledRelativeAttitudeProcessor
-import com.irurueta.android.navigation.inertial.processors.attitude.LeveledRelativeAttitudeProcessor
+import com.irurueta.android.navigation.inertial.processors.attitude.*
 import com.irurueta.android.navigation.inertial.setPrivateProperty
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.frames.CoordinateTransformation
@@ -54,6 +52,7 @@ class LeveledRelativeAttitudeEstimator2Test {
         // check
         assertSame(context, estimator.context)
         assertNull(estimator.location)
+        assertTrue(estimator.adjustGravityNorm)
         assertEquals(SensorDelay.GAME, estimator.sensorDelay)
         assertTrue(estimator.useAccelerometer)
         assertTrue(estimator.startOffsetEnabled)
@@ -203,12 +202,14 @@ class LeveledRelativeAttitudeEstimator2Test {
             estimateEulerAngles = false,
             attitudeAvailableListener,
             accuracyChangedListener,
-            bufferFilledListener
+            bufferFilledListener,
+            adjustGravityNorm = false
         )
 
         // check
         assertSame(context, estimator.context)
         assertSame(location, estimator.location)
+        assertFalse(estimator.adjustGravityNorm)
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
         assertFalse(estimator.useAccelerometer)
         assertFalse(estimator.startOffsetEnabled)
@@ -391,6 +392,33 @@ class LeveledRelativeAttitudeEstimator2Test {
 
         // set new value
         estimator.location = null
+    }
+
+    @Test
+    fun adjustGravityNorm_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val estimator = LeveledRelativeAttitudeEstimator2(context)
+
+        // check default value
+        assertTrue(estimator.adjustGravityNorm)
+
+        val gravityProcessor: LeveledRelativeAttitudeProcessor? =
+            estimator.getPrivateProperty("gravityProcessor")
+        requireNotNull(gravityProcessor)
+        assertTrue(gravityProcessor.adjustGravityNorm)
+
+        val accelerometerProcessor: AccelerometerLeveledRelativeAttitudeProcessor? =
+            estimator.getPrivateProperty("accelerometerProcessor")
+        requireNotNull(accelerometerProcessor)
+        assertTrue(accelerometerProcessor.adjustGravityNorm)
+
+        // set new value
+        estimator.adjustGravityNorm = false
+
+        // check
+        assertFalse(estimator.adjustGravityNorm)
+        assertFalse(gravityProcessor.adjustGravityNorm)
+        assertFalse(accelerometerProcessor.adjustGravityNorm)
     }
 
     @Test(expected = IllegalStateException::class)

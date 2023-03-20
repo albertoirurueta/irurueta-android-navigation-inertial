@@ -15,6 +15,7 @@
  */
 package com.irurueta.android.navigation.inertial.processors.pose
 
+import android.location.Location
 import com.irurueta.algebra.Matrix
 import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorMeasurement
@@ -121,6 +122,18 @@ abstract class BaseRelativePoseProcessor(
      * Contains current pose respect to the start of this estimator.
      */
     val poseTransformation = EuclideanTransformation3D()
+
+    /**
+     * Gets or sets device location
+     */
+    abstract var location: Location?
+
+    /**
+     * Indicates whether gravity norm must be adjusted to either Earth
+     * standard norm, or norm at provided location. If no location is provided, this should only be
+     * enabled when device is close to sea level.
+     */
+    abstract var adjustGravityNorm: Boolean
 
     /**
      * Resets internal parameters.

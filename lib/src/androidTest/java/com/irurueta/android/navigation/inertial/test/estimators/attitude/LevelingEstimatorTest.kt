@@ -18,7 +18,6 @@ package com.irurueta.android.navigation.inertial.test.estimators.attitude
 import android.util.Log
 import androidx.test.core.app.ActivityScenario
 import androidx.test.filters.RequiresDevice
-import androidx.test.rule.GrantPermissionRule
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
 import com.irurueta.android.navigation.inertial.estimators.attitude.LevelingEstimator
@@ -28,17 +27,10 @@ import com.irurueta.android.navigation.inertial.estimators.filter.MedianAveragin
 import com.irurueta.android.navigation.inertial.test.LocationActivity
 import org.junit.Assert.*
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
 
+@RequiresDevice
 class LevelingEstimatorTest {
-
-    @get:Rule
-    val permissionRule: GrantPermissionRule = GrantPermissionRule.grant(
-        android.Manifest.permission.ACCESS_COARSE_LOCATION,
-        android.Manifest.permission.ACCESS_FINE_LOCATION,
-        android.Manifest.permission.ACCESS_BACKGROUND_LOCATION
-    )
 
     private val syncHelper = ThreadSyncHelper()
 
@@ -52,7 +44,6 @@ class LevelingEstimatorTest {
         completed = 0
     }
 
-    @RequiresDevice
     @Test
     fun startAndStop_whenGravitySensor_estimatesLeveling() {
         val scenario = ActivityScenario.launch(LocationActivity::class.java).use {
@@ -83,7 +74,6 @@ class LevelingEstimatorTest {
         assertTrue(completed > 0)
     }
 
-    @RequiresDevice
     @Test
     fun startAndStop_whenAccelerometerSensorAndLowPassAveragingFilter_estimatesLeveling() {
         val scenario = ActivityScenario.launch(LocationActivity::class.java).use {
@@ -116,7 +106,6 @@ class LevelingEstimatorTest {
         assertTrue(completed > 0)
     }
 
-    @RequiresDevice
     @Test
     fun startAndStop_whenAccelerometerSensorAndMeanAveragingFilter_estimatesLeveling() {
         val scenario = ActivityScenario.launch(LocationActivity::class.java).use {
@@ -149,7 +138,6 @@ class LevelingEstimatorTest {
         assertTrue(completed > 0)
     }
 
-    @RequiresDevice
     @Test
     fun startAndStop_whenAccelerometerSensorAndMedianAveragingFilter_estimatesLeveling() {
         val scenario = ActivityScenario.launch(LocationActivity::class.java).use {
@@ -182,7 +170,6 @@ class LevelingEstimatorTest {
         assertTrue(completed > 0)
     }
 
-    @RequiresDevice
     @Test
     fun startAndStop_whenAccelerometerUncalibratedSensorAndLowPassAveragingFilter_estimatesLeveling() {
         val scenario = ActivityScenario.launch(LocationActivity::class.java).use {
@@ -215,7 +202,6 @@ class LevelingEstimatorTest {
         assertTrue(completed > 0)
     }
 
-    @RequiresDevice
     @Test
     fun startAndStop_whenAccelerometerUncalibratedSensorAndMeanAveragingFilter_estimatesLeveling() {
         val scenario = ActivityScenario.launch(LocationActivity::class.java).use {
@@ -248,7 +234,6 @@ class LevelingEstimatorTest {
         assertTrue(completed > 0)
     }
 
-    @RequiresDevice
     @Test
     fun startAndStop_whenAccelerometerUncalibratedSensorAndMedianAveragingFilter_estimatesLeveling() {
         val scenario = ActivityScenario.launch(LocationActivity::class.java).use {

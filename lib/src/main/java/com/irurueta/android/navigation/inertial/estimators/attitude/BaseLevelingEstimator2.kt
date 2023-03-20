@@ -49,6 +49,9 @@ import com.irurueta.navigation.frames.FrameType
  * @property levelingAvailableListener listener to notify when a new leveling measurement is
  * available.
  * @property accuracyChangedListener listener to notify changes in accuracy.
+ * @property adjustGravityNorm indicates whether gravity norm must be adjusted to either Earth
+ * standard norm, or norm at provided location. If no location is provided, this should only be
+ * enabled when device is close to sea level.
  */
 abstract class BaseLevelingEstimator2<T : BaseLevelingEstimator2<T, L1, L2>,
         L1 : BaseLevelingEstimator2.OnLevelingAvailableListener<T, L1, L2>,
@@ -62,7 +65,8 @@ abstract class BaseLevelingEstimator2<T : BaseLevelingEstimator2<T, L1, L2>,
     val estimateCoordinateTransformation: Boolean,
     val estimateEulerAngles: Boolean,
     var levelingAvailableListener: L1?,
-    var accuracyChangedListener: L2?
+    var accuracyChangedListener: L2?,
+    adjustGravityNorm: Boolean
 ) {
     /**
      * Internal processor to estimate leveled attitude from accelerometer or gravity measurements.
@@ -73,13 +77,13 @@ abstract class BaseLevelingEstimator2<T : BaseLevelingEstimator2<T, L1, L2>,
      * Processor to estimate gravity expressed in NED coordinates from Android gravity sensor
      * measurements.
      */
-    private val gravityProcessor = GravityProcessor()
+    protected val gravityProcessor = GravityProcessor()
 
     /**
      * Processor to estimate gravity expressed in NED coordinates from Android accelerometer sensor
      * measurements.
      */
-    private val accelerometerGravityProcessor =
+    protected val accelerometerGravityProcessor =
         AccelerometerGravityProcessor(accelerometerAveragingFilter)
 
     /**
@@ -159,6 +163,17 @@ abstract class BaseLevelingEstimator2<T : BaseLevelingEstimator2<T, L1, L2>,
         else
             gravitySensorCollector.startOffset
 
+    /**
+     * Indicates whether gravity norm must be adjusted to either Earth standard norm, or norm at
+     * provided location. If no location is provided, this should only be enabled when device is
+     * close to sea level.
+     */
+    var adjustGravityNorm: Boolean = adjustGravityNorm
+        set(value) {
+            field = value
+            gravityProcessor.adjustGravityNorm = value
+            accelerometerGravityProcessor.adjustGravityNorm = value
+        }
 
     /**
      * Starts this estimator.

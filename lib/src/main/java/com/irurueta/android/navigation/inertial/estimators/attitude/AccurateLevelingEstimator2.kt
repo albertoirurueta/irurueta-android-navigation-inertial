@@ -48,6 +48,9 @@ import com.irurueta.android.navigation.inertial.processors.attitude.AccurateLeve
  * @property levelingAvailableListener listener to notify when a new leveling measurement is
  * available.
  * @property accuracyChangedListener listener to notify changes in accuracy.
+ * @property adjustGravityNorm indicates whether gravity norm must be adjusted to either Earth
+ * standard norm, or norm at provided location. If no location is provided, this should only be
+ * enabled when device is close to sea level.
  */
 class AccurateLevelingEstimator2(
     context: Context,
@@ -60,7 +63,8 @@ class AccurateLevelingEstimator2(
     estimateCoordinateTransformation: Boolean = false,
     estimateEulerAngles: Boolean = true,
     levelingAvailableListener: OnLevelingAvailableListener? = null,
-    accuracyChangedListener: OnAccuracyChangedListener? = null
+    accuracyChangedListener: OnAccuracyChangedListener? = null,
+    adjustGravityNorm: Boolean = true
 ) : BaseLevelingEstimator2<AccurateLevelingEstimator2, AccurateLevelingEstimator2.OnLevelingAvailableListener, AccurateLevelingEstimator2.OnAccuracyChangedListener>(
     context,
     sensorDelay,
@@ -71,7 +75,8 @@ class AccurateLevelingEstimator2(
     estimateCoordinateTransformation,
     estimateEulerAngles,
     levelingAvailableListener,
-    accuracyChangedListener
+    accuracyChangedListener,
+    adjustGravityNorm
 ) {
     /**
      * Internal processor to estimate leveled attitude from accelerometer or gravity measurements.
@@ -86,8 +91,19 @@ class AccurateLevelingEstimator2(
     var location: Location = location
         set(value) {
             field = value
-            levelingProcessor.location = location
+            levelingProcessor.location = value
+            gravityProcessor.location = value
+            accelerometerGravityProcessor.location = value
         }
+
+    // initializes gravity processor
+    init {
+        gravityProcessor.location = location
+        accelerometerGravityProcessor.location = location
+
+        gravityProcessor.adjustGravityNorm = adjustGravityNorm
+        accelerometerGravityProcessor.adjustGravityNorm = adjustGravityNorm
+    }
 
     /**
      * Interface to notify when a new leveling measurement is available.

@@ -15,6 +15,7 @@
  */
 package com.irurueta.android.navigation.inertial.processors.pose
 
+import android.location.Location
 import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
@@ -47,6 +48,26 @@ class AttitudeRelativePoseProcessor(
      * Internal gravity processor from accelerometer measurements.
      */
     private val gravityProcessor = AccelerometerGravityProcessor(averagingFilter)
+
+    /**
+     * Gets or sets device location
+     */
+    override var location: Location?
+        get() = gravityProcessor.location
+        set(value) {
+            gravityProcessor.location = value
+        }
+
+    /**
+     * Indicates whether gravity norm must be adjusted to either Earth
+     * standard norm, or norm at provided location. If no location is provided, this should only be
+     * enabled when device is close to sea level.
+     */
+    override var adjustGravityNorm: Boolean
+        get() = gravityProcessor.adjustGravityNorm
+        set(value) {
+            gravityProcessor.adjustGravityNorm = value
+        }
 
     /**
      * Processes provided synced measurement to estimate current attitude and position.

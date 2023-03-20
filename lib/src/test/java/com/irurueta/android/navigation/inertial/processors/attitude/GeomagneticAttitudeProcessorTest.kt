@@ -62,6 +62,7 @@ class GeomagneticAttitudeProcessorTest {
         processor.getGravity(gravity2)
         assertEquals(gravity1, gravity2)
         assertNull(processor.location)
+        assertTrue(processor.adjustGravityNorm)
         assertNull(processor.currentDate)
         assertFalse(processor.useAccurateLevelingProcessor)
         assertNull(processor.worldMagneticModel)
@@ -86,6 +87,7 @@ class GeomagneticAttitudeProcessorTest {
         processor.getGravity(gravity2)
         assertEquals(gravity1, gravity2)
         assertNull(processor.location)
+        assertTrue(processor.adjustGravityNorm)
         assertNull(processor.currentDate)
         assertFalse(processor.useAccurateLevelingProcessor)
         assertNull(processor.worldMagneticModel)
@@ -218,6 +220,29 @@ class GeomagneticAttitudeProcessorTest {
 
         // check
         assertSame(location, processor.location)
+
+        val gravityProcessor: GravityProcessor? = processor.getPrivateProperty("gravityProcessor")
+        requireNotNull(gravityProcessor)
+        assertSame(location, gravityProcessor.location)
+    }
+
+    @Test
+    fun adjustGravityNorm_setsExpectedValue() {
+        val processor = GeomagneticAttitudeProcessor()
+
+        val gravityProcessor: GravityProcessor? = processor.getPrivateProperty("gravityProcessor")
+        requireNotNull(gravityProcessor)
+
+        // check default value
+        assertTrue(processor.adjustGravityNorm)
+        assertTrue(gravityProcessor.adjustGravityNorm)
+
+        // set new value
+        processor.adjustGravityNorm = false
+
+        // check
+        assertFalse(processor.adjustGravityNorm)
+        assertFalse(gravityProcessor.adjustGravityNorm)
     }
 
     @Test

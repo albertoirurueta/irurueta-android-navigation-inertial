@@ -75,7 +75,8 @@ class LeveledRelativeAttitudeEstimator2(
     val estimateEulerAngles: Boolean = true,
     var attitudeAvailableListener: OnAttitudeAvailableListener? = null,
     var accuracyChangedListener: OnAccuracyChangedListener? = null,
-    var bufferFilledListener: OnBufferFilledListener? = null
+    var bufferFilledListener: OnBufferFilledListener? = null,
+    adjustGravityNorm: Boolean = true
 ) {
     /**
      * Processes accelerometer + gyroscope measurements.
@@ -174,6 +175,18 @@ class LeveledRelativeAttitudeEstimator2(
             accelerometerProcessor.location = value
             gravityProcessor.location = value
             field = value
+        }
+
+    /**
+     * Indicates whether gravity norm must be adjusted to either Earth standard norm, or norm at
+     * provided location. If no location is provided, this should only be enabled when device is
+     * close to sea level.
+     */
+    var adjustGravityNorm: Boolean = adjustGravityNorm
+        set(value) {
+            field = value
+            gravityProcessor.adjustGravityNorm = value
+            accelerometerProcessor.adjustGravityNorm = value
         }
 
     /**

@@ -29,13 +29,12 @@ import com.irurueta.android.navigation.inertial.estimators.filter.MeanAveragingF
 import com.irurueta.android.navigation.inertial.estimators.filter.MedianAveragingFilter
 import com.irurueta.android.navigation.inertial.test.LocationActivity
 import io.mockk.spyk
-import org.junit.Assert
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertTrue
+import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
+@RequiresDevice
 class AccurateLevelingEstimatorTest {
 
     @get:Rule
@@ -59,7 +58,6 @@ class AccurateLevelingEstimatorTest {
         completed = 0
     }
 
-    @RequiresDevice
     @Test
     fun startAndStop_whenGravitySensor_estimatesLeveling() {
         val location = getCurrentLocation()
@@ -86,7 +84,6 @@ class AccurateLevelingEstimatorTest {
         assertTrue(completed > 0)
     }
 
-    @RequiresDevice
     @Test
     fun startAndStop_whenAccelerometerSensorAndLowPassAveragingFilter_estimatesLeveling() {
         val location = getCurrentLocation()
@@ -115,7 +112,6 @@ class AccurateLevelingEstimatorTest {
         assertTrue(completed > 0)
     }
 
-    @RequiresDevice
     @Test
     fun startAndStop_whenAccelerometerSensorAndMeanAveragingFilter_estimatesLeveling() {
         val location = getCurrentLocation()
@@ -144,7 +140,6 @@ class AccurateLevelingEstimatorTest {
         assertTrue(completed > 0)
     }
 
-    @RequiresDevice
     @Test
     fun startAndStop_whenAccelerometerSensorAndMedianAveragingFilter_estimatesLeveling() {
         val location = getCurrentLocation()
@@ -173,7 +168,6 @@ class AccurateLevelingEstimatorTest {
         assertTrue(completed > 0)
     }
 
-    @RequiresDevice
     @Test
     fun startAndStop_whenAccelerometerUncalibratedSensorAndLowPassAveragingFilter_estimatesLeveling() {
         val location = getCurrentLocation()
@@ -202,7 +196,6 @@ class AccurateLevelingEstimatorTest {
         assertTrue(completed > 0)
     }
 
-    @RequiresDevice
     @Test
     fun startAndStop_whenAccelerometerUncalibratedSensorAndMeanAveragingFilter_estimatesLeveling() {
         val location = getCurrentLocation()
@@ -231,7 +224,6 @@ class AccurateLevelingEstimatorTest {
         assertTrue(completed > 0)
     }
 
-    @RequiresDevice
     @Test
     fun startAndStop_whenAccelerometerUncalibratedSensorAndMedianAveragingFilter_estimatesLeveling() {
         val location = getCurrentLocation()
@@ -289,7 +281,7 @@ class AccurateLevelingEstimatorTest {
         assertNotNull(scenario)
 
         syncHelper.waitOnCondition({ completed < 1 })
-        Assert.assertEquals(1, completed)
+        assertEquals(1, completed)
         completed = 0
 
         val currentLocation = this.currentLocation

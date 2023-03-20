@@ -138,6 +138,19 @@ abstract class BaseDoubleFusedGeomagneticAttitudeProcessor<M : SensorMeasurement
         get() = geomagneticProcessor.location
         set(value) {
             geomagneticProcessor.location = value
+            relativeGyroscopeProcessor.location = value
+        }
+
+    /**
+     * Indicates whether gravity norm must be adjusted to either Earth
+     * standard norm, or norm at provided location. If no location is provided, this should only be
+     * enabled when device is close to sea level.
+     */
+    var adjustGravityNorm: Boolean
+        get() = geomagneticProcessor.adjustGravityNorm
+        set(value) {
+            geomagneticProcessor.adjustGravityNorm = value
+            relativeGyroscopeProcessor.adjustGravityNorm = value
         }
 
     /**

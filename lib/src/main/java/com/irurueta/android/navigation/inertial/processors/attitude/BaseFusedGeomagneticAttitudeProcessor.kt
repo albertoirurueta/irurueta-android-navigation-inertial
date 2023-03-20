@@ -140,6 +140,17 @@ abstract class BaseFusedGeomagneticAttitudeProcessor<M : SensorMeasurement<M>, S
         }
 
     /**
+     * Indicates whether gravity norm must be adjusted to either Earth
+     * standard norm, or norm at provided location. If no location is provided, this should only be
+     * enabled when device is close to sea level.
+     */
+    var adjustGravityNorm: Boolean
+        get() = geomagneticProcessor.adjustGravityNorm
+        set(value) {
+            geomagneticProcessor.adjustGravityNorm = value
+        }
+
+    /**
      * Timestamp being used when World Magnetic Model is evaluated to obtain current magnetic
      * declination. This is only taken into account if [useWorldMagneticModel] is true.
      * If not defined, current date is assumed.

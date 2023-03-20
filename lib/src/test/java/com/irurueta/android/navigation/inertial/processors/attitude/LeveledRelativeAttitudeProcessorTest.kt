@@ -65,6 +65,7 @@ class LeveledRelativeAttitudeProcessorTest {
         assertEquals(gravity1, gravity2)
 
         assertNull(processor.location)
+        assertTrue(processor.adjustGravityNorm)
         assertFalse(processor.useAccurateLevelingProcessor)
         assertTrue(processor.useAccurateRelativeGyroscopeAttitudeProcessor)
         assertTrue(processor.useIndirectInterpolation)
@@ -119,6 +120,7 @@ class LeveledRelativeAttitudeProcessorTest {
         assertEquals(gravity1, gravity2)
 
         assertNull(processor.location)
+        assertTrue(processor.adjustGravityNorm)
         assertFalse(processor.useAccurateLevelingProcessor)
         assertTrue(processor.useAccurateRelativeGyroscopeAttitudeProcessor)
         assertTrue(processor.useIndirectInterpolation)
@@ -246,6 +248,29 @@ class LeveledRelativeAttitudeProcessorTest {
 
         // check
         assertSame(location, processor.location)
+
+        val gravityProcessor: GravityProcessor? = processor.getPrivateProperty("gravityProcessor")
+        requireNotNull(gravityProcessor)
+        assertSame(location, gravityProcessor.location)
+    }
+
+    @Test
+    fun adjustGravityNorm_setsExpectedValue() {
+        val processor = LeveledRelativeAttitudeProcessor()
+
+        val gravityProcessor: GravityProcessor? = processor.getPrivateProperty("gravityProcessor")
+        requireNotNull(gravityProcessor)
+
+        // check default value
+        assertTrue(processor.adjustGravityNorm)
+        assertTrue(gravityProcessor.adjustGravityNorm)
+
+        // set new value
+        processor.adjustGravityNorm = false
+
+        // check
+        assertFalse(processor.adjustGravityNorm)
+        assertFalse(gravityProcessor.adjustGravityNorm)
     }
 
     @Test(expected = IllegalStateException::class)

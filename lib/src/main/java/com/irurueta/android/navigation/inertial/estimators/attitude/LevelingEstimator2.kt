@@ -16,6 +16,7 @@
 package com.irurueta.android.navigation.inertial.estimators.attitude
 
 import android.content.Context
+import android.location.Location
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
@@ -47,6 +48,10 @@ import com.irurueta.android.navigation.inertial.processors.attitude.LevelingProc
  * @property levelingAvailableListener listener to notify when a new leveling measurement is
  * available.
  * @property accuracyChangedListener listener to notify changes in accuracy.
+ * @property location Device location.
+ * @property adjustGravityNorm indicates whether gravity norm must be adjusted to either Earth
+ * standard norm, or norm at provided location. If no location is provided, this should only be
+ * enabled when device is close to sea level.
  */
 class LevelingEstimator2(
     context: Context,
@@ -58,7 +63,9 @@ class LevelingEstimator2(
     estimateCoordinateTransformation: Boolean = false,
     estimateEulerAngles: Boolean = true,
     levelingAvailableListener: OnLevelingAvailableListener? = null,
-    accuracyChangedListener: OnAccuracyChangedListener? = null
+    accuracyChangedListener: OnAccuracyChangedListener? = null,
+    location: Location? = null,
+    adjustGravityNorm: Boolean = true
 ) : BaseLevelingEstimator2<LevelingEstimator2, LevelingEstimator2.OnLevelingAvailableListener, LevelingEstimator2.OnAccuracyChangedListener>(
     context,
     sensorDelay,
@@ -69,13 +76,35 @@ class LevelingEstimator2(
     estimateCoordinateTransformation,
     estimateEulerAngles,
     levelingAvailableListener,
-    accuracyChangedListener
+    accuracyChangedListener,
+    adjustGravityNorm
 ) {
 
     /**
      * Internal processor to estimate leveled attitude from accelerometer or gravity measurements.
      */
     override val levelingProcessor = LevelingProcessor()
+
+    /**
+     * Gets or sets device location.
+     * Location can be updated while this estimator is running to obtain more accurate attitude
+     * estimations.
+     */
+    var location: Location? = location
+        set(value) {
+            field = value
+            gravityProcessor.location = value
+            accelerometerGravityProcessor.location = value
+        }
+
+    // initializes gravity processor
+    init {
+        gravityProcessor.location = location
+        accelerometerGravityProcessor.location = location
+
+        gravityProcessor.adjustGravityNorm = adjustGravityNorm
+        accelerometerGravityProcessor.adjustGravityNorm = adjustGravityNorm
+    }
 
     /**
      * Interface to notify when a new leveling measurement is available.

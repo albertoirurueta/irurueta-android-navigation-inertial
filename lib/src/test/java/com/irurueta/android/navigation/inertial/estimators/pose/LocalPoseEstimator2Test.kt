@@ -83,6 +83,7 @@ class LocalPoseEstimator2Test {
         assertNull(estimator.poseAvailableListener)
         assertNull(estimator.accuracyChangedListener)
         assertNull(estimator.bufferFilledListener)
+        assertTrue(estimator.adjustGravityNorm)
     }
 
     @Test
@@ -148,6 +149,7 @@ class LocalPoseEstimator2Test {
         assertSame(poseAvailableListener, estimator.poseAvailableListener)
         assertSame(accuracyChangedListener, estimator.accuracyChangedListener)
         assertSame(bufferFilledListener, estimator.bufferFilledListener)
+        assertTrue(estimator.adjustGravityNorm)
     }
 
     @Test
@@ -2101,6 +2103,60 @@ class LocalPoseEstimator2Test {
             accelerometerDoubleFusedProcessorSpy.useLeveledRelativeAttitudeRespectStart = false
         }
         verify(exactly = 1) { attitudeProcessorSpy.useLeveledRelativeAttitudeRespectStart = false }
+    }
+
+    @Test
+    fun adjustGravityNorm_whenNotRunning_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val initialLocation = getLocation()
+        val estimator = LocalPoseEstimator2(context, initialLocation)
+
+        val fusedProcessor: FusedLocalPoseProcessor? =
+            estimator.getPrivateProperty("fusedProcessor")
+        requireNotNull(fusedProcessor)
+        val accelerometerFusedProcessor: AccelerometerFusedLocalPoseProcessor? =
+            estimator.getPrivateProperty("accelerometerFusedProcessor")
+        requireNotNull(accelerometerFusedProcessor)
+        val doubleFusedProcessor: DoubleFusedLocalPoseProcessor? =
+            estimator.getPrivateProperty("doubleFusedProcessor")
+        requireNotNull(doubleFusedProcessor)
+        val accelerometerDoubleFusedProcessor: AccelerometerDoubleFusedLocalPoseProcessor? =
+            estimator.getPrivateProperty("accelerometerDoubleFusedProcessor")
+        requireNotNull(accelerometerDoubleFusedProcessor)
+
+        // check default value
+        assertFalse(estimator.running)
+        assertTrue(estimator.adjustGravityNorm)
+        assertTrue(fusedProcessor.adjustGravityNorm)
+        assertTrue(accelerometerFusedProcessor.adjustGravityNorm)
+        assertTrue(doubleFusedProcessor.adjustGravityNorm)
+        assertTrue(accelerometerDoubleFusedProcessor.adjustGravityNorm)
+
+        // set new value
+        estimator.adjustGravityNorm = false
+
+        // check
+        assertFalse(estimator.adjustGravityNorm)
+        assertFalse(fusedProcessor.adjustGravityNorm)
+        assertFalse(accelerometerFusedProcessor.adjustGravityNorm)
+        assertFalse(doubleFusedProcessor.adjustGravityNorm)
+        assertFalse(accelerometerDoubleFusedProcessor.adjustGravityNorm)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun adjustGravityNorm_whenRunning_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val initialLocation = getLocation()
+        val estimator = LocalPoseEstimator2(context, initialLocation)
+
+        assertFalse(estimator.running)
+
+        // set as running
+        estimator.setPrivateProperty("running", true)
+
+        assertTrue(estimator.running)
+
+        estimator.adjustGravityNorm = false
     }
 
     @Test(expected = IllegalStateException::class)

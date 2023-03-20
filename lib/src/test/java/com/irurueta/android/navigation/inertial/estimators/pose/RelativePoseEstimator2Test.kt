@@ -16,6 +16,7 @@
 package com.irurueta.android.navigation.inertial.estimators.pose
 
 import android.content.Context
+import android.location.Location
 import androidx.test.core.app.ApplicationProvider
 import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
@@ -92,6 +93,8 @@ class RelativePoseEstimator2Test {
         )
         assertNull(estimator.timeIntervalSeconds)
         assertFalse(estimator.running)
+        assertNull(estimator.location)
+        assertTrue(estimator.adjustGravityNorm)
     }
 
     @Test
@@ -164,6 +167,8 @@ class RelativePoseEstimator2Test {
         requireNotNull(timeIntervalSeconds)
         assertEquals(0.0, timeIntervalSeconds, 0.0)
         assertFalse(estimator.running)
+        assertNull(estimator.location)
+        assertTrue(estimator.adjustGravityNorm)
     }
 
     @Test
@@ -699,6 +704,69 @@ class RelativePoseEstimator2Test {
 
         verify { accelerometerFusedProcessorSpy wasNot Called }
         verify(exactly = 1) { fusedProcessorSpy.timeIntervalSeconds }
+    }
+
+    @Test
+    fun location_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val estimator = RelativePoseEstimator2(context)
+
+        val fusedProcessor: FusedRelativePoseProcessor? =
+            estimator.getPrivateProperty("fusedProcessor")
+        requireNotNull(fusedProcessor)
+        val accelerometerFusedProcessor: AccelerometerFusedRelativePoseProcessor? =
+            estimator.getPrivateProperty("accelerometerFusedProcessor")
+        requireNotNull(accelerometerFusedProcessor)
+        val attitudeProcessor: AttitudeRelativePoseProcessor? =
+            estimator.getPrivateProperty("attitudeProcessor")
+        requireNotNull(attitudeProcessor)
+
+        // check default value
+        assertNull(estimator.location)
+        assertNull(fusedProcessor.location)
+        assertNull(accelerometerFusedProcessor.location)
+        assertNull(attitudeProcessor.location)
+
+        // set new value
+        val location = getLocation()
+        estimator.location = location
+
+        // check
+        assertSame(location, estimator.location)
+        assertSame(location, fusedProcessor.location)
+        assertSame(location, accelerometerFusedProcessor.location)
+        assertSame(location, attitudeProcessor.location)
+    }
+
+    @Test
+    fun adjustGravityNorm_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val estimator = RelativePoseEstimator2(context)
+
+        val fusedProcessor: FusedRelativePoseProcessor? =
+            estimator.getPrivateProperty("fusedProcessor")
+        requireNotNull(fusedProcessor)
+        val accelerometerFusedProcessor: AccelerometerFusedRelativePoseProcessor? =
+            estimator.getPrivateProperty("accelerometerFusedProcessor")
+        requireNotNull(accelerometerFusedProcessor)
+        val attitudeProcessor: AttitudeRelativePoseProcessor? =
+            estimator.getPrivateProperty("attitudeProcessor")
+        requireNotNull(attitudeProcessor)
+
+        // check default value
+        assertTrue(estimator.adjustGravityNorm)
+        assertTrue(fusedProcessor.adjustGravityNorm)
+        assertTrue(accelerometerFusedProcessor.adjustGravityNorm)
+        assertTrue(attitudeProcessor.adjustGravityNorm)
+
+        // set new value
+        estimator.adjustGravityNorm = false
+
+        // check
+        assertFalse(estimator.adjustGravityNorm)
+        assertFalse(fusedProcessor.adjustGravityNorm)
+        assertFalse(accelerometerFusedProcessor.adjustGravityNorm)
+        assertFalse(attitudeProcessor.adjustGravityNorm)
     }
 
     @Test(expected = IllegalStateException::class)
@@ -1512,6 +1580,38 @@ class RelativePoseEstimator2Test {
     }
 
     private companion object {
+        const val MIN_LATITUDE_DEGREES = -90.0
+        const val MAX_LATITUDE_DEGREES = 90.0
+
+        const val MIN_LONGITUDE_DEGREES = -180.0
+        const val MAX_LONGITUDE_DEGREES = 180.0
+
+        const val MIN_HEIGHT = -100.0
+        const val MAX_HEIGHT = 4000.0
+
         const val TIME_INTERVAL = 0.02
+
+        fun getLocation(): Location {
+            val randomizer = UniformRandomizer()
+            val latitudeDegrees = randomizer.nextDouble(
+                MIN_LATITUDE_DEGREES,
+                MAX_LATITUDE_DEGREES
+            )
+            val longitudeDegrees = randomizer.nextDouble(
+                MIN_LONGITUDE_DEGREES,
+                MAX_LONGITUDE_DEGREES
+            )
+            val height = randomizer.nextDouble(
+                MIN_HEIGHT,
+                MAX_HEIGHT
+            )
+
+            val location = mockk<Location>()
+            every { location.latitude }.returns(latitudeDegrees)
+            every { location.longitude }.returns(longitudeDegrees)
+            every { location.altitude }.returns(height)
+
+            return location
+        }
     }
 }

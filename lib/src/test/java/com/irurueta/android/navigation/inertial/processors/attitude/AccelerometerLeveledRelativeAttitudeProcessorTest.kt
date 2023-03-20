@@ -63,6 +63,7 @@ class AccelerometerLeveledRelativeAttitudeProcessorTest {
         assertEquals(gravity1, gravity2)
 
         assertNull(processor.location)
+        assertTrue(processor.adjustGravityNorm)
         assertFalse(processor.useAccurateLevelingProcessor)
         assertTrue(processor.useAccurateRelativeGyroscopeAttitudeProcessor)
         assertTrue(processor.useIndirectInterpolation)
@@ -117,6 +118,7 @@ class AccelerometerLeveledRelativeAttitudeProcessorTest {
         assertEquals(gravity1, gravity2)
 
         assertNull(processor.location)
+        assertTrue(processor.adjustGravityNorm)
         assertFalse(processor.useAccurateLevelingProcessor)
         assertTrue(processor.useAccurateRelativeGyroscopeAttitudeProcessor)
         assertTrue(processor.useIndirectInterpolation)
@@ -248,6 +250,31 @@ class AccelerometerLeveledRelativeAttitudeProcessorTest {
 
         // check
         assertSame(location, processor.location)
+
+        val gravityProcessor: AccelerometerGravityProcessor? =
+            processor.getPrivateProperty("gravityProcessor")
+        requireNotNull(gravityProcessor)
+        assertSame(location, gravityProcessor.location)
+    }
+
+    @Test
+    fun adjustGravityNorm_setsExpectedValue() {
+        val processor = AccelerometerLeveledRelativeAttitudeProcessor()
+
+        val gravityProcessor: AccelerometerGravityProcessor? =
+            processor.getPrivateProperty("gravityProcessor")
+        requireNotNull(gravityProcessor)
+
+        // check default value
+        assertTrue(processor.adjustGravityNorm)
+        assertTrue(gravityProcessor.adjustGravityNorm)
+
+        // set new value
+        processor.adjustGravityNorm = false
+
+        // check
+        assertFalse(processor.adjustGravityNorm)
+        assertFalse(gravityProcessor.adjustGravityNorm)
     }
 
     @Test(expected = IllegalStateException::class)
@@ -1877,8 +1904,10 @@ class AccelerometerLeveledRelativeAttitudeProcessorTest {
         assertEquals(levelingAttitude2, levelingAttitude1)
 
         val fusedAttitude2 = deltaRelativeAttitude.multiplyAndReturnNew(fusedAttitudeCopy)
-        val t = min(processor.interpolationValue + processor.indirectInterpolationWeight *
-                abs(deltaRelativeAttitude.rotationAngle / TIME_INTERVAL), 1.0)
+        val t = min(
+            processor.interpolationValue + processor.indirectInterpolationWeight *
+                    abs(deltaRelativeAttitude.rotationAngle / TIME_INTERVAL), 1.0
+        )
         Quaternion.slerp(
             fusedAttitude2,
             levelingAttitude2,
@@ -2036,7 +2065,8 @@ class AccelerometerLeveledRelativeAttitudeProcessorTest {
         every { QuaternionHelper.dotProduct(any(), any()) }.returns(processor.outlierThreshold)
 
         // process
-        val accelerometerMeasurement = AccelerometerSensorMeasurement(accuracy = SensorAccuracy.MEDIUM)
+        val accelerometerMeasurement =
+            AccelerometerSensorMeasurement(accuracy = SensorAccuracy.MEDIUM)
         val gyroscopeMeasurement = GyroscopeSensorMeasurement(accuracy = SensorAccuracy.HIGH)
         val timestamp = System.nanoTime()
         val syncedMeasurement = AccelerometerAndGyroscopeSyncedSensorMeasurement(

@@ -16,7 +16,6 @@
 package com.irurueta.android.navigation.inertial.estimators.attitude
 
 import android.content.Context
-import android.hardware.SensorManager
 import android.location.Location
 import android.os.SystemClock
 import androidx.test.core.app.ApplicationProvider
@@ -28,6 +27,7 @@ import com.irurueta.android.navigation.inertial.processors.attitude.Acceleromete
 import com.irurueta.android.navigation.inertial.processors.attitude.BaseLevelingProcessor
 import com.irurueta.android.navigation.inertial.processors.attitude.GravityProcessor
 import com.irurueta.android.navigation.inertial.setPrivateProperty
+import com.irurueta.android.navigation.inertial.toNEDPosition
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.frames.CoordinateTransformation
 import com.irurueta.navigation.frames.FrameType
@@ -71,8 +71,25 @@ class AccurateLevelingEstimator2Test {
         assertTrue(estimator.estimateEulerAngles)
         assertNull(estimator.levelingAvailableListener)
         assertNull(estimator.accuracyChangedListener)
+        assertTrue(estimator.adjustGravityNorm)
         assertFalse(estimator.running)
         assertNull(estimator.startOffset)
+
+        val gravityProcessor: GravityProcessor? =
+            getPrivateProperty(BaseLevelingEstimator2::class, estimator, "gravityProcessor")
+        requireNotNull(gravityProcessor)
+        assertSame(location, gravityProcessor.location)
+        assertTrue(gravityProcessor.adjustGravityNorm)
+
+        val accelerometerGravityProcessor: AccelerometerGravityProcessor? =
+            getPrivateProperty(
+                BaseLevelingEstimator2::class,
+                estimator,
+                "accelerometerGravityProcessor"
+            )
+        requireNotNull(accelerometerGravityProcessor)
+        assertSame(location, accelerometerGravityProcessor.location)
+        assertTrue(accelerometerGravityProcessor.adjustGravityNorm)
     }
 
     @Test
@@ -94,7 +111,8 @@ class AccurateLevelingEstimator2Test {
             estimateCoordinateTransformation = true,
             estimateEulerAngles = false,
             levelingAvailableListener,
-            accuracyChangedListener
+            accuracyChangedListener,
+            adjustGravityNorm = false
         )
 
         // check
@@ -112,8 +130,25 @@ class AccurateLevelingEstimator2Test {
         assertFalse(estimator.estimateEulerAngles)
         assertSame(levelingAvailableListener, estimator.levelingAvailableListener)
         assertSame(accuracyChangedListener, estimator.accuracyChangedListener)
+        assertFalse(estimator.adjustGravityNorm)
         assertFalse(estimator.running)
         assertNull(estimator.startOffset)
+
+        val gravityProcessor: GravityProcessor? =
+            getPrivateProperty(BaseLevelingEstimator2::class, estimator, "gravityProcessor")
+        requireNotNull(gravityProcessor)
+        assertSame(location, gravityProcessor.location)
+        assertFalse(gravityProcessor.adjustGravityNorm)
+
+        val accelerometerGravityProcessor: AccelerometerGravityProcessor? =
+            getPrivateProperty(
+                BaseLevelingEstimator2::class,
+                estimator,
+                "accelerometerGravityProcessor"
+            )
+        requireNotNull(accelerometerGravityProcessor)
+        assertSame(location, accelerometerGravityProcessor.location)
+        assertFalse(accelerometerGravityProcessor.adjustGravityNorm)
     }
 
     @Test
@@ -165,6 +200,52 @@ class AccurateLevelingEstimator2Test {
 
         // check
         assertSame(location2, estimator.location)
+
+        val gravityProcessor: GravityProcessor? =
+            getPrivateProperty(BaseLevelingEstimator2::class, estimator, "gravityProcessor")
+        requireNotNull(gravityProcessor)
+        assertSame(location2, gravityProcessor.location)
+
+        val accelerometerGravityProcessor: AccelerometerGravityProcessor? =
+            getPrivateProperty(
+                BaseLevelingEstimator2::class,
+                estimator,
+                "accelerometerGravityProcessor"
+            )
+        requireNotNull(accelerometerGravityProcessor)
+        assertSame(location2, accelerometerGravityProcessor.location)
+    }
+
+    @Test
+    fun adjustGravityNorm_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val location1 = getLocation()
+        val estimator = AccurateLevelingEstimator2(context, location1)
+
+        // check default value
+        assertTrue(estimator.adjustGravityNorm)
+
+        val gravityProcessor: GravityProcessor? =
+            getPrivateProperty(BaseLevelingEstimator2::class, estimator, "gravityProcessor")
+        requireNotNull(gravityProcessor)
+        assertTrue(gravityProcessor.adjustGravityNorm)
+
+        val accelerometerGravityProcessor: AccelerometerGravityProcessor? =
+            getPrivateProperty(
+                BaseLevelingEstimator2::class,
+                estimator,
+                "accelerometerGravityProcessor"
+            )
+        requireNotNull(accelerometerGravityProcessor)
+        assertTrue(accelerometerGravityProcessor.adjustGravityNorm)
+
+        // set new value
+        estimator.adjustGravityNorm = false
+
+        // check
+        assertFalse(estimator.adjustGravityNorm)
+        assertFalse(gravityProcessor.adjustGravityNorm)
+        assertFalse(accelerometerGravityProcessor.adjustGravityNorm)
     }
 
     @Test
@@ -537,9 +618,12 @@ class AccurateLevelingEstimator2Test {
             timestamp,
             SensorAccuracy.MEDIUM
         )
-        val norm = sqrt(floatFx.toDouble() * floatFx.toDouble()
-                + floatFy.toDouble() * floatFy.toDouble() + floatFz.toDouble() * floatFz.toDouble())
-        val factor = SensorManager.GRAVITY_EARTH / norm
+        val norm = sqrt(
+            floatFx.toDouble() * floatFx.toDouble()
+                    + floatFy.toDouble() * floatFy.toDouble() + floatFz.toDouble() * floatFz.toDouble()
+        )
+        val factor =
+            NEDGravityEstimator.estimateGravityAndReturnNew(location.toNEDPosition()).norm / norm
         listener.onMeasurement(gravitySensorCollector, measurement)
 
         verify(exactly = 1) { gravityProcessorSpy.process(measurement) }
@@ -670,9 +754,12 @@ class AccurateLevelingEstimator2Test {
             timestamp,
             SensorAccuracy.MEDIUM
         )
-        val norm = sqrt(floatFx.toDouble() * floatFx.toDouble()
-                + floatFy.toDouble() * floatFy.toDouble() + floatFz.toDouble() * floatFz.toDouble())
-        val factor = SensorManager.GRAVITY_EARTH / norm
+        val norm = sqrt(
+            floatFx.toDouble() * floatFx.toDouble()
+                    + floatFy.toDouble() * floatFy.toDouble() + floatFz.toDouble() * floatFz.toDouble()
+        )
+        val factor =
+            NEDGravityEstimator.estimateGravityAndReturnNew(location.toNEDPosition()).norm / norm
         listener.onMeasurement(gravitySensorCollector, measurement)
 
         verify(exactly = 1) { gravityProcessorSpy.process(measurement) }
@@ -807,9 +894,12 @@ class AccurateLevelingEstimator2Test {
             timestamp,
             SensorAccuracy.MEDIUM
         )
-        val norm = sqrt(floatFx.toDouble() * floatFx.toDouble()
-                + floatFy.toDouble() * floatFy.toDouble() + floatFz.toDouble() * floatFz.toDouble())
-        val factor = SensorManager.GRAVITY_EARTH / norm
+        val norm = sqrt(
+            floatFx.toDouble() * floatFx.toDouble()
+                    + floatFy.toDouble() * floatFy.toDouble() + floatFz.toDouble() * floatFz.toDouble()
+        )
+        val factor =
+            NEDGravityEstimator.estimateGravityAndReturnNew(location.toNEDPosition()).norm / norm
         listener.onMeasurement(gravitySensorCollector, measurement)
 
         verify(exactly = 1) { gravityProcessorSpy.process(measurement) }

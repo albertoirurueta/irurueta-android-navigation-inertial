@@ -15,6 +15,7 @@
  */
 package com.irurueta.android.navigation.inertial.processors.pose
 
+import android.location.Location
 import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
 import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
@@ -59,6 +60,8 @@ class AttitudeRelativePoseProcessorTest {
         assertEquals(0.0, processor.timeIntervalSeconds, 0.0)
         assertNotNull(processor.averagingFilter)
         assertTrue(processor.averagingFilter is LowPassAveragingFilter)
+        assertNull(processor.location)
+        assertTrue(processor.adjustGravityNorm)
     }
 
     @Test
@@ -76,6 +79,8 @@ class AttitudeRelativePoseProcessorTest {
         assertNotNull(processor.poseTransformation)
         assertEquals(0.0, processor.timeIntervalSeconds, 0.0)
         assertSame(averagingFilter, processor.averagingFilter)
+        assertNull(processor.location)
+        assertTrue(processor.adjustGravityNorm)
     }
 
     @Test
@@ -159,6 +164,47 @@ class AttitudeRelativePoseProcessorTest {
             )
         requireNotNull(timeIntervalSeconds2)
         assertEquals(0.0, timeIntervalSeconds2, 0.0)
+    }
+
+    @Test
+    fun location_setsExpectedValue() {
+        val processor = AttitudeRelativePoseProcessor()
+
+        // check default value
+        assertNull(processor.location)
+
+        val gravityProcessor: AccelerometerGravityProcessor? =
+            processor.getPrivateProperty("gravityProcessor")
+        requireNotNull(gravityProcessor)
+        assertNull(gravityProcessor.location)
+
+        // set new value
+        val location = getLocation()
+        processor.location = location
+
+        // check
+        assertSame(location, processor.location)
+        assertSame(location, gravityProcessor.location)
+    }
+
+    @Test
+    fun adjustGravityNorm_setsExpectedValue() {
+        val processor = AttitudeRelativePoseProcessor()
+
+        // check default value
+        assertTrue(processor.adjustGravityNorm)
+
+        val gravityProcessor: AccelerometerGravityProcessor? =
+            processor.getPrivateProperty("gravityProcessor")
+        requireNotNull(gravityProcessor)
+        assertTrue(gravityProcessor.adjustGravityNorm)
+
+        // set new value
+        processor.adjustGravityNorm = false
+
+        // check
+        assertFalse(gravityProcessor.adjustGravityNorm)
+        assertFalse(gravityProcessor.adjustGravityNorm)
     }
 
     @Test
@@ -721,6 +767,30 @@ class AttitudeRelativePoseProcessorTest {
                 Math.toRadians(longitudeDegrees),
                 height
             )
+        }
+
+        fun getLocation(): Location {
+            val randomizer = UniformRandomizer()
+            val latitudeDegrees = randomizer.nextDouble(
+                MIN_LATITUDE_DEGREES,
+                MAX_LATITUDE_DEGREES
+            )
+            val longitudeDegrees =
+                randomizer.nextDouble(
+                    MIN_LONGITUDE_DEGREES,
+                    MAX_LONGITUDE_DEGREES
+                )
+            val height = randomizer.nextDouble(
+                MIN_HEIGHT,
+                MAX_HEIGHT
+            )
+
+            val location = mockk<Location>()
+            every { location.latitude }.returns(latitudeDegrees)
+            every { location.longitude }.returns(longitudeDegrees)
+            every { location.altitude }.returns(height)
+
+            return location
         }
     }
 }

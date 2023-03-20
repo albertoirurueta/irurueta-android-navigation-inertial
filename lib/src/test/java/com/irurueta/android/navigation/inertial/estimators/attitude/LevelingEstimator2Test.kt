@@ -17,6 +17,7 @@ package com.irurueta.android.navigation.inertial.estimators.attitude
 
 import android.content.Context
 import android.hardware.SensorManager
+import android.location.Location
 import android.os.SystemClock
 import androidx.test.core.app.ApplicationProvider
 import com.irurueta.algebra.Matrix
@@ -68,12 +69,31 @@ class LevelingEstimator2Test {
         assertTrue(estimator.estimateEulerAngles)
         assertNull(estimator.levelingAvailableListener)
         assertNull(estimator.accuracyChangedListener)
+        assertNull(estimator.location)
+        assertTrue(estimator.adjustGravityNorm)
         assertFalse(estimator.running)
         assertNull(estimator.startOffset)
+
+        val gravityProcessor: GravityProcessor? =
+            getPrivateProperty(BaseLevelingEstimator2::class, estimator, "gravityProcessor")
+        requireNotNull(gravityProcessor)
+        assertNull(gravityProcessor.location)
+        assertTrue(gravityProcessor.adjustGravityNorm)
+
+        val accelerometerGravityProcessor: AccelerometerGravityProcessor? =
+            getPrivateProperty(
+                BaseLevelingEstimator2::class,
+                estimator,
+                "accelerometerGravityProcessor"
+            )
+        requireNotNull(accelerometerGravityProcessor)
+        assertNull(accelerometerGravityProcessor.location)
+        assertTrue(accelerometerGravityProcessor.adjustGravityNorm)
     }
 
     @Test
     fun constructor_whenAllProperties_setsExpectedValues() {
+        val location = getLocation()
         val levelingAvailableListener = mockk<LevelingEstimator2.OnLevelingAvailableListener>()
         val accuracyChangedListener = mockk<LevelingEstimator2.OnAccuracyChangedListener>()
         val accelerometerAveragingFilter = MeanAveragingFilter()
@@ -88,7 +108,9 @@ class LevelingEstimator2Test {
             estimateCoordinateTransformation = true,
             estimateEulerAngles = false,
             levelingAvailableListener,
-            accuracyChangedListener
+            accuracyChangedListener,
+            location,
+            adjustGravityNorm = false
         )
 
         // check
@@ -105,8 +127,26 @@ class LevelingEstimator2Test {
         assertFalse(estimator.estimateEulerAngles)
         assertSame(levelingAvailableListener, estimator.levelingAvailableListener)
         assertSame(accuracyChangedListener, estimator.accuracyChangedListener)
+        assertSame(location, estimator.location)
+        assertFalse(estimator.adjustGravityNorm)
         assertFalse(estimator.running)
         assertNull(estimator.startOffset)
+
+        val gravityProcessor: GravityProcessor? =
+            getPrivateProperty(BaseLevelingEstimator2::class, estimator, "gravityProcessor")
+        requireNotNull(gravityProcessor)
+        assertSame(location, gravityProcessor.location)
+        assertFalse(gravityProcessor.adjustGravityNorm)
+
+        val accelerometerGravityProcessor: AccelerometerGravityProcessor? =
+            getPrivateProperty(
+                BaseLevelingEstimator2::class,
+                estimator,
+                "accelerometerGravityProcessor"
+            )
+        requireNotNull(accelerometerGravityProcessor)
+        assertSame(location, accelerometerGravityProcessor.location)
+        assertFalse(accelerometerGravityProcessor.adjustGravityNorm)
     }
 
     @Test
@@ -139,6 +179,68 @@ class LevelingEstimator2Test {
 
         // check
         assertSame(listener, estimator.accuracyChangedListener)
+    }
+
+    @Test
+    fun location_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val location1 = getLocation()
+        val estimator = LevelingEstimator2(context, location = location1)
+
+        // check initial value
+        assertSame(location1, estimator.location)
+
+        // set new value
+        val location2 = getLocation()
+        estimator.location = location2
+
+        // check
+        assertSame(location2, estimator.location)
+
+        val gravityProcessor: GravityProcessor? =
+            getPrivateProperty(BaseLevelingEstimator2::class, estimator, "gravityProcessor")
+        requireNotNull(gravityProcessor)
+        assertSame(location2, gravityProcessor.location)
+
+        val accelerometerGravityProcessor: AccelerometerGravityProcessor? =
+            getPrivateProperty(
+                BaseLevelingEstimator2::class,
+                estimator,
+                "accelerometerGravityProcessor"
+            )
+        requireNotNull(accelerometerGravityProcessor)
+        assertSame(location2, accelerometerGravityProcessor.location)
+    }
+
+    @Test
+    fun adjustGravityNorm_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val estimator = LevelingEstimator2(context)
+
+        // check default value
+        assertTrue(estimator.adjustGravityNorm)
+
+        val gravityProcessor: GravityProcessor? =
+            getPrivateProperty(BaseLevelingEstimator2::class, estimator, "gravityProcessor")
+        requireNotNull(gravityProcessor)
+        assertTrue(gravityProcessor.adjustGravityNorm)
+
+        val accelerometerGravityProcessor: AccelerometerGravityProcessor? =
+            getPrivateProperty(
+                BaseLevelingEstimator2::class,
+                estimator,
+                "accelerometerGravityProcessor"
+            )
+        requireNotNull(accelerometerGravityProcessor)
+        assertTrue(accelerometerGravityProcessor.adjustGravityNorm)
+
+        // set new value
+        estimator.adjustGravityNorm = false
+
+        // check
+        assertFalse(estimator.adjustGravityNorm)
+        assertFalse(gravityProcessor.adjustGravityNorm)
+        assertFalse(accelerometerGravityProcessor.adjustGravityNorm)
     }
 
     @Test
@@ -1120,10 +1222,36 @@ class LevelingEstimator2Test {
         const val MIN_LATITUDE_DEGREES = -90.0
         const val MAX_LATITUDE_DEGREES = 90.0
 
+        const val MIN_LONGITUDE_DEGREES = -180.0
+        const val MAX_LONGITUDE_DEGREES = 180.0
+
         const val MIN_HEIGHT = -100.0
         const val MAX_HEIGHT = 4000.0
 
         const val MIN_ANGLE_DEGREES = -45.0
         const val MAX_ANGLE_DEGREES = 45.0
+
+        fun getLocation(): Location {
+            val randomizer = UniformRandomizer()
+            val latitudeDegrees = randomizer.nextDouble(
+                MIN_LATITUDE_DEGREES,
+                MAX_LATITUDE_DEGREES
+            )
+            val longitudeDegrees = randomizer.nextDouble(
+                MIN_LONGITUDE_DEGREES,
+                MAX_LONGITUDE_DEGREES
+            )
+            val height = randomizer.nextDouble(
+                MIN_HEIGHT,
+                MAX_HEIGHT
+            )
+
+            val location = mockk<Location>()
+            every { location.latitude }.returns(latitudeDegrees)
+            every { location.longitude }.returns(longitudeDegrees)
+            every { location.altitude }.returns(height)
+
+            return location
+        }
     }
 }

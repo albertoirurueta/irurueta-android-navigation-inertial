@@ -111,6 +111,7 @@ class DoubleFusedLocalPoseProcessorTest {
             BaseDoubleFusedGeomagneticAttitudeProcessor.DEFAULT_PANIC_COUNTER_THRESHOLD,
             processor.attitudePanicCounterThreshold
         )
+        assertTrue(processor.adjustGravityNorm)
     }
 
     @Test
@@ -177,6 +178,7 @@ class DoubleFusedLocalPoseProcessorTest {
             BaseDoubleFusedGeomagneticAttitudeProcessor.DEFAULT_PANIC_COUNTER_THRESHOLD,
             processor.attitudePanicCounterThreshold
         )
+        assertTrue(processor.adjustGravityNorm)
     }
 
     @Test
@@ -724,6 +726,27 @@ class DoubleFusedLocalPoseProcessorTest {
         verify(exactly = 1) {
             attitudeProcessorSpy.panicCounterThreshold = attitudePanicCounterThreshold
         }
+    }
+
+    @Test
+    fun adjustGravityNorm_setsExpectedValue() {
+        val initialLocation = getLocation()
+        val processor = DoubleFusedLocalPoseProcessor(initialLocation)
+
+        val attitudeProcessor: DoubleFusedGeomagneticAttitudeProcessor? =
+            processor.getPrivateProperty("attitudeProcessor")
+        requireNotNull(attitudeProcessor)
+
+        // check default value
+        assertTrue(processor.adjustGravityNorm)
+        assertTrue(attitudeProcessor.adjustGravityNorm)
+
+        // set new value
+        processor.adjustGravityNorm = false
+
+        // check
+        assertFalse(processor.adjustGravityNorm)
+        assertFalse(attitudeProcessor.adjustGravityNorm)
     }
 
     @Test
@@ -2155,7 +2178,7 @@ class DoubleFusedLocalPoseProcessorTest {
                 randomizer.nextDouble(MIN_LONGITUDE_DEGREES, MAX_LONGITUDE_DEGREES)
             val height = randomizer.nextDouble(MIN_HEIGHT, MAX_HEIGHT)
 
-            val location = mockk<Location>()
+            val location = mockk<Location>(relaxed = true)
             every { location.latitude }.returns(latitudeDegrees)
             every { location.longitude }.returns(longitudeDegrees)
             every { location.altitude }.returns(height)

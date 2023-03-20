@@ -15,6 +15,7 @@
  */
 package com.irurueta.android.navigation.inertial.processors.pose
 
+import android.location.Location
 import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
 import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.estimators.pose.SpeedTriad
@@ -88,6 +89,8 @@ class FusedRelativePoseProcessorTest {
             BaseFusedGeomagneticAttitudeProcessor.DEFAULT_PANIC_COUNTER_THRESHOLD,
             processor.attitudePanicCounterThreshold
         )
+        assertNull(processor.location)
+        assertTrue(processor.adjustGravityNorm)
     }
 
     @Test
@@ -135,6 +138,8 @@ class FusedRelativePoseProcessorTest {
             BaseFusedGeomagneticAttitudeProcessor.DEFAULT_PANIC_COUNTER_THRESHOLD,
             processor.attitudePanicCounterThreshold
         )
+        assertNull(processor.location)
+        assertTrue(processor.adjustGravityNorm)
     }
 
     @Test
@@ -443,6 +448,47 @@ class FusedRelativePoseProcessorTest {
             attitudePanicCounterThreshold,
             processor.attitudePanicCounterThreshold
         )
+    }
+
+    @Test
+    fun location_setsExpectedValue() {
+        val processor = FusedRelativePoseProcessor()
+
+        val attitudeProcessor: LeveledRelativeAttitudeProcessor? =
+            processor.getPrivateProperty("attitudeProcessor")
+        requireNotNull(attitudeProcessor)
+
+        // check default value
+        assertNull(processor.location)
+        assertNull(attitudeProcessor.location)
+
+        // set new value
+        val location = getLocation()
+        processor.location = location
+
+        // check
+        assertSame(location, processor.location)
+        assertSame(location, attitudeProcessor.location)
+    }
+
+    @Test
+    fun adjustGravityNorm_setsExpectedValue() {
+        val processor = FusedRelativePoseProcessor()
+
+        val attitudeProcessor: LeveledRelativeAttitudeProcessor? =
+            processor.getPrivateProperty("attitudeProcessor")
+        requireNotNull(attitudeProcessor)
+
+        // check default value
+        assertTrue(processor.adjustGravityNorm)
+        assertTrue(attitudeProcessor.adjustGravityNorm)
+
+        // set new value
+        processor.adjustGravityNorm = false
+
+        // check
+        assertFalse(processor.adjustGravityNorm)
+        assertFalse(attitudeProcessor.adjustGravityNorm)
     }
 
     @Test
@@ -1136,6 +1182,29 @@ class FusedRelativePoseProcessorTest {
         const val TIME_INTERVAL_NANOS = 10_000_000L
 
         const val VERY_LARGE_ABSOLUTE_ERROR = 1e-3
+
+        fun getLocation(): Location {
+            val randomizer = UniformRandomizer()
+            val latitudeDegrees = randomizer.nextDouble(
+                MIN_LATITUDE_DEGREES,
+                MAX_LATITUDE_DEGREES
+            )
+            val longitudeDegrees = randomizer.nextDouble(
+                MIN_LONGITUDE_DEGREES,
+                MAX_LONGITUDE_DEGREES
+            )
+            val height = randomizer.nextDouble(
+                MIN_HEIGHT,
+                MAX_HEIGHT
+            )
+
+            val location = mockk<Location>(relaxed = true)
+            every { location.latitude }.returns(latitudeDegrees)
+            every { location.longitude }.returns(longitudeDegrees)
+            every { location.altitude }.returns(height)
+
+            return location
+        }
 
         fun getSpeed(): SpeedTriad {
             val randomizer = UniformRandomizer()

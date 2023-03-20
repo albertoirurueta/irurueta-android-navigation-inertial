@@ -22,9 +22,7 @@ import com.irurueta.android.navigation.inertial.ThreadSyncHelper
 import com.irurueta.android.navigation.inertial.collectors.AttitudeSensorType
 import com.irurueta.android.navigation.inertial.estimators.attitude.AttitudeEstimator2
 import com.irurueta.android.navigation.inertial.test.LocationActivity
-import org.junit.Assert
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertTrue
+import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 
@@ -52,7 +50,7 @@ class AttitudeEstimator2Test {
         assertNotNull(scenario)
 
         syncHelper.waitOnCondition({ completed < 1 })
-        Assert.assertEquals(1, completed)
+        assertEquals(1, completed)
         completed = 0
     }
 

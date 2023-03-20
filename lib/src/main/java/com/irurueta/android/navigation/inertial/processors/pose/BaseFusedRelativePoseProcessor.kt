@@ -15,6 +15,7 @@
  */
 package com.irurueta.android.navigation.inertial.processors.pose
 
+import android.location.Location
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.SensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.SyncedSensorMeasurement
@@ -169,6 +170,26 @@ abstract class BaseFusedRelativePoseProcessor<M : SensorMeasurement<M>, S : Sync
         @Throws(IllegalArgumentException::class)
         set(value) {
             attitudeProcessor.panicCounterThreshold = value
+        }
+
+    /**
+     * Gets or sets device location
+     */
+    override var location: Location?
+        get() = attitudeProcessor.location
+        set(value) {
+            attitudeProcessor.location = value
+        }
+
+    /**
+     * Indicates whether gravity norm must be adjusted to either Earth
+     * standard norm, or norm at provided location. If no location is provided, this should only be
+     * enabled when device is close to sea level.
+     */
+    override var adjustGravityNorm: Boolean
+        get() = attitudeProcessor.adjustGravityNorm
+        set(value) {
+            attitudeProcessor.adjustGravityNorm = value
         }
 
     /**

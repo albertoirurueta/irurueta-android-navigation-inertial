@@ -77,6 +77,9 @@ import java.util.*
  * @property bufferFilledListener listener to notify that some buffer has been filled. This usually
  * happens when consumer of measurements cannot keep up with the rate at which measurements are
  * generated.
+ * @property adjustGravityNorm indicates whether gravity norm must be adjusted to either Earth
+ * standard norm, or norm at provided location. If no location is provided, this should only be
+ * enabled when device is close to sea level.
  */
 class EcefAbsolutePoseEstimator2(
     val context: Context,
@@ -101,7 +104,8 @@ class EcefAbsolutePoseEstimator2(
     estimatePoseTransformation: Boolean = false,
     var poseAvailableListener: OnPoseAvailableListener? = null,
     var accuracyChangedListener: OnAccuracyChangedListener? = null,
-    var bufferFilledListener: OnBufferFilledListener? = null
+    var bufferFilledListener: OnBufferFilledListener? = null,
+    adjustGravityNorm: Boolean = true
 ) {
     /**
      * Internal processor using fused attitude estimation with gravity + pose estimation.
@@ -573,6 +577,22 @@ class EcefAbsolutePoseEstimator2(
         }
 
     /**
+     * Indicates whether gravity norm must be adjusted to either Earth
+     * standard norm, or norm at provided location. If no location is provided, this should only be
+     * enabled when device is close to sea level.
+     */
+    var adjustGravityNorm: Boolean = adjustGravityNorm
+        set(value) {
+            check(!running)
+
+            fusedProcessor.adjustGravityNorm = value
+            accelerometerFusedProcessor.adjustGravityNorm = value
+            doubleFusedProcessor.adjustGravityNorm = value
+            accelerometerDoubleFusedProcessor.adjustGravityNorm = value
+            field = value
+        }
+
+    /**
      * Indicates whether this estimator is running or not.
      */
     var running: Boolean = false
@@ -668,6 +688,7 @@ class EcefAbsolutePoseEstimator2(
         this.timestamp = timestamp
         this.useAccurateRelativeGyroscopeAttitudeProcessor =
             useAccurateRelativeGyroscopeAttitudeProcessor
+        this.adjustGravityNorm = adjustGravityNorm
     }
 
     /**

@@ -16,10 +16,7 @@
 package com.irurueta.android.navigation.inertial.processors.pose
 
 import android.location.Location
-import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorMeasurement
-import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorMeasurement
-import com.irurueta.android.navigation.inertial.collectors.SensorMeasurement
-import com.irurueta.android.navigation.inertial.collectors.SyncedSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.processors.attitude.BaseDoubleFusedGeomagneticAttitudeProcessor
 import com.irurueta.navigation.frames.NEDVelocity
 import com.irurueta.navigation.inertial.calibration.AccelerationTriad
@@ -236,6 +233,17 @@ abstract class BaseDoubleFusedLocalPoseProcessor<M : SensorMeasurement<M>, S : S
         }
 
     /**
+     * Indicates whether gravity norm must be adjusted to either Earth
+     * standard norm, or norm at provided location. If no location is provided, this should only be
+     * enabled when device is close to sea level.
+     */
+    var adjustGravityNorm: Boolean
+        get() = attitudeProcessor.adjustGravityNorm
+        set(value) {
+            attitudeProcessor.adjustGravityNorm = value
+        }
+
+    /**
      * Resets internal parameters.
      */
     override fun reset() {
@@ -270,5 +278,33 @@ abstract class BaseDoubleFusedLocalPoseProcessor<M : SensorMeasurement<M>, S : S
         } else {
             false
         }
+    }
+
+    /**
+     * Processes pose by taking into account estimated current attitude, accelerometer and
+     * gyroscope measurements to estimate new position and velocity from previous ones.
+     *
+     * @param accelerometerMeasurement accelerometer measurement.
+     * @param gyroscopeMeasurement gyroscope measurement.
+     * @param timestamp timestamp when all measurements are assumed to occur.
+     * @return true if new pose is processed, false otherwise.
+     */
+    override fun processPose(
+        accelerometerMeasurement: AccelerometerSensorMeasurement,
+        gyroscopeMeasurement: GyroscopeSensorMeasurement,
+        timestamp: Long
+    ): Boolean {
+        val result = super.processPose(accelerometerMeasurement, gyroscopeMeasurement, timestamp)
+        val latitude = Math.toDegrees(currentNedFrame.latitude)
+        val longitude = Math.toDegrees(currentNedFrame.longitude)
+        val height = currentNedFrame.height
+        val location = attitudeProcessor.location
+        if (location != null) {
+            location.latitude = latitude
+            location.longitude = longitude
+            location.altitude = height
+            attitudeProcessor.location = location
+        }
+        return result
     }
 }

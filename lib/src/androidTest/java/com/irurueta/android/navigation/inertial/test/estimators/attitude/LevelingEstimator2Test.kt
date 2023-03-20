@@ -15,24 +15,28 @@
  */
 package com.irurueta.android.navigation.inertial.test.estimators.attitude
 
+import android.location.Location
 import android.util.Log
 import androidx.test.core.app.ActivityScenario
 import androidx.test.filters.RequiresDevice
 import androidx.test.rule.GrantPermissionRule
+import com.irurueta.android.navigation.inertial.LocationService
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
-import com.irurueta.android.navigation.inertial.estimators.attitude.LevelingEstimator
 import com.irurueta.android.navigation.inertial.estimators.attitude.LevelingEstimator2
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.MeanAveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.MedianAveragingFilter
 import com.irurueta.android.navigation.inertial.test.LocationActivity
+import io.mockk.spyk
 import org.junit.Assert
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
+@RequiresDevice
 class LevelingEstimator2Test {
 
     @get:Rule
@@ -47,6 +51,8 @@ class LevelingEstimator2Test {
     @Volatile
     private var completed = 0
 
+    private var currentLocation: Location? = null
+
     private var activity: LocationActivity? = null
 
     @Before
@@ -54,15 +60,9 @@ class LevelingEstimator2Test {
         completed = 0
     }
 
-    @RequiresDevice
     @Test
     fun startAndStop_whenGravitySensor_estimatesLeveling() {
-        val scenario = ActivityScenario.launch(LocationActivity::class.java).use {
-            it.onActivity { activity ->
-                this@LevelingEstimator2Test.activity = activity
-            }
-        }
-        Assert.assertNotNull(scenario)
+        val location = getCurrentLocation()
         val activity = this.activity
         requireNotNull(activity)
 
@@ -73,7 +73,8 @@ class LevelingEstimator2Test {
             levelingAvailableListener = { _, _, _, roll, pitch, _ ->
                 logLeveling(roll, pitch)
                 syncHelper.notifyAll { completed++ }
-            }
+            },
+            location = location
         )
 
         estimator.start()
@@ -85,15 +86,9 @@ class LevelingEstimator2Test {
         assertTrue(completed > 0)
     }
 
-    @RequiresDevice
     @Test
     fun startAndStop_whenAccelerometerSensorAndLowPassAveragingFilter_estimatesLeveling() {
-        val scenario = ActivityScenario.launch(LocationActivity::class.java).use {
-            it.onActivity { activity ->
-                this@LevelingEstimator2Test.activity = activity
-            }
-        }
-        Assert.assertNotNull(scenario)
+        val location = getCurrentLocation()
         val activity = this.activity
         requireNotNull(activity)
 
@@ -106,7 +101,8 @@ class LevelingEstimator2Test {
             levelingAvailableListener = { _, _, _, roll, pitch, _ ->
                 logLeveling(roll, pitch)
                 syncHelper.notifyAll { completed++ }
-            }
+            },
+            location = location
         )
 
         estimator.start()
@@ -118,15 +114,9 @@ class LevelingEstimator2Test {
         assertTrue(completed > 0)
     }
 
-    @RequiresDevice
     @Test
     fun startAndStop_whenAccelerometerSensorAndMeanAveragingFilter_estimatesLeveling() {
-        val scenario = ActivityScenario.launch(LocationActivity::class.java).use {
-            it.onActivity { activity ->
-                this@LevelingEstimator2Test.activity = activity
-            }
-        }
-        Assert.assertNotNull(scenario)
+        val location = getCurrentLocation()
         val activity = this.activity
         requireNotNull(activity)
 
@@ -139,7 +129,8 @@ class LevelingEstimator2Test {
             levelingAvailableListener = { _, _, _, roll, pitch, _ ->
                 logLeveling(roll, pitch)
                 syncHelper.notifyAll { completed++ }
-            }
+            },
+            location = location
         )
 
         estimator.start()
@@ -151,15 +142,9 @@ class LevelingEstimator2Test {
         assertTrue(completed > 0)
     }
 
-    @RequiresDevice
     @Test
     fun startAndStop_whenAccelerometerSensorAndMedianAveragingFilter_estimatesLeveling() {
-        val scenario = ActivityScenario.launch(LocationActivity::class.java).use {
-            it.onActivity { activity ->
-                this@LevelingEstimator2Test.activity = activity
-            }
-        }
-        Assert.assertNotNull(scenario)
+        val location = getCurrentLocation()
         val activity = this.activity
         requireNotNull(activity)
 
@@ -172,7 +157,8 @@ class LevelingEstimator2Test {
             levelingAvailableListener = { _, _, _, roll, pitch, _ ->
                 logLeveling(roll, pitch)
                 syncHelper.notifyAll { completed++ }
-            }
+            },
+            location = location
         )
 
         estimator.start()
@@ -184,15 +170,9 @@ class LevelingEstimator2Test {
         assertTrue(completed > 0)
     }
 
-    @RequiresDevice
     @Test
     fun startAndStop_whenAccelerometerUncalibratedSensorAndLowPassAveragingFilter_estimatesLeveling() {
-        val scenario = ActivityScenario.launch(LocationActivity::class.java).use {
-            it.onActivity { activity ->
-                this@LevelingEstimator2Test.activity = activity
-            }
-        }
-        Assert.assertNotNull(scenario)
+        val location = getCurrentLocation()
         val activity = this.activity
         requireNotNull(activity)
 
@@ -205,7 +185,8 @@ class LevelingEstimator2Test {
             levelingAvailableListener = { _, _, _, roll, pitch, _ ->
                 logLeveling(roll, pitch)
                 syncHelper.notifyAll { completed++ }
-            }
+            },
+            location = location
         )
 
         estimator.start()
@@ -217,15 +198,9 @@ class LevelingEstimator2Test {
         assertTrue(completed > 0)
     }
 
-    @RequiresDevice
     @Test
     fun startAndStop_whenAccelerometerUncalibratedSensorAndMeanAveragingFilter_estimatesLeveling() {
-        val scenario = ActivityScenario.launch(LocationActivity::class.java).use {
-            it.onActivity { activity ->
-                this@LevelingEstimator2Test.activity = activity
-            }
-        }
-        Assert.assertNotNull(scenario)
+        val location = getCurrentLocation()
         val activity = this.activity
         requireNotNull(activity)
 
@@ -238,7 +213,8 @@ class LevelingEstimator2Test {
             levelingAvailableListener = { _, _, _, roll, pitch, _ ->
                 logLeveling(roll, pitch)
                 syncHelper.notifyAll { completed++ }
-            }
+            },
+            location = location
         )
 
         estimator.start()
@@ -250,19 +226,13 @@ class LevelingEstimator2Test {
         assertTrue(completed > 0)
     }
 
-    @RequiresDevice
     @Test
     fun startAndStop_whenAccelerometerUncalibratedSensorAndMedianAveragingFilter_estimatesLeveling() {
-        val scenario = ActivityScenario.launch(LocationActivity::class.java).use {
-            it.onActivity { activity ->
-                this@LevelingEstimator2Test.activity = activity
-            }
-        }
-        Assert.assertNotNull(scenario)
+        val location = getCurrentLocation()
         val activity = this.activity
         requireNotNull(activity)
 
-        val estimator = LevelingEstimator(
+        val estimator = LevelingEstimator2(
             activity,
             useAccelerometer = true,
             accelerometerSensorType = AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
@@ -271,7 +241,8 @@ class LevelingEstimator2Test {
             levelingAvailableListener = { _, _, _, roll, pitch, _ ->
                 logLeveling(roll, pitch)
                 syncHelper.notifyAll { completed++ }
-            }
+            },
+            location = location
         )
 
         estimator.start()
@@ -281,6 +252,39 @@ class LevelingEstimator2Test {
         estimator.stop()
 
         assertTrue(completed > 0)
+    }
+
+    private fun getCurrentLocation(): Location {
+        val scenario = ActivityScenario.launch(LocationActivity::class.java).use {
+            it.onActivity { activity ->
+                this@LevelingEstimator2Test.activity = activity
+                val service = LocationService(activity)
+
+                val enabled = service.locationEnabled
+                requireNotNull(enabled)
+                assertTrue(enabled)
+
+                val currentLocationListener =
+                    spyk(object : LocationService.OnCurrentLocationListener {
+                        override fun onCurrentLocation(location: Location) {
+                            currentLocation = location
+
+                            syncHelper.notifyAll { completed++ }
+                        }
+                    })
+
+                service.getCurrentLocation(currentLocationListener)
+            }
+        }
+        assertNotNull(scenario)
+
+        syncHelper.waitOnCondition({ completed < 1 })
+        Assert.assertEquals(1, completed)
+        completed = 0
+
+        val currentLocation = this.currentLocation
+        requireNotNull(currentLocation)
+        return currentLocation
     }
 
     private fun logLeveling(roll: Double?, pitch: Double?) {

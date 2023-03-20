@@ -58,6 +58,7 @@ class AccelerometerDoubleFusedGeomagneticAttitudeProcessorTest {
         processor.getGravity(gravity2)
         assertEquals(gravity1, gravity2)
         assertNull(processor.location)
+        assertTrue(processor.adjustGravityNorm)
         assertNull(processor.currentDate)
         assertFalse(processor.useAccurateLevelingProcessor)
         assertNull(processor.worldMagneticModel)
@@ -108,6 +109,7 @@ class AccelerometerDoubleFusedGeomagneticAttitudeProcessorTest {
         processor.getGravity(gravity2)
         assertEquals(gravity1, gravity2)
         assertNull(processor.location)
+        assertTrue(processor.adjustGravityNorm)
         assertNull(processor.currentDate)
         assertFalse(processor.useAccurateLevelingProcessor)
         assertNull(processor.worldMagneticModel)
@@ -271,6 +273,11 @@ class AccelerometerDoubleFusedGeomagneticAttitudeProcessorTest {
         requireNotNull(geomagneticProcessor)
         val geomagneticProcessorSpy = spyk(geomagneticProcessor)
         processor.setPrivateProperty("geomagneticProcessor", geomagneticProcessorSpy)
+        val relativeGyroscopeProcessor: BaseLeveledRelativeAttitudeProcessor<GravitySensorMeasurement, *>? =
+            processor.getPrivateProperty("relativeGyroscopeProcessor")
+        requireNotNull(relativeGyroscopeProcessor)
+        val relativeGyroscopeProcessorSpy = spyk(relativeGyroscopeProcessor)
+        processor.setPrivateProperty("relativeGyroscopeProcessor", relativeGyroscopeProcessorSpy)
 
         // set new value
         val location = getLocation()
@@ -281,6 +288,35 @@ class AccelerometerDoubleFusedGeomagneticAttitudeProcessorTest {
 
         verify(exactly = 1) { geomagneticProcessorSpy.location }
         verify(exactly = 1) { geomagneticProcessorSpy.location = location }
+        verify(exactly = 1) { relativeGyroscopeProcessorSpy.location = location }
+
+        assertSame(location, geomagneticProcessorSpy.location)
+        assertSame(location, relativeGyroscopeProcessorSpy.location)
+    }
+
+    @Test
+    fun adjustGravityNorm_setsExpectedValue() {
+        val processor = AccelerometerDoubleFusedGeomagneticAttitudeProcessor()
+
+        val geomagneticProcessor: BaseGeomagneticAttitudeProcessor<GravitySensorMeasurement, *>? =
+            processor.getPrivateProperty("geomagneticProcessor")
+        requireNotNull(geomagneticProcessor)
+        val relativeGyroscopeProcessor: BaseLeveledRelativeAttitudeProcessor<GravitySensorMeasurement, *>? =
+            processor.getPrivateProperty("relativeGyroscopeProcessor")
+        requireNotNull(relativeGyroscopeProcessor)
+
+        // check default value
+        assertTrue(processor.adjustGravityNorm)
+        assertTrue(geomagneticProcessor.adjustGravityNorm)
+        assertTrue(relativeGyroscopeProcessor.adjustGravityNorm)
+
+        // set new value
+        processor.adjustGravityNorm = false
+
+        // check
+        assertFalse(processor.adjustGravityNorm)
+        assertFalse(geomagneticProcessor.adjustGravityNorm)
+        assertFalse(relativeGyroscopeProcessor.adjustGravityNorm)
     }
 
     @Test

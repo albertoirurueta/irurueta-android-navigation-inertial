@@ -16,6 +16,7 @@
 package com.irurueta.android.navigation.inertial.estimators.pose
 
 import android.content.Context
+import android.location.Location
 import android.os.SystemClock
 import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
@@ -52,6 +53,9 @@ import java.util.*
  * @property bufferFilledListener listener to notify that some buffer has been filled. This usually
  * happens when consumer of measurements cannot keep up with the rate at which measurements are
  * generated.
+ * @property adjustGravityNorm indicates whether gravity norm must be adjusted to either Earth
+ * standard norm, or norm at provided location. If no location is provided, this should only be
+ * enabled when device is close to sea level.
  */
 class RelativePoseEstimator2(
     val context: Context,
@@ -67,7 +71,9 @@ class RelativePoseEstimator2(
     useAccurateRelativeGyroscopeAttitudeProcessor: Boolean = true,
     var poseAvailableListener: OnPoseAvailableListener? = null,
     var accuracyChangedListener: OnAccuracyChangedListener? = null,
-    var bufferFilledListener: OnBufferFilledListener? = null
+    var bufferFilledListener: OnBufferFilledListener? = null,
+    location: Location? = null,
+    adjustGravityNorm: Boolean = true
 ) {
     /**
      * Internal processor using fused attitude estimation with gravity + pose estimation.
@@ -306,6 +312,32 @@ class RelativePoseEstimator2(
             } else {
                 fusedProcessor.timeIntervalSeconds
             }
+        }
+
+    /**
+     * Gets or sets device location
+     */
+    var location: Location? = location
+    set(value) {
+        fusedProcessor.location = value
+        accelerometerFusedProcessor.location = value
+        attitudeProcessor.location = value
+        field = value
+    }
+
+    /**
+     * Indicates whether gravity norm must be adjusted to either Earth
+     * standard norm, or norm at provided location. If no location is provided, this should only be
+     * enabled when device is close to sea level.
+     */
+    var adjustGravityNorm: Boolean = adjustGravityNorm
+        set(value) {
+            check(!running)
+
+            fusedProcessor.adjustGravityNorm = value
+            accelerometerFusedProcessor.adjustGravityNorm = value
+            attitudeProcessor.adjustGravityNorm = value
+            field = value
         }
 
     /**

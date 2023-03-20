@@ -30,13 +30,12 @@ import com.irurueta.android.navigation.inertial.estimators.filter.MeanAveragingF
 import com.irurueta.android.navigation.inertial.estimators.filter.MedianAveragingFilter
 import com.irurueta.android.navigation.inertial.test.LocationActivity
 import io.mockk.spyk
-import org.junit.Assert
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertTrue
+import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
+@RequiresDevice
 class GeomagneticAttitudeEstimatorTest {
 
     @get:Rule
@@ -60,7 +59,6 @@ class GeomagneticAttitudeEstimatorTest {
         completed = 0
     }
 
-    @RequiresDevice
     @Test
     fun startAndStop_whenGravitySensor_estimatesAttitude() {
         val location = getCurrentLocation()
@@ -87,7 +85,6 @@ class GeomagneticAttitudeEstimatorTest {
         assertTrue(completed > 0)
     }
 
-    @RequiresDevice
     @Test
     fun startAndStop_whenAccelerometerSensorMagnetometerSensorAndLowPassAveragingFilter_estimatesAttitude() {
         val location = getCurrentLocation()
@@ -117,7 +114,6 @@ class GeomagneticAttitudeEstimatorTest {
         assertTrue(completed > 0)
     }
 
-    @RequiresDevice
     @Test
     fun startAndStop_whenAccelerometerSensorMagnetometerSensorAndMeanPassAveragingFilter_estimatesAttitude() {
         val location = getCurrentLocation()
@@ -147,7 +143,6 @@ class GeomagneticAttitudeEstimatorTest {
         assertTrue(completed > 0)
     }
 
-    @RequiresDevice
     @Test
     fun startAndStop_whenAccelerometerSensorMagnetometerSensorAndMedianPassAveragingFilter_estimatesAttitude() {
         val location = getCurrentLocation()
@@ -177,7 +172,6 @@ class GeomagneticAttitudeEstimatorTest {
         assertTrue(completed > 0)
     }
 
-    @RequiresDevice
     @Test
     fun startAndStop_whenAccelerometerUncalibratedSensorMagnetometerUncalibratedSensorAndLowPassAveragingFilter_estimatesAttitude() {
         val location = getCurrentLocation()
@@ -207,7 +201,6 @@ class GeomagneticAttitudeEstimatorTest {
         assertTrue(completed > 0)
     }
 
-    @RequiresDevice
     @Test
     fun startAndStop_whenAccelerometerUncalibratedMagnetometerUncalibratedSensorAndMeanAveragingFilter_estimatesAttitude() {
         val location = getCurrentLocation()
@@ -237,7 +230,6 @@ class GeomagneticAttitudeEstimatorTest {
         assertTrue(completed > 0)
     }
 
-    @RequiresDevice
     @Test
     fun startAndStop_whenAccelerometerUncalibratedSensorMagnetometerUncalibratedSensorAndMedianAveragingFilter_estimatesAttitude() {
         val location = getCurrentLocation()
@@ -299,7 +291,7 @@ class GeomagneticAttitudeEstimatorTest {
         assertNotNull(scenario)
 
         syncHelper.waitOnCondition({ completed < 1 })
-        Assert.assertEquals(1, completed)
+        assertEquals(1, completed)
         completed = 0
 
         val currentLocation = this.currentLocation

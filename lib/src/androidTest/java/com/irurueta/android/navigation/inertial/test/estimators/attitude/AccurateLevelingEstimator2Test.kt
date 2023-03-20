@@ -34,6 +34,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
+@RequiresDevice
 class AccurateLevelingEstimator2Test {
 
     @get:Rule
@@ -57,7 +58,6 @@ class AccurateLevelingEstimator2Test {
         completed = 0
     }
 
-    @RequiresDevice
     @Test
     fun startAndStop_whenGravitySensor_estimatesLeveling() {
         val location = getCurrentLocation()
@@ -84,7 +84,6 @@ class AccurateLevelingEstimator2Test {
         assertTrue(completed > 0)
     }
 
-    @RequiresDevice
     @Test
     fun startAndStop_whenAccelerometerSensorAndLowPassAveragingFilter_estimatesLeveling() {
         val location = getCurrentLocation()
@@ -113,7 +112,6 @@ class AccurateLevelingEstimator2Test {
         assertTrue(completed > 0)
     }
 
-    @RequiresDevice
     @Test
     fun startAndStop_whenAccelerometerSensorAndMeanAveragingFilter_estimatesLeveling() {
         val location = getCurrentLocation()
@@ -142,7 +140,6 @@ class AccurateLevelingEstimator2Test {
         assertTrue(completed > 0)
     }
 
-    @RequiresDevice
     @Test
     fun startAndStop_whenAccelerometerSensorAndMedianAveragingFilter_estimatesLeveling() {
         val location = getCurrentLocation()
@@ -171,7 +168,6 @@ class AccurateLevelingEstimator2Test {
         assertTrue(completed > 0)
     }
 
-    @RequiresDevice
     @Test
     fun startAndStop_whenAccelerometerUncalibratedSensorAndLowPassAveragingFilter_estimatesLeveling() {
         val location = getCurrentLocation()
@@ -200,7 +196,6 @@ class AccurateLevelingEstimator2Test {
         assertTrue(completed > 0)
     }
 
-    @RequiresDevice
     @Test
     fun startAndStop_whenAccelerometerUncalibratedSensorAndMeanAveragingFilter_estimatesLeveling() {
         val location = getCurrentLocation()
@@ -229,7 +224,6 @@ class AccurateLevelingEstimator2Test {
         assertTrue(completed > 0)
     }
 
-    @RequiresDevice
     @Test
     fun startAndStop_whenAccelerometerUncalibratedSensorAndMedianAveragingFilter_estimatesLeveling() {
         val location = getCurrentLocation()

@@ -84,6 +84,7 @@ class EcefAbsolutePoseEstimator2Test {
         assertNull(estimator.poseAvailableListener)
         assertNull(estimator.accuracyChangedListener)
         assertNull(estimator.bufferFilledListener)
+        assertTrue(estimator.adjustGravityNorm)
     }
 
     @Test
@@ -118,7 +119,8 @@ class EcefAbsolutePoseEstimator2Test {
             estimatePoseTransformation = true,
             poseAvailableListener,
             accuracyChangedListener,
-            bufferFilledListener
+            bufferFilledListener,
+            adjustGravityNorm = false
         )
 
         // check
@@ -149,6 +151,7 @@ class EcefAbsolutePoseEstimator2Test {
         assertSame(poseAvailableListener, estimator.poseAvailableListener)
         assertSame(accuracyChangedListener, estimator.accuracyChangedListener)
         assertSame(bufferFilledListener, estimator.bufferFilledListener)
+        assertFalse(estimator.adjustGravityNorm)
     }
 
     @Test
@@ -2098,6 +2101,60 @@ class EcefAbsolutePoseEstimator2Test {
             accelerometerDoubleFusedProcessorSpy.useLeveledRelativeAttitudeRespectStart = false
         }
         verify(exactly = 1) { attitudeProcessorSpy.useLeveledRelativeAttitudeRespectStart = false }
+    }
+
+    @Test
+    fun adjustGravityNorm_whenNotRunning_setsExpectedValue() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val initialLocation = getLocation()
+        val estimator = EcefAbsolutePoseEstimator2(context, initialLocation)
+
+        val fusedProcessor: FusedECEFAbsolutePoseProcessor? =
+            estimator.getPrivateProperty("fusedProcessor")
+        requireNotNull(fusedProcessor)
+        val accelerometerFusedProcessor: AccelerometerFusedECEFAbsolutePoseProcessor? =
+            estimator.getPrivateProperty("accelerometerFusedProcessor")
+        requireNotNull(accelerometerFusedProcessor)
+        val doubleFusedProcessor: DoubleFusedECEFAbsolutePoseProcessor? =
+            estimator.getPrivateProperty("doubleFusedProcessor")
+        requireNotNull(doubleFusedProcessor)
+        val accelerometerDoubleFusedProcessor: AccelerometerDoubleFusedECEFAbsolutePoseProcessor? =
+            estimator.getPrivateProperty("accelerometerDoubleFusedProcessor")
+        requireNotNull(accelerometerDoubleFusedProcessor)
+
+        // check default value
+        assertFalse(estimator.running)
+        assertTrue(estimator.adjustGravityNorm)
+        assertTrue(fusedProcessor.adjustGravityNorm)
+        assertTrue(accelerometerFusedProcessor.adjustGravityNorm)
+        assertTrue(doubleFusedProcessor.adjustGravityNorm)
+        assertTrue(accelerometerDoubleFusedProcessor.adjustGravityNorm)
+
+        // set new value
+        estimator.adjustGravityNorm = false
+
+        // check
+        assertFalse(estimator.adjustGravityNorm)
+        assertFalse(fusedProcessor.adjustGravityNorm)
+        assertFalse(accelerometerFusedProcessor.adjustGravityNorm)
+        assertFalse(doubleFusedProcessor.adjustGravityNorm)
+        assertFalse(accelerometerDoubleFusedProcessor.adjustGravityNorm)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun adjustGravityNorm_whenRunning_throwsIllegalStateException() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val initialLocation = getLocation()
+        val estimator = EcefAbsolutePoseEstimator2(context, initialLocation)
+
+        assertFalse(estimator.running)
+
+        // set as running
+        estimator.setPrivateProperty("running", true)
+
+        assertTrue(estimator.running)
+
+        estimator.adjustGravityNorm = false
     }
 
     @Test(expected = IllegalStateException::class)
