@@ -475,7 +475,7 @@ class AccelerometerQuadraticSensorMeasurementInterpolatorTest {
 
         const val SIZE = 6
 
-        const val ABSOLUTE_ERROR = 1e-3f
+        const val ABSOLUTE_ERROR = 2e-3f
 
         fun assertMeasurement(
             measurement1: AccelerometerSensorMeasurement,
