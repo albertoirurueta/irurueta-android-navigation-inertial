@@ -127,10 +127,7 @@ class RelativePoseEstimatorActivity : AppCompatActivity() {
                 camera = createCamera(cubeView, Quaternion())
                 cubeView.camera = camera
                 cubeView.cubeSize = cubeSize
-                cubeView.cubePosition =
-                    InhomogeneousPoint3D(-cubeDistance, 0.0, 0.0)
-                //cubeView.cubePosition =
-                //    InhomogeneousPoint3D(-CubeRenderer.DEFAULT_CUBE_DISTANCE, 0.0, 0.0)
+                cubeView.cubePosition = InhomogeneousPoint3D(0.0, 0.0, cubeDistance)
             }
         }
 
@@ -185,7 +182,7 @@ class RelativePoseEstimatorActivity : AppCompatActivity() {
         if (poseEstimator?.running == true) return
 
         if (poseEstimator != null) {
-            // TODO: poseEstimator?.initialLocation = location
+            poseEstimator?.location = location
         } else {
             val accelerometerAveragingFilter =
                 buildAveragingFilter(accelerometerAveragingFilterType)
@@ -206,6 +203,7 @@ class RelativePoseEstimatorActivity : AppCompatActivity() {
                 accelerometerSensorType = accelerometerSensorType,
                 gyroscopeSensorType = gyroscopeSensorType,
                 accelerometerAveragingFilter = accelerometerAveragingFilter,
+                location = location,
                 poseAvailableListener = { _, timestamp, poseTransformation ->
 
                     if (!initialAttitudeAvailable) {

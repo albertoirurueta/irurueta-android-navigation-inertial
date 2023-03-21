@@ -141,10 +141,7 @@ class LocalPoseEstimatorActivity : AppCompatActivity() {
                 camera = createCamera(cubeView, Quaternion())
                 cubeView.camera = camera
                 cubeView.cubeSize = cubeSize
-                cubeView.cubePosition =
-                    InhomogeneousPoint3D(-cubeDistance, 0.0, 0.0)
-                //cubeView.cubePosition =
-                //    InhomogeneousPoint3D(-CubeRenderer.DEFAULT_CUBE_DISTANCE, 0.0, 0.0)
+                cubeView.cubePosition = InhomogeneousPoint3D(0.0, 0.0, cubeDistance)
             }
         }
 
@@ -198,67 +195,63 @@ class LocalPoseEstimatorActivity : AppCompatActivity() {
         val location = this.location ?: return
         if (poseEstimator?.running == true) return
 
-        if (poseEstimator != null) {
-            // TODO: poseEstimator?.initialLocation = location
+        val accelerometerAveragingFilter =
+            buildAveragingFilter(accelerometerAveragingFilterType)
+
+        val refreshRate = if (Build.VERSION.SDK_INT > Build.VERSION_CODES.Q) {
+            this.display?.mode?.refreshRate ?: FALLBACK_REFRESH_RATE
         } else {
-            val accelerometerAveragingFilter =
-                buildAveragingFilter(accelerometerAveragingFilterType)
-
-            val refreshRate = if (Build.VERSION.SDK_INT > Build.VERSION_CODES.Q) {
-                this.display?.mode?.refreshRate ?: FALLBACK_REFRESH_RATE
-            } else {
-                FALLBACK_REFRESH_RATE
-            }
-            val refreshIntervalNanos = (1.0f / refreshRate * 1e9).toLong()
-
-            poseEstimator = LocalPoseEstimator2(
-                this,
-                location,
-                sensorDelay = SensorDelay.FASTEST,
-                useAttitudeSensor = true,
-                useAccelerometerForAttitudeEstimation = false,
-                startOffsetEnabled = false,
-                accelerometerSensorType = accelerometerSensorType,
-                gyroscopeSensorType = gyroscopeSensorType,
-                magnetometerSensorType = magnetometerSensorType,
-                accelerometerAveragingFilter = accelerometerAveragingFilter,
-                useWorldMagneticModel = useWorldMagneticModel,
-                useAccurateLevelingProcessor = true,
-                useDoubleFusedAttitudeProcessor = true,
-                estimatePoseTransformation = true,
-                poseAvailableListener = { _, _, _, _, timestamp, initialTransformation ->
-
-                    if (!initialAttitudeAvailable) {
-                        previousTimestamp = timestamp
-
-                        initialAttitudeAvailable = true
-                    }
-
-                    // refresh only as much as display allows even though sensors might run at higher refresh rates
-                    if (timestamp - previousTimestamp >= refreshIntervalNanos) {
-                        previousTimestamp = timestamp
-
-                        val enuRotation = Quaternion()
-                        initialTransformation?.rotation?.toQuaternion(enuRotation)
-                        val nedRotation = Quaternion()
-                        ENUtoNEDConverter.convert(enuRotation, nedRotation)
-                        nedRotation.toEulerAngles(eulerAngles)
-                        rollView?.text =
-                            getString(R.string.roll_degrees, Math.toDegrees(eulerAngles[0]))
-                        pitchView?.text =
-                            getString(R.string.pitch_degrees, Math.toDegrees(eulerAngles[1]))
-                        yawView?.text =
-                            getString(R.string.yaw_degrees, Math.toDegrees(eulerAngles[2]))
-
-                        initialTransformation?.inverse()
-                        initialTransformation?.transform(initialCamera, camera)
-
-                        cubeView?.camera = camera
-                    }
-                }
-            )
-            poseEstimator?.start()
+            FALLBACK_REFRESH_RATE
         }
+        val refreshIntervalNanos = (1.0f / refreshRate * 1e9).toLong()
+
+        poseEstimator = LocalPoseEstimator2(
+            this,
+            location,
+            sensorDelay = SensorDelay.FASTEST,
+            useAttitudeSensor = true,
+            useAccelerometerForAttitudeEstimation = false,
+            startOffsetEnabled = false,
+            accelerometerSensorType = accelerometerSensorType,
+            gyroscopeSensorType = gyroscopeSensorType,
+            magnetometerSensorType = magnetometerSensorType,
+            accelerometerAveragingFilter = accelerometerAveragingFilter,
+            useWorldMagneticModel = useWorldMagneticModel,
+            useAccurateLevelingProcessor = true,
+            useDoubleFusedAttitudeProcessor = true,
+            estimatePoseTransformation = true,
+            poseAvailableListener = { _, _, _, _, timestamp, initialTransformation ->
+
+                if (!initialAttitudeAvailable) {
+                    previousTimestamp = timestamp
+
+                    initialAttitudeAvailable = true
+                }
+
+                // refresh only as much as display allows even though sensors might run at higher refresh rates
+                if (timestamp - previousTimestamp >= refreshIntervalNanos) {
+                    previousTimestamp = timestamp
+
+                    val enuRotation = Quaternion()
+                    initialTransformation?.rotation?.toQuaternion(enuRotation)
+                    val nedRotation = Quaternion()
+                    ENUtoNEDConverter.convert(enuRotation, nedRotation)
+                    nedRotation.toEulerAngles(eulerAngles)
+                    rollView?.text =
+                        getString(R.string.roll_degrees, Math.toDegrees(eulerAngles[0]))
+                    pitchView?.text =
+                        getString(R.string.pitch_degrees, Math.toDegrees(eulerAngles[1]))
+                    yawView?.text =
+                        getString(R.string.yaw_degrees, Math.toDegrees(eulerAngles[2]))
+
+                    initialTransformation?.inverse()
+                    initialTransformation?.transform(initialCamera, camera)
+
+                    cubeView?.camera = camera
+                }
+            }
+        )
+        poseEstimator?.start()
     }
 
     private fun buildAveragingFilter(averagingFilterType: String?): AveragingFilter {
