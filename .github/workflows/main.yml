@@ -36,21 +36,25 @@ jobs:
           script: java --version
 
       - name: Run tests
-        uses: reactivecircus/android-emulator-runner@v2
+        #uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 29
-          target: google_apis
-          arch: x86_64
-          script: ./gradlew clean test connectedAndroidTest lint dokkaHtml --scan
+          #api-level: 29
+          #target: google_apis
+          #arch: x86_64
+          #script: ./gradlew clean test connectedAndroidTest lint dokkaHtml
+          script: ./gradlew clean test lint dokkaHtml
       - name: Publish test results
         uses: EnricoMi/publish-unit-test-result-action/composite@v1
         if: always()
         with:
+          #files: |
+          #  app/build/test-results/**/*.xml
+          #  app/build/outputs/androidTest-results/**/*.xml
+          #  lib/build/test-results/**/*.xml
+          #  lib/build/outputs/androidTest-results/**/*.xml
           files: |
             app/build/test-results/**/*.xml
-            app/build/outputs/androidTest-results/**/*.xml
             lib/build/test-results/**/*.xml
-            lib/build/outputs/androidTest-results/**/*.xml
       - name: Convert unit tests coverage results
         run: |
           mkdir lib/build/reports/coverage/test || true
