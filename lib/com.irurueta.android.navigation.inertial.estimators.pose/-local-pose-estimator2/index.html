@@ -1,0 +1,551 @@
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>LocalPoseEstimator2</title>
+<link href="../../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../../";</script><script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async="async"></script><link href="../../../styles/style.css" rel="Stylesheet"><link href="../../../styles/logo-styles.css" rel="Stylesheet"><link href="../../../styles/jetbrains-mono.css" rel="Stylesheet"><link href="../../../styles/main.css" rel="Stylesheet"><script type="text/javascript" src="../../../scripts/clipboard.js" async="async"></script><script type="text/javascript" src="../../../scripts/navigation-loader.js" async="async"></script><script type="text/javascript" src="../../../scripts/platform-content-handler.js" async="async"></script><script type="text/javascript" src="../../../scripts/main.js" async="async"></script>  </head>
+  <body>
+    <div id="container">
+      <div id="leftColumn"><a href="../../../index.html">
+          <div id="logo"></div>
+        </a>
+        <div id="paneSearch"></div>
+        <div id="sideMenu"></div>
+      </div>
+      <div id="main">
+        <div id="leftToggler"><span class="icon-toggler"></span></div>
+<script type="text/javascript" src="../../../scripts/main.js"></script>        <div class="main-content" id="content" pageIds="lib::com.irurueta.android.navigation.inertial.estimators.pose/LocalPoseEstimator2///PointingToDeclaration//1946847589">
+          <div class="navigation-wrapper" id="navigation-wrapper">
+            <div class="breadcrumbs"><a href="../../../index.html">lib</a>/<a href="../index.html">com.irurueta.android.navigation.inertial.estimators.pose</a>/<a href="index.html">LocalPoseEstimator2</a></div>
+            <div class="pull-right d-flex">
+              <div id="searchBar"></div>
+            </div>
+          </div>
+          <div class="cover ">
+            <h1 class="cover"><span>Local</span><wbr></wbr><span>Pose</span><wbr></wbr><span><span>Estimator2</span></span></h1>
+            <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">class <a href="index.html">LocalPoseEstimator2</a>(context: <a href="https://developer.android.com/reference/kotlin/android/content/Context.html">Context</a>, initialLocation: <a href="https://developer.android.com/reference/kotlin/android/location/Location.html">Location</a>, initialVelocity: <span data-unresolved-link="com.irurueta.navigation.frames/NEDVelocity///PointingToDeclaration/">NEDVelocity</span>, sensorDelay: <a href="../../com.irurueta.android.navigation.inertial.collectors/-sensor-delay/index.html">SensorDelay</a>, useAttitudeSensor: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a>, useAccelerometerForAttitudeEstimation: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a>, startOffsetEnabled: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a>, accelerometerSensorType: <a href="../../com.irurueta.android.navigation.inertial.collectors/-accelerometer-sensor-type/index.html">AccelerometerSensorType</a>, magnetometerSensorType: <a href="../../com.irurueta.android.navigation.inertial.collectors/-magnetometer-sensor-type/index.html">MagnetometerSensorType</a>, accelerometerAveragingFilter: <a href="../../com.irurueta.android.navigation.inertial.estimators.filter/-averaging-filter/index.html">AveragingFilter</a>, gyroscopeSensorType: <a href="../../com.irurueta.android.navigation.inertial.collectors/-gyroscope-sensor-type/index.html">GyroscopeSensorType</a>, worldMagneticModel: <span data-unresolved-link="com.irurueta.navigation.inertial.wmm/WorldMagneticModel///PointingToDeclaration/">WorldMagneticModel</span>?, timestamp: <a href="https://developer.android.com/reference/kotlin/java/util/Date.html">Date</a>?, useWorldMagneticModel: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a>, useAccurateLevelingProcessor: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a>, useAccurateRelativeGyroscopeAttitudeProcessor: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a>, useDoubleFusedAttitudeProcessor: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a>, estimatePoseTransformation: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a>, poseAvailableListener: <a href="-on-pose-available-listener/index.html">LocalPoseEstimator2.OnPoseAvailableListener</a>?, accuracyChangedListener: <a href="-on-accuracy-changed-listener/index.html">LocalPoseEstimator2.OnAccuracyChangedListener</a>?, bufferFilledListener: <a href="-on-buffer-filled-listener/index.html">LocalPoseEstimator2.OnBufferFilledListener</a>?, adjustGravityNorm: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a>)<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><p class="paragraph">Estimates pose with 6DOF (Degrees of Freedom) containing absolute attitude and position using local plane navigation.</p></div></div>
+          </div>
+          <div class="tabbedcontent">
+            <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="Types">Types</button><button class="section-tab" data-togglable="Constructors">Constructors</button><button class="section-tab" data-togglable="Functions">Functions</button><button class="section-tab" data-togglable="Properties">Properties</button><button class="section-tab" data-togglable="Parameters">Parameters</button></div>
+            <div class="tabs-section-body">
+              <h2 class="">Parameters</h2>
+              <div data-togglable="Parameters">
+                <div class="platform-hinted WithExtraAttributes" data-platform-hinted="data-platform-hinted" data-togglable="Parameters"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div data-togglable="Parameters"><div class="table" data-togglable="Parameters"><div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="main-subrow keyValue WithExtraAttributes"><div class=""><span class="inline-flex"><span>initial</span><wbr></wbr><span><span>Location</span></span></span></div><div><div class="title"><div data-togglable="Parameters"><p class="paragraph">initial device location.</p></div></div></div></div></div><div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="main-subrow keyValue WithExtraAttributes"><div class=""><span class="inline-flex"><span>initial</span><wbr></wbr><span><span>Velocity</span></span></span></div><div><div class="title"><div data-togglable="Parameters"><p class="paragraph">initial velocity of device expressed in NED coordinates.</p></div></div></div></div></div><div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="main-subrow keyValue WithExtraAttributes"><div class=""><span class="inline-flex"><span>world</span><wbr></wbr><span>Magnetic</span><wbr></wbr><span><span>Model</span></span></span></div><div><div class="title"><div data-togglable="Parameters"><p class="paragraph">Earth's magnetic model. Null to use default model when <a href="use-world-magnetic-model.html">useWorldMagneticModel</a> is true. If <a href="use-world-magnetic-model.html">useWorldMagneticModel</a> is false, this is ignored. This is ignored if <a href="use-attitude-sensor.html">useAttitudeSensor</a> is true.</p></div></div></div></div></div><div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="main-subrow keyValue WithExtraAttributes"><div class=""><span class="inline-flex"><span><span>timestamp</span></span></span></div><div><div class="title"><div data-togglable="Parameters"><p class="paragraph">Timestamp when World Magnetic Model will be evaluated to obtain current. Only taken into account if <a href="use-world-magnetic-model.html">useWorldMagneticModel</a> is tue. This is ignored if <a href="use-attitude-sensor.html">useAttitudeSensor</a> is true.</p></div></div></div></div></div><div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="main-subrow keyValue WithExtraAttributes"><div class=""><span class="inline-flex"><span>use</span><wbr></wbr><span>World</span><wbr></wbr><span>Magnetic</span><wbr></wbr><span><span>Model</span></span></span></div><div><div class="title"><div data-togglable="Parameters"><p class="paragraph">true so that world magnetic model is taken into account to adjust attitude yaw angle by current magnetic declination based on current World Magnetic Model, location and timestamp, false to ignore declination. This is ignored if <a href="use-attitude-sensor.html">useAttitudeSensor</a> is true.</p></div></div></div></div></div><div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="main-subrow keyValue WithExtraAttributes"><div class=""><span class="inline-flex"><span>use</span><wbr></wbr><span>Accurate</span><wbr></wbr><span>Leveling</span><wbr></wbr><span><span>Processor</span></span></span></div><div><div class="title"><div data-togglable="Parameters"><p class="paragraph">true to use accurate leveling, false to use a normal one. This is ignored if <a href="use-attitude-sensor.html">useAttitudeSensor</a> is true.</p></div></div></div></div></div><div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="main-subrow keyValue WithExtraAttributes"><div class=""><span class="inline-flex"><span>estimate</span><wbr></wbr><span>Pose</span><wbr></wbr><span><span>Transformation</span></span></span></div><div><div class="title"><div data-togglable="Parameters"><p class="paragraph">true to estimate 3D metric pose transformation, false to skip transformation computation.</p></div></div></div></div></div></div></div></div></div>
+              </div>
+              <h2 class="tabbedcontent">Constructors</h2>
+              <div class="table" data-togglable="Constructors"><a data-name="1291638311%2FConstructors%2F1946847589" anchor-label="LocalPoseEstimator2" id="1291638311%2FConstructors%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue TabbedContent">
+                    <div class=""><span class="inline-flex"><a href="-local-pose-estimator2.html">LocalPoseEstimator2</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1291638311%2FConstructors%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">fun <a href="-local-pose-estimator2.html">LocalPoseEstimator2</a>(context: <a href="https://developer.android.com/reference/kotlin/android/content/Context.html">Context</a>, initialLocation: <a href="https://developer.android.com/reference/kotlin/android/location/Location.html">Location</a>, initialVelocity: <span data-unresolved-link="com.irurueta.navigation.frames/NEDVelocity///PointingToDeclaration/">NEDVelocity</span> = NEDVelocity(), sensorDelay: <a href="../../com.irurueta.android.navigation.inertial.collectors/-sensor-delay/index.html">SensorDelay</a> = SensorDelay.FASTEST, useAttitudeSensor: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a> = true, useAccelerometerForAttitudeEstimation: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a> = false, startOffsetEnabled: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a> = true, accelerometerSensorType: <a href="../../com.irurueta.android.navigation.inertial.collectors/-accelerometer-sensor-type/index.html">AccelerometerSensorType</a> = AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED, magnetometerSensorType: <a href="../../com.irurueta.android.navigation.inertial.collectors/-magnetometer-sensor-type/index.html">MagnetometerSensorType</a> = MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED, accelerometerAveragingFilter: <a href="../../com.irurueta.android.navigation.inertial.estimators.filter/-averaging-filter/index.html">AveragingFilter</a> = LowPassAveragingFilter(), gyroscopeSensorType: <a href="../../com.irurueta.android.navigation.inertial.collectors/-gyroscope-sensor-type/index.html">GyroscopeSensorType</a> = GyroscopeSensorType.GYROSCOPE_UNCALIBRATED, worldMagneticModel: <span data-unresolved-link="com.irurueta.navigation.inertial.wmm/WorldMagneticModel///PointingToDeclaration/">WorldMagneticModel</span>? = null, timestamp: <a href="https://developer.android.com/reference/kotlin/java/util/Date.html">Date</a>? = null, useWorldMagneticModel: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a> = false, useAccurateLevelingProcessor: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a> = true, useAccurateRelativeGyroscopeAttitudeProcessor: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a> = true, useDoubleFusedAttitudeProcessor: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a> = true, estimatePoseTransformation: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a> = false, poseAvailableListener: <a href="-on-pose-available-listener/index.html">LocalPoseEstimator2.OnPoseAvailableListener</a>? = null, accuracyChangedListener: <a href="-on-accuracy-changed-listener/index.html">LocalPoseEstimator2.OnAccuracyChangedListener</a>? = null, bufferFilledListener: <a href="-on-buffer-filled-listener/index.html">LocalPoseEstimator2.OnBufferFilledListener</a>? = null, adjustGravityNorm: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a> = true)<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <h2 class="">Types</h2>
+              <div class="table" data-togglable="Types"><a data-name="-1072759005%2FClasslikes%2F1946847589" anchor-label="OnAccuracyChangedListener" id="-1072759005%2FClasslikes%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="-on-accuracy-changed-listener/index.html"><span>On</span><wbr></wbr><span>Accuracy</span><wbr></wbr><span>Changed</span><wbr></wbr><span><span>Listener</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1072759005%2FClasslikes%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">fun interface <a href="-on-accuracy-changed-listener/index.html">OnAccuracyChangedListener</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<div class="brief "><p class="paragraph">Interface to notify when sensor (either accelerometer, gravity or magnetometer) accuracy changes.</p></div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="1533190810%2FClasslikes%2F1946847589" anchor-label="OnBufferFilledListener" id="1533190810%2FClasslikes%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="-on-buffer-filled-listener/index.html"><span>On</span><wbr></wbr><span>Buffer</span><wbr></wbr><span>Filled</span><wbr></wbr><span><span>Listener</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1533190810%2FClasslikes%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">fun interface <a href="-on-buffer-filled-listener/index.html">OnBufferFilledListener</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<div class="brief "><p class="paragraph">Interface to notify when a buffer gets completely filled. When buffers get filled, internal collectors will continue collection at the expense of loosing old data. Consumers of this listener should device what to do at this point (which might require stopping this estimator)..</p></div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="1584435526%2FClasslikes%2F1946847589" anchor-label="OnPoseAvailableListener" id="1584435526%2FClasslikes%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="-on-pose-available-listener/index.html"><span>On</span><wbr></wbr><span>Pose</span><wbr></wbr><span>Available</span><wbr></wbr><span><span>Listener</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1584435526%2FClasslikes%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">fun interface <a href="-on-pose-available-listener/index.html">OnPoseAvailableListener</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<div class="brief "><p class="paragraph">Interface to notify when a new pose is available.</p></div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <h2 class="">Functions</h2>
+              <div class="table" data-togglable="Functions"><a data-name="-915260837%2FFunctions%2F1946847589" anchor-label="start" id="-915260837%2FFunctions%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="start.html"><span><span>start</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-915260837%2FFunctions%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">fun <a href="start.html">start</a>(startTimestamp: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a> = SystemClock.elapsedRealtimeNanos()): <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<div class="brief "><p class="paragraph">Starts this estimator.</p></div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="808293656%2FFunctions%2F1946847589" anchor-label="stop" id="808293656%2FFunctions%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="stop.html"><span><span>stop</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="808293656%2FFunctions%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">fun <a href="stop.html">stop</a>()<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<div class="brief "><p class="paragraph">Stops this estimator.</p></div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <h2 class="">Properties</h2>
+              <div class="table" data-togglable="Properties"><a data-name="1941090775%2FProperties%2F1946847589" anchor-label="accelerometerAveragingFilter" id="1941090775%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="accelerometer-averaging-filter.html">accelerometerAveragingFilter</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1941090775%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="1941090775%2FProperties%2F1946847589" anchor-label="accelerometerAveragingFilter" id="1941090775%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="accelerometer-averaging-filter.html">accelerometerAveragingFilter</a>: <a href="../../com.irurueta.android.navigation.inertial.estimators.filter/-averaging-filter/index.html">AveragingFilter</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="1941090775%2FProperties%2F1946847589" anchor-label="accelerometerAveragingFilter" id="1941090775%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">an averaging filter for accelerometer samples to obtain sensed gravity component of specific force. This is ignored if <a href="use-attitude-sensor.html">useAttitudeSensor</a> is true.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-1189917923%2FProperties%2F1946847589" anchor-label="accelerometerSensorType" id="-1189917923%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="accelerometer-sensor-type.html">accelerometerSensorType</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1189917923%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-1189917923%2FProperties%2F1946847589" anchor-label="accelerometerSensorType" id="-1189917923%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="accelerometer-sensor-type.html">accelerometerSensorType</a>: <a href="../../com.irurueta.android.navigation.inertial.collectors/-accelerometer-sensor-type/index.html">AccelerometerSensorType</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1189917923%2FProperties%2F1946847589" anchor-label="accelerometerSensorType" id="-1189917923%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">One of the supported accelerometer sensor types. It is suggested to avoid using non-calibrated accelerometers.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="1234148113%2FProperties%2F1946847589" anchor-label="accuracyChangedListener" id="1234148113%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="accuracy-changed-listener.html">accuracyChangedListener</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1234148113%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="1234148113%2FProperties%2F1946847589" anchor-label="accuracyChangedListener" id="1234148113%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="accuracy-changed-listener.html">accuracyChangedListener</a>: <a href="-on-accuracy-changed-listener/index.html">LocalPoseEstimator2.OnAccuracyChangedListener</a>? = null<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="1234148113%2FProperties%2F1946847589" anchor-label="accuracyChangedListener" id="1234148113%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">listener to notify changes in accuracy.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="281320453%2FProperties%2F1946847589" anchor-label="adjustGravityNorm" id="281320453%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="adjust-gravity-norm.html">adjustGravityNorm</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="281320453%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="281320453%2FProperties%2F1946847589" anchor-label="adjustGravityNorm" id="281320453%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="adjust-gravity-norm.html">adjustGravityNorm</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="281320453%2FProperties%2F1946847589" anchor-label="adjustGravityNorm" id="281320453%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Indicates whether gravity norm must be adjusted to either Earth standard norm, or norm at provided location. If no location is provided, this should only be enabled when device is close to sea level.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-63245444%2FProperties%2F1946847589" anchor-label="attitudeIndirectInterpolationWeight" id="-63245444%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="attitude-indirect-interpolation-weight.html">attitudeIndirectInterpolationWeight</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-63245444%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-63245444%2FProperties%2F1946847589" anchor-label="attitudeIndirectInterpolationWeight" id="-63245444%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="attitude-indirect-interpolation-weight.html">attitudeIndirectInterpolationWeight</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html">Double</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-63245444%2FProperties%2F1946847589" anchor-label="attitudeIndirectInterpolationWeight" id="-63245444%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Factor to take into account when interpolation value is computed and <a href="use-indirect-attitude-interpolation.html">useIndirectAttitudeInterpolation</a> is enabled to determine actual interpolation value based on current relative attitude rotation velocity.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-1669292413%2FProperties%2F1946847589" anchor-label="attitudeInterpolationValue" id="-1669292413%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="attitude-interpolation-value.html">attitudeInterpolationValue</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1669292413%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-1669292413%2FProperties%2F1946847589" anchor-label="attitudeInterpolationValue" id="-1669292413%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="attitude-interpolation-value.html">attitudeInterpolationValue</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html">Double</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1669292413%2FProperties%2F1946847589" anchor-label="attitudeInterpolationValue" id="-1669292413%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Interpolation value to be used to combine both leveling and relative attitudes. Must be between 0.0 and 1.0 (both included). The closer to 0.0 this value is, the more resemblance the result will have to a pure leveling (which feels more jerky). On the contrary, the closer to 1.0 this value is, the more resemblance the result will have to a pure non-leveled relative attitude (which feels softer but might have arbitrary roll and pitch Euler angles).</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-319203586%2FProperties%2F1946847589" anchor-label="attitudeOutlierPanicThreshold" id="-319203586%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="attitude-outlier-panic-threshold.html">attitudeOutlierPanicThreshold</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-319203586%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-319203586%2FProperties%2F1946847589" anchor-label="attitudeOutlierPanicThreshold" id="-319203586%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="attitude-outlier-panic-threshold.html">attitudeOutlierPanicThreshold</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html">Double</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-319203586%2FProperties%2F1946847589" anchor-label="attitudeOutlierPanicThreshold" id="-319203586%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Threshold to determine that geomagnetic attitude has largely diverged and if situation is not reverted soon, attitude will be reset to geomagnetic one.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-1680631779%2FProperties%2F1946847589" anchor-label="attitudeOutlierThreshold" id="-1680631779%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="attitude-outlier-threshold.html">attitudeOutlierThreshold</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1680631779%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-1680631779%2FProperties%2F1946847589" anchor-label="attitudeOutlierThreshold" id="-1680631779%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="attitude-outlier-threshold.html">attitudeOutlierThreshold</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html">Double</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1680631779%2FProperties%2F1946847589" anchor-label="attitudeOutlierThreshold" id="-1680631779%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Threshold to determine that current geomagnetic attitude appears to be an outlier respect to estimated fused attitude. When geomagnetic attitude and fused attitudes diverge, fusion is not performed, and instead only gyroscope relative attitude is used for fusion estimation.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="462366436%2FProperties%2F1946847589" anchor-label="attitudePanicCounterThreshold" id="462366436%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="attitude-panic-counter-threshold.html">attitudePanicCounterThreshold</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="462366436%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="462366436%2FProperties%2F1946847589" anchor-label="attitudePanicCounterThreshold" id="462366436%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="attitude-panic-counter-threshold.html">attitudePanicCounterThreshold</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html">Int</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="462366436%2FProperties%2F1946847589" anchor-label="attitudePanicCounterThreshold" id="462366436%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Threshold to determine when fused attitude has largely diverged for a given number of samples and must be reset.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-1285812988%2FProperties%2F1946847589" anchor-label="bufferFilledListener" id="-1285812988%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="buffer-filled-listener.html">bufferFilledListener</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1285812988%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-1285812988%2FProperties%2F1946847589" anchor-label="bufferFilledListener" id="-1285812988%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="buffer-filled-listener.html">bufferFilledListener</a>: <a href="-on-buffer-filled-listener/index.html">LocalPoseEstimator2.OnBufferFilledListener</a>? = null<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1285812988%2FProperties%2F1946847589" anchor-label="bufferFilledListener" id="-1285812988%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">listener to notify that some buffer has been filled. This usually happens when consumer of measurements cannot keep up with the rate at which measurements are generated.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="1426971825%2FProperties%2F1946847589" anchor-label="context" id="1426971825%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="context.html">context</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1426971825%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="1426971825%2FProperties%2F1946847589" anchor-label="context" id="1426971825%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="context.html">context</a>: <a href="https://developer.android.com/reference/kotlin/android/content/Context.html">Context</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="1426971825%2FProperties%2F1946847589" anchor-label="context" id="1426971825%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Android context.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-777743336%2FProperties%2F1946847589" anchor-label="estimatePoseTransformation" id="-777743336%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="estimate-pose-transformation.html">estimatePoseTransformation</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-777743336%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-777743336%2FProperties%2F1946847589" anchor-label="estimatePoseTransformation" id="-777743336%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="estimate-pose-transformation.html">estimatePoseTransformation</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-777743336%2FProperties%2F1946847589" anchor-label="estimatePoseTransformation" id="-777743336%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">True to estimate 3D metric pose transformation, false otherwise.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-1432781785%2FProperties%2F1946847589" anchor-label="gyroscopeSensorType" id="-1432781785%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="gyroscope-sensor-type.html">gyroscopeSensorType</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1432781785%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-1432781785%2FProperties%2F1946847589" anchor-label="gyroscopeSensorType" id="-1432781785%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="gyroscope-sensor-type.html">gyroscopeSensorType</a>: <a href="../../com.irurueta.android.navigation.inertial.collectors/-gyroscope-sensor-type/index.html">GyroscopeSensorType</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1432781785%2FProperties%2F1946847589" anchor-label="gyroscopeSensorType" id="-1432781785%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">One of the supported gyroscope sensor types. It is suggested to avoid using non-calibrated gyroscopes.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-234073209%2FProperties%2F1946847589" anchor-label="initialLocation" id="-234073209%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="initial-location.html">initialLocation</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-234073209%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-234073209%2FProperties%2F1946847589" anchor-label="initialLocation" id="-234073209%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="initial-location.html">initialLocation</a>: <a href="https://developer.android.com/reference/kotlin/android/location/Location.html">Location</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-234073209%2FProperties%2F1946847589" anchor-label="initialLocation" id="-234073209%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets initial device location.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-992652449%2FProperties%2F1946847589" anchor-label="initialVelocity" id="-992652449%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="initial-velocity.html">initialVelocity</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-992652449%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-992652449%2FProperties%2F1946847589" anchor-label="initialVelocity" id="-992652449%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="initial-velocity.html">initialVelocity</a>: <span data-unresolved-link="com.irurueta.navigation.frames/NEDVelocity///PointingToDeclaration/">NEDVelocity</span><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-992652449%2FProperties%2F1946847589" anchor-label="initialVelocity" id="-992652449%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets initial device velocity.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-735073534%2FProperties%2F1946847589" anchor-label="magnetometerSensorType" id="-735073534%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="magnetometer-sensor-type.html">magnetometerSensorType</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-735073534%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-735073534%2FProperties%2F1946847589" anchor-label="magnetometerSensorType" id="-735073534%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="magnetometer-sensor-type.html">magnetometerSensorType</a>: <a href="../../com.irurueta.android.navigation.inertial.collectors/-magnetometer-sensor-type/index.html">MagnetometerSensorType</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-735073534%2FProperties%2F1946847589" anchor-label="magnetometerSensorType" id="-735073534%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">One of the supported magnetometer sensor types. This is ignored if <a href="use-attitude-sensor.html">useAttitudeSensor</a> is true.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="1742036404%2FProperties%2F1946847589" anchor-label="poseAvailableListener" id="1742036404%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="pose-available-listener.html">poseAvailableListener</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1742036404%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="1742036404%2FProperties%2F1946847589" anchor-label="poseAvailableListener" id="1742036404%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="pose-available-listener.html">poseAvailableListener</a>: <a href="-on-pose-available-listener/index.html">LocalPoseEstimator2.OnPoseAvailableListener</a>? = null<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="1742036404%2FProperties%2F1946847589" anchor-label="poseAvailableListener" id="1742036404%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">notifies when a new estimated pose is available.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="1132932769%2FProperties%2F1946847589" anchor-label="running" id="1132932769%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="running.html">running</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1132932769%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="1132932769%2FProperties%2F1946847589" anchor-label="running" id="1132932769%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="running.html">running</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a> = false<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="1132932769%2FProperties%2F1946847589" anchor-label="running" id="1132932769%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Indicates whether this estimator is running or not.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-562686921%2FProperties%2F1946847589" anchor-label="sensorDelay" id="-562686921%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="sensor-delay.html">sensorDelay</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-562686921%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-562686921%2FProperties%2F1946847589" anchor-label="sensorDelay" id="-562686921%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="sensor-delay.html">sensorDelay</a>: <a href="../../com.irurueta.android.navigation.inertial.collectors/-sensor-delay/index.html">SensorDelay</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-562686921%2FProperties%2F1946847589" anchor-label="sensorDelay" id="-562686921%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Delay of sensors between samples.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-1079385170%2FProperties%2F1946847589" anchor-label="startOffsetEnabled" id="-1079385170%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="start-offset-enabled.html">startOffsetEnabled</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1079385170%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-1079385170%2FProperties%2F1946847589" anchor-label="startOffsetEnabled" id="-1079385170%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="start-offset-enabled.html">startOffsetEnabled</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a> = true<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1079385170%2FProperties%2F1946847589" anchor-label="startOffsetEnabled" id="-1079385170%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">indicates whether start offsets will be computed when first measurement is received or not. True indicates that offset is computed, false assumes that offset is null.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-1849458637%2FProperties%2F1946847589" anchor-label="timeIntervalSeconds" id="-1849458637%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="time-interval-seconds.html">timeIntervalSeconds</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1849458637%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-1849458637%2FProperties%2F1946847589" anchor-label="timeIntervalSeconds" id="-1849458637%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="time-interval-seconds.html">timeIntervalSeconds</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html">Double</a>?<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1849458637%2FProperties%2F1946847589" anchor-label="timeIntervalSeconds" id="-1849458637%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Time interval expressed in seconds between consecutive measurements</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="1977865834%2FProperties%2F1946847589" anchor-label="timestamp" id="1977865834%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="timestamp.html">timestamp</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1977865834%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="1977865834%2FProperties%2F1946847589" anchor-label="timestamp" id="1977865834%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="timestamp.html">timestamp</a>: <a href="https://developer.android.com/reference/kotlin/java/util/Date.html">Date</a>?<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="1977865834%2FProperties%2F1946847589" anchor-label="timestamp" id="1977865834%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Timestamp being used when World Magnetic Model is evaluated to obtain current magnetic declination. This is only taken into account if <a href="use-world-magnetic-model.html">useWorldMagneticModel</a> is true. If not defined, current date is assumed.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="1110645034%2FProperties%2F1946847589" anchor-label="useAccelerometerForAttitudeEstimation" id="1110645034%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="use-accelerometer-for-attitude-estimation.html">useAccelerometerForAttitudeEstimation</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1110645034%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="1110645034%2FProperties%2F1946847589" anchor-label="useAccelerometerForAttitudeEstimation" id="1110645034%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="use-accelerometer-for-attitude-estimation.html">useAccelerometerForAttitudeEstimation</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a> = false<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="1110645034%2FProperties%2F1946847589" anchor-label="useAccelerometerForAttitudeEstimation" id="1110645034%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">true to use accelerometer sensor for attitude estimation, false to use system gravity sensor for leveling purposes. Regardless of this values, pose estimator always uses the accelerometer sensor, however, it can be used both for leveling and device motion, or only for device motion. This is ignored if <a href="use-attitude-sensor.html">useAttitudeSensor</a> is true.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="2090698241%2FProperties%2F1946847589" anchor-label="useAccurateLevelingProcessor" id="2090698241%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="use-accurate-leveling-processor.html">useAccurateLevelingProcessor</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2090698241%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="2090698241%2FProperties%2F1946847589" anchor-label="useAccurateLevelingProcessor" id="2090698241%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="use-accurate-leveling-processor.html">useAccurateLevelingProcessor</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="2090698241%2FProperties%2F1946847589" anchor-label="useAccurateLevelingProcessor" id="2090698241%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Indicates whether accurate leveling must be used or not.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-838989546%2FProperties%2F1946847589" anchor-label="useAccurateRelativeGyroscopeAttitudeProcessor" id="-838989546%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="use-accurate-relative-gyroscope-attitude-processor.html">useAccurateRelativeGyroscopeAttitudeProcessor</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-838989546%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-838989546%2FProperties%2F1946847589" anchor-label="useAccurateRelativeGyroscopeAttitudeProcessor" id="-838989546%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="use-accurate-relative-gyroscope-attitude-processor.html">useAccurateRelativeGyroscopeAttitudeProcessor</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-838989546%2FProperties%2F1946847589" anchor-label="useAccurateRelativeGyroscopeAttitudeProcessor" id="-838989546%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Indicates whether accurate non-leveled relative attitude processor must be used or not.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="1363996597%2FProperties%2F1946847589" anchor-label="useAttitudeSensor" id="1363996597%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="use-attitude-sensor.html">useAttitudeSensor</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1363996597%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="1363996597%2FProperties%2F1946847589" anchor-label="useAttitudeSensor" id="1363996597%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="use-attitude-sensor.html">useAttitudeSensor</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a> = true<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="1363996597%2FProperties%2F1946847589" anchor-label="useAttitudeSensor" id="1363996597%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">true to use Android system attitude sensor, false to fuse accelerometer/gravity + gyroscope + magnetometer sensors to estimate attitude.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="1819399843%2FProperties%2F1946847589" anchor-label="useDoubleFusedAttitudeProcessor" id="1819399843%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="use-double-fused-attitude-processor.html">useDoubleFusedAttitudeProcessor</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1819399843%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="1819399843%2FProperties%2F1946847589" anchor-label="useDoubleFusedAttitudeProcessor" id="1819399843%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="use-double-fused-attitude-processor.html">useDoubleFusedAttitudeProcessor</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a> = true<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="1819399843%2FProperties%2F1946847589" anchor-label="useDoubleFusedAttitudeProcessor" id="1819399843%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">true to use double fused absolute attitude estimator, false otherwise. This is ignored if <a href="use-attitude-sensor.html">useAttitudeSensor</a> is true.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="1791202517%2FProperties%2F1946847589" anchor-label="useIndirectAttitudeInterpolation" id="1791202517%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="use-indirect-attitude-interpolation.html">useIndirectAttitudeInterpolation</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1791202517%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="1791202517%2FProperties%2F1946847589" anchor-label="useIndirectAttitudeInterpolation" id="1791202517%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="use-indirect-attitude-interpolation.html">useIndirectAttitudeInterpolation</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="1791202517%2FProperties%2F1946847589" anchor-label="useIndirectAttitudeInterpolation" id="1791202517%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Indicates whether fusion between leveling and relative attitudes occurs based on changing interpolation value that depends on actual relative attitude rotation velocity.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="608233644%2FProperties%2F1946847589" anchor-label="useLeveledRelativeAttitudeRespectStart" id="608233644%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="use-leveled-relative-attitude-respect-start.html">useLeveledRelativeAttitudeRespectStart</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="608233644%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="608233644%2FProperties%2F1946847589" anchor-label="useLeveledRelativeAttitudeRespectStart" id="608233644%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="use-leveled-relative-attitude-respect-start.html">useLeveledRelativeAttitudeRespectStart</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a> = true<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="608233644%2FProperties%2F1946847589" anchor-label="useLeveledRelativeAttitudeRespectStart" id="608233644%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">True indicates that attitude is leveled and expressed respect to estimator start. False indicates that attitude is absolute.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-423376762%2FProperties%2F1946847589" anchor-label="useWorldMagneticModel" id="-423376762%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="use-world-magnetic-model.html">useWorldMagneticModel</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-423376762%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-423376762%2FProperties%2F1946847589" anchor-label="useWorldMagneticModel" id="-423376762%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="use-world-magnetic-model.html">useWorldMagneticModel</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-423376762%2FProperties%2F1946847589" anchor-label="useWorldMagneticModel" id="-423376762%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Indicates whether world magnetic model is taken into account to adjust attitude yaw angle by current magnetic declination based on current World Magnetic Model, location and timestamp. If null, the default model is used if <a href="use-world-magnetic-model.html">useWorldMagneticModel</a> is true. If <a href="use-world-magnetic-model.html">useWorldMagneticModel</a> is false, this is ignored.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="222848615%2FProperties%2F1946847589" anchor-label="worldMagneticModel" id="222848615%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="world-magnetic-model.html">worldMagneticModel</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="222848615%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="222848615%2FProperties%2F1946847589" anchor-label="worldMagneticModel" id="222848615%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="world-magnetic-model.html">worldMagneticModel</a>: <span data-unresolved-link="com.irurueta.navigation.inertial.wmm/WorldMagneticModel///PointingToDeclaration/">WorldMagneticModel</span>?<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="222848615%2FProperties%2F1946847589" anchor-label="worldMagneticModel" id="222848615%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Indicates whether world magnetic model is taken into account to adjust attitude yaw angle by current magnetic declination based on current World Magnetic Model, location and timestamp. If null, the default model is used if <a href="use-world-magnetic-model.html">useWorldMagneticModel</a> is true. If <a href="use-world-magnetic-model.html">useWorldMagneticModel</a> is false, this is ignored.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="footer"><span class="go-to-top-icon"><a href="#content"></a></span><span>© 2023 Copyright</span><span class="pull-right"><span>Generated by </span><a href="https://github.com/Kotlin/dokka"><span>dokka</span><span class="padded-icon"></span></a></span></div>
+      </div>
+    </div>
+  </body>
+</html>
+

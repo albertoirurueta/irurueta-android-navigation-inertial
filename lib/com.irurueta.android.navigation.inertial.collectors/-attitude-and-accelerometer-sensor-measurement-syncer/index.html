@@ -1,0 +1,539 @@
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>AttitudeAndAccelerometerSensorMeasurementSyncer</title>
+<link href="../../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../../";</script><script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async="async"></script><link href="../../../styles/style.css" rel="Stylesheet"><link href="../../../styles/logo-styles.css" rel="Stylesheet"><link href="../../../styles/jetbrains-mono.css" rel="Stylesheet"><link href="../../../styles/main.css" rel="Stylesheet"><script type="text/javascript" src="../../../scripts/clipboard.js" async="async"></script><script type="text/javascript" src="../../../scripts/navigation-loader.js" async="async"></script><script type="text/javascript" src="../../../scripts/platform-content-handler.js" async="async"></script><script type="text/javascript" src="../../../scripts/main.js" async="async"></script>  </head>
+  <body>
+    <div id="container">
+      <div id="leftColumn"><a href="../../../index.html">
+          <div id="logo"></div>
+        </a>
+        <div id="paneSearch"></div>
+        <div id="sideMenu"></div>
+      </div>
+      <div id="main">
+        <div id="leftToggler"><span class="icon-toggler"></span></div>
+<script type="text/javascript" src="../../../scripts/main.js"></script>        <div class="main-content" id="content" pageIds="lib::com.irurueta.android.navigation.inertial.collectors/AttitudeAndAccelerometerSensorMeasurementSyncer///PointingToDeclaration//1946847589">
+          <div class="navigation-wrapper" id="navigation-wrapper">
+            <div class="breadcrumbs"><a href="../../../index.html">lib</a>/<a href="../index.html">com.irurueta.android.navigation.inertial.collectors</a>/<a href="index.html">AttitudeAndAccelerometerSensorMeasurementSyncer</a></div>
+            <div class="pull-right d-flex">
+              <div id="searchBar"></div>
+            </div>
+          </div>
+          <div class="cover ">
+            <h1 class="cover"><span>Attitude</span><wbr></wbr><span>And</span><wbr></wbr><span>Accelerometer</span><wbr></wbr><span>Sensor</span><wbr></wbr><span>Measurement</span><wbr></wbr><span><span>Syncer</span></span></h1>
+            <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">class <a href="index.html">AttitudeAndAccelerometerSensorMeasurementSyncer</a>(context: <a href="https://developer.android.com/reference/kotlin/android/content/Context.html">Context</a>, attitudeSensorType: <a href="../-attitude-sensor-type/index.html">AttitudeSensorType</a>, accelerometerSensorType: <a href="../-accelerometer-sensor-type/index.html">AccelerometerSensorType</a>, attitudeSensorDelay: <a href="../-sensor-delay/index.html">SensorDelay</a>, accelerometerSensorDelay: <a href="../-sensor-delay/index.html">SensorDelay</a>, attitudeCapacity: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html">Int</a>, accelerometerCapacity: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html">Int</a>, attitudeStartOffsetEnabled: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a>, accelerometerStartOffsetEnabled: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a>, stopWhenFilledBuffer: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a>, staleOffsetNanos: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>, staleDetectionEnabled: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a>, accuracyChangedListener: <a href="../-sensor-measurement-syncer/-on-accuracy-changed-listener/index.html">SensorMeasurementSyncer.OnAccuracyChangedListener</a>&lt;<a href="../-attitude-and-accelerometer-synced-sensor-measurement/index.html">AttitudeAndAccelerometerSyncedSensorMeasurement</a>, <a href="index.html">AttitudeAndAccelerometerSensorMeasurementSyncer</a>&gt;?, bufferFilledListener: <a href="../-sensor-measurement-syncer/-on-buffer-filled-listener/index.html">SensorMeasurementSyncer.OnBufferFilledListener</a>&lt;<a href="../-attitude-and-accelerometer-synced-sensor-measurement/index.html">AttitudeAndAccelerometerSyncedSensorMeasurement</a>, <a href="index.html">AttitudeAndAccelerometerSensorMeasurementSyncer</a>&gt;?, syncedMeasurementListener: <a href="../-sensor-measurement-syncer/-on-synced-measurements-listener/index.html">SensorMeasurementSyncer.OnSyncedMeasurementsListener</a>&lt;<a href="../-attitude-and-accelerometer-synced-sensor-measurement/index.html">AttitudeAndAccelerometerSyncedSensorMeasurement</a>, <a href="index.html">AttitudeAndAccelerometerSensorMeasurementSyncer</a>&gt;?, staleDetectedMeasurementsListener: <a href="../-sensor-measurement-syncer/-on-stale-detected-measurements-listener/index.html">SensorMeasurementSyncer.OnStaleDetectedMeasurementsListener</a>&lt;<a href="../-attitude-and-accelerometer-synced-sensor-measurement/index.html">AttitudeAndAccelerometerSyncedSensorMeasurement</a>, <a href="index.html">AttitudeAndAccelerometerSensorMeasurementSyncer</a>&gt;?, attitudeInterpolator: <a href="../../com.irurueta.android.navigation.inertial.collectors.interpolators/-attitude-sensor-measurement-interpolator/index.html">AttitudeSensorMeasurementInterpolator</a>, accelerometerInterpolator: <a href="../../com.irurueta.android.navigation.inertial.collectors.interpolators/-accelerometer-sensor-measurement-interpolator/index.html">AccelerometerSensorMeasurementInterpolator</a>) : <a href="../-sensor-measurement-syncer/index.html">SensorMeasurementSyncer</a>&lt;<a href="../-attitude-and-accelerometer-synced-sensor-measurement/index.html">AttitudeAndAccelerometerSyncedSensorMeasurement</a>, <a href="index.html">AttitudeAndAccelerometerSensorMeasurementSyncer</a>&gt; <span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><p class="paragraph">Syncs attitude and accelerometer sensor measurements in case they arrive with certain delay.</p><p class="paragraph">Typically when synchronization is needed is for correct pose estimation, for attitude estimation, not synced sensor measurements can also be used to achieve a reasonable estimation.</p></div></div>
+          </div>
+          <div class="tabbedcontent">
+            <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="Types">Types</button><button class="section-tab" data-togglable="Constructors">Constructors</button><button class="section-tab" data-togglable="Functions">Functions</button><button class="section-tab" data-togglable="Properties">Properties</button></div>
+            <div class="tabs-section-body">
+              <h2 class="tabbedcontent">Constructors</h2>
+              <div class="table" data-togglable="Constructors"><a data-name="348708499%2FConstructors%2F1946847589" anchor-label="AttitudeAndAccelerometerSensorMeasurementSyncer" id="348708499%2FConstructors%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue TabbedContent">
+                    <div class=""><span class="inline-flex"><a href="-attitude-and-accelerometer-sensor-measurement-syncer.html">AttitudeAndAccelerometerSensorMeasurementSyncer</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="348708499%2FConstructors%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">fun <a href="-attitude-and-accelerometer-sensor-measurement-syncer.html">AttitudeAndAccelerometerSensorMeasurementSyncer</a>(context: <a href="https://developer.android.com/reference/kotlin/android/content/Context.html">Context</a>, attitudeSensorType: <a href="../-attitude-sensor-type/index.html">AttitudeSensorType</a> = AttitudeSensorType.ABSOLUTE_ATTITUDE, accelerometerSensorType: <a href="../-accelerometer-sensor-type/index.html">AccelerometerSensorType</a> = AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED, attitudeSensorDelay: <a href="../-sensor-delay/index.html">SensorDelay</a> = SensorDelay.FASTEST, accelerometerSensorDelay: <a href="../-sensor-delay/index.html">SensorDelay</a> = SensorDelay.FASTEST, attitudeCapacity: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html">Int</a> = DEFAULT_ATTITUDE_CAPACITY, accelerometerCapacity: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html">Int</a> = DEFAULT_ACCELEROMETER_CAPACITY, attitudeStartOffsetEnabled: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a> = false, accelerometerStartOffsetEnabled: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a> = false, stopWhenFilledBuffer: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a> = true, staleOffsetNanos: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a> = AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer.DEFAULT_STALE_OFFSET_NANOS, staleDetectionEnabled: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a> = true, accuracyChangedListener: <a href="../-sensor-measurement-syncer/-on-accuracy-changed-listener/index.html">SensorMeasurementSyncer.OnAccuracyChangedListener</a>&lt;<a href="../-attitude-and-accelerometer-synced-sensor-measurement/index.html">AttitudeAndAccelerometerSyncedSensorMeasurement</a>, <a href="index.html">AttitudeAndAccelerometerSensorMeasurementSyncer</a>&gt;? = null, bufferFilledListener: <a href="../-sensor-measurement-syncer/-on-buffer-filled-listener/index.html">SensorMeasurementSyncer.OnBufferFilledListener</a>&lt;<a href="../-attitude-and-accelerometer-synced-sensor-measurement/index.html">AttitudeAndAccelerometerSyncedSensorMeasurement</a>, <a href="index.html">AttitudeAndAccelerometerSensorMeasurementSyncer</a>&gt;? = null, syncedMeasurementListener: <a href="../-sensor-measurement-syncer/-on-synced-measurements-listener/index.html">SensorMeasurementSyncer.OnSyncedMeasurementsListener</a>&lt;<a href="../-attitude-and-accelerometer-synced-sensor-measurement/index.html">AttitudeAndAccelerometerSyncedSensorMeasurement</a>, <a href="index.html">AttitudeAndAccelerometerSensorMeasurementSyncer</a>&gt;? = null, staleDetectedMeasurementsListener: <a href="../-sensor-measurement-syncer/-on-stale-detected-measurements-listener/index.html">SensorMeasurementSyncer.OnStaleDetectedMeasurementsListener</a>&lt;<a href="../-attitude-and-accelerometer-synced-sensor-measurement/index.html">AttitudeAndAccelerometerSyncedSensorMeasurement</a>, <a href="index.html">AttitudeAndAccelerometerSensorMeasurementSyncer</a>&gt;? = null, attitudeInterpolator: <a href="../../com.irurueta.android.navigation.inertial.collectors.interpolators/-attitude-sensor-measurement-interpolator/index.html">AttitudeSensorMeasurementInterpolator</a> = AttitudeLinearSensorMeasurementInterpolator(), accelerometerInterpolator: <a href="../../com.irurueta.android.navigation.inertial.collectors.interpolators/-accelerometer-sensor-measurement-interpolator/index.html">AccelerometerSensorMeasurementInterpolator</a> = AccelerometerQuadraticSensorMeasurementInterpolator())<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <h2 class="">Types</h2>
+              <div class="table" data-togglable="Types"><a data-name="-1571035115%2FClasslikes%2F1946847589" anchor-label="Companion" id="-1571035115%2FClasslikes%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="-companion/index.html"><span><span>Companion</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1571035115%2FClasslikes%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">object <a href="-companion/index.html">Companion</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+</div>
+</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <h2 class="">Functions</h2>
+              <div class="table" data-togglable="Functions"><a data-name="-1590439283%2FFunctions%2F1946847589" anchor-label="start" id="-1590439283%2FFunctions%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="start.html"><span><span>start</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1590439283%2FFunctions%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">open override fun <a href="start.html">start</a>(startTimestamp: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>): <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<div class="brief "><p class="paragraph">Starts collecting and syncing sensor measurements.</p></div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="956065866%2FFunctions%2F1946847589" anchor-label="stop" id="956065866%2FFunctions%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="stop.html"><span><span>stop</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="956065866%2FFunctions%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace"><div class="block"><div class="block">@<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.jvm/-synchronized/index.html">Synchronized</a></div></div>open override fun <a href="stop.html">stop</a>()<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<div class="brief "><p class="paragraph">Stops processing and syncing sensor measurements.</p></div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <h2 class="">Properties</h2>
+              <div class="table" data-togglable="Properties"><a data-name="-1608438971%2FProperties%2F1946847589" anchor-label="accelerometerCapacity" id="-1608438971%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="accelerometer-capacity.html">accelerometerCapacity</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1608438971%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-1608438971%2FProperties%2F1946847589" anchor-label="accelerometerCapacity" id="-1608438971%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="accelerometer-capacity.html">accelerometerCapacity</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html">Int</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1608438971%2FProperties%2F1946847589" anchor-label="accelerometerCapacity" id="-1608438971%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">capacity of accelerometer buffer.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-1173512533%2FProperties%2F1946847589" anchor-label="accelerometerCollectorUsage" id="-1173512533%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="accelerometer-collector-usage.html">accelerometerCollectorUsage</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1173512533%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-1173512533%2FProperties%2F1946847589" anchor-label="accelerometerCollectorUsage" id="-1173512533%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="accelerometer-collector-usage.html">accelerometerCollectorUsage</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-float/index.html">Float</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1173512533%2FProperties%2F1946847589" anchor-label="accelerometerCollectorUsage" id="-1173512533%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets accelerometer collector current usage as a value between 0.0 and 1.0. 0.0 indicates that buffer is empty and no measurement has yet been received. 1.0 indicates that buffer is full.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-786932008%2FProperties%2F1946847589" anchor-label="accelerometerInterpolator" id="-786932008%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="accelerometer-interpolator.html">accelerometerInterpolator</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-786932008%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-786932008%2FProperties%2F1946847589" anchor-label="accelerometerInterpolator" id="-786932008%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="accelerometer-interpolator.html">accelerometerInterpolator</a>: <a href="../../com.irurueta.android.navigation.inertial.collectors.interpolators/-accelerometer-sensor-measurement-interpolator/index.html">AccelerometerSensorMeasurementInterpolator</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-786932008%2FProperties%2F1946847589" anchor-label="accelerometerInterpolator" id="-786932008%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">interpolator for accelerometer measurements.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="428909765%2FProperties%2F1946847589" anchor-label="accelerometerSensor" id="428909765%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="accelerometer-sensor.html">accelerometerSensor</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="428909765%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="428909765%2FProperties%2F1946847589" anchor-label="accelerometerSensor" id="428909765%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="accelerometer-sensor.html">accelerometerSensor</a>: <a href="https://developer.android.com/reference/kotlin/android/hardware/Sensor.html">Sensor</a>?<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="428909765%2FProperties%2F1946847589" anchor-label="accelerometerSensor" id="428909765%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets accelerometer sensor being used to obtain measurements or null if not available. This can be used to obtain additional information about the sensor.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-212680404%2FProperties%2F1946847589" anchor-label="accelerometerSensorAvailable" id="-212680404%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="accelerometer-sensor-available.html">accelerometerSensorAvailable</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-212680404%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-212680404%2FProperties%2F1946847589" anchor-label="accelerometerSensorAvailable" id="-212680404%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="accelerometer-sensor-available.html">accelerometerSensorAvailable</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-212680404%2FProperties%2F1946847589" anchor-label="accelerometerSensorAvailable" id="-212680404%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Indicates whether requested accelerometer sensor is available or not.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="37716914%2FProperties%2F1946847589" anchor-label="accelerometerSensorDelay" id="37716914%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="accelerometer-sensor-delay.html">accelerometerSensorDelay</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="37716914%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="37716914%2FProperties%2F1946847589" anchor-label="accelerometerSensorDelay" id="37716914%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="accelerometer-sensor-delay.html">accelerometerSensorDelay</a>: <a href="../-sensor-delay/index.html">SensorDelay</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="37716914%2FProperties%2F1946847589" anchor-label="accelerometerSensorDelay" id="37716914%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Delay of accelerometer sensor between samples.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-758024533%2FProperties%2F1946847589" anchor-label="accelerometerSensorType" id="-758024533%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="accelerometer-sensor-type.html">accelerometerSensorType</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-758024533%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-758024533%2FProperties%2F1946847589" anchor-label="accelerometerSensorType" id="-758024533%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="accelerometer-sensor-type.html">accelerometerSensorType</a>: <a href="../-accelerometer-sensor-type/index.html">AccelerometerSensorType</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-758024533%2FProperties%2F1946847589" anchor-label="accelerometerSensorType" id="-758024533%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">One of the supported accelerometer sensor types.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-275287162%2FProperties%2F1946847589" anchor-label="accelerometerStartOffset" id="-275287162%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="accelerometer-start-offset.html">accelerometerStartOffset</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-275287162%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-275287162%2FProperties%2F1946847589" anchor-label="accelerometerStartOffset" id="-275287162%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="accelerometer-start-offset.html">accelerometerStartOffset</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>?<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-275287162%2FProperties%2F1946847589" anchor-label="accelerometerStartOffset" id="-275287162%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets initial accelerometer offset expressed in nano seconds between first received measurement timestamp and start time expressed in the monotonically increasing system clock obtained by <a href="https://developer.android.com/reference/kotlin/android/os/SystemClock.html#elapsedrealtimenanos">SystemClock.elapsedRealtimeNanos</a>.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="57025491%2FProperties%2F1946847589" anchor-label="accelerometerStartOffsetEnabled" id="57025491%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="accelerometer-start-offset-enabled.html">accelerometerStartOffsetEnabled</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="57025491%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="57025491%2FProperties%2F1946847589" anchor-label="accelerometerStartOffsetEnabled" id="57025491%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="accelerometer-start-offset-enabled.html">accelerometerStartOffsetEnabled</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a> = false<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="57025491%2FProperties%2F1946847589" anchor-label="accelerometerStartOffsetEnabled" id="57025491%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">indicates whether accelerometer start offset will be computed when first measurement is received. True indicates that offset is computed, false assumes that offset is null.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-1757117062%2FProperties%2F1946847589" anchor-label="accelerometerUsage" id="-1757117062%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="accelerometer-usage.html">accelerometerUsage</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1757117062%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-1757117062%2FProperties%2F1946847589" anchor-label="accelerometerUsage" id="-1757117062%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="accelerometer-usage.html">accelerometerUsage</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-float/index.html">Float</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1757117062%2FProperties%2F1946847589" anchor-label="accelerometerUsage" id="-1757117062%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets accelerometer buffer current usage as a value between 0.0 and 1.0. 0.0 indicates that buffer is empty and no measurement has yet ben received. 1.0 indicates that buffer is full.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="1058005501%2FProperties%2F1946847589" anchor-label="accuracyChangedListener" id="1058005501%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-sensor-measurement-syncer/accuracy-changed-listener.html">accuracyChangedListener</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1058005501%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="1058005501%2FProperties%2F1946847589" anchor-label="accuracyChangedListener" id="1058005501%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="../-sensor-measurement-syncer/accuracy-changed-listener.html">accuracyChangedListener</a>: <a href="../-sensor-measurement-syncer/-on-accuracy-changed-listener/index.html">SensorMeasurementSyncer.OnAccuracyChangedListener</a>&lt;<a href="../-attitude-and-accelerometer-synced-sensor-measurement/index.html">AttitudeAndAccelerometerSyncedSensorMeasurement</a>, <a href="index.html">AttitudeAndAccelerometerSensorMeasurementSyncer</a>&gt;?<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="1058005501%2FProperties%2F1946847589" anchor-label="accuracyChangedListener" id="1058005501%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">listener to notify changes in accuracy.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-1898138488%2FProperties%2F1946847589" anchor-label="attitudeCapacity" id="-1898138488%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="attitude-capacity.html">attitudeCapacity</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1898138488%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-1898138488%2FProperties%2F1946847589" anchor-label="attitudeCapacity" id="-1898138488%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="attitude-capacity.html">attitudeCapacity</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html">Int</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1898138488%2FProperties%2F1946847589" anchor-label="attitudeCapacity" id="-1898138488%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">capacity of attitude buffer.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="2122312110%2FProperties%2F1946847589" anchor-label="attitudeCollectorUsage" id="2122312110%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="attitude-collector-usage.html">attitudeCollectorUsage</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2122312110%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="2122312110%2FProperties%2F1946847589" anchor-label="attitudeCollectorUsage" id="2122312110%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="attitude-collector-usage.html">attitudeCollectorUsage</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-float/index.html">Float</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="2122312110%2FProperties%2F1946847589" anchor-label="attitudeCollectorUsage" id="2122312110%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets attitude collector current usage as a value between 0.0 and 1.0. 0.0 indicates that buffer is empty and no measurement has yet been received. 1.0 indicates that buffer is full.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="2023198363%2FProperties%2F1946847589" anchor-label="attitudeInterpolator" id="2023198363%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="attitude-interpolator.html">attitudeInterpolator</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2023198363%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="2023198363%2FProperties%2F1946847589" anchor-label="attitudeInterpolator" id="2023198363%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="attitude-interpolator.html">attitudeInterpolator</a>: <a href="../../com.irurueta.android.navigation.inertial.collectors.interpolators/-attitude-sensor-measurement-interpolator/index.html">AttitudeSensorMeasurementInterpolator</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="2023198363%2FProperties%2F1946847589" anchor-label="attitudeInterpolator" id="2023198363%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">interpolator for attitude measurements.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-585915704%2FProperties%2F1946847589" anchor-label="attitudeSensor" id="-585915704%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="attitude-sensor.html">attitudeSensor</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-585915704%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-585915704%2FProperties%2F1946847589" anchor-label="attitudeSensor" id="-585915704%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="attitude-sensor.html">attitudeSensor</a>: <a href="https://developer.android.com/reference/kotlin/android/hardware/Sensor.html">Sensor</a>?<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-585915704%2FProperties%2F1946847589" anchor-label="attitudeSensor" id="-585915704%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets attitude sensor being used to obtain measurements or null if not available. This can be used to obtain additional information about the sensor.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-1121331575%2FProperties%2F1946847589" anchor-label="attitudeSensorAvailable" id="-1121331575%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="attitude-sensor-available.html">attitudeSensorAvailable</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1121331575%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-1121331575%2FProperties%2F1946847589" anchor-label="attitudeSensorAvailable" id="-1121331575%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="attitude-sensor-available.html">attitudeSensorAvailable</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1121331575%2FProperties%2F1946847589" anchor-label="attitudeSensorAvailable" id="-1121331575%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Indicates whether requested attitude sensor is available or not.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-1811296369%2FProperties%2F1946847589" anchor-label="attitudeSensorDelay" id="-1811296369%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="attitude-sensor-delay.html">attitudeSensorDelay</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1811296369%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-1811296369%2FProperties%2F1946847589" anchor-label="attitudeSensorDelay" id="-1811296369%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="attitude-sensor-delay.html">attitudeSensorDelay</a>: <a href="../-sensor-delay/index.html">SensorDelay</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1811296369%2FProperties%2F1946847589" anchor-label="attitudeSensorDelay" id="-1811296369%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Delay of attitude sensor between samples.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="13613870%2FProperties%2F1946847589" anchor-label="attitudeSensorType" id="13613870%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="attitude-sensor-type.html">attitudeSensorType</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="13613870%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="13613870%2FProperties%2F1946847589" anchor-label="attitudeSensorType" id="13613870%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="attitude-sensor-type.html">attitudeSensorType</a>: <a href="../-attitude-sensor-type/index.html">AttitudeSensorType</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="13613870%2FProperties%2F1946847589" anchor-label="attitudeSensorType" id="13613870%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">One of the supported attitude sensor types.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-2124300445%2FProperties%2F1946847589" anchor-label="attitudeStartOffset" id="-2124300445%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="attitude-start-offset.html">attitudeStartOffset</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2124300445%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-2124300445%2FProperties%2F1946847589" anchor-label="attitudeStartOffset" id="-2124300445%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="attitude-start-offset.html">attitudeStartOffset</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>?<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-2124300445%2FProperties%2F1946847589" anchor-label="attitudeStartOffset" id="-2124300445%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets initial attitude offset expressed in nano seconds between first received measurement timestamp and start time expressed in the monotonically increasing system clock obtained by <a href="https://developer.android.com/reference/kotlin/android/os/SystemClock.html#elapsedrealtimenanos">SystemClock.elapsedRealtimeNanos</a>.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="1608856918%2FProperties%2F1946847589" anchor-label="attitudeStartOffsetEnabled" id="1608856918%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="attitude-start-offset-enabled.html">attitudeStartOffsetEnabled</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1608856918%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="1608856918%2FProperties%2F1946847589" anchor-label="attitudeStartOffsetEnabled" id="1608856918%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="attitude-start-offset-enabled.html">attitudeStartOffsetEnabled</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a> = false<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="1608856918%2FProperties%2F1946847589" anchor-label="attitudeStartOffsetEnabled" id="1608856918%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">indicates whether attitude start offset will be computed when first measurement is received. True indicates that offset is computed, false assumes that offset is null.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="842545943%2FProperties%2F1946847589" anchor-label="attitudeUsage" id="842545943%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="attitude-usage.html">attitudeUsage</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="842545943%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="842545943%2FProperties%2F1946847589" anchor-label="attitudeUsage" id="842545943%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="attitude-usage.html">attitudeUsage</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-float/index.html">Float</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="842545943%2FProperties%2F1946847589" anchor-label="attitudeUsage" id="842545943%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets attitude buffer current usage as a value between 0.0 and 1.0. 0.0 indicates that buffer is empty and no measurement has yet ben received. 1.0 indicates that buffer is full.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="255790488%2FProperties%2F1946847589" anchor-label="bufferFilledListener" id="255790488%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-sensor-measurement-syncer/buffer-filled-listener.html">bufferFilledListener</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="255790488%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="255790488%2FProperties%2F1946847589" anchor-label="bufferFilledListener" id="255790488%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="../-sensor-measurement-syncer/buffer-filled-listener.html">bufferFilledListener</a>: <a href="../-sensor-measurement-syncer/-on-buffer-filled-listener/index.html">SensorMeasurementSyncer.OnBufferFilledListener</a>&lt;<a href="../-attitude-and-accelerometer-synced-sensor-measurement/index.html">AttitudeAndAccelerometerSyncedSensorMeasurement</a>, <a href="index.html">AttitudeAndAccelerometerSensorMeasurementSyncer</a>&gt;?<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="255790488%2FProperties%2F1946847589" anchor-label="bufferFilledListener" id="255790488%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">listener to notify that some buffer has been filled. This usually happens when consumer of measurements cannot keep up with the rate at which measurements are generated.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="1022458781%2FProperties%2F1946847589" anchor-label="context" id="1022458781%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-sensor-measurement-syncer/context.html">context</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1022458781%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="1022458781%2FProperties%2F1946847589" anchor-label="context" id="1022458781%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="../-sensor-measurement-syncer/context.html">context</a>: <a href="https://developer.android.com/reference/kotlin/android/content/Context.html">Context</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="1022458781%2FProperties%2F1946847589" anchor-label="context" id="1022458781%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Android context.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-1200728076%2FProperties%2F1946847589" anchor-label="mostRecentTimestamp" id="-1200728076%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-sensor-measurement-syncer/most-recent-timestamp.html">mostRecentTimestamp</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1200728076%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-1200728076%2FProperties%2F1946847589" anchor-label="mostRecentTimestamp" id="-1200728076%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="../-sensor-measurement-syncer/most-recent-timestamp.html">mostRecentTimestamp</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>?<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1200728076%2FProperties%2F1946847589" anchor-label="mostRecentTimestamp" id="-1200728076%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets most recent timestamp of all measurements processed so far. Timestamp is expressed in nanoseconds by a monotonic clock based on <a href="https://developer.android.com/reference/kotlin/android/os/SystemClock.html#elapsedrealtimenanos">SystemClock.elapsedRealtimeNanos</a>.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-2112528057%2FProperties%2F1946847589" anchor-label="numberOfProcessedMeasurements" id="-2112528057%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-sensor-measurement-syncer/number-of-processed-measurements.html">numberOfProcessedMeasurements</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2112528057%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-2112528057%2FProperties%2F1946847589" anchor-label="numberOfProcessedMeasurements" id="-2112528057%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="../-sensor-measurement-syncer/number-of-processed-measurements.html">numberOfProcessedMeasurements</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html">Int</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-2112528057%2FProperties%2F1946847589" anchor-label="numberOfProcessedMeasurements" id="-2112528057%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets number of processed measurements since this syncer started.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-2132193931%2FProperties%2F1946847589" anchor-label="oldestTimestamp" id="-2132193931%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-sensor-measurement-syncer/oldest-timestamp.html">oldestTimestamp</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2132193931%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-2132193931%2FProperties%2F1946847589" anchor-label="oldestTimestamp" id="-2132193931%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="../-sensor-measurement-syncer/oldest-timestamp.html">oldestTimestamp</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>?<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-2132193931%2FProperties%2F1946847589" anchor-label="oldestTimestamp" id="-2132193931%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets oldest timestamp in the buffer.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="728419725%2FProperties%2F1946847589" anchor-label="running" id="728419725%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-sensor-measurement-syncer/running.html">running</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="728419725%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="728419725%2FProperties%2F1946847589" anchor-label="running" id="728419725%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="../-sensor-measurement-syncer/running.html">running</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="728419725%2FProperties%2F1946847589" anchor-label="running" id="728419725%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Indicates whether syncer is running and processing measurements.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="970835078%2FProperties%2F1946847589" anchor-label="staleDetectedMeasurementsListener" id="970835078%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-sensor-measurement-syncer/stale-detected-measurements-listener.html">staleDetectedMeasurementsListener</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="970835078%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="970835078%2FProperties%2F1946847589" anchor-label="staleDetectedMeasurementsListener" id="970835078%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="../-sensor-measurement-syncer/stale-detected-measurements-listener.html">staleDetectedMeasurementsListener</a>: <a href="../-sensor-measurement-syncer/-on-stale-detected-measurements-listener/index.html">SensorMeasurementSyncer.OnStaleDetectedMeasurementsListener</a>&lt;<a href="../-attitude-and-accelerometer-synced-sensor-measurement/index.html">AttitudeAndAccelerometerSyncedSensorMeasurement</a>, <a href="index.html">AttitudeAndAccelerometerSensorMeasurementSyncer</a>&gt;?<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="970835078%2FProperties%2F1946847589" anchor-label="staleDetectedMeasurementsListener" id="970835078%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">listener to notify when stale measurements are found. This might indicate that buffers are too small and data is not being properly synced.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="1488766743%2FProperties%2F1946847589" anchor-label="staleDetectionEnabled" id="1488766743%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-sensor-measurement-syncer/stale-detection-enabled.html">staleDetectionEnabled</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1488766743%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="1488766743%2FProperties%2F1946847589" anchor-label="staleDetectionEnabled" id="1488766743%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="../-sensor-measurement-syncer/stale-detection-enabled.html">staleDetectionEnabled</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="1488766743%2FProperties%2F1946847589" anchor-label="staleDetectionEnabled" id="1488766743%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">true to enable stale measurement detection, false otherwise.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="2091795259%2FProperties%2F1946847589" anchor-label="staleOffsetNanos" id="2091795259%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-sensor-measurement-syncer/stale-offset-nanos.html">staleOffsetNanos</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2091795259%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="2091795259%2FProperties%2F1946847589" anchor-label="staleOffsetNanos" id="2091795259%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="../-sensor-measurement-syncer/stale-offset-nanos.html">staleOffsetNanos</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="2091795259%2FProperties%2F1946847589" anchor-label="staleOffsetNanos" id="2091795259%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">offset respect most recent received timestamp of a measurement to consider the measurement as stale so that it is skipped from synced measurement processing and returned back from buffer to cache of measurements.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-689489446%2FProperties%2F1946847589" anchor-label="startTimestamp" id="-689489446%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-sensor-measurement-syncer/start-timestamp.html">startTimestamp</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-689489446%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-689489446%2FProperties%2F1946847589" anchor-label="startTimestamp" id="-689489446%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="../-sensor-measurement-syncer/start-timestamp.html">startTimestamp</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-689489446%2FProperties%2F1946847589" anchor-label="startTimestamp" id="-689489446%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Timestamp when collector started expressed as a monotonically increasing timestamp in nanoseconds as indicated by <a href="https://developer.android.com/reference/kotlin/android/os/SystemClock.html#elapsedrealtimenanos">SystemClock.elapsedRealtimeNanos</a>.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-984075664%2FProperties%2F1946847589" anchor-label="stopWhenFilledBuffer" id="-984075664%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-sensor-measurement-syncer/stop-when-filled-buffer.html">stopWhenFilledBuffer</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-984075664%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-984075664%2FProperties%2F1946847589" anchor-label="stopWhenFilledBuffer" id="-984075664%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="../-sensor-measurement-syncer/stop-when-filled-buffer.html">stopWhenFilledBuffer</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-984075664%2FProperties%2F1946847589" anchor-label="stopWhenFilledBuffer" id="-984075664%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">true to stop syncer when any buffer completely fills, false to continue processing measurements at the expense of loosing old data. This will be notified using <a href="../-sensor-measurement-syncer/buffer-filled-listener.html">bufferFilledListener</a>.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-56083530%2FProperties%2F1946847589" anchor-label="syncedMeasurementListener" id="-56083530%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-sensor-measurement-syncer/synced-measurement-listener.html">syncedMeasurementListener</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-56083530%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-56083530%2FProperties%2F1946847589" anchor-label="syncedMeasurementListener" id="-56083530%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="../-sensor-measurement-syncer/synced-measurement-listener.html">syncedMeasurementListener</a>: <a href="../-sensor-measurement-syncer/-on-synced-measurements-listener/index.html">SensorMeasurementSyncer.OnSyncedMeasurementsListener</a>&lt;<a href="../-attitude-and-accelerometer-synced-sensor-measurement/index.html">AttitudeAndAccelerometerSyncedSensorMeasurement</a>, <a href="index.html">AttitudeAndAccelerometerSensorMeasurementSyncer</a>&gt;?<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-56083530%2FProperties%2F1946847589" anchor-label="syncedMeasurementListener" id="-56083530%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">listener to notify the generation of a new synced measurement.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="footer"><span class="go-to-top-icon"><a href="#content"></a></span><span>© 2023 Copyright</span><span class="pull-right"><span>Generated by </span><a href="https://github.com/Kotlin/dokka"><span>dokka</span><span class="padded-icon"></span></a></span></div>
+      </div>
+    </div>
+  </body>
+</html>
+

@@ -1,0 +1,1183 @@
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>AccelerometerGyroscopeAndMagnetometerMeasurementGenerator</title>
+<link href="../../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../../";</script><script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async="async"></script><link href="../../../styles/style.css" rel="Stylesheet"><link href="../../../styles/logo-styles.css" rel="Stylesheet"><link href="../../../styles/jetbrains-mono.css" rel="Stylesheet"><link href="../../../styles/main.css" rel="Stylesheet"><script type="text/javascript" src="../../../scripts/clipboard.js" async="async"></script><script type="text/javascript" src="../../../scripts/navigation-loader.js" async="async"></script><script type="text/javascript" src="../../../scripts/platform-content-handler.js" async="async"></script><script type="text/javascript" src="../../../scripts/main.js" async="async"></script>  </head>
+  <body>
+    <div id="container">
+      <div id="leftColumn"><a href="../../../index.html">
+          <div id="logo"></div>
+        </a>
+        <div id="paneSearch"></div>
+        <div id="sideMenu"></div>
+      </div>
+      <div id="main">
+        <div id="leftToggler"><span class="icon-toggler"></span></div>
+<script type="text/javascript" src="../../../scripts/main.js"></script>        <div class="main-content" id="content" pageIds="lib::com.irurueta.android.navigation.inertial.calibration.intervals.measurements/AccelerometerGyroscopeAndMagnetometerMeasurementGenerator///PointingToDeclaration//1946847589">
+          <div class="navigation-wrapper" id="navigation-wrapper">
+            <div class="breadcrumbs"><a href="../../../index.html">lib</a>/<a href="../index.html">com.irurueta.android.navigation.inertial.calibration.intervals.measurements</a>/<a href="index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator</a></div>
+            <div class="pull-right d-flex">
+              <div id="searchBar"></div>
+            </div>
+          </div>
+          <div class="cover ">
+            <h1 class="cover"><span>Accelerometer</span><wbr></wbr><span>Gyroscope</span><wbr></wbr><span>And</span><wbr></wbr><span>Magnetometer</span><wbr></wbr><span>Measurement</span><wbr></wbr><span><span>Generator</span></span></h1>
+            <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">class <a href="index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator</a>(context: <a href="https://developer.android.com/reference/kotlin/android/content/Context.html">Context</a>, accelerometerSensorType: <a href="../../com.irurueta.android.navigation.inertial.collectors/-accelerometer-sensor-type/index.html">AccelerometerSensorType</a>, accelerometerSensorDelay: <a href="../../com.irurueta.android.navigation.inertial.collectors/-sensor-delay/index.html">SensorDelay</a>, gyroscopeSensorType: <a href="../../com.irurueta.android.navigation.inertial.collectors/-gyroscope-sensor-type/index.html">GyroscopeSensorType</a>, gyroscopeSensorDelay: <a href="../../com.irurueta.android.navigation.inertial.collectors/-sensor-delay/index.html">SensorDelay</a>, magnetometerSensorType: <a href="../../com.irurueta.android.navigation.inertial.collectors/-magnetometer-sensor-type/index.html">MagnetometerSensorType</a>, magnetometerSensorDelay: <a href="../../com.irurueta.android.navigation.inertial.collectors/-sensor-delay/index.html">SensorDelay</a>, initializationStartedListener: <a href="-on-initialization-started-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationStartedListener</a>?, initializationCompletedListener: <a href="-on-initialization-completed-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationCompletedListener</a>?, errorListener: <a href="-on-error-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnErrorListener</a>?, staticIntervalDetectedListener: <a href="-on-static-interval-detected-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnStaticIntervalDetectedListener</a>?, dynamicIntervalDetectedListener: <a href="-on-dynamic-interval-detected-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnDynamicIntervalDetectedListener</a>?, staticIntervalSkippedListener: <a href="-on-static-interval-skipped-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnStaticIntervalSkippedListener</a>?, dynamicIntervalSkippedListener: <a href="-on-dynamic-interval-skipped-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnDynamicIntervalSkippedListener</a>?, generatedAccelerometerMeasurementListener: <a href="-on-generated-accelerometer-measurement-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedAccelerometerMeasurementListener</a>?, generatedGyroscopeMeasurementListener: <a href="-on-generated-gyroscope-measurement-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedGyroscopeMeasurementListener</a>?, generatedMagnetometerMeasurementListener: <a href="-on-generated-magnetometer-measurement-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedMagnetometerMeasurementListener</a>?, resetListener: <a href="-on-reset-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnResetListener</a>?, accelerometerMeasurementListener: <a href="../../com.irurueta.android.navigation.inertial.collectors/-accelerometer-sensor-collector/-on-measurement-listener/index.html">AccelerometerSensorCollector.OnMeasurementListener</a>?, gyroscopeMeasurementListener: <a href="../../com.irurueta.android.navigation.inertial.collectors/-gyroscope-sensor-collector/-on-measurement-listener/index.html">GyroscopeSensorCollector.OnMeasurementListener</a>?, magnetometerMeasurementListener: <a href="../../com.irurueta.android.navigation.inertial.collectors/-magnetometer-sensor-collector/-on-measurement-listener/index.html">MagnetometerSensorCollector.OnMeasurementListener</a>?, accuracyChangedListener: <a href="../../com.irurueta.android.navigation.inertial.collectors/-sensor-collector/-on-accuracy-changed-listener/index.html">SensorCollector.OnAccuracyChangedListener</a>?) : <a href="../-calibration-measurement-generator/index.html">CalibrationMeasurementGenerator</a>&lt;<span data-unresolved-link="com.irurueta.navigation.inertial.calibration/TimedBodyKinematicsAndMagneticFluxDensity///PointingToDeclaration/">TimedBodyKinematicsAndMagneticFluxDensity</span>&gt; <span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><p class="paragraph">Generates measurements that can later be used by accelerometer, gyroscope and magnetometer calibrators. Measurements are generated by taking into account static and dynamic intervals on the device, when the device is kept static (e.g. motionless), or when some force is applied to the device changing its position or orientation. Static and dynamic intervals are always measured using the accelerometer. Additionally, the gyroscope and magnetometer are also used, and measurements are generated to calibrate either accelerometers, gyroscopes or magnetometers. Measurement generator converts device ENU measurements into measurements expressed in local tangent plane NED coordinates.</p></div></div>
+          </div>
+          <div class="tabbedcontent">
+            <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="Types">Types</button><button class="section-tab" data-togglable="Constructors">Constructors</button><button class="section-tab" data-togglable="Functions">Functions</button><button class="section-tab" data-togglable="Properties">Properties</button></div>
+            <div class="tabs-section-body">
+              <h2 class="tabbedcontent">Constructors</h2>
+              <div class="table" data-togglable="Constructors"><a data-name="-2006970107%2FConstructors%2F1946847589" anchor-label="AccelerometerGyroscopeAndMagnetometerMeasurementGenerator" id="-2006970107%2FConstructors%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue TabbedContent">
+                    <div class=""><span class="inline-flex"><a href="-accelerometer-gyroscope-and-magnetometer-measurement-generator.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2006970107%2FConstructors%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">fun <a href="-accelerometer-gyroscope-and-magnetometer-measurement-generator.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator</a>(context: <a href="https://developer.android.com/reference/kotlin/android/content/Context.html">Context</a>, accelerometerSensorType: <a href="../../com.irurueta.android.navigation.inertial.collectors/-accelerometer-sensor-type/index.html">AccelerometerSensorType</a> = AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED, accelerometerSensorDelay: <a href="../../com.irurueta.android.navigation.inertial.collectors/-sensor-delay/index.html">SensorDelay</a> = SensorDelay.FASTEST, gyroscopeSensorType: <a href="../../com.irurueta.android.navigation.inertial.collectors/-gyroscope-sensor-type/index.html">GyroscopeSensorType</a> = GyroscopeSensorType.GYROSCOPE_UNCALIBRATED, gyroscopeSensorDelay: <a href="../../com.irurueta.android.navigation.inertial.collectors/-sensor-delay/index.html">SensorDelay</a> = SensorDelay.FASTEST, magnetometerSensorType: <a href="../../com.irurueta.android.navigation.inertial.collectors/-magnetometer-sensor-type/index.html">MagnetometerSensorType</a> = MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED, magnetometerSensorDelay: <a href="../../com.irurueta.android.navigation.inertial.collectors/-sensor-delay/index.html">SensorDelay</a> = SensorDelay.FASTEST, initializationStartedListener: <a href="-on-initialization-started-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationStartedListener</a>? = null, initializationCompletedListener: <a href="-on-initialization-completed-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationCompletedListener</a>? = null, errorListener: <a href="-on-error-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnErrorListener</a>? = null, staticIntervalDetectedListener: <a href="-on-static-interval-detected-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnStaticIntervalDetectedListener</a>? = null, dynamicIntervalDetectedListener: <a href="-on-dynamic-interval-detected-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnDynamicIntervalDetectedListener</a>? = null, staticIntervalSkippedListener: <a href="-on-static-interval-skipped-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnStaticIntervalSkippedListener</a>? = null, dynamicIntervalSkippedListener: <a href="-on-dynamic-interval-skipped-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnDynamicIntervalSkippedListener</a>? = null, generatedAccelerometerMeasurementListener: <a href="-on-generated-accelerometer-measurement-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedAccelerometerMeasurementListener</a>? = null, generatedGyroscopeMeasurementListener: <a href="-on-generated-gyroscope-measurement-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedGyroscopeMeasurementListener</a>? = null, generatedMagnetometerMeasurementListener: <a href="-on-generated-magnetometer-measurement-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedMagnetometerMeasurementListener</a>? = null, resetListener: <a href="-on-reset-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnResetListener</a>? = null, accelerometerMeasurementListener: <a href="../../com.irurueta.android.navigation.inertial.collectors/-accelerometer-sensor-collector/-on-measurement-listener/index.html">AccelerometerSensorCollector.OnMeasurementListener</a>? = null, gyroscopeMeasurementListener: <a href="../../com.irurueta.android.navigation.inertial.collectors/-gyroscope-sensor-collector/-on-measurement-listener/index.html">GyroscopeSensorCollector.OnMeasurementListener</a>? = null, magnetometerMeasurementListener: <a href="../../com.irurueta.android.navigation.inertial.collectors/-magnetometer-sensor-collector/-on-measurement-listener/index.html">MagnetometerSensorCollector.OnMeasurementListener</a>? = null, accuracyChangedListener: <a href="../../com.irurueta.android.navigation.inertial.collectors/-sensor-collector/-on-accuracy-changed-listener/index.html">SensorCollector.OnAccuracyChangedListener</a>? = null)<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <h2 class="">Types</h2>
+              <div class="table" data-togglable="Types"><a data-name="-1298495267%2FClasslikes%2F1946847589" anchor-label="OnDynamicIntervalDetectedListener" id="-1298495267%2FClasslikes%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="-on-dynamic-interval-detected-listener/index.html"><span>On</span><wbr></wbr><span>Dynamic</span><wbr></wbr><span>Interval</span><wbr></wbr><span>Detected</span><wbr></wbr><span><span>Listener</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1298495267%2FClasslikes%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">fun interface <a href="-on-dynamic-interval-detected-listener/index.html">OnDynamicIntervalDetectedListener</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<div class="brief "><p class="paragraph">Interface to notify when a dynamic interval is detected.</p></div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="293637931%2FClasslikes%2F1946847589" anchor-label="OnDynamicIntervalSkippedListener" id="293637931%2FClasslikes%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="-on-dynamic-interval-skipped-listener/index.html"><span>On</span><wbr></wbr><span>Dynamic</span><wbr></wbr><span>Interval</span><wbr></wbr><span>Skipped</span><wbr></wbr><span><span>Listener</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="293637931%2FClasslikes%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">fun interface <a href="-on-dynamic-interval-skipped-listener/index.html">OnDynamicIntervalSkippedListener</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<div class="brief "><p class="paragraph">Interface to notify when a dynamic interval is skipped. This happens when interval is too long.</p></div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="1474284891%2FClasslikes%2F1946847589" anchor-label="OnErrorListener" id="1474284891%2FClasslikes%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="-on-error-listener/index.html"><span>On</span><wbr></wbr><span>Error</span><wbr></wbr><span><span>Listener</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1474284891%2FClasslikes%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">fun interface <a href="-on-error-listener/index.html">OnErrorListener</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<div class="brief "><p class="paragraph">Interface to notify when an error occurs.</p></div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="420036679%2FClasslikes%2F1946847589" anchor-label="OnGeneratedAccelerometerMeasurementListener" id="420036679%2FClasslikes%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="-on-generated-accelerometer-measurement-listener/index.html"><span>On</span><wbr></wbr><span>Generated</span><wbr></wbr><span>Accelerometer</span><wbr></wbr><span>Measurement</span><wbr></wbr><span><span>Listener</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="420036679%2FClasslikes%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">fun interface <a href="-on-generated-accelerometer-measurement-listener/index.html">OnGeneratedAccelerometerMeasurementListener</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<div class="brief "><p class="paragraph">Interface to notify when a new accelerometer calibration measurement is generated.</p></div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-1609484419%2FClasslikes%2F1946847589" anchor-label="OnGeneratedGyroscopeMeasurementListener" id="-1609484419%2FClasslikes%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="-on-generated-gyroscope-measurement-listener/index.html"><span>On</span><wbr></wbr><span>Generated</span><wbr></wbr><span>Gyroscope</span><wbr></wbr><span>Measurement</span><wbr></wbr><span><span>Listener</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1609484419%2FClasslikes%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">fun interface <a href="-on-generated-gyroscope-measurement-listener/index.html">OnGeneratedGyroscopeMeasurementListener</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<div class="brief "><p class="paragraph">Interface to notify when a new gyroscope calibration measurement is generated.</p></div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-1919974258%2FClasslikes%2F1946847589" anchor-label="OnGeneratedMagnetometerMeasurementListener" id="-1919974258%2FClasslikes%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="-on-generated-magnetometer-measurement-listener/index.html"><span>On</span><wbr></wbr><span>Generated</span><wbr></wbr><span>Magnetometer</span><wbr></wbr><span>Measurement</span><wbr></wbr><span><span>Listener</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1919974258%2FClasslikes%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">fun interface <a href="-on-generated-magnetometer-measurement-listener/index.html">OnGeneratedMagnetometerMeasurementListener</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<div class="brief "><p class="paragraph">Interface to notify when a new magnetometer calibration measurement is generated.</p></div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="404698296%2FClasslikes%2F1946847589" anchor-label="OnInitializationCompletedListener" id="404698296%2FClasslikes%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="-on-initialization-completed-listener/index.html"><span>On</span><wbr></wbr><span>Initialization</span><wbr></wbr><span>Completed</span><wbr></wbr><span><span>Listener</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="404698296%2FClasslikes%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">fun interface <a href="-on-initialization-completed-listener/index.html">OnInitializationCompletedListener</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<div class="brief "><p class="paragraph">Interface to notify when generator completes its initialization.</p></div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="393691842%2FClasslikes%2F1946847589" anchor-label="OnInitializationStartedListener" id="393691842%2FClasslikes%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="-on-initialization-started-listener/index.html"><span>On</span><wbr></wbr><span>Initialization</span><wbr></wbr><span>Started</span><wbr></wbr><span><span>Listener</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="393691842%2FClasslikes%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">fun interface <a href="-on-initialization-started-listener/index.html">OnInitializationStartedListener</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<div class="brief "><p class="paragraph">Interface to notify when generator starts initialization.</p></div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="865289972%2FClasslikes%2F1946847589" anchor-label="OnResetListener" id="865289972%2FClasslikes%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="-on-reset-listener/index.html"><span>On</span><wbr></wbr><span>Reset</span><wbr></wbr><span><span>Listener</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="865289972%2FClasslikes%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">fun interface <a href="-on-reset-listener/index.html">OnResetListener</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<div class="brief "><p class="paragraph">Interface to notify when generator is reset (occurs when starting after stopping the generator).</p></div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-1272588350%2FClasslikes%2F1946847589" anchor-label="OnStaticIntervalDetectedListener" id="-1272588350%2FClasslikes%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="-on-static-interval-detected-listener/index.html"><span>On</span><wbr></wbr><span>Static</span><wbr></wbr><span>Interval</span><wbr></wbr><span>Detected</span><wbr></wbr><span><span>Listener</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1272588350%2FClasslikes%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">fun interface <a href="-on-static-interval-detected-listener/index.html">OnStaticIntervalDetectedListener</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<div class="brief "><p class="paragraph">Interface to notify a new static interval is detected.</p></div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="294473638%2FClasslikes%2F1946847589" anchor-label="OnStaticIntervalSkippedListener" id="294473638%2FClasslikes%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="-on-static-interval-skipped-listener/index.html"><span>On</span><wbr></wbr><span>Static</span><wbr></wbr><span>Interval</span><wbr></wbr><span>Skipped</span><wbr></wbr><span><span>Listener</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="294473638%2FClasslikes%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">fun interface <a href="-on-static-interval-skipped-listener/index.html">OnStaticIntervalSkippedListener</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<div class="brief "><p class="paragraph">Interface to notify when a static interval is skipped. This happens when interval is too short.</p></div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <h2 class="">Functions</h2>
+              <div class="table" data-togglable="Functions"><a data-name="1950751181%2FFunctions%2F1946847589" anchor-label="getAccelerometerAverageTimeIntervalAsTime" id="1950751181%2FFunctions%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-calibration-measurement-generator/get-accelerometer-average-time-interval-as-time.html"><span>get</span><wbr></wbr><span>Accelerometer</span><wbr></wbr><span>Average</span><wbr></wbr><span>Time</span><wbr></wbr><span>Interval</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Time</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1950751181%2FFunctions%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">fun <a href="../-calibration-measurement-generator/get-accelerometer-average-time-interval-as-time.html">getAccelerometerAverageTimeIntervalAsTime</a>(result: <span data-unresolved-link="com.irurueta.units/Time///PointingToDeclaration/">Time</span>): <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<div class="brief "><p class="paragraph">Gets average time interval between accelerometer measurements. This is only available once detector completes initialization.</p></div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-1967469610%2FFunctions%2F1946847589" anchor-label="getAccelerometerBaseNoiseLevelAsMeasurement" id="-1967469610%2FFunctions%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="get-accelerometer-base-noise-level-as-measurement.html"><span>get</span><wbr></wbr><span>Accelerometer</span><wbr></wbr><span>Base</span><wbr></wbr><span>Noise</span><wbr></wbr><span>Level</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Measurement</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1967469610%2FFunctions%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">open override fun <a href="get-accelerometer-base-noise-level-as-measurement.html">getAccelerometerBaseNoiseLevelAsMeasurement</a>(result: <span data-unresolved-link="com.irurueta.units/Acceleration///PointingToDeclaration/">Acceleration</span>): <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<div class="brief "><p class="paragraph">Gets sensor measurement base noise level that has been detected during initialization. This is only available once detector completes initialization.</p></div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-1573530416%2FFunctions%2F1946847589" anchor-label="getAccelerometerTimeIntervalStandardDeviationAsTime" id="-1573530416%2FFunctions%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-calibration-measurement-generator/get-accelerometer-time-interval-standard-deviation-as-time.html"><span>get</span><wbr></wbr><span>Accelerometer</span><wbr></wbr><span>Time</span><wbr></wbr><span>Interval</span><wbr></wbr><span>Standard</span><wbr></wbr><span>Deviation</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Time</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1573530416%2FFunctions%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">fun <a href="../-calibration-measurement-generator/get-accelerometer-time-interval-standard-deviation-as-time.html">getAccelerometerTimeIntervalStandardDeviationAsTime</a>(result: <span data-unresolved-link="com.irurueta.units/Time///PointingToDeclaration/">Time</span>): <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<div class="brief "><p class="paragraph">Gets estimated standard deviation of time interval between accelerometer measurements. This is only available once detector completes initialization.</p></div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="1868615399%2FFunctions%2F1946847589" anchor-label="getBaseNoiseLevelAbsoluteThresholdAsMeasurement" id="1868615399%2FFunctions%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="get-base-noise-level-absolute-threshold-as-measurement.html"><span>get</span><wbr></wbr><span>Base</span><wbr></wbr><span>Noise</span><wbr></wbr><span>Level</span><wbr></wbr><span>Absolute</span><wbr></wbr><span>Threshold</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Measurement</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1868615399%2FFunctions%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">open override fun <a href="get-base-noise-level-absolute-threshold-as-measurement.html">getBaseNoiseLevelAbsoluteThresholdAsMeasurement</a>(result: <span data-unresolved-link="com.irurueta.units/Acceleration///PointingToDeclaration/">Acceleration</span>)<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<div class="brief "><p class="paragraph">Gets overall absolute threshold to determine whether there has been excessive motion during the whole initialization phase. Failure will be detected if estimated base noise level exceeds this threshold when initialization completes.</p></div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-631644741%2FFunctions%2F1946847589" anchor-label="getGyroscopeBaseNoiseLevelAsMeasurement" id="-631644741%2FFunctions%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="get-gyroscope-base-noise-level-as-measurement.html"><span>get</span><wbr></wbr><span>Gyroscope</span><wbr></wbr><span>Base</span><wbr></wbr><span>Noise</span><wbr></wbr><span>Level</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Measurement</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-631644741%2FFunctions%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">fun <a href="get-gyroscope-base-noise-level-as-measurement.html">getGyroscopeBaseNoiseLevelAsMeasurement</a>(result: <span data-unresolved-link="com.irurueta.units/AngularSpeed///PointingToDeclaration/">AngularSpeed</span>): <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<div class="brief "><p class="paragraph">Gets gyroscope measurement base noise level that has been detected during initialization. This is only available once generator completes initialization.</p></div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-1649593290%2FFunctions%2F1946847589" anchor-label="getInitialMagneticFluxDensityNormAsMeasurement" id="-1649593290%2FFunctions%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="get-initial-magnetic-flux-density-norm-as-measurement.html"><span>get</span><wbr></wbr><span>Initial</span><wbr></wbr><span>Magnetic</span><wbr></wbr><span>Flux</span><wbr></wbr><span>Density</span><wbr></wbr><span>Norm</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Measurement</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1649593290%2FFunctions%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">fun <a href="get-initial-magnetic-flux-density-norm-as-measurement.html">getInitialMagneticFluxDensityNormAsMeasurement</a>(result: <span data-unresolved-link="com.irurueta.units/MagneticFluxDensity///PointingToDeclaration/">MagneticFluxDensity</span>): <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<div class="brief "><p class="paragraph">Gets norm of average magnetic flux density obtained during initialization. This is only available once generator completes initialization.</p></div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="1947415650%2FFunctions%2F1946847589" anchor-label="getMagnetometerBaseNoiseLevelAsMeasurement" id="1947415650%2FFunctions%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="get-magnetometer-base-noise-level-as-measurement.html"><span>get</span><wbr></wbr><span>Magnetometer</span><wbr></wbr><span>Base</span><wbr></wbr><span>Noise</span><wbr></wbr><span>Level</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Measurement</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1947415650%2FFunctions%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">fun <a href="get-magnetometer-base-noise-level-as-measurement.html">getMagnetometerBaseNoiseLevelAsMeasurement</a>(result: <span data-unresolved-link="com.irurueta.units/MagneticFluxDensity///PointingToDeclaration/">MagneticFluxDensity</span>): <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<div class="brief "><p class="paragraph">Gets magnetometer measurement base noise level that has been detected during initialization. This is only available once generator completes initialization.</p></div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="641842165%2FFunctions%2F1946847589" anchor-label="getThresholdAsMeasurement" id="641842165%2FFunctions%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="get-threshold-as-measurement.html"><span>get</span><wbr></wbr><span>Threshold</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Measurement</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="641842165%2FFunctions%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">open override fun <a href="get-threshold-as-measurement.html">getThresholdAsMeasurement</a>(result: <span data-unresolved-link="com.irurueta.units/Acceleration///PointingToDeclaration/">Acceleration</span>): <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<div class="brief "><p class="paragraph">Gets estimated threshold to determine static/dynamic period changes. This is only available once detector completes initialization.</p></div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-244102589%2FFunctions%2F1946847589" anchor-label="start" id="-244102589%2FFunctions%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="start.html"><span><span>start</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-244102589%2FFunctions%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">open override fun <a href="start.html">start</a>()<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<div class="brief "><p class="paragraph">Starts collection of sensor measurements.</p></div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-513575853%2FFunctions%2F1946847589" anchor-label="stop" id="-513575853%2FFunctions%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="stop.html"><span><span>stop</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-513575853%2FFunctions%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">open override fun <a href="stop.html">stop</a>()<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<div class="brief "><p class="paragraph">Stops collection of sensor measurements.</p></div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <h2 class="">Properties</h2>
+              <div class="table" data-togglable="Properties"><a data-name="-138779942%2FProperties%2F1946847589" anchor-label="accelerometerAverageTimeInterval" id="-138779942%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-calibration-measurement-generator/accelerometer-average-time-interval.html">accelerometerAverageTimeInterval</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-138779942%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-138779942%2FProperties%2F1946847589" anchor-label="accelerometerAverageTimeInterval" id="-138779942%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="../-calibration-measurement-generator/accelerometer-average-time-interval.html">accelerometerAverageTimeInterval</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html">Double</a>?<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-138779942%2FProperties%2F1946847589" anchor-label="accelerometerAverageTimeInterval" id="-138779942%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets average time interval between accelerometer samples expressed in seconds (s). This is only available once this generator completes initialization.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="1566881723%2FProperties%2F1946847589" anchor-label="accelerometerAverageTimeIntervalAsTime" id="1566881723%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-calibration-measurement-generator/accelerometer-average-time-interval-as-time.html">accelerometerAverageTimeIntervalAsTime</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1566881723%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="1566881723%2FProperties%2F1946847589" anchor-label="accelerometerAverageTimeIntervalAsTime" id="1566881723%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="../-calibration-measurement-generator/accelerometer-average-time-interval-as-time.html">accelerometerAverageTimeIntervalAsTime</a>: <span data-unresolved-link="com.irurueta.units/Time///PointingToDeclaration/">Time</span>?<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="1566881723%2FProperties%2F1946847589" anchor-label="accelerometerAverageTimeIntervalAsTime" id="1566881723%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets average time interval between accelerometer samples. This is only available once this generator completes initialization.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="412073275%2FProperties%2F1946847589" anchor-label="accelerometerBaseNoiseLevel" id="412073275%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="accelerometer-base-noise-level.html">accelerometerBaseNoiseLevel</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="412073275%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="412073275%2FProperties%2F1946847589" anchor-label="accelerometerBaseNoiseLevel" id="412073275%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">open override val <a href="accelerometer-base-noise-level.html">accelerometerBaseNoiseLevel</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html">Double</a>?<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="412073275%2FProperties%2F1946847589" anchor-label="accelerometerBaseNoiseLevel" id="412073275%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets accelerometer measurement base noise level that has been detected during initialization expressed in meters per squared second (m/s^2). This is only available once detector completes initialization.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-764235211%2FProperties%2F1946847589" anchor-label="accelerometerBaseNoiseLevelAsMeasurement" id="-764235211%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="accelerometer-base-noise-level-as-measurement.html">accelerometerBaseNoiseLevelAsMeasurement</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-764235211%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-764235211%2FProperties%2F1946847589" anchor-label="accelerometerBaseNoiseLevelAsMeasurement" id="-764235211%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">open override val <a href="accelerometer-base-noise-level-as-measurement.html">accelerometerBaseNoiseLevelAsMeasurement</a>: <span data-unresolved-link="com.irurueta.units/Acceleration///PointingToDeclaration/">Acceleration</span>?<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-764235211%2FProperties%2F1946847589" anchor-label="accelerometerBaseNoiseLevelAsMeasurement" id="-764235211%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets sensor measurement base noise level that has been detected during initialization. This is only available once detector completes initialization.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="1431797246%2FProperties%2F1946847589" anchor-label="accelerometerBaseNoiseLevelPsd" id="1431797246%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="accelerometer-base-noise-level-psd.html">accelerometerBaseNoiseLevelPsd</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1431797246%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="1431797246%2FProperties%2F1946847589" anchor-label="accelerometerBaseNoiseLevelPsd" id="1431797246%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">open override val <a href="accelerometer-base-noise-level-psd.html">accelerometerBaseNoiseLevelPsd</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html">Double</a>?<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="1431797246%2FProperties%2F1946847589" anchor-label="accelerometerBaseNoiseLevelPsd" id="1431797246%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets measurement base noise level PSD (Power Spectral Density) expressed in (m^2 * s^-3).</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-1217656064%2FProperties%2F1946847589" anchor-label="accelerometerBaseNoiseLevelRootPsd" id="-1217656064%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="accelerometer-base-noise-level-root-psd.html">accelerometerBaseNoiseLevelRootPsd</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1217656064%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-1217656064%2FProperties%2F1946847589" anchor-label="accelerometerBaseNoiseLevelRootPsd" id="-1217656064%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">open override val <a href="accelerometer-base-noise-level-root-psd.html">accelerometerBaseNoiseLevelRootPsd</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html">Double</a>?<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1217656064%2FProperties%2F1946847589" anchor-label="accelerometerBaseNoiseLevelRootPsd" id="-1217656064%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets measurement base noise level root PSD (Power Spectral Density) expressed in (m * s^-1.5). This is only available once detector completes initialization.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="875308404%2FProperties%2F1946847589" anchor-label="accelerometerMeasurementListener" id="875308404%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="accelerometer-measurement-listener.html">accelerometerMeasurementListener</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="875308404%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="875308404%2FProperties%2F1946847589" anchor-label="accelerometerMeasurementListener" id="875308404%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="accelerometer-measurement-listener.html">accelerometerMeasurementListener</a>: <a href="../../com.irurueta.android.navigation.inertial.collectors/-accelerometer-sensor-collector/-on-measurement-listener/index.html">AccelerometerSensorCollector.OnMeasurementListener</a>? = null<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="875308404%2FProperties%2F1946847589" anchor-label="accelerometerMeasurementListener" id="875308404%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">listener to notify when a new accelerometer measurement is received.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="32656407%2FProperties%2F1946847589" anchor-label="accelerometerSensor" id="32656407%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-calibration-measurement-generator/accelerometer-sensor.html">accelerometerSensor</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="32656407%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="32656407%2FProperties%2F1946847589" anchor-label="accelerometerSensor" id="32656407%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="../-calibration-measurement-generator/accelerometer-sensor.html">accelerometerSensor</a>: <a href="https://developer.android.com/reference/kotlin/android/hardware/Sensor.html">Sensor</a>?<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="32656407%2FProperties%2F1946847589" anchor-label="accelerometerSensor" id="32656407%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets accelerometer sensor being used to obtain measurements and detect static/dynamic intervals, or null if not available. This can be used to obtain additional information about the sensor.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-1279549536%2FProperties%2F1946847589" anchor-label="accelerometerSensorDelay" id="-1279549536%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-calibration-measurement-generator/accelerometer-sensor-delay.html">accelerometerSensorDelay</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1279549536%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-1279549536%2FProperties%2F1946847589" anchor-label="accelerometerSensorDelay" id="-1279549536%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="../-calibration-measurement-generator/accelerometer-sensor-delay.html">accelerometerSensorDelay</a>: <a href="../../com.irurueta.android.navigation.inertial.collectors/-sensor-delay/index.html">SensorDelay</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1279549536%2FProperties%2F1946847589" anchor-label="accelerometerSensorDelay" id="-1279549536%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Delay of sensor between samples.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-661969667%2FProperties%2F1946847589" anchor-label="accelerometerSensorType" id="-661969667%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-calibration-measurement-generator/accelerometer-sensor-type.html">accelerometerSensorType</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-661969667%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-661969667%2FProperties%2F1946847589" anchor-label="accelerometerSensorType" id="-661969667%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="../-calibration-measurement-generator/accelerometer-sensor-type.html">accelerometerSensorType</a>: <a href="../../com.irurueta.android.navigation.inertial.collectors/-accelerometer-sensor-type/index.html">AccelerometerSensorType</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-661969667%2FProperties%2F1946847589" anchor-label="accelerometerSensorType" id="-661969667%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">One of the supported accelerometer sensor types.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-158403337%2FProperties%2F1946847589" anchor-label="accelerometerTimeIntervalStandardDeviation" id="-158403337%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-calibration-measurement-generator/accelerometer-time-interval-standard-deviation.html">accelerometerTimeIntervalStandardDeviation</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-158403337%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-158403337%2FProperties%2F1946847589" anchor-label="accelerometerTimeIntervalStandardDeviation" id="-158403337%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="../-calibration-measurement-generator/accelerometer-time-interval-standard-deviation.html">accelerometerTimeIntervalStandardDeviation</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html">Double</a>?<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-158403337%2FProperties%2F1946847589" anchor-label="accelerometerTimeIntervalStandardDeviation" id="-158403337%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets estimated standard deviation of time interval between accelerometer measurements expressed in seconds (s). This is only available once detector completes initialization.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="957906968%2FProperties%2F1946847589" anchor-label="accelerometerTimeIntervalStandardDeviationAsTime" id="957906968%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-calibration-measurement-generator/accelerometer-time-interval-standard-deviation-as-time.html">accelerometerTimeIntervalStandardDeviationAsTime</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="957906968%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="957906968%2FProperties%2F1946847589" anchor-label="accelerometerTimeIntervalStandardDeviationAsTime" id="957906968%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="../-calibration-measurement-generator/accelerometer-time-interval-standard-deviation-as-time.html">accelerometerTimeIntervalStandardDeviationAsTime</a>: <span data-unresolved-link="com.irurueta.units/Time///PointingToDeclaration/">Time</span>?<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="957906968%2FProperties%2F1946847589" anchor-label="accelerometerTimeIntervalStandardDeviationAsTime" id="957906968%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets estimated standard deviation of time interval between accelerometer measurements. This is only available once detector completes initialization.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-1921783378%2FProperties%2F1946847589" anchor-label="accelerometerTimeIntervalVariance" id="-1921783378%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-calibration-measurement-generator/accelerometer-time-interval-variance.html">accelerometerTimeIntervalVariance</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1921783378%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-1921783378%2FProperties%2F1946847589" anchor-label="accelerometerTimeIntervalVariance" id="-1921783378%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="../-calibration-measurement-generator/accelerometer-time-interval-variance.html">accelerometerTimeIntervalVariance</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html">Double</a>?<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1921783378%2FProperties%2F1946847589" anchor-label="accelerometerTimeIntervalVariance" id="-1921783378%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets estimated variance of time interval between accelerometer measurements expressed in squared seconds (s^2). This is only available once detector completes initialization.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="1762096369%2FProperties%2F1946847589" anchor-label="accuracyChangedListener" id="1762096369%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-calibration-measurement-generator/accuracy-changed-listener.html">accuracyChangedListener</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1762096369%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="1762096369%2FProperties%2F1946847589" anchor-label="accuracyChangedListener" id="1762096369%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="../-calibration-measurement-generator/accuracy-changed-listener.html">accuracyChangedListener</a>: <a href="../../com.irurueta.android.navigation.inertial.collectors/-sensor-collector/-on-accuracy-changed-listener/index.html">SensorCollector.OnAccuracyChangedListener</a>?<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="1762096369%2FProperties%2F1946847589" anchor-label="accuracyChangedListener" id="1762096369%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">listener to notify when sensor accuracy changes.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="1404770508%2FProperties%2F1946847589" anchor-label="baseNoiseLevelAbsoluteThreshold" id="1404770508%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="base-noise-level-absolute-threshold.html">baseNoiseLevelAbsoluteThreshold</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1404770508%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="1404770508%2FProperties%2F1946847589" anchor-label="baseNoiseLevelAbsoluteThreshold" id="1404770508%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">open override var <a href="base-noise-level-absolute-threshold.html">baseNoiseLevelAbsoluteThreshold</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html">Double</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="1404770508%2FProperties%2F1946847589" anchor-label="baseNoiseLevelAbsoluteThreshold" id="1404770508%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets or sets overall absolute threshold to determine whether there has been excessive motion during the whole initialization phase. Failure will be detected if estimated base noise level exceeds this threshold when initialization completes. This threshold is expressed in meters per squared second (m/s^2).</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="443705924%2FProperties%2F1946847589" anchor-label="baseNoiseLevelAbsoluteThresholdAsMeasurement" id="443705924%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="base-noise-level-absolute-threshold-as-measurement.html">baseNoiseLevelAbsoluteThresholdAsMeasurement</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="443705924%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="443705924%2FProperties%2F1946847589" anchor-label="baseNoiseLevelAbsoluteThresholdAsMeasurement" id="443705924%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">open override var <a href="base-noise-level-absolute-threshold-as-measurement.html">baseNoiseLevelAbsoluteThresholdAsMeasurement</a>: <span data-unresolved-link="com.irurueta.units/Acceleration///PointingToDeclaration/">Acceleration</span><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="443705924%2FProperties%2F1946847589" anchor-label="baseNoiseLevelAbsoluteThresholdAsMeasurement" id="443705924%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets or sets overall absolute threshold to determine whether there has been excessive motion during the whole initialization phase. Failure will be detected if estimated base noise level exceeds this threshold when initialization completes.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-2009762159%2FProperties%2F1946847589" anchor-label="context" id="-2009762159%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-calibration-measurement-generator/context.html">context</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2009762159%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-2009762159%2FProperties%2F1946847589" anchor-label="context" id="-2009762159%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="../-calibration-measurement-generator/context.html">context</a>: <a href="https://developer.android.com/reference/kotlin/android/content/Context.html">Context</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-2009762159%2FProperties%2F1946847589" anchor-label="context" id="-2009762159%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Android context.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="1479346187%2FProperties%2F1946847589" anchor-label="dynamicIntervalDetectedListener" id="1479346187%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="dynamic-interval-detected-listener.html">dynamicIntervalDetectedListener</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1479346187%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="1479346187%2FProperties%2F1946847589" anchor-label="dynamicIntervalDetectedListener" id="1479346187%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="dynamic-interval-detected-listener.html">dynamicIntervalDetectedListener</a>: <a href="-on-dynamic-interval-detected-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnDynamicIntervalDetectedListener</a>? = null<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="1479346187%2FProperties%2F1946847589" anchor-label="dynamicIntervalDetectedListener" id="1479346187%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">listener to notify when a dynamic interval is detected.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="191557333%2FProperties%2F1946847589" anchor-label="dynamicIntervalSkippedListener" id="191557333%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="dynamic-interval-skipped-listener.html">dynamicIntervalSkippedListener</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="191557333%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="191557333%2FProperties%2F1946847589" anchor-label="dynamicIntervalSkippedListener" id="191557333%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="dynamic-interval-skipped-listener.html">dynamicIntervalSkippedListener</a>: <a href="-on-dynamic-interval-skipped-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnDynamicIntervalSkippedListener</a>? = null<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="191557333%2FProperties%2F1946847589" anchor-label="dynamicIntervalSkippedListener" id="191557333%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">listener to notify when a dynamic interval is skipped if its duration is too long.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-762130167%2FProperties%2F1946847589" anchor-label="errorListener" id="-762130167%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="error-listener.html">errorListener</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-762130167%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-762130167%2FProperties%2F1946847589" anchor-label="errorListener" id="-762130167%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="error-listener.html">errorListener</a>: <a href="-on-error-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnErrorListener</a>? = null<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-762130167%2FProperties%2F1946847589" anchor-label="errorListener" id="-762130167%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">listener to notify errors.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-1286890251%2FProperties%2F1946847589" anchor-label="generatedAccelerometerMeasurementListener" id="-1286890251%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="generated-accelerometer-measurement-listener.html">generatedAccelerometerMeasurementListener</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1286890251%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-1286890251%2FProperties%2F1946847589" anchor-label="generatedAccelerometerMeasurementListener" id="-1286890251%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="generated-accelerometer-measurement-listener.html">generatedAccelerometerMeasurementListener</a>: <a href="-on-generated-accelerometer-measurement-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedAccelerometerMeasurementListener</a>? = null<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1286890251%2FProperties%2F1946847589" anchor-label="generatedAccelerometerMeasurementListener" id="-1286890251%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">listener to notify when a new accelerometer calibration measurement is generated.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="1089238315%2FProperties%2F1946847589" anchor-label="generatedGyroscopeMeasurementListener" id="1089238315%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="generated-gyroscope-measurement-listener.html">generatedGyroscopeMeasurementListener</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1089238315%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="1089238315%2FProperties%2F1946847589" anchor-label="generatedGyroscopeMeasurementListener" id="1089238315%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="generated-gyroscope-measurement-listener.html">generatedGyroscopeMeasurementListener</a>: <a href="-on-generated-gyroscope-measurement-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedGyroscopeMeasurementListener</a>? = null<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="1089238315%2FProperties%2F1946847589" anchor-label="generatedGyroscopeMeasurementListener" id="1089238315%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">listener to notify when a new gyroscope calibration measurement is generated.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="1989695160%2FProperties%2F1946847589" anchor-label="generatedMagnetometerMeasurementListener" id="1989695160%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="generated-magnetometer-measurement-listener.html">generatedMagnetometerMeasurementListener</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1989695160%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="1989695160%2FProperties%2F1946847589" anchor-label="generatedMagnetometerMeasurementListener" id="1989695160%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="generated-magnetometer-measurement-listener.html">generatedMagnetometerMeasurementListener</a>: <a href="-on-generated-magnetometer-measurement-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedMagnetometerMeasurementListener</a>? = null<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="1989695160%2FProperties%2F1946847589" anchor-label="generatedMagnetometerMeasurementListener" id="1989695160%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">listener to notify when a new magnetometer calibration measurement is generated.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-1009036347%2FProperties%2F1946847589" anchor-label="gyroscopeBaseNoiseLevel" id="-1009036347%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="gyroscope-base-noise-level.html">gyroscopeBaseNoiseLevel</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1009036347%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-1009036347%2FProperties%2F1946847589" anchor-label="gyroscopeBaseNoiseLevel" id="-1009036347%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="gyroscope-base-noise-level.html">gyroscopeBaseNoiseLevel</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html">Double</a>? = null<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1009036347%2FProperties%2F1946847589" anchor-label="gyroscopeBaseNoiseLevel" id="-1009036347%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets gyroscope measurement base noise level that has been detected during initialization expressed in radians per second (rad/s). This is only available once generator completes initialization.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-826700821%2FProperties%2F1946847589" anchor-label="gyroscopeBaseNoiseLevelAsMeasurement" id="-826700821%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="gyroscope-base-noise-level-as-measurement.html">gyroscopeBaseNoiseLevelAsMeasurement</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-826700821%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-826700821%2FProperties%2F1946847589" anchor-label="gyroscopeBaseNoiseLevelAsMeasurement" id="-826700821%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="gyroscope-base-noise-level-as-measurement.html">gyroscopeBaseNoiseLevelAsMeasurement</a>: <span data-unresolved-link="com.irurueta.units/AngularSpeed///PointingToDeclaration/">AngularSpeed</span>?<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-826700821%2FProperties%2F1946847589" anchor-label="gyroscopeBaseNoiseLevelAsMeasurement" id="-826700821%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets gyroscope measurement base noise level that has been detected during initialization. This is only available once generator completes initialization.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-1037363926%2FProperties%2F1946847589" anchor-label="gyroscopeMeasurementListener" id="-1037363926%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="gyroscope-measurement-listener.html">gyroscopeMeasurementListener</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1037363926%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-1037363926%2FProperties%2F1946847589" anchor-label="gyroscopeMeasurementListener" id="-1037363926%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="gyroscope-measurement-listener.html">gyroscopeMeasurementListener</a>: <a href="../../com.irurueta.android.navigation.inertial.collectors/-gyroscope-sensor-collector/-on-measurement-listener/index.html">GyroscopeSensorCollector.OnMeasurementListener</a>? = null<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1037363926%2FProperties%2F1946847589" anchor-label="gyroscopeMeasurementListener" id="-1037363926%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">listener to notify when a new gyroscope measurement is received.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-50813402%2FProperties%2F1946847589" anchor-label="gyroscopeSensor" id="-50813402%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="gyroscope-sensor.html">gyroscopeSensor</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-50813402%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-50813402%2FProperties%2F1946847589" anchor-label="gyroscopeSensor" id="-50813402%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="gyroscope-sensor.html">gyroscopeSensor</a>: <a href="https://developer.android.com/reference/kotlin/android/hardware/Sensor.html">Sensor</a>?<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-50813402%2FProperties%2F1946847589" anchor-label="gyroscopeSensor" id="-50813402%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets gyroscope sensor being used to obtain measurements, or null if not available. This can be used to obtain additional information about the sensor.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="1513502449%2FProperties%2F1946847589" anchor-label="gyroscopeSensorDelay" id="1513502449%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="gyroscope-sensor-delay.html">gyroscopeSensorDelay</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1513502449%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="1513502449%2FProperties%2F1946847589" anchor-label="gyroscopeSensorDelay" id="1513502449%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="gyroscope-sensor-delay.html">gyroscopeSensorDelay</a>: <a href="../../com.irurueta.android.navigation.inertial.collectors/-sensor-delay/index.html">SensorDelay</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="1513502449%2FProperties%2F1946847589" anchor-label="gyroscopeSensorDelay" id="1513502449%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Delay of gyroscope sensor between samples.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-710418548%2FProperties%2F1946847589" anchor-label="gyroscopeSensorType" id="-710418548%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="gyroscope-sensor-type.html">gyroscopeSensorType</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-710418548%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-710418548%2FProperties%2F1946847589" anchor-label="gyroscopeSensorType" id="-710418548%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="gyroscope-sensor-type.html">gyroscopeSensorType</a>: <a href="../../com.irurueta.android.navigation.inertial.collectors/-gyroscope-sensor-type/index.html">GyroscopeSensorType</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-710418548%2FProperties%2F1946847589" anchor-label="gyroscopeSensorType" id="-710418548%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">One of the supported gyroscope sensor types.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-1112427546%2FProperties%2F1946847589" anchor-label="initializationCompletedListener" id="-1112427546%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="initialization-completed-listener.html">initializationCompletedListener</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1112427546%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-1112427546%2FProperties%2F1946847589" anchor-label="initializationCompletedListener" id="-1112427546%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="initialization-completed-listener.html">initializationCompletedListener</a>: <a href="-on-initialization-completed-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationCompletedListener</a>? = null<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1112427546%2FProperties%2F1946847589" anchor-label="initializationCompletedListener" id="-1112427546%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">listener to notify when initialization successfully completes.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-494026128%2FProperties%2F1946847589" anchor-label="initializationStartedListener" id="-494026128%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="initialization-started-listener.html">initializationStartedListener</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-494026128%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-494026128%2FProperties%2F1946847589" anchor-label="initializationStartedListener" id="-494026128%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="initialization-started-listener.html">initializationStartedListener</a>: <a href="-on-initialization-started-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationStartedListener</a>? = null<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-494026128%2FProperties%2F1946847589" anchor-label="initializationStartedListener" id="-494026128%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">listener to notify when initialization starts.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-1637991710%2FProperties%2F1946847589" anchor-label="initialMagneticFluxDensityNorm" id="-1637991710%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="initial-magnetic-flux-density-norm.html">initialMagneticFluxDensityNorm</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1637991710%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-1637991710%2FProperties%2F1946847589" anchor-label="initialMagneticFluxDensityNorm" id="-1637991710%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="initial-magnetic-flux-density-norm.html">initialMagneticFluxDensityNorm</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html">Double</a>? = null<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1637991710%2FProperties%2F1946847589" anchor-label="initialMagneticFluxDensityNorm" id="-1637991710%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Norm of average magnetic flux density obtained during initialization and expressed in Teslas (T).</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="1317395438%2FProperties%2F1946847589" anchor-label="initialMagneticFluxDensityNormAsMeasurement" id="1317395438%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="initial-magnetic-flux-density-norm-as-measurement.html">initialMagneticFluxDensityNormAsMeasurement</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1317395438%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="1317395438%2FProperties%2F1946847589" anchor-label="initialMagneticFluxDensityNormAsMeasurement" id="1317395438%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="initial-magnetic-flux-density-norm-as-measurement.html">initialMagneticFluxDensityNormAsMeasurement</a>: <span data-unresolved-link="com.irurueta.units/MagneticFluxDensity///PointingToDeclaration/">MagneticFluxDensity</span>?<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="1317395438%2FProperties%2F1946847589" anchor-label="initialMagneticFluxDensityNormAsMeasurement" id="1317395438%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets norm of average magnetic flux density obtained during initialization. This is only available once generator completes initialization.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-1534485218%2FProperties%2F1946847589" anchor-label="initialStaticSamples" id="-1534485218%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="initial-static-samples.html">initialStaticSamples</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1534485218%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-1534485218%2FProperties%2F1946847589" anchor-label="initialStaticSamples" id="-1534485218%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">open override var <a href="initial-static-samples.html">initialStaticSamples</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html">Int</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1534485218%2FProperties%2F1946847589" anchor-label="initialStaticSamples" id="-1534485218%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets or sets number of samples to be processed initially while keeping the sensor static in order to find the base noise level when device is static.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="106525974%2FProperties%2F1946847589" anchor-label="instantaneousNoiseLevelFactor" id="106525974%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="instantaneous-noise-level-factor.html">instantaneousNoiseLevelFactor</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="106525974%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="106525974%2FProperties%2F1946847589" anchor-label="instantaneousNoiseLevelFactor" id="106525974%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">open override var <a href="instantaneous-noise-level-factor.html">instantaneousNoiseLevelFactor</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html">Double</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="106525974%2FProperties%2F1946847589" anchor-label="instantaneousNoiseLevelFactor" id="106525974%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets or sets factor to determine that a sudden movement has occurred during initialization if instantaneous noise level exceeds accumulated noise level by this factor amount. This factor is unit-less.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-1405693793%2FProperties%2F1946847589" anchor-label="isDynamicIntervalSkipped" id="-1405693793%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="is-dynamic-interval-skipped.html">isDynamicIntervalSkipped</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1405693793%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-1405693793%2FProperties%2F1946847589" anchor-label="isDynamicIntervalSkipped" id="-1405693793%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">open override val <a href="is-dynamic-interval-skipped.html">isDynamicIntervalSkipped</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1405693793%2FProperties%2F1946847589" anchor-label="isDynamicIntervalSkipped" id="-1405693793%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Indicates whether last dynamic interval must be skipped.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="501584498%2FProperties%2F1946847589" anchor-label="isStaticIntervalSkipped" id="501584498%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="is-static-interval-skipped.html">isStaticIntervalSkipped</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="501584498%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="501584498%2FProperties%2F1946847589" anchor-label="isStaticIntervalSkipped" id="501584498%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">open override val <a href="is-static-interval-skipped.html">isStaticIntervalSkipped</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="501584498%2FProperties%2F1946847589" anchor-label="isStaticIntervalSkipped" id="501584498%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Indicates whether last static interval must be skipped.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="1399285046%2FProperties%2F1946847589" anchor-label="magnetometerBaseNoiseLevel" id="1399285046%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="magnetometer-base-noise-level.html">magnetometerBaseNoiseLevel</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1399285046%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="1399285046%2FProperties%2F1946847589" anchor-label="magnetometerBaseNoiseLevel" id="1399285046%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="magnetometer-base-noise-level.html">magnetometerBaseNoiseLevel</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html">Double</a>? = null<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="1399285046%2FProperties%2F1946847589" anchor-label="magnetometerBaseNoiseLevel" id="1399285046%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets magnetometer measurement base noise level that has been detected during initialization expressed in Teslas (T). This is only available once generator completes initialization.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="1341594138%2FProperties%2F1946847589" anchor-label="magnetometerBaseNoiseLevelAsMeasurement" id="1341594138%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="magnetometer-base-noise-level-as-measurement.html">magnetometerBaseNoiseLevelAsMeasurement</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1341594138%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="1341594138%2FProperties%2F1946847589" anchor-label="magnetometerBaseNoiseLevelAsMeasurement" id="1341594138%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="magnetometer-base-noise-level-as-measurement.html">magnetometerBaseNoiseLevelAsMeasurement</a>: <span data-unresolved-link="com.irurueta.units/MagneticFluxDensity///PointingToDeclaration/">MagneticFluxDensity</span>?<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="1341594138%2FProperties%2F1946847589" anchor-label="magnetometerBaseNoiseLevelAsMeasurement" id="1341594138%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets magnetometer measurement base noise level that has been detected during initialization. This is only available once generator completes initialization.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-850050471%2FProperties%2F1946847589" anchor-label="magnetometerMeasurementListener" id="-850050471%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="magnetometer-measurement-listener.html">magnetometerMeasurementListener</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-850050471%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-850050471%2FProperties%2F1946847589" anchor-label="magnetometerMeasurementListener" id="-850050471%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="magnetometer-measurement-listener.html">magnetometerMeasurementListener</a>: <a href="../../com.irurueta.android.navigation.inertial.collectors/-magnetometer-sensor-collector/-on-measurement-listener/index.html">MagnetometerSensorCollector.OnMeasurementListener</a>? = null<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-850050471%2FProperties%2F1946847589" anchor-label="magnetometerMeasurementListener" id="-850050471%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">listener to notify when a new magnetometer measurement is received.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-478037865%2FProperties%2F1946847589" anchor-label="magnetometerSensor" id="-478037865%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="magnetometer-sensor.html">magnetometerSensor</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-478037865%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-478037865%2FProperties%2F1946847589" anchor-label="magnetometerSensor" id="-478037865%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="magnetometer-sensor.html">magnetometerSensor</a>: <a href="https://developer.android.com/reference/kotlin/android/hardware/Sensor.html">Sensor</a>?<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-478037865%2FProperties%2F1946847589" anchor-label="magnetometerSensor" id="-478037865%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets magnetometer sensor being used to obtain measurements, or null if not available. This can be used to obtain additional information about the sensor.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-1722023136%2FProperties%2F1946847589" anchor-label="magnetometerSensorDelay" id="-1722023136%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="magnetometer-sensor-delay.html">magnetometerSensorDelay</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1722023136%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-1722023136%2FProperties%2F1946847589" anchor-label="magnetometerSensorDelay" id="-1722023136%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="magnetometer-sensor-delay.html">magnetometerSensorDelay</a>: <a href="../../com.irurueta.android.navigation.inertial.collectors/-sensor-delay/index.html">SensorDelay</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1722023136%2FProperties%2F1946847589" anchor-label="magnetometerSensorDelay" id="-1722023136%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Delay of magnetometer sensor between samples.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="1401966973%2FProperties%2F1946847589" anchor-label="magnetometerSensorType" id="1401966973%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="magnetometer-sensor-type.html">magnetometerSensorType</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1401966973%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="1401966973%2FProperties%2F1946847589" anchor-label="magnetometerSensorType" id="1401966973%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="magnetometer-sensor-type.html">magnetometerSensorType</a>: <a href="../../com.irurueta.android.navigation.inertial.collectors/-magnetometer-sensor-type/index.html">MagnetometerSensorType</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="1401966973%2FProperties%2F1946847589" anchor-label="magnetometerSensorType" id="1401966973%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">One of the supported gyroscope sensor types.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-1366606121%2FProperties%2F1946847589" anchor-label="maxDynamicSamples" id="-1366606121%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="max-dynamic-samples.html">maxDynamicSamples</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1366606121%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-1366606121%2FProperties%2F1946847589" anchor-label="maxDynamicSamples" id="-1366606121%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">open override var <a href="max-dynamic-samples.html">maxDynamicSamples</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html">Int</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1366606121%2FProperties%2F1946847589" anchor-label="maxDynamicSamples" id="-1366606121%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets or sets maximum number of samples allowed in dynamic intervals. Dynamic intervals exceeding this value are discarded.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="173219244%2FProperties%2F1946847589" anchor-label="minStaticSamples" id="173219244%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="min-static-samples.html">minStaticSamples</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="173219244%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="173219244%2FProperties%2F1946847589" anchor-label="minStaticSamples" id="173219244%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">open override var <a href="min-static-samples.html">minStaticSamples</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html">Int</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="173219244%2FProperties%2F1946847589" anchor-label="minStaticSamples" id="173219244%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets or sets minimum number of samples required in a static interval to be taken into account. Smaller static intervals will be discarded.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="210727074%2FProperties%2F1946847589" anchor-label="numberOfProcessedAccelerometerMeasurements" id="210727074%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-calibration-measurement-generator/number-of-processed-accelerometer-measurements.html">numberOfProcessedAccelerometerMeasurements</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="210727074%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="210727074%2FProperties%2F1946847589" anchor-label="numberOfProcessedAccelerometerMeasurements" id="210727074%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="../-calibration-measurement-generator/number-of-processed-accelerometer-measurements.html">numberOfProcessedAccelerometerMeasurements</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html">Int</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="210727074%2FProperties%2F1946847589" anchor-label="numberOfProcessedAccelerometerMeasurements" id="210727074%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Number of accelerometer measurements that have been processed.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="1273598343%2FProperties%2F1946847589" anchor-label="numberOfProcessedGyroscopeMeasurements" id="1273598343%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="number-of-processed-gyroscope-measurements.html">numberOfProcessedGyroscopeMeasurements</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1273598343%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="1273598343%2FProperties%2F1946847589" anchor-label="numberOfProcessedGyroscopeMeasurements" id="1273598343%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="number-of-processed-gyroscope-measurements.html">numberOfProcessedGyroscopeMeasurements</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html">Int</a> = 0<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="1273598343%2FProperties%2F1946847589" anchor-label="numberOfProcessedGyroscopeMeasurements" id="1273598343%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Number of gyroscope measurements that have been processed.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-1088844932%2FProperties%2F1946847589" anchor-label="numberOfProcessedMagnetometerMeasurements" id="-1088844932%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="number-of-processed-magnetometer-measurements.html">numberOfProcessedMagnetometerMeasurements</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1088844932%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-1088844932%2FProperties%2F1946847589" anchor-label="numberOfProcessedMagnetometerMeasurements" id="-1088844932%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="number-of-processed-magnetometer-measurements.html">numberOfProcessedMagnetometerMeasurements</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html">Int</a> = 0<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1088844932%2FProperties%2F1946847589" anchor-label="numberOfProcessedMagnetometerMeasurements" id="-1088844932%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Number of magnetometer measurements that have been processed.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="1227753389%2FProperties%2F1946847589" anchor-label="processedDynamicSamples" id="1227753389%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="processed-dynamic-samples.html">processedDynamicSamples</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1227753389%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="1227753389%2FProperties%2F1946847589" anchor-label="processedDynamicSamples" id="1227753389%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">open override val <a href="processed-dynamic-samples.html">processedDynamicSamples</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html">Int</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="1227753389%2FProperties%2F1946847589" anchor-label="processedDynamicSamples" id="1227753389%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets number of samples that have been processed in a dynamic period so far.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-1820130392%2FProperties%2F1946847589" anchor-label="processedStaticSamples" id="-1820130392%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="processed-static-samples.html">processedStaticSamples</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1820130392%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-1820130392%2FProperties%2F1946847589" anchor-label="processedStaticSamples" id="-1820130392%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">open override val <a href="processed-static-samples.html">processedStaticSamples</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html">Int</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1820130392%2FProperties%2F1946847589" anchor-label="processedStaticSamples" id="-1820130392%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets number of samples that have been processed in a static period so far.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-1371125086%2FProperties%2F1946847589" anchor-label="resetListener" id="-1371125086%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="reset-listener.html">resetListener</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1371125086%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-1371125086%2FProperties%2F1946847589" anchor-label="resetListener" id="-1371125086%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="reset-listener.html">resetListener</a>: <a href="-on-reset-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnResetListener</a>? = null<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1371125086%2FProperties%2F1946847589" anchor-label="resetListener" id="-1371125086%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">listener to notify when generator is restarted.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="1991166081%2FProperties%2F1946847589" anchor-label="running" id="1991166081%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-calibration-measurement-generator/running.html">running</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1991166081%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="1991166081%2FProperties%2F1946847589" anchor-label="running" id="1991166081%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="../-calibration-measurement-generator/running.html">running</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="1991166081%2FProperties%2F1946847589" anchor-label="running" id="1991166081%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Indicates whether this generator is already running.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-1374668948%2FProperties%2F1946847589" anchor-label="staticIntervalDetectedListener" id="-1374668948%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="static-interval-detected-listener.html">staticIntervalDetectedListener</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1374668948%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-1374668948%2FProperties%2F1946847589" anchor-label="staticIntervalDetectedListener" id="-1374668948%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="static-interval-detected-listener.html">staticIntervalDetectedListener</a>: <a href="-on-static-interval-detected-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnStaticIntervalDetectedListener</a>? = null<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1374668948%2FProperties%2F1946847589" anchor-label="staticIntervalDetectedListener" id="-1374668948%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">listener to notify when a static interval is detected.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-593244332%2FProperties%2F1946847589" anchor-label="staticIntervalSkippedListener" id="-593244332%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="static-interval-skipped-listener.html">staticIntervalSkippedListener</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-593244332%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-593244332%2FProperties%2F1946847589" anchor-label="staticIntervalSkippedListener" id="-593244332%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="static-interval-skipped-listener.html">staticIntervalSkippedListener</a>: <a href="-on-static-interval-skipped-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnStaticIntervalSkippedListener</a>? = null<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-593244332%2FProperties%2F1946847589" anchor-label="staticIntervalSkippedListener" id="-593244332%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">listener to notify when a static interval is skipped if its duration is too short.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-1253817245%2FProperties%2F1946847589" anchor-label="status" id="-1253817245%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="status.html">status</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1253817245%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-1253817245%2FProperties%2F1946847589" anchor-label="status" id="-1253817245%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">open override val <a href="status.html">status</a>: <a href="../../com.irurueta.android.navigation.inertial.calibration.intervals/-status/index.html">Status</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1253817245%2FProperties%2F1946847589" anchor-label="status" id="-1253817245%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets status of measurement generator. Initially the generator will be idle. Once it starts, it will start the initialization phase, and once initialization is complete, it will switch between static or dynamic interval until generator is stopped or an error occurs.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="1115128410%2FProperties%2F1946847589" anchor-label="threshold" id="1115128410%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="threshold.html">threshold</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1115128410%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="1115128410%2FProperties%2F1946847589" anchor-label="threshold" id="1115128410%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">open override val <a href="threshold.html">threshold</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html">Double</a>?<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="1115128410%2FProperties%2F1946847589" anchor-label="threshold" id="1115128410%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets estimated threshold to determine static/dynamic period changes expressed in meters per squared second (m/s^2). This is only available once detector completes initialization.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="1039038326%2FProperties%2F1946847589" anchor-label="thresholdAsMeasurement" id="1039038326%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="threshold-as-measurement.html">thresholdAsMeasurement</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1039038326%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="1039038326%2FProperties%2F1946847589" anchor-label="thresholdAsMeasurement" id="1039038326%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">open override val <a href="threshold-as-measurement.html">thresholdAsMeasurement</a>: <span data-unresolved-link="com.irurueta.units/Acceleration///PointingToDeclaration/">Acceleration</span>?<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="1039038326%2FProperties%2F1946847589" anchor-label="thresholdAsMeasurement" id="1039038326%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets estimated threshold to determine static/dynamic period changes. This is only available once detector completes initialization.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-429318645%2FProperties%2F1946847589" anchor-label="thresholdFactor" id="-429318645%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="threshold-factor.html">thresholdFactor</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-429318645%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-429318645%2FProperties%2F1946847589" anchor-label="thresholdFactor" id="-429318645%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">open override var <a href="threshold-factor.html">thresholdFactor</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html">Double</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-429318645%2FProperties%2F1946847589" anchor-label="thresholdFactor" id="-429318645%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets or sets factor to be applied to detected base noise level in order to determine threshold for static/dynamic period changes. This factor is unit-less.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-1907457756%2FProperties%2F1946847589" anchor-label="windowSize" id="-1907457756%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="window-size.html">windowSize</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1907457756%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-1907457756%2FProperties%2F1946847589" anchor-label="windowSize" id="-1907457756%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">open override var <a href="window-size.html">windowSize</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html">Int</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1907457756%2FProperties%2F1946847589" anchor-label="windowSize" id="-1907457756%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets or sets length of number of samples to keep within the window being processed to determine instantaneous sensor noise level. Window size must always be larger than allowed minimum value, which is 2 and must have an odd value.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="footer"><span class="go-to-top-icon"><a href="#content"></a></span><span>© 2023 Copyright</span><span class="pull-right"><span>Generated by </span><a href="https://github.com/Kotlin/dokka"><span>dokka</span><span class="padded-icon"></span></a></span></div>
+      </div>
+    </div>
+  </body>
+</html>
+

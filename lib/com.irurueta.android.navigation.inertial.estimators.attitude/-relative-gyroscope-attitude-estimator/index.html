@@ -1,0 +1,227 @@
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>RelativeGyroscopeAttitudeEstimator</title>
+<link href="../../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../../";</script><script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async="async"></script><link href="../../../styles/style.css" rel="Stylesheet"><link href="../../../styles/logo-styles.css" rel="Stylesheet"><link href="../../../styles/jetbrains-mono.css" rel="Stylesheet"><link href="../../../styles/main.css" rel="Stylesheet"><script type="text/javascript" src="../../../scripts/clipboard.js" async="async"></script><script type="text/javascript" src="../../../scripts/navigation-loader.js" async="async"></script><script type="text/javascript" src="../../../scripts/platform-content-handler.js" async="async"></script><script type="text/javascript" src="../../../scripts/main.js" async="async"></script>  </head>
+  <body>
+    <div id="container">
+      <div id="leftColumn"><a href="../../../index.html">
+          <div id="logo"></div>
+        </a>
+        <div id="paneSearch"></div>
+        <div id="sideMenu"></div>
+      </div>
+      <div id="main">
+        <div id="leftToggler"><span class="icon-toggler"></span></div>
+<script type="text/javascript" src="../../../scripts/main.js"></script>        <div class="main-content" id="content" pageIds="lib::com.irurueta.android.navigation.inertial.estimators.attitude/RelativeGyroscopeAttitudeEstimator///PointingToDeclaration//1946847589">
+          <div class="navigation-wrapper" id="navigation-wrapper">
+            <div class="breadcrumbs"><a href="../../../index.html">lib</a>/<a href="../index.html">com.irurueta.android.navigation.inertial.estimators.attitude</a>/<a href="index.html">RelativeGyroscopeAttitudeEstimator</a></div>
+            <div class="pull-right d-flex">
+              <div id="searchBar"></div>
+            </div>
+          </div>
+          <div class="cover ">
+            <h1 class="cover"><span>Relative</span><wbr></wbr><span>Gyroscope</span><wbr></wbr><span>Attitude</span><wbr></wbr><span><span>Estimator</span></span></h1>
+            <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">class <a href="index.html">RelativeGyroscopeAttitudeEstimator</a>(context: <a href="https://developer.android.com/reference/kotlin/android/content/Context.html">Context</a>, sensorType: <a href="../../com.irurueta.android.navigation.inertial.collectors/-gyroscope-sensor-type/index.html">GyroscopeSensorType</a>, sensorDelay: <a href="../../com.irurueta.android.navigation.inertial.collectors/-sensor-delay/index.html">SensorDelay</a>, estimateCoordinateTransformation: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a>, estimateDisplayEulerAngles: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a>, attitudeAvailableListener: <a href="-on-attitude-available-listener/index.html">RelativeGyroscopeAttitudeEstimator.OnAttitudeAvailableListener</a>?, gyroscopeMeasurementListener: <a href="../../com.irurueta.android.navigation.inertial.collectors/-gyroscope-sensor-collector/-on-measurement-listener/index.html">GyroscopeSensorCollector.OnMeasurementListener</a>?) : <a href="../-base-relative-gyroscope-attitude-estimator/index.html">BaseRelativeGyroscopeAttitudeEstimator</a>&lt;<a href="index.html">RelativeGyroscopeAttitudeEstimator</a>, <a href="-on-attitude-available-listener/index.html">RelativeGyroscopeAttitudeEstimator.OnAttitudeAvailableListener</a>&gt; <span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><p class="paragraph">Estimates relative attitude respect to start attitude by integrating gyroscope sensor data without using any additional sensors.</p></div></div>
+          </div>
+          <div class="tabbedcontent">
+            <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="Types">Types</button><button class="section-tab" data-togglable="Constructors">Constructors</button><button class="section-tab" data-togglable="Functions">Functions</button><button class="section-tab" data-togglable="Properties">Properties</button></div>
+            <div class="tabs-section-body">
+              <h2 class="tabbedcontent">Constructors</h2>
+              <div class="table" data-togglable="Constructors"><a data-name="-344330717%2FConstructors%2F1946847589" anchor-label="RelativeGyroscopeAttitudeEstimator" id="-344330717%2FConstructors%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue TabbedContent">
+                    <div class=""><span class="inline-flex"><a href="-relative-gyroscope-attitude-estimator.html">RelativeGyroscopeAttitudeEstimator</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-344330717%2FConstructors%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">fun <a href="-relative-gyroscope-attitude-estimator.html">RelativeGyroscopeAttitudeEstimator</a>(context: <a href="https://developer.android.com/reference/kotlin/android/content/Context.html">Context</a>, sensorType: <a href="../../com.irurueta.android.navigation.inertial.collectors/-gyroscope-sensor-type/index.html">GyroscopeSensorType</a> = GyroscopeSensorType.GYROSCOPE_UNCALIBRATED, sensorDelay: <a href="../../com.irurueta.android.navigation.inertial.collectors/-sensor-delay/index.html">SensorDelay</a> = SensorDelay.GAME, estimateCoordinateTransformation: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a> = false, estimateDisplayEulerAngles: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a> = true, attitudeAvailableListener: <a href="-on-attitude-available-listener/index.html">RelativeGyroscopeAttitudeEstimator.OnAttitudeAvailableListener</a>? = null, gyroscopeMeasurementListener: <a href="../../com.irurueta.android.navigation.inertial.collectors/-gyroscope-sensor-collector/-on-measurement-listener/index.html">GyroscopeSensorCollector.OnMeasurementListener</a>? = null)<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <h2 class="">Types</h2>
+              <div class="table" data-togglable="Types"><a data-name="-1823686043%2FClasslikes%2F1946847589" anchor-label="OnAttitudeAvailableListener" id="-1823686043%2FClasslikes%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="-on-attitude-available-listener/index.html"><span>On</span><wbr></wbr><span>Attitude</span><wbr></wbr><span>Available</span><wbr></wbr><span><span>Listener</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1823686043%2FClasslikes%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">fun interface <a href="-on-attitude-available-listener/index.html">OnAttitudeAvailableListener</a> : <a href="../-base-relative-gyroscope-attitude-estimator/-on-attitude-available-listener/index.html">BaseRelativeGyroscopeAttitudeEstimator.OnAttitudeAvailableListener</a>&lt;<a href="index.html">RelativeGyroscopeAttitudeEstimator</a>, <a href="-on-attitude-available-listener/index.html">RelativeGyroscopeAttitudeEstimator.OnAttitudeAvailableListener</a>&gt; <span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<div class="brief "><p class="paragraph">Interface to notify when a new attitude measurement is available.</p></div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <h2 class="">Functions</h2>
+              <div class="table" data-togglable="Functions"><a data-name="576929555%2FFunctions%2F1946847589" anchor-label="start" id="576929555%2FFunctions%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-base-relative-gyroscope-attitude-estimator/start.html"><span><span>start</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="576929555%2FFunctions%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">fun <a href="../-base-relative-gyroscope-attitude-estimator/start.html">start</a>(): <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<div class="brief "><p class="paragraph">Starts this estimator.</p></div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-348543613%2FFunctions%2F1946847589" anchor-label="stop" id="-348543613%2FFunctions%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-base-relative-gyroscope-attitude-estimator/stop.html"><span><span>stop</span></span></a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-348543613%2FFunctions%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><div class="symbol monospace">fun <a href="../-base-relative-gyroscope-attitude-estimator/stop.html">stop</a>()<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<div class="brief "><p class="paragraph">Stops this estimator.</p></div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <h2 class="">Properties</h2>
+              <div class="table" data-togglable="Properties"><a data-name="2113843586%2FProperties%2F1946847589" anchor-label="attitudeAvailableListener" id="2113843586%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-base-relative-gyroscope-attitude-estimator/attitude-available-listener.html">attitudeAvailableListener</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2113843586%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="2113843586%2FProperties%2F1946847589" anchor-label="attitudeAvailableListener" id="2113843586%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="../-base-relative-gyroscope-attitude-estimator/attitude-available-listener.html">attitudeAvailableListener</a>: <a href="-on-attitude-available-listener/index.html">RelativeGyroscopeAttitudeEstimator.OnAttitudeAvailableListener</a>?<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="2113843586%2FProperties%2F1946847589" anchor-label="attitudeAvailableListener" id="2113843586%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">listener to notify when a new attitude measurement is available.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-261620570%2FProperties%2F1946847589" anchor-label="averageTimeInterval" id="-261620570%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-base-relative-gyroscope-attitude-estimator/average-time-interval.html">averageTimeInterval</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-261620570%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-261620570%2FProperties%2F1946847589" anchor-label="averageTimeInterval" id="-261620570%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="../-base-relative-gyroscope-attitude-estimator/average-time-interval.html">averageTimeInterval</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html">Double</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-261620570%2FProperties%2F1946847589" anchor-label="averageTimeInterval" id="-261620570%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Gets average time interval between gyroscope samples expressed in seconds.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="905474150%2FProperties%2F1946847589" anchor-label="context" id="905474150%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-base-relative-gyroscope-attitude-estimator/context.html">context</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="905474150%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="905474150%2FProperties%2F1946847589" anchor-label="context" id="905474150%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="../-base-relative-gyroscope-attitude-estimator/context.html">context</a>: <a href="https://developer.android.com/reference/kotlin/android/content/Context.html">Context</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="905474150%2FProperties%2F1946847589" anchor-label="context" id="905474150%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Android context.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-1658634372%2FProperties%2F1946847589" anchor-label="estimateCoordinateTransformation" id="-1658634372%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-base-relative-gyroscope-attitude-estimator/estimate-coordinate-transformation.html">estimateCoordinateTransformation</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1658634372%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-1658634372%2FProperties%2F1946847589" anchor-label="estimateCoordinateTransformation" id="-1658634372%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="../-base-relative-gyroscope-attitude-estimator/estimate-coordinate-transformation.html">estimateCoordinateTransformation</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1658634372%2FProperties%2F1946847589" anchor-label="estimateCoordinateTransformation" id="-1658634372%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">true to estimate coordinate transformation, false otherwise. If not needed, it can be disabled to improve performance and decrease cpu load.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="946353620%2FProperties%2F1946847589" anchor-label="estimateEulerAngles" id="946353620%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-base-relative-gyroscope-attitude-estimator/estimate-euler-angles.html">estimateEulerAngles</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="946353620%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="946353620%2FProperties%2F1946847589" anchor-label="estimateEulerAngles" id="946353620%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="../-base-relative-gyroscope-attitude-estimator/estimate-euler-angles.html">estimateEulerAngles</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="946353620%2FProperties%2F1946847589" anchor-label="estimateEulerAngles" id="946353620%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">true to estimate euler angles, false otherwise. If not needed, it can be disabled to improve performance and decrease cpu load.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="835499610%2FProperties%2F1946847589" anchor-label="gyroscopeMeasurementListener" id="835499610%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-base-relative-gyroscope-attitude-estimator/gyroscope-measurement-listener.html">gyroscopeMeasurementListener</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="835499610%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="835499610%2FProperties%2F1946847589" anchor-label="gyroscopeMeasurementListener" id="835499610%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="../-base-relative-gyroscope-attitude-estimator/gyroscope-measurement-listener.html">gyroscopeMeasurementListener</a>: <a href="../../com.irurueta.android.navigation.inertial.collectors/-gyroscope-sensor-collector/-on-measurement-listener/index.html">GyroscopeSensorCollector.OnMeasurementListener</a>?<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="835499610%2FProperties%2F1946847589" anchor-label="gyroscopeMeasurementListener" id="835499610%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">listener to notify new gyroscope measurements.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="611435094%2FProperties%2F1946847589" anchor-label="running" id="611435094%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-base-relative-gyroscope-attitude-estimator/running.html">running</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="611435094%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="611435094%2FProperties%2F1946847589" anchor-label="running" id="611435094%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">var <a href="../-base-relative-gyroscope-attitude-estimator/running.html">running</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="611435094%2FProperties%2F1946847589" anchor-label="running" id="611435094%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Indicates whether this estimator is running or not.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="1540736364%2FProperties%2F1946847589" anchor-label="sensorDelay" id="1540736364%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-base-relative-gyroscope-attitude-estimator/sensor-delay.html">sensorDelay</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1540736364%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="1540736364%2FProperties%2F1946847589" anchor-label="sensorDelay" id="1540736364%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="../-base-relative-gyroscope-attitude-estimator/sensor-delay.html">sensorDelay</a>: <a href="../../com.irurueta.android.navigation.inertial.collectors/-sensor-delay/index.html">SensorDelay</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="1540736364%2FProperties%2F1946847589" anchor-label="sensorDelay" id="1540736364%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">Delay of gyroscope between samples.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="-1125182031%2FProperties%2F1946847589" anchor-label="sensorType" id="-1125182031%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a>
+                <div class="table-row" data-filterable-current=":lib:dokkaHtml/release" data-filterable-set=":lib:dokkaHtml/release">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-base-relative-gyroscope-attitude-estimator/sensor-type.html">sensorType</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1125182031%2FProperties%2F1946847589"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":lib:dokkaHtml/release"><a data-name="-1125182031%2FProperties%2F1946847589" anchor-label="sensorType" id="-1125182031%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><div class="symbol monospace">val <a href="../-base-relative-gyroscope-attitude-estimator/sensor-type.html">sensorType</a>: <a href="../../com.irurueta.android.navigation.inertial.collectors/-gyroscope-sensor-type/index.html">GyroscopeSensorType</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1125182031%2FProperties%2F1946847589" anchor-label="sensorType" id="-1125182031%2FProperties%2F1946847589" data-filterable-set=":lib:dokkaHtml/release"></a><p class="paragraph">One of the supported gyroscope sensor types.</p></div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="footer"><span class="go-to-top-icon"><a href="#content"></a></span><span>© 2023 Copyright</span><span class="pull-right"><span>Generated by </span><a href="https://github.com/Kotlin/dokka"><span>dokka</span><span class="padded-icon"></span></a></span></div>
+      </div>
+    </div>
+  </body>
+</html>
+
