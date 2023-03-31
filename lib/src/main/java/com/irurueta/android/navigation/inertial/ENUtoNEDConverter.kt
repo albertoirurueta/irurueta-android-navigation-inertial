@@ -85,7 +85,7 @@ object ENUtoNEDConverter {
      * @param input acceleration triad to be converted.
      * @return new acceleration triad containing result of conversion.
      */
-    fun convertAndReturnNew(input: AccelerationTriad) : AccelerationTriad {
+    fun convertAndReturnNew(input: AccelerationTriad): AccelerationTriad {
         val result = AccelerationTriad()
         convert(input, result)
         return result
@@ -97,7 +97,7 @@ object ENUtoNEDConverter {
      * @param input angular speed triad to be converted.
      * @return new angular speed triad containing result of conversion.
      */
-    fun convertAndReturnNew(input: AngularSpeedTriad) : AngularSpeedTriad {
+    fun convertAndReturnNew(input: AngularSpeedTriad): AngularSpeedTriad {
         val result = AngularSpeedTriad()
         convert(input, result)
         return result
@@ -109,7 +109,7 @@ object ENUtoNEDConverter {
      * @param input magnetic flux density to be converted.
      * @return new magnetic flux density triad containing result of conversion.
      */
-    fun convertAndReturnNew(input: MagneticFluxDensityTriad) : MagneticFluxDensityTriad {
+    fun convertAndReturnNew(input: MagneticFluxDensityTriad): MagneticFluxDensityTriad {
         val result = MagneticFluxDensityTriad()
         convert(input, result)
         return result
@@ -149,9 +149,41 @@ object ENUtoNEDConverter {
         // Renu = C * Rned * C
         // Rned = C * Renu * C
 
-        Quaternion.product(CONVERSION_ROTATION, input, output)
-        Quaternion.product(output, CONVERSION_ROTATION, output)
-        output.normalize()
+        // Because CONVERSION_ROTATION = Cq quaternion is [0, -1/sqrt(2), -1/sqrt(2), 0]
+        // And quaternion q is [a b c d]
+        // Then the product: q' = Cq * q * Cq is:
+        // q'' = q * Cq =   [a*0 + b/sqrt(2) + c/sqrt(2) - d*0 ] =  [b/sqrt(2) + c/sqrt(2) ]
+        //                  [-a/sqrt(2) + b*0 + c*0 + d/sqrt(2)]    [-a/sqrt(2) + d/sqrt(2)]
+        //                  [-a/sqrt(2) - b*0 + c*0 - d/sqrt(2)]    [-a/sqrt(2) - d/sqrt(2)]
+        //                  [a*0 - b/sqrt(2) + c/sqrt(2)  d*0  ]    [-b/sqrt(2) + c/sqrt(2)]
+
+        // q'' = 1/sqrt(2) * [b + c ]
+        //                   [-a + d]
+        //                   [-a - d]
+        //                   [-b + c]
+
+        // Finally:
+        // q' = Cq * q'' = 1/sqrt(2) * [0*(b + c) + (-a + d)/sqrt(2) + (-a - d)/sqrt(2) - 0*(-b + c)]
+        //                             [0*(-a + d) -(b + c)/sqrt(2) - (-b + c)/sqrt(2) - 0 *(-a -d) ]
+        //                             [0*(-a -d) + (-b + c)/sqrt(2) - (b + c)/sqrt(2) + 0*(-a + d) ]
+        //                             [0*(-b + c) - (-a - d)/sqrt(2) + (-a + d)/sqrt(2) + 0*(b + c)]
+
+        // q' = 1/sqrt(2) * [(-a + d -a - d)/sqrt(2) ] = 1/2 * [-2a] = [-a]
+        //                  [(-b - c + b - c)/sqrt(2)]         [-2c]   [-c]
+        //                  [(-b + c - b - c)/sqrt(2)]         [-2b]   [-b]
+        //                  [(a + d - a + d)/sqrt(2) ]         [2d ]   [ d]
+
+        // Conversion could be computed as:
+        /// Quaternion.product(CONVERSION_ROTATION, input, output)
+        // Quaternion.product(output, CONVERSION_ROTATION, output)
+        // output.normalize()
+
+        // However, since we know the actual expression, it is more efficient to compute:
+
+        output.a = -input.a
+        output.b = -input.c
+        output.c = -input.b
+        output.d = input.d
     }
 
     /**
@@ -317,7 +349,7 @@ object ENUtoNEDConverter {
      * @param input point to be converted.
      * @return new point containing result of conversion.
      */
-    fun convertPointAndReturnNew(input: Point3D) : InhomogeneousPoint3D {
+    fun convertPointAndReturnNew(input: Point3D): InhomogeneousPoint3D {
         val result = InhomogeneousPoint3D()
         convertPoint(input, result)
         return result
@@ -341,15 +373,23 @@ object ENUtoNEDConverter {
     /**
      * Obtains a matrix to convert from ENU to NED and from NED to ENU coordinate systems.
      *
-     * @param result instance where result will be stored.
+     * @param result instance where result will be stored. If matrix is not 3x3, it will be resized.
      */
     fun conversionRotationMatrix(result: Matrix) {
         if (result.rows != Rotation3D.INHOM_COORDS || result.columns != Rotation3D.INHOM_COORDS) {
             result.resize(Rotation3D.INHOM_COORDS, Rotation3D.INHOM_COORDS)
         }
-        result.setElementAt(0, 1, 1.0)
-        result.setElementAt(1, 0, 1.0)
-        result.setElementAt(2, 2, -1.0)
+        result.setElementAtIndex(0, 0.0)
+        result.setElementAtIndex(1, 1.0)
+        result.setElementAtIndex(2, 0.0)
+
+        result.setElementAtIndex(3, 1.0)
+        result.setElementAtIndex(4, 0.0)
+        result.setElementAtIndex(5, 0.0)
+
+        result.setElementAtIndex(6, 0.0)
+        result.setElementAtIndex(7, 0.0)
+        result.setElementAtIndex(8, -1.0)
     }
 
     /**
@@ -360,5 +400,67 @@ object ENUtoNEDConverter {
             val result = Matrix(Rotation3D.INHOM_COORDS, Rotation3D.INHOM_COORDS)
             conversionRotationMatrix(result)
             return result
+        }
+
+    /**
+     * Computes jacobian resulting from ENU to NED quaternion conversion.
+     *
+     * @param result instance where jacobian will be stored. If matrix is not 4x4, it will be
+     * resized.
+     */
+    fun quaternionConversionJacobian(result: Matrix) {
+        if (result.rows != Quaternion.N_PARAMS || result.columns != Quaternion.N_PARAMS) {
+            result.resize(Quaternion.N_PARAMS, Quaternion.N_PARAMS)
+        }
+
+        // Because CONVERSION_ROTATION = Cq quaternion is [0, -1/sqrt(2), -1/sqrt(2), 0]
+        // And quaternion q is [a b c d]
+        // Then the product: q' = Cq * q * Cq is:
+
+        // q' = [-a]
+        //      [-c]
+        //      [-b]
+        //      [ d]
+
+        // The jacobian of q' = [a' b' c' d'] respect q = [a b c d] is:
+        // J =  [d(a')/d(a)  d(a')/d(b)  d(a')/d(c)  d(a')/d(d)]
+        //      [d(b')/d(a)  d(b')/d(b)  d(b')/d(c)  d(b')/d(d)]
+        //      [d(c')/d(a)  d(c')/d(b)  d(c')/d(c)  d(c')/d(d)]
+        //      [d(d')/d(a)  d(d')/d(b)  d(d')/d(c)  d(d')/d(d)]
+
+        // J =  [-1  0   0   0]
+        //      [ 0  0  -1   0]
+        //      [ 0 -1   0   0]
+        //      [ 0  0   0   1]
+
+        result.setElementAtIndex(0, -1.0)
+        result.setElementAtIndex(1, 0.0)
+        result.setElementAtIndex(2, 0.0)
+        result.setElementAtIndex(3, 0.0)
+
+        result.setElementAtIndex(4, 0.0)
+        result.setElementAtIndex(5, 0.0)
+        result.setElementAtIndex(6, -1.0)
+        result.setElementAtIndex(7, 0.0)
+
+        result.setElementAtIndex(8, 0.0)
+        result.setElementAtIndex(9, -1.0)
+        result.setElementAtIndex(10, 0.0)
+        result.setElementAtIndex(11, 0.0)
+
+        result.setElementAtIndex(12, 0.0)
+        result.setElementAtIndex(13, 0.0)
+        result.setElementAtIndex(14, 0.0)
+        result.setElementAtIndex(15, 1.0)
+    }
+
+    /**
+     * Obtains jacobian resulting from ENU to NED quaternion conversion.
+     */
+    val quaternionConversionJacobian: Matrix
+        get() {
+            val result = Matrix(Quaternion.N_PARAMS, Quaternion.N_PARAMS)
+            quaternionConversionJacobian(result)
+            return  result
         }
 }

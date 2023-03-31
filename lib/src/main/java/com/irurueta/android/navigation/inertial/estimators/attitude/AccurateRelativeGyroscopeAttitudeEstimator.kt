@@ -140,18 +140,18 @@ class AccurateRelativeGyroscopeAttitudeEstimator(
                         null
                     }
 
-                val displayRoll: Double?
-                val displayPitch: Double?
-                val displayYaw: Double?
+                val roll: Double?
+                val pitch: Double?
+                val yaw: Double?
                 if (estimateEulerAngles) {
                     attitude.toEulerAngles(eulerAngles)
-                    displayRoll = eulerAngles[0]
-                    displayPitch = eulerAngles[1]
-                    displayYaw = eulerAngles[2]
+                    roll = eulerAngles[0]
+                    pitch = eulerAngles[1]
+                    yaw = eulerAngles[2]
                 } else {
-                    displayRoll = null
-                    displayPitch = null
-                    displayYaw = null
+                    roll = null
+                    pitch = null
+                    yaw = null
                 }
 
                 // notify
@@ -159,9 +159,9 @@ class AccurateRelativeGyroscopeAttitudeEstimator(
                     this@AccurateRelativeGyroscopeAttitudeEstimator,
                     attitude,
                     timestamp,
-                    displayRoll,
-                    displayPitch,
-                    displayYaw,
+                    roll,
+                    pitch,
+                    yaw,
                     c
                 )
             }

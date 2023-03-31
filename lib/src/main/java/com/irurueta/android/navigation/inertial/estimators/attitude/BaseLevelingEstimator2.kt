@@ -226,15 +226,15 @@ abstract class BaseLevelingEstimator2<T : BaseLevelingEstimator2<T, L1, L2>,
                 null
             }
 
-        val displayRoll: Double?
-        val displayPitch: Double?
+        val roll: Double?
+        val pitch: Double?
         if (estimateEulerAngles) {
             attitude.toEulerAngles(eulerAngles)
-            displayRoll = eulerAngles[0]
-            displayPitch = eulerAngles[1]
+            roll = eulerAngles[0]
+            pitch = eulerAngles[1]
         } else {
-            displayRoll = null
-            displayPitch = null
+            roll = null
+            pitch = null
         }
 
         // notify
@@ -243,8 +243,8 @@ abstract class BaseLevelingEstimator2<T : BaseLevelingEstimator2<T, L1, L2>,
             this as T,
             attitude,
             timestamp,
-            displayRoll,
-            displayPitch,
+            roll,
+            pitch,
             c
         )
     }

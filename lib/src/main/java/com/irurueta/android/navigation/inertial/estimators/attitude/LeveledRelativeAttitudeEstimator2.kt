@@ -401,18 +401,18 @@ class LeveledRelativeAttitudeEstimator2(
                 null
             }
 
-        val displayRoll: Double?
-        val displayPitch: Double?
-        val displayYaw: Double?
+        val roll: Double?
+        val pitch: Double?
+        val yaw: Double?
         if (estimateEulerAngles) {
             fusedAttitude.toEulerAngles(eulerAngles)
-            displayRoll = eulerAngles[0]
-            displayPitch = eulerAngles[1]
-            displayYaw = eulerAngles[2]
+            roll = eulerAngles[0]
+            pitch = eulerAngles[1]
+            yaw = eulerAngles[2]
         } else {
-            displayRoll = null
-            displayPitch = null
-            displayYaw = null
+            roll = null
+            pitch = null
+            yaw = null
         }
 
         // notify
@@ -420,9 +420,9 @@ class LeveledRelativeAttitudeEstimator2(
             this,
             fusedAttitude,
             timestamp,
-            displayRoll,
-            displayPitch,
-            displayYaw,
+            roll,
+            pitch,
+            yaw,
             c
         )
     }
@@ -443,6 +443,7 @@ class LeveledRelativeAttitudeEstimator2(
          * @param attitude attitude expressed in NED coordinates.
          * @param timestamp time in nanoseconds at which the measurement was made. Each measurement
          * wil be monotonically increasing using the same time base as
+         * [android.os.SystemClock.elapsedRealtimeNanos].
          * @param roll roll angle expressed in radians respect to NED coordinate system. Only
          * available if [estimateEulerAngles] is true.
          * @param pitch pitch angle expressed in radians respect to NED coordinate system. Only
@@ -485,8 +486,8 @@ class LeveledRelativeAttitudeEstimator2(
     /**
      * Interface to notify when a buffer gets completely filled.
      * When buffers get filled, internal collectors will continue collection at the expense of
-     * loosing old data. Consumers of this listener should device what to do at this point (which
-     * might require stopping this estimator)..
+     * loosing old data. Consumers of this listener should decide what to do at this point (which
+     * might require stopping this estimator).
      */
     fun interface OnBufferFilledListener {
         /**

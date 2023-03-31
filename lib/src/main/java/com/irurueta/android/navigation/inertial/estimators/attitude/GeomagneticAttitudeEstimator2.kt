@@ -318,7 +318,7 @@ class GeomagneticAttitudeEstimator2(
     }
 
     /**
-     * Processes current attitude and computes (if needed) a coordinate transformation or display
+     * Processes current attitude and computes (if needed) a coordinate transformation or
      * Euler angles.
      *
      * @param timestamp time in nanoseconds at which the measurement was made. Each measurement
@@ -334,18 +334,18 @@ class GeomagneticAttitudeEstimator2(
                 null
             }
 
-        val displayRoll: Double?
-        val displayPitch: Double?
-        val displayYaw: Double?
+        val roll: Double?
+        val pitch: Double?
+        val yaw: Double?
         if (estimateEulerAngles) {
             fusedAttitude.toEulerAngles(eulerAngles)
-            displayRoll = eulerAngles[0]
-            displayPitch = eulerAngles[1]
-            displayYaw = eulerAngles[2]
+            roll = eulerAngles[0]
+            pitch = eulerAngles[1]
+            yaw = eulerAngles[2]
         } else {
-            displayRoll = null
-            displayPitch = null
-            displayYaw = null
+            roll = null
+            pitch = null
+            yaw = null
         }
 
         // notify
@@ -353,9 +353,9 @@ class GeomagneticAttitudeEstimator2(
             this,
             fusedAttitude,
             timestamp,
-            displayRoll,
-            displayPitch,
-            displayYaw,
+            roll,
+            pitch,
+            yaw,
             c
         )
     }
