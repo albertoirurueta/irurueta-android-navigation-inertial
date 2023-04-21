@@ -24,7 +24,6 @@ import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.frames.CoordinateTransformation
 import com.irurueta.navigation.frames.FrameType
 import com.irurueta.units.TimeConverter
-import java.time.Duration
 import kotlin.math.abs
 
 /**
@@ -65,7 +64,7 @@ import kotlin.math.abs
  * happens when consumer of measurements cannot keep up with the rate at which measurements are
  * generated.
  */
-class KalmanRelativeAttitudeEstimator2(
+class KalmanRelativeAttitudeEstimator(
     val context: Context,
     val sensorDelay: SensorDelay = SensorDelay.GAME,
     val startOffsetEnabled: Boolean = true,
@@ -122,7 +121,7 @@ class KalmanRelativeAttitudeEstimator2(
             unreliable = true
             unreliableTimestamp = lastTimestamp
             accuracyChangedListener?.onAccuracyChanged(
-                this@KalmanRelativeAttitudeEstimator2,
+                this@KalmanRelativeAttitudeEstimator,
                 SensorType.RELATIVE_ATTITUDE,
                 SensorAccuracy.UNRELIABLE
             )
@@ -172,13 +171,13 @@ class KalmanRelativeAttitudeEstimator2(
         accuracyChangedListener = { _, sensorType, accuracy ->
             sensorAccuracy = accuracy
             accuracyChangedListener?.onAccuracyChanged(
-                this@KalmanRelativeAttitudeEstimator2,
+                this@KalmanRelativeAttitudeEstimator,
                 sensorType,
                 accuracy
             )
         },
         bufferFilledListener = { _, sensorType ->
-            bufferFilledListener?.onBufferFilled(this@KalmanRelativeAttitudeEstimator2, sensorType)
+            bufferFilledListener?.onBufferFilled(this@KalmanRelativeAttitudeEstimator, sensorType)
         },
         syncedMeasurementListener = { _, measurement ->
             if (processor.process(measurement)) {
@@ -324,7 +323,7 @@ class KalmanRelativeAttitudeEstimator2(
          * [estimateEulerAngles] and [estimateCovariances] are true.
          */
         fun onAttitudeAvailable(
-            estimator: KalmanRelativeAttitudeEstimator2,
+            estimator: KalmanRelativeAttitudeEstimator,
             attitude: Quaternion,
             timestamp: Long,
             roll: Double?,
@@ -356,7 +355,7 @@ class KalmanRelativeAttitudeEstimator2(
          * @param accuracy new accuracy.
          */
         fun onAccuracyChanged(
-            estimator: KalmanRelativeAttitudeEstimator2,
+            estimator: KalmanRelativeAttitudeEstimator,
             sensorType: SensorType,
             accuracy: SensorAccuracy?
         )
@@ -375,6 +374,6 @@ class KalmanRelativeAttitudeEstimator2(
          * @param estimator estimator that raised this event.
          * @param sensorType sensor that got its buffer filled.
          */
-        fun onBufferFilled(estimator: KalmanRelativeAttitudeEstimator2, sensorType: SensorType)
+        fun onBufferFilled(estimator: KalmanRelativeAttitudeEstimator, sensorType: SensorType)
     }
 }

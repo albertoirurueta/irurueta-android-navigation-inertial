@@ -16,18 +16,19 @@
 package com.irurueta.android.navigation.inertial.processors.attitude
 
 import android.hardware.SensorManager
-import android.util.Log
 import com.irurueta.algebra.ArrayUtils
 import com.irurueta.algebra.Matrix
 import com.irurueta.algebra.Utils
 import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
-import com.irurueta.android.navigation.inertial.QuaternionHelper
+import com.irurueta.android.navigation.inertial.KalmanFilter
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerAndGyroscopeSyncedSensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorMeasurement
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.inertial.calibration.AccelerationTriad
-import com.irurueta.android.navigation.inertial.KalmanFilter
+import com.irurueta.navigation.inertial.calibration.AngularSpeedTriad
+import com.irurueta.navigation.inertial.calibration.gyroscope.QuaternionStepIntegrator
+import com.irurueta.navigation.inertial.calibration.gyroscope.QuaternionStepIntegratorType
 import com.irurueta.units.TimeConverter
 import kotlin.math.abs
 import kotlin.math.exp
@@ -58,30 +59,25 @@ import kotlin.math.sqrt
  * @property freeFallThreshold Threshold to consider that device is in free fall. When device is in
  * free fall, accelerometer measurements are considered unreliable and are ignored (only gyroscope
  * predictions are made).
- * @property normalizationEnabled true indicates that quaternion attitude will be normalized for
- * each received measurement, false to keep Kalman filter estimation without normalization. For
- * accuracy reasons, it is suggested to keep normalization enabled.
+ * @property quaternionStepIntegratorType type of quaternion step integrator to be used for
+ * gyroscope integration.
  * @property processorListener listener to notify new attitudes and their uncertainties.
  * @property errorCovarianceResetListener listener to notify when error covariance needs to be reset
  * because numerical instabilities have been found.
  */
 class KalmanRelativeAttitudeProcessor(
-    var processCovariance: Boolean = true,
-    var processEulerAngles: Boolean = true,
-    var processEulerAnglesCovariance: Boolean = true,
-    var gyroscopeVariance: Double = DEFAULT_GYROSCOPE_VARIANCE,
-    var gyroscopeBiasVariance: Double = DEFAULT_GYROSCOPE_BIAS_VARIANCE,
-    var accelerometerStandardDeviation: Double = DEFAULT_ACCELEROMETER_STANDARD_DEVIATION,
-    var freeFallThreshold: Double = DEFAULT_FREE_FALL_THRESHOLD,
-    val normalizationEnabled: Boolean = true,
+    val processCovariance: Boolean = true,
+    val processEulerAngles: Boolean = true,
+    val processEulerAnglesCovariance: Boolean = true,
+    val gyroscopeVariance: Double = DEFAULT_GYROSCOPE_VARIANCE,
+    val gyroscopeBiasVariance: Double = DEFAULT_GYROSCOPE_BIAS_VARIANCE,
+    val accelerometerStandardDeviation: Double = DEFAULT_ACCELEROMETER_STANDARD_DEVIATION,
+    val freeFallThreshold: Double = DEFAULT_FREE_FALL_THRESHOLD,
+    val quaternionStepIntegratorType: QuaternionStepIntegratorType =
+        QuaternionStepIntegrator.DEFAULT_TYPE,
     var processorListener: OnProcessedListener? = null,
     var errorCovarianceResetListener: OnErrorCovarianceResetListener? = null
 ) {
-
-    /**
-     * Estimated attitude expressed in ENU coordinates.
-     */
-    val enuAttitude = Quaternion()
 
     /**
      * Estimated attitude expressed in NED coordinates.
@@ -93,17 +89,6 @@ class KalmanRelativeAttitudeProcessor(
      */
     var gyroscopeIntervalSeconds: Double = 0.0
         private set
-
-    /**
-     * Error covariance of estimated quaternion attitude expressed in ENU coordinates.
-     * This is only available if [processCovariance] is true.
-     */
-    val enuQuaternionCovariance: Matrix?
-        get() = if (processCovariance) {
-            internalEnuQuaternionCovariance
-        } else {
-            null
-        }
 
     /**
      * Error covariance of estimated quaternion attitude expressed in NED coordinates.
@@ -154,23 +139,29 @@ class KalmanRelativeAttitudeProcessor(
     private var previousTimestamp: Long = -1L
 
     /**
-     * Array containing accelerometer data expressed in ENU coordinates.
+     * Contains accelerometer data expressed in NED coordinates.
      * This is reused for performance reasons.
      */
-    private val accelerometerData: DoubleArray = DoubleArray(COMPONENTS)
+    private val accelerationTriad: AccelerationTriad = AccelerationTriad()
 
     /**
-     * Array containing gyroscope data expressed in ENU coordinates.
+     * Contains gyroscope data expressed in NED coordinates.
      * This is reused for performance reasons.
      */
-    private val gyroscopeData: DoubleArray = DoubleArray(COMPONENTS)
+    private val angularSpeedTriad: AngularSpeedTriad = AngularSpeedTriad()
+
+    /**
+     * Contains previous gyroscope data expressed in NED coordinates.
+     * This is reused for performance reasons.
+     */
+    private val previousAngularSpeedTriad: AngularSpeedTriad = AngularSpeedTriad()
 
     /**
      * Array containing unit vector pointing upwards. This is used during initialization to obtain
      * an initial attitude.
      * This is reused for performance reasons.
      */
-    private val up: DoubleArray = DoubleArray(COMPONENTS)
+    private val down: DoubleArray = DoubleArray(COMPONENTS)
 
     /**
      * Array containing unit vector pointing east. This is used during initialization to obtain
@@ -209,23 +200,22 @@ class KalmanRelativeAttitudeProcessor(
     private val q = Quaternion()
 
     /**
-     * Quaternion containing current attitude expressed in NED coordinates.
+     * Quaternion containing expected attitude expressed in ENU coordinates after integration.
      * This is reused for performance reasons.
      */
-    private val nedQ = Quaternion()
+    private val expectedQ = Quaternion()
 
     /**
-     * Skew antisymmetric matrix of angular speed. This is used to compute quaternion time
-     * derivative.
+     * Inverse of quaternion [q].
      * This is reused for performance reasons.
      */
-    private val w = Matrix(Quaternion.N_PARAMS, Quaternion.N_PARAMS)
+    private val invQ = Quaternion()
 
     /**
-     * Matrix containing representation of quaternion time derivative.
+     * Variation of attitude between [q] and [expectedQ].
      * This is reused for performance reasons.
      */
-    private val dq = Matrix(Quaternion.N_PARAMS, 1)
+    private val deltaQ = Quaternion()
 
     /**
      * Kalman filter using normalized accelerometer vector as measurements.
@@ -243,12 +233,6 @@ class KalmanRelativeAttitudeProcessor(
      */
     private val normalizedCovariance =
         Matrix(Quaternion.N_PARAMS, Quaternion.N_PARAMS)
-
-    /**
-     * Error covariance of quaternion attitude expressed in ENU coordinates.
-     * This is used internally and reused for performance reasons.
-     */
-    private val internalEnuQuaternionCovariance = Matrix(Quaternion.N_PARAMS, Quaternion.N_PARAMS)
 
     /**
      * Error covariance of quaternion attitude expressed in NED coordinates.
@@ -274,17 +258,6 @@ class KalmanRelativeAttitudeProcessor(
     private val transposedNormalizationJacobian = Matrix(Quaternion.N_PARAMS, Quaternion.N_PARAMS)
 
     /**
-     * Jacobian of quaternion conversion from ENU to NED coordinates system.
-     */
-    private val nedQuaternionConversionJacobian = ENUtoNEDConverter.quaternionConversionJacobian
-
-    /**
-     * Transposed of [nedQuaternionConversionJacobian].
-     */
-    private val transposedNedQuaternionConversionJacobian =
-        nedQuaternionConversionJacobian.transposeAndReturnNew()
-
-    /**
      * Jacobian of conversion NED quaternion attitude into Euler angles.
      * This is used for propagation of error covariance uncertainty into euler angles covariance
      * uncertainty.
@@ -302,6 +275,12 @@ class KalmanRelativeAttitudeProcessor(
      * This is reused for performance reasons.
      */
     private val internalEulerAnglesCovariance = Matrix(Quaternion.N_ANGLES, Quaternion.N_ANGLES)
+
+    /**
+     * Integrates angular speed measurements to compute predicted quaternion variation.
+     */
+    private val quaternionStepIntegrator =
+        QuaternionStepIntegrator.create(quaternionStepIntegratorType)
 
     /**
      * Processes provided synced accelerometer and gyroscope measurement to obtain a relative
@@ -336,22 +315,18 @@ class KalmanRelativeAttitudeProcessor(
         timestamp: Long = gyroscopeMeasurement.timestamp
     ): Boolean {
         val isFirst = updateTimeInterval(timestamp)
-        return if (isFirst) {
+        val result = if (isFirst) {
+            processMeasurement(gyroscopeMeasurement, angularSpeedTriad)
             false
         } else {
-            processMeasurement(accelerometerMeasurement, accelerometerData)
+            processMeasurement(accelerometerMeasurement, accelerationTriad)
             // we will always work with normalized accelerometer data to obtain up direction
-            val accelerometerNorm = normalize(accelerometerData)
+            val accelerometerNorm = normalize(accelerationTriad)
 
-//            Log.i("Kalman", "accelerometerNorm: $accelerometerNorm")
-//            Log.i("Kalman", "accelerometerData: ${accelerometerData[0]}, ${accelerometerData[1]}, ${accelerometerData[2]}")
-
-            processMeasurement(gyroscopeMeasurement, gyroscopeData)
+            processMeasurement(gyroscopeMeasurement, angularSpeedTriad)
 
             if (!initialized) {
                 estimateInitialAttitude()
-
-//                Log.i("Kalman", "initialAttitude: ${q.a}, ${q.b}, ${q.c}, ${q.d}")
 
                 initKalmanFilter()
 
@@ -365,48 +340,37 @@ class KalmanRelativeAttitudeProcessor(
                 // considered
                 updateMeasurementNoiseCovariance(accelerometerNorm)
 
-//                initErrorCovariances()
-
                 // predict using current transition matrix
-                val state =
-                    kalmanFilter.transitionMatrix.multiplyAndReturnNew(kalmanFilter.statePre)
-                kalmanFilter.statePre = state
-/*                val statePre = kalmanFilter.predict()
+                val statePre = kalmanFilter.predict()
 
                 val isFreeFall = accelerometerNorm < freeFallThreshold
                 val state = if (isFreeFall) {
                     // device is in free fall
+                    kalmanFilter.statePost.copyFrom(statePre)
                     statePre
                 } else {
                     // after prediction, update measurement matrix for next correction
                     updateMeasurementMatrix()
 
                     // correct using current accelerometer data
-                    m.fromArray(accelerometerData)
+                    accelerationTriad.getValuesAsMatrix(m)
                     kalmanFilter.correct(m)
-//                    //statePre
-                }*/
+                }
 
                 // represent state as quaternion
                 copyColumnMatrixToQuaternion(state, q)
 
-                if (normalizationEnabled) {
-                    normalizeAndUpdateState(state)
-                }
+                normalizeAndUpdateState(state)
 
-                // copy internal attitude and convert to NED coordinates
-                enuAttitude.fromQuaternion(q)
-                ENUtoNEDConverter.convert(q, nedQ)
-                nedAttitude.fromQuaternion(nedQ)
+                // copy internal attitude
+                nedAttitude.fromQuaternion(q)
 
-                processCovariance(false) //isFreeFall)
+                processCovariance(isFreeFall)
 
                 processorListener?.onProcessed(
                     this,
-                    enuAttitude,
                     nedAttitude,
                     eulerAngles,
-                    enuQuaternionCovariance,
                     nedQuaternionCovariance,
                     eulerAnglesCovariance
                 )
@@ -414,6 +378,9 @@ class KalmanRelativeAttitudeProcessor(
 
             true
         }
+
+        angularSpeedTriad.copyTo(previousAngularSpeedTriad)
+        return result
     }
 
     /**
@@ -448,13 +415,13 @@ class KalmanRelativeAttitudeProcessor(
      */
     private fun estimateInitialAttitude() {
         // set initial attitude in ENU coordinates
-        accelerometerData.copyInto(up)
-        estimateOrthogonal(up, east)
-        crossProduct(up, east, north)
+        accelerationTriad.getValuesAsArray(down)
+        estimateOrthogonal(down, east)
+        crossProduct(down, east, north)
 
-        r.setSubmatrix(0, 0, 2, 0, east)
-        r.setSubmatrix(0, 1, 2, 1, north)
-        r.setSubmatrix(0, 2, 2, 2, up)
+        r.setSubmatrix(0, 0, 2, 0, north)
+        r.setSubmatrix(0, 1, 2, 1, east)
+        r.setSubmatrix(0, 2, 2, 2, down)
         q.fromInhomogeneousMatrix(r)
         q.normalize()
     }
@@ -502,58 +469,6 @@ class KalmanRelativeAttitudeProcessor(
 
         // initialize error covariance a priori and posteriori to zero
         initErrorCovariances()
-
-        // h (measurement matrix) must be defined as the conversion of the quaternion
-        // (kalman filter state) into the rotated unit gravity vector (pointing upwards)
-
-        // z = H * x, where x is the state (the quaternion) and z is the rotated unit gravity
-        // (pointing upwards).
-        // H must be 3x4
-        // qp is the point [0, 0, 1]^T expressed as a quaternion: qp = [0, 0, 0, 1]^T
-        // The rotated point is computed as:
-        // zq = q * qp
-        // where q is the state x = [a b c d]
-        // Hence:
-        // zq = [a  -b  -c  -d][0] = [-d]
-        //      [b   a  -d   c][0]   [ c]
-        //      [c   d   a  -b][0]   [-b]
-        //      [d  -c   b   a][1]   [ a]
-        // z = [zq(1) zq(2) zq(3)]^T = [c   -b   a]^T
-        // Consequently:
-        // H =  [0   0   1   0]
-        //      [0  -1   0   0]
-        //      [1   0   0   0]
-
-        // TODO: review this
-        // A point (or unit vector pointing up) up = [0 0 1]^T
-        // Can be rotated with rotation matrix R as: up' = R * up
-
-        // The rotation matrix R can be obtained from current attitude
-        // x = [a b c d]^T as:
-        //
-        // R = [a^2 + b^2 - c^2 - d^2       2*b*c - 2*a*d               2*b*d + 2*a*c        ]
-        //     [2*b*c + 2*a*d               a^2 - b^2 + c^2 - d^2       2*c*d - 2*a*b        ]
-        //     [2*b*d - 2*a*c               2*c*d + 2*a*b               a^2 - b^2 - c^2 + d^2]
-        //
-        // where x is the state of the Kalman filter containing
-        // current attitude
-
-        // Hence:
-        // z = H * x = R * [0 0 1]^T = [2*b*d + 2*a*c        ]
-        //                             [2*c*d - 2*a*b        ]
-        //                             [a^2 - b^2 - c^2 + d^2]
-
-        // Consequently:
-        // z = H * x = [(2*b*d + 2*a*c)/a       0                   0                           0][a]
-        //             [0                       (2*c*d - 2*a*b)/b   0                           0][b]
-        //             [0                       0                   (a^2 - b^2 - c^2 + d^2)/c   0][c]
-        //                                                                                        [d]
-
-        /*val measurementMatrix = kalmanFilter.measurementMatrix
-        measurementMatrix.initialize(0.0)
-        measurementMatrix.setElementAt(0, 2, 1.0)
-        measurementMatrix.setElementAt(1, 1, -1.0)
-        measurementMatrix.setElementAt(2, 0, 1.0)*/
     }
 
     /**
@@ -589,7 +504,7 @@ class KalmanRelativeAttitudeProcessor(
      */
     private fun normalizeAndUpdateState(state: Matrix) {
         // estimate Jacobian to propagate uncertainty after normalization
-        QuaternionHelper.normalize(q, normalizationJacobian)
+        q.normalize(normalizationJacobian)
         normalizationJacobian.transpose(transposedNormalizationJacobian)
 
         // update state with normalized quaternion for greater accuracy
@@ -610,10 +525,7 @@ class KalmanRelativeAttitudeProcessor(
     private fun propagateNormalization(covariance: Matrix) {
         // propagate uncertainty taking into account that: Cov`= J * Cov * J^T
         normalizationJacobian.multiply(covariance, normalizedCovariance)
-        normalizedCovariance.multiply(
-            transposedNormalizationJacobian,
-            covariance
-        )
+        normalizedCovariance.multiply(transposedNormalizationJacobian, covariance)
     }
 
     /**
@@ -623,41 +535,45 @@ class KalmanRelativeAttitudeProcessor(
      * more information on quaternion integration.
      */
     private fun updateTransitionMatrix() {
+        quaternionStepIntegrator.integrate(
+            q,
+            previousAngularSpeedTriad.valueX,
+            previousAngularSpeedTriad.valueY,
+            previousAngularSpeedTriad.valueZ,
+            angularSpeedTriad.valueX,
+            angularSpeedTriad.valueY,
+            angularSpeedTriad.valueZ,
+            gyroscopeIntervalSeconds,
+            expectedQ
+        )
+
+
+        // compute delta attitude between current and expected quaternions:
+        // q1 = deltaQ1 * q0
+        // deltaQ1 = q1 * invQ0
+
+        q.inverse(invQ)
+        invQ.normalize()
+        expectedQ.multiply(invQ, deltaQ)
+        deltaQ.normalize()
+
+        // q0 = [a0 b0 c0 d0]
+        // deltaQ1 = [da db dc dd]
+        // q1 = [a1 b1 c1 d1]
+
+        // q1 = deltaQ1 * q0
+        // [a1] = [da * a0 - db * b0 - dc * c0 - dd * d0] = [da     -db     -dc     -dd][a0]
+        // [b1]   [da * b0 + db * a0 + dc * d0 - dd * c0]   [db      da     -dd      dc][b0]
+        // [c1]   [da * c0 - db * d0 + dc * a0 + dd * b0]   [dc      dd      da     -db][c0]
+        // [d1]   [da * d0 + db * c0 - dc * b0 + dd * a0]   [dd     -dc      db      da][d0]
+
+        // matrix above corresponds to method [Quaternion#quaternionMatrix(Matrix)]
 
         val transitionMatrix = kalmanFilter.transitionMatrix
-        val dt = gyroscopeIntervalSeconds
-
-        // Kalman filter state pre contains last known attitude quaternion
-        val statePost = kalmanFilter.statePost
-
-        // compute time derivative of current quaternion at current angular speed
-        computeOmegaSkew(gyroscopeData[0], gyroscopeData[1], gyroscopeData[2], w)
-//        copyQuaternionToColumnMatrix(q, statePost)
-        computeQuaternionTimeDerivative(statePost, w, dq)
-
-        // assuming Euler integration: q(n + 1) = q(n) + dt * dq
-        // which can be expressed in matrix form as:
-// TODO: fix
-        // [1 + (dt * dq0)/q0    0                    0                    0                ]
-        // [0                    1 + (dt * dq1)/q1    0                    0                ]
-        // [0                    0                    1 + (dt * dq2)/q2    0                ]
-        // [0                    0                    0                    1 + (dt * dq3)/q3]
-
-        // then transition matrix can be set as:
-        transitionMatrix.initialize(0.0)
-        for (i in 0 until Quaternion.N_PARAMS) {
-            transitionMatrix.setElementAt(
-                i,
-                i,
-                1.0 + (dt * dq.getElementAtIndex(i)) / statePost.getElementAtIndex(i)
-            )
-        }
+        deltaQ.quaternionMatrix(transitionMatrix)
     }
 
     private fun updateMeasurementMatrix() {
-        // statePre contains estimated Kalman filter state x before correction, which corresponds to
-        // estimated a priori attitude. Hence x = [a b c d]^T
-
         // A point (or unit vector pointing up) up = [0 0 1]^T
         // Can be rotated with rotation matrix R as: up' = R * up
 
@@ -689,17 +605,9 @@ class KalmanRelativeAttitudeProcessor(
         val d = statePre.getElementAtIndex(3)
 
         val measurementMatrix = kalmanFilter.measurementMatrix
-        measurementMatrix.setElementAtIndex(0, 2.0 * (b * d + a * c) / a)
-        measurementMatrix.setElementAtIndex(1, 0.0)
-        measurementMatrix.setElementAtIndex(2, 0.0)
-
-        measurementMatrix.setElementAtIndex(3, 0.0)
-        measurementMatrix.setElementAtIndex(4, 2.0 * (c * d - a * b) / b)
-        measurementMatrix.setElementAtIndex(5, 0.0)
-
-        measurementMatrix.setElementAtIndex(6, 0.0)
-        measurementMatrix.setElementAtIndex(7, 0.0)
-        measurementMatrix.setElementAtIndex(8, (a * a - b * b - c * c - d * d) / c)
+        measurementMatrix.setElementAt(0, 0, 2.0 * (b * d + a * c) / a)
+        measurementMatrix.setElementAt(1, 1, 2.0 * (c * d - a * b) / b)
+        measurementMatrix.setElementAt(2, 2, (a * a - b * b - c * c - d * d) / c)
     }
 
     /**
@@ -731,15 +639,8 @@ class KalmanRelativeAttitudeProcessor(
                 errorCovarianceResetListener?.onErrorCovarianceReset(this)
             }
 
-            internalEnuQuaternionCovariance.copyFrom(errorCov)
-
-            // propagate uncertainty of ENU to NED conversion taking into account that:
-            // Cov`= J * Cov * J^T
-            nedQuaternionConversionJacobian.multiply(
-                internalEnuQuaternionCovariance,
-                internalNedQuaternionCovariance
-            )
-            internalNedQuaternionCovariance.multiply(transposedNedQuaternionConversionJacobian)
+            // take only the part corresponding to ENU quaternion covariance
+            internalNedQuaternionCovariance.copyFrom(errorCov)
 
             if (processEulerAngles) {
                 // As defined in: https://en.wikipedia.org/wiki/Propagation_of_uncertainty
@@ -794,11 +695,6 @@ class KalmanRelativeAttitudeProcessor(
         const val DEFAULT_FREE_FALL_THRESHOLD = 0.1 * EARTH_GRAVITY
 
         /**
-         * Default standard deviation for magnetometer expressed in µT.
-         */
-        const val DEFAULT_MAG_STDEV = 0.1
-
-        /**
          * Amount of components of measurements and arrays.
          */
         private const val COMPONENTS = AccelerationTriad.COMPONENTS
@@ -810,19 +706,17 @@ class KalmanRelativeAttitudeProcessor(
 
         /**
          * Processes an accelerometer measurement, taking into account their biases (if available).
-         * Measurement will contain accelerometer data expressed in ENU coordinates.
+         * Measurement will contain accelerometer data expressed in NED coordinates.
          *
          * @param measurement measurement to be processed.
-         * @param result array where measurement data will be stored.
+         * @param result triad where measurement data will be stored in NED coordinates.
          * @throws IllegalArgumentException if provided result array does not have length 3.
          */
         @Throws(IllegalArgumentException::class)
         private fun processMeasurement(
             measurement: AccelerometerSensorMeasurement,
-            result: DoubleArray
+            result: AccelerationTriad
         ) {
-//            require(result.size == COMPONENTS)
-
             val ax = measurement.ax.toDouble()
             val ay = measurement.ay.toDouble()
             val az = measurement.az.toDouble()
@@ -830,26 +724,27 @@ class KalmanRelativeAttitudeProcessor(
             val by = measurement.by?.toDouble()
             val bz = measurement.bz?.toDouble()
 
-            result[0] = if (bx != null) ax - bx else ax
-            result[1] = if (by != null) ay - by else ay
-            result[2] = if (bz != null) az - bz else az
+            val valueX = if (bx != null) ax - bx else ax
+            val valueY = if (by != null) ay - by else ay
+            val valueZ = if (bz != null) az - bz else az
+
+            // convert to NED coordinates
+            ENUtoNEDConverter.convert(valueX, valueY, valueZ, result)
         }
 
         /**
          * Processes a gyroscope measurement, taking into account their biases (if available).
-         * Measurement will contain gyroscope data expressed in ENU coordinates.
+         * Measurement will contain gyroscope data expressed in BED coordinates.
          *
          * @param measurement measurement to be processed.
-         * @param result array where measurement data will be stored.
+         * @param result triad where measurement data will be stored in NED coordinates.
          * @throws IllegalArgumentException if provided result array does not have length 3.
          */
         @Throws(IllegalArgumentException::class)
         private fun processMeasurement(
             measurement: GyroscopeSensorMeasurement,
-            result: DoubleArray
+            result: AngularSpeedTriad
         ) {
-//            require(result.size == COMPONENTS)
-
             val wx = measurement.wx.toDouble()
             val wy = measurement.wy.toDouble()
             val wz = measurement.wz.toDouble()
@@ -857,9 +752,12 @@ class KalmanRelativeAttitudeProcessor(
             val by = measurement.by?.toDouble()
             val bz = measurement.bz?.toDouble()
 
-            result[0] = if (bx != null) wx - bx else wx
-            result[1] = if (by != null) wy - by else wy
-            result[2] = if (bz != null) wz - bz else wz
+            val valueX = if (bx != null) wx - bx else wx
+            val valueY = if (by != null) wy - by else wy
+            val valueZ = if (bz != null) wz - bz else wz
+
+            // convert to NED coordinates
+            ENUtoNEDConverter.convert(valueX, valueY, valueZ, result)
         }
 
         /**
@@ -881,9 +779,6 @@ class KalmanRelativeAttitudeProcessor(
          */
         @Throws(IllegalArgumentException::class)
         private fun estimateOrthogonal(input: DoubleArray, output: DoubleArray) {
-//            require(input.size == COMPONENTS)
-//            require(output.size == COMPONENTS)
-
             val absInput0 = abs(input[0])
             val absInput1 = abs(input[1])
             val absInput2 = abs(input[2])
@@ -917,6 +812,20 @@ class KalmanRelativeAttitudeProcessor(
         }
 
         /**
+         * Normalizes provided acceleration triad by its Frobenious norm.
+         *
+         * @param triad triad to be normalized.
+         * @return norm that the tria had before normalization.
+         */
+        private fun normalize(triad: AccelerationTriad): Double {
+            val norm = triad.norm
+            triad.valueX /= norm
+            triad.valueY /= norm
+            triad.valueZ /= norm
+            return norm
+        }
+
+        /**
          * Computes cross product between 2 arrays.
          *
          * @param u First array.
@@ -926,10 +835,6 @@ class KalmanRelativeAttitudeProcessor(
          */
         @Throws(IllegalArgumentException::class)
         private fun crossProduct(u: DoubleArray, v: DoubleArray, result: DoubleArray) {
-//            require(u.size == COMPONENTS)
-//            require(v.size == COMPONENTS)
-//            require(result.size == COMPONENTS)
-
             result[0] = u[1] * v[2] - u[2] * v[1]
             result[1] = u[2] * v[0] - u[0] * v[2]
             result[2] = u[0] * v[1] - u[1] * v[0]
@@ -961,76 +866,6 @@ class KalmanRelativeAttitudeProcessor(
         }
 
         /**
-         * Computes the time derivative of a quaternion at a given angular speed.
-         * @param quaternion column vector matrix containing quaternion to compute time derivative
-         * for. Must be 4x1.
-         * @param omegaSkew instance containing the skew antisymmetric matrix. Must be 4x4.
-         * @param result instance where computed time derivative will be stored. Must be 4x1.
-         * @throws IllegalArgumentException if any of provided matrices has an invalid size.
-         */
-        @Throws(IllegalArgumentException::class)
-        private fun computeQuaternionTimeDerivative(
-            quaternion: Matrix,
-            omegaSkew: Matrix,
-            result: Matrix
-        ) {
-//            require(quaternion.rows == Quaternion.N_PARAMS)
-//            require(quaternion.columns == 1)
-
-//            require(omegaSkew.rows == Quaternion.N_PARAMS)
-//            require(omegaSkew.columns == Quaternion.N_PARAMS)
-
-//            require(result.rows == Quaternion.N_PARAMS)
-//            require(result.columns == 1)
-
-            // The time derivative of a quaternion at a given angular speed follows expression:
-            // q`= 0.5 * W * q
-            // where W is the skew antisymmetric matrix of provided angular speed and q is a quaternion
-            // containing a given attitude.
-            omegaSkew.multiply(quaternion, result)
-            result.multiplyByScalar(0.5)
-        }
-
-        /**
-         * Computes the skew antisymmetric matrix of provided angular speed.
-         * @param wx x-coordinate of angular speed expressed in radians per second (rad/s).
-         * @param wy y-coordinate of angular speed expressed in radians per second (rad/s).
-         * @param wz z-coordinate of angular speed expressed in radians per second (rad/s).
-         * @param result instance where result must be stored. Must be 4x4.
-         * @throws IllegalArgumentException if provided matrix is not 4x4.
-         */
-        @Throws(IllegalArgumentException::class)
-        private fun computeOmegaSkew(wx: Double, wy: Double, wz: Double, result: Matrix) {
-//            require(result.rows == Quaternion.N_PARAMS)
-//            require(result.columns == Quaternion.N_PARAMS)
-
-            // The skew matrix has the following expression:
-            // W = [0		-wx		-wy		-wz]
-            //     [wx		0		wz		-wy]
-            //     [wy		-wz		0		 wx]
-            //     [wz		wy		-wx		  0]
-            result.setElementAtIndex(0, 0.0)
-            result.setElementAtIndex(1, wx)
-            result.setElementAtIndex(2, wy)
-            result.setElementAtIndex(3, wz)
-
-            result.setElementAtIndex(4, -wx)
-            result.setElementAtIndex(5, 0.0)
-            result.setElementAtIndex(6, -wz)
-            result.setElementAtIndex(7, wy)
-
-            result.setElementAtIndex(8, -wy)
-            result.setElementAtIndex(9, wz)
-            result.setElementAtIndex(10, 0.0)
-            result.setElementAtIndex(11, -wx)
-
-            result.setElementAtIndex(12, -wz)
-            result.setElementAtIndex(13, -wy)
-            result.setElementAtIndex(14, wx)
-            result.setElementAtIndex(15, 0.0)
-        }
-
-        /**
          * Copies quaternion values to provided vector matrix.
          *
          * @param q quaternion to copy data from.
@@ -1039,9 +874,6 @@ class KalmanRelativeAttitudeProcessor(
          */
         @Throws(IllegalArgumentException::class)
         private fun copyQuaternionToColumnMatrix(q: Quaternion, result: Matrix) {
-            require(result.rows == Quaternion.N_PARAMS)
-            require(result.columns == 1)
-
             result.setElementAtIndex(0, q.a)
             result.setElementAtIndex(1, q.b)
             result.setElementAtIndex(2, q.c)
@@ -1049,7 +881,7 @@ class KalmanRelativeAttitudeProcessor(
         }
 
         /**
-         * Copies vector matrix data into quaternionr.
+         * Copies vector matrix data into quaternion.
          *
          * @param m matrix to copy data from.
          * @param result quaternion where data will be stored.
@@ -1057,9 +889,6 @@ class KalmanRelativeAttitudeProcessor(
          */
         @Throws(IllegalArgumentException::class)
         private fun copyColumnMatrixToQuaternion(m: Matrix, result: Quaternion) {
-            require(m.rows == Quaternion.N_PARAMS)
-            require(m.columns == 1)
-
             result.a = m.getElementAtIndex(0)
             result.b = m.getElementAtIndex(1)
             result.c = m.getElementAtIndex(2)
@@ -1075,21 +904,16 @@ class KalmanRelativeAttitudeProcessor(
          * Called when a new attitude is processed.
          *
          * @param processor processor that raised this event.
-         * @param enuAttitude estimated attitude expressed in ENU coordinates.
          * @param nedAttitude estimated attitude expressed in NED coordinates.
          * @param eulerAngles estimated Euler angles associated to estimated NED attitude.
-         * @param enuQuaternionCovariance error covariance of quaternion attitude expressed in ENU
-         * coordinates.
          * @param nedQuaternionCovariance error covariance of quaternion attitude expressed in NED
          * coordinates.
          * @param eulerAnglesCovariance error covariance of Euler angles for NED attitude.
          */
         fun onProcessed(
             processor: KalmanRelativeAttitudeProcessor,
-            enuAttitude: Quaternion,
             nedAttitude: Quaternion,
             eulerAngles: DoubleArray?,
-            enuQuaternionCovariance: Matrix?,
             nedQuaternionCovariance: Matrix?,
             eulerAnglesCovariance: Matrix?
         )

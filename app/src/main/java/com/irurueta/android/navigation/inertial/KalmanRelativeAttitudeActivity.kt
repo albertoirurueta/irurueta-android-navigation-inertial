@@ -25,7 +25,7 @@ import com.irurueta.android.gl.cube.CubeTextureView
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorType
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
-import com.irurueta.android.navigation.inertial.estimators.attitude.KalmanRelativeAttitudeEstimator2
+import com.irurueta.android.navigation.inertial.estimators.attitude.KalmanRelativeAttitudeEstimator
 import com.irurueta.geometry.*
 import kotlin.math.sqrt
 
@@ -49,7 +49,7 @@ class KalmanRelativeAttitudeActivity : AppCompatActivity() {
 
     private var camera: PinholeCamera? = null
 
-    private var attitudeEstimator: KalmanRelativeAttitudeEstimator2? = null
+    private var attitudeEstimator: KalmanRelativeAttitudeEstimator? = null
 
     private val displayOrientation = Quaternion()
 
@@ -95,7 +95,7 @@ class KalmanRelativeAttitudeActivity : AppCompatActivity() {
             }
         }
 
-        attitudeEstimator = KalmanRelativeAttitudeEstimator2(
+        attitudeEstimator = KalmanRelativeAttitudeEstimator(
             this,
             SensorDelay.GAME,
             startOffsetEnabled = false,

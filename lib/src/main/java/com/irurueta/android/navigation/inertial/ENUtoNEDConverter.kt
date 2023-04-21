@@ -180,10 +180,15 @@ object ENUtoNEDConverter {
 
         // However, since we know the actual expression, it is more efficient to compute:
 
-        output.a = -input.a
-        output.b = -input.c
-        output.c = -input.b
-        output.d = input.d
+        val a = input.a
+        val b = input.b
+        val c = input.c
+        val d = input.d
+
+        output.a = -a
+        output.b = -c
+        output.c = -b
+        output.d = d
     }
 
     /**
