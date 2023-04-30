@@ -45,18 +45,15 @@ import kotlin.math.abs
  * @property gyroscopeVariance Variance of the gyroscope output per Hz (or variance at 1Hz). This is
  * equivalent to the gyroscope PSD (Power Spectral Density) that can be obtained during calibration
  * or with noise estimators. If not provided
- * [KalmanRelativeAttitudeProcessor.DEFAULT_GYROSCOPE_VARIANCE] will be used.
- * @property gyroscopeBiasVariance Variance of gyroscope bias expressed as (rad/s^2) / s. If not
- * provided [KalmanRelativeAttitudeProcessor.DEFAULT_GYROSCOPE_BIAS_VARIANCE] will be used.
+ * [KalmanRelativeAttitudeProcessor.DEFAULT_GYROSCOPE_NOISE_PSD] will be used.
  * @property accelerometerStandardDeviation Accelerometer standard deviation expressed in m/s^2. If
- * not provided [KalmanRelativeAttitudeProcessor.DEFAULT_ACCELEROMETER_STANDARD_DEVIATION] will be
- * used.
+ * not provided [KalmanRelativeAttitudeProcessor.DEFAULT_ACCELEROMETER_NOISE_STANDARD_DEVIATION]
+ * will be used.
  * @property freeFallThreshold Threshold to consider that device is in free fall. When device is in
  * free fall, accelerometer measurements are considered unreliable and are ignored (only gyroscope
  * predictions are made). If not provided
  * @property minimumUnreliableDurationSeconds Minimum duration to keep unreliable accuracy when
  * Kalman filter numerical instability is detected. This value is expressed in seconds (s).
- * [KalmanRelativeAttitudeProcessor.DEFAULT_FREE_FALL_THRESHOLD] will be used.
  * @property attitudeAvailableListener listener to notify when a new attitude measurement is
  * available.
  * @property accuracyChangedListener listener to notify changes in accuracy.
@@ -74,12 +71,9 @@ class KalmanRelativeAttitudeEstimator(
     val estimateCoordinateTransformation: Boolean = false,
     val estimateEulerAngles: Boolean = true,
     val estimateCovariances: Boolean = true,
-    val gyroscopeVariance: Double = KalmanRelativeAttitudeProcessor.DEFAULT_GYROSCOPE_VARIANCE,
-    val gyroscopeBiasVariance: Double =
-        KalmanRelativeAttitudeProcessor.DEFAULT_GYROSCOPE_BIAS_VARIANCE,
-    val accelerometerStandardDeviation: Double =
-        KalmanRelativeAttitudeProcessor.DEFAULT_ACCELEROMETER_STANDARD_DEVIATION,
-    val freeFallThreshold: Double = KalmanRelativeAttitudeProcessor.DEFAULT_FREE_FALL_THRESHOLD,
+    val gyroscopeNoisePsd: Double = KalmanRelativeAttitudeProcessor.DEFAULT_GYROSCOPE_NOISE_PSD,
+    val accelerometerNoiseStandardDeviation: Double =
+        KalmanRelativeAttitudeProcessor.DEFAULT_ACCELEROMETER_NOISE_STANDARD_DEVIATION,
     val minimumUnreliableDurationSeconds: Double = DEFAULT_MINIMUM_UNRELIABLE_DURATION_SECONDS,
     var attitudeAvailableListener: OnAttitudeAvailableListener? = null,
     var accuracyChangedListener: OnAccuracyChangedListener? = null,
@@ -110,14 +104,15 @@ class KalmanRelativeAttitudeEstimator(
      * Processor to estimate relative attitude using a Kalman filter.
      */
     private val processor = KalmanRelativeAttitudeProcessor(
-        processCovariance,
-        estimateEulerAngles,
-        processEulerAnglesCovariance,
-        gyroscopeVariance,
-        gyroscopeBiasVariance,
-        accelerometerStandardDeviation,
-        freeFallThreshold,
-        errorCovarianceResetListener = {
+        computeEulerAngles = estimateEulerAngles,
+        computeCovariances = processCovariance,
+        computeQuaternionCovariance = true,
+        computeEulerAnglesCovariance = processEulerAnglesCovariance,
+        computeAccelerometerCovariance = false,
+        computeRotationAxisCovariance = false,
+        gyroscopeNoisePsd = gyroscopeNoisePsd,
+        accelerometerNoiseStandardDeviation = accelerometerNoiseStandardDeviation,
+        numericalInstabilitiesListener = {
             unreliable = true
             unreliableTimestamp = lastTimestamp
             accuracyChangedListener?.onAccuracyChanged(
