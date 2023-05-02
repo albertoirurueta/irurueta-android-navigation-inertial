@@ -21,31 +21,33 @@ import com.irurueta.algebra.Matrix
 import com.irurueta.algebra.Utils
 import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
 import com.irurueta.android.navigation.inertial.KalmanFilter
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerAndGyroscopeSyncedSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorMeasurement
 import com.irurueta.android.navigation.inertial.processors.attitude.KalmanRelativeAttitudeProcessor.Companion.DEFAULT_ACCELEROMETER_NOISE_STANDARD_DEVIATION
 import com.irurueta.android.navigation.inertial.processors.attitude.KalmanRelativeAttitudeProcessor.Companion.DEFAULT_GYROSCOPE_NOISE_PSD
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.inertial.calibration.AccelerationTriad
 import com.irurueta.navigation.inertial.calibration.AngularSpeedTriad
+import com.irurueta.navigation.inertial.calibration.MagneticFluxDensityTriad
 import com.irurueta.navigation.inertial.calibration.gyroscope.QuaternionStepIntegrator
 import com.irurueta.navigation.inertial.calibration.gyroscope.QuaternionStepIntegratorType
 import com.irurueta.units.AccelerationUnit
+import com.irurueta.units.MagneticFluxDensityConverter
 import com.irurueta.units.TimeConverter
-import kotlin.math.abs
 import kotlin.math.pow
 
 /**
- * Estimates relative attitude using a Kalman filter.
+ * Estimates absolute attitude using a Kalman filter.
  * This is based on Android native implementation:
  * https://android.googlesource.com/platform/frameworks/native/+/refs/heads/master/services/sensorservice/Fusion.cpp
  * And also based on:
  * https://www.mdpi.com/1424-8220/20/23/6731
  *
  * This implementation uses a Kalman filter where attitude is estimated based on direction vector
- * obtained from accelerometer measurements for filter corrections, and current system state based
- * on angular speed for attitude predictions.
+ * obtained from accelerometer and magnetometer measurements for filter corrections, and current
+ * system state based on angular speed for attitude predictions.
  *
  * @property computeEulerAngles Indicates whether Euler angles must be estimated from NED attitude
  * or not.
@@ -75,7 +77,7 @@ import kotlin.math.pow
  * @property numericalInstabilitiesListener listener to notify when error covariances become
  * numerically unstable and have been reset.
  */
-class KalmanRelativeAttitudeProcessor(
+class KalmanAbsoluteAttitudeProcessor(
     val computeEulerAngles: Boolean = true,
     val computeCovariances: Boolean = true,
     val computeQuaternionCovariance: Boolean = true,
@@ -189,6 +191,12 @@ class KalmanRelativeAttitudeProcessor(
     private val accelerationTriad: AccelerationTriad = AccelerationTriad()
 
     /**
+     * Contains magnetometer data expressed in NED coordinates.
+     * This is reused for performance reasons.
+     */
+    private val magneticFluxDensityTriad: MagneticFluxDensityTriad = MagneticFluxDensityTriad()
+
+    /**
      * Contains gyroscope data expressed in NED coordinates.
      * This is reused for performance reasons.
      */
@@ -228,7 +236,7 @@ class KalmanRelativeAttitudeProcessor(
     private val r = Matrix(COMPONENTS, COMPONENTS)
 
     /**
-     * Quaternion containing current attitude expressed in NED coordinates.
+     * Quaternion containing current attitude expressed in ENU coordinates.
      * This is reused for performance reasons.
      */
     private val q = Quaternion()
@@ -274,6 +282,12 @@ class KalmanRelativeAttitudeProcessor(
      * This is reused for performance reasons.
      */
     private val h12 = Matrix(COMPONENTS, Quaternion.N_PARAMS)
+
+    /**
+     * Sub-matrix relating quaternion respect to Earth and magnetic field density respect to body.
+     * This is reused for performance reasons.
+     */
+    private val h22 = Matrix(COMPONENTS, Quaternion.N_PARAMS)
 
     /**
      * Sub-matrix relating body rotation axis and body angular speed.
@@ -378,28 +392,39 @@ class KalmanRelativeAttitudeProcessor(
     private val tmpEulerCov = Matrix(Quaternion.N_ANGLES, Quaternion.N_ANGLES)
 
     /**
-     * Processes provided synced accelerometer and gyroscope measurement to obtain a relative
-     * leveled attitude.
+     * Processes provided synced accelerometer, gyroscope and magnetometer measurement to obtain a
+     * relative leveled attitude.
      *
      * @param syncedMeasurement measurement to be processed.
      * @return true if a new attitude is estimated, false otherwise.
      */
-    fun process(syncedMeasurement: AccelerometerAndGyroscopeSyncedSensorMeasurement): Boolean {
+    fun process(syncedMeasurement: AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement):
+            Boolean {
         val accelerometerMeasurement = syncedMeasurement.accelerometerMeasurement
         val gyroscopeMeasurement = syncedMeasurement.gyroscopeMeasurement
-        return if (accelerometerMeasurement != null && gyroscopeMeasurement != null) {
-            process(accelerometerMeasurement, gyroscopeMeasurement, syncedMeasurement.timestamp)
+        val magnetometerMeasurement = syncedMeasurement.magnetometerMeasurement
+        return if (accelerometerMeasurement != null
+            && gyroscopeMeasurement != null
+            && magnetometerMeasurement != null
+        ) {
+            process(
+                accelerometerMeasurement,
+                gyroscopeMeasurement,
+                magnetometerMeasurement,
+                syncedMeasurement.timestamp
+            )
         } else {
             false
         }
     }
 
     /**
-     * Processes provided accelerometer and gyroscope measurements at provided timestamp to obtain a
-     * relative leveled attitude.
+     * Processes provided accelerometer, gyroscope and magnetometer measurements at provided
+     * timestamp to obtain a relative leveled attitude.
      *
      * @param accelerometerMeasurement accelerometer measurement to be processed.
      * @param gyroscopeMeasurement gyroscope measurement to be processed.
+     * @param magnetometerMeasurement magnetometer measurement to be processed.
      * @param timestamp timestamp when both measurements are assumed to occur. If not provided,
      * this is assumed to be gyroscope timestamp.
      * @return true if a new attitude is estimated, false otherwise.
@@ -407,6 +432,7 @@ class KalmanRelativeAttitudeProcessor(
     fun process(
         accelerometerMeasurement: AccelerometerSensorMeasurement,
         gyroscopeMeasurement: GyroscopeSensorMeasurement,
+        magnetometerMeasurement: MagnetometerSensorMeasurement,
         timestamp: Long = gyroscopeMeasurement.timestamp
     ): Boolean {
         val isFirst = updateTimeInterval(timestamp)
@@ -415,6 +441,7 @@ class KalmanRelativeAttitudeProcessor(
             false
         } else {
             processMeasurement(accelerometerMeasurement, accelerationTriad)
+            processMeasurement(magnetometerMeasurement, magneticFluxDensityTriad)
 
             if (!initialized) {
                 estimateInitialAttitude()
@@ -511,9 +538,15 @@ class KalmanRelativeAttitudeProcessor(
         up[2] = -accelerationTriad.valueZ
         normalize(up)
 
-        estimateOrthogonal(up, east)
-        crossProduct(up, east, north)
+        north[0] = magneticFluxDensityTriad.valueY
+        north[1] = magneticFluxDensityTriad.valueX
+        north[2] = -magneticFluxDensityTriad.valueZ
         normalize(north)
+
+        crossProduct(north, up, east)
+        normalize(east)
+
+        crossProduct(up, east, north)
 
         r.setSubmatrix(0, 0, 2, 0, east)
         r.setSubmatrix(0, 1, 2, 1, north)
@@ -553,9 +586,12 @@ class KalmanRelativeAttitudeProcessor(
         m.setElementAtIndex(0, accelerationTriad.valueX)
         m.setElementAtIndex(1, accelerationTriad.valueY)
         m.setElementAtIndex(2, accelerationTriad.valueZ)
-        m.setElementAtIndex(3, angularSpeedTriad.valueX)
-        m.setElementAtIndex(4, angularSpeedTriad.valueY)
-        m.setElementAtIndex(5, angularSpeedTriad.valueZ)
+        m.setElementAtIndex(3, magneticFluxDensityTriad.valueX)
+        m.setElementAtIndex(4, magneticFluxDensityTriad.valueY)
+        m.setElementAtIndex(5, magneticFluxDensityTriad.valueZ)
+        m.setElementAtIndex(6, angularSpeedTriad.valueX)
+        m.setElementAtIndex(7, angularSpeedTriad.valueY)
+        m.setElementAtIndex(8, angularSpeedTriad.valueZ)
     }
 
     /**
@@ -689,7 +725,7 @@ class KalmanRelativeAttitudeProcessor(
 
     /**
      * Updates filter transition matrix.
-     * Transition matrix is made of three sub-matrices.
+     * Transition matrix is made of four sub-matrices.
      * Acceleration 3x3 sub-matrix will always be the identity assuming that no external forces are
      * applies and consequently acceleration remains constant during a single interval. Since
      * Kalman Filter constructor already initializes the transition matrix to the identity, there is
@@ -762,14 +798,16 @@ class KalmanRelativeAttitudeProcessor(
 
         // Kalman filter measurements contain:
         // - acceleration (specific force) respect to body. (a_b)
+        // - magnetic flux density respect to body (m_b)
         // - angular speed respect to body. (w_b)
 
         // Consequently, measurement matrix m can be obtained from Kalman filter state x through
         // measurement matrix H as:
         // m = H * x
 
-        // where H is a 6x10 matrix made of the following blocks:
+        // where H is a 9x10 matrix made of the following blocks:
         // H = [H11  H12  0  ]
+        //     [0    H22  0  ]
         //     [0    0    H33]
 
         // H11 is a 3x3 matrix relating acceleration respect to Earth and respect to body
@@ -789,6 +827,18 @@ class KalmanRelativeAttitudeProcessor(
 
         // where g is gravity norm
 
+        // H22 is a 3x4 matrix relating quaternion respect to Earth and respect to body
+
+        // H22 = h * sing(alpha) * [ q0      q1      -q2     -q3] +
+        //                         [-q3      q2       q1     -q0]
+        //                         [ q2      q3       q0      q1]
+        //
+        //       h * cos(apha) * [-q2     q3      -q0     q1]
+        //                       [ q1     q0       q3     q2]
+        //                       [ q0    -q1      -q2     q3]
+
+        // where alpha is the angle between the local magnetic and gravity fields and h is the
+        // magnetic field modulus.
 
         // Matrix H33 is a 3x3 matrix performs a prediction of gyroscope measurements both in body
         // coordinates (consequently quaternion is not needed).
@@ -871,6 +921,53 @@ class KalmanRelativeAttitudeProcessor(
         h12.setElementAtIndex(11, -gravityNorm * q3)
 
 
+        // compute H22
+        val h = magneticFluxDensityTriad.norm
+
+        up[0] = accelerationTriad.valueY
+        up[1] = accelerationTriad.valueX
+        up[2] = -accelerationTriad.valueZ
+        normalize(up)
+
+        north[0] = magneticFluxDensityTriad.valueY
+        north[1] = magneticFluxDensityTriad.valueX
+        north[2] = -magneticFluxDensityTriad.valueZ
+        normalize(north)
+
+        val cosAlpha = ArrayUtils.dotProduct(north, up)
+        crossProduct(north, up, east)
+        val sinAlpha = norm(east)
+
+        val hsinAlpha = h * sinAlpha
+        val hcosAlpha = h * cosAlpha
+
+        val hsinAlphaQ0 = hsinAlpha * q0
+        val hsinAlphaQ1 = hsinAlpha * q1
+        val hsinAlphaQ2 = hsinAlpha * q2
+        val hsinAlphaQ3 = hsinAlpha * q3
+
+        val hcosAlphaQ0 = hcosAlpha * q0
+        val hcosAlphaQ1 = hcosAlpha * q1
+        val hcosAlphaQ2 = hcosAlpha * q2
+        val hcosAlphaQ3 = hcosAlpha * q3
+
+        h22.setElementAtIndex(0, hsinAlphaQ0 - hcosAlphaQ2)
+        h22.setElementAtIndex(1, -hsinAlphaQ3 + hcosAlphaQ1)
+        h22.setElementAtIndex(2, hsinAlphaQ2 + hcosAlphaQ0)
+
+        h22.setElementAtIndex(3, hsinAlphaQ1 + hcosAlphaQ3)
+        h22.setElementAtIndex(4, hsinAlphaQ2 + hcosAlphaQ0)
+        h22.setElementAtIndex(5, hsinAlphaQ3 - hcosAlphaQ1)
+
+        h22.setElementAtIndex(6, -hsinAlphaQ2 - hcosAlphaQ0)
+        h22.setElementAtIndex(7, hsinAlphaQ1 + hcosAlphaQ3)
+        h22.setElementAtIndex(8, hsinAlphaQ0 - hcosAlphaQ2)
+
+        h22.setElementAtIndex(9, -hsinAlphaQ3 + hcosAlphaQ1)
+        h22.setElementAtIndex(10, -hsinAlphaQ0 + hcosAlphaQ2)
+        h22.setElementAtIndex(11, hsinAlphaQ1 + hcosAlphaQ3)
+
+
         // compute H33
         val value = 2.0 / gyroscopeIntervalSeconds
         for (i in 0 until COMPONENTS) {
@@ -925,7 +1022,11 @@ class KalmanRelativeAttitudeProcessor(
             }
 
             // check covariance state
-            if (!isPositiveSemidefinite(errorCov, symmetricThreshold)) {
+            if (!isPositiveSemidefinite(
+                    errorCov,
+                    symmetricThreshold
+                )
+            ) {
                 // when covariance is not positive semi-definite, we can assume that Kalman filter
                 // has become numerically unstable, and we need to reset error covariance value
                 initErrorCovariances()
@@ -988,7 +1089,7 @@ class KalmanRelativeAttitudeProcessor(
          * When device is in free fall, accelerometer measurements are considered
          * unreliable and are ignored (only gyroscope predictions are made).
          */
-        const val DEFAULT_FREE_FALL_THRESHOLD = 0.1 * EARTH_GRAVITY
+        const val DEFAULT_FREE_FALL_THRESHOLD = 0.1 * KalmanRelativeAttitudeProcessor.EARTH_GRAVITY
 
         /**
          * Amount of components of measurements and arrays.
@@ -1008,7 +1109,7 @@ class KalmanRelativeAttitudeProcessor(
         /**
          * Kalman filter's number of measurement parameters.
          */
-        private const val KALMAN_FILTER_MEASUREMENT_PARAMETERS = 6
+        private const val KALMAN_FILTER_MEASUREMENT_PARAMETERS = 9
 
         /**
          * Offset of rotation axis vector within Kalman filter state.
@@ -1048,7 +1149,7 @@ class KalmanRelativeAttitudeProcessor(
 
         /**
          * Processes a gyroscope measurement, taking into account their biases (if available).
-         * Measurement will contain gyroscope data expressed in BED coordinates.
+         * Measurement will contain gyroscope data expressed in NED coordinates.
          *
          * @param measurement measurement to be processed.
          * @param result triad where measurement data will be stored in NED coordinates.
@@ -1073,6 +1174,38 @@ class KalmanRelativeAttitudeProcessor(
         }
 
         /**
+         * Processes a magnetometer measurement, taking into account their hard iron (if available).
+         * Measurement will contain magnetometer data expressed in NED coordinates.
+         *
+         * @param measurement measurement to be processed.
+         * @param result triad where measurement data will be stored in NED coordinates.
+         */
+        private fun processMeasurement(
+            measurement: MagnetometerSensorMeasurement,
+            result: MagneticFluxDensityTriad
+        ) {
+            val bx = measurement.bx.toDouble()
+            val by = measurement.by.toDouble()
+            val bz = measurement.bz.toDouble()
+            val hardIronX = measurement.hardIronX?.toDouble()
+            val hardIronY = measurement.hardIronY?.toDouble()
+            val hardIronZ = measurement.hardIronZ?.toDouble()
+
+            val valueX = if (hardIronX != null) bx - hardIronX else bx
+            val valueY = if (hardIronY != null) by - hardIronY else by
+            val valueZ = if (hardIronZ != null) bz - hardIronZ else bz
+
+            // convert to NED coordinates
+
+            ENUtoNEDConverter.convert(
+                MagneticFluxDensityConverter.microTeslaToTesla(valueX),
+                MagneticFluxDensityConverter.microTeslaToTesla(valueY),
+                MagneticFluxDensityConverter.microTeslaToTesla(valueZ),
+                result
+            )
+        }
+
+        /**
          * Computes Frobenious norm for provided array.
          *
          * @param data array to be evaluated.
@@ -1080,34 +1213,6 @@ class KalmanRelativeAttitudeProcessor(
          */
         private fun norm(data: DoubleArray): Double {
             return Utils.normF(data)
-        }
-
-        /**
-         * Estimates an orthogonal vector to provided input one.
-         *
-         * @param input vector to obtain orthogonal one from.
-         * @param output instance where estimated orthogonal vector will be stored.
-         * @throws IllegalArgumentException if provided array does not have length 3.
-         */
-        private fun estimateOrthogonal(input: DoubleArray, output: DoubleArray) {
-            val absInput0 = abs(input[0])
-            val absInput1 = abs(input[1])
-            val absInput2 = abs(input[2])
-            if (absInput0 <= absInput1 && absInput0 <= absInput2) {
-                output[0] = 0.0
-                output[1] = input[2]
-                output[2] = -input[1]
-            } else if (absInput1 <= absInput2) {
-                output[0] = input[2]
-                output[1] = 0.0
-                output[2] = -input[0]
-            } else {
-                output[0] = input[1]
-                output[1] = -input[0]
-                output[2] = 0.0
-            }
-
-            normalize(output)
         }
 
         /**
@@ -1272,7 +1377,7 @@ class KalmanRelativeAttitudeProcessor(
          * expressed in NED coordinates. Variance is unit-less.
          */
         fun onProcessed(
-            processor: KalmanRelativeAttitudeProcessor,
+            processor: KalmanAbsoluteAttitudeProcessor,
             attitude: Quaternion,
             eulerAngles: DoubleArray?,
             quaternionCovariance: Matrix?,
@@ -1293,6 +1398,6 @@ class KalmanRelativeAttitudeProcessor(
          *
          * @param processor processor that raised this event.
          */
-        fun onNumericalInstabilityDetected(processor: KalmanRelativeAttitudeProcessor)
+        fun onNumericalInstabilityDetected(processor: KalmanAbsoluteAttitudeProcessor)
     }
 }

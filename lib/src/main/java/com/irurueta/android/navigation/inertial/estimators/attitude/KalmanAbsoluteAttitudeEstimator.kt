@@ -18,8 +18,14 @@ package com.irurueta.android.navigation.inertial.estimators.attitude
 import android.content.Context
 import android.os.SystemClock
 import com.irurueta.algebra.Matrix
-import com.irurueta.android.navigation.inertial.collectors.*
-import com.irurueta.android.navigation.inertial.processors.attitude.KalmanRelativeAttitudeProcessor
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerGyroscopeAndMagnetometerSensorMeasurementSyncer
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
+import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorType
+import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorType
+import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
+import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.navigation.inertial.collectors.SensorType
+import com.irurueta.android.navigation.inertial.processors.attitude.KalmanAbsoluteAttitudeProcessor
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.frames.CoordinateTransformation
 import com.irurueta.navigation.frames.FrameType
@@ -27,9 +33,7 @@ import com.irurueta.units.TimeConverter
 import kotlin.math.abs
 
 /**
- * Estimates a leveled relative attitude, where only yaw Euler angle is relative to the start
- * instant of this estimator.
- * Roll and pitch Euler angles are leveled using accelerometer sensor.
+ * Estimates absolute attitude.
  *
  * @property context Android context.
  * @property sensorDelay Delay of sensors between samples.
@@ -45,10 +49,10 @@ import kotlin.math.abs
  * @property gyroscopeNoisePsd Variance of the gyroscope output per Hz (or variance at 1Hz). This is
  * equivalent to the gyroscope PSD (Power Spectral Density) that can be obtained during calibration
  * or with noise estimators. If not provided
- * [KalmanRelativeAttitudeProcessor.DEFAULT_GYROSCOPE_NOISE_PSD] will be used.
+ * [KalmanAbsoluteAttitudeProcessor.DEFAULT_GYROSCOPE_NOISE_PSD] will be used.
  * @property accelerometerNoiseStandardDeviation Accelerometer standard deviation expressed in
  * m/s^2. If not provided
- * [KalmanRelativeAttitudeProcessor.DEFAULT_ACCELEROMETER_NOISE_STANDARD_DEVIATION] will be used.
+ * [KalmanAbsoluteAttitudeProcessor.DEFAULT_ACCELEROMETER_NOISE_STANDARD_DEVIATION] will be used.
  * @property minimumUnreliableDurationSeconds Minimum duration to keep unreliable accuracy when
  * Kalman filter numerical instability is detected. This value is expressed in seconds (s).
  * @property attitudeAvailableListener listener to notify when a new attitude measurement is
@@ -58,19 +62,21 @@ import kotlin.math.abs
  * happens when consumer of measurements cannot keep up with the rate at which measurements are
  * generated.
  */
-class KalmanRelativeAttitudeEstimator(
+class KalmanAbsoluteAttitudeEstimator(
     val context: Context,
     val sensorDelay: SensorDelay = SensorDelay.GAME,
     val startOffsetEnabled: Boolean = false,
     val accelerometerSensorType: AccelerometerSensorType =
         AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
     val gyroscopeSensorType: GyroscopeSensorType = GyroscopeSensorType.GYROSCOPE_UNCALIBRATED,
+    val magnetometerSensorType: MagnetometerSensorType =
+        MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED,
     val estimateCoordinateTransformation: Boolean = false,
     val estimateEulerAngles: Boolean = true,
     val estimateCovariances: Boolean = true,
-    val gyroscopeNoisePsd: Double = KalmanRelativeAttitudeProcessor.DEFAULT_GYROSCOPE_NOISE_PSD,
+    val gyroscopeNoisePsd: Double = KalmanAbsoluteAttitudeProcessor.DEFAULT_GYROSCOPE_NOISE_PSD,
     val accelerometerNoiseStandardDeviation: Double =
-        KalmanRelativeAttitudeProcessor.DEFAULT_ACCELEROMETER_NOISE_STANDARD_DEVIATION,
+        KalmanAbsoluteAttitudeProcessor.DEFAULT_ACCELEROMETER_NOISE_STANDARD_DEVIATION,
     val minimumUnreliableDurationSeconds: Double = DEFAULT_MINIMUM_UNRELIABLE_DURATION_SECONDS,
     var attitudeAvailableListener: OnAttitudeAvailableListener? = null,
     var accuracyChangedListener: OnAccuracyChangedListener? = null,
@@ -98,9 +104,9 @@ class KalmanRelativeAttitudeEstimator(
     private var unreliableTimestamp: Long = -1
 
     /**
-     * Processor to estimate relative attitude using a Kalman filter.
+     * Processor to estimate absolute attitude using a Kalman filter.
      */
-    private val processor = KalmanRelativeAttitudeProcessor(
+    private val processor = KalmanAbsoluteAttitudeProcessor(
         computeEulerAngles = estimateEulerAngles,
         computeCovariances = processCovariance,
         computeQuaternionCovariance = true,
@@ -113,7 +119,7 @@ class KalmanRelativeAttitudeEstimator(
             unreliable = true
             unreliableTimestamp = lastTimestamp
             accuracyChangedListener?.onAccuracyChanged(
-                this@KalmanRelativeAttitudeEstimator,
+                this@KalmanAbsoluteAttitudeEstimator,
                 SensorType.RELATIVE_ATTITUDE,
                 SensorAccuracy.UNRELIABLE
             )
@@ -142,34 +148,38 @@ class KalmanRelativeAttitudeEstimator(
      */
     private val eulerAnglesCovariance = Matrix(Quaternion.N_ANGLES, Quaternion.N_ANGLES)
 
+
     /**
      * Current sensor accuracy.
      */
     private var sensorAccuracy: SensorAccuracy? = null
 
     /**
-     * Internal syncer to collect and sync accelerometer and gyroscope measurements.
+     * Internal syncer to collect and sync accelerometer, gyroscope and magnetometer measurements.
      */
-    private val syncer = AccelerometerAndGyroscopeSensorMeasurementSyncer(
+    private val syncer = AccelerometerGyroscopeAndMagnetometerSensorMeasurementSyncer(
         context,
         accelerometerSensorType,
         gyroscopeSensorType,
+        magnetometerSensorType,
+        sensorDelay,
         sensorDelay,
         sensorDelay,
         accelerometerStartOffsetEnabled = startOffsetEnabled,
         gyroscopeStartOffsetEnabled = startOffsetEnabled,
+        magnetometerStartOffsetEnabled = startOffsetEnabled,
         stopWhenFilledBuffer = false,
         staleDetectionEnabled = true,
         accuracyChangedListener = { _, sensorType, accuracy ->
             sensorAccuracy = accuracy
             accuracyChangedListener?.onAccuracyChanged(
-                this@KalmanRelativeAttitudeEstimator,
+                this@KalmanAbsoluteAttitudeEstimator,
                 sensorType,
                 accuracy
             )
         },
         bufferFilledListener = { _, sensorType ->
-            bufferFilledListener?.onBufferFilled(this@KalmanRelativeAttitudeEstimator, sensorType)
+            bufferFilledListener?.onBufferFilled(this@KalmanAbsoluteAttitudeEstimator, sensorType)
         },
         syncedMeasurementListener = { _, measurement ->
             if (processor.process(measurement)) {
@@ -326,7 +336,7 @@ class KalmanRelativeAttitudeEstimator(
          * [estimateEulerAngles] and [estimateCovariances] are true.
          */
         fun onAttitudeAvailable(
-            estimator: KalmanRelativeAttitudeEstimator,
+            estimator: KalmanAbsoluteAttitudeEstimator,
             attitude: Quaternion,
             timestamp: Long,
             roll: Double?,
@@ -350,7 +360,7 @@ class KalmanRelativeAttitudeEstimator(
          * @param accuracy new accuracy.
          */
         fun onAccuracyChanged(
-            estimator: KalmanRelativeAttitudeEstimator,
+            estimator: KalmanAbsoluteAttitudeEstimator,
             sensorType: SensorType,
             accuracy: SensorAccuracy?
         )
@@ -369,6 +379,6 @@ class KalmanRelativeAttitudeEstimator(
          * @param estimator estimator that raised this event.
          * @param sensorType sensor that got its buffer filled.
          */
-        fun onBufferFilled(estimator: KalmanRelativeAttitudeEstimator, sensorType: SensorType)
+        fun onBufferFilled(estimator: KalmanAbsoluteAttitudeEstimator, sensorType: SensorType)
     }
 }

@@ -220,6 +220,8 @@ class MainActivity : AppCompatActivity() {
 
     private var kalmanRelativeAttitudeEstimatorButton: AppCompatButton? = null
 
+    private var kalmanAbsoluteAttitudeEstimatorButton: AppCompatButton? = null
+
     private var poseEstimatorButton: AppCompatButton? = null
 
     private var localPoseEstimatorButton: AppCompatButton? = null
@@ -1865,6 +1867,25 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra(
                 KalmanRelativeAttitudeActivity.GYROSCOPE_SENSOR_TYPE,
                 GyroscopeSensorType.GYROSCOPE_UNCALIBRATED
+            )
+            startActivity(intent)
+        }
+
+        kalmanAbsoluteAttitudeEstimatorButton =
+            findViewById(R.id.kalman_absolute_attitude_estimator_button)
+        kalmanAbsoluteAttitudeEstimatorButton?.setOnClickListener {
+            val intent = Intent(this@MainActivity, KalmanAbsoluteAttitudeActivity::class.java)
+            intent.putExtra(
+                KalmanAbsoluteAttitudeActivity.ACCELEROMETER_SENSOR_TYPE,
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
+            )
+            intent.putExtra(
+                KalmanAbsoluteAttitudeActivity.GYROSCOPE_SENSOR_TYPE,
+                GyroscopeSensorType.GYROSCOPE_UNCALIBRATED
+            )
+            intent.putExtra(
+                KalmanAbsoluteAttitudeActivity.MAGNETOMETER_SENSOR_TYPE,
+                MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED
             )
             startActivity(intent)
         }

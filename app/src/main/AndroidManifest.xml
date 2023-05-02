@@ -34,6 +34,7 @@
         <activity android:name=".RelativePoseEstimatorActivity"/>
         <activity android:name=".AttitudeEstimatorActivity"/>
         <activity android:name=".KalmanRelativeAttitudeActivity"/>
+        <activity android:name=".KalmanAbsoluteAttitudeActivity"/>
     </application>
 
 </manifest>
