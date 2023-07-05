@@ -60,6 +60,7 @@ class ENUtoNEDConverterTest {
         assertEquals(nedTriad.valueX, enuTriad1.valueY, 0.0)
         assertEquals(nedTriad.valueY, enuTriad1.valueX, 0.0)
         assertEquals(nedTriad.valueZ, -enuTriad1.valueZ, 0.0)
+        assertEquals(nedTriad.unit, enuTriad1.unit)
 
         // convert back from NED to ENU
         val enuTriad2 = AccelerationTriad()
@@ -95,6 +96,7 @@ class ENUtoNEDConverterTest {
         assertEquals(nedTriad1.valueX, enuTriad1.valueY, 0.0)
         assertEquals(nedTriad1.valueY, enuTriad1.valueX, 0.0)
         assertEquals(nedTriad1.valueZ, -enuTriad1.valueZ, 0.0)
+        assertEquals(nedTriad1.unit, enuTriad1.unit)
 
         // convert back from NED to ENU
         val enuTriad2 = AngularSpeedTriad()
@@ -126,6 +128,7 @@ class ENUtoNEDConverterTest {
         assertEquals(nedTriad.valueX, enuTriad1.valueY, 0.0)
         assertEquals(nedTriad.valueY, enuTriad1.valueX, 0.0)
         assertEquals(nedTriad.valueZ, -enuTriad1.valueZ, 0.0)
+        assertEquals(nedTriad.unit, enuTriad1.unit)
 
         // convert back from NED to ENU
         val enuTriad2 = MagneticFluxDensityTriad()

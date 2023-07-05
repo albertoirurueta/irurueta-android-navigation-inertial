@@ -60,6 +60,7 @@ object ENUtoNEDConverter {
      */
     fun <T : Triad<U, M>, U : Enum<*>, M : Measurement<U>> convert(input: T, output: T) {
         convert(input.valueX, input.valueY, input.valueZ, output)
+        output.unit = input.unit
     }
 
     /**

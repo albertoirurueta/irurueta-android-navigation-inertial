@@ -16,6 +16,7 @@
 package com.irurueta.android.navigation.inertial.estimators.attitude
 
 import android.content.Context
+import android.location.Location
 import android.os.SystemClock
 import com.irurueta.algebra.Matrix
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerGyroscopeAndMagnetometerSensorMeasurementSyncer
@@ -25,7 +26,8 @@ import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorTyp
 import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.android.navigation.inertial.collectors.SensorType
-import com.irurueta.android.navigation.inertial.processors.attitude.KalmanAbsoluteAttitudeProcessor
+import com.irurueta.android.navigation.inertial.processors.attitude.KalmanAbsoluteAttitudeProcessor2
+import com.irurueta.android.navigation.inertial.processors.attitude.KalmanAbsoluteAttitudeProcessor3
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.frames.CoordinateTransformation
 import com.irurueta.navigation.frames.FrameType
@@ -49,10 +51,10 @@ import kotlin.math.abs
  * @property gyroscopeNoisePsd Variance of the gyroscope output per Hz (or variance at 1Hz). This is
  * equivalent to the gyroscope PSD (Power Spectral Density) that can be obtained during calibration
  * or with noise estimators. If not provided
- * [KalmanAbsoluteAttitudeProcessor.DEFAULT_GYROSCOPE_NOISE_PSD] will be used.
+ * [KalmanAbsoluteAttitudeProcessor2.DEFAULT_GYROSCOPE_NOISE_PSD] will be used.
  * @property accelerometerNoiseStandardDeviation Accelerometer standard deviation expressed in
  * m/s^2. If not provided
- * [KalmanAbsoluteAttitudeProcessor.DEFAULT_ACCELEROMETER_NOISE_STANDARD_DEVIATION] will be used.
+ * [KalmanAbsoluteAttitudeProcessor2.DEFAULT_ACCELEROMETER_NOISE_STANDARD_DEVIATION] will be used.
  * @property minimumUnreliableDurationSeconds Minimum duration to keep unreliable accuracy when
  * Kalman filter numerical instability is detected. This value is expressed in seconds (s).
  * @property attitudeAvailableListener listener to notify when a new attitude measurement is
@@ -64,6 +66,7 @@ import kotlin.math.abs
  */
 class KalmanAbsoluteAttitudeEstimator(
     val context: Context,
+    location: Location? = null,
     val sensorDelay: SensorDelay = SensorDelay.GAME,
     val startOffsetEnabled: Boolean = false,
     val accelerometerSensorType: AccelerometerSensorType =
@@ -74,9 +77,11 @@ class KalmanAbsoluteAttitudeEstimator(
     val estimateCoordinateTransformation: Boolean = false,
     val estimateEulerAngles: Boolean = true,
     val estimateCovariances: Boolean = true,
-    val gyroscopeNoisePsd: Double = KalmanAbsoluteAttitudeProcessor.DEFAULT_GYROSCOPE_NOISE_PSD,
+    val gyroscopeNoisePsd: Double = KalmanAbsoluteAttitudeProcessor2.DEFAULT_GYROSCOPE_NOISE_PSD,
     val accelerometerNoiseStandardDeviation: Double =
-        KalmanAbsoluteAttitudeProcessor.DEFAULT_ACCELEROMETER_NOISE_STANDARD_DEVIATION,
+        KalmanAbsoluteAttitudeProcessor2.DEFAULT_ACCELEROMETER_NOISE_STANDARD_DEVIATION,
+    val magnetometerNoiseStandardDeviation: Double =
+        KalmanAbsoluteAttitudeProcessor2.DEFAULT_MAGNETOMETER_NOISE_STANDARD_DEVIATION,
     val minimumUnreliableDurationSeconds: Double = DEFAULT_MINIMUM_UNRELIABLE_DURATION_SECONDS,
     var attitudeAvailableListener: OnAttitudeAvailableListener? = null,
     var accuracyChangedListener: OnAccuracyChangedListener? = null,
@@ -99,22 +104,30 @@ class KalmanAbsoluteAttitudeEstimator(
      */
     private var unreliable = false
 
+    /**
+     * Timestamp of last processed measurement.
+     */
     private var lastTimestamp: Long = -1
 
+    /**
+     * Timestamp when an unreliable measurement was found.
+     */
     private var unreliableTimestamp: Long = -1
 
     /**
      * Processor to estimate absolute attitude using a Kalman filter.
      */
-    private val processor = KalmanAbsoluteAttitudeProcessor(
+    private val processor = KalmanAbsoluteAttitudeProcessor3(
+        location,
         computeEulerAngles = estimateEulerAngles,
         computeCovariances = processCovariance,
-        computeQuaternionCovariance = true,
+        computeEcefAttitudeCovariance = true,
         computeEulerAnglesCovariance = processEulerAnglesCovariance,
-        computeAccelerometerCovariance = false,
-        computeRotationAxisCovariance = false,
+        computeEcefAccelerationCovariance = false,
+        computeNedRotationAxisCovariance = false,
         gyroscopeNoisePsd = gyroscopeNoisePsd,
         accelerometerNoiseStandardDeviation = accelerometerNoiseStandardDeviation,
+        magnetometerNoiseStandardDeviation = magnetometerNoiseStandardDeviation,
         numericalInstabilitiesListener = {
             unreliable = true
             unreliableTimestamp = lastTimestamp
@@ -125,6 +138,29 @@ class KalmanAbsoluteAttitudeEstimator(
             )
         }
     )
+
+    /*
+    private val processor = KalmanAbsoluteAttitudeProcessor2(
+        computeEulerAngles = estimateEulerAngles,
+        computeCovariances = processCovariance,
+        computeQuaternionCovariance = true,
+        computeEulerAnglesCovariance = processEulerAnglesCovariance,
+        computeAccelerometerCovariance = false,
+        computeRotationAxisCovariance = false,
+        gyroscopeNoisePsd = gyroscopeNoisePsd,
+        accelerometerNoiseStandardDeviation = accelerometerNoiseStandardDeviation,
+        magnetometerNoiseStandardDeviation = magnetometerNoiseStandardDeviation,
+        numericalInstabilitiesListener = {
+            unreliable = true
+            unreliableTimestamp = lastTimestamp
+            accuracyChangedListener?.onAccuracyChanged(
+                this@KalmanAbsoluteAttitudeEstimator,
+                SensorType.RELATIVE_ATTITUDE,
+                SensorAccuracy.UNRELIABLE
+            )
+        }
+    )
+    */
 
     /**
      * Instance being reused to externally notify attitudes so that it does not have additional
@@ -147,7 +183,6 @@ class KalmanAbsoluteAttitudeEstimator(
      * Copy of Euler angles covariance to be reused.
      */
     private val eulerAnglesCovariance = Matrix(Quaternion.N_ANGLES, Quaternion.N_ANGLES)
-
 
     /**
      * Current sensor accuracy.
@@ -194,6 +229,15 @@ class KalmanAbsoluteAttitudeEstimator(
      */
     var running: Boolean = false
         private set
+
+    /**
+     * Gets or sets current device location.
+     */
+    var location: Location? = location
+        set(value) {
+            field = value
+            processor.location = value
+        }
 
     /**
      * Starts this estimator.
@@ -263,7 +307,8 @@ class KalmanAbsoluteAttitudeEstimator(
             yaw = null
         }
 
-        val nedQuaternionCov = processor.nedQuaternionCovariance
+// TODO: fix       val nedQuaternionCov = processor.nedAttitudeCovariance
+        val nedQuaternionCov = null
         if (nedQuaternionCov != null) {
             quaternionCovariance.copyFrom(nedQuaternionCov)
         }

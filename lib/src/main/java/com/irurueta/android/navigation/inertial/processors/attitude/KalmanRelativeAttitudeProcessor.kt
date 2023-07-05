@@ -201,7 +201,7 @@ class KalmanRelativeAttitudeProcessor(
     private val previousAngularSpeedTriad: AngularSpeedTriad = AngularSpeedTriad()
 
     /**
-     * Array containing unit vector pointing upwards. This is used during intitialization to obtain
+     * Array containing unit vector pointing upwards. This is used during initialization to obtain
      * an initial attitude.
      * This is reused for performance reasons.
      */
@@ -378,6 +378,16 @@ class KalmanRelativeAttitudeProcessor(
     private val tmpEulerCov = Matrix(Quaternion.N_ANGLES, Quaternion.N_ANGLES)
 
     /**
+     * Contains gyroscope variance obtained on each measurement
+     */
+    private var gyroVariance = 0.0
+
+    /**
+     * Contains accelerometer variance expressed in (m/s^2)^2
+     */
+    private val accelerometerVariance = accelerometerNoiseStandardDeviation * accelerometerNoiseStandardDeviation
+
+    /**
      * Processes provided synced accelerometer and gyroscope measurement to obtain a relative
      * leveled attitude.
      *
@@ -441,6 +451,7 @@ class KalmanRelativeAttitudeProcessor(
                 } else {
                     // update Kalman filter measurement
                     updateMeasurement()
+                    updateMeasurementNoiseCovariance()
 
                     kalmanFilter.correct(m)
                 }
@@ -546,6 +557,19 @@ class KalmanRelativeAttitudeProcessor(
     }
 
     /**
+     * Updates measurement noise covariance based on accelerometer and gyroscope variances.
+     */
+    private fun updateMeasurementNoiseCovariance() {
+        val measurementNoiseCov = kalmanFilter.measurementNoiseCov
+        for (i in 0 until 3) {
+            measurementNoiseCov.setElementAt(i, i, accelerometerVariance)
+        }
+        for (i in 3 until 6) {
+            measurementNoiseCov.setElementAt(i, i, gyroVariance)
+        }
+    }
+
+    /**
      * Updates measurement matrix with accelerometer and gyroscope measurements to be used during
      * Kalman filter correction phase.
      */
@@ -579,7 +603,7 @@ class KalmanRelativeAttitudeProcessor(
         val sqrHalfInterval = (gyroscopeIntervalSeconds / 2.0).pow(2.0)
 
         // set Qq
-        val gyroVariance = gyroscopeNoisePsd / gyroscopeIntervalSeconds
+        gyroVariance = gyroscopeNoisePsd / gyroscopeIntervalSeconds
         updateQuaternionProcessNoiseCovariance(gyroVariance, sqrHalfInterval, processNoiseCov)
 
         // setQr
@@ -592,8 +616,6 @@ class KalmanRelativeAttitudeProcessor(
      * @param processNoiseCov process noise covariance where updated sub-matrix will be stored.
      */
     private fun updateAccelerationProcessNoiseCovariance(processNoiseCov: Matrix) {
-        val accelerometerVariance =
-            accelerometerNoiseStandardDeviation * accelerometerNoiseStandardDeviation
         for (i in 0 until COMPONENTS) {
             processNoiseCov.setElementAt(i, i, accelerometerVariance)
         }
@@ -876,6 +898,13 @@ class KalmanRelativeAttitudeProcessor(
         for (i in 0 until COMPONENTS) {
             h33.setElementAt(i, i, value)
         }
+
+        // update measurement matrix
+        val measurementMatrix = kalmanFilter.measurementMatrix
+        measurementMatrix.initialize(0.0)
+        measurementMatrix.setSubmatrix(0, 0, 2, 2, h11)
+        measurementMatrix.setSubmatrix(0, 3, 2, 6, h12)
+        measurementMatrix.setSubmatrix(3, 7, 5, 9, h33)
     }
 
     /**
@@ -925,7 +954,7 @@ class KalmanRelativeAttitudeProcessor(
             }
 
             // check covariance state
-            if (!isPositiveSemidefinite(errorCov, symmetricThreshold)) {
+            if (!isPositiveSemiDefinite(errorCov, symmetricThreshold)) {
                 // when covariance is not positive semi-definite, we can assume that Kalman filter
                 // has become numerically unstable, and we need to reset error covariance value
                 initErrorCovariances()
@@ -1073,10 +1102,10 @@ class KalmanRelativeAttitudeProcessor(
         }
 
         /**
-         * Computes Frobenious norm for provided array.
+         * Computes Frobenius norm for provided array.
          *
          * @param data array to be evaluated.
-         * @return estimated Frobenious norm.
+         * @return estimated Frobenius norm.
          */
         private fun norm(data: DoubleArray): Double {
             return Utils.normF(data)
@@ -1111,7 +1140,7 @@ class KalmanRelativeAttitudeProcessor(
         }
 
         /**
-         * Normalizes provided array by its Frobenious norm.
+         * Normalizes provided array by its Frobenius norm.
          *
          * @param array array to be normalized.
          * @return norm that array had before normalization.
@@ -1147,7 +1176,7 @@ class KalmanRelativeAttitudeProcessor(
          * is a value close to zero due to machine precision inaccuracies.
          * @return true if matrix is positive semidefinite, false otherwise.
          */
-        private fun isPositiveSemidefinite(
+        private fun isPositiveSemiDefinite(
             m: Matrix,
             threshold: Double
         ): Boolean {

@@ -19,7 +19,7 @@ import android.content.Context
 import android.os.SystemClock
 import com.irurueta.algebra.Matrix
 import com.irurueta.android.navigation.inertial.collectors.*
-import com.irurueta.android.navigation.inertial.processors.attitude.KalmanRelativeAttitudeProcessor
+import com.irurueta.android.navigation.inertial.processors.attitude.KalmanRelativeAttitudeProcessor2
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.frames.CoordinateTransformation
 import com.irurueta.navigation.frames.FrameType
@@ -45,10 +45,10 @@ import kotlin.math.abs
  * @property gyroscopeNoisePsd Variance of the gyroscope output per Hz (or variance at 1Hz). This is
  * equivalent to the gyroscope PSD (Power Spectral Density) that can be obtained during calibration
  * or with noise estimators. If not provided
- * [KalmanRelativeAttitudeProcessor.DEFAULT_GYROSCOPE_NOISE_PSD] will be used.
+ * [KalmanRelativeAttitudeProcessor2.DEFAULT_GYROSCOPE_NOISE_PSD] will be used.
  * @property accelerometerNoiseStandardDeviation Accelerometer standard deviation expressed in
  * m/s^2. If not provided
- * [KalmanRelativeAttitudeProcessor.DEFAULT_ACCELEROMETER_NOISE_STANDARD_DEVIATION] will be used.
+ * [KalmanRelativeAttitudeProcessor2.DEFAULT_ACCELEROMETER_NOISE_STANDARD_DEVIATION] will be used.
  * @property minimumUnreliableDurationSeconds Minimum duration to keep unreliable accuracy when
  * Kalman filter numerical instability is detected. This value is expressed in seconds (s).
  * @property attitudeAvailableListener listener to notify when a new attitude measurement is
@@ -68,9 +68,9 @@ class KalmanRelativeAttitudeEstimator(
     val estimateCoordinateTransformation: Boolean = false,
     val estimateEulerAngles: Boolean = true,
     val estimateCovariances: Boolean = true,
-    val gyroscopeNoisePsd: Double = KalmanRelativeAttitudeProcessor.DEFAULT_GYROSCOPE_NOISE_PSD,
+    val gyroscopeNoisePsd: Double = KalmanRelativeAttitudeProcessor2.DEFAULT_GYROSCOPE_NOISE_PSD,
     val accelerometerNoiseStandardDeviation: Double =
-        KalmanRelativeAttitudeProcessor.DEFAULT_ACCELEROMETER_NOISE_STANDARD_DEVIATION,
+        KalmanRelativeAttitudeProcessor2.DEFAULT_ACCELEROMETER_NOISE_STANDARD_DEVIATION,
     val minimumUnreliableDurationSeconds: Double = DEFAULT_MINIMUM_UNRELIABLE_DURATION_SECONDS,
     var attitudeAvailableListener: OnAttitudeAvailableListener? = null,
     var accuracyChangedListener: OnAccuracyChangedListener? = null,
@@ -93,14 +93,20 @@ class KalmanRelativeAttitudeEstimator(
      */
     private var unreliable = false
 
+    /**
+     * Timestamp of last processed measurement.
+     */
     private var lastTimestamp: Long = -1
 
+    /**
+     * Timestamp when an unreliable measurement was found.
+     */
     private var unreliableTimestamp: Long = -1
 
     /**
      * Processor to estimate relative attitude using a Kalman filter.
      */
-    private val processor = KalmanRelativeAttitudeProcessor(
+    private val processor = KalmanRelativeAttitudeProcessor2(
         computeEulerAngles = estimateEulerAngles,
         computeCovariances = processCovariance,
         computeQuaternionCovariance = true,
@@ -253,7 +259,7 @@ class KalmanRelativeAttitudeEstimator(
             yaw = null
         }
 
-        val nedQuaternionCov = processor.nedQuaternionCovariance
+        val nedQuaternionCov = processor.nedAttitudeCovariance
         if (nedQuaternionCov != null) {
             quaternionCovariance.copyFrom(nedQuaternionCov)
         }

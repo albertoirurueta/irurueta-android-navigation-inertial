@@ -15,6 +15,8 @@
  */
 package com.irurueta.android.navigation.inertial
 
+import android.annotation.SuppressLint
+import android.location.Location
 import android.os.Build
 import android.os.Bundle
 import android.view.View
@@ -52,9 +54,36 @@ class KalmanAbsoluteAttitudeActivity : AppCompatActivity() {
 
     private var rotation = Quaternion()
 
+    private var initialAttitudeAvailable = false
+
+    private var previousTimestamp = -1L
+
+    private var initialCamera = PinholeCamera()
+
     private var camera: PinholeCamera? = null
 
     private var attitudeEstimator: KalmanAbsoluteAttitudeEstimator? = null
+
+    private var hasLocationPermission = false
+
+    private var location: Location? = null
+
+    private val locationPermissionService = LocationPermissionService(this) { locationResult ->
+        hasLocationPermission = locationResult.finePermissionGranted
+        checkLocationAndStart()
+    }
+
+    private var locationService: LocationService? = null
+
+    private var useWorldMagneticModel = false
+
+    private var accelerometerSensorType =
+        AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
+
+    private var gyroscopeSensorType = GyroscopeSensorType.GYROSCOPE_UNCALIBRATED
+
+    private var magnetometerSensorType =
+        MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED
 
     private val displayOrientation = Quaternion()
 
@@ -63,7 +92,7 @@ class KalmanAbsoluteAttitudeActivity : AppCompatActivity() {
 
         val extras = intent.extras
 
-        val accelerometerSensorType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        accelerometerSensorType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             extras?.getSerializable(ACCELEROMETER_SENSOR_TYPE, AccelerometerSensorType::class.java)
                 ?: AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
         } else {
@@ -72,7 +101,7 @@ class KalmanAbsoluteAttitudeActivity : AppCompatActivity() {
                 ?: AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
         }
 
-        val gyroscopeSensorType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        gyroscopeSensorType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             extras?.getSerializable(GYROSCOPE_SENSOR_TYPE, GyroscopeSensorType::class.java)
                 ?: GyroscopeSensorType.GYROSCOPE_UNCALIBRATED
         } else {
@@ -81,7 +110,7 @@ class KalmanAbsoluteAttitudeActivity : AppCompatActivity() {
                 ?: GyroscopeSensorType.GYROSCOPE_UNCALIBRATED
         }
 
-        val magnetometerSensorType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        magnetometerSensorType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             extras?.getSerializable(MAGNETOMETER_SENSOR_TYPE, MagnetometerSensorType::class.java)
                 ?: MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED
         } else {
@@ -109,9 +138,67 @@ class KalmanAbsoluteAttitudeActivity : AppCompatActivity() {
             }
         }
 
+        if (locationPermissionService.hasFineLocationPermission()) {
+            hasLocationPermission = true
+        } else {
+            locationPermissionService.requestFineLocationPermission()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        cubeView?.onResume()
+        checkLocationAndStart()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        attitudeEstimator?.stop()
+        cubeView?.onPause()
+        initialAttitudeAvailable = false
+        previousTimestamp = -1L
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun checkLocationAndStart() {
+        if (!hasLocationPermission) {
+            return
+        }
+
+        val location = this.location
+
+        if (location != null) {
+            buildEstimatorAndStart()
+        } else {
+            locationService = LocationService(this)
+            val lastLocation = locationService?.getLastKnownLocation()
+            if (lastLocation != null) {
+                this.location = lastLocation
+                buildEstimatorAndStart()
+            } else {
+                locationService?.getCurrentLocation { currentLocation ->
+                    this@KalmanAbsoluteAttitudeActivity.location = currentLocation
+                    buildEstimatorAndStart()
+                }
+            }
+        }
+    }
+
+    private fun buildEstimatorAndStart() {
+        val location = this.location ?: return
+        if (attitudeEstimator?.running == true) return
+
+        val refreshRate = if (Build.VERSION.SDK_INT > Build.VERSION_CODES.Q) {
+            this.display?.mode?.refreshRate ?: FALLBACK_REFRESH_RATE
+        } else {
+            FALLBACK_REFRESH_RATE
+        }
+        val refreshIntervalNanos = (1.0f / refreshRate * 1e9).toLong()
+
         attitudeEstimator = KalmanAbsoluteAttitudeEstimator(
             this,
-            SensorDelay.GAME,
+            location,
+            sensorDelay = SensorDelay.GAME,
             startOffsetEnabled = false,
             accelerometerSensorType,
             gyroscopeSensorType,
@@ -119,61 +206,61 @@ class KalmanAbsoluteAttitudeActivity : AppCompatActivity() {
             estimateCoordinateTransformation = false,
             estimateEulerAngles = true,
             estimateCovariances = true,
-            attitudeAvailableListener = { _, attitude, _, roll, pitch, yaw, _, _, covariance ->
-                attitude.toQuaternion(rotation)
+            attitudeAvailableListener = { _, attitude, timestamp, roll, pitch, yaw, _, _, covariance ->
+                if (!initialAttitudeAvailable) {
+                    previousTimestamp = timestamp
 
-                rollView?.text = getString(R.string.roll_degrees, Math.toDegrees(roll ?: 0.0))
-                pitchView?.text = getString(R.string.pitch_degrees, Math.toDegrees(pitch ?: 0.0))
-                yawView?.text = getString(R.string.yaw_degrees, Math.toDegrees(yaw ?: 0.0))
-
-                if (covariance != null) {
-                    val rollStd = Math.toDegrees(sqrt(covariance.getElementAt(0, 0)))
-                    val pitchStd = Math.toDegrees(sqrt(covariance.getElementAt(1, 1)))
-                    val yawStd = Math.toDegrees(sqrt(covariance.getElementAt(2, 2)))
-
-                    rollStandardDeviationView?.text =
-                        getString(R.string.roll_accuracy_degrees, rollStd)
-                    pitchStandardDeviationView?.text =
-                        getString(R.string.pitch_accuracy_degrees, pitchStd)
-                    yawStandardDeviationView?.text =
-                        getString(R.string.yaw_accuracy_degrees, yawStd)
-                    rollStandardDeviationView?.visibility = View.VISIBLE
-                    pitchStandardDeviationView?.visibility = View.VISIBLE
-                    yawStandardDeviationView?.visibility = View.VISIBLE
-                } else {
-                    rollStandardDeviationView?.visibility = View.INVISIBLE
-                    pitchStandardDeviationView?.visibility = View.INVISIBLE
-                    yawStandardDeviationView?.visibility = View.INVISIBLE
+                    initialAttitudeAvailable = true
                 }
 
-                // rotation refers to pinhole camera point of view, to apply rotation to the cube
-                // its inverse must be used.
-                rotation.inverse()
+                // refresh only as much as display allows even though sensors might run at higher refresh rates
+                if (timestamp - previousTimestamp >= refreshIntervalNanos) {
+                    previousTimestamp = timestamp
 
-                // convert attitude from NED to ENU coordinate system to be displayed using OpenGL
-                ENUtoNEDConverter.convert(rotation, rotation)
+                    attitude.toQuaternion(rotation)
 
-                // take into account display orientation
-                val displayRotationRadians =
-                    DisplayOrientationHelper.getDisplayRotationRadians(this)
-                displayOrientation.setFromEulerAngles(0.0, 0.0, displayRotationRadians)
-                Quaternion.product(displayOrientation, rotation, rotation)
+                    rollView?.text = getString(R.string.roll_degrees, Math.toDegrees(roll ?: 0.0))
+                    pitchView?.text = getString(R.string.pitch_degrees, Math.toDegrees(pitch ?: 0.0))
+                    yawView?.text = getString(R.string.yaw_degrees, Math.toDegrees(yaw ?: 0.0))
 
-                cubeView.cubeRotation = rotation
+                    if (covariance != null) {
+                        val rollStd = Math.toDegrees(sqrt(covariance.getElementAt(0, 0)))
+                        val pitchStd = Math.toDegrees(sqrt(covariance.getElementAt(1, 1)))
+                        val yawStd = Math.toDegrees(sqrt(covariance.getElementAt(2, 2)))
+
+                        rollStandardDeviationView?.text =
+                            getString(R.string.roll_accuracy_degrees, rollStd)
+                        pitchStandardDeviationView?.text =
+                            getString(R.string.pitch_accuracy_degrees, pitchStd)
+                        yawStandardDeviationView?.text =
+                            getString(R.string.yaw_accuracy_degrees, yawStd)
+                        rollStandardDeviationView?.visibility = View.VISIBLE
+                        pitchStandardDeviationView?.visibility = View.VISIBLE
+                        yawStandardDeviationView?.visibility = View.VISIBLE
+                    } else {
+                        rollStandardDeviationView?.visibility = View.INVISIBLE
+                        pitchStandardDeviationView?.visibility = View.INVISIBLE
+                        yawStandardDeviationView?.visibility = View.INVISIBLE
+                    }
+
+                    // rotation refers to pinhole camera point of view, to apply rotation to the cube
+                    // its inverse must be used.
+                    rotation.inverse()
+
+                    // convert attitude from NED to ENU coordinate system to be displayed using OpenGL
+                    ENUtoNEDConverter.convert(rotation, rotation)
+
+                    // take into account display orientation
+                    val displayRotationRadians =
+                        DisplayOrientationHelper.getDisplayRotationRadians(this)
+                    displayOrientation.setFromEulerAngles(0.0, 0.0, displayRotationRadians)
+                    Quaternion.product(displayOrientation, rotation, rotation)
+
+                    cubeView?.cubeRotation = rotation
+                }
             }
         )
-    }
-
-    override fun onResume() {
-        super.onResume()
-        cubeView?.onResume()
         attitudeEstimator?.start()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        attitudeEstimator?.stop()
-        cubeView?.onPause()
     }
 
     companion object {
@@ -186,6 +273,8 @@ class KalmanAbsoluteAttitudeActivity : AppCompatActivity() {
         private const val HORIZONTAL_FOCAL_LENGTH = 2065.920810699463
 
         private const val VERTICAL_FOCAL_LENGTH = 2125.98623752594
+
+        private const val FALLBACK_REFRESH_RATE = 60.0f
 
         private fun createCamera(view: CubeTextureView): PinholeCamera {
             val px = view.width / 2.0
