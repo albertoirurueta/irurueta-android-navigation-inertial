@@ -31,8 +31,8 @@ import com.irurueta.android.navigation.inertial.numerical.integration.Quadrature
  * @throws IllegalArgumentException if provided q and a matrices are not 9x9.
  */
 class PreciseProcessNoiseCovarianceIntegrator(
-    q: Matrix,
-    a: Matrix,
+    q: Matrix? = null,
+    a: Matrix? = null,
     val integratorType: IntegratorType = MatrixIntegrator.DEFAULT_INTEGRATOR_TYPE,
     val quadratureType: QuadratureType = MatrixIntegrator.DEFAULT_QUADRATURE_TYPE
 ) : ProcessNoiseCovarianceIntegrator(q, a) {
@@ -98,15 +98,18 @@ class PreciseProcessNoiseCovarianceIntegrator(
      * Computes process noise covariance as the integration of [a] and [q] during provided time
      * interval.
      *
-     * @param lowerBoundTimestamp time interval lower bound expressed in seconds.
-     * @param upperBoundTimestamp time interval upper bound expressed in seconds.
+     * @param timeIntervalSeconds time interval between current and last sample expressed in
+     * seconds.
      * @param result instance where result of integration will be stored.
      */
-    override fun integrate(lowerBoundTimestamp: Double, upperBoundTimestamp: Double, result: Matrix) {
+    override fun integrate(timeIntervalSeconds: Double, result: Matrix) {
+        check(a != null)
+        check(q != null)
         require(result.rows == N_ROWS)
         require(result.columns == N_COLUMNS)
+        require(timeIntervalSeconds >= 0.0)
 
-        val integrator = MatrixIntegrator.create(lowerBoundTimestamp, upperBoundTimestamp, listener)
+        val integrator = MatrixIntegrator.create(0.0, timeIntervalSeconds, listener)
         integrator.integrate(result)
     }
 }

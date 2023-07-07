@@ -16,22 +16,17 @@
 package com.irurueta.android.navigation.inertial.processors.attitude
 
 /**
- * Supported methods to estimate process noise covariance matrix
+ * Supported methods to estimate phi matrix relating previous and predicted Kalman filter state.
  */
-enum class ProcessNoiseCovarianceMethod {
+enum class PhiMatrixMethod {
     /**
      * Precise method. Requires more computational power.
      */
     PRECISE,
 
     /**
-     * Better approximation method
-     */
-    BETTER,
-
-    /**
      * Approximated method. Assumes short time intervals between samples to approximate
-     * computation of matrix integrals.
+     * exponential of process equation matrix by the first term of its Taylor expansion series.
      */
     APPROXIMATED
 }

@@ -25,10 +25,7 @@ import com.irurueta.algebra.Matrix
  * space.
  * @throws IllegalArgumentException if provided q and a matrices are not 9x9.
  */
-abstract class ProcessNoiseCovarianceIntegrator(
-    val q: Matrix,
-    val a: Matrix
-) {
+abstract class ProcessNoiseCovarianceIntegrator(q: Matrix?, a: Matrix?) {
 
     /**
      * Gets method use to estimate process noise covariance.
@@ -36,20 +33,45 @@ abstract class ProcessNoiseCovarianceIntegrator(
     abstract val method: ProcessNoiseCovarianceMethod
 
     /**
+     * Gets or sets continuous time process noise covariance matrix.
+     */
+    var q: Matrix? = q
+        set(value) {
+            if (value != null) {
+                require(value.rows == N_ROWS)
+                require(value.columns == N_COLUMNS)
+            }
+
+            field = value
+        }
+
+    /**
+     * Gets or sets process equation matrix relating previous and predicted state in a time
+     * continuous space.
+     */
+    var a: Matrix? = a
+        set(value) {
+            if (value != null) {
+                require(value.rows == N_ROWS)
+                require(value.columns == N_COLUMNS)
+            }
+
+            field = value
+        }
+
+    /**
      * Computes process noise covariance as the integration of [a] and [q] during provided time
      * interval.
      *
-     * @param lowerBoundTimestamp time interval lower bound expressed in seconds.
-     * @param upperBoundTimestamp time interval upper bound expressed in seconds.
+     * @param timeIntervalSeconds time interval between current and last sample expressed in
+     * seconds.
      * @param result instance where result of integration will be stored.
      */
-    abstract fun integrate(lowerBoundTimestamp: Double, upperBoundTimestamp: Double, result: Matrix)
+    abstract fun integrate(timeIntervalSeconds: Double, result: Matrix)
 
     init {
-        require(a.rows == N_ROWS)
-        require(a.columns == N_COLUMNS)
-        require(q.rows == N_ROWS)
-        require(q.columns == N_COLUMNS)
+        this.q = q
+        this.a = a
     }
 
     companion object {
@@ -66,9 +88,9 @@ abstract class ProcessNoiseCovarianceIntegrator(
         const val N_COLUMNS = 9
 
         /**
-         * Default method used by instantiate integrators.
+         * Default method used to instantiate integrators.
          */
-        val DEFAULT_METHOD = ProcessNoiseCovarianceMethod.APPROXIMATED
+        val DEFAULT_METHOD = ProcessNoiseCovarianceMethod.BETTER
 
         /**
          * Creates a new instance of [ProcessNoiseCovarianceIntegrator] using provided method.
@@ -80,9 +102,9 @@ abstract class ProcessNoiseCovarianceIntegrator(
          * @return created instance.
          */
         fun create(
-            q: Matrix,
-            a: Matrix,
-            method: ProcessNoiseCovarianceMethod
+            q: Matrix? = null,
+            a: Matrix? = null,
+            method: ProcessNoiseCovarianceMethod = DEFAULT_METHOD
         ): ProcessNoiseCovarianceIntegrator {
             return when (method) {
                 ProcessNoiseCovarianceMethod.APPROXIMATED -> ApproximatedProcessNoiseCovarianceIntegrator(
@@ -90,23 +112,12 @@ abstract class ProcessNoiseCovarianceIntegrator(
                     a
                 )
 
+                ProcessNoiseCovarianceMethod.BETTER -> BetterProcessNoiseCovarianceIntegrator(q, a)
                 ProcessNoiseCovarianceMethod.PRECISE -> PreciseProcessNoiseCovarianceIntegrator(
                     q,
                     a
                 )
             }
-        }
-
-        /**
-         * Creates a new instance of [ProcessNoiseCovarianceIntegrator] using default method.
-         *
-         * @param q Continuous time process noise covariance matrix.
-         * @param a Process equation matrix relating previous and predicted state in a time
-         * continuous space.
-         * @return created instance.
-         */
-        fun create(q: Matrix, a: Matrix): ProcessNoiseCovarianceIntegrator {
-            return create(q, a, DEFAULT_METHOD)
         }
     }
 }
