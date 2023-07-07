@@ -17,6 +17,7 @@ package com.irurueta.android.navigation.inertial.processors.attitude
 
 import com.irurueta.algebra.Matrix
 import com.irurueta.android.navigation.inertial.numerical.ExponentialMatrixEstimator
+import com.irurueta.android.navigation.inertial.numerical.integration.IntegrationException
 import com.irurueta.android.navigation.inertial.numerical.integration.IntegratorType
 import com.irurueta.android.navigation.inertial.numerical.integration.MatrixIntegrator
 import com.irurueta.android.navigation.inertial.numerical.integration.MatrixSingleDimensionFunctionEvaluatorListener
@@ -101,7 +102,9 @@ class PreciseProcessNoiseCovarianceIntegrator(
      * @param timeIntervalSeconds time interval between current and last sample expressed in
      * seconds.
      * @param result instance where result of integration will be stored.
+     * @throws IntegrationException if integration fails
      */
+    @Throws(IntegrationException::class)
     override fun integrate(timeIntervalSeconds: Double, result: Matrix) {
         check(a != null)
         check(q != null)

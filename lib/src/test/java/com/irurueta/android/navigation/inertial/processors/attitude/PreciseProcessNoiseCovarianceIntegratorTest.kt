@@ -107,6 +107,88 @@ class PreciseProcessNoiseCovarianceIntegratorTest {
     }
 
     @Test
+    fun a_whenInvalidRows_throwsIllegalArgumentException() {
+        val integrator = PreciseProcessNoiseCovarianceIntegrator()
+
+        // check initial value
+        assertNull(integrator.a)
+
+        val a = Matrix(1, COLUMNS)
+        assertThrows(IllegalArgumentException::class.java) {
+            integrator.a = a
+        }
+    }
+
+    @Test
+    fun a_whenInvalidColumns_throwsIllegalArgumentException() {
+        val integrator = PreciseProcessNoiseCovarianceIntegrator()
+
+        // check initial value
+        assertNull(integrator.a)
+
+        val a = Matrix(ROWS, 1)
+        assertThrows(IllegalArgumentException::class.java) {
+            integrator.a = a
+        }
+    }
+
+    @Test
+    fun a_whenValid_setsExpectedValue() {
+        val integrator = PreciseProcessNoiseCovarianceIntegrator()
+
+        // check initial value
+        assertNull(integrator.a)
+
+        // set new value
+        val a = Matrix(ROWS, COLUMNS)
+        integrator.a = a
+
+        // check
+        assertSame(a, integrator.a)
+    }
+
+    @Test
+    fun q_whenInvalidRows_throwsIllegalArgumentException() {
+        val integrator = PreciseProcessNoiseCovarianceIntegrator()
+
+        // check initial value
+        assertNull(integrator.q)
+
+        val q = Matrix(1, COLUMNS)
+        assertThrows(IllegalArgumentException::class.java) {
+            integrator.q = q
+        }
+    }
+
+    @Test
+    fun q_whenInvalidColumns_throwsIllegalArgumentException() {
+        val integrator = PreciseProcessNoiseCovarianceIntegrator()
+
+        // check initial value
+        assertNull(integrator.q)
+
+        val q = Matrix(ROWS, 1)
+        assertThrows(IllegalArgumentException::class.java) {
+            integrator.q = q
+        }
+    }
+
+    @Test
+    fun q_whnValid_setsExpectedValue() {
+        val integrator = PreciseProcessNoiseCovarianceIntegrator()
+
+        // check initial value
+        assertNull(integrator.q)
+
+        // set new value
+        val q = Matrix(ROWS, COLUMNS)
+        integrator.q = q
+
+        // check
+        assertSame(q, integrator.q)
+    }
+
+    @Test
     fun method_returnsExpectedValue() {
         val a = Matrix(ROWS, COLUMNS)
         val q = Matrix(ROWS, COLUMNS)

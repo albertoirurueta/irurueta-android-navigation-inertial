@@ -60,6 +60,47 @@ class PrecisePhiMatrixEstimatorTest {
     }
 
     @Test
+    fun a_whenInvalidRows_throwsIllegalArgumentException() {
+        val estimator = PrecisePhiMatrixEstimator()
+
+        // check initial value
+        assertNull(estimator.a)
+
+        val a = Matrix(1, COLUMNS)
+        assertThrows(IllegalArgumentException::class.java) {
+            estimator.a = a
+        }
+    }
+
+    @Test
+    fun a_whenInvalidColumns_throwsIllegalArgumentException() {
+        val estimator = PrecisePhiMatrixEstimator()
+
+        // check initial value
+        assertNull(estimator.a)
+
+        val a = Matrix(ROWS, 1)
+        assertThrows(IllegalArgumentException::class.java) {
+            estimator.a = a
+        }
+    }
+
+    @Test
+    fun a_whenValid_setsExpectedValue() {
+        val estimator = PrecisePhiMatrixEstimator()
+
+        // check initial value
+        assertNull(estimator.a)
+
+        // set new value
+        val a = Matrix(ROWS, COLUMNS)
+        estimator.a = a
+
+        // check
+        assertSame(a, estimator.a)
+    }
+
+    @Test
     fun method_returnsExpectedValue() {
         val estimator = PrecisePhiMatrixEstimator()
 

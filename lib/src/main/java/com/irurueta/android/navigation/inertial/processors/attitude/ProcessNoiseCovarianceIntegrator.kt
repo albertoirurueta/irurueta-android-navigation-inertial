@@ -34,8 +34,11 @@ abstract class ProcessNoiseCovarianceIntegrator(q: Matrix?, a: Matrix?) {
 
     /**
      * Gets or sets continuous time process noise covariance matrix.
+     *
+     * @throws IllegalArgumentException if provided matrix is not 9x9.
      */
     var q: Matrix? = q
+        @Throws(IllegalArgumentException::class)
         set(value) {
             if (value != null) {
                 require(value.rows == N_ROWS)
@@ -48,8 +51,11 @@ abstract class ProcessNoiseCovarianceIntegrator(q: Matrix?, a: Matrix?) {
     /**
      * Gets or sets process equation matrix relating previous and predicted state in a time
      * continuous space.
+     *
+     * @throws IllegalArgumentException if provided matrix is not 9x9.
      */
     var a: Matrix? = a
+        @Throws(IllegalArgumentException::class)
         set(value) {
             if (value != null) {
                 require(value.rows == N_ROWS)
