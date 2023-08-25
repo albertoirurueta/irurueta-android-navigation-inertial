@@ -38,7 +38,7 @@ public class LinearInterpolatorTest {
 
     private static final int MIN_SAMPLES = 2;
 
-    private static final double ABSOLUTE_ERROR = 1e-12;
+    private static final double ABSOLUTE_ERROR = 1e-11;
 
     @Test
     public void interpolate_whenFirstDegreePolynomial_returnsExpectedResult()

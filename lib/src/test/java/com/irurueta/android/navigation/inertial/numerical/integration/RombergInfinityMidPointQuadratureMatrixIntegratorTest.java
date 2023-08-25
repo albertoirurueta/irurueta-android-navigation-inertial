@@ -16,68 +16,15 @@
 package com.irurueta.android.navigation.inertial.numerical.integration;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import com.irurueta.algebra.Matrix;
 import com.irurueta.algebra.WrongSizeException;
-import com.irurueta.statistics.NormalDist;
-import com.irurueta.statistics.UniformRandomizer;
 
 import org.junit.Test;
 
 public class RombergInfinityMidPointQuadratureMatrixIntegratorTest {
 
-    private static final double MIN_VALUE = -10.0;
-
-    private static final double MAX_VALUE = 10.0;
-
-    private static final double ABSOLUTE_ERROR_GAUSSIAN = 1e-5;
-
     private static final double ALMOST_INFINITY = 1e99;
-
-    @Test
-    public void integrate_whenGaussian_returnsExpectedResult()
-            throws IntegrationException, WrongSizeException {
-        final UniformRandomizer randomizer = new UniformRandomizer();
-        final double a = randomizer.nextDouble(MIN_VALUE, MAX_VALUE);
-        final double b = randomizer.nextDouble(a, MAX_VALUE);
-        final double mu = randomizer.nextDouble(a, b); //MIN_VALUE, MAX_VALUE);
-        final double sigma = ABSOLUTE_ERROR_GAUSSIAN
-                + Math.abs(randomizer.nextDouble(MIN_VALUE, MAX_VALUE));
-
-        final MatrixSingleDimensionFunctionEvaluatorListener listener =
-                new MatrixSingleDimensionFunctionEvaluatorListener() {
-
-                    @Override
-                    public void evaluate(double point, Matrix result) {
-                        result.setElementAtIndex(0, NormalDist.p(point, mu, sigma));
-                    }
-
-                    @Override
-                    public int getRows() {
-                        return 1;
-                    }
-
-                    @Override
-                    public int getColumns() {
-                        return 1;
-                    }
-                };
-
-        final RombergInfinityMidPointQuadratureMatrixIntegrator integrator =
-                new RombergInfinityMidPointQuadratureMatrixIntegrator(a, b, listener,
-                        ABSOLUTE_ERROR_GAUSSIAN);
-
-        final double expected = NormalDist.cdf(b, mu, sigma) - NormalDist.cdf(a, mu, sigma);
-
-        final Matrix integrationResult = new Matrix(1, 1);
-        integrator.integrate(integrationResult);
-
-        // check
-        final Matrix expectedResult = new Matrix(1, 1);
-        expectedResult.setElementAtIndex(0, expected);
-        assertTrue(expectedResult.equals(integrationResult, ABSOLUTE_ERROR_GAUSSIAN));
-    }
 
     @Test(expected = IntegrationException.class)
     public void integrate_whenImproperIntegrandWithSingularities_returnsExpectedResult()

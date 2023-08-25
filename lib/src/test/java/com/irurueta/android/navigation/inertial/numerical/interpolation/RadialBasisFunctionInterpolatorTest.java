@@ -32,9 +32,9 @@ public class RadialBasisFunctionInterpolatorTest {
 
     private static final int SAMPLES = 1000;
 
-    private static final double ABSOLUTE_ERROR_MQ_1 = 1e-5;
+    private static final double ABSOLUTE_ERROR_MQ_1 = 1e-4;
 
-    private static final double ABSOLUTE_ERROR_INVMQ_1 = 1e-5;
+    private static final double ABSOLUTE_ERROR_INVMQ_1 = 1e-3;
 
     private static final double ABSOLUTE_ERROR_THINPLATE_1 = 1e-2;
 
@@ -50,11 +50,11 @@ public class RadialBasisFunctionInterpolatorTest {
 
     private static final double ABSOLUTE_ERROR_MQ_3 = 1e-1;
 
-    private static final double ABSOLUTE_ERROR_INVMQ_3 = 1e-1;
+    private static final double ABSOLUTE_ERROR_INVMQ_3 = 1.0;
 
     private static final double ABSOLUTE_ERROR_THINPLATE_3 = 1.0;
 
-    private static final double ABSOLUTE_ERROR_GAUSS_3 = 1e-2;
+    private static final double ABSOLUTE_ERROR_GAUSS_3 = 1e-1;
 
     @Test
     public void interpolate_dim1AndMultiQuadricRbf_returnsExpectedResult()

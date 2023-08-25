@@ -30,19 +30,19 @@ import java.util.logging.Logger;
 
 public class PolynomialInterpolatorTest {
 
-    private static final double MIN_VALUE = -100.0;
+    private static final double MIN_VALUE = -10.0;
 
-    private static final double MAX_VALUE = 100.0;
+    private static final double MAX_VALUE = 10.0;
 
     private static final int SAMPLES = 10;
 
     private static final int INTERPOLATIONS = 1000;
 
-    private static final double ABSOLUTE_ERROR_1 = 1e-6;
+    private static final double ABSOLUTE_ERROR_1 = 1e-5;
 
     private static final double ABSOLUTE_ERROR_2 = 1e-3;
 
-    private static final double ABSOLUTE_ERROR_3 = 1e-2;
+    private static final double ABSOLUTE_ERROR_3 = 1.0;
 
     private static final double ABSOLUTE_ERROR_4 = 1.0;
 

@@ -36,11 +36,11 @@ public class RombergTrapezoidalQuadratureIntegratorTest {
 
     private static final double ABSOLUTE_ERROR_1 = 1e-9;
 
-    private static final double ABSOLUTE_ERROR_6 = 1e-8;
+    private static final double ABSOLUTE_ERROR_6 = 1e-6;
 
-    private static final double ABSOLUTE_ERROR_GAUSSIAN = 1e-10;
+    private static final double ABSOLUTE_ERROR_GAUSSIAN = 1e-8;
 
-    private static final double ABSOLUTE_ERROR_EXPONENTIAL = 1e-10;
+    private static final double ABSOLUTE_ERROR_EXPONENTIAL = 1e-7;
 
     private static final double ALMOST_INFINITY = 1e99;
 

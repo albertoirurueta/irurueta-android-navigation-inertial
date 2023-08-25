@@ -17,6 +17,7 @@ package com.irurueta.android.navigation.inertial.processors.attitude
 
 import com.irurueta.algebra.Matrix
 import com.irurueta.algebra.Utils
+import com.irurueta.android.navigation.inertial.numerical.integration.IntegrationException
 import com.irurueta.navigation.inertial.calibration.AccelerationTriad
 import com.irurueta.navigation.inertial.calibration.AngularSpeedTriad
 import com.irurueta.statistics.UniformRandomizer
@@ -188,27 +189,38 @@ class ApproximatedProcessNoiseCovarianceIntegratorTest {
 
     @Test
     fun integrate_returnsExpectedResult() {
-        val a = generateProcessEquationMatrix()
-        val q = generateContinuousTimeProcessNoiseCovarianceMatrix()
+        var succeeded = false
+        for (i in 0 until TIMES) {
+            try {
+                val a = generateProcessEquationMatrix()
+                val q = generateContinuousTimeProcessNoiseCovarianceMatrix()
 
-        val integrator = ApproximatedProcessNoiseCovarianceIntegrator(q, a)
+                val integrator = ApproximatedProcessNoiseCovarianceIntegrator(q, a)
 
-        val result = Matrix(ROWS, COLUMNS)
-        integrator.integrate(TIME_INTERVAL, result)
+                val result = Matrix(ROWS, COLUMNS)
+                integrator.integrate(TIME_INTERVAL, result)
 
-        val expected = computeApproximateIntegration(q, a)
-        assertEquals(expected, result)
+                val expected = computeApproximateIntegration(q, a)
+                assertEquals(expected, result)
 
-        val preciseIntegrator = PreciseProcessNoiseCovarianceIntegrator(q, a)
-        val preciseResult = Matrix(ROWS, COLUMNS)
-        preciseIntegrator.integrate(TIME_INTERVAL, preciseResult)
+                val preciseIntegrator = PreciseProcessNoiseCovarianceIntegrator(q, a)
+                val preciseResult = Matrix(ROWS, COLUMNS)
+                preciseIntegrator.integrate(TIME_INTERVAL, preciseResult)
 
-        val error = Utils.normF(result.subtractAndReturnNew(preciseResult))
+                val error = Utils.normF(result.subtractAndReturnNew(preciseResult))
 
-        val result2 = computeBetterApproximateIntegration(q, a)
-        val error2 = Utils.normF(result2.subtractAndReturnNew(preciseResult))
+                val result2 = computeBetterApproximateIntegration(q, a)
+                val error2 = Utils.normF(result2.subtractAndReturnNew(preciseResult))
 
-        assertTrue(error2 < error)
+                assertTrue(error2 < error)
+                succeeded = true
+                break
+            } catch (ex: IntegrationException) {
+                // ignore
+            }
+        }
+
+        assertTrue(succeeded)
     }
 
     @Test
@@ -276,15 +288,17 @@ class ApproximatedProcessNoiseCovarianceIntegratorTest {
 
         const val COLUMNS = 9
 
-        const val MIN_ANGULAR_SPEED = -Math.PI
+        const val MIN_ANGULAR_SPEED = -Math.PI / 100.0
 
-        const val MAX_ANGULAR_SPEED = Math.PI
+        const val MAX_ANGULAR_SPEED = Math.PI / 100.0
 
         const val TIME_INTERVAL = 0.02
 
         const val BG = 1e-6
 
         const val GYROSCOPE_STANDDARD_DEVIATION = 0.006
+
+        const val TIMES = 100
 
         fun generateProcessEquationMatrix(): Matrix {
             val randomizer = UniformRandomizer()

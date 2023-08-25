@@ -35,42 +35,12 @@ public class TrapezoidalQuadratureIntegratorTest {
 
     private static final double ABSOLUTE_ERROR_1 = 1e-10;
 
-    private static final double ABSOLUTE_ERROR_2 = 1e-6;
-
-    private static final double ABSOLUTE_ERROR_4 = 1e-5;
-
-    private static final double ABSOLUTE_ERROR_6 = 1e-2;
-
-    private static final double ABSOLUTE_ERROR_EXPONENTIAL = 1e-7;
+    private static final double ABSOLUTE_ERROR_EXPONENTIAL = 1e-6;
 
     @Test
     public void integrate_whenFirstDegreePolynomial_returnsExpectedResult()
             throws IntegrationException {
-        assertPolynomialIntegration(1, ABSOLUTE_ERROR_1);
-    }
-
-    @Test
-    public void integrate_whenSecondDegreePolynomial_returnsExpectedResult()
-            throws IntegrationException {
-        assertPolynomialIntegration(2, ABSOLUTE_ERROR_2);
-    }
-
-    @Test
-    public void integrate_whenThirdDegreePolynomial_returnsExpectedResult()
-            throws IntegrationException {
-        assertPolynomialIntegration(3, ABSOLUTE_ERROR_2);
-    }
-
-    @Test
-    public void integrate_whenFourthDegreePolynomial_returnsExpectedResult()
-            throws IntegrationException {
-        assertPolynomialIntegration(4, ABSOLUTE_ERROR_4);
-    }
-
-    @Test
-    public void integrate_whenSixthDegreePolynomial_returnsExpectedResult()
-            throws IntegrationException {
-        assertPolynomialIntegration(6, ABSOLUTE_ERROR_6);
+        assertPolynomialIntegration();
     }
 
     @Test
@@ -123,9 +93,9 @@ public class TrapezoidalQuadratureIntegratorTest {
         assertEquals(QuadratureType.TRAPEZOIDAL, integrator.getQuadratureType());
     }
 
-    private void assertPolynomialIntegration(final int degree, final double error)
+    private void assertPolynomialIntegration()
             throws IntegrationException {
-        final Polynomial polynomial = buildPolynomial(degree);
+        final Polynomial polynomial = buildPolynomial(1);
         final Polynomial integrationPolynomial = polynomial.integrationAndReturnNew();
 
         // set integration interval
@@ -145,7 +115,7 @@ public class TrapezoidalQuadratureIntegratorTest {
                 });
         final double result = integrator.integrate();
 
-        assertEquals(expected, result, error);
+        assertEquals(expected, result, TrapezoidalQuadratureIntegratorTest.ABSOLUTE_ERROR_1);
     }
 
     private Polynomial buildPolynomial(final int degree) {

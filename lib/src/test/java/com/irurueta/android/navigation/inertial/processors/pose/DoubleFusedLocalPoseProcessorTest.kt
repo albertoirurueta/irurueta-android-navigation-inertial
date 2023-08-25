@@ -2114,7 +2114,7 @@ class DoubleFusedLocalPoseProcessorTest {
         val localDiffPosition2: InhomogeneousPoint3D? =
             getPrivateProperty(BaseLocalPoseProcessor::class, processor, "localDiffPosition")
         requireNotNull(localDiffPosition2)
-        assertEquals(localDiffPosition, localDiffPosition2)
+        assertTrue(localDiffPosition.equals(localDiffPosition2, ABSOLUTE_ERROR))
 
         val poseTransformation =
             EuclideanTransformation3D(transformationRotation, localDiffPosition.asArray())

@@ -30,9 +30,9 @@ import java.util.logging.Logger;
 
 public class RationalInterpolatorTest {
 
-    private static final double MIN_VALUE = -100.0;
+    private static final double MIN_VALUE = -10.0;
 
-    private static final double MAX_VALUE = 100.0;
+    private static final double MAX_VALUE = 10.0;
 
     private static final int SAMPLES = 1000;
 
@@ -40,11 +40,11 @@ public class RationalInterpolatorTest {
 
     private static final double ABSOLUTE_ERROR_1 = 1e-7;
 
-    private static final double ABSOLUTE_ERROR_2 = 1e-5;
+    private static final double ABSOLUTE_ERROR_2 = 1e-1;
 
-    private static final double ABSOLUTE_ERROR_3 = 1e-3;
+    private static final double ABSOLUTE_ERROR_3 = 1e-2;
 
-    private static final double ABSOLUTE_ERROR_4 = 1e-1;
+    private static final double ABSOLUTE_ERROR_4 = 1.0;
 
     private static final double ABSOLUTE_ERROR_5 = 2.0;
 

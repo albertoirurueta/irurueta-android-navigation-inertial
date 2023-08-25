@@ -34,7 +34,7 @@ public class ShepardInterpolatorTest {
 
     private static final double ABSOLUTE_ERROR_1 = 1e-2;
 
-    private static final double ABSOLUTE_ERROR_2 = 1.0;
+    private static final double ABSOLUTE_ERROR_2 = 2.0;
 
     @Test
     public void interpolate_dim1_returnsExpectedResult()

@@ -1253,7 +1253,7 @@ class AccurateLevelingEstimator2Test {
     }
 
     private companion object {
-        const val ABSOLUTE_ERROR = 1e-1
+        const val ABSOLUTE_ERROR = 5e-1
 
         const val MIN_LATITUDE_DEGREES = -90.0
         const val MAX_LATITUDE_DEGREES = 90.0

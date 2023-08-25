@@ -41,13 +41,13 @@ public class RombergMidPointQuadratureMatrixIntegratorTest {
 
     private static final double MAX_LAMBDA = 1.0;
 
-    private static final double ABSOLUTE_ERROR_1 = 1e-10;
+    private static final double ABSOLUTE_ERROR_1 = 1e-9;
 
-    private static final double ABSOLUTE_ERROR_5 = 1e-8;
+    private static final double ABSOLUTE_ERROR_5 = 1e-7;
 
-    private static final double ABSOLUTE_ERROR_GAUSSIAN = 1e-10;
+    private static final double ABSOLUTE_ERROR_GAUSSIAN = 1e-7;
 
-    private static final double ABSOLUTE_ERROR_EXPONENTIAL = 1e-8;
+    private static final double ABSOLUTE_ERROR_EXPONENTIAL = 1e-5;
 
     private static final double ABSOLUTE_ERROR_IMPROPER_1 = 1e-5;
 

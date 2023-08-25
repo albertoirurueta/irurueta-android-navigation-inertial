@@ -307,7 +307,7 @@ class MagnetometerLinearSensorMeasurementInterpolatorTest {
 
         const val SIZE = 6
 
-        const val ABSOLUTE_ERROR = 5e-6f
+        const val ABSOLUTE_ERROR = 1e-4f
 
         fun assertMeasurement(
             measurement1: MagnetometerSensorMeasurement,

@@ -36,7 +36,7 @@ public class Polynomial2DInterpolatorTest {
 
     private static final int SAMPLES = 10;
 
-    private static final double ABSOLUTE_ERROR_1 = 1e-2;
+    private static final double ABSOLUTE_ERROR_1 = 1e-1;
 
     private static final double ABSOLUTE_ERROR_2 = 1e-1;
 

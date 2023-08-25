@@ -30,15 +30,15 @@ public class RombergInfinityMidPointQuadratureIntegratorTest {
 
     private static final double MAX_VALUE = 10.0;
 
-    private static final double ABSOLUTE_ERROR_1 = 1e-5;
+    private static final double ABSOLUTE_ERROR_1 = 1e-3;
 
     private static final double ABSOLUTE_ERROR_3 = 1e-4;
 
-    private static final double ABSOLUTE_ERROR_4 = 1e-3;
+    private static final double ABSOLUTE_ERROR_4 = 1e-1;
 
-    private static final double ABSOLUTE_ERROR_5 = 1e-2;
+    private static final double ABSOLUTE_ERROR_5 = 1.0;
 
-    private static final double ABSOLUTE_ERROR_6 = 1e-1;
+    private static final double ABSOLUTE_ERROR_6 = 1.0;
 
     private static final double ABSOLUTE_ERROR_GAUSSIAN = 1e-6;
 

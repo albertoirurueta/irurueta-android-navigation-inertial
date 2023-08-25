@@ -34,6 +34,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import kotlin.math.abs
+import kotlin.math.max
+import kotlin.math.min
 
 @RunWith(RobolectricTestRunner::class)
 class LeveledRelativeAttitudeProcessorTest {
@@ -1889,8 +1891,8 @@ class LeveledRelativeAttitudeProcessorTest {
         assertEquals(levelingAttitude2, levelingAttitude1)
 
         val fusedAttitude2 = deltaRelativeAttitude.multiplyAndReturnNew(fusedAttitudeCopy)
-        val t = processor.interpolationValue + processor.indirectInterpolationWeight *
-                abs(deltaRelativeAttitude.rotationAngle / TIME_INTERVAL)
+        val t = min(max(0.0, processor.interpolationValue + processor.indirectInterpolationWeight *
+                abs(deltaRelativeAttitude.rotationAngle / TIME_INTERVAL)), 1.0)
         Quaternion.slerp(
             fusedAttitude2,
             levelingAttitude2,

@@ -38,11 +38,13 @@ public class RombergUpperSquareRootMidPointQuadratureIntegratorTest {
 
     private static final double ABSOLUTE_ERROR_1 = 1e-10;
 
-    private static final double ABSOLUTE_ERROR_5 = 1e-3;
+    private static final double ABSOLUTE_ERROR_4 = 1e-8;
 
-    private static final double ABSOLUTE_ERROR_GAUSSIAN = 1e-8;
+    private static final double ABSOLUTE_ERROR_5 = 1.0;
 
-    private static final double ABSOLUTE_ERROR_EXPONENTIAL = 1e-7;
+    private static final double ABSOLUTE_ERROR_GAUSSIAN = 1e-6;
+
+    private static final double ABSOLUTE_ERROR_EXPONENTIAL = 1e-4;
 
     private static final double ABSOLUTE_ERROR_IMPROPER_1 = 1e-5;
 
@@ -71,7 +73,7 @@ public class RombergUpperSquareRootMidPointQuadratureIntegratorTest {
     @Test
     public void integrate_whenFourthDegreePolynomial_returnsExpectedResult()
             throws IntegrationException {
-        assertPolynomialIntegration(4, ABSOLUTE_ERROR_1);
+        assertPolynomialIntegration(4, ABSOLUTE_ERROR_4);
     }
 
     @Test

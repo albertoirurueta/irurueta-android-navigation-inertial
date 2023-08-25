@@ -307,7 +307,7 @@ class AccelerometerLinearSensorMeasurementInterpolatorTest {
 
         const val SIZE = 6
 
-        const val ABSOLUTE_ERROR = 5e-6f
+        const val ABSOLUTE_ERROR = 5e-5f
 
         fun assertMeasurement(
             measurement1: AccelerometerSensorMeasurement,

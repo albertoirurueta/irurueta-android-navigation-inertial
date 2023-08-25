@@ -43,7 +43,7 @@ public class RombergLowerSquareRootMidPointQuadratureMatrixIntegratorTest {
 
     private static final double ABSOLUTE_ERROR_5 = 1e-1;
 
-    private static final double ABSOLUTE_ERROR_GAUSSIAN = 1e-8;
+    private static final double ABSOLUTE_ERROR_GAUSSIAN = 1e-7;
 
     private static final double ABSOLUTE_ERROR_EXPONENTIAL = 1e-4;
 

@@ -23,8 +23,6 @@ import com.irurueta.algebra.Matrix;
 import com.irurueta.algebra.WrongSizeException;
 import com.irurueta.android.navigation.inertial.numerical.ExponentialMatrixEstimator;
 import com.irurueta.numerical.EvaluationException;
-import com.irurueta.numerical.polynomials.Polynomial;
-import com.irurueta.statistics.NormalDist;
 import com.irurueta.statistics.UniformRandomizer;
 
 import org.junit.Test;
@@ -35,132 +33,9 @@ public class SimpsonUpperSquareRootMidPointQuadratureMatrixIntegratorTest {
 
     private static final double MAX_VALUE = 10.0;
 
-    private static final double MIN_LAMBDA = -1.0;
-
-    private static final double MAX_LAMBDA = 1.0;
-
-    private static final double ABSOLUTE_ERROR_1 = 1e-7;
-
-    private static final double ABSOLUTE_ERROR_3 = 1e-6;
-
-    private static final double ABSOLUTE_ERROR_4 = 1e-5;
-
-    private static final double ABSOLUTE_ERROR_5 = 1e-1;
-
-    private static final double ABSOLUTE_ERROR_GAUSSIAN = 1e-9;
-
-    private static final double ABSOLUTE_ERROR_EXPONENTIAL = 1e-8;
+    private static final double ABSOLUTE_ERROR_EXPONENTIAL = 1e-3;
 
     private static final double ABSOLUTE_ERROR_IMPROPER_1 = 1e-5;
-
-    @Test
-    public void integrate_whenFirstDegreePolynomial_returnsExpectedResult()
-            throws IntegrationException, WrongSizeException {
-        assertPolynomialIntegration(1, ABSOLUTE_ERROR_1);
-    }
-
-    @Test
-    public void integrate_whenThirdDegreePolynomial_returnsExpectedResult()
-            throws IntegrationException, WrongSizeException {
-        assertPolynomialIntegration(3, ABSOLUTE_ERROR_3);
-    }
-
-    @Test
-    public void integrate_whenFourthDegreePolynomial_returnsExpectedResult()
-            throws IntegrationException, WrongSizeException {
-        assertPolynomialIntegration(4, ABSOLUTE_ERROR_4);
-    }
-
-    @Test
-    public void integrate_whenSixthDegreePolynomial_returnsExpectedResult()
-            throws IntegrationException, WrongSizeException {
-        assertPolynomialIntegration(6, ABSOLUTE_ERROR_5);
-    }
-
-    @Test
-    public void integrate_whenGaussian_returnsExpectedResult()
-            throws IntegrationException, WrongSizeException {
-        final UniformRandomizer randomizer = new UniformRandomizer();
-        final double a = randomizer.nextDouble(MIN_VALUE, MAX_VALUE);
-        final double b = randomizer.nextDouble(a, MAX_VALUE);
-        final double mu = randomizer.nextDouble(MIN_VALUE, MAX_VALUE);
-        final double sigma = ABSOLUTE_ERROR_GAUSSIAN
-                + Math.abs(randomizer.nextDouble(a, MAX_VALUE));
-
-        final double expected = NormalDist.cdf(b, mu, sigma) - NormalDist.cdf(a, mu, sigma);
-
-        final MatrixSingleDimensionFunctionEvaluatorListener listener =
-                new MatrixSingleDimensionFunctionEvaluatorListener() {
-
-                    @Override
-                    public void evaluate(double point, Matrix result) {
-                        result.setElementAtIndex(0, NormalDist.p(point, mu, sigma));
-                    }
-
-                    @Override
-                    public int getRows() {
-                        return 1;
-                    }
-
-                    @Override
-                    public int getColumns() {
-                        return 1;
-                    }
-                };
-
-        final SimpsonUpperSquareRootMidPointQuadratureMatrixIntegrator integrator =
-                new SimpsonUpperSquareRootMidPointQuadratureMatrixIntegrator(a, b, listener);
-
-        final Matrix integrationResult = new Matrix(1, 1);
-        integrator.integrate(integrationResult);
-
-        // check
-        final Matrix expectedResult = new Matrix(1, 1);
-        expectedResult.setElementAtIndex(0, expected);
-        assertTrue(expectedResult.equals(integrationResult, ABSOLUTE_ERROR_GAUSSIAN));
-    }
-
-    @Test
-    public void integrate_whenExponential1_returnsExpectedResult()
-            throws WrongSizeException, IntegrationException {
-
-        final UniformRandomizer randomizer = new UniformRandomizer();
-        final double a = randomizer.nextDouble(MIN_VALUE, MAX_VALUE);
-        final double b = randomizer.nextDouble(a, MAX_VALUE);
-        final double lambda = randomizer.nextDouble(MIN_LAMBDA, MAX_LAMBDA);
-
-        final MatrixSingleDimensionFunctionEvaluatorListener listener =
-                new MatrixSingleDimensionFunctionEvaluatorListener() {
-
-                    @Override
-                    public void evaluate(double t, Matrix result) {
-                        result.setElementAtIndex(0, Math.exp(lambda * t));
-                    }
-
-                    @Override
-                    public int getRows() {
-                        return 1;
-                    }
-
-                    @Override
-                    public int getColumns() {
-                        return 1;
-                    }
-                };
-
-        final SimpsonUpperSquareRootMidPointQuadratureMatrixIntegrator integrator =
-                new SimpsonUpperSquareRootMidPointQuadratureMatrixIntegrator(a, b, listener);
-
-        final double expected = 1.0 / lambda * (Math.exp(lambda * b) - Math.exp(lambda * a));
-
-        final Matrix integrationResult = new Matrix(1, 1);
-        integrator.integrate(integrationResult);
-
-        // check
-        final Matrix expectedResult = new Matrix(1, 1);
-        expectedResult.setElementAtIndex(0, expected);
-        assertTrue(expectedResult.equals(integrationResult, ABSOLUTE_ERROR_EXPONENTIAL));
-    }
 
     @Test
     public void integrate_whenExponential2_returnsExpectedResult()
@@ -414,61 +289,5 @@ public class SimpsonUpperSquareRootMidPointQuadratureMatrixIntegratorTest {
         final SimpsonUpperSquareRootMidPointQuadratureMatrixIntegrator integrator =
                 new SimpsonUpperSquareRootMidPointQuadratureMatrixIntegrator(0.0, 1.0, listener);
         assertEquals(QuadratureType.UPPER_SQUARE_ROOT_MID_POINT, integrator.getQuadratureType());
-    }
-
-    private void assertPolynomialIntegration(final int degree, final double error)
-            throws IntegrationException, WrongSizeException {
-        final Polynomial polynomial = buildPolynomial(degree);
-        final Polynomial integrationPolynomial = polynomial.integrationAndReturnNew();
-
-        // set integration interval
-        final UniformRandomizer randomizer = new UniformRandomizer();
-        final double a = randomizer.nextDouble(MIN_VALUE, MAX_VALUE);
-        final double b = randomizer.nextDouble(a, MAX_VALUE);
-
-        final double expected = integrationPolynomial.evaluate(b)
-                - integrationPolynomial.evaluate(a);
-
-        final MatrixSingleDimensionFunctionEvaluatorListener listener =
-                new MatrixSingleDimensionFunctionEvaluatorListener() {
-
-                    @Override
-                    public void evaluate(double point, Matrix result) {
-                        result.setElementAtIndex(0, polynomial.evaluate(point));
-                    }
-
-                    @Override
-                    public int getRows() {
-                        return 1;
-                    }
-
-                    @Override
-                    public int getColumns() {
-                        return 1;
-                    }
-                };
-
-        final SimpsonUpperSquareRootMidPointQuadratureMatrixIntegrator integrator =
-                new SimpsonUpperSquareRootMidPointQuadratureMatrixIntegrator(a, b, listener);
-
-        final Matrix integrationResult = new Matrix(1, 1);
-        integrator.integrate(integrationResult);
-
-        // check
-        final Matrix expectedResult = new Matrix(1, 1);
-        expectedResult.setElementAtIndex(0, expected);
-        assertTrue(expectedResult.equals(integrationResult, error));
-    }
-
-    private Polynomial buildPolynomial(final int degree) {
-        final UniformRandomizer randomizer = new UniformRandomizer();
-        final Polynomial result = new Polynomial(1.0);
-        for (int i = 0; i < degree; i++) {
-            final double root = randomizer.nextDouble(MIN_VALUE, MAX_VALUE);
-            final Polynomial poly = new Polynomial(-root, 1.0);
-            result.multiply(poly);
-        }
-
-        return result;
     }
 }

@@ -28,6 +28,7 @@ import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.android.navigation.inertial.collectors.SensorType
 import com.irurueta.android.navigation.inertial.processors.attitude.KalmanAbsoluteAttitudeProcessor2
 import com.irurueta.android.navigation.inertial.processors.attitude.KalmanAbsoluteAttitudeProcessor3
+import com.irurueta.android.navigation.inertial.processors.attitude.KalmanAbsoluteAttitudeProcessor4
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.frames.CoordinateTransformation
 import com.irurueta.navigation.frames.FrameType
@@ -77,11 +78,11 @@ class KalmanAbsoluteAttitudeEstimator(
     val estimateCoordinateTransformation: Boolean = false,
     val estimateEulerAngles: Boolean = true,
     val estimateCovariances: Boolean = true,
-    val gyroscopeNoisePsd: Double = KalmanAbsoluteAttitudeProcessor2.DEFAULT_GYROSCOPE_NOISE_PSD,
+    val gyroscopeNoisePsd: Double = KalmanAbsoluteAttitudeProcessor4.DEFAULT_GYROSCOPE_NOISE_PSD,
     val accelerometerNoiseStandardDeviation: Double =
-        KalmanAbsoluteAttitudeProcessor2.DEFAULT_ACCELEROMETER_NOISE_STANDARD_DEVIATION,
+        KalmanAbsoluteAttitudeProcessor4.DEFAULT_ACCELEROMETER_NOISE_STANDARD_DEVIATION,
     val magnetometerNoiseStandardDeviation: Double =
-        KalmanAbsoluteAttitudeProcessor2.DEFAULT_MAGNETOMETER_NOISE_STANDARD_DEVIATION,
+        KalmanAbsoluteAttitudeProcessor4.DEFAULT_MAGNETOMETER_NOISE_STANDARD_DEVIATION,
     val minimumUnreliableDurationSeconds: Double = DEFAULT_MINIMUM_UNRELIABLE_DURATION_SECONDS,
     var attitudeAvailableListener: OnAttitudeAvailableListener? = null,
     var accuracyChangedListener: OnAccuracyChangedListener? = null,
@@ -117,7 +118,14 @@ class KalmanAbsoluteAttitudeEstimator(
     /**
      * Processor to estimate absolute attitude using a Kalman filter.
      */
-    private val processor = KalmanAbsoluteAttitudeProcessor3(
+    private val processor = KalmanAbsoluteAttitudeProcessor4(
+        location,
+        gyroscopeNoisePsd = gyroscopeNoisePsd,
+        accelerometerNoiseStandardDeviation = accelerometerNoiseStandardDeviation,
+        magnetometerNoiseStandardDeviation = magnetometerNoiseStandardDeviation,
+    )
+
+    /*private val processor = KalmanAbsoluteAttitudeProcessor3(
         location,
         computeEulerAngles = estimateEulerAngles,
         computeCovariances = processCovariance,
@@ -137,7 +145,7 @@ class KalmanAbsoluteAttitudeEstimator(
                 SensorAccuracy.UNRELIABLE
             )
         }
-    )
+    )*/
 
     /*
     private val processor = KalmanAbsoluteAttitudeProcessor2(

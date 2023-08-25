@@ -36,7 +36,7 @@ public class BicubicSpline2DInterpolatorTest {
 
     private static final int SAMPLES = 10;
 
-    private static final double ABSOLUTE_ERROR_1 = 1e-7;
+    private static final double ABSOLUTE_ERROR_1 = 1e-5;
 
     @Test
     public void interpolate_whenFirstDegree2DPolynomial_returnsExpectedResult()

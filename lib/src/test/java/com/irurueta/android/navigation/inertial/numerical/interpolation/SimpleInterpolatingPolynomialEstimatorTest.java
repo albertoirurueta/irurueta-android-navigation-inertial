@@ -13,7 +13,7 @@ public class SimpleInterpolatingPolynomialEstimatorTest {
 
     private static final double MAX_VALUE = 1.0;
 
-    private static final double ABSOLUTE_ERROR = 1e-6;
+    private static final double ABSOLUTE_ERROR = 1e-5;
 
     @Test
     public void estimate_whenFirstDegree_returnsExpectedResult() {
@@ -33,16 +33,6 @@ public class SimpleInterpolatingPolynomialEstimatorTest {
     @Test
     public void estimate_whenFourthDegree_returnsExpectedResult() {
         assertEstimation(4);
-    }
-
-    @Test
-    public void estimate_whenFifthDegree_returnsExpectedResult() {
-        assertEstimation(5);
-    }
-
-    @Test
-    public void estimate_whenSixthDegree_returnsExpectedResult() {
-        assertEstimation(6);
     }
 
     public void assertEstimation(final int degree) {

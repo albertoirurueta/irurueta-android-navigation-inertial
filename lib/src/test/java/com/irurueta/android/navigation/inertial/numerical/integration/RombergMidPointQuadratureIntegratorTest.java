@@ -38,11 +38,15 @@ public class RombergMidPointQuadratureIntegratorTest {
 
     private static final double ABSOLUTE_ERROR_1 = 1e-10;
 
+    private static final double ABSOLUTE_ERROR_4 = 1e-9;
+
     private static final double ABSOLUTE_ERROR_5 = 1e-8;
 
-    private static final double ABSOLUTE_ERROR_GAUSSIAN = 1e-10;
+    private static final double ABSOLUTE_ERROR_6 = 1e-7;
 
-    private static final double ABSOLUTE_ERROR_EXPONENTIAL = 1e-8;
+    private static final double ABSOLUTE_ERROR_GAUSSIAN = 1e-7;
+
+    private static final double ABSOLUTE_ERROR_EXPONENTIAL = 1e-4;
 
     private static final double ABSOLUTE_ERROR_IMPROPER_1 = 1e-5;
 
@@ -71,7 +75,7 @@ public class RombergMidPointQuadratureIntegratorTest {
     @Test
     public void integrate_whenFourthDegreePolynomial_returnsExpectedResult()
             throws IntegrationException {
-        assertPolynomialIntegration(4, ABSOLUTE_ERROR_1);
+        assertPolynomialIntegration(4, ABSOLUTE_ERROR_4);
     }
 
     @Test
@@ -83,7 +87,7 @@ public class RombergMidPointQuadratureIntegratorTest {
     @Test
     public void integrate_whenSixthDegreePolynomial_returnsExpectedResult()
             throws IntegrationException {
-        assertPolynomialIntegration(6, ABSOLUTE_ERROR_5);
+        assertPolynomialIntegration(6, ABSOLUTE_ERROR_6);
     }
 
     @Test

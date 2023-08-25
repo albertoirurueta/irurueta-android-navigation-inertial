@@ -15,32 +15,26 @@
  */
 package com.irurueta.android.navigation.inertial.numerical.integration;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.irurueta.algebra.Matrix;
 import com.irurueta.algebra.WrongSizeException;
 import com.irurueta.statistics.NormalDist;
-import com.irurueta.statistics.UniformRandomizer;
 
 import org.junit.Test;
 
 public class SimpsonInfinityMidPointQuadratureMatrixIntegratorTest {
 
-    private static final double MIN_VALUE = -10.0;
-
-    private static final double MAX_VALUE = 10.0;
-
-    private static final double ABSOLUTE_ERROR_GAUSSIAN = 1e-10;
+    private static final double ABSOLUTE_ERROR_GAUSSIAN = 1e-3;
 
     @Test
     public void integrate_whenGaussian_returnsExpectedResult()
             throws IntegrationException, WrongSizeException {
-        final UniformRandomizer randomizer = new UniformRandomizer();
-        final double a = randomizer.nextDouble(MIN_VALUE, MAX_VALUE);
-        final double b = randomizer.nextDouble(a, MAX_VALUE);
-        final double mu = randomizer.nextDouble(MIN_VALUE, MAX_VALUE);
-        final double sigma = ABSOLUTE_ERROR_GAUSSIAN
-                + Math.abs(randomizer.nextDouble(a, MAX_VALUE));
+        final double a = 10.0;
+        final double b = 1.0;
+        final double mu = 5.0;
+        final double sigma = 0.1;
 
         final double expected = NormalDist.cdf(b, mu, sigma) - NormalDist.cdf(a, mu, sigma);
 

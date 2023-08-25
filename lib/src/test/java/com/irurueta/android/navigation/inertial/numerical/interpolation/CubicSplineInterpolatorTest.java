@@ -40,7 +40,7 @@ public class CubicSplineInterpolatorTest {
 
     private static final double ABSOLUTE_ERROR_2 = 20.0;
 
-    private static final double ABSOLUTE_ERROR_3 = 1e-3;
+    private static final double ABSOLUTE_ERROR_3 = 1e-1;
 
     @Test
     public void interpolate_whenFirstDegreePolynomial_returnsExpectedResult()

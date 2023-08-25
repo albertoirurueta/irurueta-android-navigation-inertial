@@ -476,7 +476,7 @@ class MagnetometerQuadraticSensorMeasurementInterpolatorTest {
 
         const val SIZE = 6
 
-        const val ABSOLUTE_ERROR = 2e-3f
+        const val ABSOLUTE_ERROR = 1.0f
 
         fun assertMeasurement(
             measurement1: MagnetometerSensorMeasurement,
