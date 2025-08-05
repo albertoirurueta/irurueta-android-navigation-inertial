@@ -22,8 +22,8 @@ import androidx.test.core.app.ApplicationProvider
 import com.irurueta.algebra.Matrix
 import com.irurueta.android.navigation.inertial.GravityHelper
 import com.irurueta.android.navigation.inertial.collectors.*
-import com.irurueta.android.navigation.inertial.getPrivateProperty
-import com.irurueta.android.navigation.inertial.setPrivateProperty
+import com.irurueta.android.testutils.getPrivateProperty
+import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.navigation.inertial.BodyKinematics
 import com.irurueta.navigation.inertial.calibration.*
 import com.irurueta.navigation.inertial.calibration.intervals.TriadStaticIntervalDetector
@@ -35,16 +35,114 @@ import com.irurueta.numerical.robust.RobustEstimatorMethod
 import com.irurueta.statistics.UniformRandomizer
 import com.irurueta.units.*
 import io.mockk.*
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
 import org.junit.After
 import org.junit.Assert.*
+import org.junit.Ignore
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.util.*
 import kotlin.math.max
 
+@Ignore("possible memory leak")
 @RunWith(RobolectricTestRunner::class)
 class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
+
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var initializationStartedListener:
+            StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var initializationCompletedListener:
+            StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var errorListener:
+            StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var staticIntervalDetectedListener:
+            StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var dynamicIntervalDetectedListener:
+            StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var staticIntervalSkippedListener:
+            StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalSkippedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var dynamicIntervalSkippedListener:
+            StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalSkippedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var generatedAccelerometerMeasurementListener:
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2.OnGeneratedAccelerometerMeasurementListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var generatedGyroscopeMeasurementListener:
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2.OnGeneratedGyroscopeMeasurementListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var generatedMagnetometerMeasurementListener:
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2.OnGeneratedMagnetometerMeasurementListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var readyToSolveCalibrationListener:
+            StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var calibrationSolvingStartedListener:
+            StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var calibrationCompletedListener:
+            StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var stoppedListener:
+            StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var unreliableGravityNormEstimationListener:
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2.OnUnreliableGravityEstimationListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var initialAccelerometerBiasAvailableListener:
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2.OnInitialAccelerometerBiasAvailableListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var initialGyroscopeBiasAvailableListener:
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2.OnInitialGyroscopeBiasAvailableListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var initialMagnetometerHardIronAvailableListener:
+            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2.OnInitialMagnetometerHardIronAvailableListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var accuracyChangedListener: SensorCollector.OnAccuracyChangedListener
+
+    @MockK(relaxUnitFun = true, relaxed = true)
+    private lateinit var accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator
+
+    @MockK(relaxUnitFun = true, relaxed = true)
+    private lateinit var magnetometerCalibrator: SingleSensorStaticIntervalMagnetometerCalibrator
+
+    @MockK
+    private lateinit var location: Location
+
+    @MockK
+    private lateinit var sensor: Sensor
+
+    @MockK
+    private lateinit var matrix: Matrix
 
     @After
     fun tearDown() {
@@ -200,22 +298,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertEquals(0.0, calibrator.magnetometerInitialMyz, 0.0)
         assertEquals(0.0, calibrator.magnetometerInitialMzx, 0.0)
         assertEquals(0.0, calibrator.magnetometerInitialMzy, 0.0)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.DEFAULT_USE_COMMON_Z_AXIS,
-            calibrator.isAccelerometerCommonAxisUsed
-        )
-        assertEquals(
-            StaticIntervalGyroscopeCalibrator.DEFAULT_USE_COMMON_Z_AXIS,
-            calibrator.isGyroscopeCommonAxisUsed
-        )
-        assertEquals(
-            StaticIntervalMagnetometerCalibrator.DEFAULT_USE_COMMON_Z_AXIS,
-            calibrator.isMagnetometerCommonAxisUsed
-        )
-        assertEquals(
-            StaticIntervalGyroscopeCalibrator.DEFAULT_ESTIMATE_G_DEPENDENT_CROSS_BIASES,
-            calibrator.isGDependentCrossBiasesEstimated
-        )
+        assertFalse(calibrator.isAccelerometerCommonAxisUsed)
+        assertFalse(calibrator.isGyroscopeCommonAxisUsed)
+        assertFalse(calibrator.isMagnetometerCommonAxisUsed)
+        assertFalse(calibrator.isGDependentCrossBiasesEstimated)
         assertEquals(
             StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
             calibrator.minimumRequiredAccelerometerMeasurements
@@ -502,43 +588,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val location = getLocation()
         val timestamp = Date()
         val worldMagneticModel = WorldMagneticModel()
-        val initializationStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>()
-        val initializationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>()
-        val errorListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>()
-        val staticIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>()
-        val dynamicIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>()
-        val staticIntervalSkippedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalSkippedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>()
-        val dynamicIntervalSkippedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalSkippedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>()
-        val generatedAccelerometerMeasurementListener =
-            mockk<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2.OnGeneratedAccelerometerMeasurementListener>()
-        val generatedGyroscopeMeasurementListener =
-            mockk<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2.OnGeneratedGyroscopeMeasurementListener>()
-        val generatedMagnetometerMeasurementListener =
-            mockk<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2.OnGeneratedMagnetometerMeasurementListener>()
-        val readyToSolveCalibrationListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>()
-        val calibrationSolvingStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>()
-        val calibrationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>()
-        val stoppedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>()
-        val unreliableGravityNormEstimationListener =
-            mockk<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2.OnUnreliableGravityEstimationListener>()
-        val initialAccelerometerBiasAvailableListener =
-            mockk<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2.OnInitialAccelerometerBiasAvailableListener>()
-        val initialGyroscopeBiasAvailableListener =
-            mockk<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2.OnInitialGyroscopeBiasAvailableListener>()
-        val initialMagnetometerHardIronAvailableListener =
-            mockk<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2.OnInitialMagnetometerHardIronAvailableListener>()
-        val accuracyChangedListener = mockk<SensorCollector.OnAccuracyChangedListener>()
         val accelerometerQualityScoreMapper = DefaultAccelerometerQualityScoreMapper()
         val gyroscopeQualityScoreMapper = DefaultGyroscopeQualityScoreMapper()
         val magnetometerQualityScoreMapper = DefaultMagnetometerQualityScoreMapper()
@@ -746,22 +795,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertEquals(0.0, calibrator.magnetometerInitialMyz, 0.0)
         assertEquals(0.0, calibrator.magnetometerInitialMzx, 0.0)
         assertEquals(0.0, calibrator.magnetometerInitialMzy, 0.0)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.DEFAULT_USE_COMMON_Z_AXIS,
-            calibrator.isAccelerometerCommonAxisUsed
-        )
-        assertEquals(
-            StaticIntervalGyroscopeCalibrator.DEFAULT_USE_COMMON_Z_AXIS,
-            calibrator.isGyroscopeCommonAxisUsed
-        )
-        assertEquals(
-            StaticIntervalMagnetometerCalibrator.DEFAULT_USE_COMMON_Z_AXIS,
-            calibrator.isMagnetometerCommonAxisUsed
-        )
-        assertEquals(
-            StaticIntervalGyroscopeCalibrator.DEFAULT_ESTIMATE_G_DEPENDENT_CROSS_BIASES,
-            calibrator.isGDependentCrossBiasesEstimated
-        )
+        assertFalse(calibrator.isAccelerometerCommonAxisUsed)
+        assertFalse(calibrator.isGyroscopeCommonAxisUsed)
+        assertFalse(calibrator.isMagnetometerCommonAxisUsed)
+        assertFalse(calibrator.isGDependentCrossBiasesEstimated)
         assertEquals(
             StaticIntervalAccelerometerCalibrator.ACCELEROMETER_KNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
             calibrator.minimumRequiredAccelerometerMeasurements
@@ -1225,8 +1262,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertNull(calibrator.initializationStartedListener)
 
         // set new value
-        val initializationStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>()
         calibrator.initializationStartedListener = initializationStartedListener
 
         // check
@@ -1243,8 +1278,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertNull(calibrator.initializationCompletedListener)
 
         // set new value
-        val initializationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>()
         calibrator.initializationCompletedListener = initializationCompletedListener
 
         // check
@@ -1261,8 +1294,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertNull(calibrator.errorListener)
 
         // set new value
-        val errorListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>()
         calibrator.errorListener = errorListener
 
         // check
@@ -1279,8 +1310,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertNull(calibrator.staticIntervalDetectedListener)
 
         // set new value
-        val staticIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>()
         calibrator.staticIntervalDetectedListener = staticIntervalDetectedListener
 
         // check
@@ -1297,8 +1326,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertNull(calibrator.dynamicIntervalDetectedListener)
 
         // set new value
-        val dynamicIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>()
         calibrator.dynamicIntervalDetectedListener = dynamicIntervalDetectedListener
 
         // check
@@ -1315,8 +1342,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertNull(calibrator.staticIntervalSkippedListener)
 
         // set new value
-        val staticIntervalSkippedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalSkippedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>()
         calibrator.staticIntervalSkippedListener = staticIntervalSkippedListener
 
         // check
@@ -1333,8 +1358,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertNull(calibrator.dynamicIntervalSkippedListener)
 
         // set new value
-        val dynamicIntervalSkippedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalSkippedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>()
         calibrator.dynamicIntervalSkippedListener = dynamicIntervalSkippedListener
 
         // check
@@ -1351,8 +1374,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertNull(calibrator.generatedAccelerometerMeasurementListener)
 
         // set new value
-        val generatedAccelerometerMeasurementListener =
-            mockk<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2.OnGeneratedAccelerometerMeasurementListener>()
         calibrator.generatedAccelerometerMeasurementListener =
             generatedAccelerometerMeasurementListener
 
@@ -1373,8 +1394,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertNull(calibrator.generatedGyroscopeMeasurementListener)
 
         // set new value
-        val generatedGyroscopeMeasurementListener =
-            mockk<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2.OnGeneratedGyroscopeMeasurementListener>()
         calibrator.generatedGyroscopeMeasurementListener = generatedGyroscopeMeasurementListener
 
         // check
@@ -1394,8 +1413,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertNull(calibrator.generatedMagnetometerMeasurementListener)
 
         // set new value
-        val generatedMagnetometerMeasurementListener =
-            mockk<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2.OnGeneratedMagnetometerMeasurementListener>()
         calibrator.generatedMagnetometerMeasurementListener =
             generatedMagnetometerMeasurementListener
 
@@ -1416,8 +1433,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertNull(calibrator.readyToSolveCalibrationListener)
 
         // set new value
-        val readyToSolveCalibrationListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>()
         calibrator.readyToSolveCalibrationListener = readyToSolveCalibrationListener
 
         // check
@@ -1434,8 +1449,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertNull(calibrator.calibrationSolvingStartedListener)
 
         // set new value
-        val calibrationSolvingStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>()
         calibrator.calibrationSolvingStartedListener = calibrationSolvingStartedListener
 
         // check
@@ -1452,8 +1465,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertNull(calibrator.calibrationCompletedListener)
 
         // set new value
-        val calibrationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>()
         calibrator.calibrationCompletedListener = calibrationCompletedListener
 
         // check
@@ -1470,8 +1481,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertNull(calibrator.stoppedListener)
 
         // set new value
-        val stoppedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>()
         calibrator.stoppedListener = stoppedListener
 
         // check
@@ -1488,8 +1497,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertNull(calibrator.unreliableGravityNormEstimationListener)
 
         // set new value
-        val unreliableGravityNormEstimationListener =
-            mockk<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2.OnUnreliableGravityEstimationListener>()
         calibrator.unreliableGravityNormEstimationListener = unreliableGravityNormEstimationListener
 
         // check
@@ -1509,8 +1516,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertNull(calibrator.initialAccelerometerBiasAvailableListener)
 
         // set new value
-        val initialAccelerometerBiasAvailableListener =
-            mockk<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2.OnInitialAccelerometerBiasAvailableListener>()
         calibrator.initialAccelerometerBiasAvailableListener =
             initialAccelerometerBiasAvailableListener
 
@@ -1531,8 +1536,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertNull(calibrator.initialGyroscopeBiasAvailableListener)
 
         // set new value
-        val initialGyroscopeBiasAvailableListener =
-            mockk<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2.OnInitialGyroscopeBiasAvailableListener>()
         calibrator.initialGyroscopeBiasAvailableListener = initialGyroscopeBiasAvailableListener
 
         // check
@@ -1552,8 +1555,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertNull(calibrator.initialMagnetometerHardIronAvailableListener)
 
         // set new value
-        val initialMagnetometerHardIronAvailableListener =
-            mockk<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2.OnInitialMagnetometerHardIronAvailableListener>()
         calibrator.initialMagnetometerHardIronAvailableListener =
             initialMagnetometerHardIronAvailableListener
 
@@ -1574,7 +1575,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertNull(calibrator.accuracyChangedListener)
 
         // set new value
-        val accuracyChangedListener = mockk<SensorCollector.OnAccuracyChangedListener>()
         calibrator.accuracyChangedListener = accuracyChangedListener
 
         // check
@@ -4719,7 +4719,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
     }
 
     @Test
-    fun minimumRequiredGyroscopeMeasurements_whenNoGroundTruthInitialBiasNoCommonAxisAndCrossBiases_returnsExpctedValue() {
+    fun minimumRequiredGyroscopeMeasurements_whenNoGroundTruthInitialBiasNoCommonAxisAndCrossBiases_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(context)
@@ -4736,7 +4736,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
     }
 
     @Test
-    fun minimumRequiredGyroscopeMeasurements_whenNoGroundTruthInitialBiasNoCommonAxisAndNoCrossBiases_returnsExpctedValue() {
+    fun minimumRequiredGyroscopeMeasurements_whenNoGroundTruthInitialBiasNoCommonAxisAndNoCrossBiases_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(context)
@@ -6771,8 +6771,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
     @Test
     fun onInitializationStarted_whenAccelerometerAndGyroscopeAndMagnetometerAlreadyInitialized_makesNoAction() {
-        val initializationStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(
             context,
@@ -6809,10 +6807,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
     @Test
     fun onInitializationStarted_whenAccelerometerAndGyroscopeAndMagnetometerNotInitialized_notifies() {
-        val initializationStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(
             context,
@@ -6876,8 +6870,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
     @Test
     fun onInitializationStarted_whenMagnetometerAndAccelerometerAndGyroscopeAlreadyInitialized_makesNoAction() {
-        val initializationStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(
             context,
@@ -6914,10 +6906,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
     @Test
     fun onInitializationStarted_whenMagnetometerAndAccelerometerAndGyroscopeNotInitialized_notifies() {
-        val initializationStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(
             context,
@@ -6982,8 +6970,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
     @Test
     fun onInitializationCompleted_whenAccelerometerAndGyroscopeAndMagnetometerNotCompleted_makesNoAction() {
-        val initializationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(
             context,
@@ -7017,10 +7003,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
     @Test
     fun onInitializationCompleted_whenAccelerometerAndGyroscopeAndMagnetometerAlreadyCompleted_notifies() {
-        val initializationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(
             context,
@@ -7086,8 +7068,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
     @Test
     fun onInitializationCompleted_whenMagnetometerAndAccelerometerAndGyroscopeNotCompleted_makesNoAction() {
-        val initializationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(
             context,
@@ -7121,10 +7101,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
     @Test
     fun onInitializationCompleted_whenMagnetometerAndAccelerometerAndGyroscopeAlreadyCompleted_notifies() {
-        val initializationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(
             context,
@@ -7190,10 +7166,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
     @Test
     fun onError_whenAccelerometerAndGyroscope_stopsAndNotifies() {
-        val errorListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(
             context,
@@ -7264,10 +7236,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
     @Test
     fun onError_whenMagnetometer_stopsAndNotifies() {
-        val errorListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(
             context,
@@ -7322,10 +7290,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
     @Test
     fun onStaticIntervalDetected_whenListener_notifies() {
-        val staticIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(
             context,
@@ -7359,10 +7323,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
     @Test
     fun onDynamicIntervalDetected_whenListener_notifies() {
-        val dynamicIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(
             context,
@@ -7396,10 +7356,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
     @Test
     fun onStaticIntervalSkipped_whenListener_notifies() {
-        val staticIntervalSkippedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalSkippedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(
             context,
@@ -7433,10 +7389,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
     @Test
     fun onDynamicIntervalSkipped_whenListener_notifies() {
-        val dynamicIntervalSkippedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalSkippedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(
             context,
@@ -7476,10 +7428,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
     @Test
     fun onGeneratedAccelerometerMeasurement_whenListener_notifies() {
-        val generatedAccelerometerMeasurementListener =
-            mockk<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2.OnGeneratedAccelerometerMeasurementListener>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(
             context,
@@ -7532,10 +7480,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
     @Test
     fun onGeneratedGyroscopeMeasurementListener_whenListener_notifies() {
-        val generatedGyroscopeMeasurementListener =
-            mockk<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2.OnGeneratedGyroscopeMeasurementListener>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(
             context,
@@ -7598,8 +7542,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
     @Test
     fun onReadyToSolveCalibration_whenAccelerometerAndGyroscopeAndMagnetometerNotReadyToSolveCalibration_makesNoAction() {
-        val readyToSolveCalibrationListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(
             context,
@@ -7633,10 +7575,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
     @Test
     fun onReadyToSolveCalibration_whenAccelerometerAndGyroscopeAndMagnetometerReadyToSolveCalibration_notifies() {
-        val readyToSolveCalibrationListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(
             context,
@@ -7702,8 +7640,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
     @Test
     fun onReadyToSolveCalibration_whenMagnetometerAndAccelerometerAndGyroscopeNotReadyToSolveCalibration_makesNoAction() {
-        val readyToSolveCalibrationListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(
             context,
@@ -7737,10 +7673,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
     @Test
     fun onReadyToSolveCalibration_whenMagnetometerAndAccelerometerAndGyroscopeReadyToSolveCalibration_notifies() {
-        val readyToSolveCalibrationListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(
             context,
@@ -7776,8 +7708,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
     @Test
     fun onCalibrationSolvingStarted_whenAccelerometerAndGyroscopeAndMagnetometerNotReadyToSolveCalibration_makesNoAction() {
-        val calibrationSolvingStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(
             context,
@@ -7815,8 +7745,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
     @Test
     fun onCalibrationSolvingStarted_whenAccelerometerAndGyroscopeMagnetometerNotReadyToSolveCalibrationAndMagnetometerCalibrationSolvingStarted_makesNoAction() {
-        val calibrationSolvingStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(
             context,
@@ -7890,10 +7818,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
     @Test
     fun onCalibrationSolvingStarted_whenAccelerometerAndGyroscopeMagnetometerReadyToSolveCalibrationAndMagnetometerCalibrationSolvingNotStarted_notifies() {
-        val calibrationSolvingStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(
             context,
@@ -7937,10 +7861,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
     @Test
     fun onCalibrationSolvingStarted_whenAccelerometerAndGyroscopeMagnetometerReadyToSolveCalibrationAndMagnetometerCalibrationSolvingStarted_makesNoAction() {
-        val calibrationSolvingStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(
             context,
@@ -7981,8 +7901,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
     @Test
     fun onCalibrationSolvingStarted_whenMagnetometerAndAccelerometerAndGyroscopeNotReadyToSolveCalibration_makesNoAction() {
-        val calibrationSolvingStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(
             context,
@@ -8020,8 +7938,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
     @Test
     fun onCalibrationSolvingStarted_whenMagnetometerAndAccelerometerAndGyroscopeNotReadyToSolveCalibrationAndAccelerometerAndGyroscopeCalibrationSolvingStarted_makesNoAction() {
-        val calibrationSolvingStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(
             context,
@@ -8095,10 +8011,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
     @Test
     fun onCalibrationSolvingStarted_whenMagnetometerAndAccelerometerAndGyroscopeReadyToSolveCalibrationAndAccelerometerAndGyroscopeCalibrationSolvingNotStarted_notifies() {
-        val calibrationSolvingStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(
             context,
@@ -8142,10 +8054,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
     @Test
     fun onCalibrationSolvingStarted_whenMagnetometerAndAccelerometerAndGyroscopeReadyToSolveCalibrationAndAccelerometerAndGyroscopeCalibrationSolvingStarted_makesNoAction() {
-        val calibrationSolvingStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(
             context,
@@ -8186,8 +8094,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
     @Test
     fun onCalibrationCompleted_whenAccelerometerAndGyroscopeAndMagnetometerCalibrationNotCompleted_makesNoAction() {
-        val calibrationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(
             context,
@@ -8251,10 +8157,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
     @Test
     fun onCalibrationCompleted_whenAccelerometerAndGyroscopeAndMagnetometerCalibrationCompleted_notifies() {
-        val calibrationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(
             context,
@@ -8290,8 +8192,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
     @Test
     fun onCalibrationCompleted_whenMagnetometerAndAccelerometerAndGyroscopeCalibrationNotCompleted_makesNoAction() {
-        val calibrationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(
             context,
@@ -8355,10 +8255,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
     @Test
     fun onCalibrationCompleted_whenMagnetometerAndAccelerometerAndGyroscopeCalibrationCompleted_notifies() {
-        val calibrationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(
             context,
@@ -8394,8 +8290,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
     @Test
     fun onStopped_whenAccelerometerAndGyroscopeAndMagnetometerNotStopped_makesNoAction() {
-        val stoppedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(
             context,
@@ -8459,10 +8353,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
     @Test
     fun onStopped_whenAccelerometerAndGyroscopeAndMagnetometerStopped_notifies() {
-        val stoppedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(
             context,
@@ -8498,8 +8388,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
     @Test
     fun onStopped_whenMagnetometerAndAccelerometerAndGyroscopeNotStopped_makesNoAction() {
-        val stoppedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(
             context,
@@ -8563,10 +8451,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
     @Test
     fun onStopped_whenMagnetometerAndAccelerometerAndGyroscopeNotStopped_notifies() {
-        val stoppedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(
             context,
@@ -8616,10 +8500,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
     @Test
     fun onUnreliableGravityNormEstimation_whenListener_notifies() {
-        val unreliableGravityNormEstimationListener =
-            mockk<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2.OnUnreliableGravityEstimationListener>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(
             context,
@@ -8658,10 +8538,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
     @Test
     fun onInitialAccelerometerBiasAvailable_whenListener_notifies() {
-        val initialAccelerometerBiasAvailableListener =
-            mockk<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2.OnInitialAccelerometerBiasAvailableListener>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(
             context,
@@ -8703,10 +8579,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
     @Test
     fun onInitialGyroscopeBiasAvailable_whenListener_notifies() {
-        val initialGyroscopeBiasAvailableListener =
-            mockk<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2.OnInitialGyroscopeBiasAvailableListener>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(
             context,
@@ -8747,8 +8619,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
     @Test
     fun onAccuracyChanged_whenListener_notifies() {
-        val accuracyChangedListener =
-            mockk<SensorCollector.OnAccuracyChangedListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(
             context,
@@ -8782,10 +8652,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
     @Test
     fun onInitialHardIronAvailable_whenListener_notifies() {
-        val initialMagnetometerHardIronAvailableListener =
-            mockk<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2.OnInitialMagnetometerHardIronAvailableListener>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(
             context,
@@ -8827,10 +8693,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
     @Test
     fun onGeneratedMagnetometerMeasurement_whenListener_notifies() {
-        val generatedMagnetometerMeasurementListener =
-            mockk<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2.OnGeneratedMagnetometerMeasurementListener>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(
             context,
@@ -10808,18 +10670,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(context)
 
-        val accelerometerAndGyroscopeCalibrator =
-            mockk<StaticIntervalAccelerometerAndGyroscopeCalibrator>(
-                relaxUnitFun = true,
-                relaxed = true
-            )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibrator
-        )
-        val magnetometerCalibrator = mockk<SingleSensorStaticIntervalMagnetometerCalibrator>(
-            relaxUnitFun = true,
-            relaxed = true
         )
         calibrator.setPrivateProperty("magnetometerCalibrator", magnetometerCalibrator)
         calibrator.setPrivateProperty("accelerometerAndGyroscopeInitializationStarted", true)
@@ -10946,14 +10799,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(context)
 
-        val accelerometerAndGyroscopeCalibrator =
-            mockk<StaticIntervalAccelerometerAndGyroscopeCalibrator>(relaxUnitFun = true)
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibrator
         )
-        val magnetometerCalibrator =
-            mockk<SingleSensorStaticIntervalMagnetometerCalibrator>(relaxUnitFun = true)
         calibrator.setPrivateProperty("magnetometerCalibrator", magnetometerCalibrator)
 
         calibrator.stop()
@@ -10968,19 +10817,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(context)
 
-        val accelerometerAndGyroscopeCalibrator =
-            mockk<StaticIntervalAccelerometerAndGyroscopeCalibrator>(
-                relaxUnitFun = true,
-                relaxed = true
-            )
         every { accelerometerAndGyroscopeCalibrator.calibrate() }.returns(false)
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibrator
-        )
-        val magnetometerCalibrator = mockk<SingleSensorStaticIntervalMagnetometerCalibrator>(
-            relaxUnitFun = true,
-            relaxed = true
         )
         every { magnetometerCalibrator.calibrate() }.returns(true)
         calibrator.setPrivateProperty("magnetometerCalibrator", magnetometerCalibrator)
@@ -10997,19 +10837,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(context)
 
-        val accelerometerAndGyroscopeCalibrator =
-            mockk<StaticIntervalAccelerometerAndGyroscopeCalibrator>(
-                relaxUnitFun = true,
-                relaxed = true
-            )
         every { accelerometerAndGyroscopeCalibrator.calibrate() }.returns(true)
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibrator
-        )
-        val magnetometerCalibrator = mockk<SingleSensorStaticIntervalMagnetometerCalibrator>(
-            relaxUnitFun = true,
-            relaxed = true
         )
         every { magnetometerCalibrator.calibrate() }.returns(false)
         calibrator.setPrivateProperty("magnetometerCalibrator", magnetometerCalibrator)
@@ -11026,19 +10857,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(context)
 
-        val accelerometerAndGyroscopeCalibrator =
-            mockk<StaticIntervalAccelerometerAndGyroscopeCalibrator>(
-                relaxUnitFun = true,
-                relaxed = true
-            )
         every { accelerometerAndGyroscopeCalibrator.calibrate() }.returns(true)
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibrator
-        )
-        val magnetometerCalibrator = mockk<SingleSensorStaticIntervalMagnetometerCalibrator>(
-            relaxUnitFun = true,
-            relaxed = true
         )
         every { magnetometerCalibrator.calibrate() }.returns(true)
         calibrator.setPrivateProperty("magnetometerCalibrator", magnetometerCalibrator)
@@ -11058,10 +10880,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check default value
         assertNull(calibrator.estimatedAccelerometerBiasX)
 
-        val accelerometerAndGyroscopeCalibrator =
-            mockk<StaticIntervalAccelerometerAndGyroscopeCalibrator>(
-                relaxed = true
-            )
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         every { accelerometerAndGyroscopeCalibrator.estimatedAccelerometerBiasX }.returns(value)
@@ -11084,10 +10902,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check default value
         assertNull(calibrator.estimatedAccelerometerBiasY)
 
-        val accelerometerAndGyroscopeCalibrator =
-            mockk<StaticIntervalAccelerometerAndGyroscopeCalibrator>(
-                relaxed = true
-            )
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         every { accelerometerAndGyroscopeCalibrator.estimatedAccelerometerBiasY }.returns(value)
@@ -11110,10 +10924,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check default value
         assertNull(calibrator.estimatedAccelerometerBiasZ)
 
-        val accelerometerAndGyroscopeCalibrator =
-            mockk<StaticIntervalAccelerometerAndGyroscopeCalibrator>(
-                relaxed = true
-            )
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         every { accelerometerAndGyroscopeCalibrator.estimatedAccelerometerBiasZ }.returns(value)
@@ -11136,10 +10946,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check default value
         assertNull(calibrator.estimatedAccelerometerBiasXAsMeasurement)
 
-        val accelerometerAndGyroscopeCalibrator =
-            mockk<StaticIntervalAccelerometerAndGyroscopeCalibrator>(
-                relaxed = true
-            )
         val value = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
         every { accelerometerAndGyroscopeCalibrator.estimatedAccelerometerBiasXAsMeasurement }.returns(
             value
@@ -11164,10 +10970,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val result = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
         assertFalse(calibrator.getEstimatedAccelerometerBiasXAsMeasurement(result))
 
-        val accelerometerAndGyroscopeCalibrator =
-            mockk<StaticIntervalAccelerometerAndGyroscopeCalibrator>(
-                relaxed = true
-            )
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         every { accelerometerAndGyroscopeCalibrator.getEstimatedAccelerometerBiasXAsMeasurement(any()) }.answers { answer ->
@@ -11201,10 +11003,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check default value
         assertNull(calibrator.estimatedAccelerometerBiasYAsMeasurement)
 
-        val accelerometerAndGyroscopeCalibrator =
-            mockk<StaticIntervalAccelerometerAndGyroscopeCalibrator>(
-                relaxed = true
-            )
         val value = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
         every { accelerometerAndGyroscopeCalibrator.estimatedAccelerometerBiasYAsMeasurement }.returns(
             value
@@ -11229,10 +11027,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val result = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
         assertFalse(calibrator.getEstimatedAccelerometerBiasYAsMeasurement(result))
 
-        val accelerometerAndGyroscopeCalibrator =
-            mockk<StaticIntervalAccelerometerAndGyroscopeCalibrator>(
-                relaxed = true
-            )
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         every { accelerometerAndGyroscopeCalibrator.getEstimatedAccelerometerBiasYAsMeasurement(any()) }.answers { answer ->
@@ -11266,10 +11060,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check default value
         assertNull(calibrator.estimatedAccelerometerBiasZAsMeasurement)
 
-        val accelerometerAndGyroscopeCalibrator =
-            mockk<StaticIntervalAccelerometerAndGyroscopeCalibrator>(
-                relaxed = true
-            )
         val value = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
         every { accelerometerAndGyroscopeCalibrator.estimatedAccelerometerBiasZAsMeasurement }.returns(
             value
@@ -11294,10 +11084,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val result = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
         assertFalse(calibrator.getEstimatedAccelerometerBiasZAsMeasurement(result))
 
-        val accelerometerAndGyroscopeCalibrator =
-            mockk<StaticIntervalAccelerometerAndGyroscopeCalibrator>(
-                relaxed = true
-            )
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         every { accelerometerAndGyroscopeCalibrator.getEstimatedAccelerometerBiasZAsMeasurement(any()) }.answers { answer ->
@@ -11331,10 +11117,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check default value
         assertNull(calibrator.estimatedAccelerometerBiasAsTriad)
 
-        val accelerometerAndGyroscopeCalibrator =
-            mockk<StaticIntervalAccelerometerAndGyroscopeCalibrator>(
-                relaxed = true
-            )
         val value = AccelerationTriad()
         every { accelerometerAndGyroscopeCalibrator.estimatedAccelerometerBiasAsTriad }.returns(
             value
@@ -11359,10 +11141,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val result = AccelerationTriad()
         assertFalse(calibrator.getEstimatedAccelerometerBiasAsTriad(result))
 
-        val accelerometerAndGyroscopeCalibrator =
-            mockk<StaticIntervalAccelerometerAndGyroscopeCalibrator>(
-                relaxed = true
-            )
         val randomizer = UniformRandomizer()
         val valueX = randomizer.nextDouble()
         val valueY = randomizer.nextDouble()
@@ -11401,8 +11179,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(context)
 
-        val accelerometerAndGyroscopeCalibrator =
-            mockk<StaticIntervalAccelerometerAndGyroscopeCalibrator>()
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         every { accelerometerAndGyroscopeCalibrator.estimatedAccelerometerBiasStandardDeviationNorm }.returns(
@@ -11427,10 +11203,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check default value
         assertNull(calibrator.estimatedGyroscopeBiasX)
 
-        val accelerometerAndGyroscopeCalibrator =
-            mockk<StaticIntervalAccelerometerAndGyroscopeCalibrator>(
-                relaxed = true
-            )
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         every { accelerometerAndGyroscopeCalibrator.estimatedGyroscopeBiasX }.returns(value)
@@ -11453,10 +11225,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check default value
         assertNull(calibrator.estimatedGyroscopeBiasY)
 
-        val accelerometerAndGyroscopeCalibrator =
-            mockk<StaticIntervalAccelerometerAndGyroscopeCalibrator>(
-                relaxed = true
-            )
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         every { accelerometerAndGyroscopeCalibrator.estimatedGyroscopeBiasY }.returns(value)
@@ -11479,10 +11247,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check default value
         assertNull(calibrator.estimatedGyroscopeBiasZ)
 
-        val accelerometerAndGyroscopeCalibrator =
-            mockk<StaticIntervalAccelerometerAndGyroscopeCalibrator>(
-                relaxed = true
-            )
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         every { accelerometerAndGyroscopeCalibrator.estimatedGyroscopeBiasZ }.returns(value)
@@ -11505,10 +11269,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check default value
         assertNull(calibrator.estimatedGyroscopeBiasXAsMeasurement)
 
-        val accelerometerAndGyroscopeCalibrator =
-            mockk<StaticIntervalAccelerometerAndGyroscopeCalibrator>(
-                relaxed = true
-            )
         val value = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
         every { accelerometerAndGyroscopeCalibrator.estimatedGyroscopeBiasXAsMeasurement }.returns(
             value
@@ -11533,10 +11293,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val result = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
         assertFalse(calibrator.getEstimatedGyroscopeBiasXAsMeasurement(result))
 
-        val accelerometerAndGyroscopeCalibrator =
-            mockk<StaticIntervalAccelerometerAndGyroscopeCalibrator>(
-                relaxed = true
-            )
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         every { accelerometerAndGyroscopeCalibrator.getEstimatedGyroscopeBiasXAsMeasurement(any()) }.answers { answer ->
@@ -11570,10 +11326,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check default value
         assertNull(calibrator.estimatedGyroscopeBiasYAsMeasurement)
 
-        val accelerometerAndGyroscopeCalibrator =
-            mockk<StaticIntervalAccelerometerAndGyroscopeCalibrator>(
-                relaxed = true
-            )
         val value = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
         every { accelerometerAndGyroscopeCalibrator.estimatedGyroscopeBiasYAsMeasurement }.returns(
             value
@@ -11598,10 +11350,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val result = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
         assertFalse(calibrator.getEstimatedGyroscopeBiasYAsMeasurement(result))
 
-        val accelerometerAndGyroscopeCalibrator =
-            mockk<StaticIntervalAccelerometerAndGyroscopeCalibrator>(
-                relaxed = true
-            )
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         every { accelerometerAndGyroscopeCalibrator.getEstimatedGyroscopeBiasYAsMeasurement(any()) }.answers { answer ->
@@ -11635,10 +11383,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check default value
         assertNull(calibrator.estimatedGyroscopeBiasZAsMeasurement)
 
-        val accelerometerAndGyroscopeCalibrator =
-            mockk<StaticIntervalAccelerometerAndGyroscopeCalibrator>(
-                relaxed = true
-            )
         val value = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
         every { accelerometerAndGyroscopeCalibrator.estimatedGyroscopeBiasZAsMeasurement }.returns(
             value
@@ -11663,10 +11407,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val result = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
         assertFalse(calibrator.getEstimatedGyroscopeBiasZAsMeasurement(result))
 
-        val accelerometerAndGyroscopeCalibrator =
-            mockk<StaticIntervalAccelerometerAndGyroscopeCalibrator>(
-                relaxed = true
-            )
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         every { accelerometerAndGyroscopeCalibrator.getEstimatedGyroscopeBiasZAsMeasurement(any()) }.answers { answer ->
@@ -11700,10 +11440,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check default value
         assertNull(calibrator.estimatedGyroscopeBiasAsTriad)
 
-        val accelerometerAndGyroscopeCalibrator =
-            mockk<StaticIntervalAccelerometerAndGyroscopeCalibrator>(
-                relaxed = true
-            )
         val value = AngularSpeedTriad()
         every { accelerometerAndGyroscopeCalibrator.estimatedGyroscopeBiasAsTriad }.returns(
             value
@@ -11728,10 +11464,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val result = AngularSpeedTriad()
         assertFalse(calibrator.getEstimatedGyroscopeBiasAsTriad(result))
 
-        val accelerometerAndGyroscopeCalibrator =
-            mockk<StaticIntervalAccelerometerAndGyroscopeCalibrator>(
-                relaxed = true
-            )
         val randomizer = UniformRandomizer()
         val valueX = randomizer.nextDouble()
         val valueY = randomizer.nextDouble()
@@ -11773,10 +11505,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check default value
         assertNull(calibrator.estimatedGyroscopeBiasStandardDeviationNorm)
 
-        val accelerometerAndGyroscopeCalibrator =
-            mockk<StaticIntervalAccelerometerAndGyroscopeCalibrator>(
-                relaxed = true
-            )
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         every { accelerometerAndGyroscopeCalibrator.estimatedGyroscopeBiasStandardDeviationNorm }.returns(
@@ -11801,10 +11529,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check default value
         assertNull(calibrator.estimatedMagnetometerHardIronX)
 
-        val magnetometerCalibrator =
-            mockk<SingleSensorStaticIntervalMagnetometerCalibrator>(
-                relaxed = true
-            )
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         every { magnetometerCalibrator.estimatedHardIronX }.returns(
@@ -11829,10 +11553,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check default value
         assertNull(calibrator.estimatedMagnetometerHardIronY)
 
-        val magnetometerCalibrator =
-            mockk<SingleSensorStaticIntervalMagnetometerCalibrator>(
-                relaxed = true
-            )
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         every { magnetometerCalibrator.estimatedHardIronY }.returns(
@@ -11857,10 +11577,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check default value
         assertNull(calibrator.estimatedMagnetometerHardIronZ)
 
-        val magnetometerCalibrator =
-            mockk<SingleSensorStaticIntervalMagnetometerCalibrator>(
-                relaxed = true
-            )
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         every { magnetometerCalibrator.estimatedHardIronZ }.returns(
@@ -11885,10 +11601,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check default value
         assertNull(calibrator.estimatedMagnetometerHardIronXAsMeasurement)
 
-        val magnetometerCalibrator =
-            mockk<SingleSensorStaticIntervalMagnetometerCalibrator>(
-                relaxed = true
-            )
         val value = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
         every { magnetometerCalibrator.estimatedHardIronXAsMeasurement }.returns(
             value
@@ -11913,10 +11625,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val result = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
         assertFalse(calibrator.getEstimatedMagnetometerHardIronXAsMeasurement(result))
 
-        val magnetometerCalibrator =
-            mockk<SingleSensorStaticIntervalMagnetometerCalibrator>(
-                relaxed = true
-            )
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         every { magnetometerCalibrator.getEstimatedHardIronXAsMeasurement(any()) }.answers { answer ->
@@ -11946,10 +11654,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check default value
         assertNull(calibrator.estimatedMagnetometerHardIronYAsMeasurement)
 
-        val magnetometerCalibrator =
-            mockk<SingleSensorStaticIntervalMagnetometerCalibrator>(
-                relaxed = true
-            )
         val value = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
         every { magnetometerCalibrator.estimatedHardIronYAsMeasurement }.returns(
             value
@@ -11974,10 +11678,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val result = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
         assertFalse(calibrator.getEstimatedMagnetometerHardIronYAsMeasurement(result))
 
-        val magnetometerCalibrator =
-            mockk<SingleSensorStaticIntervalMagnetometerCalibrator>(
-                relaxed = true
-            )
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         every { magnetometerCalibrator.getEstimatedHardIronYAsMeasurement(any()) }.answers { answer ->
@@ -12007,10 +11707,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check default value
         assertNull(calibrator.estimatedMagnetometerHardIronZAsMeasurement)
 
-        val magnetometerCalibrator =
-            mockk<SingleSensorStaticIntervalMagnetometerCalibrator>(
-                relaxed = true
-            )
         val value = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
         every { magnetometerCalibrator.estimatedHardIronZAsMeasurement }.returns(
             value
@@ -12035,10 +11731,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val result = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
         assertFalse(calibrator.getEstimatedMagnetometerHardIronZAsMeasurement(result))
 
-        val magnetometerCalibrator =
-            mockk<SingleSensorStaticIntervalMagnetometerCalibrator>(
-                relaxed = true
-            )
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         every { magnetometerCalibrator.getEstimatedHardIronZAsMeasurement(any()) }.answers { answer ->
@@ -12068,10 +11760,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check default value
         assertNull(calibrator.estimatedMagnetometerHardIronAsTriad)
 
-        val magnetometerCalibrator =
-            mockk<SingleSensorStaticIntervalMagnetometerCalibrator>(
-                relaxed = true
-            )
         val value = MagneticFluxDensityTriad()
         every { magnetometerCalibrator.estimatedHardIronAsTriad }.returns(
             value
@@ -12096,10 +11784,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val result = MagneticFluxDensityTriad()
         assertFalse(calibrator.getEstimatedMagnetometerHardIronAsTriad(result))
 
-        val magnetometerCalibrator =
-            mockk<SingleSensorStaticIntervalMagnetometerCalibrator>(
-                relaxed = true
-            )
         val randomizer = UniformRandomizer()
         val valueX = randomizer.nextDouble()
         val valueY = randomizer.nextDouble()
@@ -12764,15 +12448,14 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
         val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
-        val value = mockk<Sensor>()
-        every { accelerometerAndGyroscopeCalibratorSpy.accelerometerSensor }.returns(value)
+        every { accelerometerAndGyroscopeCalibratorSpy.accelerometerSensor }.returns(sensor)
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
         )
 
         // check
-        assertSame(value, calibrator.accelerometerSensor)
+        assertSame(sensor, calibrator.accelerometerSensor)
 
         verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.accelerometerSensor }
     }
@@ -12791,15 +12474,14 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
         val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
-        val value = mockk<Sensor>()
-        every { accelerometerAndGyroscopeCalibratorSpy.gyroscopeSensor }.returns(value)
+        every { accelerometerAndGyroscopeCalibratorSpy.gyroscopeSensor }.returns(sensor)
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
         )
 
         // check
-        assertSame(value, calibrator.gyroscopeSensor)
+        assertSame(sensor, calibrator.gyroscopeSensor)
 
         verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.gyroscopeSensor }
     }
@@ -12818,15 +12500,14 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
             calibrator.getPrivateProperty("magnetometerCalibrator")
         requireNotNull(magnetometerCalibrator)
         val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
-        val value = mockk<Sensor>()
-        every { magnetometerCalibratorSpy.magnetometerSensor }.returns(value)
+        every { magnetometerCalibratorSpy.magnetometerSensor }.returns(sensor)
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
             magnetometerCalibratorSpy
         )
 
         // check
-        assertSame(value, calibrator.magnetometerSensor)
+        assertSame(sensor, calibrator.magnetometerSensor)
 
         verify(exactly = 1) { magnetometerCalibratorSpy.magnetometerSensor }
     }
@@ -12845,15 +12526,14 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
         val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
-        val value = mockk<Sensor>()
-        every { accelerometerAndGyroscopeCalibratorSpy.gravitySensor }.returns(value)
+        every { accelerometerAndGyroscopeCalibratorSpy.gravitySensor }.returns(sensor)
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
         )
 
         // check
-        assertSame(value, calibrator.gravitySensor)
+        assertSame(sensor, calibrator.gravitySensor)
 
         verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.gravitySensor }
     }
@@ -12893,9 +12573,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
         val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
-        val value = mockk<Matrix>()
         every { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerMa }.returns(
-            value
+            matrix
         )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
@@ -12903,7 +12582,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         )
 
         // check
-        assertEquals(value, calibrator.estimatedAccelerometerMa)
+        assertEquals(matrix, calibrator.estimatedAccelerometerMa)
 
         verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerMa }
     }
@@ -13192,9 +12871,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
         val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
-        val value = mockk<Matrix>()
         every { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerCovariance }.returns(
-            value
+            matrix
         )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
@@ -13202,7 +12880,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         )
 
         // check
-        assertSame(value, calibrator.estimatedAccelerometerCovariance)
+        assertSame(matrix, calibrator.estimatedAccelerometerCovariance)
 
         verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerCovariance }
     }
@@ -13281,9 +12959,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
         val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
-        val value = mockk<Matrix>()
         every { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeMg }.returns(
-            value
+            matrix
         )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
@@ -13291,7 +12968,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         )
 
         // check
-        assertSame(value, calibrator.estimatedGyroscopeMg)
+        assertSame(matrix, calibrator.estimatedGyroscopeMg)
 
         verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeMg }
     }
@@ -13580,9 +13257,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
         val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
-        val value = mockk<Matrix>()
         every { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeGg }.returns(
-            value
+            matrix
         )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
@@ -13590,7 +13266,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         )
 
         // check
-        assertSame(value, calibrator.estimatedGyroscopeGg)
+        assertSame(matrix, calibrator.estimatedGyroscopeGg)
 
         verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeGg }
     }
@@ -13609,9 +13285,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
         val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
-        val value = mockk<Matrix>()
         every { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeCovariance }.returns(
-            value
+            matrix
         )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
@@ -13619,7 +13294,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         )
 
         // check
-        assertSame(value, calibrator.estimatedGyroscopeCovariance)
+        assertSame(matrix, calibrator.estimatedGyroscopeCovariance)
 
         verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeCovariance }
     }
@@ -13694,13 +13369,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertNull(calibrator.estimatedMagnetometerMm)
 
         // mock internal calibrator
-        val magnetometerCalibrator =
-            mockk<SingleSensorStaticIntervalMagnetometerCalibrator>(
-                relaxed = true
-            )
-        val value = mockk<Matrix>()
         every { magnetometerCalibrator.estimatedMm }.returns(
-            value
+            matrix
         )
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
@@ -13708,7 +13378,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         )
 
         // check
-        assertSame(value, calibrator.estimatedMagnetometerMm)
+        assertSame(matrix, calibrator.estimatedMagnetometerMm)
 
         verify(exactly = 1) { magnetometerCalibrator.estimatedMm }
     }
@@ -13723,10 +13393,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertNull(calibrator.estimatedMagnetometerSx)
 
         // mock internal calibrator
-        val magnetometerCalibrator =
-            mockk<SingleSensorStaticIntervalMagnetometerCalibrator>(
-                relaxed = true
-            )
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         every { magnetometerCalibrator.estimatedSx }.returns(
@@ -13753,10 +13419,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertNull(calibrator.estimatedMagnetometerSy)
 
         // mock internal calibrator
-        val magnetometerCalibrator =
-            mockk<SingleSensorStaticIntervalMagnetometerCalibrator>(
-                relaxed = true
-            )
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         every { magnetometerCalibrator.estimatedSy }.returns(
@@ -13783,10 +13445,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertNull(calibrator.estimatedMagnetometerSz)
 
         // mock internal calibrator
-        val magnetometerCalibrator =
-            mockk<SingleSensorStaticIntervalMagnetometerCalibrator>(
-                relaxed = true
-            )
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         every { magnetometerCalibrator.estimatedSz }.returns(
@@ -13813,10 +13471,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertNull(calibrator.estimatedMagnetometerMxy)
 
         // mock internal calibrator
-        val magnetometerCalibrator =
-            mockk<SingleSensorStaticIntervalMagnetometerCalibrator>(
-                relaxed = true
-            )
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         every { magnetometerCalibrator.estimatedMxy }.returns(
@@ -13843,10 +13497,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertNull(calibrator.estimatedMagnetometerMxz)
 
         // mock internal calibrator
-        val magnetometerCalibrator =
-            mockk<SingleSensorStaticIntervalMagnetometerCalibrator>(
-                relaxed = true
-            )
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         every { magnetometerCalibrator.estimatedMxz }.returns(
@@ -13873,10 +13523,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertNull(calibrator.estimatedMagnetometerMyx)
 
         // mock internal calibrator
-        val magnetometerCalibrator =
-            mockk<SingleSensorStaticIntervalMagnetometerCalibrator>(
-                relaxed = true
-            )
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         every { magnetometerCalibrator.estimatedMyx }.returns(
@@ -13903,10 +13549,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertNull(calibrator.estimatedMagnetometerMyz)
 
         // mock internal calibrator
-        val magnetometerCalibrator =
-            mockk<SingleSensorStaticIntervalMagnetometerCalibrator>(
-                relaxed = true
-            )
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         every { magnetometerCalibrator.estimatedMyz }.returns(
@@ -13933,10 +13575,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertNull(calibrator.estimatedMagnetometerMzx)
 
         // mock internal calibrator
-        val magnetometerCalibrator =
-            mockk<SingleSensorStaticIntervalMagnetometerCalibrator>(
-                relaxed = true
-            )
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         every { magnetometerCalibrator.estimatedMzx }.returns(
@@ -13963,10 +13601,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertNull(calibrator.estimatedMagnetometerMzy)
 
         // mock internal calibrator
-        val magnetometerCalibrator =
-            mockk<SingleSensorStaticIntervalMagnetometerCalibrator>(
-                relaxed = true
-            )
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         every { magnetometerCalibrator.estimatedMzy }.returns(
@@ -13993,13 +13627,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertNull(calibrator.estimatedMagnetometerCovariance)
 
         // mock internal calibrator
-        val magnetometerCalibrator =
-            mockk<SingleSensorStaticIntervalMagnetometerCalibrator>(
-                relaxed = true
-            )
-        val value = mockk<Matrix>()
         every { magnetometerCalibrator.estimatedCovariance }.returns(
-            value
+            matrix
         )
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
@@ -14007,7 +13636,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         )
 
         // check
-        assertSame(value, calibrator.estimatedMagnetometerCovariance)
+        assertSame(matrix, calibrator.estimatedMagnetometerCovariance)
 
         verify(exactly = 1) { magnetometerCalibrator.estimatedCovariance }
     }
@@ -14022,10 +13651,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertNull(calibrator.estimatedMagnetometerChiSq)
 
         // mock internal calibrator
-        val magnetometerCalibrator =
-            mockk<SingleSensorStaticIntervalMagnetometerCalibrator>(
-                relaxed = true
-            )
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         every { magnetometerCalibrator.estimatedChiSq }.returns(
@@ -14052,10 +13677,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertNull(calibrator.estimatedMagnetometerMse)
 
         // mock internal calibrator
-        val magnetometerCalibrator =
-            mockk<SingleSensorStaticIntervalMagnetometerCalibrator>(
-                relaxed = true
-            )
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         every { magnetometerCalibrator.estimatedMse }.returns(
@@ -14378,6 +13999,20 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         verify(exactly = 1) { magnetometerCalibratorSpy.isReadyToSolveCalibration }
     }
 
+    private fun getLocation(): Location {
+        val randomizer = UniformRandomizer()
+        val latitudeDegrees = randomizer.nextDouble(MIN_LATITUDE_DEGREES, MAX_LATITUDE_DEGREES)
+        val longitudeDegrees =
+            randomizer.nextDouble(MIN_LONGITUDE_DEGREES, MAX_LONGITUDE_DEGREES)
+        val height = randomizer.nextDouble(MIN_HEIGHT, MAX_HEIGHT)
+
+        every { location.latitude }.returns(latitudeDegrees)
+        every { location.longitude }.returns(longitudeDegrees)
+        every { location.altitude }.returns(height)
+
+        return location
+    }
+
     private companion object {
         const val MA_SIZE = 3
         const val MM_SIZE = 3
@@ -14437,20 +14072,5 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         const val MAX_SOFT_IRON = 1e-6
 
         const val MAGNETOMETER_NOISE_STD = 200e-9
-
-        fun getLocation(): Location {
-            val randomizer = UniformRandomizer()
-            val latitudeDegrees = randomizer.nextDouble(MIN_LATITUDE_DEGREES, MAX_LATITUDE_DEGREES)
-            val longitudeDegrees =
-                randomizer.nextDouble(MIN_LONGITUDE_DEGREES, MAX_LONGITUDE_DEGREES)
-            val height = randomizer.nextDouble(MIN_HEIGHT, MAX_HEIGHT)
-
-            val location = mockk<Location>()
-            every { location.latitude }.returns(latitudeDegrees)
-            every { location.longitude }.returns(longitudeDegrees)
-            every { location.altitude }.returns(height)
-
-            return location
-        }
     }
 }

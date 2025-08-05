@@ -38,7 +38,7 @@ public abstract class MatrixQuadrature {
     }
 
     /**
-     * Returns the value of the integrat at the nth stage of refinement.
+     * Returns the value of the integral at the nth stage of refinement.
      *
      * @param result instance where the value of the integral at the nth stage of refinement will
      *               be stored.

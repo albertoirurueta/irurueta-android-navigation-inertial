@@ -49,7 +49,7 @@ import com.irurueta.navigation.frames.FrameType
  * available.
  */
 abstract class BaseLevelingEstimator<T : BaseLevelingEstimator<T, L>,
-        L : BaseLevelingEstimator.OnLevelingAvailableListener<T, L>> constructor(
+        L : BaseLevelingEstimator.OnLevelingAvailableListener<T, L>>(
     val context: Context,
     val sensorDelay: SensorDelay = SensorDelay.GAME,
     val useAccelerometer: Boolean = false,

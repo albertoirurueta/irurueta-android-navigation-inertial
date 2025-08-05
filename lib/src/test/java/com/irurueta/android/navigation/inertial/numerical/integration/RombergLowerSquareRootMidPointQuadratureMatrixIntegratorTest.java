@@ -205,7 +205,7 @@ public class RombergLowerSquareRootMidPointQuadratureMatrixIntegratorTest {
                 new MatrixSingleDimensionFunctionEvaluatorListener() {
 
                     @Override
-                    public void evaluate(double t, Matrix result) throws EvaluationException {
+                    public void evaluate(double t, Matrix result) {
                         // f(t) = e^(A*t) = [cost(t)  sin(t)]
                         //                  [-sin(t)  cos(t)]
                         final double c = Math.cos(t);

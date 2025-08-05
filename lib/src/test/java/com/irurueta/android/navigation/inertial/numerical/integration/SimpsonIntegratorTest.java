@@ -39,12 +39,7 @@ public class SimpsonIntegratorTest {
         final double b = randomizer.nextDouble(a, MAX_VALUE);
 
         final SingleDimensionFunctionEvaluatorListener listener =
-                new SingleDimensionFunctionEvaluatorListener() {
-                    @Override
-                    public double evaluate(double point) {
-                        return 0.0;
-                    }
-                };
+                point -> 0.0;
 
         SimpsonIntegrator<?> integrator = SimpsonIntegrator.create(a, b, listener, EPS,
                 QuadratureType.TRAPEZOIDAL);
@@ -95,12 +90,7 @@ public class SimpsonIntegratorTest {
         final double b = randomizer.nextDouble(a, MAX_VALUE);
 
         final SingleDimensionFunctionEvaluatorListener listener =
-                new SingleDimensionFunctionEvaluatorListener() {
-                    @Override
-                    public double evaluate(double point) {
-                        return 0.0;
-                    }
-                };
+                point -> 0.0;
 
         SimpsonIntegrator<?> integrator = SimpsonIntegrator.create(a, b, listener,
                 QuadratureType.TRAPEZOIDAL);
@@ -150,12 +140,7 @@ public class SimpsonIntegratorTest {
         final double b = randomizer.nextDouble(a, MAX_VALUE);
 
         final SingleDimensionFunctionEvaluatorListener listener =
-                new SingleDimensionFunctionEvaluatorListener() {
-                    @Override
-                    public double evaluate(double point) {
-                        return 0.0;
-                    }
-                };
+                point -> 0.0;
 
         SimpsonIntegrator<?> integrator = SimpsonIntegrator.create(a, b, listener, EPS);
         assertTrue(integrator instanceof SimpsonTrapezoidalQuadratureIntegrator);

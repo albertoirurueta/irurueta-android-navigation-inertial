@@ -32,6 +32,7 @@ import java.util.*
  * consider the measurement as stale so that it is skipped from synced measurement processing and
  * returned back from buffer to cache of measurements.
  * @property staleDetectionEnabled true to enable stale measurement detection, false otherwise.
+ * @property skipWhenProcessing true to skip new measurements while processing a measurement.
  * @property accuracyChangedListener listener to notify changes in accuracy.
  * @property bufferFilledListener listener to notify that some buffer has been filled. This usually
  * happens when consumer of measurements cannot keep up with the rate at which measurements are
@@ -46,6 +47,7 @@ abstract class SensorMeasurementSyncer<M : SyncedSensorMeasurement, S : SensorMe
     val stopWhenFilledBuffer: Boolean,
     val staleOffsetNanos: Long,
     val staleDetectionEnabled: Boolean,
+    val skipWhenProcessing: Boolean,
     var accuracyChangedListener: OnAccuracyChangedListener<M, S>?,
     var bufferFilledListener: OnBufferFilledListener<M, S>?,
     var syncedMeasurementListener: OnSyncedMeasurementsListener<M, S>?,
@@ -72,6 +74,12 @@ abstract class SensorMeasurementSyncer<M : SyncedSensorMeasurement, S : SensorMe
      * Indicates whether syncer is running and processing measurements.
      */
     var running = false
+        protected set
+
+    /**
+     * Indicates whether syncer is processing measurements.
+     */
+    var processing = false
         protected set
 
     /**

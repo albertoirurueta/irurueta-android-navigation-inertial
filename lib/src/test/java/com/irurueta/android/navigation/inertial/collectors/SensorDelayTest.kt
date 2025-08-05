@@ -16,9 +16,6 @@
 package com.irurueta.android.navigation.inertial.collectors
 
 import android.hardware.SensorManager
-import io.mockk.clearAllMocks
-import io.mockk.unmockkAll
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -27,15 +24,9 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class SensorDelayTest {
 
-    @After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-    }
-
     @Test
     fun sensorDelay_fromValues_returnsExpectedValues() {
-        assertEquals(4, SensorDelay.values().size)
+        assertEquals(4, SensorDelay.entries.size)
         assertEquals(SensorDelay.FASTEST, SensorDelay.from(SensorManager.SENSOR_DELAY_FASTEST))
         assertEquals(SensorDelay.GAME, SensorDelay.from(SensorManager.SENSOR_DELAY_GAME))
         assertEquals(SensorDelay.UI, SensorDelay.from(SensorManager.SENSOR_DELAY_UI))

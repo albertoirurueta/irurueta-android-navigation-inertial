@@ -124,23 +124,19 @@ public abstract class SimpsonIntegrator<T extends Quadrature> extends Integrator
             final double a, final double b,
             final SingleDimensionFunctionEvaluatorListener listener, final double eps,
             final QuadratureType quadratureType) {
-        switch (quadratureType) {
-            case TRAPEZOIDAL:
-                return new SimpsonTrapezoidalQuadratureIntegrator(a, b, listener, eps);
-            case MID_POINT:
-                return new SimpsonMidPointQuadratureIntegrator(a, b, listener, eps);
-            case INFINITY_MID_POINT:
-                return new SimpsonInfinityMidPointQuadratureIntegrator(a, b, listener, eps);
-            case LOWER_SQUARE_ROOT_MID_POINT:
-                return new SimpsonLowerSquareRootMidPointQuadratureIntegrator(a, b, listener, eps);
-            case UPPER_SQUARE_ROOT_MID_POINT:
-                return new SimpsonUpperSquareRootMidPointQuadratureIntegrator(a, b, listener, eps);
-            case DOUBLE_EXPONENTIAL_RULE:
-                return new SimpsonDoubleExponentialRuleQuadratureIntegrator(a, b, listener, eps);
-            case EXPONENTIAL_MID_POINT:
-            default:
-                throw new IllegalArgumentException();
-        }
+        return switch (quadratureType) {
+            case TRAPEZOIDAL -> new SimpsonTrapezoidalQuadratureIntegrator(a, b, listener, eps);
+            case MID_POINT -> new SimpsonMidPointQuadratureIntegrator(a, b, listener, eps);
+            case INFINITY_MID_POINT ->
+                    new SimpsonInfinityMidPointQuadratureIntegrator(a, b, listener, eps);
+            case LOWER_SQUARE_ROOT_MID_POINT ->
+                    new SimpsonLowerSquareRootMidPointQuadratureIntegrator(a, b, listener, eps);
+            case UPPER_SQUARE_ROOT_MID_POINT ->
+                    new SimpsonUpperSquareRootMidPointQuadratureIntegrator(a, b, listener, eps);
+            case DOUBLE_EXPONENTIAL_RULE ->
+                    new SimpsonDoubleExponentialRuleQuadratureIntegrator(a, b, listener, eps);
+            default -> throw new IllegalArgumentException();
+        };
     }
 
     /**
@@ -157,23 +153,19 @@ public abstract class SimpsonIntegrator<T extends Quadrature> extends Integrator
             final double a, final double b,
             final SingleDimensionFunctionEvaluatorListener listener,
             final QuadratureType quadratureType) {
-        switch (quadratureType) {
-            case TRAPEZOIDAL:
-                return new SimpsonTrapezoidalQuadratureIntegrator(a, b, listener);
-            case MID_POINT:
-                return new SimpsonMidPointQuadratureIntegrator(a, b, listener);
-            case INFINITY_MID_POINT:
-                return new SimpsonInfinityMidPointQuadratureIntegrator(a, b, listener);
-            case LOWER_SQUARE_ROOT_MID_POINT:
-                return new SimpsonLowerSquareRootMidPointQuadratureIntegrator(a, b, listener);
-            case UPPER_SQUARE_ROOT_MID_POINT:
-                return new SimpsonUpperSquareRootMidPointQuadratureIntegrator(a, b, listener);
-            case DOUBLE_EXPONENTIAL_RULE:
-                return new SimpsonDoubleExponentialRuleQuadratureIntegrator(a, b, listener);
-            case EXPONENTIAL_MID_POINT:
-            default:
-                throw new IllegalArgumentException();
-        }
+        return switch (quadratureType) {
+            case TRAPEZOIDAL -> new SimpsonTrapezoidalQuadratureIntegrator(a, b, listener);
+            case MID_POINT -> new SimpsonMidPointQuadratureIntegrator(a, b, listener);
+            case INFINITY_MID_POINT ->
+                    new SimpsonInfinityMidPointQuadratureIntegrator(a, b, listener);
+            case LOWER_SQUARE_ROOT_MID_POINT ->
+                    new SimpsonLowerSquareRootMidPointQuadratureIntegrator(a, b, listener);
+            case UPPER_SQUARE_ROOT_MID_POINT ->
+                    new SimpsonUpperSquareRootMidPointQuadratureIntegrator(a, b, listener);
+            case DOUBLE_EXPONENTIAL_RULE ->
+                    new SimpsonDoubleExponentialRuleQuadratureIntegrator(a, b, listener);
+            default -> throw new IllegalArgumentException();
+        };
     }
 
     /**

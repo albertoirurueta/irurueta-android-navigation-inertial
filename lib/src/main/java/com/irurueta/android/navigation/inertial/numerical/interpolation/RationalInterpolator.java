@@ -101,7 +101,7 @@ public class RationalInterpolator extends BaseInterpolator {
                 hh = h;
             }
             c[i] = ya[jl + i];
-            // The TINY part is needed to prevent a rare zero-over-zero conditoin
+            // The TINY part is needed to prevent a rare zero-over-zero condition
             d[i] = ya[jl + i] + TINY;
         }
         y = ya[jl + ns--];

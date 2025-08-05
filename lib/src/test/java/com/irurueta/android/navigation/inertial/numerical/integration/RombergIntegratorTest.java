@@ -38,12 +38,7 @@ public class RombergIntegratorTest {
         final double b = randomizer.nextDouble(a, MAX_VALUE);
 
         final SingleDimensionFunctionEvaluatorListener listener =
-                new SingleDimensionFunctionEvaluatorListener() {
-                    @Override
-                    public double evaluate(double point) {
-                        return 0.0;
-                    }
-                };
+                point -> 0.0;
 
         RombergIntegrator<?> integrator = RombergIntegrator.create(a, b, listener, EPS,
                 QuadratureType.TRAPEZOIDAL);
@@ -94,12 +89,7 @@ public class RombergIntegratorTest {
         final double b = randomizer.nextDouble(a, MAX_VALUE);
 
         final SingleDimensionFunctionEvaluatorListener listener =
-                new SingleDimensionFunctionEvaluatorListener() {
-                    @Override
-                    public double evaluate(double point) {
-                        return 0.0;
-                    }
-                };
+                point -> 0.0;
 
         RombergIntegrator<?> integrator = RombergIntegrator.create(a, b, listener,
                 QuadratureType.TRAPEZOIDAL);
@@ -148,12 +138,7 @@ public class RombergIntegratorTest {
         final double b = randomizer.nextDouble(a, MAX_VALUE);
 
         final SingleDimensionFunctionEvaluatorListener listener =
-                new SingleDimensionFunctionEvaluatorListener() {
-                    @Override
-                    public double evaluate(double point) {
-                        return 0.0;
-                    }
-                };
+                point -> 0.0;
 
         RombergIntegrator<?> integrator = RombergIntegrator.create(a, b, listener, EPS);
         assertTrue(integrator instanceof RombergTrapezoidalQuadratureIntegrator);

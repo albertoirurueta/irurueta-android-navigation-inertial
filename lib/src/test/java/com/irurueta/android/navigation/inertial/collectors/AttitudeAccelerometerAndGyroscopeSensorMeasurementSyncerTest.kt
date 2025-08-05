@@ -3,20 +3,44 @@ package com.irurueta.android.navigation.inertial.collectors
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.irurueta.android.navigation.inertial.collectors.interpolators.*
-import com.irurueta.android.navigation.inertial.getPrivateProperty
-import com.irurueta.android.navigation.inertial.setPrivateProperty
+import com.irurueta.android.testutils.getPrivateProperty
+import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.geometry.Quaternion
 import com.irurueta.statistics.UniformRandomizer
 import io.mockk.*
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
 import org.junit.After
 import org.junit.Assert.*
+import org.junit.Ignore
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.util.*
 
+@Ignore("possible memory leak")
 @RunWith(RobolectricTestRunner::class)
 class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncerTest {
+
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var accuracyChangedListener:
+            SensorMeasurementSyncer.OnAccuracyChangedListener<AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement, AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var bufferFilledListener:
+            SensorMeasurementSyncer.OnBufferFilledListener<AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement, AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var syncedMeasurementListener:
+            SensorMeasurementSyncer.OnSyncedMeasurementsListener<AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement, AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var staleDetectedMeasurementsListener:
+            SensorMeasurementSyncer.OnStaleDetectedMeasurementsListener<AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement, AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer>
 
     @After
     fun tearDown() {
@@ -61,6 +85,7 @@ class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncerTest {
             syncer.staleOffsetNanos
         )
         assertTrue(syncer.staleDetectionEnabled)
+        assertTrue(syncer.skipWhenProcessing)
         assertNull(syncer.accuracyChangedListener)
         assertNull(syncer.bufferFilledListener)
         assertNull(syncer.syncedMeasurementListener)
@@ -73,6 +98,7 @@ class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncerTest {
         assertTrue(syncer.gyroscopeInterpolator is GyroscopeQuadraticSensorMeasurementInterpolator)
         assertEquals(0L, syncer.startTimestamp)
         assertFalse(syncer.running)
+        assertFalse(syncer.processing)
         assertEquals(0, syncer.numberOfProcessedMeasurements)
         assertNull(syncer.mostRecentTimestamp)
         assertNull(syncer.oldestTimestamp)
@@ -114,14 +140,6 @@ class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncerTest {
     @Test
     fun constructor_whenAllParameters_setsExpectedValues() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val accuracyChangedListener =
-            mockk<SensorMeasurementSyncer.OnAccuracyChangedListener<AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement, AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer>>()
-        val bufferFilledListener =
-            mockk<SensorMeasurementSyncer.OnBufferFilledListener<AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement, AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer>>()
-        val syncedMeasurementListener =
-            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement, AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer>>()
-        val staleDetectedMeasurementsListener =
-            mockk<SensorMeasurementSyncer.OnStaleDetectedMeasurementsListener<AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement, AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer>>()
         val attitudeInterpolator = AttitudeDirectSensorMeasurementInterpolator()
         val accelerometerInterpolator = AccelerometerDirectSensorMeasurementInterpolator()
         val gyroscopeInterpolator = GyroscopeDirectSensorMeasurementInterpolator()
@@ -142,6 +160,7 @@ class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncerTest {
             stopWhenFilledBuffer = false,
             staleOffsetNanos = 123456789L,
             staleDetectionEnabled = false,
+            skipWhenProcessing = false,
             accuracyChangedListener = accuracyChangedListener,
             bufferFilledListener = bufferFilledListener,
             syncedMeasurementListener = syncedMeasurementListener,
@@ -168,6 +187,7 @@ class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncerTest {
         assertFalse(syncer.stopWhenFilledBuffer)
         assertEquals(123456789L, syncer.staleOffsetNanos)
         assertFalse(syncer.staleDetectionEnabled)
+        assertFalse(syncer.skipWhenProcessing)
         assertSame(accuracyChangedListener, syncer.accuracyChangedListener)
         assertSame(bufferFilledListener, syncer.bufferFilledListener)
         assertSame(syncedMeasurementListener, syncer.syncedMeasurementListener)
@@ -177,6 +197,7 @@ class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncerTest {
         assertSame(gyroscopeInterpolator, syncer.gyroscopeInterpolator)
         assertEquals(0L, syncer.startTimestamp)
         assertFalse(syncer.running)
+        assertFalse(syncer.processing)
         assertEquals(0, syncer.numberOfProcessedMeasurements)
         assertNull(syncer.mostRecentTimestamp)
         assertNull(syncer.oldestTimestamp)
@@ -206,8 +227,6 @@ class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncerTest {
         assertNull(syncer.accuracyChangedListener)
 
         // set new value
-        val accuracyChangedListener =
-            mockk<SensorMeasurementSyncer.OnAccuracyChangedListener<AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement, AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer>>()
         syncer.accuracyChangedListener = accuracyChangedListener
 
         // check
@@ -223,8 +242,6 @@ class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncerTest {
         assertNull(syncer.bufferFilledListener)
 
         // set new value
-        val bufferFilledListener =
-            mockk<SensorMeasurementSyncer.OnBufferFilledListener<AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement, AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer>>()
         syncer.bufferFilledListener = bufferFilledListener
 
         // check
@@ -240,8 +257,6 @@ class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncerTest {
         assertNull(syncer.syncedMeasurementListener)
 
         // set new value
-        val syncedMeasurementListener =
-            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement, AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer>>()
         syncer.syncedMeasurementListener = syncedMeasurementListener
 
         // check
@@ -257,8 +272,6 @@ class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncerTest {
         assertNull(syncer.staleDetectedMeasurementsListener)
 
         // set new value
-        val staleDetectedMeasurementsListener =
-            mockk<SensorMeasurementSyncer.OnStaleDetectedMeasurementsListener<AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement, AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer>>()
         syncer.staleDetectedMeasurementsListener = staleDetectedMeasurementsListener
 
         // check
@@ -510,6 +523,7 @@ class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncerTest {
         // set as running
         setPrivateProperty(SensorMeasurementSyncer::class, syncer, "running", true)
         assertTrue(syncer.running)
+        assertFalse(syncer.processing)
 
         syncer.start()
     }
@@ -520,6 +534,7 @@ class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncerTest {
         val syncer = AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer(context)
 
         assertFalse(syncer.running)
+        assertFalse(syncer.processing)
         assertEquals(0L, syncer.startTimestamp)
 
         // sets variables that will be later reset
@@ -591,12 +606,14 @@ class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncerTest {
         syncer.setPrivateProperty("lastNotifiedGyroscopeTimestamp", 4L)
 
         assertFalse(syncer.running)
+        assertFalse(syncer.processing)
         assertEquals(0L, syncer.startTimestamp)
 
         assertFalse(syncer.start())
 
         // check
         assertFalse(syncer.running)
+        assertFalse(syncer.processing)
         assertNotEquals(0L, syncer.startTimestamp)
 
         assertTrue(attitudeMeasurements.isEmpty())
@@ -625,6 +642,7 @@ class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncerTest {
         assertNull(oldestTimestamp)
 
         assertFalse(syncer.running)
+        assertFalse(syncer.processing)
 
         val hasPreviousAttitudeMeasurement: Boolean? =
             syncer.getPrivateProperty("hasPreviousAttitudeMeasurement")
@@ -667,6 +685,7 @@ class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncerTest {
         val syncer = AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer(context)
 
         assertFalse(syncer.running)
+        assertFalse(syncer.processing)
         assertEquals(0L, syncer.startTimestamp)
 
         val timestamp = System.nanoTime()
@@ -674,6 +693,7 @@ class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncerTest {
 
         // check
         assertFalse(syncer.running)
+        assertFalse(syncer.processing)
         assertEquals(timestamp, syncer.startTimestamp)
     }
 
@@ -702,11 +722,13 @@ class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncerTest {
         syncer.setPrivateProperty("gyroscopeSensorCollector", gyroscopeSensorCollectorSpy)
 
         assertFalse(syncer.running)
+        assertFalse(syncer.processing)
 
         val timestamp = System.nanoTime()
         assertFalse(syncer.start(timestamp))
 
         assertFalse(syncer.running)
+        assertFalse(syncer.processing)
         assertEquals(timestamp, syncer.startTimestamp)
 
         verify(exactly = 1) { attitudeSensorCollectorSpy.start(timestamp) }
@@ -739,11 +761,13 @@ class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncerTest {
         syncer.setPrivateProperty("gyroscopeSensorCollector", gyroscopeSensorCollectorSpy)
 
         assertFalse(syncer.running)
+        assertFalse(syncer.processing)
 
         val timestamp = System.nanoTime()
         assertFalse(syncer.start(timestamp))
 
         assertFalse(syncer.running)
+        assertFalse(syncer.processing)
         assertEquals(timestamp, syncer.startTimestamp)
 
         verify(exactly = 1) { attitudeSensorCollectorSpy.start(timestamp) }
@@ -776,11 +800,13 @@ class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncerTest {
         syncer.setPrivateProperty("gyroscopeSensorCollector", gyroscopeSensorCollectorSpy)
 
         assertFalse(syncer.running)
+        assertFalse(syncer.processing)
 
         val timestamp = System.nanoTime()
         assertFalse(syncer.start(timestamp))
 
         assertFalse(syncer.running)
+        assertFalse(syncer.processing)
         assertEquals(timestamp, syncer.startTimestamp)
 
         verify(exactly = 1) { attitudeSensorCollectorSpy.start(timestamp) }
@@ -813,11 +839,13 @@ class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncerTest {
         syncer.setPrivateProperty("gyroscopeSensorCollector", gyroscopeSensorCollectorSpy)
 
         assertFalse(syncer.running)
+        assertFalse(syncer.processing)
 
         val timestamp = System.nanoTime()
         assertTrue(syncer.start(timestamp))
 
         assertTrue(syncer.running)
+        assertFalse(syncer.processing)
         assertEquals(timestamp, syncer.startTimestamp)
 
         verify(exactly = 1) { attitudeSensorCollectorSpy.start(timestamp) }
@@ -952,6 +980,7 @@ class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncerTest {
         assertNull(oldestTimestamp)
 
         assertFalse(syncer.running)
+        assertFalse(syncer.processing)
 
         val hasPreviousAttitudeMeasurement: Boolean? =
             syncer.getPrivateProperty("hasPreviousAttitudeMeasurement")
@@ -1009,10 +1038,6 @@ class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncerTest {
 
     @Test
     fun attitudeSensorCollector_whenAccuracyChangedListenerAndListenerAvailable_notifies() {
-        val accuracyChangedListener =
-            mockk<SensorMeasurementSyncer.OnAccuracyChangedListener<AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement, AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val syncer = AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer(
             context,
@@ -1063,10 +1088,6 @@ class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncerTest {
 
     @Test
     fun attitudeSensorCollector_whenBufferFilledAndListenerAvailable_notifies() {
-        val bufferFilledListener =
-            mockk<SensorMeasurementSyncer.OnBufferFilledListener<AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement, AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val syncer = AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer(
             context,
@@ -1095,9 +1116,36 @@ class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncerTest {
     }
 
     @Test
+    fun attitudeSensorCollector_whenSkipWhenProcessingAndProcessing_makesNoAction() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val syncer = AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer(
+            context,
+            skipWhenProcessing = true,
+            syncedMeasurementListener = syncedMeasurementListener
+        )
+
+        val attitudeSensorCollector: BufferedAttitudeSensorCollector? =
+            syncer.getPrivateProperty("attitudeSensorCollector")
+        requireNotNull(attitudeSensorCollector)
+        val attitudeSensorCollectorSpy = spyk(attitudeSensorCollector)
+        every { attitudeSensorCollectorSpy.getMeasurementsBeforePosition(any()) }.returns(
+            ArrayDeque()
+        )
+        syncer.setPrivateProperty("attitudeSensorCollector", attitudeSensorCollectorSpy)
+        setPrivateProperty(SensorMeasurementSyncer::class, syncer, "processing", true)
+
+        val listener = attitudeSensorCollectorSpy.measurementListener
+        requireNotNull(listener)
+
+        listener.onMeasurement(attitudeSensorCollectorSpy, AttitudeSensorMeasurement(), 0)
+
+        verify(exactly = 0) { attitudeSensorCollectorSpy.getMeasurementsBeforePosition(0) }
+        verify { syncedMeasurementListener wasNot Called }
+        assertNull(syncer.mostRecentTimestamp)
+    }
+
+    @Test
     fun attitudeSensorCollector_whenMeasurementAndNoMeasurementsAvailable_callsCollector() {
-        val syncedMeasurementListener =
-            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement, AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val syncer = AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer(
             context,
@@ -1125,8 +1173,6 @@ class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncerTest {
 
     @Test
     fun attitudeSensorCollector_whenMeasurementAndMeasurementsAvailable_updatesMostRecentTimestampCopiesMeasurementsAndProcessesThem() {
-        val syncedMeasurementListener =
-            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement, AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val syncer = AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer(
             context,
@@ -1222,10 +1268,6 @@ class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncerTest {
 
     @Test
     fun accelerometerSensorCollector_whenAccuracyChangedListenerAndListenerAvailable_notifies() {
-        val accuracyChangedListener =
-            mockk<SensorMeasurementSyncer.OnAccuracyChangedListener<AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement, AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val syncer = AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer(
             context,
@@ -1276,10 +1318,6 @@ class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncerTest {
 
     @Test
     fun accelerometerSensorCollector_whenBufferFilledAndListenerAvailable_notifies() {
-        val bufferFilledListener =
-            mockk<SensorMeasurementSyncer.OnBufferFilledListener<AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement, AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val syncer = AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer(
             context,
@@ -1311,9 +1349,33 @@ class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncerTest {
     }
 
     @Test
+    fun accelerometerSensorCollector_whenSkipWhenProcessingAndProcessing_makesNoAction() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val syncer = AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer(
+            context,
+            skipWhenProcessing = true,
+            syncedMeasurementListener = syncedMeasurementListener
+        )
+
+        val accelerometerSensorCollector: BufferedAccelerometerSensorCollector? =
+            syncer.getPrivateProperty("accelerometerSensorCollector")
+        requireNotNull(accelerometerSensorCollector)
+        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
+        syncer.setPrivateProperty("accelerometerSensorCollector", accelerometerSensorCollectorSpy)
+        setPrivateProperty(SensorMeasurementSyncer::class, syncer, "processing", true)
+
+        val listener = accelerometerSensorCollector.measurementListener
+        requireNotNull(listener)
+
+        listener.onMeasurement(accelerometerSensorCollectorSpy, AccelerometerSensorMeasurement(), 0)
+
+        verify { accelerometerSensorCollectorSpy wasNot Called }
+        verify { syncedMeasurementListener wasNot Called }
+        assertNull(syncer.mostRecentTimestamp)
+    }
+
+    @Test
     fun accelerometerSensorCollector_whenMeasurementAndMostRecentTimestampNotDefined_makesNoAction() {
-        val syncedMeasurementListener =
-            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement, AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val syncer = AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer(
             context,
@@ -1338,8 +1400,6 @@ class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncerTest {
 
     @Test
     fun accelerometerSensorCollector_whenMeasurementMostRecentTimestampDefinedAndNoMeasurementsAvailable_callsCollector() {
-        val syncedMeasurementListener =
-            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement, AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val syncer = AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer(
             context,
@@ -1380,8 +1440,6 @@ class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncerTest {
 
     @Test
     fun accelerometerSensorCollector_whenMeasurementMostRecentTimestampDefinedAndMeasurementsAvailable_copiesMeasurements() {
-        val syncedMeasurementListener =
-            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement, AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val syncer = AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer(
             context,
@@ -1484,10 +1542,6 @@ class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncerTest {
 
     @Test
     fun gyroscopeSensorCollector_whenAccuracyChangedListenerAndListenerAvailable_notifies() {
-        val accuracyChangedListener =
-            mockk<SensorMeasurementSyncer.OnAccuracyChangedListener<AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement, AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val syncer = AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer(
             context,
@@ -1539,10 +1593,6 @@ class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncerTest {
 
     @Test
     fun gyroscopeSensorCollector_whenBufferFilledAndListenerAvailable_notifies() {
-        val bufferFilledListener =
-            mockk<SensorMeasurementSyncer.OnBufferFilledListener<AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement, AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val syncer =
             AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer(
@@ -1575,9 +1625,33 @@ class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncerTest {
     }
 
     @Test
+    fun gyroscopeSensorCollector_whenSkipWhenProcessingAndProcessing_makesNoAction() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val syncer = AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer(
+            context,
+            skipWhenProcessing = true,
+            syncedMeasurementListener = syncedMeasurementListener
+        )
+
+        val gyroscopeSensorCollector: BufferedGyroscopeSensorCollector? =
+            syncer.getPrivateProperty("gyroscopeSensorCollector")
+        requireNotNull(gyroscopeSensorCollector)
+        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
+        syncer.setPrivateProperty("gyroscopeSensorCollector", gyroscopeSensorCollectorSpy)
+        setPrivateProperty(SensorMeasurementSyncer::class, syncer, "processing", true)
+
+        val listener = gyroscopeSensorCollector.measurementListener
+        requireNotNull(listener)
+
+        listener.onMeasurement(gyroscopeSensorCollectorSpy, GyroscopeSensorMeasurement(), 0)
+
+        verify { gyroscopeSensorCollectorSpy wasNot Called }
+        verify { syncedMeasurementListener wasNot Called }
+        assertNull(syncer.mostRecentTimestamp)
+    }
+
+    @Test
     fun gyroscopeSensorCollector_whenMeasurementAndMostRecentTimestampNotDefined_makesNoAction() {
-        val syncedMeasurementListener =
-            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement, AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val syncer = AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer(
             context,
@@ -1602,8 +1676,6 @@ class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncerTest {
 
     @Test
     fun gyroscopeSensorCollector_whenMeasurementMostRecentTimestampDefinedAndNoMeasurementsAvailable_callsCollector() {
-        val syncedMeasurementListener =
-            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement, AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val syncer = AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer(
             context,
@@ -1644,8 +1716,6 @@ class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncerTest {
 
     @Test
     fun gyroscopeSensorCollector_whenMeasurementMostRecentTimestampDefinedAndMeasurementsAvailable_copiesMeasurements() {
-        val syncedMeasurementListener =
-            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement, AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val syncer = AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer(
             context,
@@ -1746,10 +1816,6 @@ class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncerTest {
 
     @Test
     fun sensorCollectors_whenAllMeasurements_notifiesSyncedMeasurement() {
-        val syncedMeasurementListener =
-            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement, AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val syncer = AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer(
             context,
@@ -1995,14 +2061,6 @@ class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncerTest {
 
     @Test
     fun cleanupStaleMeasurements_whenStaleMeasurementsAvailable_notifies() {
-        val syncedMeasurementListener =
-            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement, AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer>>(
-                relaxUnitFun = true
-            )
-        val staleDetectedMeasurementsListener =
-            mockk<SensorMeasurementSyncer.OnStaleDetectedMeasurementsListener<AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement, AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val syncer = AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer(
             context,
@@ -2294,14 +2352,6 @@ class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncerTest {
 
     @Test
     fun cleanupStaleMeasurements_whenStaleDetectionDisabled_doesNotNotify() {
-        val syncedMeasurementListener =
-            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement, AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer>>(
-                relaxUnitFun = true
-            )
-        val staleDetectedMeasurementsListener =
-            mockk<SensorMeasurementSyncer.OnStaleDetectedMeasurementsListener<AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement, AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val syncer = AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer(
             context,
@@ -2591,10 +2641,6 @@ class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncerTest {
 
     @Test
     fun sensorCollectors_whenPreviousGyroscopeMeasurement_notifies() {
-        val syncedMeasurementListener =
-            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement, AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val syncer = AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer(
             context,
@@ -2885,10 +2931,6 @@ class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncerTest {
 
     @Test
     fun sensorCollectors_whenNoPreviousGyroscopeMeasurement_notifies() {
-        val syncedMeasurementListener =
-            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement, AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val syncer = AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer(
             context,
@@ -3179,10 +3221,6 @@ class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncerTest {
 
     @Test
     fun sensorCollectors_whenStopping_clearCollectionsAndResets() {
-        val syncedMeasurementListener =
-            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement, AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val syncer = AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer(
             context,

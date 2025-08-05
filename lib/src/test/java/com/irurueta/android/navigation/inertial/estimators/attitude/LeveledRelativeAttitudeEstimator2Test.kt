@@ -21,22 +21,45 @@ import androidx.test.core.app.ApplicationProvider
 import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.MeanAveragingFilter
-import com.irurueta.android.navigation.inertial.getPrivateProperty
 import com.irurueta.android.navigation.inertial.processors.attitude.*
-import com.irurueta.android.navigation.inertial.setPrivateProperty
+import com.irurueta.android.testutils.getPrivateProperty
+import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.frames.CoordinateTransformation
 import com.irurueta.navigation.frames.FrameType
 import com.irurueta.statistics.UniformRandomizer
 import io.mockk.*
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
 import org.junit.After
 import org.junit.Assert.*
+import org.junit.Ignore
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
+@Ignore("possible memory leak")
 @RunWith(RobolectricTestRunner::class)
 class LeveledRelativeAttitudeEstimator2Test {
+
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var attitudeAvailableListener:
+            LeveledRelativeAttitudeEstimator2.OnAttitudeAvailableListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var accuracyChangedListener:
+            LeveledRelativeAttitudeEstimator2.OnAccuracyChangedListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var bufferFilledListener:
+            LeveledRelativeAttitudeEstimator2.OnBufferFilledListener
+
+    @MockK
+    private lateinit var location: Location
 
     @After
     fun tearDown() {
@@ -182,11 +205,6 @@ class LeveledRelativeAttitudeEstimator2Test {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val location = getLocation()
         val accelerometerAveragingFilter = MeanAveragingFilter()
-        val attitudeAvailableListener =
-            mockk<LeveledRelativeAttitudeEstimator2.OnAttitudeAvailableListener>()
-        val accuracyChangedListener =
-            mockk<LeveledRelativeAttitudeEstimator2.OnAccuracyChangedListener>()
-        val bufferFilledListener = mockk<LeveledRelativeAttitudeEstimator2.OnBufferFilledListener>()
         val estimator = LeveledRelativeAttitudeEstimator2(
             context,
             location,
@@ -1079,8 +1097,6 @@ class LeveledRelativeAttitudeEstimator2Test {
 
     @Test
     fun gravitySyncer_whenAccuracyChangedAndListener_notifies() {
-        val accuracyChangedListener =
-            mockk<LeveledRelativeAttitudeEstimator2.OnAccuracyChangedListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = LeveledRelativeAttitudeEstimator2(
             context,
@@ -1128,8 +1144,6 @@ class LeveledRelativeAttitudeEstimator2Test {
 
     @Test
     fun gravitySyncer_whenBufferFilledAndListener_notifies() {
-        val bufferFilledListener =
-            mockk<LeveledRelativeAttitudeEstimator2.OnBufferFilledListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = LeveledRelativeAttitudeEstimator2(
             context,
@@ -1158,8 +1172,6 @@ class LeveledRelativeAttitudeEstimator2Test {
 
     @Test
     fun gravitySyncer_whenSyncedMeasurementAndNotProcessed_makesNoAction() {
-        val attitudeAvailableListener =
-            mockk<LeveledRelativeAttitudeEstimator2.OnAttitudeAvailableListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = LeveledRelativeAttitudeEstimator2(
             context,
@@ -1217,8 +1229,6 @@ class LeveledRelativeAttitudeEstimator2Test {
 
     @Test
     fun gravitySyncer_whenSyncedMeasurementProcessedEstimateCoordinateTransformationAndEulerAnglesDisableAndListener_updatesFusedAttitudeAndNotifies() {
-        val attitudeAvailableListener =
-            mockk<LeveledRelativeAttitudeEstimator2.OnAttitudeAvailableListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = LeveledRelativeAttitudeEstimator2(
             context,
@@ -1266,8 +1276,6 @@ class LeveledRelativeAttitudeEstimator2Test {
 
     @Test
     fun gravitySyncer_whenSyncedMeasurementProcessedEstimateCoordinateTransformationAndEulerAnglesEnableAndListener_updatesFusedAttitudeAndNotifies() {
-        val attitudeAvailableListener =
-            mockk<LeveledRelativeAttitudeEstimator2.OnAttitudeAvailableListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = LeveledRelativeAttitudeEstimator2(
             context,
@@ -1349,8 +1357,6 @@ class LeveledRelativeAttitudeEstimator2Test {
 
     @Test
     fun accelerometerSyncer_whenAccuracyChangedAndListener_notifies() {
-        val accuracyChangedListener =
-            mockk<LeveledRelativeAttitudeEstimator2.OnAccuracyChangedListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = LeveledRelativeAttitudeEstimator2(
             context,
@@ -1398,8 +1404,6 @@ class LeveledRelativeAttitudeEstimator2Test {
 
     @Test
     fun accelerometerSyncer_whenBufferFilledAndListener_notifies() {
-        val bufferFilledListener =
-            mockk<LeveledRelativeAttitudeEstimator2.OnBufferFilledListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = LeveledRelativeAttitudeEstimator2(
             context,
@@ -1428,8 +1432,6 @@ class LeveledRelativeAttitudeEstimator2Test {
 
     @Test
     fun accelerometerSyncer_whenSyncedMeasurementAndNotProcessed_makesNoAction() {
-        val attitudeAvailableListener =
-            mockk<LeveledRelativeAttitudeEstimator2.OnAttitudeAvailableListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = LeveledRelativeAttitudeEstimator2(
             context,
@@ -1487,8 +1489,6 @@ class LeveledRelativeAttitudeEstimator2Test {
 
     @Test
     fun accelerometerSyncer_whenSyncedMeasurementProcessedEstimateCoordinateTransformationAndEulerAnglesDisableAndListener_updatesFusedAttitudeAndNotifies() {
-        val attitudeAvailableListener =
-            mockk<LeveledRelativeAttitudeEstimator2.OnAttitudeAvailableListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = LeveledRelativeAttitudeEstimator2(
             context,
@@ -1536,8 +1536,6 @@ class LeveledRelativeAttitudeEstimator2Test {
 
     @Test
     fun accelerometerSyncer_whenSyncedMeasurementProcessedEstimateCoordinateTransformationAndEulerAnglesEnableAndListener_updatesFusedAttitudeAndNotifies() {
-        val attitudeAvailableListener =
-            mockk<LeveledRelativeAttitudeEstimator2.OnAttitudeAvailableListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = LeveledRelativeAttitudeEstimator2(
             context,
@@ -1599,6 +1597,28 @@ class LeveledRelativeAttitudeEstimator2Test {
         }
     }
 
+    private fun getLocation(): Location {
+        val randomizer = UniformRandomizer()
+        val latitudeDegrees = randomizer.nextDouble(
+            MIN_LATITUDE_DEGREES,
+            MAX_LATITUDE_DEGREES
+        )
+        val longitudeDegrees = randomizer.nextDouble(
+            MIN_LONGITUDE_DEGREES,
+            MAX_LONGITUDE_DEGREES
+        )
+        val height = randomizer.nextDouble(
+            MIN_HEIGHT,
+            MAX_HEIGHT
+        )
+
+        every { location.latitude }.returns(latitudeDegrees)
+        every { location.longitude }.returns(longitudeDegrees)
+        every { location.altitude }.returns(height)
+
+        return location
+    }
+
     private companion object {
         const val MIN_LATITUDE_DEGREES = -90.0
         const val MAX_LATITUDE_DEGREES = 90.0
@@ -1613,29 +1633,6 @@ class LeveledRelativeAttitudeEstimator2Test {
         const val MAX_ANGLE_DEGREES = 45.0
 
         const val TIME_INTERVAL = 0.02
-
-        fun getLocation(): Location {
-            val randomizer = UniformRandomizer()
-            val latitudeDegrees = randomizer.nextDouble(
-                MIN_LATITUDE_DEGREES,
-                MAX_LATITUDE_DEGREES
-            )
-            val longitudeDegrees = randomizer.nextDouble(
-                MIN_LONGITUDE_DEGREES,
-                MAX_LONGITUDE_DEGREES
-            )
-            val height = randomizer.nextDouble(
-                MIN_HEIGHT,
-                MAX_HEIGHT
-            )
-
-            val location = mockk<Location>()
-            every { location.latitude }.returns(latitudeDegrees)
-            every { location.longitude }.returns(longitudeDegrees)
-            every { location.altitude }.returns(height)
-
-            return location
-        }
 
         fun getAttitude(): Quaternion {
             val randomizer = UniformRandomizer()

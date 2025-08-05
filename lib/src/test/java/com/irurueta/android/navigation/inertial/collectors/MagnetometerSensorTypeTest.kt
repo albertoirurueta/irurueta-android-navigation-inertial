@@ -16,9 +16,6 @@
 package com.irurueta.android.navigation.inertial.collectors
 
 import android.hardware.Sensor
-import io.mockk.clearAllMocks
-import io.mockk.unmockkAll
-import org.junit.After
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -27,15 +24,9 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class MagnetometerSensorTypeTest {
 
-    @After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-    }
-
     @Test
     fun fromValues_returnsExpected() {
-        assertEquals(2, MagnetometerSensorType.values().size)
+        assertEquals(2, MagnetometerSensorType.entries.size)
         assertEquals(
             MagnetometerSensorType.MAGNETOMETER,
             MagnetometerSensorType.from(Sensor.TYPE_MAGNETIC_FIELD)

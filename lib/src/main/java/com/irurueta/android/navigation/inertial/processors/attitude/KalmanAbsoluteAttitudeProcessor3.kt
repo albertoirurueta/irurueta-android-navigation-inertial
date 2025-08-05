@@ -75,9 +75,9 @@ class KalmanAbsoluteAttitudeProcessor3(
     val computeNedRotationAxisCovariance: Boolean = true,
     val gyroscopeNoisePsd: Double = DEFAULT_GYROSCOPE_NOISE_PSD,
     val accelerometerNoiseStandardDeviation: Double = DEFAULT_ACCELEROMETER_NOISE_STANDARD_DEVIATION,
-    val magnetometerNoiseStandardDeviation: Double = DEFAULT_MAGNETOMETER_NOISE_STANDARD_DEVIATION,
-    val temperatureStandardDeviation: Double = DEFAULT_TEMPERATURE_NOISE_STANDARD_DEVIATION,
-    val quaternionStepIntegratorType: QuaternionStepIntegratorType =
+    magnetometerNoiseStandardDeviation: Double = DEFAULT_MAGNETOMETER_NOISE_STANDARD_DEVIATION,
+    temperatureStandardDeviation: Double = DEFAULT_TEMPERATURE_NOISE_STANDARD_DEVIATION,
+    quaternionStepIntegratorType: QuaternionStepIntegratorType =
         QuaternionStepIntegrator.DEFAULT_TYPE,
     val freeFallThreshold: Double = DEFAULT_FREE_FALL_THRESHOLD,
     val symmetricThreshold: Double = SYMMETRIC_THRESHOLD,
@@ -396,7 +396,7 @@ class KalmanAbsoluteAttitudeProcessor3(
     private val nedDeltaQ = Quaternion()
 
     /**
-     * Contains [deltaQ] expressed in quaternion matrix form to be used for matrix multiplication.
+     * Contains deltaQ expressed in quaternion matrix form to be used for matrix multiplication.
      * This is reused for performance reasons.
      */
     private val deltaQMatrix = Matrix(Quaternion.N_PARAMS, Quaternion.N_PARAMS)
@@ -461,7 +461,7 @@ class KalmanAbsoluteAttitudeProcessor3(
     private val h33 = Matrix(COMPONENTS, COMPONENTS)
 
     /**
-     * Sub-matrix relating current temperature and boy ned attitue rotation axis.
+     * Sub-matrix relating current temperature and boy ned attitude rotation axis.
      * This is reused for performance reasons.
      */
     private val h34 = Matrix(COMPONENTS, 1)
@@ -705,7 +705,7 @@ class KalmanAbsoluteAttitudeProcessor3(
         }
 
         nedAngularSpeed.copyTo(previousNedAngularSpeed)
-        return result
+        return false
     }
 
     /**
@@ -1153,7 +1153,7 @@ class KalmanAbsoluteAttitudeProcessor3(
         // Consequently, variation in norm is:
         // |v'| = |w*deltaT/2|*|v|
         // |w * deltaT / 2 | = 1
-        // And finally we obtain the approximate relation betweeb angular speed and rotation axis
+        // And finally we obtain the approximate relation between angular speed and rotation axis
         // as:
         // w_b = 2 / deltaT * v_b
 

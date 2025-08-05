@@ -27,6 +27,9 @@ import com.irurueta.android.navigation.inertial.calibration.intervals.measuremen
 import com.irurueta.android.navigation.inertial.calibration.noise.AccumulatedMeasurementEstimator
 import com.irurueta.android.navigation.inertial.calibration.noise.GravityNormEstimator
 import com.irurueta.android.navigation.inertial.collectors.*
+import com.irurueta.android.testutils.callPrivateFuncWithResult
+import com.irurueta.android.testutils.getPrivateProperty
+import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.navigation.NavigationException
 import com.irurueta.navigation.frames.CoordinateTransformation
 import com.irurueta.navigation.frames.FrameType
@@ -47,16 +50,109 @@ import com.irurueta.units.AccelerationUnit
 import com.irurueta.units.Time
 import com.irurueta.units.TimeUnit
 import io.mockk.*
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
 import org.junit.After
 import org.junit.Assert.*
+import org.junit.Ignore
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.lang.reflect.InvocationTargetException
 import java.util.*
 
+@Ignore("possible memory leak")
 @RunWith(RobolectricTestRunner::class)
 class StaticIntervalAccelerometerCalibratorTest {
+
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var initializationStartedListener:
+            StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalAccelerometerCalibrator>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var initializationCompletedListener:
+            StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalAccelerometerCalibrator>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var errorListener:
+            StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalAccelerometerCalibrator>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var staticIntervalDetectedListener:
+            StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<StaticIntervalAccelerometerCalibrator>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var dynamicIntervalDetectedListener:
+            StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener<StaticIntervalAccelerometerCalibrator>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var staticIntervalSkippedListener:
+            StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalSkippedListener<StaticIntervalAccelerometerCalibrator>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var dynamicIntervalSkippedListener:
+            StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalSkippedListener<StaticIntervalAccelerometerCalibrator>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var generatedAccelerometerMeasurementListener:
+            StaticIntervalAccelerometerCalibrator.OnGeneratedAccelerometerMeasurementListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var readyToSolveCalibrationListener:
+            StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener<StaticIntervalAccelerometerCalibrator>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var calibrationSolvingStartedListener:
+            StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalAccelerometerCalibrator>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var calibrationCompletedListener:
+            StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<StaticIntervalAccelerometerCalibrator>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var stoppedListener:
+            StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalAccelerometerCalibrator>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var unreliableGravityNormEstimatorListener:
+            StaticIntervalAccelerometerCalibrator.OnUnreliableGravityEstimationListener
+
+    @MockK
+    private lateinit var initialBiasAvailableListener:
+            StaticIntervalAccelerometerCalibrator.OnInitialAccelerometerBiasAvailableListener
+
+    @MockK
+    private lateinit var accuracyChangedListener: SensorCollector.OnAccuracyChangedListener
+
+    @MockK
+    private lateinit var qualityScoreMapper: QualityScoreMapper<StandardDeviationBodyKinematics>
+
+    @MockK
+    private lateinit var unreliableGravityNormEstimationListener:
+            StaticIntervalAccelerometerCalibrator.OnUnreliableGravityEstimationListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var initialAccelerometerBiasAvailableListener:
+            StaticIntervalAccelerometerCalibrator.OnInitialAccelerometerBiasAvailableListener
+
+    @MockK
+    private lateinit var generator: AccelerometerMeasurementGenerator
+
+    @MockK
+    private lateinit var measurement: StandardDeviationBodyKinematics
+
+    @MockK
+    private lateinit var gravityNormEstimator: GravityNormEstimator
+
+    @MockK
+    private lateinit var internalCalibrator: AccelerometerNonLinearCalibrator
+
+    @MockK
+    private lateinit var location: Location
 
     @After
     fun tearDown() {
@@ -1239,8 +1335,6 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun constructor_whenInitializationStartedListener_returnsExpectedValues() {
-        val initializationStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalAccelerometerCalibrator>>()
         val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(
@@ -1441,10 +1535,6 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun constructor_whenInitializationCompletedListener_returnsExpectedValues() {
-        val initializationStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalAccelerometerCalibrator>>()
-        val initializationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalAccelerometerCalibrator>>()
         val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(
@@ -1646,12 +1736,6 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun constructor_whenErrorListener_returnsExpectedValues() {
-        val initializationStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalAccelerometerCalibrator>>()
-        val initializationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalAccelerometerCalibrator>>()
-        val errorListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalAccelerometerCalibrator>>()
         val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(
@@ -1854,14 +1938,6 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun constructor_whenStaticIntervalDetectedListener_returnsExpectedValues() {
-        val initializationStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalAccelerometerCalibrator>>()
-        val initializationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalAccelerometerCalibrator>>()
-        val errorListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalAccelerometerCalibrator>>()
-        val staticIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<StaticIntervalAccelerometerCalibrator>>()
         val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(
@@ -2065,16 +2141,6 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun constructor_whenDynamicIntervalDetectedListener_returnsExpectedValues() {
-        val initializationStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalAccelerometerCalibrator>>()
-        val initializationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalAccelerometerCalibrator>>()
-        val errorListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalAccelerometerCalibrator>>()
-        val staticIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<StaticIntervalAccelerometerCalibrator>>()
-        val dynamicIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener<StaticIntervalAccelerometerCalibrator>>()
         val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(
@@ -2279,18 +2345,6 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun constructor_whenStaticIntervalSkippedListener_returnsExpectedValues() {
-        val initializationStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalAccelerometerCalibrator>>()
-        val initializationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalAccelerometerCalibrator>>()
-        val errorListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalAccelerometerCalibrator>>()
-        val staticIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<StaticIntervalAccelerometerCalibrator>>()
-        val dynamicIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener<StaticIntervalAccelerometerCalibrator>>()
-        val staticIntervalSkippedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalSkippedListener<StaticIntervalAccelerometerCalibrator>>()
         val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(
@@ -2496,20 +2550,6 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun constructor_whenDynamicIntervalSkippedListener_returnsExpectedValues() {
-        val initializationStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalAccelerometerCalibrator>>()
-        val initializationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalAccelerometerCalibrator>>()
-        val errorListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalAccelerometerCalibrator>>()
-        val staticIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<StaticIntervalAccelerometerCalibrator>>()
-        val dynamicIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener<StaticIntervalAccelerometerCalibrator>>()
-        val staticIntervalSkippedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalSkippedListener<StaticIntervalAccelerometerCalibrator>>()
-        val dynamicIntervalSkippedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalSkippedListener<StaticIntervalAccelerometerCalibrator>>()
         val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(
@@ -2716,22 +2756,6 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun constructor_whenGeneratedAccelerometerMeasurementListener_returnsExpectedValues() {
-        val initializationStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalAccelerometerCalibrator>>()
-        val initializationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalAccelerometerCalibrator>>()
-        val errorListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalAccelerometerCalibrator>>()
-        val staticIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<StaticIntervalAccelerometerCalibrator>>()
-        val dynamicIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener<StaticIntervalAccelerometerCalibrator>>()
-        val staticIntervalSkippedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalSkippedListener<StaticIntervalAccelerometerCalibrator>>()
-        val dynamicIntervalSkippedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalSkippedListener<StaticIntervalAccelerometerCalibrator>>()
-        val generatedAccelerometerMeasurementListener =
-            mockk<StaticIntervalAccelerometerCalibrator.OnGeneratedAccelerometerMeasurementListener>()
         val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(
@@ -2942,24 +2966,6 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun constructor_whenReadyToSolveCalibrationListener_returnsExpectedValues() {
-        val initializationStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalAccelerometerCalibrator>>()
-        val initializationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalAccelerometerCalibrator>>()
-        val errorListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalAccelerometerCalibrator>>()
-        val staticIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<StaticIntervalAccelerometerCalibrator>>()
-        val dynamicIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener<StaticIntervalAccelerometerCalibrator>>()
-        val staticIntervalSkippedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalSkippedListener<StaticIntervalAccelerometerCalibrator>>()
-        val dynamicIntervalSkippedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalSkippedListener<StaticIntervalAccelerometerCalibrator>>()
-        val generatedAccelerometerMeasurementListener =
-            mockk<StaticIntervalAccelerometerCalibrator.OnGeneratedAccelerometerMeasurementListener>()
-        val readyToSolveCalibrationListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener<StaticIntervalAccelerometerCalibrator>>()
         val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(
@@ -3171,26 +3177,6 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun constructor_whenCalibrationSolvingStartedListener_returnsExpectedValues() {
-        val initializationStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalAccelerometerCalibrator>>()
-        val initializationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalAccelerometerCalibrator>>()
-        val errorListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalAccelerometerCalibrator>>()
-        val staticIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<StaticIntervalAccelerometerCalibrator>>()
-        val dynamicIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener<StaticIntervalAccelerometerCalibrator>>()
-        val staticIntervalSkippedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalSkippedListener<StaticIntervalAccelerometerCalibrator>>()
-        val dynamicIntervalSkippedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalSkippedListener<StaticIntervalAccelerometerCalibrator>>()
-        val generatedAccelerometerMeasurementListener =
-            mockk<StaticIntervalAccelerometerCalibrator.OnGeneratedAccelerometerMeasurementListener>()
-        val readyToSolveCalibrationListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener<StaticIntervalAccelerometerCalibrator>>()
-        val calibrationSolvingStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalAccelerometerCalibrator>>()
         val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(
@@ -3403,28 +3389,6 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun constructor_whenCalibrationCompletedListener_returnsExpectedValues() {
-        val initializationStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalAccelerometerCalibrator>>()
-        val initializationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalAccelerometerCalibrator>>()
-        val errorListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalAccelerometerCalibrator>>()
-        val staticIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<StaticIntervalAccelerometerCalibrator>>()
-        val dynamicIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener<StaticIntervalAccelerometerCalibrator>>()
-        val staticIntervalSkippedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalSkippedListener<StaticIntervalAccelerometerCalibrator>>()
-        val dynamicIntervalSkippedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalSkippedListener<StaticIntervalAccelerometerCalibrator>>()
-        val generatedAccelerometerMeasurementListener =
-            mockk<StaticIntervalAccelerometerCalibrator.OnGeneratedAccelerometerMeasurementListener>()
-        val readyToSolveCalibrationListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener<StaticIntervalAccelerometerCalibrator>>()
-        val calibrationSolvingStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalAccelerometerCalibrator>>()
-        val calibrationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<StaticIntervalAccelerometerCalibrator>>()
         val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(
@@ -3638,30 +3602,6 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun constructor_whenStoppedListener_returnsExpectedValues() {
-        val initializationStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalAccelerometerCalibrator>>()
-        val initializationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalAccelerometerCalibrator>>()
-        val errorListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalAccelerometerCalibrator>>()
-        val staticIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<StaticIntervalAccelerometerCalibrator>>()
-        val dynamicIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener<StaticIntervalAccelerometerCalibrator>>()
-        val staticIntervalSkippedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalSkippedListener<StaticIntervalAccelerometerCalibrator>>()
-        val dynamicIntervalSkippedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalSkippedListener<StaticIntervalAccelerometerCalibrator>>()
-        val generatedAccelerometerMeasurementListener =
-            mockk<StaticIntervalAccelerometerCalibrator.OnGeneratedAccelerometerMeasurementListener>()
-        val readyToSolveCalibrationListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener<StaticIntervalAccelerometerCalibrator>>()
-        val calibrationSolvingStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalAccelerometerCalibrator>>()
-        val calibrationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<StaticIntervalAccelerometerCalibrator>>()
-        val stoppedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalAccelerometerCalibrator>>()
         val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(
@@ -3876,32 +3816,6 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun constructor_whenUnreliableGravityNormEstimationListener_returnsExpectedValues() {
-        val initializationStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalAccelerometerCalibrator>>()
-        val initializationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalAccelerometerCalibrator>>()
-        val errorListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalAccelerometerCalibrator>>()
-        val staticIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<StaticIntervalAccelerometerCalibrator>>()
-        val dynamicIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener<StaticIntervalAccelerometerCalibrator>>()
-        val staticIntervalSkippedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalSkippedListener<StaticIntervalAccelerometerCalibrator>>()
-        val dynamicIntervalSkippedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalSkippedListener<StaticIntervalAccelerometerCalibrator>>()
-        val generatedAccelerometerMeasurementListener =
-            mockk<StaticIntervalAccelerometerCalibrator.OnGeneratedAccelerometerMeasurementListener>()
-        val readyToSolveCalibrationListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener<StaticIntervalAccelerometerCalibrator>>()
-        val calibrationSolvingStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalAccelerometerCalibrator>>()
-        val calibrationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<StaticIntervalAccelerometerCalibrator>>()
-        val stoppedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalAccelerometerCalibrator>>()
-        val unreliableGravityNormEstimatorListener =
-            mockk<StaticIntervalAccelerometerCalibrator.OnUnreliableGravityEstimationListener>()
         val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(
@@ -4120,34 +4034,6 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun constructor_whenInitialBiasAvailableListener_returnsExpectedValues() {
-        val initializationStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalAccelerometerCalibrator>>()
-        val initializationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalAccelerometerCalibrator>>()
-        val errorListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalAccelerometerCalibrator>>()
-        val staticIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<StaticIntervalAccelerometerCalibrator>>()
-        val dynamicIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener<StaticIntervalAccelerometerCalibrator>>()
-        val staticIntervalSkippedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalSkippedListener<StaticIntervalAccelerometerCalibrator>>()
-        val dynamicIntervalSkippedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalSkippedListener<StaticIntervalAccelerometerCalibrator>>()
-        val generatedAccelerometerMeasurementListener =
-            mockk<StaticIntervalAccelerometerCalibrator.OnGeneratedAccelerometerMeasurementListener>()
-        val readyToSolveCalibrationListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener<StaticIntervalAccelerometerCalibrator>>()
-        val calibrationSolvingStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalAccelerometerCalibrator>>()
-        val calibrationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<StaticIntervalAccelerometerCalibrator>>()
-        val stoppedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalAccelerometerCalibrator>>()
-        val unreliableGravityNormEstimatorListener =
-            mockk<StaticIntervalAccelerometerCalibrator.OnUnreliableGravityEstimationListener>()
-        val initialBiasAvailableListener =
-            mockk<StaticIntervalAccelerometerCalibrator.OnInitialAccelerometerBiasAvailableListener>()
         val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(
@@ -4370,35 +4256,6 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun constructor_whenAccuracyChangedListener_returnsExpectedValues() {
-        val initializationStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalAccelerometerCalibrator>>()
-        val initializationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalAccelerometerCalibrator>>()
-        val errorListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalAccelerometerCalibrator>>()
-        val staticIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<StaticIntervalAccelerometerCalibrator>>()
-        val dynamicIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener<StaticIntervalAccelerometerCalibrator>>()
-        val staticIntervalSkippedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalSkippedListener<StaticIntervalAccelerometerCalibrator>>()
-        val dynamicIntervalSkippedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalSkippedListener<StaticIntervalAccelerometerCalibrator>>()
-        val generatedAccelerometerMeasurementListener =
-            mockk<StaticIntervalAccelerometerCalibrator.OnGeneratedAccelerometerMeasurementListener>()
-        val readyToSolveCalibrationListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener<StaticIntervalAccelerometerCalibrator>>()
-        val calibrationSolvingStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalAccelerometerCalibrator>>()
-        val calibrationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<StaticIntervalAccelerometerCalibrator>>()
-        val stoppedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalAccelerometerCalibrator>>()
-        val unreliableGravityNormEstimatorListener =
-            mockk<StaticIntervalAccelerometerCalibrator.OnUnreliableGravityEstimationListener>()
-        val initialBiasAvailableListener =
-            mockk<StaticIntervalAccelerometerCalibrator.OnInitialAccelerometerBiasAvailableListener>()
-        val accuracyChangedListener = mockk<SensorCollector.OnAccuracyChangedListener>()
         val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(
@@ -4622,36 +4479,6 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun constructor_whenQualityScoreMapper_returnsExpectedValues() {
-        val initializationStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalAccelerometerCalibrator>>()
-        val initializationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalAccelerometerCalibrator>>()
-        val errorListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalAccelerometerCalibrator>>()
-        val staticIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<StaticIntervalAccelerometerCalibrator>>()
-        val dynamicIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener<StaticIntervalAccelerometerCalibrator>>()
-        val staticIntervalSkippedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalSkippedListener<StaticIntervalAccelerometerCalibrator>>()
-        val dynamicIntervalSkippedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalSkippedListener<StaticIntervalAccelerometerCalibrator>>()
-        val generatedAccelerometerMeasurementListener =
-            mockk<StaticIntervalAccelerometerCalibrator.OnGeneratedAccelerometerMeasurementListener>()
-        val readyToSolveCalibrationListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener<StaticIntervalAccelerometerCalibrator>>()
-        val calibrationSolvingStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalAccelerometerCalibrator>>()
-        val calibrationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<StaticIntervalAccelerometerCalibrator>>()
-        val stoppedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalAccelerometerCalibrator>>()
-        val unreliableGravityNormEstimatorListener =
-            mockk<StaticIntervalAccelerometerCalibrator.OnUnreliableGravityEstimationListener>()
-        val initialBiasAvailableListener =
-            mockk<StaticIntervalAccelerometerCalibrator.OnInitialAccelerometerBiasAvailableListener>()
-        val accuracyChangedListener = mockk<SensorCollector.OnAccuracyChangedListener>()
-        val qualityScoreMapper = mockk<QualityScoreMapper<StandardDeviationBodyKinematics>>()
         val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(
@@ -4883,8 +4710,6 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNull(calibrator.initializationStartedListener)
 
         // set new value
-        val initializationStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalAccelerometerCalibrator>>()
         calibrator.initializationStartedListener = initializationStartedListener
 
         // check
@@ -4900,8 +4725,6 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNull(calibrator.initializationCompletedListener)
 
         // set new value
-        val initializationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalAccelerometerCalibrator>>()
         calibrator.initializationCompletedListener = initializationCompletedListener
 
         // check
@@ -4917,8 +4740,6 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNull(calibrator.errorListener)
 
         // set new value
-        val errorListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalAccelerometerCalibrator>>()
         calibrator.errorListener = errorListener
 
         // check
@@ -4934,8 +4755,6 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNull(calibrator.staticIntervalDetectedListener)
 
         // set new value
-        val staticIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<StaticIntervalAccelerometerCalibrator>>()
         calibrator.staticIntervalDetectedListener = staticIntervalDetectedListener
 
         // check
@@ -4951,8 +4770,6 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNull(calibrator.dynamicIntervalDetectedListener)
 
         // set new value
-        val dynamicIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener<StaticIntervalAccelerometerCalibrator>>()
         calibrator.dynamicIntervalDetectedListener = dynamicIntervalDetectedListener
 
         // check
@@ -4968,8 +4785,6 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNull(calibrator.staticIntervalSkippedListener)
 
         // set new value
-        val staticIntervalSkippedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalSkippedListener<StaticIntervalAccelerometerCalibrator>>()
         calibrator.staticIntervalSkippedListener = staticIntervalSkippedListener
 
         // check
@@ -4985,8 +4800,6 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNull(calibrator.dynamicIntervalSkippedListener)
 
         // set new value
-        val dynamicIntervalSkippedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalSkippedListener<StaticIntervalAccelerometerCalibrator>>()
         calibrator.dynamicIntervalSkippedListener = dynamicIntervalSkippedListener
 
         // check
@@ -5002,8 +4815,6 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNull(calibrator.generatedAccelerometerMeasurementListener)
 
         // set new value
-        val generatedAccelerometerMeasurementListener =
-            mockk<StaticIntervalAccelerometerCalibrator.OnGeneratedAccelerometerMeasurementListener>()
         calibrator.generatedAccelerometerMeasurementListener =
             generatedAccelerometerMeasurementListener
 
@@ -5023,8 +4834,6 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNull(calibrator.readyToSolveCalibrationListener)
 
         // set new value
-        val readyToSolveCalibrationListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener<StaticIntervalAccelerometerCalibrator>>()
         calibrator.readyToSolveCalibrationListener = readyToSolveCalibrationListener
 
         // check
@@ -5040,8 +4849,6 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNull(calibrator.calibrationSolvingStartedListener)
 
         // set new value
-        val calibrationSolvingStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalAccelerometerCalibrator>>()
         calibrator.calibrationSolvingStartedListener = calibrationSolvingStartedListener
 
         // check
@@ -5057,8 +4864,6 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNull(calibrator.calibrationCompletedListener)
 
         // set new value
-        val calibrationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<StaticIntervalAccelerometerCalibrator>>()
         calibrator.calibrationCompletedListener = calibrationCompletedListener
 
         // check
@@ -5074,8 +4879,6 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNull(calibrator.stoppedListener)
 
         // set new value
-        val stoppedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalAccelerometerCalibrator>>()
         calibrator.stoppedListener = stoppedListener
 
         // check
@@ -5091,8 +4894,6 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNull(calibrator.unreliableGravityNormEstimationListener)
 
         // set new value
-        val unreliableGravityNormEstimationListener =
-            mockk<StaticIntervalAccelerometerCalibrator.OnUnreliableGravityEstimationListener>()
         calibrator.unreliableGravityNormEstimationListener = unreliableGravityNormEstimationListener
 
         // check
@@ -5111,8 +4912,6 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNull(calibrator.initialAccelerometerBiasAvailableListener)
 
         // set new value
-        val initialAccelerometerBiasAvailableListener =
-            mockk<StaticIntervalAccelerometerCalibrator.OnInitialAccelerometerBiasAvailableListener>()
         calibrator.initialAccelerometerBiasAvailableListener =
             initialAccelerometerBiasAvailableListener
 
@@ -5132,7 +4931,6 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNull(calibrator.accuracyChangedListener)
 
         // set new value
-        val accuracyChangedListener = mockk<SensorCollector.OnAccuracyChangedListener>()
         calibrator.accuracyChangedListener = accuracyChangedListener
 
         // check
@@ -6523,16 +6321,11 @@ class StaticIntervalAccelerometerCalibratorTest {
             calibrator.getPrivateProperty("generatorInitializationStartedListener")
         requireNotNull(generatorInitializationStartedListener)
 
-        val generator = mockk<AccelerometerMeasurementGenerator>()
         generatorInitializationStartedListener.onInitializationStarted(generator)
     }
 
     @Test
     fun onInitializationStarted_whenListenerAvailable_notifies() {
-        val initializationStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalAccelerometerCalibrator>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
@@ -6543,7 +6336,6 @@ class StaticIntervalAccelerometerCalibratorTest {
             calibrator.getPrivateProperty("generatorInitializationStartedListener")
         requireNotNull(generatorInitializationStartedListener)
 
-        val generator = mockk<AccelerometerMeasurementGenerator>()
         generatorInitializationStartedListener.onInitializationStarted(generator)
 
         verify(exactly = 1) { initializationStartedListener.onInitializationStarted(calibrator) }
@@ -6571,7 +6363,6 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val baseNoiseLevel = randomizer.nextDouble()
-        val generator = mockk<AccelerometerMeasurementGenerator>()
         generatorInitializationCompletedListener.onInitializationCompleted(
             generator,
             baseNoiseLevel
@@ -6583,10 +6374,6 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun onInitializationCompleted_whenListenerAvailable_setsGravityNormAndNotifies() {
-        val initializationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalAccelerometerCalibrator>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
@@ -6610,7 +6397,6 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val baseNoiseLevel = randomizer.nextDouble()
-        val generator = mockk<AccelerometerMeasurementGenerator>()
         generatorInitializationCompletedListener.onInitializationCompleted(
             generator,
             baseNoiseLevel
@@ -6662,14 +6448,6 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun onError_whenListenersAvailable_stopsAndNotifies() {
-        val errorListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalAccelerometerCalibrator>>(
-                relaxUnitFun = true
-            )
-        val stoppedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalAccelerometerCalibrator>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
@@ -6726,16 +6504,11 @@ class StaticIntervalAccelerometerCalibratorTest {
             calibrator.getPrivateProperty("generatorStaticIntervalDetectedListener")
         requireNotNull(generatorStaticIntervalDetectedListener)
 
-        val generator = mockk<AccelerometerMeasurementGenerator>()
         generatorStaticIntervalDetectedListener.onStaticIntervalDetected(generator)
     }
 
     @Test
     fun onStaticIntervalDetected_whenListenerAvailable_notifies() {
-        val staticIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<StaticIntervalAccelerometerCalibrator>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
@@ -6746,7 +6519,6 @@ class StaticIntervalAccelerometerCalibratorTest {
             calibrator.getPrivateProperty("generatorStaticIntervalDetectedListener")
         requireNotNull(generatorStaticIntervalDetectedListener)
 
-        val generator = mockk<AccelerometerMeasurementGenerator>()
         generatorStaticIntervalDetectedListener.onStaticIntervalDetected(generator)
 
         verify(exactly = 1) { staticIntervalDetectedListener.onStaticIntervalDetected(calibrator) }
@@ -6761,16 +6533,11 @@ class StaticIntervalAccelerometerCalibratorTest {
             calibrator.getPrivateProperty("generatorDynamicIntervalDetectedListener")
         requireNotNull(generatorDynamicIntervalDetectedListener)
 
-        val generator = mockk<AccelerometerMeasurementGenerator>()
         generatorDynamicIntervalDetectedListener.onDynamicIntervalDetected(generator)
     }
 
     @Test
     fun onDynamicIntervalDetected_whenListenerAvailable_notifies() {
-        val dynamicIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener<StaticIntervalAccelerometerCalibrator>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
@@ -6781,7 +6548,6 @@ class StaticIntervalAccelerometerCalibratorTest {
             calibrator.getPrivateProperty("generatorDynamicIntervalDetectedListener")
         requireNotNull(generatorDynamicIntervalDetectedListener)
 
-        val generator = mockk<AccelerometerMeasurementGenerator>()
         generatorDynamicIntervalDetectedListener.onDynamicIntervalDetected(generator)
 
         verify(exactly = 1) { dynamicIntervalDetectedListener.onDynamicIntervalDetected(calibrator) }
@@ -6796,16 +6562,11 @@ class StaticIntervalAccelerometerCalibratorTest {
             calibrator.getPrivateProperty("generatorStaticIntervalSkippedListener")
         requireNotNull(generatorStaticIntervalSkippedListener)
 
-        val generator = mockk<AccelerometerMeasurementGenerator>()
         generatorStaticIntervalSkippedListener.onStaticIntervalSkipped(generator)
     }
 
     @Test
     fun onStaticIntervalSkipped_whenListenerAvailable_notifies() {
-        val staticIntervalSkippedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalSkippedListener<StaticIntervalAccelerometerCalibrator>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
@@ -6816,7 +6577,6 @@ class StaticIntervalAccelerometerCalibratorTest {
             calibrator.getPrivateProperty("generatorStaticIntervalSkippedListener")
         requireNotNull(generatorStaticIntervalSkippedListener)
 
-        val generator = mockk<AccelerometerMeasurementGenerator>()
         generatorStaticIntervalSkippedListener.onStaticIntervalSkipped(generator)
 
         verify(exactly = 1) { staticIntervalSkippedListener.onStaticIntervalSkipped(calibrator) }
@@ -6831,16 +6591,11 @@ class StaticIntervalAccelerometerCalibratorTest {
             calibrator.getPrivateProperty("generatorDynamicIntervalSkippedListener")
         requireNotNull(generatorDynamicIntervalSkippedListener)
 
-        val generator = mockk<AccelerometerMeasurementGenerator>()
         generatorDynamicIntervalSkippedListener.onDynamicIntervalSkipped(generator)
     }
 
     @Test
     fun onDynamicIntervalSkipped_whenListenerAvailable_notifies() {
-        val dynamicIntervalSkippedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalSkippedListener<StaticIntervalAccelerometerCalibrator>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
@@ -6851,7 +6606,6 @@ class StaticIntervalAccelerometerCalibratorTest {
             calibrator.getPrivateProperty("generatorDynamicIntervalSkippedListener")
         requireNotNull(generatorDynamicIntervalSkippedListener)
 
-        val generator = mockk<AccelerometerMeasurementGenerator>()
         generatorDynamicIntervalSkippedListener.onDynamicIntervalSkipped(generator)
 
         verify(exactly = 1) { dynamicIntervalSkippedListener.onDynamicIntervalSkipped(calibrator) }
@@ -6868,7 +6622,6 @@ class StaticIntervalAccelerometerCalibratorTest {
             calibrator.getPrivateProperty("generatorGeneratedMeasurementListener")
         requireNotNull(generatorGeneratedMeasurementListener)
 
-        val generator = mockk<AccelerometerMeasurementGenerator>()
         val measurement = StandardDeviationBodyKinematics()
         generatorGeneratedMeasurementListener.onGeneratedMeasurement(generator, measurement)
 
@@ -6878,10 +6631,6 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun onGeneratedMeasurement_whenListenerAvailable_notifies() {
-        val generatedAccelerometerMeasurementListener =
-            mockk<StaticIntervalAccelerometerCalibrator.OnGeneratedAccelerometerMeasurementListener>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
@@ -6894,7 +6643,6 @@ class StaticIntervalAccelerometerCalibratorTest {
             calibrator.getPrivateProperty("generatorGeneratedMeasurementListener")
         requireNotNull(generatorGeneratedMeasurementListener)
 
-        val generator = mockk<AccelerometerMeasurementGenerator>()
         val measurement = StandardDeviationBodyKinematics()
         generatorGeneratedMeasurementListener.onGeneratedMeasurement(generator, measurement)
 
@@ -6929,7 +6677,7 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         // add enough measurements
         val measurement = StandardDeviationBodyKinematics()
-        for (i in 1..calibrator.requiredMeasurements) {
+        (1..calibrator.requiredMeasurements).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
         assertTrue(calibrator.isReadyToSolveCalibration)
@@ -6968,10 +6716,6 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun onGeneratedMeasurement_whenReadyToSolveCalibrationListenerAvailable_notifies() {
         val location = getLocation()
-        val readyToSolveCalibrationListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener<StaticIntervalAccelerometerCalibrator>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
@@ -6988,7 +6732,7 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         // add enough measurements
         val measurement = StandardDeviationBodyKinematics()
-        for (i in 1..calibrator.requiredMeasurements) {
+        (1..calibrator.requiredMeasurements).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
         assertTrue(calibrator.isReadyToSolveCalibration)
@@ -7076,7 +6820,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         val randomizer = UniformRandomizer()
         val random = Random()
 
-        for (i in 1..reqMeasurements) {
+        (1..reqMeasurements).forEach { _ ->
             val roll = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
             val pitch = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
             val yaw = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
@@ -7167,27 +6911,6 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun onGeneratedMeasurement_whenSolveCalibrationEnabledAndListenersAvailable_solvesCalibrationAndNotifies() {
-        val readyToSolveCalibrationListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener<StaticIntervalAccelerometerCalibrator>>(
-                relaxUnitFun = true
-            )
-        val stoppedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalAccelerometerCalibrator>>(
-                relaxUnitFun = true
-            )
-        val calibrationSolvingStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalAccelerometerCalibrator>>(
-                relaxUnitFun = true
-            )
-        val calibrationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<StaticIntervalAccelerometerCalibrator>>(
-                relaxUnitFun = true
-            )
-        val errorListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalAccelerometerCalibrator>>(
-                relaxUnitFun = true
-            )
-
         val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(
@@ -7242,7 +6965,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         val randomizer = UniformRandomizer()
         val random = Random()
 
-        for (i in 1..reqMeasurements) {
+        (1..reqMeasurements).forEach { _ ->
             val roll = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
             val pitch = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
             val yaw = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
@@ -7544,10 +7267,6 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun onAccelerometerMeasurement_whenFirstMeasurementAndListener_updatesInitialBiasesAndNotifies() {
-        val initialAccelerometerBiasAvailableListener =
-            mockk<StaticIntervalAccelerometerCalibrator.OnInitialAccelerometerBiasAvailableListener>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
@@ -7611,10 +7330,6 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun onAccelerometerMeasurement_whenNotFirstMeasurement_makesNoAction() {
-        val initialAccelerometerBiasAvailableListener =
-            mockk<StaticIntervalAccelerometerCalibrator.OnInitialAccelerometerBiasAvailableListener>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
@@ -7676,7 +7391,6 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val gravityNorm = randomizer.nextDouble()
-        val gravityNormEstimator = mockk<GravityNormEstimator>()
         every { gravityNormEstimator.averageNorm }.returns(gravityNorm)
         gravityNormCompletedListener.onEstimationCompleted(gravityNormEstimator)
 
@@ -7694,7 +7408,6 @@ class StaticIntervalAccelerometerCalibratorTest {
             calibrator.getPrivateProperty("gravityNormUnreliableListener")
         requireNotNull(gravityNormUnreliableListener)
 
-        val gravityNormEstimator = mockk<GravityNormEstimator>()
         gravityNormUnreliableListener.onUnreliable(gravityNormEstimator)
 
         assertTrue(calibrator.accelerometerResultUnreliable)
@@ -7702,10 +7415,6 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun onGravityNormUnreliable_whenListenerAvailable_setsResultAsUnreliableAndNotifies() {
-        val unreliableGravityNormEstimatorListener =
-            mockk<StaticIntervalAccelerometerCalibrator.OnUnreliableGravityEstimationListener>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
@@ -7718,7 +7427,6 @@ class StaticIntervalAccelerometerCalibratorTest {
             calibrator.getPrivateProperty("gravityNormUnreliableListener")
         requireNotNull(gravityNormUnreliableListener)
 
-        val gravityNormEstimator = mockk<GravityNormEstimator>()
         gravityNormUnreliableListener.onUnreliable(gravityNormEstimator)
 
         assertTrue(calibrator.accelerometerResultUnreliable)
@@ -8768,16 +8476,11 @@ class StaticIntervalAccelerometerCalibratorTest {
         val gravityNorm = GravityHelper.getGravityNormForLocation(location)
         calibrator.setPrivateProperty("gravityNorm", gravityNorm)
 
-        val measurements = calibrator.accelerometerMeasurements
-        val measurementsSpy = spyk(measurements)
-        calibrator.setPrivateProperty("accelerometerMeasurements", measurementsSpy)
-
         calibrator.setPrivateProperty("accelerometerResultUnreliable", true)
         calibrator.setPrivateProperty("accelerometerInitialBiasX", 0.0)
         calibrator.setPrivateProperty("accelerometerInitialBiasY", 0.0)
         calibrator.setPrivateProperty("accelerometerInitialBiasZ", 0.0)
 
-        val internalCalibrator = mockk<AccelerometerNonLinearCalibrator>()
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibrator)
 
         val gravityNormEstimator: GravityNormEstimator? =
@@ -8797,7 +8500,6 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         // check
         assertNull(calibrator.gravityNorm)
-        verify(exactly = 1) { measurementsSpy.clear() }
         assertFalse(calibrator.accelerometerResultUnreliable)
         assertNull(calibrator.accelerometerInitialBiasX)
         assertNull(calibrator.accelerometerInitialBiasY)
@@ -8821,16 +8523,11 @@ class StaticIntervalAccelerometerCalibratorTest {
         val gravityNorm = GravityHelper.getGravityNormForLocation(getLocation())
         calibrator.setPrivateProperty("gravityNorm", gravityNorm)
 
-        val measurements = calibrator.accelerometerMeasurements
-        val measurementsSpy = spyk(measurements)
-        calibrator.setPrivateProperty("accelerometerMeasurements", measurementsSpy)
-
         calibrator.setPrivateProperty("accelerometerResultUnreliable", true)
         calibrator.setPrivateProperty("accelerometerInitialBiasX", 0.0)
         calibrator.setPrivateProperty("accelerometerInitialBiasY", 0.0)
         calibrator.setPrivateProperty("accelerometerInitialBiasZ", 0.0)
 
-        val internalCalibrator = mockk<AccelerometerNonLinearCalibrator>()
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibrator)
 
         val gravityNormEstimator: GravityNormEstimator? =
@@ -8851,7 +8548,6 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         // check
         assertNull(calibrator.gravityNorm)
-        verify(exactly = 1) { measurementsSpy.clear() }
         assertFalse(calibrator.accelerometerResultUnreliable)
         assertNull(calibrator.accelerometerInitialBiasX)
         assertNull(calibrator.accelerometerInitialBiasY)
@@ -8951,10 +8647,6 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun stop_whenListenerAvailable_notifies() {
-        val stoppedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalAccelerometerCalibrator>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
@@ -9020,8 +8712,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -9035,14 +8726,6 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun calibrate_whenReadyNotRunningAndInternalCalibratorAndListeners_callsInternalCalibratorAndNotifies() {
-        val calibrationSolvingStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalAccelerometerCalibrator>>(
-                relaxUnitFun = true
-            )
-        val calibrationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<StaticIntervalAccelerometerCalibrator>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
@@ -9050,15 +8733,13 @@ class StaticIntervalAccelerometerCalibratorTest {
             calibrationCompletedListener = calibrationCompletedListener
         )
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
         assertTrue(calibrator.isReadyToSolveCalibration)
         assertFalse(calibrator.running)
 
-        val internalCalibrator = mockk<AccelerometerNonLinearCalibrator>()
         justRun { internalCalibrator.calibrate() }
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibrator)
 
@@ -9078,15 +8759,13 @@ class StaticIntervalAccelerometerCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
         assertTrue(calibrator.isReadyToSolveCalibration)
         assertFalse(calibrator.running)
 
-        val internalCalibrator = mockk<AccelerometerNonLinearCalibrator>()
         every { internalCalibrator.calibrate() }.throws(NavigationException())
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibrator)
 
@@ -9097,25 +8776,19 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun calibrate_whenFailureAndErrorListener_setsAsNotRunning() {
-        val errorListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalAccelerometerCalibrator>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             errorListener = errorListener
         )
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
         assertTrue(calibrator.isReadyToSolveCalibration)
         assertFalse(calibrator.running)
 
-        val internalCalibrator = mockk<AccelerometerNonLinearCalibrator>()
         every { internalCalibrator.calibrate() }.throws(NavigationException())
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibrator)
 
@@ -9698,8 +9371,7 @@ class StaticIntervalAccelerometerCalibratorTest {
             isAccelerometerGroundTruthInitialBias = true
         )
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -9764,8 +9436,7 @@ class StaticIntervalAccelerometerCalibratorTest {
             isAccelerometerGroundTruthInitialBias = true
         )
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -9843,8 +9514,7 @@ class StaticIntervalAccelerometerCalibratorTest {
             isAccelerometerGroundTruthInitialBias = true
         )
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -9917,8 +9587,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         val gravityNorm = GravityHelper.getGravityNormForLocation(getLocation())
         calibrator.setPrivateProperty("gravityNorm", gravityNorm)
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -9993,8 +9662,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         val gravityNorm = GravityHelper.getGravityNormForLocation(getLocation())
         calibrator.setPrivateProperty("gravityNorm", gravityNorm)
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -10075,8 +9743,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         val gravityNorm = GravityHelper.getGravityNormForLocation(getLocation())
         calibrator.setPrivateProperty("gravityNorm", gravityNorm)
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -10148,8 +9815,7 @@ class StaticIntervalAccelerometerCalibratorTest {
             isAccelerometerGroundTruthInitialBias = true
         )
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -10198,8 +9864,7 @@ class StaticIntervalAccelerometerCalibratorTest {
             isAccelerometerGroundTruthInitialBias = false
         )
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -10271,8 +9936,7 @@ class StaticIntervalAccelerometerCalibratorTest {
             isAccelerometerGroundTruthInitialBias = false
         )
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -10350,8 +10014,7 @@ class StaticIntervalAccelerometerCalibratorTest {
             isAccelerometerGroundTruthInitialBias = false
         )
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -10424,8 +10087,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         val gravityNorm = GravityHelper.getGravityNormForLocation(getLocation())
         calibrator.setPrivateProperty("gravityNorm", gravityNorm)
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -10499,8 +10161,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         val gravityNorm = GravityHelper.getGravityNormForLocation(getLocation())
         calibrator.setPrivateProperty("gravityNorm", gravityNorm)
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -10571,8 +10232,7 @@ class StaticIntervalAccelerometerCalibratorTest {
             isAccelerometerGroundTruthInitialBias = false
         )
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -10621,8 +10281,7 @@ class StaticIntervalAccelerometerCalibratorTest {
             isAccelerometerGroundTruthInitialBias = true
         )
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -10713,8 +10372,7 @@ class StaticIntervalAccelerometerCalibratorTest {
             isAccelerometerGroundTruthInitialBias = true
         )
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -10811,8 +10469,7 @@ class StaticIntervalAccelerometerCalibratorTest {
             isAccelerometerGroundTruthInitialBias = true
         )
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -10914,8 +10571,7 @@ class StaticIntervalAccelerometerCalibratorTest {
             isAccelerometerGroundTruthInitialBias = true
         )
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -10979,8 +10635,7 @@ class StaticIntervalAccelerometerCalibratorTest {
             isAccelerometerGroundTruthInitialBias = true
         )
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -11071,8 +10726,7 @@ class StaticIntervalAccelerometerCalibratorTest {
             isAccelerometerGroundTruthInitialBias = true
         )
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -11169,8 +10823,7 @@ class StaticIntervalAccelerometerCalibratorTest {
             isAccelerometerGroundTruthInitialBias = true
         )
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -11271,8 +10924,7 @@ class StaticIntervalAccelerometerCalibratorTest {
             isAccelerometerGroundTruthInitialBias = true
         )
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -11338,10 +10990,9 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
         every { measurement.angularRateStandardDeviation }.returns(0.0)
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -11437,10 +11088,9 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
         every { measurement.angularRateStandardDeviation }.returns(0.0)
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -11542,10 +11192,9 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
         every { measurement.angularRateStandardDeviation }.returns(0.0)
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -11651,10 +11300,9 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
         every { measurement.angularRateStandardDeviation }.returns(0.0)
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -11717,8 +11365,7 @@ class StaticIntervalAccelerometerCalibratorTest {
             isAccelerometerGroundTruthInitialBias = true
         )
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -11745,13 +11392,13 @@ class StaticIntervalAccelerometerCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.LMedS
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.LMEDS
         calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
         calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         calibrator.accelerometerRobustThreshold = ROBUST_THRESHOLD
 
-        assertEquals(RobustEstimatorMethod.LMedS, calibrator.accelerometerRobustMethod)
+        assertEquals(RobustEstimatorMethod.LMEDS, calibrator.accelerometerRobustMethod)
         assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
         assertNotNull(calibrator.location)
         assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
@@ -11809,8 +11456,7 @@ class StaticIntervalAccelerometerCalibratorTest {
             isAccelerometerGroundTruthInitialBias = true
         )
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -11843,13 +11489,13 @@ class StaticIntervalAccelerometerCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.LMedS
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.LMEDS
         calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
         calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         calibrator.accelerometerRobustThreshold = ROBUST_THRESHOLD
 
-        assertEquals(RobustEstimatorMethod.LMedS, calibrator.accelerometerRobustMethod)
+        assertEquals(RobustEstimatorMethod.LMEDS, calibrator.accelerometerRobustMethod)
         assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
         assertNotNull(calibrator.location)
         assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
@@ -11907,8 +11553,7 @@ class StaticIntervalAccelerometerCalibratorTest {
             isAccelerometerGroundTruthInitialBias = true
         )
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -11935,7 +11580,7 @@ class StaticIntervalAccelerometerCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.LMedS
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.LMEDS
         calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
         calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
@@ -11951,7 +11596,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
-        assertEquals(RobustEstimatorMethod.LMedS, calibrator.accelerometerRobustMethod)
+        assertEquals(RobustEstimatorMethod.LMEDS, calibrator.accelerometerRobustMethod)
         assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
         assertNotNull(calibrator.location)
         assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
@@ -12019,8 +11664,7 @@ class StaticIntervalAccelerometerCalibratorTest {
             isAccelerometerGroundTruthInitialBias = true
         )
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -12047,14 +11691,14 @@ class StaticIntervalAccelerometerCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.LMedS
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.LMEDS
         calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
         calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         calibrator.accelerometerRobustThreshold = null
         calibrator.accelerometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
 
-        assertEquals(RobustEstimatorMethod.LMedS, calibrator.accelerometerRobustMethod)
+        assertEquals(RobustEstimatorMethod.LMEDS, calibrator.accelerometerRobustMethod)
         assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
         assertNotNull(calibrator.location)
         assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
@@ -12086,10 +11730,9 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
         every { measurement.angularRateStandardDeviation }.returns(0.0)
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -12115,13 +11758,13 @@ class StaticIntervalAccelerometerCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROMedS
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROMEDS
         calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
         calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         calibrator.accelerometerRobustThreshold = ROBUST_THRESHOLD
 
-        assertEquals(RobustEstimatorMethod.PROMedS, calibrator.accelerometerRobustMethod)
+        assertEquals(RobustEstimatorMethod.PROMEDS, calibrator.accelerometerRobustMethod)
         assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
         assertNotNull(calibrator.location)
         assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
@@ -12185,10 +11828,9 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
         every { measurement.angularRateStandardDeviation }.returns(0.0)
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -12220,13 +11862,13 @@ class StaticIntervalAccelerometerCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROMedS
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROMEDS
         calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
         calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         calibrator.accelerometerRobustThreshold = ROBUST_THRESHOLD
 
-        assertEquals(RobustEstimatorMethod.PROMedS, calibrator.accelerometerRobustMethod)
+        assertEquals(RobustEstimatorMethod.PROMEDS, calibrator.accelerometerRobustMethod)
         assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
         assertNotNull(calibrator.location)
         assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
@@ -12290,10 +11932,9 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
         every { measurement.angularRateStandardDeviation }.returns(0.0)
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -12319,7 +11960,7 @@ class StaticIntervalAccelerometerCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROMedS
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROMEDS
         calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
         calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
@@ -12335,7 +11976,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
-        assertEquals(RobustEstimatorMethod.PROMedS, calibrator.accelerometerRobustMethod)
+        assertEquals(RobustEstimatorMethod.PROMEDS, calibrator.accelerometerRobustMethod)
         assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
         assertNotNull(calibrator.location)
         assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
@@ -12409,10 +12050,9 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
         every { measurement.angularRateStandardDeviation }.returns(0.0)
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -12438,14 +12078,14 @@ class StaticIntervalAccelerometerCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROMedS
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROMEDS
         calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
         calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         calibrator.accelerometerRobustThreshold = null
         calibrator.accelerometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
 
-        assertEquals(RobustEstimatorMethod.PROMedS, calibrator.accelerometerRobustMethod)
+        assertEquals(RobustEstimatorMethod.PROMEDS, calibrator.accelerometerRobustMethod)
         assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
         assertNotNull(calibrator.location)
         assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
@@ -12476,8 +12116,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         val gravityNorm = GravityHelper.getGravityNormForLocation(getLocation())
         calibrator.setPrivateProperty("gravityNorm", gravityNorm)
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -12570,8 +12209,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         val gravityNorm = GravityHelper.getGravityNormForLocation(getLocation())
         calibrator.setPrivateProperty("gravityNorm", gravityNorm)
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -12670,8 +12308,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         val gravityNorm = GravityHelper.getGravityNormForLocation(getLocation())
         calibrator.setPrivateProperty("gravityNorm", gravityNorm)
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -12771,8 +12408,7 @@ class StaticIntervalAccelerometerCalibratorTest {
             isAccelerometerGroundTruthInitialBias = true
         )
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -12839,8 +12475,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         val gravityNorm = GravityHelper.getGravityNormForLocation(getLocation())
         calibrator.setPrivateProperty("gravityNorm", gravityNorm)
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -12907,8 +12542,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         val gravityNorm = GravityHelper.getGravityNormForLocation(getLocation())
         calibrator.setPrivateProperty("gravityNorm", gravityNorm)
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -13001,8 +12635,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         val gravityNorm = GravityHelper.getGravityNormForLocation(getLocation())
         calibrator.setPrivateProperty("gravityNorm", gravityNorm)
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -13101,8 +12734,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         val gravityNorm = GravityHelper.getGravityNormForLocation(getLocation())
         calibrator.setPrivateProperty("gravityNorm", gravityNorm)
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -13202,8 +12834,7 @@ class StaticIntervalAccelerometerCalibratorTest {
             isAccelerometerGroundTruthInitialBias = true
         )
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -13270,8 +12901,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         val gravityNorm = GravityHelper.getGravityNormForLocation(getLocation())
         calibrator.setPrivateProperty("gravityNorm", gravityNorm)
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -13340,10 +12970,9 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
         every { measurement.angularRateStandardDeviation }.returns(0.0)
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -13441,10 +13070,9 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
         every { measurement.angularRateStandardDeviation }.returns(0.0)
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -13548,10 +13176,9 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
         every { measurement.angularRateStandardDeviation }.returns(0.0)
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -13656,10 +13283,9 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
         every { measurement.angularRateStandardDeviation }.returns(0.0)
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -13727,10 +13353,9 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
         every { measurement.angularRateStandardDeviation }.returns(0.0)
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -13796,8 +13421,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         val gravityNorm = GravityHelper.getGravityNormForLocation(getLocation())
         calibrator.setPrivateProperty("gravityNorm", gravityNorm)
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -13824,13 +13448,13 @@ class StaticIntervalAccelerometerCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.LMedS
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.LMEDS
         calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
         calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         calibrator.accelerometerRobustThreshold = ROBUST_THRESHOLD
 
-        assertEquals(RobustEstimatorMethod.LMedS, calibrator.accelerometerRobustMethod)
+        assertEquals(RobustEstimatorMethod.LMEDS, calibrator.accelerometerRobustMethod)
         assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
         assertNull(calibrator.location)
         assertEquals(gravityNorm, calibrator.gravityNorm)
@@ -13890,8 +13514,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         val gravityNorm = GravityHelper.getGravityNormForLocation(getLocation())
         calibrator.setPrivateProperty("gravityNorm", gravityNorm)
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -13924,13 +13547,13 @@ class StaticIntervalAccelerometerCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.LMedS
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.LMEDS
         calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
         calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         calibrator.accelerometerRobustThreshold = ROBUST_THRESHOLD
 
-        assertEquals(RobustEstimatorMethod.LMedS, calibrator.accelerometerRobustMethod)
+        assertEquals(RobustEstimatorMethod.LMEDS, calibrator.accelerometerRobustMethod)
         assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
         assertNull(calibrator.location)
         assertEquals(gravityNorm, calibrator.gravityNorm)
@@ -13990,8 +13613,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         val gravityNorm = GravityHelper.getGravityNormForLocation(getLocation())
         calibrator.setPrivateProperty("gravityNorm", gravityNorm)
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -14018,7 +13640,7 @@ class StaticIntervalAccelerometerCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.LMedS
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.LMEDS
         calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
         calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
@@ -14034,7 +13656,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
-        assertEquals(RobustEstimatorMethod.LMedS, calibrator.accelerometerRobustMethod)
+        assertEquals(RobustEstimatorMethod.LMEDS, calibrator.accelerometerRobustMethod)
         assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
         assertNull(calibrator.location)
         assertEquals(gravityNorm, calibrator.gravityNorm)
@@ -14096,8 +13718,7 @@ class StaticIntervalAccelerometerCalibratorTest {
             isAccelerometerGroundTruthInitialBias = true
         )
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -14124,14 +13745,14 @@ class StaticIntervalAccelerometerCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.LMedS
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.LMEDS
         calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
         calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         calibrator.accelerometerRobustThreshold = null
         calibrator.accelerometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
 
-        assertEquals(RobustEstimatorMethod.LMedS, calibrator.accelerometerRobustMethod)
+        assertEquals(RobustEstimatorMethod.LMEDS, calibrator.accelerometerRobustMethod)
         assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
         assertNull(calibrator.location)
         assertNull(calibrator.gravityNorm)
@@ -14164,8 +13785,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         val gravityNorm = GravityHelper.getGravityNormForLocation(getLocation())
         calibrator.setPrivateProperty("gravityNorm", gravityNorm)
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -14192,14 +13812,14 @@ class StaticIntervalAccelerometerCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.LMedS
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.LMEDS
         calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
         calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         calibrator.accelerometerRobustThreshold = null
         calibrator.accelerometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
 
-        assertEquals(RobustEstimatorMethod.LMedS, calibrator.accelerometerRobustMethod)
+        assertEquals(RobustEstimatorMethod.LMEDS, calibrator.accelerometerRobustMethod)
         assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
         assertNull(calibrator.location)
         assertEquals(gravityNorm, calibrator.gravityNorm)
@@ -14234,10 +13854,9 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
         every { measurement.angularRateStandardDeviation }.returns(0.0)
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -14263,13 +13882,13 @@ class StaticIntervalAccelerometerCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROMedS
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROMEDS
         calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
         calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         calibrator.accelerometerRobustThreshold = ROBUST_THRESHOLD
 
-        assertEquals(RobustEstimatorMethod.PROMedS, calibrator.accelerometerRobustMethod)
+        assertEquals(RobustEstimatorMethod.PROMEDS, calibrator.accelerometerRobustMethod)
         assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
         assertNull(calibrator.location)
         assertEquals(gravityNorm, calibrator.gravityNorm)
@@ -14335,10 +13954,9 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
         every { measurement.angularRateStandardDeviation }.returns(0.0)
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -14370,13 +13988,13 @@ class StaticIntervalAccelerometerCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROMedS
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROMEDS
         calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
         calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         calibrator.accelerometerRobustThreshold = ROBUST_THRESHOLD
 
-        assertEquals(RobustEstimatorMethod.PROMedS, calibrator.accelerometerRobustMethod)
+        assertEquals(RobustEstimatorMethod.PROMEDS, calibrator.accelerometerRobustMethod)
         assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
         assertNull(calibrator.location)
         assertEquals(gravityNorm, calibrator.gravityNorm)
@@ -14442,10 +14060,9 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
         every { measurement.angularRateStandardDeviation }.returns(0.0)
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -14471,7 +14088,7 @@ class StaticIntervalAccelerometerCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROMedS
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROMEDS
         calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
         calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
@@ -14487,7 +14104,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
-        assertEquals(RobustEstimatorMethod.PROMedS, calibrator.accelerometerRobustMethod)
+        assertEquals(RobustEstimatorMethod.PROMEDS, calibrator.accelerometerRobustMethod)
         assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
         assertNull(calibrator.location)
         assertEquals(gravityNorm, calibrator.gravityNorm)
@@ -14555,10 +14172,9 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
         every { measurement.angularRateStandardDeviation }.returns(0.0)
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -14584,14 +14200,14 @@ class StaticIntervalAccelerometerCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROMedS
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROMEDS
         calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
         calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         calibrator.accelerometerRobustThreshold = null
         calibrator.accelerometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
 
-        assertEquals(RobustEstimatorMethod.PROMedS, calibrator.accelerometerRobustMethod)
+        assertEquals(RobustEstimatorMethod.PROMEDS, calibrator.accelerometerRobustMethod)
         assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
         assertNull(calibrator.location)
         assertNull(calibrator.gravityNorm)
@@ -14626,10 +14242,9 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
         every { measurement.angularRateStandardDeviation }.returns(0.0)
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -14655,14 +14270,14 @@ class StaticIntervalAccelerometerCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROMedS
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROMEDS
         calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
         calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         calibrator.accelerometerRobustThreshold = null
         calibrator.accelerometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
 
-        assertEquals(RobustEstimatorMethod.PROMedS, calibrator.accelerometerRobustMethod)
+        assertEquals(RobustEstimatorMethod.PROMEDS, calibrator.accelerometerRobustMethod)
         assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
         assertNull(calibrator.location)
         assertEquals(gravityNorm, calibrator.gravityNorm)
@@ -14694,8 +14309,7 @@ class StaticIntervalAccelerometerCalibratorTest {
             isAccelerometerGroundTruthInitialBias = false
         )
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -14786,8 +14400,7 @@ class StaticIntervalAccelerometerCalibratorTest {
             isAccelerometerGroundTruthInitialBias = false
         )
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -14884,8 +14497,7 @@ class StaticIntervalAccelerometerCalibratorTest {
             isAccelerometerGroundTruthInitialBias = false
         )
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -14986,8 +14598,7 @@ class StaticIntervalAccelerometerCalibratorTest {
             isAccelerometerGroundTruthInitialBias = false
         )
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -15051,8 +14662,7 @@ class StaticIntervalAccelerometerCalibratorTest {
             isAccelerometerGroundTruthInitialBias = false
         )
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -15143,8 +14753,7 @@ class StaticIntervalAccelerometerCalibratorTest {
             isAccelerometerGroundTruthInitialBias = false
         )
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -15241,8 +14850,7 @@ class StaticIntervalAccelerometerCalibratorTest {
             isAccelerometerGroundTruthInitialBias = false
         )
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -15343,8 +14951,7 @@ class StaticIntervalAccelerometerCalibratorTest {
             isAccelerometerGroundTruthInitialBias = false
         )
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -15410,10 +15017,9 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
         every { measurement.angularRateStandardDeviation }.returns(0.0)
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -15509,10 +15115,9 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
         every { measurement.angularRateStandardDeviation }.returns(0.0)
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -15614,10 +15219,9 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
         every { measurement.angularRateStandardDeviation }.returns(0.0)
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -15723,10 +15327,9 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
         every { measurement.angularRateStandardDeviation }.returns(0.0)
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -15789,8 +15392,7 @@ class StaticIntervalAccelerometerCalibratorTest {
             isAccelerometerGroundTruthInitialBias = false
         )
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -15817,13 +15419,13 @@ class StaticIntervalAccelerometerCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.LMedS
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.LMEDS
         calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
         calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         calibrator.accelerometerRobustThreshold = ROBUST_THRESHOLD
 
-        assertEquals(RobustEstimatorMethod.LMedS, calibrator.accelerometerRobustMethod)
+        assertEquals(RobustEstimatorMethod.LMEDS, calibrator.accelerometerRobustMethod)
         assertFalse(calibrator.isAccelerometerGroundTruthInitialBias)
         assertNotNull(calibrator.location)
         assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
@@ -15881,8 +15483,7 @@ class StaticIntervalAccelerometerCalibratorTest {
             isAccelerometerGroundTruthInitialBias = false
         )
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -15915,13 +15516,13 @@ class StaticIntervalAccelerometerCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.LMedS
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.LMEDS
         calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
         calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         calibrator.accelerometerRobustThreshold = ROBUST_THRESHOLD
 
-        assertEquals(RobustEstimatorMethod.LMedS, calibrator.accelerometerRobustMethod)
+        assertEquals(RobustEstimatorMethod.LMEDS, calibrator.accelerometerRobustMethod)
         assertFalse(calibrator.isAccelerometerGroundTruthInitialBias)
         assertNotNull(calibrator.location)
         assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
@@ -15978,8 +15579,7 @@ class StaticIntervalAccelerometerCalibratorTest {
             location = location
         )
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -16006,7 +15606,7 @@ class StaticIntervalAccelerometerCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.LMedS
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.LMEDS
         calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
         calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
@@ -16022,7 +15622,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
-        assertEquals(RobustEstimatorMethod.LMedS, calibrator.accelerometerRobustMethod)
+        assertEquals(RobustEstimatorMethod.LMEDS, calibrator.accelerometerRobustMethod)
         assertFalse(calibrator.isAccelerometerGroundTruthInitialBias)
         assertNotNull(calibrator.location)
         assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
@@ -16085,8 +15685,7 @@ class StaticIntervalAccelerometerCalibratorTest {
             isAccelerometerGroundTruthInitialBias = false
         )
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -16113,14 +15712,14 @@ class StaticIntervalAccelerometerCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.LMedS
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.LMEDS
         calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
         calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         calibrator.accelerometerRobustThreshold = null
         calibrator.accelerometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
 
-        assertEquals(RobustEstimatorMethod.LMedS, calibrator.accelerometerRobustMethod)
+        assertEquals(RobustEstimatorMethod.LMEDS, calibrator.accelerometerRobustMethod)
         assertFalse(calibrator.isAccelerometerGroundTruthInitialBias)
         assertNotNull(calibrator.location)
         assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
@@ -16152,10 +15751,9 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
         every { measurement.angularRateStandardDeviation }.returns(0.0)
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -16181,13 +15779,13 @@ class StaticIntervalAccelerometerCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROMedS
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROMEDS
         calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
         calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         calibrator.accelerometerRobustThreshold = ROBUST_THRESHOLD
 
-        assertEquals(RobustEstimatorMethod.PROMedS, calibrator.accelerometerRobustMethod)
+        assertEquals(RobustEstimatorMethod.PROMEDS, calibrator.accelerometerRobustMethod)
         assertFalse(calibrator.isAccelerometerGroundTruthInitialBias)
         assertNotNull(calibrator.location)
         assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
@@ -16251,10 +15849,9 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
         every { measurement.angularRateStandardDeviation }.returns(0.0)
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -16286,13 +15883,13 @@ class StaticIntervalAccelerometerCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROMedS
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROMEDS
         calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
         calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         calibrator.accelerometerRobustThreshold = ROBUST_THRESHOLD
 
-        assertEquals(RobustEstimatorMethod.PROMedS, calibrator.accelerometerRobustMethod)
+        assertEquals(RobustEstimatorMethod.PROMEDS, calibrator.accelerometerRobustMethod)
         assertFalse(calibrator.isAccelerometerGroundTruthInitialBias)
         assertNotNull(calibrator.location)
         assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
@@ -16356,10 +15953,9 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
         every { measurement.angularRateStandardDeviation }.returns(0.0)
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -16385,7 +15981,7 @@ class StaticIntervalAccelerometerCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROMedS
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROMEDS
         calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
         calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
@@ -16401,7 +15997,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
-        assertEquals(RobustEstimatorMethod.PROMedS, calibrator.accelerometerRobustMethod)
+        assertEquals(RobustEstimatorMethod.PROMEDS, calibrator.accelerometerRobustMethod)
         assertFalse(calibrator.isAccelerometerGroundTruthInitialBias)
         assertNotNull(calibrator.location)
         assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
@@ -16470,10 +16066,9 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
         every { measurement.angularRateStandardDeviation }.returns(0.0)
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -16499,14 +16094,14 @@ class StaticIntervalAccelerometerCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROMedS
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROMEDS
         calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
         calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         calibrator.accelerometerRobustThreshold = null
         calibrator.accelerometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
 
-        assertEquals(RobustEstimatorMethod.PROMedS, calibrator.accelerometerRobustMethod)
+        assertEquals(RobustEstimatorMethod.PROMEDS, calibrator.accelerometerRobustMethod)
         assertFalse(calibrator.isAccelerometerGroundTruthInitialBias)
         assertNotNull(calibrator.location)
         assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
@@ -16537,8 +16132,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         val gravityNorm = GravityHelper.getGravityNormForLocation(getLocation())
         calibrator.setPrivateProperty("gravityNorm", gravityNorm)
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -16631,8 +16225,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         val gravityNorm = GravityHelper.getGravityNormForLocation(getLocation())
         calibrator.setPrivateProperty("gravityNorm", gravityNorm)
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -16731,8 +16324,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         val gravityNorm = GravityHelper.getGravityNormForLocation(getLocation())
         calibrator.setPrivateProperty("gravityNorm", gravityNorm)
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -16832,8 +16424,7 @@ class StaticIntervalAccelerometerCalibratorTest {
             isAccelerometerGroundTruthInitialBias = false
         )
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -16900,8 +16491,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         val gravityNorm = GravityHelper.getGravityNormForLocation(getLocation())
         calibrator.setPrivateProperty("gravityNorm", gravityNorm)
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -16968,8 +16558,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         val gravityNorm = GravityHelper.getGravityNormForLocation(getLocation())
         calibrator.setPrivateProperty("gravityNorm", gravityNorm)
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -17062,8 +16651,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         val gravityNorm = GravityHelper.getGravityNormForLocation(getLocation())
         calibrator.setPrivateProperty("gravityNorm", gravityNorm)
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -17162,8 +16750,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         val gravityNorm = GravityHelper.getGravityNormForLocation(getLocation())
         calibrator.setPrivateProperty("gravityNorm", gravityNorm)
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -17263,8 +16850,7 @@ class StaticIntervalAccelerometerCalibratorTest {
             isAccelerometerGroundTruthInitialBias = false
         )
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -17331,8 +16917,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         val gravityNorm = GravityHelper.getGravityNormForLocation(getLocation())
         calibrator.setPrivateProperty("gravityNorm", gravityNorm)
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -17401,10 +16986,9 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
         every { measurement.angularRateStandardDeviation }.returns(0.0)
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -17502,10 +17086,9 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
         every { measurement.angularRateStandardDeviation }.returns(0.0)
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -17609,10 +17192,9 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
         every { measurement.angularRateStandardDeviation }.returns(0.0)
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -17717,10 +17299,9 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
         every { measurement.angularRateStandardDeviation }.returns(0.0)
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -17788,10 +17369,9 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
         every { measurement.angularRateStandardDeviation }.returns(0.0)
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -17857,8 +17437,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         val gravityNorm = GravityHelper.getGravityNormForLocation(getLocation())
         calibrator.setPrivateProperty("gravityNorm", gravityNorm)
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -17885,13 +17464,13 @@ class StaticIntervalAccelerometerCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.LMedS
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.LMEDS
         calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
         calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         calibrator.accelerometerRobustThreshold = ROBUST_THRESHOLD
 
-        assertEquals(RobustEstimatorMethod.LMedS, calibrator.accelerometerRobustMethod)
+        assertEquals(RobustEstimatorMethod.LMEDS, calibrator.accelerometerRobustMethod)
         assertFalse(calibrator.isAccelerometerGroundTruthInitialBias)
         assertNull(calibrator.location)
         assertEquals(gravityNorm, calibrator.gravityNorm)
@@ -17951,8 +17530,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         val gravityNorm = GravityHelper.getGravityNormForLocation(getLocation())
         calibrator.setPrivateProperty("gravityNorm", gravityNorm)
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -17985,13 +17563,13 @@ class StaticIntervalAccelerometerCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.LMedS
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.LMEDS
         calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
         calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         calibrator.accelerometerRobustThreshold = ROBUST_THRESHOLD
 
-        assertEquals(RobustEstimatorMethod.LMedS, calibrator.accelerometerRobustMethod)
+        assertEquals(RobustEstimatorMethod.LMEDS, calibrator.accelerometerRobustMethod)
         assertFalse(calibrator.isAccelerometerGroundTruthInitialBias)
         assertNull(calibrator.location)
         assertEquals(gravityNorm, calibrator.gravityNorm)
@@ -18051,8 +17629,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         val gravityNorm = GravityHelper.getGravityNormForLocation(getLocation())
         calibrator.setPrivateProperty("gravityNorm", gravityNorm)
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -18079,7 +17656,7 @@ class StaticIntervalAccelerometerCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.LMedS
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.LMEDS
         calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
         calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
@@ -18095,7 +17672,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
-        assertEquals(RobustEstimatorMethod.LMedS, calibrator.accelerometerRobustMethod)
+        assertEquals(RobustEstimatorMethod.LMEDS, calibrator.accelerometerRobustMethod)
         assertFalse(calibrator.isAccelerometerGroundTruthInitialBias)
         assertNull(calibrator.location)
         assertEquals(gravityNorm, calibrator.gravityNorm)
@@ -18157,8 +17734,7 @@ class StaticIntervalAccelerometerCalibratorTest {
             isAccelerometerGroundTruthInitialBias = false
         )
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -18185,14 +17761,14 @@ class StaticIntervalAccelerometerCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.LMedS
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.LMEDS
         calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
         calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         calibrator.accelerometerRobustThreshold = null
         calibrator.accelerometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
 
-        assertEquals(RobustEstimatorMethod.LMedS, calibrator.accelerometerRobustMethod)
+        assertEquals(RobustEstimatorMethod.LMEDS, calibrator.accelerometerRobustMethod)
         assertFalse(calibrator.isAccelerometerGroundTruthInitialBias)
         assertNull(calibrator.location)
         assertNull(calibrator.gravityNorm)
@@ -18225,8 +17801,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         val gravityNorm = GravityHelper.getGravityNormForLocation(getLocation())
         calibrator.setPrivateProperty("gravityNorm", gravityNorm)
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -18253,14 +17828,14 @@ class StaticIntervalAccelerometerCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.LMedS
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.LMEDS
         calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
         calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         calibrator.accelerometerRobustThreshold = null
         calibrator.accelerometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
 
-        assertEquals(RobustEstimatorMethod.LMedS, calibrator.accelerometerRobustMethod)
+        assertEquals(RobustEstimatorMethod.LMEDS, calibrator.accelerometerRobustMethod)
         assertFalse(calibrator.isAccelerometerGroundTruthInitialBias)
         assertNull(calibrator.location)
         assertEquals(gravityNorm, calibrator.gravityNorm)
@@ -18297,10 +17872,9 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
         every { measurement.angularRateStandardDeviation }.returns(0.0)
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -18326,13 +17900,13 @@ class StaticIntervalAccelerometerCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROMedS
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROMEDS
         calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
         calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         calibrator.accelerometerRobustThreshold = ROBUST_THRESHOLD
 
-        assertEquals(RobustEstimatorMethod.PROMedS, calibrator.accelerometerRobustMethod)
+        assertEquals(RobustEstimatorMethod.PROMEDS, calibrator.accelerometerRobustMethod)
         assertFalse(calibrator.isAccelerometerGroundTruthInitialBias)
         assertNull(calibrator.location)
         assertEquals(gravityNorm, calibrator.gravityNorm)
@@ -18398,10 +17972,9 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
         every { measurement.angularRateStandardDeviation }.returns(0.0)
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -18433,13 +18006,13 @@ class StaticIntervalAccelerometerCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROMedS
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROMEDS
         calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
         calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         calibrator.accelerometerRobustThreshold = ROBUST_THRESHOLD
 
-        assertEquals(RobustEstimatorMethod.PROMedS, calibrator.accelerometerRobustMethod)
+        assertEquals(RobustEstimatorMethod.PROMEDS, calibrator.accelerometerRobustMethod)
         assertFalse(calibrator.isAccelerometerGroundTruthInitialBias)
         assertNull(calibrator.location)
         assertEquals(gravityNorm, calibrator.gravityNorm)
@@ -18505,10 +18078,9 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
         every { measurement.angularRateStandardDeviation }.returns(0.0)
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -18534,7 +18106,7 @@ class StaticIntervalAccelerometerCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROMedS
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROMEDS
         calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
         calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
@@ -18550,7 +18122,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
-        assertEquals(RobustEstimatorMethod.PROMedS, calibrator.accelerometerRobustMethod)
+        assertEquals(RobustEstimatorMethod.PROMEDS, calibrator.accelerometerRobustMethod)
         assertFalse(calibrator.isAccelerometerGroundTruthInitialBias)
         assertNull(calibrator.location)
         assertEquals(gravityNorm, calibrator.gravityNorm)
@@ -18618,10 +18190,9 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
         every { measurement.angularRateStandardDeviation }.returns(0.0)
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -18647,14 +18218,14 @@ class StaticIntervalAccelerometerCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROMedS
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROMEDS
         calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
         calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         calibrator.accelerometerRobustThreshold = null
         calibrator.accelerometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
 
-        assertEquals(RobustEstimatorMethod.PROMedS, calibrator.accelerometerRobustMethod)
+        assertEquals(RobustEstimatorMethod.PROMEDS, calibrator.accelerometerRobustMethod)
         assertFalse(calibrator.isAccelerometerGroundTruthInitialBias)
         assertNull(calibrator.location)
         assertNull(calibrator.gravityNorm)
@@ -18689,10 +18260,9 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
         every { measurement.angularRateStandardDeviation }.returns(0.0)
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
 
@@ -18718,14 +18288,14 @@ class StaticIntervalAccelerometerCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROMedS
+        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROMEDS
         calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
         calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         calibrator.accelerometerRobustThreshold = null
         calibrator.accelerometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
 
-        assertEquals(RobustEstimatorMethod.PROMedS, calibrator.accelerometerRobustMethod)
+        assertEquals(RobustEstimatorMethod.PROMEDS, calibrator.accelerometerRobustMethod)
         assertFalse(calibrator.isAccelerometerGroundTruthInitialBias)
         assertNull(calibrator.location)
         assertEquals(gravityNorm, calibrator.gravityNorm)
@@ -18745,6 +18315,20 @@ class StaticIntervalAccelerometerCalibratorTest {
             assertNull(calibrator.callPrivateFuncWithResult("buildAccelerometerInternalCalibrator"))
         }
         assertTrue(ex.cause is IllegalStateException)
+    }
+
+    private fun getLocation(): Location {
+        val randomizer = UniformRandomizer()
+        val latitudeDegrees = randomizer.nextDouble(MIN_LATITUDE_DEGREES, MAX_LATITUDE_DEGREES)
+        val longitudeDegrees =
+            randomizer.nextDouble(MIN_LONGITUDE_DEGREES, MAX_LONGITUDE_DEGREES)
+        val height = randomizer.nextDouble(MIN_HEIGHT, MAX_HEIGHT)
+
+        every { location.latitude }.returns(latitudeDegrees)
+        every { location.longitude }.returns(longitudeDegrees)
+        every { location.altitude }.returns(height)
+
+        return location
     }
 
     private companion object {
@@ -18795,21 +18379,6 @@ class StaticIntervalAccelerometerCalibratorTest {
         const val DEG_TO_RAD = 0.01745329252
 
         const val ABSOLUTE_ERROR = 1e-6
-
-        fun getLocation(): Location {
-            val randomizer = UniformRandomizer()
-            val latitudeDegrees = randomizer.nextDouble(MIN_LATITUDE_DEGREES, MAX_LATITUDE_DEGREES)
-            val longitudeDegrees =
-                randomizer.nextDouble(MIN_LONGITUDE_DEGREES, MAX_LONGITUDE_DEGREES)
-            val height = randomizer.nextDouble(MIN_HEIGHT, MAX_HEIGHT)
-
-            val location = mockk<Location>()
-            every { location.latitude }.returns(latitudeDegrees)
-            every { location.longitude }.returns(longitudeDegrees)
-            every { location.altitude }.returns(height)
-
-            return location
-        }
 
         fun generateBa(): Matrix {
             return Matrix.newFromArray(

@@ -119,14 +119,17 @@ class KalmanAbsoluteAttitudeActivity : AppCompatActivity() {
                 ?: MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED
         }
 
-        setContentView(R.layout.activity_kalman_absolute_attitude_estimator)
-        cubeView = findViewById(R.id.cube)
-        rollView = findViewById(R.id.roll)
-        pitchView = findViewById(R.id.pitch)
-        yawView = findViewById(R.id.yaw)
-        rollStandardDeviationView = findViewById(R.id.roll_accuracy)
-        pitchStandardDeviationView = findViewById(R.id.pitch_accuracy)
-        yawStandardDeviationView = findViewById(R.id.yaw_accuracy)
+        setContentView(com.irurueta.android.navigation.inertial.app.R.layout.activity_kalman_absolute_attitude_estimator)
+        cubeView = findViewById(com.irurueta.android.navigation.inertial.app.R.id.cube)
+        rollView = findViewById(com.irurueta.android.navigation.inertial.app.R.id.roll)
+        pitchView = findViewById(com.irurueta.android.navigation.inertial.app.R.id.pitch)
+        yawView = findViewById(com.irurueta.android.navigation.inertial.app.R.id.yaw)
+        rollStandardDeviationView =
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.roll_accuracy)
+        pitchStandardDeviationView =
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.pitch_accuracy)
+        yawStandardDeviationView =
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.yaw_accuracy)
 
         val cubeView = cubeView ?: return
         cubeView.onSurfaceChangedListener = object : CubeTextureView.OnSurfaceChangedListener {
@@ -219,9 +222,18 @@ class KalmanAbsoluteAttitudeActivity : AppCompatActivity() {
 
                     attitude.toQuaternion(rotation)
 
-                    rollView?.text = getString(R.string.roll_degrees, Math.toDegrees(roll ?: 0.0))
-                    pitchView?.text = getString(R.string.pitch_degrees, Math.toDegrees(pitch ?: 0.0))
-                    yawView?.text = getString(R.string.yaw_degrees, Math.toDegrees(yaw ?: 0.0))
+                    rollView?.text = getString(
+                        com.irurueta.android.navigation.inertial.app.R.string.roll_degrees,
+                        Math.toDegrees(roll ?: 0.0)
+                    )
+                    pitchView?.text = getString(
+                        com.irurueta.android.navigation.inertial.app.R.string.pitch_degrees,
+                        Math.toDegrees(pitch ?: 0.0)
+                    )
+                    yawView?.text = getString(
+                        com.irurueta.android.navigation.inertial.app.R.string.yaw_degrees,
+                        Math.toDegrees(yaw ?: 0.0)
+                    )
 
                     if (covariance != null) {
                         val rollStd = Math.toDegrees(sqrt(covariance.getElementAt(0, 0)))
@@ -229,11 +241,20 @@ class KalmanAbsoluteAttitudeActivity : AppCompatActivity() {
                         val yawStd = Math.toDegrees(sqrt(covariance.getElementAt(2, 2)))
 
                         rollStandardDeviationView?.text =
-                            getString(R.string.roll_accuracy_degrees, rollStd)
+                            getString(
+                                com.irurueta.android.navigation.inertial.app.R.string.roll_accuracy_degrees,
+                                rollStd
+                            )
                         pitchStandardDeviationView?.text =
-                            getString(R.string.pitch_accuracy_degrees, pitchStd)
+                            getString(
+                                com.irurueta.android.navigation.inertial.app.R.string.pitch_accuracy_degrees,
+                                pitchStd
+                            )
                         yawStandardDeviationView?.text =
-                            getString(R.string.yaw_accuracy_degrees, yawStd)
+                            getString(
+                                com.irurueta.android.navigation.inertial.app.R.string.yaw_accuracy_degrees,
+                                yawStd
+                            )
                         rollStandardDeviationView?.visibility = View.VISIBLE
                         pitchStandardDeviationView?.visibility = View.VISIBLE
                         yawStandardDeviationView?.visibility = View.VISIBLE

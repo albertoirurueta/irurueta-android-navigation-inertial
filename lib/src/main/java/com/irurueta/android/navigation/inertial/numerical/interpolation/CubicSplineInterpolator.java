@@ -76,7 +76,7 @@ public class CubicSplineInterpolator extends BaseInterpolator {
 
         final double h = xx[khi] - xx[jl];
         if (h == 0.0) {
-            // The xa's must be istinct
+            // The xa's must be distinct
             throw new InterpolationException();
         }
 

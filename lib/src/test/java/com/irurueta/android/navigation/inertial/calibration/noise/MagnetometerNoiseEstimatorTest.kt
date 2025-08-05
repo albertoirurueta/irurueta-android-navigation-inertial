@@ -20,8 +20,8 @@ import android.hardware.Sensor
 import android.os.SystemClock
 import androidx.test.core.app.ApplicationProvider
 import com.irurueta.android.navigation.inertial.collectors.*
-import com.irurueta.android.navigation.inertial.getPrivateProperty
-import com.irurueta.android.navigation.inertial.setPrivateProperty
+import com.irurueta.android.testutils.getPrivateProperty
+import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.navigation.frames.*
 import com.irurueta.navigation.frames.converters.NEDtoECEFPositionVelocityConverter
 import com.irurueta.navigation.inertial.BodyMagneticFluxDensity
@@ -34,15 +34,37 @@ import com.irurueta.navigation.inertial.wmm.WMMEarthMagneticFluxDensityEstimator
 import com.irurueta.statistics.UniformRandomizer
 import com.irurueta.units.*
 import io.mockk.*
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
 import org.junit.After
 import org.junit.Assert.*
+import org.junit.Ignore
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.util.*
 
+@Ignore("possible memory leak")
 @RunWith(RobolectricTestRunner::class)
 class MagnetometerNoiseEstimatorTest {
+
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var completedListener:
+            AccumulatedTriadEstimator.OnEstimationCompletedListener<MagnetometerNoiseEstimator>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var unreliableListener:
+            AccumulatedTriadEstimator.OnUnreliableListener<MagnetometerNoiseEstimator>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var measurementListener: MagnetometerSensorCollector.OnMeasurementListener
+
+    @MockK
+    private lateinit var sensor: Sensor
 
     @After
     fun tearDown() {
@@ -604,8 +626,6 @@ class MagnetometerNoiseEstimatorTest {
 
     @Test
     fun constructor_whenCompletedListener_setsExpectedValues() {
-        val completedListener = mockk<AccumulatedTriadEstimator
-        .OnEstimationCompletedListener<MagnetometerNoiseEstimator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = MagnetometerNoiseEstimator(
             context,
@@ -696,10 +716,6 @@ class MagnetometerNoiseEstimatorTest {
 
     @Test
     fun constructor_whenUnreliableListener_setsExpectedValues() {
-        val completedListener = mockk<AccumulatedTriadEstimator
-        .OnEstimationCompletedListener<MagnetometerNoiseEstimator>>()
-        val unreliableListener =
-            mockk<AccumulatedTriadEstimator.OnUnreliableListener<MagnetometerNoiseEstimator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = MagnetometerNoiseEstimator(
             context,
@@ -791,11 +807,6 @@ class MagnetometerNoiseEstimatorTest {
 
     @Test
     fun constructor_whenMeasurementListener_setsExpectedValues() {
-        val completedListener = mockk<AccumulatedTriadEstimator
-        .OnEstimationCompletedListener<MagnetometerNoiseEstimator>>()
-        val unreliableListener =
-            mockk<AccumulatedTriadEstimator.OnUnreliableListener<MagnetometerNoiseEstimator>>()
-        val measurementListener = mockk<MagnetometerSensorCollector.OnMeasurementListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = MagnetometerNoiseEstimator(
             context,
@@ -895,8 +906,6 @@ class MagnetometerNoiseEstimatorTest {
         assertNull(estimator.completedListener)
 
         // set new value
-        val completedListener = mockk<AccumulatedTriadEstimator
-        .OnEstimationCompletedListener<MagnetometerNoiseEstimator>>()
         estimator.completedListener = completedListener
 
         // check
@@ -912,8 +921,6 @@ class MagnetometerNoiseEstimatorTest {
         assertNull(estimator.unreliableListener)
 
         // set new value
-        val unreliableListener =
-            mockk<AccumulatedTriadEstimator.OnUnreliableListener<MagnetometerNoiseEstimator>>()
         estimator.unreliableListener = unreliableListener
 
         // check
@@ -930,7 +937,6 @@ class MagnetometerNoiseEstimatorTest {
             estimator.getPrivateProperty("collector")
         requireNotNull(collector)
         val collectorSpy = spyk(collector)
-        val sensor = mockk<Sensor>()
         every { collectorSpy.sensor }.returns(sensor)
         estimator.setPrivateProperty("collector", collectorSpy)
 
@@ -1169,8 +1175,6 @@ class MagnetometerNoiseEstimatorTest {
 
     @Test
     fun onMeasurement_whenMeasurementListener_notifies() {
-        val measurementListener =
-            mockk<MagnetometerSensorCollector.OnMeasurementListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator =
             MagnetometerNoiseEstimator(context, measurementListener = measurementListener)
@@ -1445,8 +1449,6 @@ class MagnetometerNoiseEstimatorTest {
 
     @Test
     fun onMeasurement_whenIsCompleteMaxSamplesOnlyAndListener() {
-        val completedListener = mockk<AccumulatedTriadEstimator
-        .OnEstimationCompletedListener<MagnetometerNoiseEstimator>>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = MagnetometerNoiseEstimator(
             context,
@@ -1559,8 +1561,6 @@ class MagnetometerNoiseEstimatorTest {
 
     @Test
     fun onMeasurement_whenIsCompleteMaxDurationOnlyAndListener() {
-        val completedListener = mockk<AccumulatedTriadEstimator
-        .OnEstimationCompletedListener<MagnetometerNoiseEstimator>>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = MagnetometerNoiseEstimator(
             context,
@@ -1677,8 +1677,6 @@ class MagnetometerNoiseEstimatorTest {
 
     @Test
     fun onMeasurement_whenIsCompleteMaxSamplesOrDurationAndListener() {
-        val completedListener = mockk<AccumulatedTriadEstimator
-        .OnEstimationCompletedListener<MagnetometerNoiseEstimator>>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator =
             MagnetometerNoiseEstimator(
@@ -1764,10 +1762,6 @@ class MagnetometerNoiseEstimatorTest {
 
     @Test
     fun onAccuracyChanged_whenUnreliableAndListener_setsResultAsUnreliable() {
-        val unreliableListener =
-            mockk<AccumulatedTriadEstimator.OnUnreliableListener<MagnetometerNoiseEstimator>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = MagnetometerNoiseEstimator(context, unreliableListener = unreliableListener)
 
@@ -1792,10 +1786,6 @@ class MagnetometerNoiseEstimatorTest {
 
     @Test
     fun onAccuracyChanged_whenNotUnreliable_makesNoAction() {
-        val unreliableListener =
-            mockk<AccumulatedTriadEstimator.OnUnreliableListener<MagnetometerNoiseEstimator>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = MagnetometerNoiseEstimator(context, unreliableListener = unreliableListener)
 

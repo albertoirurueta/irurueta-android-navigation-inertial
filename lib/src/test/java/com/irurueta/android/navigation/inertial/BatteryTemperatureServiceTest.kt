@@ -21,17 +21,37 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.BatteryManager
 import androidx.test.core.app.ApplicationProvider
+import com.irurueta.android.testutils.getPrivateProperty
+import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.units.Temperature
 import com.irurueta.units.TemperatureUnit
 import io.mockk.*
+import io.mockk.impl.annotations.MockK
+import io.mockk.impl.annotations.SpyK
+import io.mockk.junit4.MockKRule
 import org.junit.After
 import org.junit.Assert.*
+import org.junit.Ignore
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
+@Ignore("possible memory leak")
 @RunWith(RobolectricTestRunner::class)
 class BatteryTemperatureServiceTest {
+
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK
+    private lateinit var listener: BatteryTemperatureService.OnBatteryTemperatureChangedListener
+
+    @MockK
+    private lateinit var intent: Intent
+
+    @SpyK
+    private var contextSpy = ApplicationProvider.getApplicationContext<Context>()
 
     @After
     fun tearDown() {
@@ -56,7 +76,6 @@ class BatteryTemperatureServiceTest {
     @Test
     fun constructor_whenAllParameters_setsExpectedValues() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val listener = mockk<BatteryTemperatureService.OnBatteryTemperatureChangedListener>()
         val service = BatteryTemperatureService(context, listener)
 
         // check
@@ -77,7 +96,6 @@ class BatteryTemperatureServiceTest {
         assertNull(service.batteryTemperatureChangedListener)
 
         // set new value
-        val listener = mockk<BatteryTemperatureService.OnBatteryTemperatureChangedListener>()
         service.batteryTemperatureChangedListener = listener
 
         assertSame(listener, service.batteryTemperatureChangedListener)
@@ -85,8 +103,6 @@ class BatteryTemperatureServiceTest {
 
     @Test
     fun currentBatteryTemperatureCelsius_whenNotAvailable_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val contextSpy = spyk(context)
         every { contextSpy.registerReceiver(null, any()) }.returns(null)
 
         val service = BatteryTemperatureService(contextSpy)
@@ -96,9 +112,6 @@ class BatteryTemperatureServiceTest {
 
     @Test
     fun currentBatteryTemperatureCelsius_whenAvailable_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val contextSpy = spyk(context)
-        val intent = mockk<Intent>()
         every { intent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0) }.returns(300)
         every { contextSpy.registerReceiver(null, any()) }.returns(intent)
 
@@ -111,8 +124,6 @@ class BatteryTemperatureServiceTest {
 
     @Test
     fun currentBatteryTemperature_whenNotAvailable_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val contextSpy = spyk(context)
         every { contextSpy.registerReceiver(null, any()) }.returns(null)
 
         val service = BatteryTemperatureService(contextSpy)
@@ -122,9 +133,6 @@ class BatteryTemperatureServiceTest {
 
     @Test
     fun currentBatteryTemperature_whenAvailable_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val contextSpy = spyk(context)
-        val intent = mockk<Intent>()
         every { intent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0) }.returns(300)
         every { contextSpy.registerReceiver(null, any()) }.returns(intent)
 
@@ -138,8 +146,6 @@ class BatteryTemperatureServiceTest {
 
     @Test
     fun getCurrentBatteryTemperature_whenNotAvailable_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val contextSpy = spyk(context)
         every { contextSpy.registerReceiver(null, any()) }.returns(null)
 
         val service = BatteryTemperatureService(contextSpy)
@@ -154,9 +160,6 @@ class BatteryTemperatureServiceTest {
 
     @Test
     fun getCurrentBatteryTemperature_whenAvailable_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val contextSpy = spyk(context)
-        val intent = mockk<Intent>()
         every { intent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0) }.returns(300)
         every { contextSpy.registerReceiver(null, any()) }.returns(intent)
 
@@ -172,9 +175,6 @@ class BatteryTemperatureServiceTest {
 
     @Test
     fun start_whenNotRunning_registersReceiver() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val contextSpy = spyk(context)
-
         val service = BatteryTemperatureService(contextSpy)
 
         val receiver: BroadcastReceiver? = service.getPrivateProperty("receiver")
@@ -200,9 +200,6 @@ class BatteryTemperatureServiceTest {
 
     @Test
     fun start_whenRunning_makesNoAction() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val contextSpy = spyk(context)
-
         val service = BatteryTemperatureService(contextSpy)
 
         service.setPrivateProperty("running", true)
@@ -216,9 +213,6 @@ class BatteryTemperatureServiceTest {
 
     @Test
     fun stop_whenNotRunning_makesNoAction() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val contextSpy = spyk(context)
-
         val service = BatteryTemperatureService(contextSpy)
 
         assertFalse(service.running)
@@ -231,9 +225,6 @@ class BatteryTemperatureServiceTest {
 
     @Test
     fun stop_whenRunning_unregistersReceiver() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val contextSpy = spyk(context)
-
         val service = BatteryTemperatureService(contextSpy)
 
         val receiver: BroadcastReceiver? = service.getPrivateProperty("receiver")

@@ -16,23 +16,14 @@
 package com.irurueta.android.navigation.inertial.collectors
 
 import android.hardware.SensorManager
-import io.mockk.clearAllMocks
-import io.mockk.unmockkAll
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class SensorAccuracyTest {
 
-    @After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-    }
-
     @Test
     fun sensorAccuracy_fromValues_returnsExpectedValues() {
-        assertEquals(4, SensorAccuracy.values().size)
+        assertEquals(4, SensorAccuracy.entries.size)
         assertEquals(
             SensorAccuracy.UNRELIABLE,
             SensorAccuracy.from(SensorManager.SENSOR_STATUS_UNRELIABLE)

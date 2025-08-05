@@ -18,7 +18,7 @@ package com.irurueta.android.navigation.inertial.numerical.interpolation;
 /**
  * Interface defining a Radial Basis Function (RBF) to be used for interpolation.
  */
-interface RadialBasisFunction {
+public interface RadialBasisFunction {
     /**
      * Evaluates RBF at provided distance between two points.
      *

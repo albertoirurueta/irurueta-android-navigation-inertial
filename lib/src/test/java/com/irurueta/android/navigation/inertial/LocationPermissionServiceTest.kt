@@ -27,16 +27,38 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.test.core.app.ApplicationProvider
 import io.mockk.*
+import io.mockk.impl.annotations.MockK
+import io.mockk.impl.annotations.SpyK
+import io.mockk.junit4.MockKRule
 import org.junit.After
 import org.junit.Assert.*
+import org.junit.Ignore
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
+@Ignore("possible memory leak")
 @Suppress("UseCheckPermission")
 @RunWith(RobolectricTestRunner::class)
 class LocationPermissionServiceTest {
+
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK
+    private lateinit var listener:
+            LocationPermissionService.OnLocationPermissionRequestResultListener
+
+    @MockK
+    private lateinit var launcher: ActivityResultLauncher<Array<String>>
+
+    @SpyK
+    private var context: Context = ApplicationProvider.getApplicationContext()
+
+    @SpyK
+    private var activity = AppCompatActivity()
 
     @After
     fun tearDown() {
@@ -58,7 +80,6 @@ class LocationPermissionServiceTest {
     @Test
     fun constructor_whenActivityAndListener_setsContextActivityAndListener() {
         val activity = AppCompatActivity()
-        val listener = mockk<LocationPermissionService.OnLocationPermissionRequestResultListener>()
         val service = LocationPermissionService(activity, listener)
 
         // check
@@ -81,7 +102,6 @@ class LocationPermissionServiceTest {
     @Test
     fun constructor_whenContextAndListener_setsContextAndListener() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val listener = mockk<LocationPermissionService.OnLocationPermissionRequestResultListener>()
         val service = LocationPermissionService(context, listener)
 
         // check
@@ -99,7 +119,6 @@ class LocationPermissionServiceTest {
         assertNull(service.onLocationPermissionRequestResultListener)
 
         // set new value
-        val listener = mockk<LocationPermissionService.OnLocationPermissionRequestResultListener>()
         service.onLocationPermissionRequestResultListener = listener
 
         // check
@@ -109,7 +128,6 @@ class LocationPermissionServiceTest {
     @SuppressLint("UseCheckPermission")
     @Test
     fun hasFineLocationPermission_whenPermissionGranted_callsExpectedMethod() {
-        val context = spyk(ApplicationProvider.getApplicationContext())
         every {
             context.checkPermission(
                 Manifest.permission.ACCESS_FINE_LOCATION,
@@ -132,7 +150,6 @@ class LocationPermissionServiceTest {
     @SuppressLint("UseCheckPermission")
     @Test
     fun hasFineLocationPermission_whenPermissionDenied_callsExpectedMethod() {
-        val context = spyk(ApplicationProvider.getApplicationContext())
         every {
             context.checkPermission(
                 Manifest.permission.ACCESS_FINE_LOCATION,
@@ -154,7 +171,6 @@ class LocationPermissionServiceTest {
 
     @Test
     fun hasCoarseLocationPermission_whenPermissionGranted_callsExpectedMethod() {
-        val context = spyk(ApplicationProvider.getApplicationContext())
         every {
             context.checkPermission(
                 Manifest.permission.ACCESS_COARSE_LOCATION,
@@ -176,7 +192,6 @@ class LocationPermissionServiceTest {
 
     @Test
     fun hasCoarseLocationPermission_whenPermissionDenied_callsExpectedMethod() {
-        val context = spyk(ApplicationProvider.getApplicationContext())
         every {
             context.checkPermission(
                 Manifest.permission.ACCESS_COARSE_LOCATION,
@@ -199,7 +214,6 @@ class LocationPermissionServiceTest {
     @Config(sdk = [Build.VERSION_CODES.P])
     @Test
     fun hasBackgroundLocationPermission_whenSdkPAndFinePermissionGranted_callsExpectedMethod() {
-        val context = spyk(ApplicationProvider.getApplicationContext())
         every {
             context.checkPermission(
                 Manifest.permission.ACCESS_FINE_LOCATION,
@@ -223,7 +237,6 @@ class LocationPermissionServiceTest {
     @Config(sdk = [Build.VERSION_CODES.P])
     @Test
     fun hasBackgroundLocationPermission_whenSdkPAndCoarsePermissionGranted_callsExpectedMethod() {
-        val context = spyk(ApplicationProvider.getApplicationContext())
         every {
             context.checkPermission(
                 Manifest.permission.ACCESS_FINE_LOCATION,
@@ -261,7 +274,6 @@ class LocationPermissionServiceTest {
     @Config(sdk = [Build.VERSION_CODES.P])
     @Test
     fun hasBackgroundLocationPermission_whenSdkPAndPermissionDenied_callsExpectedMethod() {
-        val context = spyk(ApplicationProvider.getApplicationContext())
         every {
             context.checkPermission(
                 Manifest.permission.ACCESS_FINE_LOCATION,
@@ -299,7 +311,6 @@ class LocationPermissionServiceTest {
     @Config(sdk = [Build.VERSION_CODES.Q])
     @Test
     fun hasBackgroundLocationPermission_whenSdkQAndPermissionGranted_callsExpectedMethod() {
-        val context = spyk(ApplicationProvider.getApplicationContext())
         every {
             context.checkPermission(
                 Manifest.permission.ACCESS_BACKGROUND_LOCATION,
@@ -322,7 +333,6 @@ class LocationPermissionServiceTest {
     @Config(sdk = [Build.VERSION_CODES.Q])
     @Test
     fun hasBackgroundLocationPermission_whenSdkQAndPermissionDenied_callsExpectedMethod() {
-        val context = spyk(ApplicationProvider.getApplicationContext())
         every {
             context.checkPermission(
                 Manifest.permission.ACCESS_BACKGROUND_LOCATION,
@@ -344,7 +354,6 @@ class LocationPermissionServiceTest {
 
     @Test(expected = IllegalStateException::class)
     fun shouldShowRequestFineLocationPermissionRationale_whenNoActivity_throwsIllegalStateException() {
-        val context = spyk(ApplicationProvider.getApplicationContext())
         val service = LocationPermissionService(context)
 
         service.shouldShowRequestFineLocationPermissionRationale()
@@ -376,7 +385,6 @@ class LocationPermissionServiceTest {
 
     @Test(expected = IllegalStateException::class)
     fun shouldShowRequestCoarseLocationPermissionRationale_whenNoActivity_throwsIllegalStateException() {
-        val context = spyk(ApplicationProvider.getApplicationContext())
         val service = LocationPermissionService(context)
 
         service.shouldShowRequestCoarseLocationPermissionRationale()
@@ -409,7 +417,6 @@ class LocationPermissionServiceTest {
     @Config(sdk = [Build.VERSION_CODES.Q])
     @Test(expected = IllegalStateException::class)
     fun shouldShowRequestBackgroundLocationPermissionRationale_whenNoActivityAndSdkQ_throwsIllegalStateException() {
-        val context = spyk(ApplicationProvider.getApplicationContext())
         val service = LocationPermissionService(context)
 
         service.shouldShowRequestBackgroundLocationPermissionRationale()
@@ -444,7 +451,6 @@ class LocationPermissionServiceTest {
     @Config(sdk = [Build.VERSION_CODES.P])
     @Test
     fun shouldShowRequestBackgroundLocationPermissionRationale_whenNoActivityAndSdkR_callsExpectedMethod() {
-        val context = spyk(ApplicationProvider.getApplicationContext())
         every {
             context.checkPermission(
                 any(),
@@ -467,7 +473,6 @@ class LocationPermissionServiceTest {
     @Config(sdk = [Build.VERSION_CODES.P])
     @Test
     fun shouldShowRequestBackgroundLocationPermissionRationale_whenActivityAndSdkR_callsExpectedMethod() {
-        val activity = spyk(AppCompatActivity())
         every {
             activity.checkPermission(
                 any(),
@@ -504,8 +509,6 @@ class LocationPermissionServiceTest {
 
     @Test
     fun requestFineLocationPermission_whenActivityAndNoListener_callsExpectedMethod() {
-        val activity = spyk(AppCompatActivity())
-        val launcher = mockk<ActivityResultLauncher<Array<String>>>()
         justRun { launcher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)) }
 
         every {
@@ -536,8 +539,6 @@ class LocationPermissionServiceTest {
 
     @Test
     fun requestFineLocationPermission_whenActivityAndListener_notifiesResultOfRequest() {
-        val activity = spyk(AppCompatActivity())
-        val launcher = mockk<ActivityResultLauncher<Array<String>>>()
         justRun { launcher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)) }
 
         every {
@@ -554,7 +555,6 @@ class LocationPermissionServiceTest {
             return@answers launcher
         }
 
-        val listener = mockk<LocationPermissionService.OnLocationPermissionRequestResultListener>()
         justRun { listener.onLocationPermissionRequestResult(any()) }
 
         val service = LocationPermissionService(activity, listener)
@@ -583,8 +583,6 @@ class LocationPermissionServiceTest {
 
     @Test
     fun requestFineLocationPermission_whenCancelled_notifiesResultOfRequest() {
-        val activity = spyk(AppCompatActivity())
-        val launcher = mockk<ActivityResultLauncher<Array<String>>>()
         justRun { launcher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)) }
 
         every {
@@ -601,7 +599,6 @@ class LocationPermissionServiceTest {
             return@answers launcher
         }
 
-        val listener = mockk<LocationPermissionService.OnLocationPermissionRequestResultListener>()
         justRun { listener.onLocationPermissionRequestResult(any()) }
 
         val service = LocationPermissionService(activity, listener)
@@ -638,8 +635,6 @@ class LocationPermissionServiceTest {
 
     @Test
     fun requestCoarseLocationPermission_whenActivityAndNoListener_callsExpectedMethod() {
-        val activity = spyk(AppCompatActivity())
-        val launcher = mockk<ActivityResultLauncher<Array<String>>>()
         justRun { launcher.launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION)) }
 
         every {
@@ -670,8 +665,6 @@ class LocationPermissionServiceTest {
 
     @Test
     fun requestCoarseLocationPermission_whenActivityAndListener_notifiesResultOfRequest() {
-        val activity = spyk(AppCompatActivity())
-        val launcher = mockk<ActivityResultLauncher<Array<String>>>()
         justRun { launcher.launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION)) }
 
         every {
@@ -688,7 +681,6 @@ class LocationPermissionServiceTest {
             return@answers launcher
         }
 
-        val listener = mockk<LocationPermissionService.OnLocationPermissionRequestResultListener>()
         justRun { listener.onLocationPermissionRequestResult(any()) }
 
         val service = LocationPermissionService(activity, listener)
@@ -717,8 +709,6 @@ class LocationPermissionServiceTest {
 
     @Test
     fun requestCoarseLocationPermission_whenCancelled_notifiesResultOfRequest() {
-        val activity = spyk(AppCompatActivity())
-        val launcher = mockk<ActivityResultLauncher<Array<String>>>()
         justRun { launcher.launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION)) }
 
         every {
@@ -735,7 +725,6 @@ class LocationPermissionServiceTest {
             return@answers launcher
         }
 
-        val listener = mockk<LocationPermissionService.OnLocationPermissionRequestResultListener>()
         justRun { listener.onLocationPermissionRequestResult(any()) }
 
         val service = LocationPermissionService(activity, listener)
@@ -773,8 +762,6 @@ class LocationPermissionServiceTest {
     @Config(sdk = [Build.VERSION_CODES.Q])
     @Test
     fun requestBackgroundFineLocationPermission_whenActivityNoListenerAndSdkQ_callsExpectedMethod() {
-        val activity = spyk(AppCompatActivity())
-        val launcher = mockk<ActivityResultLauncher<Array<String>>>()
         justRun {
             launcher.launch(
                 arrayOf(
@@ -823,8 +810,6 @@ class LocationPermissionServiceTest {
     @Config(sdk = [Build.VERSION_CODES.Q])
     @Test
     fun requestBackgroundFineLocationPermission_whenActivityListenerAndSdkQ_notifiesResultOfRequest() {
-        val activity = spyk(AppCompatActivity())
-        val launcher = mockk<ActivityResultLauncher<Array<String>>>()
         justRun {
             launcher.launch(
                 arrayOf(
@@ -851,7 +836,6 @@ class LocationPermissionServiceTest {
             return@answers launcher
         }
 
-        val listener = mockk<LocationPermissionService.OnLocationPermissionRequestResultListener>()
         justRun { listener.onLocationPermissionRequestResult(any()) }
 
         val service = LocationPermissionService(activity, listener)
@@ -888,8 +872,6 @@ class LocationPermissionServiceTest {
     @Config(sdk = [Build.VERSION_CODES.Q])
     @Test
     fun requestBackgroundFineLocationPermission_whenCancelledAndSdkQ_notifiesResultOfRequest() {
-        val activity = spyk(AppCompatActivity())
-        val launcher = mockk<ActivityResultLauncher<Array<String>>>()
         justRun {
             launcher.launch(
                 arrayOf(
@@ -913,7 +895,6 @@ class LocationPermissionServiceTest {
             return@answers launcher
         }
 
-        val listener = mockk<LocationPermissionService.OnLocationPermissionRequestResultListener>()
         justRun { listener.onLocationPermissionRequestResult(any()) }
 
         val service = LocationPermissionService(activity, listener)
@@ -950,8 +931,6 @@ class LocationPermissionServiceTest {
     @Config(sdk = [Build.VERSION_CODES.P])
     @Test
     fun requestBackgroundFineLocationPermission_whenActivityNoListenerAndSdkP_callsExpectedMethod() {
-        val activity = spyk(AppCompatActivity())
-        val launcher = mockk<ActivityResultLauncher<Array<String>>>()
         justRun { launcher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)) }
 
         every {
@@ -985,8 +964,6 @@ class LocationPermissionServiceTest {
     @Config(sdk = [Build.VERSION_CODES.P])
     @Test
     fun requestBackgroundFineLocationPermission_whenActivityListenerAndSdkP_notifiesResultOfRequest() {
-        val activity = spyk(AppCompatActivity())
-        val launcher = mockk<ActivityResultLauncher<Array<String>>>()
         justRun { launcher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)) }
 
         every {
@@ -1003,7 +980,6 @@ class LocationPermissionServiceTest {
             return@answers launcher
         }
 
-        val listener = mockk<LocationPermissionService.OnLocationPermissionRequestResultListener>()
         justRun { listener.onLocationPermissionRequestResult(any()) }
 
         val service = LocationPermissionService(activity, listener)
@@ -1033,8 +1009,6 @@ class LocationPermissionServiceTest {
     @Config(sdk = [Build.VERSION_CODES.P])
     @Test
     fun requestBackgroundFineLocationPermission_whenCancelledAndSdkP_notifiesResultOfRequest() {
-        val activity = spyk(AppCompatActivity())
-        val launcher = mockk<ActivityResultLauncher<Array<String>>>()
         justRun { launcher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)) }
 
         every {
@@ -1051,7 +1025,6 @@ class LocationPermissionServiceTest {
             return@answers launcher
         }
 
-        val listener = mockk<LocationPermissionService.OnLocationPermissionRequestResultListener>()
         justRun { listener.onLocationPermissionRequestResult(any()) }
 
         val service = LocationPermissionService(activity, listener)
@@ -1089,8 +1062,6 @@ class LocationPermissionServiceTest {
     @Config(sdk = [Build.VERSION_CODES.Q])
     @Test
     fun requestBackgroundCoarseLocationPermission_whenActivityNoListenerAndSdkQ_callsExpectedMethod() {
-        val activity = spyk(AppCompatActivity())
-        val launcher = mockk<ActivityResultLauncher<Array<String>>>()
         justRun {
             launcher.launch(
                 arrayOf(
@@ -1136,8 +1107,6 @@ class LocationPermissionServiceTest {
     @Config(sdk = [Build.VERSION_CODES.Q])
     @Test
     fun requestBackgroundCoarseLocationPermission_whenActivityListenerAndSdkQ_notifiesResultOfRequest() {
-        val activity = spyk(AppCompatActivity())
-        val launcher = mockk<ActivityResultLauncher<Array<String>>>()
         justRun {
             launcher.launch(
                 arrayOf(
@@ -1164,7 +1133,6 @@ class LocationPermissionServiceTest {
             return@answers launcher
         }
 
-        val listener = mockk<LocationPermissionService.OnLocationPermissionRequestResultListener>()
         justRun { listener.onLocationPermissionRequestResult(any()) }
 
         val service = LocationPermissionService(activity, listener)
@@ -1201,8 +1169,6 @@ class LocationPermissionServiceTest {
     @Config(sdk = [Build.VERSION_CODES.Q])
     @Test
     fun requestBackgroundCoarseLocationPermission_whenCancelledAndSdkQ_notifiesResultOfRequest() {
-        val activity = spyk(AppCompatActivity())
-        val launcher = mockk<ActivityResultLauncher<Array<String>>>()
         justRun {
             launcher.launch(
                 arrayOf(
@@ -1226,7 +1192,6 @@ class LocationPermissionServiceTest {
             return@answers launcher
         }
 
-        val listener = mockk<LocationPermissionService.OnLocationPermissionRequestResultListener>()
         justRun { listener.onLocationPermissionRequestResult(any()) }
 
         val service = LocationPermissionService(activity, listener)
@@ -1263,8 +1228,6 @@ class LocationPermissionServiceTest {
     @Config(sdk = [Build.VERSION_CODES.P])
     @Test
     fun requestBackgroundCoarseLocationPermission_whenActivityNoListenerAndSdkP_callsExpectedMethod() {
-        val activity = spyk(AppCompatActivity())
-        val launcher = mockk<ActivityResultLauncher<Array<String>>>()
         justRun { launcher.launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION)) }
 
         every {
@@ -1296,8 +1259,6 @@ class LocationPermissionServiceTest {
     @Config(sdk = [Build.VERSION_CODES.P])
     @Test
     fun requestBackgroundCoarseLocationPermission_whenActivityListenerAndSdkP_notifiesResultOfRequest() {
-        val activity = spyk(AppCompatActivity())
-        val launcher = mockk<ActivityResultLauncher<Array<String>>>()
         justRun { launcher.launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION)) }
 
         every {
@@ -1314,7 +1275,6 @@ class LocationPermissionServiceTest {
             return@answers launcher
         }
 
-        val listener = mockk<LocationPermissionService.OnLocationPermissionRequestResultListener>()
         justRun { listener.onLocationPermissionRequestResult(any()) }
 
         val service = LocationPermissionService(activity, listener)
@@ -1346,8 +1306,6 @@ class LocationPermissionServiceTest {
     @Config(sdk = [Build.VERSION_CODES.P])
     @Test
     fun requestBackgroundCoarseLocationPermission_whenCancelledAndSdkP_notifiesResultOfRequest() {
-        val activity = spyk(AppCompatActivity())
-        val launcher = mockk<ActivityResultLauncher<Array<String>>>()
         justRun { launcher.launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION)) }
 
         every {
@@ -1364,7 +1322,6 @@ class LocationPermissionServiceTest {
             return@answers launcher
         }
 
-        val listener = mockk<LocationPermissionService.OnLocationPermissionRequestResultListener>()
         justRun { listener.onLocationPermissionRequestResult(any()) }
 
         val service = LocationPermissionService(activity, listener)

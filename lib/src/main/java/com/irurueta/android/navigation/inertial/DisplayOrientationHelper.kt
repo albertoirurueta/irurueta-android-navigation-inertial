@@ -34,7 +34,7 @@ object DisplayOrientationHelper {
     fun getDisplayRotationDegrees(context: Context): Double {
         // Device orientation (portrait, landscape, etc)
         val rotation =  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            context.display?.rotation
+            context.display.rotation
         } else {
             val windowManager = context.getSystemService(
                 Context.WINDOW_SERVICE

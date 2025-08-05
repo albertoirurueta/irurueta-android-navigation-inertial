@@ -173,26 +173,23 @@ public abstract class RombergMatrixIntegrator<T extends MatrixQuadrature> extend
             final double a, final double b,
             final MatrixSingleDimensionFunctionEvaluatorListener listener, final double eps,
             final QuadratureType quadratureType) throws WrongSizeException {
-        switch (quadratureType) {
-            case MID_POINT:
-                return new RombergMidPointQuadratureMatrixIntegrator(a, b, listener, eps);
-            case INFINITY_MID_POINT:
-                return new RombergInfinityMidPointQuadratureMatrixIntegrator(a, b, listener, eps);
-            case LOWER_SQUARE_ROOT_MID_POINT:
-                return new RombergLowerSquareRootMidPointQuadratureMatrixIntegrator(a, b, listener,
-                        eps);
-            case UPPER_SQUARE_ROOT_MID_POINT:
-                return new RombergUpperSquareRootMidPointQuadratureMatrixIntegrator(a, b, listener,
-                        eps);
-            case EXPONENTIAL_MID_POINT:
-                return new RombergExponentialMidPointQuadratureMatrixIntegrator(a, listener, eps);
-            case DOUBLE_EXPONENTIAL_RULE:
-                return new RombergDoubleExponentialRuleQuadratureMatrixIntegrator(a, b, listener,
-                        eps);
-            case TRAPEZOIDAL:
-            default:
-                return new RombergTrapezoidalQuadratureMatrixIntegrator(a, b, listener, eps);
-        }
+        return switch (quadratureType) {
+            case MID_POINT -> new RombergMidPointQuadratureMatrixIntegrator(a, b, listener, eps);
+            case INFINITY_MID_POINT ->
+                    new RombergInfinityMidPointQuadratureMatrixIntegrator(a, b, listener, eps);
+            case LOWER_SQUARE_ROOT_MID_POINT ->
+                    new RombergLowerSquareRootMidPointQuadratureMatrixIntegrator(a, b, listener,
+                            eps);
+            case UPPER_SQUARE_ROOT_MID_POINT ->
+                    new RombergUpperSquareRootMidPointQuadratureMatrixIntegrator(a, b, listener,
+                            eps);
+            case EXPONENTIAL_MID_POINT ->
+                    new RombergExponentialMidPointQuadratureMatrixIntegrator(a, listener, eps);
+            case DOUBLE_EXPONENTIAL_RULE ->
+                    new RombergDoubleExponentialRuleQuadratureMatrixIntegrator(a, b, listener,
+                            eps);
+            default -> new RombergTrapezoidalQuadratureMatrixIntegrator(a, b, listener, eps);
+        };
     }
 
     /**
@@ -212,23 +209,20 @@ public abstract class RombergMatrixIntegrator<T extends MatrixQuadrature> extend
             final double a, final double b,
             final MatrixSingleDimensionFunctionEvaluatorListener listener,
             final QuadratureType quadratureType) throws WrongSizeException {
-        switch (quadratureType) {
-            case MID_POINT:
-                return new RombergMidPointQuadratureMatrixIntegrator(a, b, listener);
-            case INFINITY_MID_POINT:
-                return new RombergInfinityMidPointQuadratureMatrixIntegrator(a, b, listener);
-            case LOWER_SQUARE_ROOT_MID_POINT:
-                return new RombergLowerSquareRootMidPointQuadratureMatrixIntegrator(a, b, listener);
-            case UPPER_SQUARE_ROOT_MID_POINT:
-                return new RombergUpperSquareRootMidPointQuadratureMatrixIntegrator(a, b, listener);
-            case EXPONENTIAL_MID_POINT:
-                return new RombergExponentialMidPointQuadratureMatrixIntegrator(a, listener);
-            case DOUBLE_EXPONENTIAL_RULE:
-                return new RombergDoubleExponentialRuleQuadratureMatrixIntegrator(a, b, listener);
-            case TRAPEZOIDAL:
-            default:
-                return new RombergTrapezoidalQuadratureMatrixIntegrator(a, b, listener);
-        }
+        return switch (quadratureType) {
+            case MID_POINT -> new RombergMidPointQuadratureMatrixIntegrator(a, b, listener);
+            case INFINITY_MID_POINT ->
+                    new RombergInfinityMidPointQuadratureMatrixIntegrator(a, b, listener);
+            case LOWER_SQUARE_ROOT_MID_POINT ->
+                    new RombergLowerSquareRootMidPointQuadratureMatrixIntegrator(a, b, listener);
+            case UPPER_SQUARE_ROOT_MID_POINT ->
+                    new RombergUpperSquareRootMidPointQuadratureMatrixIntegrator(a, b, listener);
+            case EXPONENTIAL_MID_POINT ->
+                    new RombergExponentialMidPointQuadratureMatrixIntegrator(a, listener);
+            case DOUBLE_EXPONENTIAL_RULE ->
+                    new RombergDoubleExponentialRuleQuadratureMatrixIntegrator(a, b, listener);
+            default -> new RombergTrapezoidalQuadratureMatrixIntegrator(a, b, listener);
+        };
     }
 
     /**

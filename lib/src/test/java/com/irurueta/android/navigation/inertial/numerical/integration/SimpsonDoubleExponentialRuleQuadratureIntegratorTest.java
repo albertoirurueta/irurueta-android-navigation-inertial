@@ -67,89 +67,49 @@ public class SimpsonDoubleExponentialRuleQuadratureIntegratorTest {
 
         final SimpsonDoubleExponentialRuleQuadratureIntegrator interpolator1 =
                 new SimpsonDoubleExponentialRuleQuadratureIntegrator(a, b, HMAX,
-                        new SingleDimensionFunctionEvaluatorListener() {
-                            @Override
-                            public double evaluate(final double point) {
-                                return 0;
-                            }
-                        }, EPS);
+                        point -> 0, EPS);
 
         assertNotNull(interpolator1);
 
         final SimpsonDoubleExponentialRuleQuadratureIntegrator interpolator2 =
                 new SimpsonDoubleExponentialRuleQuadratureIntegrator(a, b,
-                        new SingleDimensionFunctionEvaluatorListener() {
-                            @Override
-                            public double evaluate(final double point) {
-                                return 0;
-                            }
-                        }, EPS);
+                        point -> 0, EPS);
 
         assertNotNull(interpolator2);
 
         final SimpsonDoubleExponentialRuleQuadratureIntegrator interpolator3 =
                 new SimpsonDoubleExponentialRuleQuadratureIntegrator(a, b, HMAX,
-                        new SingleDimensionFunctionEvaluatorListener() {
-                            @Override
-                            public double evaluate(final double point) {
-                                return 0;
-                            }
-                        });
+                        point -> 0);
 
         assertNotNull(interpolator3);
 
         final SimpsonDoubleExponentialRuleQuadratureIntegrator interpolator4 =
                 new SimpsonDoubleExponentialRuleQuadratureIntegrator(a, b,
-                        new SingleDimensionFunctionEvaluatorListener() {
-                            @Override
-                            public double evaluate(final double point) {
-                                return 0;
-                            }
-                        });
+                        point -> 0);
 
         assertNotNull(interpolator4);
 
         final SimpsonDoubleExponentialRuleQuadratureIntegrator interpolator5 =
                 new SimpsonDoubleExponentialRuleQuadratureIntegrator(a, b, HMAX,
-                        new DoubleExponentialSingleDimensionFunctionEvaluatorListener() {
-                            @Override
-                            public double evaluate(final double point, final double delta) {
-                                return 0;
-                            }
-                        }, EPS);
+                        (point, delta) -> 0, EPS);
 
         assertNotNull(interpolator5);
 
         final SimpsonDoubleExponentialRuleQuadratureIntegrator interpolator6 =
                 new SimpsonDoubleExponentialRuleQuadratureIntegrator(a, b,
-                        new DoubleExponentialSingleDimensionFunctionEvaluatorListener() {
-                            @Override
-                            public double evaluate(final double point, final double delta) {
-                                return 0;
-                            }
-                        }, EPS);
+                        (point, delta) -> 0, EPS);
 
         assertNotNull(interpolator6);
 
         final SimpsonDoubleExponentialRuleQuadratureIntegrator interpolator7 =
                 new SimpsonDoubleExponentialRuleQuadratureIntegrator(a, b, HMAX,
-                        new DoubleExponentialSingleDimensionFunctionEvaluatorListener() {
-                            @Override
-                            public double evaluate(final double point, final double delta) {
-                                return 0;
-                            }
-                        });
+                        (point, delta) -> 0);
 
         assertNotNull(interpolator7);
 
         final SimpsonDoubleExponentialRuleQuadratureIntegrator interpolator8 =
                 new SimpsonDoubleExponentialRuleQuadratureIntegrator(a, b,
-                        new DoubleExponentialSingleDimensionFunctionEvaluatorListener() {
-                            @Override
-                            public double evaluate(final double point, final double delta) {
-                                return 0;
-                            }
-                        });
+                        (point, delta) -> 0);
 
         assertNotNull(interpolator8);
     }
@@ -203,12 +163,7 @@ public class SimpsonDoubleExponentialRuleQuadratureIntegratorTest {
 
         final SimpsonDoubleExponentialRuleQuadratureIntegrator integrator =
                 new SimpsonDoubleExponentialRuleQuadratureIntegrator(a, b,
-                        new SingleDimensionFunctionEvaluatorListener() {
-                            @Override
-                            public double evaluate(double point) {
-                                return NormalDist.p(point, mu, sigma);
-                            }
-                        });
+                        point -> NormalDist.p(point, mu, sigma));
         final double result = integrator.integrate();
 
         assertEquals(expected, result, ABSOLUTE_ERROR_GAUSSIAN);
@@ -225,12 +180,7 @@ public class SimpsonDoubleExponentialRuleQuadratureIntegratorTest {
 
         final SimpsonDoubleExponentialRuleQuadratureIntegrator integrator =
                 new SimpsonDoubleExponentialRuleQuadratureIntegrator(a, b,
-                        new SingleDimensionFunctionEvaluatorListener() {
-                            @Override
-                            public double evaluate(double point) {
-                                return Math.exp(lambda * point);
-                            }
-                        });
+                        point -> Math.exp(lambda * point));
         final double result = integrator.integrate();
 
         assertEquals(expected, result, ABSOLUTE_ERROR_EXPONENTIAL);
@@ -242,12 +192,7 @@ public class SimpsonDoubleExponentialRuleQuadratureIntegratorTest {
 
         final SimpsonDoubleExponentialRuleQuadratureIntegrator integrator =
                 new SimpsonDoubleExponentialRuleQuadratureIntegrator(0.0, 1.0,
-                        new SingleDimensionFunctionEvaluatorListener() {
-                            @Override
-                            public double evaluate(double point) {
-                                return Math.log(point) * Math.log(1 - point);
-                            }
-                        });
+                        point -> Math.log(point) * Math.log(1 - point));
         integrator.integrate();
     }
 
@@ -259,12 +204,7 @@ public class SimpsonDoubleExponentialRuleQuadratureIntegratorTest {
 
         final SimpsonDoubleExponentialRuleQuadratureIntegrator integrator =
                 new SimpsonDoubleExponentialRuleQuadratureIntegrator(0.0, ALMOST_INFINITY,
-                        new SingleDimensionFunctionEvaluatorListener() {
-                            @Override
-                            public double evaluate(double point) {
-                                return Math.pow(point, -2.0 / 7.0) * Math.exp(-point * point);
-                            }
-                        });
+                        point -> Math.pow(point, -2.0 / 7.0) * Math.exp(-point * point));
         final double result = integrator.integrate();
 
         assertNotEquals(expected, result, ABSOLUTE_ERROR_IMPROPER_3);
@@ -301,12 +241,7 @@ public class SimpsonDoubleExponentialRuleQuadratureIntegratorTest {
 
         final SimpsonDoubleExponentialRuleQuadratureIntegrator integrator =
                 new SimpsonDoubleExponentialRuleQuadratureIntegrator(a, b,
-                        new SingleDimensionFunctionEvaluatorListener() {
-                            @Override
-                            public double evaluate(final double point) {
-                                return polynomial.evaluate(point);
-                            }
-                        });
+                        polynomial::evaluate);
         final double result = integrator.integrate();
 
         assertEquals(expected, result, error);

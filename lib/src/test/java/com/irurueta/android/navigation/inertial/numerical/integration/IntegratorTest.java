@@ -46,12 +46,7 @@ public class IntegratorTest {
         final double b = randomizer.nextDouble(a, MAX_VALUE);
 
         final SingleDimensionFunctionEvaluatorListener listener =
-                new SingleDimensionFunctionEvaluatorListener() {
-                    @Override
-                    public double evaluate(double point) {
-                        return 0.0;
-                    }
-                };
+                point -> 0.0;
 
         Integrator integrator = Integrator.create(a, b, listener, EPS, IntegratorType.QUADRATURE,
                 QuadratureType.TRAPEZOIDAL);
@@ -189,12 +184,7 @@ public class IntegratorTest {
         final double b = randomizer.nextDouble(a, MAX_VALUE);
 
         final SingleDimensionFunctionEvaluatorListener listener =
-                new SingleDimensionFunctionEvaluatorListener() {
-                    @Override
-                    public double evaluate(double point) {
-                        return 0.0;
-                    }
-                };
+                point -> 0.0;
 
         Integrator integrator = Integrator.create(a, b, listener, IntegratorType.QUADRATURE,
                 QuadratureType.TRAPEZOIDAL);
@@ -332,12 +322,7 @@ public class IntegratorTest {
         final double b = randomizer.nextDouble(a, MAX_VALUE);
 
         final SingleDimensionFunctionEvaluatorListener listener =
-                new SingleDimensionFunctionEvaluatorListener() {
-                    @Override
-                    public double evaluate(double point) {
-                        return 0.0;
-                    }
-                };
+                point -> 0.0;
 
         Integrator integrator = Integrator.create(a, b, listener, EPS, IntegratorType.QUADRATURE);
         assertTrue(integrator instanceof TrapezoidalQuadratureIntegrator);
@@ -362,12 +347,7 @@ public class IntegratorTest {
         final double b = randomizer.nextDouble(a, MAX_VALUE);
 
         final SingleDimensionFunctionEvaluatorListener listener =
-                new SingleDimensionFunctionEvaluatorListener() {
-                    @Override
-                    public double evaluate(double point) {
-                        return 0.0;
-                    }
-                };
+                point -> 0.0;
 
         Integrator integrator = Integrator.create(a, b, listener, IntegratorType.QUADRATURE);
         assertTrue(integrator instanceof TrapezoidalQuadratureIntegrator);
@@ -392,12 +372,7 @@ public class IntegratorTest {
         final double b = randomizer.nextDouble(a, MAX_VALUE);
 
         final SingleDimensionFunctionEvaluatorListener listener =
-                new SingleDimensionFunctionEvaluatorListener() {
-                    @Override
-                    public double evaluate(double point) {
-                        return 0.0;
-                    }
-                };
+                point -> 0.0;
 
         Integrator integrator = Integrator.create(a, b, listener, EPS);
         assertTrue(integrator instanceof RombergTrapezoidalQuadratureIntegrator);
@@ -412,12 +387,7 @@ public class IntegratorTest {
         final double b = randomizer.nextDouble(a, MAX_VALUE);
 
         final SingleDimensionFunctionEvaluatorListener listener =
-                new SingleDimensionFunctionEvaluatorListener() {
-                    @Override
-                    public double evaluate(double point) {
-                        return 0.0;
-                    }
-                };
+                point -> 0.0;
 
         Integrator integrator = Integrator.create(a, b, listener);
         assertTrue(integrator instanceof RombergTrapezoidalQuadratureIntegrator);
@@ -434,12 +404,9 @@ public class IntegratorTest {
 
         final int[] evaluations = new int[1];
         final SingleDimensionFunctionEvaluatorListener listener =
-                new SingleDimensionFunctionEvaluatorListener() {
-                    @Override
-                    public double evaluate(double point) {
-                        evaluations[0] += 1;
-                        return Math.exp(lambda * point);
-                    }
+                point -> {
+                    evaluations[0] += 1;
+                    return Math.exp(lambda * point);
                 };
 
         final double expected = 1.0 / lambda * (Math.exp(lambda * b) - Math.exp(lambda * a));

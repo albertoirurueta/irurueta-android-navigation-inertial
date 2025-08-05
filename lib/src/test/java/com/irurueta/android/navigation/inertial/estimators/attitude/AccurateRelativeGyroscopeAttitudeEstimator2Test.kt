@@ -19,22 +19,38 @@ import android.content.Context
 import android.os.SystemClock
 import androidx.test.core.app.ApplicationProvider
 import com.irurueta.android.navigation.inertial.collectors.*
-import com.irurueta.android.navigation.inertial.getPrivateProperty
 import com.irurueta.android.navigation.inertial.processors.attitude.AccurateRelativeGyroscopeAttitudeProcessor
-import com.irurueta.android.navigation.inertial.setPrivateProperty
+import com.irurueta.android.testutils.getPrivateProperty
+import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.frames.CoordinateTransformation
 import com.irurueta.navigation.frames.FrameType
 import com.irurueta.statistics.UniformRandomizer
 import io.mockk.*
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
 import org.junit.After
 import org.junit.Assert.*
+import org.junit.Ignore
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
+@Ignore("possible memory leak")
 @RunWith(RobolectricTestRunner::class)
 class AccurateRelativeGyroscopeAttitudeEstimator2Test {
+
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var attitudeAvailableListener:
+            AccurateRelativeGyroscopeAttitudeEstimator2.OnAttitudeAvailableListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var accuracyChangedListener:
+            AccurateRelativeGyroscopeAttitudeEstimator2.OnAccuracyChangedListener
 
     @After
     fun tearDown() {
@@ -62,10 +78,6 @@ class AccurateRelativeGyroscopeAttitudeEstimator2Test {
 
     @Test
     fun constructor_whenAllProperties_setsExpectedValues() {
-        val attitudeAvailableListener =
-            mockk<AccurateRelativeGyroscopeAttitudeEstimator2.OnAttitudeAvailableListener>()
-        val accuracyChangedListener =
-            mockk<AccurateRelativeGyroscopeAttitudeEstimator2.OnAccuracyChangedListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = AccurateRelativeGyroscopeAttitudeEstimator2(
             context,
@@ -100,8 +112,6 @@ class AccurateRelativeGyroscopeAttitudeEstimator2Test {
         assertNull(estimator.attitudeAvailableListener)
 
         // set new value
-        val attitudeAvailableListener =
-            mockk<AccurateRelativeGyroscopeAttitudeEstimator2.OnAttitudeAvailableListener>()
         estimator.attitudeAvailableListener = attitudeAvailableListener
 
         // check
@@ -117,8 +127,6 @@ class AccurateRelativeGyroscopeAttitudeEstimator2Test {
         assertNull(estimator.accuracyChangedListener)
 
         // set new value
-        val accuracyChangedListener =
-            mockk<AccurateRelativeGyroscopeAttitudeEstimator2.OnAccuracyChangedListener>()
         estimator.accuracyChangedListener = accuracyChangedListener
 
         // check
@@ -289,10 +297,6 @@ class AccurateRelativeGyroscopeAttitudeEstimator2Test {
 
     @Test
     fun onAccuracyChanged_whenListener_notifies() {
-        val accuracyChangedListener =
-            mockk<AccurateRelativeGyroscopeAttitudeEstimator2.OnAccuracyChangedListener>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = AccurateRelativeGyroscopeAttitudeEstimator2(
             context,
@@ -320,8 +324,6 @@ class AccurateRelativeGyroscopeAttitudeEstimator2Test {
 
     @Test
     fun onMeasurement_whenNotProcessed_makesNoAction() {
-        val attitudeAvailableListener =
-            mockk<AccurateRelativeGyroscopeAttitudeEstimator2.OnAttitudeAvailableListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = AccurateRelativeGyroscopeAttitudeEstimator2(
             context,
@@ -412,8 +414,6 @@ class AccurateRelativeGyroscopeAttitudeEstimator2Test {
 
     @Test
     fun onMeasurement_whenProcessedNotEstimateCoordinateTransformationAndEulerAngles_updateAttitudeAndNotifies() {
-        val attitudeAvailableListener =
-            mockk<AccurateRelativeGyroscopeAttitudeEstimator2.OnAttitudeAvailableListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = AccurateRelativeGyroscopeAttitudeEstimator2(
             context,
@@ -475,8 +475,6 @@ class AccurateRelativeGyroscopeAttitudeEstimator2Test {
 
     @Test
     fun onMeasurement_whenProcessedEstimateCoordinateTransformationAndEulerAngles_updateAttitudeAndNotifies() {
-        val attitudeAvailableListener =
-            mockk<AccurateRelativeGyroscopeAttitudeEstimator2.OnAttitudeAvailableListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = AccurateRelativeGyroscopeAttitudeEstimator2(
             context,

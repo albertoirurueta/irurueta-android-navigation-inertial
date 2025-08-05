@@ -40,12 +40,7 @@ public class DoubleExponentialRuleQuadratureTest {
         final Polynomial polynomial = buildPolynomial();
 
         final DoubleExponentialRuleQuadrature quadrature = new DoubleExponentialRuleQuadrature(
-                new SingleDimensionFunctionEvaluatorListener() {
-                    @Override
-                    public double evaluate(final double point) {
-                        return polynomial.evaluate(point);
-                    }
-                }, a, b);
+                polynomial::evaluate, a, b);
 
         assertNotEquals(0.0, quadrature.next());
     }

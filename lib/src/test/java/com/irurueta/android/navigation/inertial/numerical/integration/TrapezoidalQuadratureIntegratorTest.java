@@ -17,12 +17,12 @@ package com.irurueta.android.navigation.inertial.numerical.integration;
 
 import static org.junit.Assert.assertEquals;
 
-import com.irurueta.numerical.SingleDimensionFunctionEvaluatorListener;
 import com.irurueta.numerical.polynomials.Polynomial;
 import com.irurueta.statistics.UniformRandomizer;
 
 import org.junit.Test;
 
+/** @noinspection SameParameterValue*/
 public class TrapezoidalQuadratureIntegratorTest {
 
     private static final double MIN_VALUE = -10.0;
@@ -53,12 +53,7 @@ public class TrapezoidalQuadratureIntegratorTest {
         final double expected = 1.0 / lambda * (Math.exp(lambda * b) - Math.exp(lambda * a));
 
         final TrapezoidalQuadratureIntegrator integrator = new TrapezoidalQuadratureIntegrator(a, b,
-                new SingleDimensionFunctionEvaluatorListener() {
-            @Override
-            public double evaluate(double point) {
-                return Math.exp(lambda * point);
-            }
-        });
+                point -> Math.exp(lambda * point));
         final double result = integrator.integrate();
 
         assertEquals(expected, result, ABSOLUTE_ERROR_EXPONENTIAL);
@@ -70,12 +65,7 @@ public class TrapezoidalQuadratureIntegratorTest {
 
         final TrapezoidalQuadratureIntegrator integrator =
                 new TrapezoidalQuadratureIntegrator(0.0, 1.0,
-                        new SingleDimensionFunctionEvaluatorListener() {
-                            @Override
-                            public double evaluate(double point) {
-                                return Math.log(point) * Math.log(1.0 - point);
-                            }
-                        });
+                        point -> Math.log(point) * Math.log(1.0 - point));
         integrator.integrate();
     }
 
@@ -107,12 +97,7 @@ public class TrapezoidalQuadratureIntegratorTest {
                 - integrationPolynomial.evaluate(a);
 
         final TrapezoidalQuadratureIntegrator integrator = new TrapezoidalQuadratureIntegrator(a, b,
-                new SingleDimensionFunctionEvaluatorListener() {
-                    @Override
-                    public double evaluate(final double point) {
-                        return polynomial.evaluate(point);
-                    }
-                });
+                polynomial::evaluate);
         final double result = integrator.integrate();
 
         assertEquals(expected, result, TrapezoidalQuadratureIntegratorTest.ABSOLUTE_ERROR_1);

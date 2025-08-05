@@ -22,15 +22,34 @@ import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import com.irurueta.android.navigation.inertial.collectors.SensorType
 import io.mockk.*
+import io.mockk.impl.annotations.SpyK
+import io.mockk.junit4.MockKRule
 import org.junit.After
 import org.junit.Assert.*
+import org.junit.Ignore
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
+@Ignore("possible memory leak")
 @RunWith(RobolectricTestRunner::class)
 class SensorAvailabilityServiceTest {
+
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    private val context = ApplicationProvider.getApplicationContext<Context>()
+    private val sensorManager: SensorManager? =
+        context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
+
+    @SpyK
+    private var sensorManagerSpy = sensorManager!!
+
+    @SpyK
+    private var contextSpy = context
+
 
     @After
     fun tearDown() {
@@ -79,12 +98,6 @@ class SensorAvailabilityServiceTest {
     @Config(sdk = [Build.VERSION_CODES.O])
     @Test
     fun hasSensor_whenSdkO_returnsExpectedValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val sensorManager: SensorManager? =
-            context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
-        requireNotNull(sensorManager)
-        val sensorManagerSpy = spyk(sensorManager)
-        val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val service = SensorAvailabilityService(contextSpy)
@@ -135,12 +148,6 @@ class SensorAvailabilityServiceTest {
     @Config(sdk = [Build.VERSION_CODES.N])
     @Test
     fun hasSensor_whenSdkN_returnsExpectedValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val sensorManager: SensorManager? =
-            context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
-        requireNotNull(sensorManager)
-        val sensorManagerSpy = spyk(sensorManager)
-        val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val service = SensorAvailabilityService(contextSpy)

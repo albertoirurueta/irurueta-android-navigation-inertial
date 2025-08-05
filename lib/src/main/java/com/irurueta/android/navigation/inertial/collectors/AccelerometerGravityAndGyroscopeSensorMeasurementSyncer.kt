@@ -53,6 +53,7 @@ import java.util.*
  * consider the measurement as stale so that it is skipped from synced measurement processing and
  * returned back from buffer to cache of measurements.
  * @property staleDetectionEnabled true to enable stale measurement detection, false otherwise.
+ * @property skipWhenProcessing true to skip new measurements when processing a measurement.
  * @property accuracyChangedListener listener to notify changes in accuracy.
  * @property bufferFilledListener listener to notify that some buffer has been filled. This usually
  * happens when consumer of measurements cannot keep up with the rate at which measurements are
@@ -81,6 +82,7 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
     stopWhenFilledBuffer: Boolean = true,
     staleOffsetNanos: Long = DEFAULT_STALE_OFFSET_NANOS,
     staleDetectionEnabled: Boolean = true,
+    skipWhenProcessing: Boolean = true,
     accuracyChangedListener: OnAccuracyChangedListener<AccelerometerGravityAndGyroscopeSyncedSensorMeasurement, AccelerometerGravityAndGyroscopeSensorMeasurementSyncer>? = null,
     bufferFilledListener: OnBufferFilledListener<AccelerometerGravityAndGyroscopeSyncedSensorMeasurement, AccelerometerGravityAndGyroscopeSensorMeasurementSyncer>? = null,
     syncedMeasurementListener: OnSyncedMeasurementsListener<AccelerometerGravityAndGyroscopeSyncedSensorMeasurement, AccelerometerGravityAndGyroscopeSensorMeasurementSyncer>? = null,
@@ -93,6 +95,7 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
     stopWhenFilledBuffer,
     staleOffsetNanos,
     staleDetectionEnabled,
+    skipWhenProcessing,
     accuracyChangedListener,
     bufferFilledListener,
     syncedMeasurementListener,
@@ -241,7 +244,13 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
             }
         },
         measurementListener = { collector, _, bufferPosition ->
+            if (this.skipWhenProcessing && processing) {
+                return@BufferedAccelerometerSensorCollector
+            }
+
             synchronized(this@AccelerometerGravityAndGyroscopeSensorMeasurementSyncer) {
+                processing = true
+
                 val measurementsBeforePosition =
                     collector.getMeasurementsBeforePosition(bufferPosition)
                 val lastTimestamp = measurementsBeforePosition.lastOrNull()?.timestamp
@@ -252,6 +261,8 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
                     copyToAccelerometerMeasurements(measurementsBeforePosition)
                     processMeasurements()
                 }
+
+                processing = false
             }
         }
     )
@@ -500,6 +511,7 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
     @Synchronized
     override fun stop() {
         stopping = true
+        processing = false
         accelerometerSensorCollector.stop()
         gravitySensorCollector.stop()
         gyroscopeSensorCollector.stop()
@@ -737,7 +749,7 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
             hasPreviousAccelerometerMeasurement = true
         }
 
-        if (alreadyProcessedAccelerometerMeasurements.size > 0) {
+        if (alreadyProcessedAccelerometerMeasurements.isNotEmpty()) {
             // remove processed accelerometer measurements
             accelerometerMeasurements.removeAll(alreadyProcessedAccelerometerMeasurements)
         }
@@ -751,6 +763,7 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
             // collections are reset at this point to prevent concurrent modifications
             clearCollectionsAndReset()
             stopping = false
+            processing = false
         }
     }
 
@@ -762,6 +775,7 @@ class AccelerometerGravityAndGyroscopeSensorMeasurementSyncer(
         mostRecentTimestamp = null
         oldestTimestamp = null
         running = false
+        processing = false
 
         hasPreviousAccelerometerMeasurement = false
         hasPreviousGravityMeasurement = false

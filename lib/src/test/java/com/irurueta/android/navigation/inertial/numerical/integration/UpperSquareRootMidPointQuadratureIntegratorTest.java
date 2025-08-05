@@ -17,8 +17,6 @@ package com.irurueta.android.navigation.inertial.numerical.integration;
 
 import static org.junit.Assert.assertEquals;
 
-import com.irurueta.numerical.SingleDimensionFunctionEvaluatorListener;
-
 import org.junit.Test;
 
 public class UpperSquareRootMidPointQuadratureIntegratorTest {
@@ -32,12 +30,7 @@ public class UpperSquareRootMidPointQuadratureIntegratorTest {
 
         final UpperSquareRootMidPointQuadratureIntegrator integrator =
                 new UpperSquareRootMidPointQuadratureIntegrator(0.0, 1.0,
-                        new SingleDimensionFunctionEvaluatorListener() {
-                            @Override
-                            public double evaluate(double point) {
-                                return Math.log(point) * Math.log(1 - point);
-                            }
-                        });
+                        point -> Math.log(point) * Math.log(1 - point));
         final double result = integrator.integrate();
 
         assertEquals(expected, result, ABSOLUTE_ERROR_IMPROPER_1);

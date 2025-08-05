@@ -69,89 +69,49 @@ public class RombergDoubleExponentialRuleQuadratureIntegratorTest {
 
         final RombergDoubleExponentialRuleQuadratureIntegrator interpolator1 =
                 new RombergDoubleExponentialRuleQuadratureIntegrator(a, b, HMAX,
-                        new SingleDimensionFunctionEvaluatorListener() {
-                            @Override
-                            public double evaluate(final double point) {
-                                return 0;
-                            }
-                        }, EPS);
+                        point -> 0, EPS);
 
         assertNotNull(interpolator1);
 
         final RombergDoubleExponentialRuleQuadratureIntegrator interpolator2 =
                 new RombergDoubleExponentialRuleQuadratureIntegrator(a, b,
-                        new SingleDimensionFunctionEvaluatorListener() {
-                            @Override
-                            public double evaluate(final double point) {
-                                return 0;
-                            }
-                        }, EPS);
+                        point -> 0, EPS);
 
         assertNotNull(interpolator2);
 
         final RombergDoubleExponentialRuleQuadratureIntegrator interpolator3 =
                 new RombergDoubleExponentialRuleQuadratureIntegrator(a, b, HMAX,
-                        new SingleDimensionFunctionEvaluatorListener() {
-                            @Override
-                            public double evaluate(final double point) {
-                                return 0;
-                            }
-                        });
+                        point -> 0);
 
         assertNotNull(interpolator3);
 
         final RombergDoubleExponentialRuleQuadratureIntegrator interpolator4 =
                 new RombergDoubleExponentialRuleQuadratureIntegrator(a, b,
-                        new SingleDimensionFunctionEvaluatorListener() {
-                            @Override
-                            public double evaluate(final double point) {
-                                return 0;
-                            }
-                        });
+                        point -> 0);
 
         assertNotNull(interpolator4);
 
         final RombergDoubleExponentialRuleQuadratureIntegrator interpolator5 =
                 new RombergDoubleExponentialRuleQuadratureIntegrator(a, b, HMAX,
-                        new DoubleExponentialSingleDimensionFunctionEvaluatorListener() {
-                            @Override
-                            public double evaluate(final double point, final double delta) {
-                                return 0;
-                            }
-                        }, EPS);
+                        (point, delta) -> 0, EPS);
 
         assertNotNull(interpolator5);
 
         final RombergDoubleExponentialRuleQuadratureIntegrator interpolator6 =
                 new RombergDoubleExponentialRuleQuadratureIntegrator(a, b,
-                        new DoubleExponentialSingleDimensionFunctionEvaluatorListener() {
-                            @Override
-                            public double evaluate(final double point, final double delta) {
-                                return 0;
-                            }
-                        }, EPS);
+                        (point, delta) -> 0, EPS);
 
         assertNotNull(interpolator6);
 
         final RombergDoubleExponentialRuleQuadratureIntegrator interpolator7 =
                 new RombergDoubleExponentialRuleQuadratureIntegrator(a, b, HMAX,
-                        new DoubleExponentialSingleDimensionFunctionEvaluatorListener() {
-                            @Override
-                            public double evaluate(final double point, final double delta) {
-                                return 0;
-                            }
-                        });
+                        (point, delta) -> 0);
 
         assertNotNull(interpolator7);
 
         final RombergDoubleExponentialRuleQuadratureIntegrator interpolator8 =
                 new RombergDoubleExponentialRuleQuadratureIntegrator(a, b,
-                        new DoubleExponentialSingleDimensionFunctionEvaluatorListener() {
-                            @Override
-                            public double evaluate(final double point, final double delta) {
-                                return 0;
-                            }
-                        });
+                        (point, delta) -> 0);
 
         assertNotNull(interpolator8);
     }
@@ -205,12 +165,7 @@ public class RombergDoubleExponentialRuleQuadratureIntegratorTest {
 
         final RombergDoubleExponentialRuleQuadratureIntegrator integrator =
                 new RombergDoubleExponentialRuleQuadratureIntegrator(a, b,
-                        new SingleDimensionFunctionEvaluatorListener() {
-                            @Override
-                            public double evaluate(double point) {
-                                return NormalDist.p(point, mu, sigma);
-                            }
-                        });
+                        point -> NormalDist.p(point, mu, sigma));
         final double result = integrator.integrate();
 
         assertEquals(expected, result, ABSOLUTE_ERROR_GAUSSIAN);
@@ -227,12 +182,7 @@ public class RombergDoubleExponentialRuleQuadratureIntegratorTest {
 
         final RombergDoubleExponentialRuleQuadratureIntegrator integrator =
                 new RombergDoubleExponentialRuleQuadratureIntegrator(a, b,
-                        new SingleDimensionFunctionEvaluatorListener() {
-                            @Override
-                            public double evaluate(double point) {
-                                return Math.exp(lambda * point);
-                            }
-                        });
+                        point -> Math.exp(lambda * point));
         final double result = integrator.integrate();
 
         assertEquals(expected, result, ABSOLUTE_ERROR_EXPONENTIAL);
@@ -245,12 +195,7 @@ public class RombergDoubleExponentialRuleQuadratureIntegratorTest {
 
         final RombergDoubleExponentialRuleQuadratureIntegrator integrator =
                 new RombergDoubleExponentialRuleQuadratureIntegrator(0.0, 1.0,
-                        new SingleDimensionFunctionEvaluatorListener() {
-                            @Override
-                            public double evaluate(double point) {
-                                return Math.log(point) * Math.log(1 - point);
-                            }
-                        });
+                        point -> Math.log(point) * Math.log(1 - point));
         final double result = integrator.integrate();
 
         assertEquals(expected, result, ABSOLUTE_ERROR_IMPROPER_1);
@@ -264,12 +209,7 @@ public class RombergDoubleExponentialRuleQuadratureIntegratorTest {
 
         final RombergDoubleExponentialRuleQuadratureIntegrator integrator =
                 new RombergDoubleExponentialRuleQuadratureIntegrator(0.0, ALMOST_INFINITY,
-                        new SingleDimensionFunctionEvaluatorListener() {
-                            @Override
-                            public double evaluate(double point) {
-                                return Math.pow(point, -2.0 / 7.0) * Math.exp(-point * point);
-                            }
-                        });
+                        point -> Math.pow(point, -2.0 / 7.0) * Math.exp(-point * point));
         final double result = integrator.integrate();
 
         assertNotEquals(expected, result, ABSOLUTE_ERROR_IMPROPER_3);
@@ -306,12 +246,7 @@ public class RombergDoubleExponentialRuleQuadratureIntegratorTest {
 
         final RombergDoubleExponentialRuleQuadratureIntegrator integrator =
                 new RombergDoubleExponentialRuleQuadratureIntegrator(a, b,
-                        new SingleDimensionFunctionEvaluatorListener() {
-                            @Override
-                            public double evaluate(final double point) {
-                                return polynomial.evaluate(point);
-                            }
-                        });
+                        polynomial::evaluate);
         final double result = integrator.integrate();
 
         assertEquals(expected, result, error);

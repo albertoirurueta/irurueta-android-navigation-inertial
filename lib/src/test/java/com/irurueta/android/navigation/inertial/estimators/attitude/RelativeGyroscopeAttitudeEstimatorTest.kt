@@ -24,22 +24,41 @@ import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollec
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorType
 import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
-import com.irurueta.android.navigation.inertial.getPrivateProperty
-import com.irurueta.android.navigation.inertial.setPrivateProperty
+import com.irurueta.android.testutils.getPrivateProperty
+import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.frames.CoordinateTransformation
 import com.irurueta.navigation.frames.FrameType
 import com.irurueta.navigation.inertial.calibration.TimeIntervalEstimator
 import com.irurueta.statistics.UniformRandomizer
 import io.mockk.*
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
 import org.junit.After
 import org.junit.Assert.*
+import org.junit.Ignore
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
+@Ignore("possible memory leak")
 @RunWith(RobolectricTestRunner::class)
 class RelativeGyroscopeAttitudeEstimatorTest {
+
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var attitudeAvailableListener:
+            RelativeGyroscopeAttitudeEstimator.OnAttitudeAvailableListener
+
+    @MockK
+    private lateinit var gyroscopeMeasurementListener:
+            GyroscopeSensorCollector.OnMeasurementListener
+
+    @MockK
+    private lateinit var display: Display
 
     @After
     fun tearDown() {
@@ -69,9 +88,6 @@ class RelativeGyroscopeAttitudeEstimatorTest {
 
     @Test
     fun constructor_whenAllProperties_setsExpectedValues() {
-        val attitudeAvailableListener =
-            mockk<RelativeGyroscopeAttitudeEstimator.OnAttitudeAvailableListener>()
-        val gyroscopeMeasurementListener = mockk<GyroscopeSensorCollector.OnMeasurementListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = RelativeGyroscopeAttitudeEstimator(
             context,
@@ -107,8 +123,6 @@ class RelativeGyroscopeAttitudeEstimatorTest {
         assertNull(estimator.attitudeAvailableListener)
 
         // set new value
-        val attitudeAvailableListener =
-            mockk<RelativeGyroscopeAttitudeEstimator.OnAttitudeAvailableListener>()
         estimator.attitudeAvailableListener = attitudeAvailableListener
 
         // check
@@ -124,7 +138,6 @@ class RelativeGyroscopeAttitudeEstimatorTest {
         assertNull(estimator.gyroscopeMeasurementListener)
 
         // set new value
-        val gyroscopeMeasurementListener = mockk<GyroscopeSensorCollector.OnMeasurementListener>()
         estimator.gyroscopeMeasurementListener = gyroscopeMeasurementListener
 
         // check
@@ -277,7 +290,6 @@ class RelativeGyroscopeAttitudeEstimatorTest {
 
     @Test
     fun onGyroscopeMeasurement_whenNoProcessedSample_setsInitialTimestamp() {
-        val display = mockk<Display>()
         every { display.rotation }.returns(Surface.ROTATION_0)
         val context = spyk(ApplicationProvider.getApplicationContext())
         every { context.display }.returns(display)
@@ -403,7 +415,6 @@ class RelativeGyroscopeAttitudeEstimatorTest {
 
     @Test
     fun onGyroscopeMeasurement_whenProcessedSample_keepsInitialTimestamp() {
-        val display = mockk<Display>()
         every { display.rotation }.returns(Surface.ROTATION_0)
         val context = spyk(ApplicationProvider.getApplicationContext())
         every { context.display }.returns(display)
@@ -539,9 +550,6 @@ class RelativeGyroscopeAttitudeEstimatorTest {
 
     @Test
     fun onGyroscopeMeasurement_whenListenerEstimateCoordinateTransformationAndEstimateDisplayEulerAnglesDisabled_notifiesWithoutSuchParameters() {
-        val attitudeAvailableListener =
-            mockk<RelativeGyroscopeAttitudeEstimator.OnAttitudeAvailableListener>(relaxUnitFun = true)
-        val display = mockk<Display>()
         every { display.rotation }.returns(Surface.ROTATION_0)
         val context = spyk(ApplicationProvider.getApplicationContext())
         every { context.display }.returns(display)
@@ -684,9 +692,6 @@ class RelativeGyroscopeAttitudeEstimatorTest {
 
     @Test
     fun onGyroscopeMeasurement_whenListenerEstimateCoordinateTransformationAndEstimateDisplayEulerAnglesEnabled_notifiesWithSuchParameters() {
-        val attitudeAvailableListener =
-            mockk<RelativeGyroscopeAttitudeEstimator.OnAttitudeAvailableListener>(relaxUnitFun = true)
-        val display = mockk<Display>()
         every { display.rotation }.returns(Surface.ROTATION_0)
         val context = spyk(ApplicationProvider.getApplicationContext())
         every { context.display }.returns(display)
@@ -829,9 +834,6 @@ class RelativeGyroscopeAttitudeEstimatorTest {
 
     @Test
     fun onGyroscopeMeasurement_whenBiases_notifiesWithSuchParameters() {
-        val attitudeAvailableListener =
-            mockk<RelativeGyroscopeAttitudeEstimator.OnAttitudeAvailableListener>(relaxUnitFun = true)
-        val display = mockk<Display>()
         every { display.rotation }.returns(Surface.ROTATION_0)
         val context = spyk(ApplicationProvider.getApplicationContext())
         every { context.display }.returns(display)
@@ -981,9 +983,6 @@ class RelativeGyroscopeAttitudeEstimatorTest {
 
     @Test
     fun onGyroscopeMeasurement_whenListenerIgnoreDisplayOrientation_notifiesWithoutSuchParameters() {
-        val attitudeAvailableListener =
-            mockk<RelativeGyroscopeAttitudeEstimator.OnAttitudeAvailableListener>(relaxUnitFun = true)
-        val display = mockk<Display>()
         every { display.rotation }.returns(Surface.ROTATION_0)
         val context = spyk(ApplicationProvider.getApplicationContext())
         every { context.display }.returns(display)

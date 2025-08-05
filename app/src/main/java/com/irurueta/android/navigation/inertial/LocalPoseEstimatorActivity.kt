@@ -122,14 +122,14 @@ class LocalPoseEstimatorActivity : AppCompatActivity() {
             extras?.getBoolean(USE_WORLD_MAGNETIC_MODEL, false)
                 ?: false
 
-        setContentView(R.layout.activity_local_pose_estimator)
-        cubeView = findViewById(R.id.cube)
-        rollView = findViewById(R.id.roll)
-        pitchView = findViewById(R.id.pitch)
-        yawView = findViewById(R.id.yaw)
-        xPosView = findViewById(R.id.x_pos)
-        yPosView = findViewById(R.id.y_pos)
-        zPosView = findViewById(R.id.z_pos)
+        setContentView(com.irurueta.android.navigation.inertial.app.R.layout.activity_local_pose_estimator)
+        cubeView = findViewById(com.irurueta.android.navigation.inertial.app.R.id.cube)
+        rollView = findViewById(com.irurueta.android.navigation.inertial.app.R.id.roll)
+        pitchView = findViewById(com.irurueta.android.navigation.inertial.app.R.id.pitch)
+        yawView = findViewById(com.irurueta.android.navigation.inertial.app.R.id.yaw)
+        xPosView = findViewById(com.irurueta.android.navigation.inertial.app.R.id.x_pos)
+        yPosView = findViewById(com.irurueta.android.navigation.inertial.app.R.id.y_pos)
+        zPosView = findViewById(com.irurueta.android.navigation.inertial.app.R.id.z_pos)
 
         val cubeSize = 0.25f
         val cubeDistance = 0.5
@@ -238,11 +238,20 @@ class LocalPoseEstimatorActivity : AppCompatActivity() {
                     ENUtoNEDConverter.convert(enuRotation, nedRotation)
                     nedRotation.toEulerAngles(eulerAngles)
                     rollView?.text =
-                        getString(R.string.roll_degrees, Math.toDegrees(eulerAngles[0]))
+                        getString(
+                            com.irurueta.android.navigation.inertial.app.R.string.roll_degrees,
+                            Math.toDegrees(eulerAngles[0])
+                        )
                     pitchView?.text =
-                        getString(R.string.pitch_degrees, Math.toDegrees(eulerAngles[1]))
+                        getString(
+                            com.irurueta.android.navigation.inertial.app.R.string.pitch_degrees,
+                            Math.toDegrees(eulerAngles[1])
+                        )
                     yawView?.text =
-                        getString(R.string.yaw_degrees, Math.toDegrees(eulerAngles[2]))
+                        getString(
+                            com.irurueta.android.navigation.inertial.app.R.string.yaw_degrees,
+                            Math.toDegrees(eulerAngles[2])
+                        )
 
                     initialTransformation?.inverse()
                     initialTransformation?.transform(initialCamera, camera)

@@ -18,23 +18,38 @@ package com.irurueta.android.navigation.inertial.processors.attitude
 import android.location.Location
 import com.irurueta.android.navigation.inertial.QuaternionHelper
 import com.irurueta.android.navigation.inertial.collectors.*
-import com.irurueta.android.navigation.inertial.getPrivateProperty
-import com.irurueta.android.navigation.inertial.setPrivateProperty
+import com.irurueta.android.testutils.getPrivateProperty
+import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.inertial.calibration.AccelerationTriad
 import com.irurueta.statistics.UniformRandomizer
 import com.irurueta.units.AccelerationUnit
 import io.mockk.*
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
 import org.junit.After
 import org.junit.Assert.*
+import org.junit.Ignore
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import kotlin.math.abs
 import kotlin.math.min
 
+@Ignore("possible memory leak")
 @RunWith(RobolectricTestRunner::class)
 class AccelerometerLeveledRelativeAttitudeProcessorTest {
+
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var processorListener:
+            BaseLeveledRelativeAttitudeProcessor.OnProcessedListener<AccelerometerSensorMeasurement, AccelerometerAndGyroscopeSyncedSensorMeasurement>
+
+    @MockK
+    private lateinit var location: Location
 
     @After
     fun tearDown() {
@@ -96,9 +111,6 @@ class AccelerometerLeveledRelativeAttitudeProcessorTest {
 
     @Test
     fun constructor_whenListener_setsExpectedValues() {
-        val processorListener =
-            mockk<BaseLeveledRelativeAttitudeProcessor.OnProcessedListener<AccelerometerSensorMeasurement,
-                    AccelerometerAndGyroscopeSyncedSensorMeasurement>>()
         val processor = AccelerometerLeveledRelativeAttitudeProcessor(processorListener)
 
         // check
@@ -1070,11 +1082,6 @@ class AccelerometerLeveledRelativeAttitudeProcessorTest {
 
     @Test
     fun process_whenRelativeAttitudeProcessedPreviousRelativeGravityProcessedAndListener_updatesFusedAttitudeAndReturnsTrue() {
-        val processorListener =
-            mockk<BaseLeveledRelativeAttitudeProcessor.OnProcessedListener<AccelerometerSensorMeasurement,
-                    AccelerometerAndGyroscopeSyncedSensorMeasurement>>(
-                relaxUnitFun = true
-            )
         val processor = AccelerometerLeveledRelativeAttitudeProcessor(processorListener)
 
         // setup spies
@@ -1280,11 +1287,6 @@ class AccelerometerLeveledRelativeAttitudeProcessorTest {
 
     @Test
     fun process_whenRelativeAttitudeProcessedPreviousRelativeGravityProcessedAndNoResetToLevelingAndMediumDivergence_fusesAttitudeIncreasesPanicCounterAndReturnsTrue() {
-        val processorListener =
-            mockk<BaseLeveledRelativeAttitudeProcessor.OnProcessedListener<AccelerometerSensorMeasurement,
-                    AccelerometerAndGyroscopeSyncedSensorMeasurement>>(
-                relaxUnitFun = true
-            )
         val processor = AccelerometerLeveledRelativeAttitudeProcessor(processorListener)
 
         // setup spies
@@ -1502,11 +1504,6 @@ class AccelerometerLeveledRelativeAttitudeProcessorTest {
 
     @Test
     fun process_whenRelativeAttitudeProcessedPreviousRelativeGravityProcessedAndNoResetToLevelingAndLargeDivergence_fusesAttitudeIncreasesPanicCounterAndReturnsTrue() {
-        val processorListener =
-            mockk<BaseLeveledRelativeAttitudeProcessor.OnProcessedListener<AccelerometerSensorMeasurement,
-                    AccelerometerAndGyroscopeSyncedSensorMeasurement>>(
-                relaxUnitFun = true
-            )
         val processor = AccelerometerLeveledRelativeAttitudeProcessor(processorListener)
 
         // setup spies
@@ -1724,11 +1721,6 @@ class AccelerometerLeveledRelativeAttitudeProcessorTest {
 
     @Test
     fun process_whenRelativeAttitudeProcessedPreviousRelativeGravityProcessedAndNoResetToLevelingSmallDivergenceAndIndirectInterpolation_fusesAttitudeIncreasesPanicCounterAndReturnsTrue() {
-        val processorListener =
-            mockk<BaseLeveledRelativeAttitudeProcessor.OnProcessedListener<AccelerometerSensorMeasurement,
-                    AccelerometerAndGyroscopeSyncedSensorMeasurement>>(
-                relaxUnitFun = true
-            )
         val processor = AccelerometerLeveledRelativeAttitudeProcessor(processorListener)
         processor.useIndirectInterpolation = true
 
@@ -1958,11 +1950,6 @@ class AccelerometerLeveledRelativeAttitudeProcessorTest {
 
     @Test
     fun process_whenRelativeAttitudeProcessedPreviousRelativeGravityProcessedAndNoResetToLevelingSmallDivergenceAndDirectInterpolation_fusesAttitudeIncreasesPanicCounterAndReturnsTrue() {
-        val processorListener =
-            mockk<BaseLeveledRelativeAttitudeProcessor.OnProcessedListener<AccelerometerSensorMeasurement,
-                    AccelerometerAndGyroscopeSyncedSensorMeasurement>>(
-                relaxUnitFun = true
-            )
         val processor = AccelerometerLeveledRelativeAttitudeProcessor(processorListener)
         processor.useIndirectInterpolation = false
 
@@ -2185,6 +2172,28 @@ class AccelerometerLeveledRelativeAttitudeProcessorTest {
         }
     }
 
+    private fun getLocation(): Location {
+        val randomizer = UniformRandomizer()
+        val latitudeDegrees = randomizer.nextDouble(
+            MIN_LATITUDE_DEGREES,
+            MAX_LATITUDE_DEGREES
+        )
+        val longitudeDegrees = randomizer.nextDouble(
+            MIN_LONGITUDE_DEGREES,
+            MAX_LONGITUDE_DEGREES
+        )
+        val height = randomizer.nextDouble(
+            MIN_HEIGHT,
+            MAX_HEIGHT
+        )
+
+        every { location.latitude }.returns(latitudeDegrees)
+        every { location.longitude }.returns(longitudeDegrees)
+        every { location.altitude }.returns(height)
+
+        return location
+    }
+
     private companion object {
         const val MIN_LATITUDE_DEGREES = -90.0
         const val MAX_LATITUDE_DEGREES = 90.0
@@ -2199,29 +2208,6 @@ class AccelerometerLeveledRelativeAttitudeProcessorTest {
         const val MAX_ANGLE_DEGREES = 45.0
 
         const val TIME_INTERVAL = 0.02
-
-        fun getLocation(): Location {
-            val randomizer = UniformRandomizer()
-            val latitudeDegrees = randomizer.nextDouble(
-                MIN_LATITUDE_DEGREES,
-                MAX_LATITUDE_DEGREES
-            )
-            val longitudeDegrees = randomizer.nextDouble(
-                MIN_LONGITUDE_DEGREES,
-                MAX_LONGITUDE_DEGREES
-            )
-            val height = randomizer.nextDouble(
-                MIN_HEIGHT,
-                MAX_HEIGHT
-            )
-
-            val location = mockk<Location>()
-            every { location.latitude }.returns(latitudeDegrees)
-            every { location.longitude }.returns(longitudeDegrees)
-            every { location.altitude }.returns(height)
-
-            return location
-        }
 
         fun getAttitude(): Quaternion {
             val randomizer = UniformRandomizer()

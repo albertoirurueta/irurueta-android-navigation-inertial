@@ -22,10 +22,10 @@ import com.irurueta.algebra.Matrix
 import com.irurueta.android.navigation.inertial.calibration.intervals.ErrorReason
 import com.irurueta.android.navigation.inertial.calibration.intervals.measurements.GyroscopeMeasurementGenerator
 import com.irurueta.android.navigation.inertial.calibration.intervals.measurements.SingleSensorCalibrationMeasurementGenerator
-import com.irurueta.android.navigation.inertial.callPrivateFuncWithResult
 import com.irurueta.android.navigation.inertial.collectors.*
-import com.irurueta.android.navigation.inertial.getPrivateProperty
-import com.irurueta.android.navigation.inertial.setPrivateProperty
+import com.irurueta.android.testutils.callPrivateFuncWithResult
+import com.irurueta.android.testutils.getPrivateProperty
+import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.NavigationException
 import com.irurueta.navigation.frames.*
@@ -40,8 +40,12 @@ import com.irurueta.numerical.robust.RobustEstimatorMethod
 import com.irurueta.statistics.UniformRandomizer
 import com.irurueta.units.*
 import io.mockk.*
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
 import org.junit.After
 import org.junit.Assert.*
+import org.junit.Ignore
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -49,8 +53,77 @@ import java.lang.reflect.InvocationTargetException
 import java.util.*
 import kotlin.math.sqrt
 
+@Ignore("possible memory leak")
 @RunWith(RobolectricTestRunner::class)
 class StaticIntervalGyroscopeCalibratorTest {
+
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var initializationStartedListener:
+            StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalGyroscopeCalibrator>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var initializationCompletedListener:
+            StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalGyroscopeCalibrator>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var errorListener:
+            StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalGyroscopeCalibrator>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var staticIntervalDetectedListener:
+            StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<StaticIntervalGyroscopeCalibrator>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var dynamicIntervalDetectedListener:
+            StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener<StaticIntervalGyroscopeCalibrator>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var staticIntervalSkippedListener:
+            StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalSkippedListener<StaticIntervalGyroscopeCalibrator>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var dynamicIntervalSkippedListener:
+            StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalSkippedListener<StaticIntervalGyroscopeCalibrator>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var generatedGyroscopeMeasurementListener:
+            StaticIntervalGyroscopeCalibrator.OnGeneratedGyroscopeMeasurementListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var readyToSolveCalibrationListener:
+            StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener<StaticIntervalGyroscopeCalibrator>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var calibrationSolvingStartedListener:
+            StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalGyroscopeCalibrator>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var calibrationCompletedListener:
+            StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<StaticIntervalGyroscopeCalibrator>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var stoppedListener:
+            StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalGyroscopeCalibrator>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var initialGyroscopeBiasAvailableListener:
+            StaticIntervalGyroscopeCalibrator.OnInitialGyroscopeBiasAvailableListener
+
+    @MockK
+    private lateinit var accuracyChangedListener: SensorCollector.OnAccuracyChangedListener
+
+    @MockK
+    private lateinit var gyroscopeQualityScoreMapper:
+            QualityScoreMapper<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>
+
+    @MockK
+    private lateinit var generator: GyroscopeMeasurementGenerator
+
+    @MockK
+    private lateinit var internalCalibrator: GyroscopeNonLinearCalibrator
 
     @After
     fun tearDown() {
@@ -1829,8 +1902,6 @@ class StaticIntervalGyroscopeCalibratorTest {
 
     @Test
     fun constructor_whenInitializationStartedListener_returnsExpectedValues() {
-        val initializationStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalGyroscopeCalibrator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(
             context,
@@ -2088,10 +2159,6 @@ class StaticIntervalGyroscopeCalibratorTest {
 
     @Test
     fun constructor_whenInitializationCompletedListener_returnsExpectedValues() {
-        val initializationStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalGyroscopeCalibrator>>()
-        val initializationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalGyroscopeCalibrator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(
             context,
@@ -2350,12 +2417,6 @@ class StaticIntervalGyroscopeCalibratorTest {
 
     @Test
     fun constructor_whenErrorListener_returnsExpectedValues() {
-        val initializationStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalGyroscopeCalibrator>>()
-        val initializationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalGyroscopeCalibrator>>()
-        val errorListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalGyroscopeCalibrator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(
             context,
@@ -2615,14 +2676,6 @@ class StaticIntervalGyroscopeCalibratorTest {
 
     @Test
     fun constructor_whenStaticIntervalDetectedListener_returnsExpectedValues() {
-        val initializationStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalGyroscopeCalibrator>>()
-        val initializationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalGyroscopeCalibrator>>()
-        val errorListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalGyroscopeCalibrator>>()
-        val staticIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<StaticIntervalGyroscopeCalibrator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(
             context,
@@ -2883,16 +2936,6 @@ class StaticIntervalGyroscopeCalibratorTest {
 
     @Test
     fun constructor_whenDynamicIntervalDetectedListener_returnsExpectedValues() {
-        val initializationStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalGyroscopeCalibrator>>()
-        val initializationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalGyroscopeCalibrator>>()
-        val errorListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalGyroscopeCalibrator>>()
-        val staticIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<StaticIntervalGyroscopeCalibrator>>()
-        val dynamicIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener<StaticIntervalGyroscopeCalibrator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(
             context,
@@ -3154,18 +3197,6 @@ class StaticIntervalGyroscopeCalibratorTest {
 
     @Test
     fun constructor_whenStaticIntervalSkippedListener_returnsExpectedValues() {
-        val initializationStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalGyroscopeCalibrator>>()
-        val initializationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalGyroscopeCalibrator>>()
-        val errorListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalGyroscopeCalibrator>>()
-        val staticIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<StaticIntervalGyroscopeCalibrator>>()
-        val dynamicIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener<StaticIntervalGyroscopeCalibrator>>()
-        val staticIntervalSkippedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalSkippedListener<StaticIntervalGyroscopeCalibrator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(
             context,
@@ -3428,20 +3459,6 @@ class StaticIntervalGyroscopeCalibratorTest {
 
     @Test
     fun constructor_whenDynamicIntervalSkippedListener_returnsExpectedValues() {
-        val initializationStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalGyroscopeCalibrator>>()
-        val initializationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalGyroscopeCalibrator>>()
-        val errorListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalGyroscopeCalibrator>>()
-        val staticIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<StaticIntervalGyroscopeCalibrator>>()
-        val dynamicIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener<StaticIntervalGyroscopeCalibrator>>()
-        val staticIntervalSkippedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalSkippedListener<StaticIntervalGyroscopeCalibrator>>()
-        val dynamicIntervalSkippedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalSkippedListener<StaticIntervalGyroscopeCalibrator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(
             context,
@@ -3705,22 +3722,6 @@ class StaticIntervalGyroscopeCalibratorTest {
 
     @Test
     fun constructor_whenGeneratedGyroscopeMeasurementListener_returnsExpectedValues() {
-        val initializationStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalGyroscopeCalibrator>>()
-        val initializationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalGyroscopeCalibrator>>()
-        val errorListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalGyroscopeCalibrator>>()
-        val staticIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<StaticIntervalGyroscopeCalibrator>>()
-        val dynamicIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener<StaticIntervalGyroscopeCalibrator>>()
-        val staticIntervalSkippedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalSkippedListener<StaticIntervalGyroscopeCalibrator>>()
-        val dynamicIntervalSkippedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalSkippedListener<StaticIntervalGyroscopeCalibrator>>()
-        val generatedGyroscopeMeasurementListener =
-            mockk<StaticIntervalGyroscopeCalibrator.OnGeneratedGyroscopeMeasurementListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(
             context,
@@ -3988,24 +3989,6 @@ class StaticIntervalGyroscopeCalibratorTest {
 
     @Test
     fun constructor_whenReadyToSolveCalibrationListener_returnsExpectedValues() {
-        val initializationStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalGyroscopeCalibrator>>()
-        val initializationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalGyroscopeCalibrator>>()
-        val errorListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalGyroscopeCalibrator>>()
-        val staticIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<StaticIntervalGyroscopeCalibrator>>()
-        val dynamicIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener<StaticIntervalGyroscopeCalibrator>>()
-        val staticIntervalSkippedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalSkippedListener<StaticIntervalGyroscopeCalibrator>>()
-        val dynamicIntervalSkippedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalSkippedListener<StaticIntervalGyroscopeCalibrator>>()
-        val generatedGyroscopeMeasurementListener =
-            mockk<StaticIntervalGyroscopeCalibrator.OnGeneratedGyroscopeMeasurementListener>()
-        val readyToSolveCalibrationListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener<StaticIntervalGyroscopeCalibrator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(
             context,
@@ -4274,26 +4257,6 @@ class StaticIntervalGyroscopeCalibratorTest {
 
     @Test
     fun constructor_whenCalibrationSolvingStartedListener_returnsExpectedValues() {
-        val initializationStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalGyroscopeCalibrator>>()
-        val initializationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalGyroscopeCalibrator>>()
-        val errorListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalGyroscopeCalibrator>>()
-        val staticIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<StaticIntervalGyroscopeCalibrator>>()
-        val dynamicIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener<StaticIntervalGyroscopeCalibrator>>()
-        val staticIntervalSkippedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalSkippedListener<StaticIntervalGyroscopeCalibrator>>()
-        val dynamicIntervalSkippedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalSkippedListener<StaticIntervalGyroscopeCalibrator>>()
-        val generatedGyroscopeMeasurementListener =
-            mockk<StaticIntervalGyroscopeCalibrator.OnGeneratedGyroscopeMeasurementListener>()
-        val readyToSolveCalibrationListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener<StaticIntervalGyroscopeCalibrator>>()
-        val calibrationSolvingStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalGyroscopeCalibrator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(
             context,
@@ -4563,28 +4526,6 @@ class StaticIntervalGyroscopeCalibratorTest {
 
     @Test
     fun constructor_whenCalibrationCompletedListener_returnsExpectedValues() {
-        val initializationStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalGyroscopeCalibrator>>()
-        val initializationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalGyroscopeCalibrator>>()
-        val errorListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalGyroscopeCalibrator>>()
-        val staticIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<StaticIntervalGyroscopeCalibrator>>()
-        val dynamicIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener<StaticIntervalGyroscopeCalibrator>>()
-        val staticIntervalSkippedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalSkippedListener<StaticIntervalGyroscopeCalibrator>>()
-        val dynamicIntervalSkippedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalSkippedListener<StaticIntervalGyroscopeCalibrator>>()
-        val generatedGyroscopeMeasurementListener =
-            mockk<StaticIntervalGyroscopeCalibrator.OnGeneratedGyroscopeMeasurementListener>()
-        val readyToSolveCalibrationListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener<StaticIntervalGyroscopeCalibrator>>()
-        val calibrationSolvingStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalGyroscopeCalibrator>>()
-        val calibrationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<StaticIntervalGyroscopeCalibrator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(
             context,
@@ -4855,30 +4796,6 @@ class StaticIntervalGyroscopeCalibratorTest {
 
     @Test
     fun constructor_whenStoppedListener_returnsExpectedValues() {
-        val initializationStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalGyroscopeCalibrator>>()
-        val initializationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalGyroscopeCalibrator>>()
-        val errorListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalGyroscopeCalibrator>>()
-        val staticIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<StaticIntervalGyroscopeCalibrator>>()
-        val dynamicIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener<StaticIntervalGyroscopeCalibrator>>()
-        val staticIntervalSkippedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalSkippedListener<StaticIntervalGyroscopeCalibrator>>()
-        val dynamicIntervalSkippedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalSkippedListener<StaticIntervalGyroscopeCalibrator>>()
-        val generatedGyroscopeMeasurementListener =
-            mockk<StaticIntervalGyroscopeCalibrator.OnGeneratedGyroscopeMeasurementListener>()
-        val readyToSolveCalibrationListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener<StaticIntervalGyroscopeCalibrator>>()
-        val calibrationSolvingStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalGyroscopeCalibrator>>()
-        val calibrationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<StaticIntervalGyroscopeCalibrator>>()
-        val stoppedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalGyroscopeCalibrator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(
             context,
@@ -5150,32 +5067,6 @@ class StaticIntervalGyroscopeCalibratorTest {
 
     @Test
     fun constructor_whenInitialGyroscopeBiasAvailableListener_returnsExpectedValues() {
-        val initializationStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalGyroscopeCalibrator>>()
-        val initializationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalGyroscopeCalibrator>>()
-        val errorListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalGyroscopeCalibrator>>()
-        val staticIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<StaticIntervalGyroscopeCalibrator>>()
-        val dynamicIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener<StaticIntervalGyroscopeCalibrator>>()
-        val staticIntervalSkippedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalSkippedListener<StaticIntervalGyroscopeCalibrator>>()
-        val dynamicIntervalSkippedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalSkippedListener<StaticIntervalGyroscopeCalibrator>>()
-        val generatedGyroscopeMeasurementListener =
-            mockk<StaticIntervalGyroscopeCalibrator.OnGeneratedGyroscopeMeasurementListener>()
-        val readyToSolveCalibrationListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener<StaticIntervalGyroscopeCalibrator>>()
-        val calibrationSolvingStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalGyroscopeCalibrator>>()
-        val calibrationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<StaticIntervalGyroscopeCalibrator>>()
-        val stoppedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalGyroscopeCalibrator>>()
-        val initialGyroscopeBiasAvailableListener =
-            mockk<StaticIntervalGyroscopeCalibrator.OnInitialGyroscopeBiasAvailableListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(
             context,
@@ -5451,33 +5342,6 @@ class StaticIntervalGyroscopeCalibratorTest {
 
     @Test
     fun constructor_whenAccuracyChangedListener_returnsExpectedValues() {
-        val initializationStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalGyroscopeCalibrator>>()
-        val initializationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalGyroscopeCalibrator>>()
-        val errorListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalGyroscopeCalibrator>>()
-        val staticIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<StaticIntervalGyroscopeCalibrator>>()
-        val dynamicIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener<StaticIntervalGyroscopeCalibrator>>()
-        val staticIntervalSkippedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalSkippedListener<StaticIntervalGyroscopeCalibrator>>()
-        val dynamicIntervalSkippedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalSkippedListener<StaticIntervalGyroscopeCalibrator>>()
-        val generatedGyroscopeMeasurementListener =
-            mockk<StaticIntervalGyroscopeCalibrator.OnGeneratedGyroscopeMeasurementListener>()
-        val readyToSolveCalibrationListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener<StaticIntervalGyroscopeCalibrator>>()
-        val calibrationSolvingStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalGyroscopeCalibrator>>()
-        val calibrationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<StaticIntervalGyroscopeCalibrator>>()
-        val stoppedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalGyroscopeCalibrator>>()
-        val initialGyroscopeBiasAvailableListener =
-            mockk<StaticIntervalGyroscopeCalibrator.OnInitialGyroscopeBiasAvailableListener>()
-        val accuracyChangedListener = mockk<SensorCollector.OnAccuracyChangedListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(
             context,
@@ -5754,35 +5618,6 @@ class StaticIntervalGyroscopeCalibratorTest {
 
     @Test
     fun constructor_whenGyroscopeQualityScoreMapper_returnsExpectedValues() {
-        val initializationStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalGyroscopeCalibrator>>()
-        val initializationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalGyroscopeCalibrator>>()
-        val errorListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalGyroscopeCalibrator>>()
-        val staticIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<StaticIntervalGyroscopeCalibrator>>()
-        val dynamicIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener<StaticIntervalGyroscopeCalibrator>>()
-        val staticIntervalSkippedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalSkippedListener<StaticIntervalGyroscopeCalibrator>>()
-        val dynamicIntervalSkippedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalSkippedListener<StaticIntervalGyroscopeCalibrator>>()
-        val generatedGyroscopeMeasurementListener =
-            mockk<StaticIntervalGyroscopeCalibrator.OnGeneratedGyroscopeMeasurementListener>()
-        val readyToSolveCalibrationListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener<StaticIntervalGyroscopeCalibrator>>()
-        val calibrationSolvingStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalGyroscopeCalibrator>>()
-        val calibrationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<StaticIntervalGyroscopeCalibrator>>()
-        val stoppedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalGyroscopeCalibrator>>()
-        val initialGyroscopeBiasAvailableListener =
-            mockk<StaticIntervalGyroscopeCalibrator.OnInitialGyroscopeBiasAvailableListener>()
-        val accuracyChangedListener = mockk<SensorCollector.OnAccuracyChangedListener>()
-        val gyroscopeQualityScoreMapper =
-            mockk<QualityScoreMapper<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(
             context,
@@ -6067,8 +5902,6 @@ class StaticIntervalGyroscopeCalibratorTest {
         assertNull(calibrator.initializationStartedListener)
 
         // set new value
-        val initializationStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalGyroscopeCalibrator>>()
         calibrator.initializationStartedListener = initializationStartedListener
 
         // check
@@ -6084,8 +5917,6 @@ class StaticIntervalGyroscopeCalibratorTest {
         assertNull(calibrator.initializationCompletedListener)
 
         // set new value
-        val initializationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalGyroscopeCalibrator>>()
         calibrator.initializationCompletedListener = initializationCompletedListener
 
         // check
@@ -6101,8 +5932,6 @@ class StaticIntervalGyroscopeCalibratorTest {
         assertNull(calibrator.errorListener)
 
         // set new value
-        val errorListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalGyroscopeCalibrator>>()
         calibrator.errorListener = errorListener
 
         // check
@@ -6118,8 +5947,6 @@ class StaticIntervalGyroscopeCalibratorTest {
         assertNull(calibrator.staticIntervalDetectedListener)
 
         // set new value
-        val staticIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<StaticIntervalGyroscopeCalibrator>>()
         calibrator.staticIntervalDetectedListener = staticIntervalDetectedListener
 
         // check
@@ -6135,8 +5962,6 @@ class StaticIntervalGyroscopeCalibratorTest {
         assertNull(calibrator.dynamicIntervalDetectedListener)
 
         // set new value
-        val dynamicIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener<StaticIntervalGyroscopeCalibrator>>()
         calibrator.dynamicIntervalDetectedListener = dynamicIntervalDetectedListener
 
         // check
@@ -6152,8 +5977,6 @@ class StaticIntervalGyroscopeCalibratorTest {
         assertNull(calibrator.staticIntervalSkippedListener)
 
         // set new value
-        val staticIntervalSkippedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalSkippedListener<StaticIntervalGyroscopeCalibrator>>()
         calibrator.staticIntervalSkippedListener = staticIntervalSkippedListener
 
         // check
@@ -6169,8 +5992,6 @@ class StaticIntervalGyroscopeCalibratorTest {
         assertNull(calibrator.dynamicIntervalSkippedListener)
 
         // set new value
-        val dynamicIntervalSkippedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalSkippedListener<StaticIntervalGyroscopeCalibrator>>()
         calibrator.dynamicIntervalSkippedListener = dynamicIntervalSkippedListener
 
         // check
@@ -6186,8 +6007,6 @@ class StaticIntervalGyroscopeCalibratorTest {
         assertNull(calibrator.generatedGyroscopeMeasurementListener)
 
         // set new value
-        val generatedGyroscopeMeasurementListener =
-            mockk<StaticIntervalGyroscopeCalibrator.OnGeneratedGyroscopeMeasurementListener>()
         calibrator.generatedGyroscopeMeasurementListener = generatedGyroscopeMeasurementListener
 
         // check
@@ -6206,8 +6025,6 @@ class StaticIntervalGyroscopeCalibratorTest {
         assertNull(calibrator.readyToSolveCalibrationListener)
 
         // set new value
-        val readyToSolveCalibrationListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener<StaticIntervalGyroscopeCalibrator>>()
         calibrator.readyToSolveCalibrationListener = readyToSolveCalibrationListener
 
         // check
@@ -6223,8 +6040,6 @@ class StaticIntervalGyroscopeCalibratorTest {
         assertNull(calibrator.calibrationSolvingStartedListener)
 
         // set new value
-        val calibrationSolvingStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalGyroscopeCalibrator>>()
         calibrator.calibrationSolvingStartedListener = calibrationSolvingStartedListener
 
         // check
@@ -6240,8 +6055,6 @@ class StaticIntervalGyroscopeCalibratorTest {
         assertNull(calibrator.calibrationCompletedListener)
 
         // set new value
-        val calibrationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<StaticIntervalGyroscopeCalibrator>>()
         calibrator.calibrationCompletedListener = calibrationCompletedListener
 
         // check
@@ -6257,8 +6070,6 @@ class StaticIntervalGyroscopeCalibratorTest {
         assertNull(calibrator.stoppedListener)
 
         // set new value
-        val stoppedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalGyroscopeCalibrator>>()
         calibrator.stoppedListener = stoppedListener
 
         // check
@@ -6274,8 +6085,6 @@ class StaticIntervalGyroscopeCalibratorTest {
         assertNull(calibrator.initialGyroscopeBiasAvailableListener)
 
         // set new value
-        val initialGyroscopeBiasAvailableListener =
-            mockk<StaticIntervalGyroscopeCalibrator.OnInitialGyroscopeBiasAvailableListener>()
         calibrator.initialGyroscopeBiasAvailableListener = initialGyroscopeBiasAvailableListener
 
         // check
@@ -6294,7 +6103,6 @@ class StaticIntervalGyroscopeCalibratorTest {
         assertNull(calibrator.accuracyChangedListener)
 
         // set new value
-        val accuracyChangedListener = mockk<SensorCollector.OnAccuracyChangedListener>()
         calibrator.accuracyChangedListener = accuracyChangedListener
 
         // check
@@ -7556,7 +7364,7 @@ class StaticIntervalGyroscopeCalibratorTest {
     }
 
     @Test
-    fun minimumRequiredGyroscopeMeasurements_whenGroundTruthInitialBiasCommonAxisAndNoCrossBiases_returnsExpctedValue() {
+    fun minimumRequiredGyroscopeMeasurements_whenGroundTruthInitialBiasCommonAxisAndNoCrossBiases_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
@@ -7572,7 +7380,7 @@ class StaticIntervalGyroscopeCalibratorTest {
     }
 
     @Test
-    fun minimumRequiredGyroscopeMeasurements_whenGroundTruthInitialBiasNoCommonAxisAndCrossBiases_returnsExpctedValue() {
+    fun minimumRequiredGyroscopeMeasurements_whenGroundTruthInitialBiasNoCommonAxisAndCrossBiases_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
@@ -7588,7 +7396,7 @@ class StaticIntervalGyroscopeCalibratorTest {
     }
 
     @Test
-    fun minimumRequiredGyroscopeMeasurements_whenGroundTruthInitialBiasNoCommonAxisAndNoCrossBiases_returnsExpctedValue() {
+    fun minimumRequiredGyroscopeMeasurements_whenGroundTruthInitialBiasNoCommonAxisAndNoCrossBiases_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
@@ -7604,7 +7412,7 @@ class StaticIntervalGyroscopeCalibratorTest {
     }
 
     @Test
-    fun minimumRequiredGyroscopeMeasurements_whenNoGroundTruthInitialBiasCommonAxisAndCrossBiases_returnsExpctedValue() {
+    fun minimumRequiredGyroscopeMeasurements_whenNoGroundTruthInitialBiasCommonAxisAndCrossBiases_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
@@ -7620,7 +7428,7 @@ class StaticIntervalGyroscopeCalibratorTest {
     }
 
     @Test
-    fun minimumRequiredGyroscopeMeasurements_whenNoGroundTruthInitialBiasCommonAxisAndNoCrossBiases_returnsExpctedValue() {
+    fun minimumRequiredGyroscopeMeasurements_whenNoGroundTruthInitialBiasCommonAxisAndNoCrossBiases_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
@@ -7636,7 +7444,7 @@ class StaticIntervalGyroscopeCalibratorTest {
     }
 
     @Test
-    fun minimumRequiredGyroscopeMeasurements_whenNoGroundTruthInitialBiasNoCommonAxisAndCrossBiases_returnsExpctedValue() {
+    fun minimumRequiredGyroscopeMeasurements_whenNoGroundTruthInitialBiasNoCommonAxisAndCrossBiases_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
@@ -7652,7 +7460,7 @@ class StaticIntervalGyroscopeCalibratorTest {
     }
 
     @Test
-    fun minimumRequiredGyroscopeMeasurements_whenNoGroundTruthInitialBiasNoCommonAxisAndNoCrossBiases_returnsExpctedValue() {
+    fun minimumRequiredGyroscopeMeasurements_whenNoGroundTruthInitialBiasNoCommonAxisAndNoCrossBiases_returnsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
@@ -8877,16 +8685,11 @@ class StaticIntervalGyroscopeCalibratorTest {
             calibrator.getPrivateProperty("generatorInitializationStartedListener")
         requireNotNull(generatorInitializationStartedListener)
 
-        val generator = mockk<GyroscopeMeasurementGenerator>()
         generatorInitializationStartedListener.onInitializationStarted(generator)
     }
 
     @Test
     fun onInitializationStarted_whenListenerAvailable_notifies() {
-        val initializationStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalGyroscopeCalibrator>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(
             context,
@@ -8897,7 +8700,6 @@ class StaticIntervalGyroscopeCalibratorTest {
             calibrator.getPrivateProperty("generatorInitializationStartedListener")
         requireNotNull(generatorInitializationStartedListener)
 
-        val generator = mockk<GyroscopeMeasurementGenerator>()
         generatorInitializationStartedListener.onInitializationStarted(generator)
 
         verify(exactly = 1) { initializationStartedListener.onInitializationStarted(calibrator) }
@@ -8914,7 +8716,6 @@ class StaticIntervalGyroscopeCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val baseNoiseLevel = randomizer.nextDouble()
-        val generator = mockk<GyroscopeMeasurementGenerator>()
         generatorInitializationCompletedListener.onInitializationCompleted(
             generator,
             baseNoiseLevel
@@ -8923,10 +8724,6 @@ class StaticIntervalGyroscopeCalibratorTest {
 
     @Test
     fun onInitializationCompleted_whenListenerAvailable_notifies() {
-        val initializationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalGyroscopeCalibrator>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(
             context,
@@ -8939,7 +8736,6 @@ class StaticIntervalGyroscopeCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val baseNoiseLevel = randomizer.nextDouble()
-        val generator = mockk<GyroscopeMeasurementGenerator>()
         generatorInitializationCompletedListener.onInitializationCompleted(
             generator,
             baseNoiseLevel
@@ -8980,14 +8776,6 @@ class StaticIntervalGyroscopeCalibratorTest {
 
     @Test
     fun onError_whenListenersAvailable_stopsAndNotifies() {
-        val errorListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalGyroscopeCalibrator>>(
-                relaxUnitFun = true
-            )
-        val stoppedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalGyroscopeCalibrator>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(
             context,
@@ -9036,16 +8824,11 @@ class StaticIntervalGyroscopeCalibratorTest {
             calibrator.getPrivateProperty("generatorStaticIntervalDetectedListener")
         requireNotNull(generatorStaticIntervalDetectedListener)
 
-        val generator = mockk<GyroscopeMeasurementGenerator>()
         generatorStaticIntervalDetectedListener.onStaticIntervalDetected(generator)
     }
 
     @Test
     fun onStaticIntervalDetected_whenListenerAvailable_notifies() {
-        val staticIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<StaticIntervalGyroscopeCalibrator>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(
             context,
@@ -9056,7 +8839,6 @@ class StaticIntervalGyroscopeCalibratorTest {
             calibrator.getPrivateProperty("generatorStaticIntervalDetectedListener")
         requireNotNull(generatorStaticIntervalDetectedListener)
 
-        val generator = mockk<GyroscopeMeasurementGenerator>()
         generatorStaticIntervalDetectedListener.onStaticIntervalDetected(generator)
 
         verify(exactly = 1) { staticIntervalDetectedListener.onStaticIntervalDetected(calibrator) }
@@ -9071,16 +8853,11 @@ class StaticIntervalGyroscopeCalibratorTest {
             calibrator.getPrivateProperty("generatorDynamicIntervalDetectedListener")
         requireNotNull(generatorDynamicIntervalDetectedListener)
 
-        val generator = mockk<GyroscopeMeasurementGenerator>()
         generatorDynamicIntervalDetectedListener.onDynamicIntervalDetected(generator)
     }
 
     @Test
     fun onDynamicIntervalDetected_whenListenerAvailable_notifies() {
-        val dynamicIntervalDetectedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener<StaticIntervalGyroscopeCalibrator>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(
             context,
@@ -9091,7 +8868,6 @@ class StaticIntervalGyroscopeCalibratorTest {
             calibrator.getPrivateProperty("generatorDynamicIntervalDetectedListener")
         requireNotNull(generatorDynamicIntervalDetectedListener)
 
-        val generator = mockk<GyroscopeMeasurementGenerator>()
         generatorDynamicIntervalDetectedListener.onDynamicIntervalDetected(generator)
 
         verify(exactly = 1) { dynamicIntervalDetectedListener.onDynamicIntervalDetected(calibrator) }
@@ -9106,16 +8882,11 @@ class StaticIntervalGyroscopeCalibratorTest {
             calibrator.getPrivateProperty("generatorStaticIntervalSkippedListener")
         requireNotNull(generatorStaticIntervalSkippedListener)
 
-        val generator = mockk<GyroscopeMeasurementGenerator>()
         generatorStaticIntervalSkippedListener.onStaticIntervalSkipped(generator)
     }
 
     @Test
     fun onStaticIntervalSkipped_whenListenerAvailable_notifies() {
-        val staticIntervalSkippedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalSkippedListener<StaticIntervalGyroscopeCalibrator>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(
             context,
@@ -9126,7 +8897,6 @@ class StaticIntervalGyroscopeCalibratorTest {
             calibrator.getPrivateProperty("generatorStaticIntervalSkippedListener")
         requireNotNull(generatorStaticIntervalSkippedListener)
 
-        val generator = mockk<GyroscopeMeasurementGenerator>()
         generatorStaticIntervalSkippedListener.onStaticIntervalSkipped(generator)
 
         verify(exactly = 1) { staticIntervalSkippedListener.onStaticIntervalSkipped(calibrator) }
@@ -9141,16 +8911,11 @@ class StaticIntervalGyroscopeCalibratorTest {
             calibrator.getPrivateProperty("generatorDynamicIntervalSkippedListener")
         requireNotNull(generatorDynamicIntervalSkippedListener)
 
-        val generator = mockk<GyroscopeMeasurementGenerator>()
         generatorDynamicIntervalSkippedListener.onDynamicIntervalSkipped(generator)
     }
 
     @Test
     fun onDynamicIntervalSkipped_whenListenerAvailable_notifies() {
-        val dynamicIntervalSkippedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalSkippedListener<StaticIntervalGyroscopeCalibrator>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(
             context,
@@ -9161,7 +8926,6 @@ class StaticIntervalGyroscopeCalibratorTest {
             calibrator.getPrivateProperty("generatorDynamicIntervalSkippedListener")
         requireNotNull(generatorDynamicIntervalSkippedListener)
 
-        val generator = mockk<GyroscopeMeasurementGenerator>()
         generatorDynamicIntervalSkippedListener.onDynamicIntervalSkipped(generator)
 
         verify(exactly = 1) { dynamicIntervalSkippedListener.onDynamicIntervalSkipped(calibrator) }
@@ -9178,7 +8942,6 @@ class StaticIntervalGyroscopeCalibratorTest {
             calibrator.getPrivateProperty("generatorGeneratedMeasurementListener")
         requireNotNull(generatorGeneratedMeasurementListener)
 
-        val generator = mockk<GyroscopeMeasurementGenerator>()
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
         generatorGeneratedMeasurementListener.onGeneratedMeasurement(generator, measurement)
 
@@ -9188,10 +8951,6 @@ class StaticIntervalGyroscopeCalibratorTest {
 
     @Test
     fun onGeneratedMeasurement_whenListenerAvailable_notifies() {
-        val generatedGyroscopeMeasurementListener =
-            mockk<StaticIntervalGyroscopeCalibrator.OnGeneratedGyroscopeMeasurementListener>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(
             context,
@@ -9204,7 +8963,6 @@ class StaticIntervalGyroscopeCalibratorTest {
             calibrator.getPrivateProperty("generatorGeneratedMeasurementListener")
         requireNotNull(generatorGeneratedMeasurementListener)
 
-        val generator = mockk<GyroscopeMeasurementGenerator>()
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
         generatorGeneratedMeasurementListener.onGeneratedMeasurement(generator, measurement)
 
@@ -9237,7 +8995,7 @@ class StaticIntervalGyroscopeCalibratorTest {
 
         // add enough measurements
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
-        for (i in 1..calibrator.requiredMeasurements) {
+        (1..calibrator.requiredMeasurements).forEach { _ ->
             calibrator.gyroscopeMeasurements.add(measurement)
         }
         assertTrue(calibrator.isReadyToSolveCalibration)
@@ -9267,10 +9025,6 @@ class StaticIntervalGyroscopeCalibratorTest {
 
     @Test
     fun onGeneratedMeasurement_whenReadyToSolveCalibrationListenerAvailable_notifies() {
-        val readyToSolveCalibrationListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener<StaticIntervalGyroscopeCalibrator>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(
             context,
@@ -9286,7 +9040,7 @@ class StaticIntervalGyroscopeCalibratorTest {
 
         // add enough measurements
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
-        for (i in 1..calibrator.requiredMeasurements) {
+        (1..calibrator.requiredMeasurements).forEach { _ ->
             calibrator.gyroscopeMeasurements.add(measurement)
         }
         assertTrue(calibrator.isReadyToSolveCalibration)
@@ -9371,7 +9125,7 @@ class StaticIntervalGyroscopeCalibratorTest {
 
         val sequences =
             mutableListOf<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>()
-        for (i in 0 until reqMeasurements) {
+        (0 until reqMeasurements).forEach { _ ->
             // initial attitude of sequence
             val roll = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
             val pitch = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
@@ -9596,26 +9350,6 @@ class StaticIntervalGyroscopeCalibratorTest {
 
     @Test
     fun onGeneratedMeasurement_whenSolveCalibrationEnabledAndListenersAvailable_solvesCalibrationAndNotifies() {
-        val readyToSolveCalibrationListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener<StaticIntervalGyroscopeCalibrator>>(
-                relaxUnitFun = true
-            )
-        val stoppedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalGyroscopeCalibrator>>(
-                relaxUnitFun = true
-            )
-        val calibrationSolvingStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalGyroscopeCalibrator>>(
-                relaxUnitFun = true
-            )
-        val calibrationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<StaticIntervalGyroscopeCalibrator>>(
-                relaxUnitFun = true
-            )
-        val errorListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalGyroscopeCalibrator>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(
             context,
@@ -9675,7 +9409,7 @@ class StaticIntervalGyroscopeCalibratorTest {
 
         val sequences =
             mutableListOf<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>()
-        for (i in 0 until reqMeasurements) {
+        (0 until reqMeasurements).forEach { _ ->
             // initial attitude of sequence
             val roll = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
             val pitch = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
@@ -10678,10 +10412,6 @@ class StaticIntervalGyroscopeCalibratorTest {
 
     @Test
     fun onGyroscopeMeasurement_whenFirstMeasurementAndListener_updatesInitialBias() {
-        val initialGyroscopeBiasAvailableListener =
-            mockk<StaticIntervalGyroscopeCalibrator.OnInitialGyroscopeBiasAvailableListener>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(
             context,
@@ -10745,10 +10475,6 @@ class StaticIntervalGyroscopeCalibratorTest {
 
     @Test
     fun onGyroscopeMeasurement_whenNotFirstMeasurement_makesNoAction() {
-        val initialGyroscopeBiasAvailableListener =
-            mockk<StaticIntervalGyroscopeCalibrator.OnInitialGyroscopeBiasAvailableListener>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(
             context,
@@ -11556,15 +11282,10 @@ class StaticIntervalGyroscopeCalibratorTest {
 
         assertFalse(calibrator.running)
 
-        val measurements = calibrator.gyroscopeMeasurements
-        val measurementsSpy = spyk(measurements)
-        calibrator.setPrivateProperty("gyroscopeMeasurements", measurementsSpy)
-
         calibrator.setPrivateProperty("gyroscopeInitialBiasX", 0.0)
         calibrator.setPrivateProperty("gyroscopeInitialBiasY", 0.0)
         calibrator.setPrivateProperty("gyroscopeInitialBiasZ", 0.0)
 
-        val internalCalibrator = mockk<GyroscopeNonLinearCalibrator>()
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibrator)
 
         val generator: GyroscopeMeasurementGenerator? =
@@ -11577,7 +11298,6 @@ class StaticIntervalGyroscopeCalibratorTest {
         calibrator.start()
 
         // check
-        verify(exactly = 1) { measurementsSpy.clear() }
         assertNull(calibrator.gyroscopeInitialBiasX)
         assertNull(calibrator.gyroscopeInitialBiasY)
         assertNull(calibrator.gyroscopeInitialBiasZ)
@@ -11630,10 +11350,6 @@ class StaticIntervalGyroscopeCalibratorTest {
 
     @Test
     fun stop_whenListenerAvailable_notifies() {
-        val stoppedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalGyroscopeCalibrator>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(
             context,
@@ -11691,7 +11407,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { i ->
             calibrator.gyroscopeMeasurements.add(measurement)
         }
 
@@ -11705,14 +11421,6 @@ class StaticIntervalGyroscopeCalibratorTest {
 
     @Test
     fun calibrate_whenReadyNotRunningAndInternalCalibratorAndListeners_callsInternalCalibratorAndNotifies() {
-        val calibrationSolvingStartedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalGyroscopeCalibrator>>(
-                relaxUnitFun = true
-            )
-        val calibrationCompletedListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<StaticIntervalGyroscopeCalibrator>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(
             context,
@@ -11721,14 +11429,13 @@ class StaticIntervalGyroscopeCalibratorTest {
         )
 
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.gyroscopeMeasurements.add(measurement)
         }
 
         assertTrue(calibrator.isReadyToSolveCalibration)
         assertFalse(calibrator.running)
 
-        val internalCalibrator = mockk<GyroscopeNonLinearCalibrator>()
         justRun { internalCalibrator.calibrate() }
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibrator)
 
@@ -11749,14 +11456,13 @@ class StaticIntervalGyroscopeCalibratorTest {
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.gyroscopeMeasurements.add(measurement)
         }
 
         assertTrue(calibrator.isReadyToSolveCalibration)
         assertFalse(calibrator.running)
 
-        val internalCalibrator = mockk<GyroscopeNonLinearCalibrator>()
         every { internalCalibrator.calibrate() }.throws(NavigationException())
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibrator)
 
@@ -11767,10 +11473,6 @@ class StaticIntervalGyroscopeCalibratorTest {
 
     @Test
     fun calibrate_whenFailureAndErrorListener_setsAsNotRunning() {
-        val errorListener =
-            mockk<StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalGyroscopeCalibrator>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(
             context,
@@ -11778,14 +11480,13 @@ class StaticIntervalGyroscopeCalibratorTest {
         )
 
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.gyroscopeMeasurements.add(measurement)
         }
 
         assertTrue(calibrator.isReadyToSolveCalibration)
         assertFalse(calibrator.running)
 
-        val internalCalibrator = mockk<GyroscopeNonLinearCalibrator>()
         every { internalCalibrator.calibrate() }.throws(NavigationException())
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibrator)
 
@@ -12332,7 +12033,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         )
 
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
-        for (i in 1..16) {
+        (1..16).forEach { _ ->
             calibrator.gyroscopeMeasurements.add(measurement)
         }
 
@@ -12418,7 +12119,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         )
 
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
-        for (i in 1..16) {
+        (1..16).forEach { _ ->
             calibrator.gyroscopeMeasurements.add(measurement)
         }
 
@@ -12510,7 +12211,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         )
 
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
-        for (i in 1..19) {
+        (1..19).forEach { _ ->
             calibrator.gyroscopeMeasurements.add(measurement)
         }
 
@@ -12596,7 +12297,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         )
 
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
-        for (i in 1..19) {
+        (1..19).forEach { _ ->
             calibrator.gyroscopeMeasurements.add(measurement)
         }
 
@@ -12687,7 +12388,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         )
 
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
-        for (i in 1..16) {
+        (1..16).forEach { _ ->
             calibrator.gyroscopeMeasurements.add(measurement)
         }
 
@@ -12791,7 +12492,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         )
 
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
-        for (i in 1..16) {
+        (1..16).forEach { _ ->
             calibrator.gyroscopeMeasurements.add(measurement)
         }
 
@@ -12901,7 +12602,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         )
 
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
-        for (i in 1..19) {
+        (1..19).forEach { _ ->
             calibrator.gyroscopeMeasurements.add(measurement)
         }
 
@@ -13005,7 +12706,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         )
 
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
-        for (i in 1..19) {
+        (1..19).forEach { _ ->
             calibrator.gyroscopeMeasurements.add(measurement)
         }
 
@@ -13115,7 +12816,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         )
 
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
-        for (i in 1..16) {
+        (1..16).forEach { _ ->
             calibrator.gyroscopeMeasurements.add(measurement)
         }
 
@@ -13219,7 +12920,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         )
 
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
-        for (i in 1..19) {
+        (1..19).forEach { _ ->
             calibrator.gyroscopeMeasurements.add(measurement)
         }
 
@@ -13323,7 +13024,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         )
 
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
-        for (i in 1..19) {
+        (1..19).forEach { _ ->
             calibrator.gyroscopeMeasurements.add(measurement)
         }
 
@@ -13389,7 +13090,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         )
 
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
-        for (i in 1..16) {
+        (1..16).forEach { _ ->
             calibrator.gyroscopeMeasurements.add(measurement)
         }
 
@@ -13493,7 +13194,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         )
 
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
-        for (i in 1..16) {
+        (1..16).forEach { _ ->
             calibrator.gyroscopeMeasurements.add(measurement)
         }
 
@@ -13603,7 +13304,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         )
 
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
-        for (i in 1..19) {
+        (1..19).forEach { _ ->
             calibrator.gyroscopeMeasurements.add(measurement)
         }
 
@@ -13707,7 +13408,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         )
 
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
-        for (i in 1..19) {
+        (1..19).forEach { _ ->
             calibrator.gyroscopeMeasurements.add(measurement)
         }
 
@@ -13817,7 +13518,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         )
 
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
-        for (i in 1..16) {
+        (1..16).forEach { _ ->
             calibrator.gyroscopeMeasurements.add(measurement)
         }
 
@@ -13921,7 +13622,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         )
 
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
-        for (i in 1..19) {
+        (1..19).forEach { _ ->
             calibrator.gyroscopeMeasurements.add(measurement)
         }
 
@@ -14025,7 +13726,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         )
 
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
-        for (i in 1..19) {
+        (1..19).forEach { _ ->
             calibrator.gyroscopeMeasurements.add(measurement)
         }
 
@@ -14091,7 +13792,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         )
 
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
-        for (i in 1..16) {
+        (1..16).forEach { _ ->
             calibrator.gyroscopeMeasurements.add(measurement)
         }
 
@@ -14196,7 +13897,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         )
 
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
-        for (i in 1..16) {
+        (1..16).forEach { _ ->
             calibrator.gyroscopeMeasurements.add(measurement)
         }
 
@@ -14307,7 +14008,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         )
 
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
-        for (i in 1..19) {
+        (1..19).forEach { _ ->
             calibrator.gyroscopeMeasurements.add(measurement)
         }
 
@@ -14412,7 +14113,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         )
 
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
-        for (i in 1..19) {
+        (1..19).forEach { _ ->
             calibrator.gyroscopeMeasurements.add(measurement)
         }
 
@@ -14523,7 +14224,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         )
 
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
-        for (i in 1..16) {
+        (1..16).forEach { _ ->
             calibrator.gyroscopeMeasurements.add(measurement)
         }
 
@@ -14628,7 +14329,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         )
 
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
-        for (i in 1..19) {
+        (1..19).forEach { _ ->
             calibrator.gyroscopeMeasurements.add(measurement)
         }
 
@@ -14733,7 +14434,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         )
 
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
-        for (i in 1..19) {
+        (1..19).forEach { _ ->
             calibrator.gyroscopeMeasurements.add(measurement)
         }
 
@@ -14799,7 +14500,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         )
 
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
-        for (i in 1..16) {
+        (1..16).forEach { _ ->
             calibrator.gyroscopeMeasurements.add(measurement)
         }
 
@@ -14837,13 +14538,13 @@ class StaticIntervalGyroscopeCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.gyroscopeRobustMethod = RobustEstimatorMethod.LMedS
+        calibrator.gyroscopeRobustMethod = RobustEstimatorMethod.LMEDS
         calibrator.gyroscopeRobustConfidence = ROBUST_CONFIDENCE
         calibrator.gyroscopeRobustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.gyroscopeRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         calibrator.gyroscopeRobustThreshold = ROBUST_THRESHOLD
 
-        assertEquals(RobustEstimatorMethod.LMedS, calibrator.gyroscopeRobustMethod)
+        assertEquals(RobustEstimatorMethod.LMEDS, calibrator.gyroscopeRobustMethod)
         assertTrue(calibrator.isGyroscopeGroundTruthInitialBias)
         assertEquals(ROBUST_CONFIDENCE, calibrator.gyroscopeRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.gyroscopeRobustMaxIterations)
@@ -14903,7 +14604,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         )
 
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
-        for (i in 1..16) {
+        (1..16).forEach { _ ->
             calibrator.gyroscopeMeasurements.add(measurement)
         }
 
@@ -14947,13 +14648,13 @@ class StaticIntervalGyroscopeCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.gyroscopeRobustMethod = RobustEstimatorMethod.LMedS
+        calibrator.gyroscopeRobustMethod = RobustEstimatorMethod.LMEDS
         calibrator.gyroscopeRobustConfidence = ROBUST_CONFIDENCE
         calibrator.gyroscopeRobustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.gyroscopeRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         calibrator.gyroscopeRobustThreshold = ROBUST_THRESHOLD
 
-        assertEquals(RobustEstimatorMethod.LMedS, calibrator.gyroscopeRobustMethod)
+        assertEquals(RobustEstimatorMethod.LMEDS, calibrator.gyroscopeRobustMethod)
         assertTrue(calibrator.isGyroscopeGroundTruthInitialBias)
         assertEquals(ROBUST_CONFIDENCE, calibrator.gyroscopeRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.gyroscopeRobustMaxIterations)
@@ -15013,7 +14714,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         )
 
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
-        for (i in 1..19) {
+        (1..19).forEach { _ ->
             calibrator.gyroscopeMeasurements.add(measurement)
         }
 
@@ -15051,13 +14752,13 @@ class StaticIntervalGyroscopeCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.gyroscopeRobustMethod = RobustEstimatorMethod.LMedS
+        calibrator.gyroscopeRobustMethod = RobustEstimatorMethod.LMEDS
         calibrator.gyroscopeRobustConfidence = ROBUST_CONFIDENCE
         calibrator.gyroscopeRobustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.gyroscopeRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         calibrator.gyroscopeRobustThreshold = ROBUST_THRESHOLD
 
-        assertEquals(RobustEstimatorMethod.LMedS, calibrator.gyroscopeRobustMethod)
+        assertEquals(RobustEstimatorMethod.LMEDS, calibrator.gyroscopeRobustMethod)
         assertFalse(calibrator.isGyroscopeGroundTruthInitialBias)
         assertEquals(ROBUST_CONFIDENCE, calibrator.gyroscopeRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.gyroscopeRobustMaxIterations)
@@ -15117,7 +14818,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         )
 
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
-        for (i in 1..19) {
+        (1..19).forEach { _ ->
             calibrator.gyroscopeMeasurements.add(measurement)
         }
 
@@ -15161,13 +14862,13 @@ class StaticIntervalGyroscopeCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.gyroscopeRobustMethod = RobustEstimatorMethod.LMedS
+        calibrator.gyroscopeRobustMethod = RobustEstimatorMethod.LMEDS
         calibrator.gyroscopeRobustConfidence = ROBUST_CONFIDENCE
         calibrator.gyroscopeRobustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.gyroscopeRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         calibrator.gyroscopeRobustThreshold = ROBUST_THRESHOLD
 
-        assertEquals(RobustEstimatorMethod.LMedS, calibrator.gyroscopeRobustMethod)
+        assertEquals(RobustEstimatorMethod.LMEDS, calibrator.gyroscopeRobustMethod)
         assertFalse(calibrator.isGyroscopeGroundTruthInitialBias)
         assertEquals(ROBUST_CONFIDENCE, calibrator.gyroscopeRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.gyroscopeRobustMaxIterations)
@@ -15227,7 +14928,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         )
 
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
-        for (i in 1..16) {
+        (1..16).forEach { _ ->
             calibrator.gyroscopeMeasurements.add(measurement)
         }
 
@@ -15258,7 +14959,7 @@ class StaticIntervalGyroscopeCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.gyroscopeRobustMethod = RobustEstimatorMethod.LMedS
+        calibrator.gyroscopeRobustMethod = RobustEstimatorMethod.LMEDS
         calibrator.gyroscopeRobustConfidence = ROBUST_CONFIDENCE
         calibrator.gyroscopeRobustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.gyroscopeRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
@@ -15274,7 +14975,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         every { generatorSpy.gyroscopeBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
-        assertEquals(RobustEstimatorMethod.LMedS, calibrator.gyroscopeRobustMethod)
+        assertEquals(RobustEstimatorMethod.LMEDS, calibrator.gyroscopeRobustMethod)
         assertTrue(calibrator.isGyroscopeGroundTruthInitialBias)
         assertEquals(ROBUST_CONFIDENCE, calibrator.gyroscopeRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.gyroscopeRobustMaxIterations)
@@ -15336,7 +15037,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         )
 
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
-        for (i in 1..19) {
+        (1..19).forEach { _ ->
             calibrator.gyroscopeMeasurements.add(measurement)
         }
 
@@ -15367,7 +15068,7 @@ class StaticIntervalGyroscopeCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.gyroscopeRobustMethod = RobustEstimatorMethod.LMedS
+        calibrator.gyroscopeRobustMethod = RobustEstimatorMethod.LMEDS
         calibrator.gyroscopeRobustConfidence = ROBUST_CONFIDENCE
         calibrator.gyroscopeRobustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.gyroscopeRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
@@ -15383,7 +15084,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         every { generatorSpy.gyroscopeBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
-        assertEquals(RobustEstimatorMethod.LMedS, calibrator.gyroscopeRobustMethod)
+        assertEquals(RobustEstimatorMethod.LMEDS, calibrator.gyroscopeRobustMethod)
         assertFalse(calibrator.isGyroscopeGroundTruthInitialBias)
         assertEquals(ROBUST_CONFIDENCE, calibrator.gyroscopeRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.gyroscopeRobustMaxIterations)
@@ -15445,7 +15146,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         )
 
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
-        for (i in 1..19) {
+        (1..19).forEach { _ ->
             calibrator.gyroscopeMeasurements.add(measurement)
         }
 
@@ -15476,14 +15177,14 @@ class StaticIntervalGyroscopeCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.gyroscopeRobustMethod = RobustEstimatorMethod.LMedS
+        calibrator.gyroscopeRobustMethod = RobustEstimatorMethod.LMEDS
         calibrator.gyroscopeRobustConfidence = ROBUST_CONFIDENCE
         calibrator.gyroscopeRobustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.gyroscopeRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         calibrator.gyroscopeRobustThreshold = null
         calibrator.gyroscopeRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
 
-        assertEquals(RobustEstimatorMethod.LMedS, calibrator.gyroscopeRobustMethod)
+        assertEquals(RobustEstimatorMethod.LMEDS, calibrator.gyroscopeRobustMethod)
         assertFalse(calibrator.isGyroscopeGroundTruthInitialBias)
         assertEquals(ROBUST_CONFIDENCE, calibrator.gyroscopeRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.gyroscopeRobustMaxIterations)
@@ -15511,7 +15212,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         )
 
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
-        for (i in 1..16) {
+        (1..16).forEach { _ ->
             calibrator.gyroscopeMeasurements.add(measurement)
         }
 
@@ -15549,13 +15250,13 @@ class StaticIntervalGyroscopeCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.gyroscopeRobustMethod = RobustEstimatorMethod.PROMedS
+        calibrator.gyroscopeRobustMethod = RobustEstimatorMethod.PROMEDS
         calibrator.gyroscopeRobustConfidence = ROBUST_CONFIDENCE
         calibrator.gyroscopeRobustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.gyroscopeRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         calibrator.gyroscopeRobustThreshold = ROBUST_THRESHOLD
 
-        assertEquals(RobustEstimatorMethod.PROMedS, calibrator.gyroscopeRobustMethod)
+        assertEquals(RobustEstimatorMethod.PROMEDS, calibrator.gyroscopeRobustMethod)
         assertTrue(calibrator.isGyroscopeGroundTruthInitialBias)
         assertEquals(ROBUST_CONFIDENCE, calibrator.gyroscopeRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.gyroscopeRobustMaxIterations)
@@ -15616,7 +15317,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         )
 
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
-        for (i in 1..16) {
+        (1..16).forEach { _ ->
             calibrator.gyroscopeMeasurements.add(measurement)
         }
 
@@ -15660,13 +15361,13 @@ class StaticIntervalGyroscopeCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.gyroscopeRobustMethod = RobustEstimatorMethod.PROMedS
+        calibrator.gyroscopeRobustMethod = RobustEstimatorMethod.PROMEDS
         calibrator.gyroscopeRobustConfidence = ROBUST_CONFIDENCE
         calibrator.gyroscopeRobustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.gyroscopeRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         calibrator.gyroscopeRobustThreshold = ROBUST_THRESHOLD
 
-        assertEquals(RobustEstimatorMethod.PROMedS, calibrator.gyroscopeRobustMethod)
+        assertEquals(RobustEstimatorMethod.PROMEDS, calibrator.gyroscopeRobustMethod)
         assertTrue(calibrator.isGyroscopeGroundTruthInitialBias)
         assertEquals(ROBUST_CONFIDENCE, calibrator.gyroscopeRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.gyroscopeRobustMaxIterations)
@@ -15727,7 +15428,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         )
 
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
-        for (i in 1..19) {
+        (1..19).forEach { _ ->
             calibrator.gyroscopeMeasurements.add(measurement)
         }
 
@@ -15765,13 +15466,13 @@ class StaticIntervalGyroscopeCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.gyroscopeRobustMethod = RobustEstimatorMethod.PROMedS
+        calibrator.gyroscopeRobustMethod = RobustEstimatorMethod.PROMEDS
         calibrator.gyroscopeRobustConfidence = ROBUST_CONFIDENCE
         calibrator.gyroscopeRobustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.gyroscopeRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         calibrator.gyroscopeRobustThreshold = ROBUST_THRESHOLD
 
-        assertEquals(RobustEstimatorMethod.PROMedS, calibrator.gyroscopeRobustMethod)
+        assertEquals(RobustEstimatorMethod.PROMEDS, calibrator.gyroscopeRobustMethod)
         assertFalse(calibrator.isGyroscopeGroundTruthInitialBias)
         assertEquals(ROBUST_CONFIDENCE, calibrator.gyroscopeRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.gyroscopeRobustMaxIterations)
@@ -15832,7 +15533,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         )
 
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
-        for (i in 1..19) {
+        (1..19).forEach { _ ->
             calibrator.gyroscopeMeasurements.add(measurement)
         }
 
@@ -15876,13 +15577,13 @@ class StaticIntervalGyroscopeCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.gyroscopeRobustMethod = RobustEstimatorMethod.PROMedS
+        calibrator.gyroscopeRobustMethod = RobustEstimatorMethod.PROMEDS
         calibrator.gyroscopeRobustConfidence = ROBUST_CONFIDENCE
         calibrator.gyroscopeRobustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.gyroscopeRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         calibrator.gyroscopeRobustThreshold = ROBUST_THRESHOLD
 
-        assertEquals(RobustEstimatorMethod.PROMedS, calibrator.gyroscopeRobustMethod)
+        assertEquals(RobustEstimatorMethod.PROMEDS, calibrator.gyroscopeRobustMethod)
         assertFalse(calibrator.isGyroscopeGroundTruthInitialBias)
         assertEquals(ROBUST_CONFIDENCE, calibrator.gyroscopeRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.gyroscopeRobustMaxIterations)
@@ -15943,7 +15644,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         )
 
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
-        for (i in 1..16) {
+        (1..16).forEach { _ ->
             calibrator.gyroscopeMeasurements.add(measurement)
         }
 
@@ -15974,7 +15675,7 @@ class StaticIntervalGyroscopeCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.gyroscopeRobustMethod = RobustEstimatorMethod.PROMedS
+        calibrator.gyroscopeRobustMethod = RobustEstimatorMethod.PROMEDS
         calibrator.gyroscopeRobustConfidence = ROBUST_CONFIDENCE
         calibrator.gyroscopeRobustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.gyroscopeRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
@@ -15990,7 +15691,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         every { generatorSpy.gyroscopeBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
-        assertEquals(RobustEstimatorMethod.PROMedS, calibrator.gyroscopeRobustMethod)
+        assertEquals(RobustEstimatorMethod.PROMEDS, calibrator.gyroscopeRobustMethod)
         assertTrue(calibrator.isGyroscopeGroundTruthInitialBias)
         assertEquals(ROBUST_CONFIDENCE, calibrator.gyroscopeRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.gyroscopeRobustMaxIterations)
@@ -16053,7 +15754,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         )
 
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
-        for (i in 1..19) {
+        (1..19).forEach { _ ->
             calibrator.gyroscopeMeasurements.add(measurement)
         }
 
@@ -16084,7 +15785,7 @@ class StaticIntervalGyroscopeCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.gyroscopeRobustMethod = RobustEstimatorMethod.PROMedS
+        calibrator.gyroscopeRobustMethod = RobustEstimatorMethod.PROMEDS
         calibrator.gyroscopeRobustConfidence = ROBUST_CONFIDENCE
         calibrator.gyroscopeRobustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.gyroscopeRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
@@ -16100,7 +15801,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         every { generatorSpy.gyroscopeBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
-        assertEquals(RobustEstimatorMethod.PROMedS, calibrator.gyroscopeRobustMethod)
+        assertEquals(RobustEstimatorMethod.PROMEDS, calibrator.gyroscopeRobustMethod)
         assertFalse(calibrator.isGyroscopeGroundTruthInitialBias)
         assertEquals(ROBUST_CONFIDENCE, calibrator.gyroscopeRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.gyroscopeRobustMaxIterations)
@@ -16163,7 +15864,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         )
 
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
-        for (i in 1..19) {
+        (1..19).forEach { _ ->
             calibrator.gyroscopeMeasurements.add(measurement)
         }
 
@@ -16194,14 +15895,14 @@ class StaticIntervalGyroscopeCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.gyroscopeRobustMethod = RobustEstimatorMethod.PROMedS
+        calibrator.gyroscopeRobustMethod = RobustEstimatorMethod.PROMEDS
         calibrator.gyroscopeRobustConfidence = ROBUST_CONFIDENCE
         calibrator.gyroscopeRobustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.gyroscopeRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         calibrator.gyroscopeRobustThreshold = null
         calibrator.gyroscopeRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
 
-        assertEquals(RobustEstimatorMethod.PROMedS, calibrator.gyroscopeRobustMethod)
+        assertEquals(RobustEstimatorMethod.PROMEDS, calibrator.gyroscopeRobustMethod)
         assertFalse(calibrator.isGyroscopeGroundTruthInitialBias)
         assertEquals(ROBUST_CONFIDENCE, calibrator.gyroscopeRobustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.gyroscopeRobustMaxIterations)

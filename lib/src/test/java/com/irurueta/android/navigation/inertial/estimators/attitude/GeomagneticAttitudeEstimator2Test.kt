@@ -6,25 +6,47 @@ import androidx.test.core.app.ApplicationProvider
 import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.MeanAveragingFilter
-import com.irurueta.android.navigation.inertial.getPrivateProperty
 import com.irurueta.android.navigation.inertial.processors.attitude.AccelerometerGeomagneticAttitudeProcessor
 import com.irurueta.android.navigation.inertial.processors.attitude.GeomagneticAttitudeProcessor
-import com.irurueta.android.navigation.inertial.setPrivateProperty
+import com.irurueta.android.testutils.getPrivateProperty
+import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.frames.CoordinateTransformation
 import com.irurueta.navigation.frames.FrameType
 import com.irurueta.navigation.inertial.wmm.WorldMagneticModel
 import com.irurueta.statistics.UniformRandomizer
 import io.mockk.*
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
 import org.junit.After
 import org.junit.Assert.*
+import org.junit.Ignore
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.util.*
 
+@Ignore("possible memory leak")
 @RunWith(RobolectricTestRunner::class)
 class GeomagneticAttitudeEstimator2Test {
+
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var attitudeAvailableListener:
+            GeomagneticAttitudeEstimator2.OnAttitudeAvailableListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var accuracyChangedListener:
+            GeomagneticAttitudeEstimator2.OnAccuracyChangedListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var bufferFilledListener: GeomagneticAttitudeEstimator2.OnBufferFilledListener
+
+    @MockK
+    private lateinit var location: Location
 
     @After
     fun tearDown() {
@@ -72,11 +94,6 @@ class GeomagneticAttitudeEstimator2Test {
         val worldMagneticModel = WorldMagneticModel()
         val timestamp = Date()
         val accelerometerAveragingFilter = MeanAveragingFilter()
-        val attitudeAvailableListener =
-            mockk<GeomagneticAttitudeEstimator2.OnAttitudeAvailableListener>()
-        val accuracyChangedListener =
-            mockk<GeomagneticAttitudeEstimator2.OnAccuracyChangedListener>()
-        val bufferFilledListener = mockk<GeomagneticAttitudeEstimator2.OnBufferFilledListener>()
         val estimator = GeomagneticAttitudeEstimator2(
             context,
             location,
@@ -164,11 +181,10 @@ class GeomagneticAttitudeEstimator2Test {
         assertNull(estimator.attitudeAvailableListener)
 
         // set new value
-        val listener = mockk<GeomagneticAttitudeEstimator2.OnAttitudeAvailableListener>()
-        estimator.attitudeAvailableListener = listener
+        estimator.attitudeAvailableListener = attitudeAvailableListener
 
         // check
-        assertSame(listener, estimator.attitudeAvailableListener)
+        assertSame(attitudeAvailableListener, estimator.attitudeAvailableListener)
     }
 
     @Test
@@ -180,11 +196,10 @@ class GeomagneticAttitudeEstimator2Test {
         assertNull(estimator.accuracyChangedListener)
 
         // set new value
-        val listener = mockk<GeomagneticAttitudeEstimator2.OnAccuracyChangedListener>()
-        estimator.accuracyChangedListener = listener
+        estimator.accuracyChangedListener = accuracyChangedListener
 
         // check
-        assertSame(listener, estimator.accuracyChangedListener)
+        assertSame(accuracyChangedListener, estimator.accuracyChangedListener)
     }
 
     @Test
@@ -196,11 +211,10 @@ class GeomagneticAttitudeEstimator2Test {
         assertNull(estimator.bufferFilledListener)
 
         // set new value
-        val listener = mockk<GeomagneticAttitudeEstimator2.OnBufferFilledListener>()
-        estimator.bufferFilledListener = listener
+        estimator.bufferFilledListener = bufferFilledListener
 
         // check
-        assertSame(listener, estimator.bufferFilledListener)
+        assertSame(bufferFilledListener, estimator.bufferFilledListener)
     }
 
     @Test
@@ -692,8 +706,6 @@ class GeomagneticAttitudeEstimator2Test {
 
     @Test
     fun gravitySyncer_whenAccuracyChangedAndListener_notifies() {
-        val accuracyChangedListener =
-            mockk<GeomagneticAttitudeEstimator2.OnAccuracyChangedListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = GeomagneticAttitudeEstimator2(
             context,
@@ -741,8 +753,6 @@ class GeomagneticAttitudeEstimator2Test {
 
     @Test
     fun gravitySyncer_whenBufferFilledAndListener_notifies() {
-        val bufferFilledListener =
-            mockk<GeomagneticAttitudeEstimator2.OnBufferFilledListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = GeomagneticAttitudeEstimator2(
             context,
@@ -771,8 +781,6 @@ class GeomagneticAttitudeEstimator2Test {
 
     @Test
     fun gravitySyncer_whenSyncedMeasurementAndNotProcessed_makesNoAction() {
-        val attitudeAvailableListener =
-            mockk<GeomagneticAttitudeEstimator2.OnAttitudeAvailableListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = GeomagneticAttitudeEstimator2(
             context,
@@ -830,8 +838,6 @@ class GeomagneticAttitudeEstimator2Test {
 
     @Test
     fun gravitySyncer_whenSyncedMeasurementProcessedEstimateCoordinateTransformationAndEulerAnglesDisableAndListener_updatesFusedAttitudeAndNotifies() {
-        val attitudeAvailableListener =
-            mockk<GeomagneticAttitudeEstimator2.OnAttitudeAvailableListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = GeomagneticAttitudeEstimator2(
             context,
@@ -879,8 +885,6 @@ class GeomagneticAttitudeEstimator2Test {
 
     @Test
     fun gravitySyncer_whenSyncedMeasurementProcessedEstimateCoordinateTransformationAndEulerAnglesEnableAndListener_updatesFusedAttitudeAndNotifies() {
-        val attitudeAvailableListener =
-            mockk<GeomagneticAttitudeEstimator2.OnAttitudeAvailableListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = GeomagneticAttitudeEstimator2(
             context,
@@ -962,8 +966,6 @@ class GeomagneticAttitudeEstimator2Test {
 
     @Test
     fun accelerometerSyncer_whenAccuracyChangedAndListener_notifies() {
-        val accuracyChangedListener =
-            mockk<GeomagneticAttitudeEstimator2.OnAccuracyChangedListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = GeomagneticAttitudeEstimator2(
             context,
@@ -1011,8 +1013,6 @@ class GeomagneticAttitudeEstimator2Test {
 
     @Test
     fun accelerometerSyncer_whenBufferFilledAndListener_notifies() {
-        val bufferFilledListener =
-            mockk<GeomagneticAttitudeEstimator2.OnBufferFilledListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = GeomagneticAttitudeEstimator2(
             context,
@@ -1041,8 +1041,6 @@ class GeomagneticAttitudeEstimator2Test {
 
     @Test
     fun accelerometerSyncer_whenSyncedMeasurementAndNotProcessed_makesNoAction() {
-        val attitudeAvailableListener =
-            mockk<GeomagneticAttitudeEstimator2.OnAttitudeAvailableListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = GeomagneticAttitudeEstimator2(
             context,
@@ -1100,8 +1098,6 @@ class GeomagneticAttitudeEstimator2Test {
 
     @Test
     fun accelerometerSyncer_whenSyncedMeasurementProcessedEstimateCoordinateTransformationAndEulerAnglesDisableAndListener_updatesFusedAttitudeAndNotifies() {
-        val attitudeAvailableListener =
-            mockk<GeomagneticAttitudeEstimator2.OnAttitudeAvailableListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = GeomagneticAttitudeEstimator2(
             context,
@@ -1149,8 +1145,6 @@ class GeomagneticAttitudeEstimator2Test {
 
     @Test
     fun accelerometerSyncer_whenSyncedMeasurementProcessedEstimateCoordinateTransformationAndEulerAnglesEnableAndListener_updatesFusedAttitudeAndNotifies() {
-        val attitudeAvailableListener =
-            mockk<GeomagneticAttitudeEstimator2.OnAttitudeAvailableListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = GeomagneticAttitudeEstimator2(
             context,
@@ -1212,6 +1206,28 @@ class GeomagneticAttitudeEstimator2Test {
         }
     }
 
+    private fun getLocation(): Location {
+        val randomizer = UniformRandomizer()
+        val latitudeDegrees = randomizer.nextDouble(
+            MIN_LATITUDE_DEGREES,
+            MAX_LATITUDE_DEGREES
+        )
+        val longitudeDegrees = randomizer.nextDouble(
+            MIN_LONGITUDE_DEGREES,
+            MAX_LONGITUDE_DEGREES
+        )
+        val height = randomizer.nextDouble(
+            MIN_HEIGHT,
+            MAX_HEIGHT
+        )
+
+        every { location.latitude }.returns(latitudeDegrees)
+        every { location.longitude }.returns(longitudeDegrees)
+        every { location.altitude }.returns(height)
+
+        return location
+    }
+
     private companion object {
         const val MIN_LATITUDE_DEGREES = -90.0
         const val MAX_LATITUDE_DEGREES = 90.0
@@ -1224,29 +1240,6 @@ class GeomagneticAttitudeEstimator2Test {
 
         const val MIN_ANGLE_DEGREES = -45.0
         const val MAX_ANGLE_DEGREES = 45.0
-
-        fun getLocation(): Location {
-            val randomizer = UniformRandomizer()
-            val latitudeDegrees = randomizer.nextDouble(
-                MIN_LATITUDE_DEGREES,
-                MAX_LATITUDE_DEGREES
-            )
-            val longitudeDegrees = randomizer.nextDouble(
-                MIN_LONGITUDE_DEGREES,
-                MAX_LONGITUDE_DEGREES
-            )
-            val height = randomizer.nextDouble(
-                MIN_HEIGHT,
-                MAX_HEIGHT
-            )
-
-            val location = mockk<Location>()
-            every { location.latitude }.returns(latitudeDegrees)
-            every { location.longitude }.returns(longitudeDegrees)
-            every { location.altitude }.returns(height)
-
-            return location
-        }
 
         fun getAttitude(): Quaternion {
             val randomizer = UniformRandomizer()

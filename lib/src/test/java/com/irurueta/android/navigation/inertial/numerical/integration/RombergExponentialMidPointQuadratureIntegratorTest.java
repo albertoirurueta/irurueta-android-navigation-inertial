@@ -17,7 +17,6 @@ package com.irurueta.android.navigation.inertial.numerical.integration;
 
 import static org.junit.Assert.assertEquals;
 
-import com.irurueta.numerical.SingleDimensionFunctionEvaluatorListener;
 import com.irurueta.statistics.Gamma;
 
 import org.junit.Test;
@@ -34,12 +33,7 @@ public class RombergExponentialMidPointQuadratureIntegratorTest {
 
         final RombergExponentialMidPointQuadratureIntegrator integrator =
                 new RombergExponentialMidPointQuadratureIntegrator(0.0,
-                        new SingleDimensionFunctionEvaluatorListener() {
-                            @Override
-                            public double evaluate(double point) {
-                                return Math.pow(point, -2.0 / 7.0) * Math.exp(-point * point);
-                            }
-                        });
+                        point -> Math.pow(point, -2.0 / 7.0) * Math.exp(-point * point));
         final double result = integrator.integrate();
 
         assertEquals(expected, result, ABSOLUTE_ERROR_IMPROPER_3);

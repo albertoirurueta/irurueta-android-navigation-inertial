@@ -102,7 +102,7 @@ class ProcessNoiseCovarianceIntegratorTest {
 
         const val BG = 1e-6
 
-        const val GYROSCOPE_STANDDARD_DEVIATION = 0.006
+        const val GYROSCOPE_STANDARD_DEVIATION = 0.006
 
         fun generateProcessEquationMatrix(): Matrix {
             val randomizer = UniformRandomizer()
@@ -129,7 +129,7 @@ class ProcessNoiseCovarianceIntegratorTest {
 
             val rg: Matrix =
                 Matrix.identity(AngularSpeedTriad.COMPONENTS, AngularSpeedTriad.COMPONENTS)
-            rg.multiplyByScalar(GYROSCOPE_STANDDARD_DEVIATION * GYROSCOPE_STANDDARD_DEVIATION)
+            rg.multiplyByScalar(GYROSCOPE_STANDARD_DEVIATION * GYROSCOPE_STANDARD_DEVIATION)
 
             val qbg: Matrix =
                 Matrix.identity(AngularSpeedTriad.COMPONENTS, AngularSpeedTriad.COMPONENTS)

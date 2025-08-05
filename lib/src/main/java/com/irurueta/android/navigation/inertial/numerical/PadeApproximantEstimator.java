@@ -153,7 +153,7 @@ public class PadeApproximantEstimator {
            final double[] denominatorResult) throws NumericalException {
       if (taylorCoefficients.length < 3) {
          throw new IllegalArgumentException(
-                 "Length of Tayloar series coefficients must be at least 3");
+                 "Length of Taylor series coefficients must be at least 3");
       }
 
       try {

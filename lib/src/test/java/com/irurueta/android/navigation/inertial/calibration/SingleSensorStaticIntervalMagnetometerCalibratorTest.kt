@@ -25,14 +25,14 @@ import com.irurueta.algebra.WrongSizeException
 import com.irurueta.android.navigation.inertial.calibration.intervals.ErrorReason
 import com.irurueta.android.navigation.inertial.calibration.intervals.IntervalDetector
 import com.irurueta.android.navigation.inertial.calibration.intervals.MagnetometerIntervalDetector
-import com.irurueta.android.navigation.inertial.callPrivateFuncWithResult
 import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorType
 import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
-import com.irurueta.android.navigation.inertial.getPrivateProperty
-import com.irurueta.android.navigation.inertial.setPrivateProperty
 import com.irurueta.android.navigation.inertial.toNEDPosition
+import com.irurueta.android.testutils.callPrivateFuncWithResult
+import com.irurueta.android.testutils.getPrivateProperty
+import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.navigation.NavigationException
 import com.irurueta.navigation.frames.CoordinateTransformation
 import com.irurueta.navigation.frames.FrameType
@@ -55,8 +55,12 @@ import com.irurueta.units.MagneticFluxDensityUnit
 import com.irurueta.units.Time
 import com.irurueta.units.TimeUnit
 import io.mockk.*
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
 import org.junit.After
 import org.junit.Assert.*
+import org.junit.Ignore
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -65,8 +69,66 @@ import java.util.*
 import kotlin.math.pow
 import kotlin.math.sqrt
 
+@Ignore("possible memory leak")
 @RunWith(RobolectricTestRunner::class)
 class SingleSensorStaticIntervalMagnetometerCalibratorTest {
+
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var initializationStartedListener:
+            SingleSensorStaticIntervalCalibrator.OnInitializationStartedListener<SingleSensorStaticIntervalMagnetometerCalibrator>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var initializationCompletedListener:
+            SingleSensorStaticIntervalCalibrator.OnInitializationCompletedListener<SingleSensorStaticIntervalMagnetometerCalibrator>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var errorListener:
+            SingleSensorStaticIntervalCalibrator.OnErrorListener<SingleSensorStaticIntervalMagnetometerCalibrator>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var initialHardIronAvailableListener:
+            SingleSensorStaticIntervalMagnetometerCalibrator.OnInitialHardIronAvailableListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var newCalibrationMeasurementAvailableListener:
+            SingleSensorStaticIntervalCalibrator.OnNewCalibrationMeasurementAvailableListener<SingleSensorStaticIntervalMagnetometerCalibrator, StandardDeviationBodyMagneticFluxDensity>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var readyToSolveCalibrationListener:
+            SingleSensorStaticIntervalCalibrator.OnReadyToSolveCalibrationListener<SingleSensorStaticIntervalMagnetometerCalibrator>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var calibrationSolvingStartedListener:
+            SingleSensorStaticIntervalCalibrator.OnCalibrationSolvingStartedListener<SingleSensorStaticIntervalMagnetometerCalibrator>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var calibrationCompletedListener:
+            SingleSensorStaticIntervalCalibrator.OnCalibrationCompletedListener<SingleSensorStaticIntervalMagnetometerCalibrator>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var stoppedListener:
+            SingleSensorStaticIntervalCalibrator.OnStoppedListener<SingleSensorStaticIntervalMagnetometerCalibrator>
+
+    @MockK
+    private lateinit var qualityScoreMapper: QualityScoreMapper<StandardDeviationBodyMagneticFluxDensity>
+
+    @MockK
+    private lateinit var intervalDetector: MagnetometerIntervalDetector
+
+    @MockK
+    private lateinit var measurement: StandardDeviationBodyMagneticFluxDensity
+
+    @MockK
+    private lateinit var location: Location
+
+    @MockK
+    private lateinit var internalCalibrator: MagnetometerNonLinearCalibrator
+
+    @MockK
+    private lateinit var sensor: Sensor
 
     @After
     fun tearDown() {
@@ -242,26 +304,6 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun constructor_whenAllParameters_returnsExpectedValues() {
-        val initializationStartedListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnInitializationStartedListener<SingleSensorStaticIntervalMagnetometerCalibrator>>()
-        val initializationCompletedListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnInitializationCompletedListener<SingleSensorStaticIntervalMagnetometerCalibrator>>()
-        val errorListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnErrorListener<SingleSensorStaticIntervalMagnetometerCalibrator>>()
-        val initialHardIronAvailableListener =
-            mockk<SingleSensorStaticIntervalMagnetometerCalibrator.OnInitialHardIronAvailableListener>()
-        val newCalibrationMeasurementAvailableListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnNewCalibrationMeasurementAvailableListener<SingleSensorStaticIntervalMagnetometerCalibrator, StandardDeviationBodyMagneticFluxDensity>>()
-        val readyToSolveCalibrationListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnReadyToSolveCalibrationListener<SingleSensorStaticIntervalMagnetometerCalibrator>>()
-        val calibrationSolvingStartedListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnCalibrationSolvingStartedListener<SingleSensorStaticIntervalMagnetometerCalibrator>>()
-        val calibrationCompletedListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnCalibrationCompletedListener<SingleSensorStaticIntervalMagnetometerCalibrator>>()
-        val stoppedListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnStoppedListener<SingleSensorStaticIntervalMagnetometerCalibrator>>()
-        val qualityScoreMapper =
-            mockk<QualityScoreMapper<StandardDeviationBodyMagneticFluxDensity>>()
         val location = getLocation()
         val timestamp = Date()
         val worldMagneticModel = WorldMagneticModel()
@@ -461,8 +503,6 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
         assertNull(calibrator.initializationStartedListener)
 
         // set new value
-        val initializationStartedListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnInitializationStartedListener<SingleSensorStaticIntervalMagnetometerCalibrator>>()
         calibrator.initializationStartedListener = initializationStartedListener
 
         // check
@@ -478,8 +518,6 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
         assertNull(calibrator.initializationCompletedListener)
 
         // set new value
-        val initializationCompletedListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnInitializationCompletedListener<SingleSensorStaticIntervalMagnetometerCalibrator>>()
         calibrator.initializationCompletedListener = initializationCompletedListener
 
         // check
@@ -495,8 +533,6 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
         assertNull(calibrator.errorListener)
 
         // set new value
-        val errorListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnErrorListener<SingleSensorStaticIntervalMagnetometerCalibrator>>()
         calibrator.errorListener = errorListener
 
         // check
@@ -512,8 +548,6 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
         assertNull(calibrator.initialHardIronAvailableListener)
 
         // set new value
-        val initialHardIronAvailableListener =
-            mockk<SingleSensorStaticIntervalMagnetometerCalibrator.OnInitialHardIronAvailableListener>()
         calibrator.initialHardIronAvailableListener = initialHardIronAvailableListener
 
         // check
@@ -529,8 +563,6 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
         assertNull(calibrator.newCalibrationMeasurementAvailableListener)
 
         // set new value
-        val newCalibrationMeasurementAvailableListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnNewCalibrationMeasurementAvailableListener<SingleSensorStaticIntervalMagnetometerCalibrator, StandardDeviationBodyMagneticFluxDensity>>()
         calibrator.newCalibrationMeasurementAvailableListener =
             newCalibrationMeasurementAvailableListener
 
@@ -550,8 +582,6 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
         assertNull(calibrator.readyToSolveCalibrationListener)
 
         // set new value
-        val readyToSolveCalibrationListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnReadyToSolveCalibrationListener<SingleSensorStaticIntervalMagnetometerCalibrator>>()
         calibrator.readyToSolveCalibrationListener = readyToSolveCalibrationListener
 
         // check
@@ -567,8 +597,6 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
         assertNull(calibrator.calibrationSolvingStartedListener)
 
         // set new value
-        val calibrationSolvingStartedListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnCalibrationSolvingStartedListener<SingleSensorStaticIntervalMagnetometerCalibrator>>()
         calibrator.calibrationSolvingStartedListener = calibrationSolvingStartedListener
 
         // check
@@ -584,8 +612,6 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
         assertNull(calibrator.calibrationCompletedListener)
 
         // set new value
-        val calibrationCompletedListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnCalibrationCompletedListener<SingleSensorStaticIntervalMagnetometerCalibrator>>()
         calibrator.calibrationCompletedListener = calibrationCompletedListener
 
         // check
@@ -601,8 +627,6 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
         assertNull(calibrator.stoppedListener)
 
         // set new value
-        val stoppedListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnStoppedListener<SingleSensorStaticIntervalMagnetometerCalibrator>>()
         calibrator.stoppedListener = stoppedListener
 
         // check
@@ -1906,16 +1930,11 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             )
         requireNotNull(intervalDetectorInitializationStartedListener)
 
-        val intervalDetector = mockk<MagnetometerIntervalDetector>()
         intervalDetectorInitializationStartedListener.onInitializationStarted(intervalDetector)
     }
 
     @Test
     fun onInitializationStarted_whenListenerAvailable_notifies() {
-        val initializationStartedListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnInitializationStartedListener<SingleSensorStaticIntervalMagnetometerCalibrator>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = SingleSensorStaticIntervalMagnetometerCalibrator(
             context,
@@ -1930,7 +1949,6 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             )
         requireNotNull(intervalDetectorInitializationStartedListener)
 
-        val intervalDetector = mockk<MagnetometerIntervalDetector>()
         intervalDetectorInitializationStartedListener.onInitializationStarted(intervalDetector)
 
         verify(exactly = 1) { initializationStartedListener.onInitializationStarted(calibrator) }
@@ -1951,7 +1969,6 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val baseNoiseLevel = randomizer.nextDouble()
-        val intervalDetector = mockk<MagnetometerIntervalDetector>()
         intervalDetectorInitializationCompletedListener.onInitializationCompleted(
             intervalDetector,
             baseNoiseLevel
@@ -1960,10 +1977,6 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun onInitializationCompleted_whenListenerAvailable_notifies() {
-        val initializationCompletedListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnInitializationCompletedListener<SingleSensorStaticIntervalMagnetometerCalibrator>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = SingleSensorStaticIntervalMagnetometerCalibrator(
             context,
@@ -1980,7 +1993,6 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val baseNoiseLevel = randomizer.nextDouble()
-        val intervalDetector = mockk<MagnetometerIntervalDetector>()
         intervalDetectorInitializationCompletedListener.onInitializationCompleted(
             intervalDetector,
             baseNoiseLevel
@@ -2024,14 +2036,6 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun onError_whenListenersAvailable_stopsAndNotifies() {
-        val errorListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnErrorListener<SingleSensorStaticIntervalMagnetometerCalibrator>>(
-                relaxUnitFun = true
-            )
-        val stoppedListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnStoppedListener<SingleSensorStaticIntervalMagnetometerCalibrator>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = SingleSensorStaticIntervalMagnetometerCalibrator(
             context,
@@ -2084,7 +2088,6 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             calibrator.getPrivateProperty("intervalDetectorDynamicIntervalDetectedListener")
         requireNotNull(intervalDetectorDynamicIntervalDetectedListener)
 
-        val intervalDetector = mockk<MagnetometerIntervalDetector>()
         intervalDetectorDynamicIntervalDetectedListener.onDynamicIntervalDetected(
             intervalDetector,
             1.0,
@@ -2128,7 +2131,6 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             calibrator.getPrivateProperty("intervalDetectorDynamicIntervalDetectedListener")
         requireNotNull(intervalDetectorDynamicIntervalDetectedListener)
 
-        val intervalDetector = mockk<MagnetometerIntervalDetector>()
         intervalDetectorDynamicIntervalDetectedListener.onDynamicIntervalDetected(
             intervalDetector,
             1.0,
@@ -2162,7 +2164,6 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             calibrator.getPrivateProperty("intervalDetectorDynamicIntervalDetectedListener")
         requireNotNull(intervalDetectorDynamicIntervalDetectedListener)
 
-        val intervalDetector = mockk<MagnetometerIntervalDetector>()
         intervalDetectorDynamicIntervalDetectedListener.onDynamicIntervalDetected(
             intervalDetector,
             1.0,
@@ -2217,7 +2218,6 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             calibrator.getPrivateProperty("intervalDetectorDynamicIntervalDetectedListener")
         requireNotNull(intervalDetectorDynamicIntervalDetectedListener)
 
-        val intervalDetector = mockk<MagnetometerIntervalDetector>()
         intervalDetectorDynamicIntervalDetectedListener.onDynamicIntervalDetected(
             intervalDetector,
             1.0,
@@ -2239,10 +2239,6 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun onDynamicIntervalDetected_whenNewCalibrationMeasurementAvailable_notifies() {
-        val newCalibrationMeasurementAvailableListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnNewCalibrationMeasurementAvailableListener<SingleSensorStaticIntervalMagnetometerCalibrator, StandardDeviationBodyMagneticFluxDensity>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = SingleSensorStaticIntervalMagnetometerCalibrator(
             context,
@@ -2253,7 +2249,6 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             calibrator.getPrivateProperty("intervalDetectorDynamicIntervalDetectedListener")
         requireNotNull(intervalDetectorDynamicIntervalDetectedListener)
 
-        val intervalDetector = mockk<MagnetometerIntervalDetector>()
         intervalDetectorDynamicIntervalDetectedListener.onDynamicIntervalDetected(
             intervalDetector,
             1.0,
@@ -2325,7 +2320,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             calibrator.getPrivateProperty("intervalDetectorDynamicIntervalDetectedListener")
         requireNotNull(intervalDetectorDynamicIntervalDetectedListener)
 
-        for (i in 1..reqMeasurements) {
+        (1..reqMeasurements).forEach { _ ->
             intervalDetectorDynamicIntervalDetectedListener.onDynamicIntervalDetected(
                 intervalDetector,
                 1.0,
@@ -2356,14 +2351,6 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun onDynamicIntervalDetected_whenListenersAvailable_notifies() {
-        val readyToSolveCalibrationListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnReadyToSolveCalibrationListener<SingleSensorStaticIntervalMagnetometerCalibrator>>(
-                relaxUnitFun = true
-            )
-        val stoppedListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnStoppedListener<SingleSensorStaticIntervalMagnetometerCalibrator>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = SingleSensorStaticIntervalMagnetometerCalibrator(
             context,
@@ -2395,7 +2382,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             calibrator.getPrivateProperty("intervalDetectorDynamicIntervalDetectedListener")
         requireNotNull(intervalDetectorDynamicIntervalDetectedListener)
 
-        for (i in 1..reqMeasurements) {
+        (1..reqMeasurements).forEach { _ ->
             intervalDetectorDynamicIntervalDetectedListener.onDynamicIntervalDetected(
                 intervalDetector,
                 1.0,
@@ -2457,7 +2444,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
 
-        for (i in 1..reqMeasurements) {
+        (1..reqMeasurements).forEach { _ ->
             val roll = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
             val pitch = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
             val yaw = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
@@ -2530,27 +2517,6 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun onDynamicIntervalDetected_whenSolveCalibrationEnabledAndListenerAvailable_solvesCalibrationAndNotifies() {
-        val readyToSolveCalibrationListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnReadyToSolveCalibrationListener<SingleSensorStaticIntervalMagnetometerCalibrator>>(
-                relaxUnitFun = true
-            )
-        val stoppedListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnStoppedListener<SingleSensorStaticIntervalMagnetometerCalibrator>>(
-                relaxUnitFun = true
-            )
-        val calibrationSolvingStartedListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnCalibrationSolvingStartedListener<SingleSensorStaticIntervalMagnetometerCalibrator>>(
-                relaxUnitFun = true
-            )
-        val calibrationCompletedListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnCalibrationCompletedListener<SingleSensorStaticIntervalMagnetometerCalibrator>>(
-                relaxUnitFun = true
-            )
-        val errorListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnErrorListener<SingleSensorStaticIntervalMagnetometerCalibrator>>(
-                relaxUnitFun = true
-            )
-
         val wmmEstimator = WMMEarthMagneticFluxDensityEstimator()
 
         val location = getLocation()
@@ -2590,7 +2556,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
 
-        for (i in 1..reqMeasurements) {
+        (1..reqMeasurements).forEach { _ ->
             val roll = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
             val pitch = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
             val yaw = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
@@ -2845,10 +2811,6 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun onMeasurement_whenFirstMeasurementAndListener_updatesInitialBiasesAndNotifies() {
-        val initialHardIronAvailableListener =
-            mockk<SingleSensorStaticIntervalMagnetometerCalibrator.OnInitialHardIronAvailableListener>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = SingleSensorStaticIntervalMagnetometerCalibrator(
             context,
@@ -3177,7 +3139,6 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             calibrator.getPrivateProperty("intervalDetector")
         requireNotNull(intervalDetector)
         val intervalDetectorSpy = spyk(intervalDetector)
-        val sensor = mockk<Sensor>()
         every { intervalDetectorSpy.sensor }.returns(sensor)
         calibrator.setPrivateProperty("intervalDetector", intervalDetectorSpy)
 
@@ -3603,21 +3564,11 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
 
         assertFalse(calibrator.running)
 
-        val measurements = calibrator.measurements
-        val measurementsSpy = spyk(measurements)
-        setPrivateProperty(
-            SingleSensorStaticIntervalCalibrator::class,
-            calibrator,
-            "measurements",
-            measurementsSpy
-        )
-
         calibrator.setPrivateProperty("initialHardIronX", 0.0)
         calibrator.setPrivateProperty("initialHardIronY", 0.0)
         calibrator.setPrivateProperty("initialHardIronZ", 0.0)
         calibrator.setPrivateProperty("initialMagneticFluxDensityNorm", 0.0)
 
-        val internalCalibrator = mockk<MagnetometerNonLinearCalibrator>()
         calibrator.setPrivateProperty("internalCalibrator", internalCalibrator)
 
         val intervalDetector: MagnetometerIntervalDetector? =
@@ -3630,7 +3581,6 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
         calibrator.start()
 
         // check
-        verify(exactly = 1) { measurementsSpy.clear() }
         assertNull(calibrator.initialHardIronX)
         assertNull(calibrator.initialHardIronY)
         assertNull(calibrator.initialHardIronZ)
@@ -3679,10 +3629,6 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun stop_whenListenerAvailable_notifies() {
-        val stoppedListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnStoppedListener<SingleSensorStaticIntervalMagnetometerCalibrator>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = SingleSensorStaticIntervalMagnetometerCalibrator(
             context,
@@ -3735,8 +3681,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             context
         )
 
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.measurements.add(measurement)
         }
 
@@ -3750,14 +3695,6 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun calibrate_whenReadyNotRunningAndInternalCalibratorAndListeners_callsInternalCalibratorAndNotifies() {
-        val calibrationSolvingStartedListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnCalibrationSolvingStartedListener<SingleSensorStaticIntervalMagnetometerCalibrator>>(
-                relaxUnitFun = true
-            )
-        val calibrationCompletedListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnCalibrationCompletedListener<SingleSensorStaticIntervalMagnetometerCalibrator>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = SingleSensorStaticIntervalMagnetometerCalibrator(
             context,
@@ -3765,15 +3702,13 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             calibrationCompletedListener = calibrationCompletedListener
         )
 
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.measurements.add(measurement)
         }
 
         assertTrue(calibrator.isReadyToSolveCalibration)
         assertFalse(calibrator.running)
 
-        val internalCalibrator = mockk<MagnetometerNonLinearCalibrator>()
         justRun { internalCalibrator.calibrate() }
         calibrator.setPrivateProperty("internalCalibrator", internalCalibrator)
 
@@ -3795,15 +3730,13 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             context
         )
 
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.measurements.add(measurement)
         }
 
         assertTrue(calibrator.isReadyToSolveCalibration)
         assertFalse(calibrator.running)
 
-        val internalCalibrator = mockk<MagnetometerNonLinearCalibrator>()
         every { internalCalibrator.calibrate() }.throws(NavigationException())
         calibrator.setPrivateProperty("internalCalibrator", internalCalibrator)
 
@@ -3814,25 +3747,19 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
 
     @Test
     fun calibrate_whenFailureAndErrorListener_setsAsNotRunning() {
-        val errorListener =
-            mockk<SingleSensorStaticIntervalCalibrator.OnErrorListener<SingleSensorStaticIntervalMagnetometerCalibrator>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = SingleSensorStaticIntervalMagnetometerCalibrator(
             context,
             errorListener = errorListener
         )
 
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.measurements.add(measurement)
         }
 
         assertTrue(calibrator.isReadyToSolveCalibration)
         assertFalse(calibrator.running)
 
-        val internalCalibrator = mockk<MagnetometerNonLinearCalibrator>()
         every { internalCalibrator.calibrate() }.throws(NavigationException())
         calibrator.setPrivateProperty("internalCalibrator", internalCalibrator)
 
@@ -4459,8 +4386,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
         assertSame(worldMagneticModel, calibrator.worldMagneticModel)
         assertFalse(calibrator.isInitialMagneticFluxDensityNormMeasured)
 
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.measurements.add(measurement)
         }
 
@@ -4546,8 +4472,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             isGroundTruthInitialHardIron = true
         )
 
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.measurements.add(measurement)
         }
 
@@ -4635,8 +4560,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             isGroundTruthInitialHardIron = true
         )
 
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.measurements.add(measurement)
         }
 
@@ -4718,8 +4642,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             isGroundTruthInitialHardIron = false
         )
 
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.measurements.add(measurement)
         }
 
@@ -4801,8 +4724,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             isGroundTruthInitialHardIron = false
         )
 
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.measurements.add(measurement)
         }
 
@@ -4884,8 +4806,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             isGroundTruthInitialHardIron = false
         )
 
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.measurements.add(measurement)
         }
 
@@ -4982,8 +4903,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             isGroundTruthInitialHardIron = false
         )
 
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.measurements.add(measurement)
         }
 
@@ -5080,8 +5000,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             isGroundTruthInitialHardIron = true
         )
 
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.measurements.add(measurement)
         }
 
@@ -5184,8 +5103,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             isGroundTruthInitialHardIron = true
         )
 
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.measurements.add(measurement)
         }
 
@@ -5288,8 +5206,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             isGroundTruthInitialHardIron = false
         )
 
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.measurements.add(measurement)
         }
 
@@ -5396,8 +5313,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             isGroundTruthInitialHardIron = true
         )
 
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.measurements.add(measurement)
         }
 
@@ -5504,8 +5420,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             isGroundTruthInitialHardIron = false
         )
 
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.measurements.add(measurement)
         }
 
@@ -5571,8 +5486,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             isGroundTruthInitialHardIron = true
         )
 
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.measurements.add(measurement)
         }
 
@@ -5638,8 +5552,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             isGroundTruthInitialHardIron = false
         )
 
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.measurements.add(measurement)
         }
 
@@ -5736,8 +5649,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             isGroundTruthInitialHardIron = false
         )
 
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.measurements.add(measurement)
         }
 
@@ -5834,8 +5746,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             isGroundTruthInitialHardIron = true
         )
 
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.measurements.add(measurement)
         }
 
@@ -5938,8 +5849,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             isGroundTruthInitialHardIron = true
         )
 
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.measurements.add(measurement)
         }
 
@@ -6042,8 +5952,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             isGroundTruthInitialHardIron = false
         )
 
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.measurements.add(measurement)
         }
 
@@ -6150,8 +6059,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             isGroundTruthInitialHardIron = true
         )
 
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.measurements.add(measurement)
         }
 
@@ -6258,8 +6166,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             isGroundTruthInitialHardIron = false
         )
 
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.measurements.add(measurement)
         }
 
@@ -6325,8 +6232,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             isGroundTruthInitialHardIron = true
         )
 
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.measurements.add(measurement)
         }
 
@@ -6394,11 +6300,10 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
         every { measurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
         )
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.measurements.add(measurement)
         }
 
@@ -6497,11 +6402,10 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
         every { measurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
         )
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.measurements.add(measurement)
         }
 
@@ -6600,11 +6504,10 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
         every { measurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
         )
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.measurements.add(measurement)
         }
 
@@ -6709,11 +6612,10 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
         every { measurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
         )
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.measurements.add(measurement)
         }
 
@@ -6812,11 +6714,10 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
         every { measurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
         )
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.measurements.add(measurement)
         }
 
@@ -6925,11 +6826,10 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
         every { measurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
         )
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.measurements.add(measurement)
         }
 
@@ -7038,11 +6938,10 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
         every { measurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
         )
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.measurements.add(measurement)
         }
 
@@ -7109,11 +7008,10 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
         every { measurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
         )
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.measurements.add(measurement)
         }
 
@@ -7178,8 +7076,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             isGroundTruthInitialHardIron = false
         )
 
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.measurements.add(measurement)
         }
 
@@ -7206,13 +7103,13 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.robustMethod = RobustEstimatorMethod.LMedS
+        calibrator.robustMethod = RobustEstimatorMethod.LMEDS
         calibrator.robustConfidence = ROBUST_CONFIDENCE
         calibrator.robustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         calibrator.robustThreshold = ROBUST_THRESHOLD
 
-        assertEquals(RobustEstimatorMethod.LMedS, calibrator.robustMethod)
+        assertEquals(RobustEstimatorMethod.LMEDS, calibrator.robustMethod)
         assertFalse(calibrator.isGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.robustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.robustMaxIterations)
@@ -7276,8 +7173,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             isGroundTruthInitialHardIron = false
         )
 
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.measurements.add(measurement)
         }
 
@@ -7304,13 +7200,13 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.robustMethod = RobustEstimatorMethod.LMedS
+        calibrator.robustMethod = RobustEstimatorMethod.LMEDS
         calibrator.robustConfidence = ROBUST_CONFIDENCE
         calibrator.robustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         calibrator.robustThreshold = ROBUST_THRESHOLD
 
-        assertEquals(RobustEstimatorMethod.LMedS, calibrator.robustMethod)
+        assertEquals(RobustEstimatorMethod.LMEDS, calibrator.robustMethod)
         assertFalse(calibrator.isGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.robustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.robustMaxIterations)
@@ -7374,8 +7270,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             isGroundTruthInitialHardIron = true
         )
 
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.measurements.add(measurement)
         }
 
@@ -7408,13 +7303,13 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.robustMethod = RobustEstimatorMethod.LMedS
+        calibrator.robustMethod = RobustEstimatorMethod.LMEDS
         calibrator.robustConfidence = ROBUST_CONFIDENCE
         calibrator.robustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         calibrator.robustThreshold = ROBUST_THRESHOLD
 
-        assertEquals(RobustEstimatorMethod.LMedS, calibrator.robustMethod)
+        assertEquals(RobustEstimatorMethod.LMEDS, calibrator.robustMethod)
         assertTrue(calibrator.isGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.robustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.robustMaxIterations)
@@ -7478,8 +7373,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             isGroundTruthInitialHardIron = true
         )
 
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.measurements.add(measurement)
         }
 
@@ -7512,13 +7406,13 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.robustMethod = RobustEstimatorMethod.LMedS
+        calibrator.robustMethod = RobustEstimatorMethod.LMEDS
         calibrator.robustConfidence = ROBUST_CONFIDENCE
         calibrator.robustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         calibrator.robustThreshold = ROBUST_THRESHOLD
 
-        assertEquals(RobustEstimatorMethod.LMedS, calibrator.robustMethod)
+        assertEquals(RobustEstimatorMethod.LMEDS, calibrator.robustMethod)
         assertTrue(calibrator.isGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.robustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.robustMaxIterations)
@@ -7582,8 +7476,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             isGroundTruthInitialHardIron = false
         )
 
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.measurements.add(measurement)
         }
 
@@ -7610,7 +7503,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.robustMethod = RobustEstimatorMethod.LMedS
+        calibrator.robustMethod = RobustEstimatorMethod.LMEDS
         calibrator.robustConfidence = ROBUST_CONFIDENCE
         calibrator.robustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
@@ -7626,7 +7519,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
         every { intervalDetectorSpy.baseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("intervalDetector", intervalDetectorSpy)
 
-        assertEquals(RobustEstimatorMethod.LMedS, calibrator.robustMethod)
+        assertEquals(RobustEstimatorMethod.LMEDS, calibrator.robustMethod)
         assertFalse(calibrator.isGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.robustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.robustMaxIterations)
@@ -7695,8 +7588,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             isGroundTruthInitialHardIron = true
         )
 
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.measurements.add(measurement)
         }
 
@@ -7723,7 +7615,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.robustMethod = RobustEstimatorMethod.LMedS
+        calibrator.robustMethod = RobustEstimatorMethod.LMEDS
         calibrator.robustConfidence = ROBUST_CONFIDENCE
         calibrator.robustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
@@ -7739,7 +7631,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
         every { intervalDetectorSpy.baseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("intervalDetector", intervalDetectorSpy)
 
-        assertEquals(RobustEstimatorMethod.LMedS, calibrator.robustMethod)
+        assertEquals(RobustEstimatorMethod.LMEDS, calibrator.robustMethod)
         assertTrue(calibrator.isGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.robustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.robustMaxIterations)
@@ -7808,8 +7700,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             isGroundTruthInitialHardIron = false
         )
 
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.measurements.add(measurement)
         }
 
@@ -7836,7 +7727,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.robustMethod = RobustEstimatorMethod.LMedS
+        calibrator.robustMethod = RobustEstimatorMethod.LMEDS
         calibrator.robustConfidence = ROBUST_CONFIDENCE
         calibrator.robustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
@@ -7844,7 +7735,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
         calibrator.robustThresholdFactor = ROBUST_THRESHOLD_FACTOR
         calibrator.robustStopThresholdFactor = ROBUST_STOP_THRESHOLD_FACTOR
 
-        assertEquals(RobustEstimatorMethod.LMedS, calibrator.robustMethod)
+        assertEquals(RobustEstimatorMethod.LMEDS, calibrator.robustMethod)
         assertFalse(calibrator.isGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.robustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.robustMaxIterations)
@@ -7876,8 +7767,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             isGroundTruthInitialHardIron = true
         )
 
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.measurements.add(measurement)
         }
 
@@ -7904,7 +7794,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.robustMethod = RobustEstimatorMethod.LMedS
+        calibrator.robustMethod = RobustEstimatorMethod.LMEDS
         calibrator.robustConfidence = ROBUST_CONFIDENCE
         calibrator.robustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
@@ -7912,7 +7802,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
         calibrator.robustThresholdFactor = ROBUST_THRESHOLD_FACTOR
         calibrator.robustStopThresholdFactor = ROBUST_STOP_THRESHOLD_FACTOR
 
-        assertEquals(RobustEstimatorMethod.LMedS, calibrator.robustMethod)
+        assertEquals(RobustEstimatorMethod.LMEDS, calibrator.robustMethod)
         assertTrue(calibrator.isGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.robustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.robustMaxIterations)
@@ -7946,11 +7836,10 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
         every { measurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
         )
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.measurements.add(measurement)
         }
 
@@ -7976,13 +7865,13 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.robustMethod = RobustEstimatorMethod.PROMedS
+        calibrator.robustMethod = RobustEstimatorMethod.PROMEDS
         calibrator.robustConfidence = ROBUST_CONFIDENCE
         calibrator.robustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         calibrator.robustThreshold = ROBUST_THRESHOLD
 
-        assertEquals(RobustEstimatorMethod.PROMedS, calibrator.robustMethod)
+        assertEquals(RobustEstimatorMethod.PROMEDS, calibrator.robustMethod)
         assertFalse(calibrator.isGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.robustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.robustMaxIterations)
@@ -8049,11 +7938,10 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
         every { measurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
         )
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.measurements.add(measurement)
         }
 
@@ -8079,13 +7967,13 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.robustMethod = RobustEstimatorMethod.PROMedS
+        calibrator.robustMethod = RobustEstimatorMethod.PROMEDS
         calibrator.robustConfidence = ROBUST_CONFIDENCE
         calibrator.robustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         calibrator.robustThreshold = ROBUST_THRESHOLD
 
-        assertEquals(RobustEstimatorMethod.PROMedS, calibrator.robustMethod)
+        assertEquals(RobustEstimatorMethod.PROMEDS, calibrator.robustMethod)
         assertFalse(calibrator.isGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.robustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.robustMaxIterations)
@@ -8152,11 +8040,10 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
         every { measurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
         )
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.measurements.add(measurement)
         }
 
@@ -8188,13 +8075,13 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.robustMethod = RobustEstimatorMethod.PROMedS
+        calibrator.robustMethod = RobustEstimatorMethod.PROMEDS
         calibrator.robustConfidence = ROBUST_CONFIDENCE
         calibrator.robustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         calibrator.robustThreshold = ROBUST_THRESHOLD
 
-        assertEquals(RobustEstimatorMethod.PROMedS, calibrator.robustMethod)
+        assertEquals(RobustEstimatorMethod.PROMEDS, calibrator.robustMethod)
         assertTrue(calibrator.isGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.robustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.robustMaxIterations)
@@ -8261,11 +8148,10 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
         every { measurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
         )
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.measurements.add(measurement)
         }
 
@@ -8297,13 +8183,13 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.robustMethod = RobustEstimatorMethod.PROMedS
+        calibrator.robustMethod = RobustEstimatorMethod.PROMEDS
         calibrator.robustConfidence = ROBUST_CONFIDENCE
         calibrator.robustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         calibrator.robustThreshold = ROBUST_THRESHOLD
 
-        assertEquals(RobustEstimatorMethod.PROMedS, calibrator.robustMethod)
+        assertEquals(RobustEstimatorMethod.PROMEDS, calibrator.robustMethod)
         assertTrue(calibrator.isGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.robustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.robustMaxIterations)
@@ -8370,11 +8256,10 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
         every { measurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
         )
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.measurements.add(measurement)
         }
 
@@ -8400,7 +8285,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.robustMethod = RobustEstimatorMethod.PROMedS
+        calibrator.robustMethod = RobustEstimatorMethod.PROMEDS
         calibrator.robustConfidence = ROBUST_CONFIDENCE
         calibrator.robustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
@@ -8416,7 +8301,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
         every { intervalDetectorSpy.baseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("intervalDetector", intervalDetectorSpy)
 
-        assertEquals(RobustEstimatorMethod.PROMedS, calibrator.robustMethod)
+        assertEquals(RobustEstimatorMethod.PROMEDS, calibrator.robustMethod)
         assertFalse(calibrator.isGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.robustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.robustMaxIterations)
@@ -8489,11 +8374,10 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
         every { measurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
         )
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.measurements.add(measurement)
         }
 
@@ -8519,7 +8403,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.robustMethod = RobustEstimatorMethod.PROMedS
+        calibrator.robustMethod = RobustEstimatorMethod.PROMEDS
         calibrator.robustConfidence = ROBUST_CONFIDENCE
         calibrator.robustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
@@ -8535,7 +8419,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
         every { intervalDetectorSpy.baseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("intervalDetector", intervalDetectorSpy)
 
-        assertEquals(RobustEstimatorMethod.PROMedS, calibrator.robustMethod)
+        assertEquals(RobustEstimatorMethod.PROMEDS, calibrator.robustMethod)
         assertTrue(calibrator.isGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.robustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.robustMaxIterations)
@@ -8608,11 +8492,10 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
         every { measurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
         )
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.measurements.add(measurement)
         }
 
@@ -8638,14 +8521,14 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.robustMethod = RobustEstimatorMethod.PROMedS
+        calibrator.robustMethod = RobustEstimatorMethod.PROMEDS
         calibrator.robustConfidence = ROBUST_CONFIDENCE
         calibrator.robustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         calibrator.robustThreshold = null
         calibrator.robustThresholdFactor = ROBUST_THRESHOLD_FACTOR
 
-        assertEquals(RobustEstimatorMethod.PROMedS, calibrator.robustMethod)
+        assertEquals(RobustEstimatorMethod.PROMEDS, calibrator.robustMethod)
         assertFalse(calibrator.isGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.robustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.robustMaxIterations)
@@ -8679,11 +8562,10 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
         every { measurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
         )
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             calibrator.measurements.add(measurement)
         }
 
@@ -8709,14 +8591,14 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             initialMzx,
             initialMzy
         )
-        calibrator.robustMethod = RobustEstimatorMethod.PROMedS
+        calibrator.robustMethod = RobustEstimatorMethod.PROMEDS
         calibrator.robustConfidence = ROBUST_CONFIDENCE
         calibrator.robustMaxIterations = ROBUST_MAX_ITERATIONS
         calibrator.robustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         calibrator.robustThreshold = null
         calibrator.robustThresholdFactor = ROBUST_THRESHOLD_FACTOR
 
-        assertEquals(RobustEstimatorMethod.PROMedS, calibrator.robustMethod)
+        assertEquals(RobustEstimatorMethod.PROMEDS, calibrator.robustMethod)
         assertTrue(calibrator.isGroundTruthInitialHardIron)
         assertEquals(ROBUST_CONFIDENCE, calibrator.robustConfidence, 0.0)
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.robustMaxIterations)
@@ -8738,6 +8620,20 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
             assertNull(calibrator.callPrivateFuncWithResult("buildInternalCalibrator"))
         }
         assertTrue(ex.cause is IllegalStateException)
+    }
+
+    private fun getLocation(): Location {
+        val randomizer = UniformRandomizer()
+        val latitudeDegrees = randomizer.nextDouble(MIN_LATITUDE_DEGREES, MAX_LATITUDE_DEGREES)
+        val longitudeDegrees =
+            randomizer.nextDouble(MIN_LONGITUDE_DEGREES, MAX_LONGITUDE_DEGREES)
+        val height = randomizer.nextDouble(MIN_HEIGHT, MAX_HEIGHT)
+
+        every { location.latitude }.returns(latitudeDegrees)
+        every { location.longitude }.returns(longitudeDegrees)
+        every { location.altitude }.returns(height)
+
+        return location
     }
 
     private companion object {
@@ -8791,21 +8687,6 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
 
         const val ABSOLUTE_ERROR = 1e-6
 
-        fun getLocation(): Location {
-            val randomizer = UniformRandomizer()
-            val latitudeDegrees = randomizer.nextDouble(MIN_LATITUDE_DEGREES, MAX_LATITUDE_DEGREES)
-            val longitudeDegrees =
-                randomizer.nextDouble(MIN_LONGITUDE_DEGREES, MAX_LONGITUDE_DEGREES)
-            val height = randomizer.nextDouble(MIN_HEIGHT, MAX_HEIGHT)
-
-            val location = mockk<Location>()
-            every { location.latitude }.returns(latitudeDegrees)
-            every { location.longitude }.returns(longitudeDegrees)
-            every { location.altitude }.returns(height)
-
-            return location
-        }
-
         fun generateHardIron(): DoubleArray {
             val result = DoubleArray(BodyMagneticFluxDensity.COMPONENTS)
             val randomizer = UniformRandomizer()
@@ -8819,7 +8700,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
                     BodyMagneticFluxDensity.COMPONENTS,
                     BodyMagneticFluxDensity.COMPONENTS, MIN_SOFT_IRON, MAX_SOFT_IRON
                 )
-            } catch (ignore: WrongSizeException) {
+            } catch (_: WrongSizeException) {
                 // never happens
                 null
             }

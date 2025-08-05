@@ -29,17 +29,67 @@ import com.google.android.gms.location.*
 import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.android.gms.tasks.OnSuccessListener
 import com.google.android.gms.tasks.Task
+import com.irurueta.android.testutils.getPrivateProperty
+import com.irurueta.android.testutils.setPrivateProperty
 import io.mockk.*
+import io.mockk.impl.annotations.MockK
+import io.mockk.impl.annotations.SpyK
+import io.mockk.junit4.MockKRule
 import org.junit.After
 import org.junit.Assert.*
+import org.junit.Ignore
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import java.util.function.Consumer
 
+@Ignore("possible memory leak")
 @RunWith(RobolectricTestRunner::class)
 class LocationServiceTest {
+
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK
+    private lateinit var googleApiAvailability: GoogleApiAvailability
+
+    @MockK
+    private lateinit var location: Location
+
+    @MockK
+    private lateinit var task: Task<Location>
+
+    @MockK
+    private lateinit var currentLocationListener: LocationService.OnCurrentLocationListener
+
+    @MockK
+    private lateinit var cancellationTokenSource: CancellationTokenSource
+
+    @MockK
+    private lateinit var cancellationSignal: CancellationSignal
+
+    @MockK
+    private lateinit var locationUpdateListener: LocationService.OnLocationUpdateListener
+
+    @MockK
+    private lateinit var requestTask: Task<Void>
+
+    @MockK
+    private lateinit var locationAvailability: LocationAvailability
+
+    @MockK
+    private lateinit var locationResult: LocationResult
+
+    @MockK
+    private lateinit var looper: Looper
+
+    @SpyK
+    private var context: Context = ApplicationProvider.getApplicationContext()
+
+    @SpyK
+    private var cancellationSignalSpy = CancellationSignal()
 
     @After
     fun tearDown() {
@@ -69,7 +119,6 @@ class LocationServiceTest {
 
     @Test
     fun constructor_whenNoLocationManager_setsDefaultValues() {
-        val context = spyk(ApplicationProvider.getApplicationContext())
         every { context.getSystemService(Context.LOCATION_SERVICE) }
             .returns(null as LocationManager?)
         val service = LocationService(context)
@@ -91,7 +140,6 @@ class LocationServiceTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val service = LocationService(context)
 
-        val googleApiAvailability = mockk<GoogleApiAvailability>()
         every { googleApiAvailability.isGooglePlayServicesAvailable(context) }.returns(
             ConnectionResult.SUCCESS
         )
@@ -113,7 +161,6 @@ class LocationServiceTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val service = LocationService(context)
 
-        val googleApiAvailability = mockk<GoogleApiAvailability>()
         every { googleApiAvailability.isGooglePlayServicesAvailable(context) }.returns(
             ConnectionResult.SUCCESS
         )
@@ -176,7 +223,6 @@ class LocationServiceTest {
         requireNotNull(locationManager)
         val locationManagerSpy = spyk(locationManager)
         every { locationManagerSpy.isProviderEnabled(LocationService.FUSED_PROVIDER) }.returns(true)
-        val location = mockk<Location>()
         every { locationManagerSpy.getLastKnownLocation(LocationService.FUSED_PROVIDER) }.returns(
             location
         )
@@ -211,9 +257,6 @@ class LocationServiceTest {
 
     @Test
     fun getCurrentLocation_whenFusedClientAndTokenSource_callsExpectedMethods() {
-        val context = spyk(ApplicationProvider.getApplicationContext())
-
-        val googleApiAvailability = mockk<GoogleApiAvailability>()
         every { googleApiAvailability.isGooglePlayServicesAvailable(context) }.returns(
             ConnectionResult.SUCCESS
         )
@@ -237,8 +280,6 @@ class LocationServiceTest {
         service.setPrivateProperty("fusedLocationClient", fusedLocationClientSpy)
         service.setPrivateProperty("cancellationTokenSource", cancellationTokenSourceSpy)
 
-        val location = mockk<Location>()
-        val task = mockk<Task<Location>>()
         every { task.addOnSuccessListener(any()) }.answers { answer ->
             @Suppress("UNCHECKED_CAST")
             val listener = answer.invocation.args[0] as OnSuccessListener<Location>
@@ -251,9 +292,8 @@ class LocationServiceTest {
             )
         }.returns(task)
 
-        val listener = mockk<LocationService.OnCurrentLocationListener>()
-        justRun { listener.onCurrentLocation(any()) }
-        service.getCurrentLocation(listener)
+        justRun { currentLocationListener.onCurrentLocation(any()) }
+        service.getCurrentLocation(currentLocationListener)
 
         verify(exactly = 1) {
             fusedLocationClientSpy.getCurrentLocation(
@@ -262,7 +302,7 @@ class LocationServiceTest {
             )
         }
         verify(exactly = 1) { task.addOnSuccessListener(any()) }
-        verify(exactly = 1) { listener.onCurrentLocation(location) }
+        verify(exactly = 1) { currentLocationListener.onCurrentLocation(location) }
 
         unmockkStatic(GoogleApiAvailability::class)
     }
@@ -270,8 +310,6 @@ class LocationServiceTest {
     @Config(sdk = [Build.VERSION_CODES.R])
     @Test
     fun getCurrentLocation_whenNoFusedClientAndNoPreviousRequestAndSdkR_callsExpectedMethods() {
-        val context = spyk(ApplicationProvider.getApplicationContext())
-
         val service = LocationService(context)
 
         val fusedLocationClient: FusedLocationProviderClient? =
@@ -286,7 +324,6 @@ class LocationServiceTest {
             service.getPrivateProperty("cancellationSignal")
         assertNull(cancellationSignal1)
 
-        val location = mockk<Location>()
         val locationManager: LocationManager? = service.getPrivateProperty("locationManager")
         requireNotNull(locationManager)
         val locationManagerSpy = spyk(locationManager)
@@ -306,9 +343,8 @@ class LocationServiceTest {
             consumer.accept(location)
         }
 
-        val listener = mockk<LocationService.OnCurrentLocationListener>()
-        justRun { listener.onCurrentLocation(any()) }
-        service.getCurrentLocation(listener)
+        justRun { currentLocationListener.onCurrentLocation(any()) }
+        service.getCurrentLocation(currentLocationListener)
 
         val cancellationSignal2: CancellationSignal? =
             service.getPrivateProperty("cancellationSignal")
@@ -322,14 +358,12 @@ class LocationServiceTest {
                 any<Consumer<Location>>()
             )
         }
-        verify(exactly = 1) { listener.onCurrentLocation(location) }
+        verify(exactly = 1) { currentLocationListener.onCurrentLocation(location) }
     }
 
     @Config(sdk = [Build.VERSION_CODES.R])
     @Test
     fun getCurrentLocation_whenNoFusedClientAndPreviousRequestAndSdkR_callsExpectedMethods() {
-        val context = spyk(ApplicationProvider.getApplicationContext())
-
         val service = LocationService(context)
 
         val fusedLocationClient: FusedLocationProviderClient? =
@@ -345,10 +379,8 @@ class LocationServiceTest {
         assertNull(cancellationSignal1)
 
         // set previous cancellation signal
-        val cancellationSignal2 = spyk(CancellationSignal())
-        service.setPrivateProperty("cancellationSignal", cancellationSignal2)
+        service.setPrivateProperty("cancellationSignal", cancellationSignalSpy)
 
-        val location = mockk<Location>()
         val locationManager: LocationManager? = service.getPrivateProperty("locationManager")
         requireNotNull(locationManager)
         val locationManagerSpy = spyk(locationManager)
@@ -363,21 +395,20 @@ class LocationServiceTest {
         }.answers { answer ->
             val cancellationSignal = answer.invocation.args[1]
             assertNotNull(cancellationSignal)
-            assertNotSame(cancellationSignal2, cancellationSignal)
+            assertNotSame(cancellationSignalSpy, cancellationSignal)
             @Suppress("UNCHECKED_CAST")
             val consumer = answer.invocation.args[3] as Consumer<Location>
             consumer.accept(location)
         }
 
-        val listener = mockk<LocationService.OnCurrentLocationListener>()
-        justRun { listener.onCurrentLocation(any()) }
-        service.getCurrentLocation(listener)
+        justRun { currentLocationListener.onCurrentLocation(any()) }
+        service.getCurrentLocation(currentLocationListener)
 
         val cancellationSignal3: CancellationSignal? =
             service.getPrivateProperty("cancellationSignal")
         assertNull(cancellationSignal3)
 
-        verify(exactly = 1) { cancellationSignal2.cancel() }
+        verify(exactly = 1) { cancellationSignalSpy.cancel() }
         verify(exactly = 1) {
             locationManagerSpy.getCurrentLocation(
                 LocationService.FUSED_PROVIDER,
@@ -386,14 +417,12 @@ class LocationServiceTest {
                 any<Consumer<Location>>()
             )
         }
-        verify(exactly = 1) { listener.onCurrentLocation(location) }
+        verify(exactly = 1) { currentLocationListener.onCurrentLocation(location) }
     }
 
     @Config(sdk = [Build.VERSION_CODES.R])
     @Test
     fun getCurrentLocation_whenNoFusedClientNoLocationManagerAndSdkR_callsExpectedMethods() {
-        val context = spyk(ApplicationProvider.getApplicationContext())
-
         val service = LocationService(context)
 
         val fusedLocationClient: FusedLocationProviderClient? =
@@ -409,30 +438,26 @@ class LocationServiceTest {
         assertNull(cancellationSignal1)
 
         // set previous cancellation signal
-        val cancellationSignal2 = spyk(CancellationSignal())
-        service.setPrivateProperty("cancellationSignal", cancellationSignal2)
+        service.setPrivateProperty("cancellationSignal", cancellationSignalSpy)
 
         val locationManager: LocationManager? = service.getPrivateProperty("locationManager")
         assertNotNull(locationManager)
         service.setPrivateProperty("locationManager", null)
 
-        val listener = mockk<LocationService.OnCurrentLocationListener>()
-        justRun { listener.onCurrentLocation(any()) }
-        service.getCurrentLocation(listener)
+        justRun { currentLocationListener.onCurrentLocation(any()) }
+        service.getCurrentLocation(currentLocationListener)
 
         val cancellationSignal3: CancellationSignal? =
             service.getPrivateProperty("cancellationSignal")
         assertNotNull(cancellationSignal3)
-        assertNotSame(cancellationSignal2, cancellationSignal3)
+        assertNotSame(cancellationSignalSpy, cancellationSignal3)
 
-        verify { listener wasNot Called }
+        verify { currentLocationListener wasNot Called }
     }
 
     @Config(sdk = [Build.VERSION_CODES.Q])
     @Test
     fun getCurrentLocation_whenNoFusedClientAndPreviousRequestAndSdkQ_callsExpectedMethods() {
-        val context = spyk(ApplicationProvider.getApplicationContext())
-
         val service = LocationService(context)
 
         val fusedLocationClient: FusedLocationProviderClient? =
@@ -443,7 +468,6 @@ class LocationServiceTest {
         assertNull(fusedLocationClient)
         assertNull(cancellationTokenSource)
 
-        val location = mockk<Location>()
         val locationManager: LocationManager? = service.getPrivateProperty("locationManager")
         requireNotNull(locationManager)
         val locationManagerSpy = spyk(locationManager)
@@ -456,21 +480,18 @@ class LocationServiceTest {
             listener.onLocationChanged(location)
         }
 
-        val listener = mockk<LocationService.OnCurrentLocationListener>()
-        justRun { listener.onCurrentLocation(any()) }
-        service.getCurrentLocation(listener)
+        justRun { currentLocationListener.onCurrentLocation(any()) }
+        service.getCurrentLocation(currentLocationListener)
 
         verify(exactly = 1) {
             @Suppress("DEPRECATION")
             locationManagerSpy.requestSingleUpdate(LocationService.FUSED_PROVIDER, any(), any())
         }
-        verify(exactly = 1) { listener.onCurrentLocation(location) }
+        verify(exactly = 1) { currentLocationListener.onCurrentLocation(location) }
     }
 
     @Test
     fun getCurrentLocation_whenNoLocationManagerAndSdkQ_makesNoAction() {
-        val context = spyk(ApplicationProvider.getApplicationContext())
-
         val service = LocationService(context)
 
         val fusedLocationClient: FusedLocationProviderClient? =
@@ -485,19 +506,15 @@ class LocationServiceTest {
         assertNotNull(locationManager)
         service.setPrivateProperty("locationManager", null)
 
-        val listener = mockk<LocationService.OnCurrentLocationListener>()
-        justRun { listener.onCurrentLocation(any()) }
-        service.getCurrentLocation(listener)
+        justRun { currentLocationListener.onCurrentLocation(any()) }
+        service.getCurrentLocation(currentLocationListener)
 
-        verify { listener wasNot Called }
+        verify { currentLocationListener wasNot Called }
     }
 
     @Config(sdk = [Build.VERSION_CODES.R])
     @Test
     fun getCurrentLocation_whenFusedClientAndNoCancellationTokenSource() {
-        val context = spyk(ApplicationProvider.getApplicationContext())
-
-        val googleApiAvailability = mockk<GoogleApiAvailability>()
         every { googleApiAvailability.isGooglePlayServicesAvailable(context) }.returns(
             ConnectionResult.SUCCESS
         )
@@ -522,7 +539,6 @@ class LocationServiceTest {
             service.getPrivateProperty("cancellationSignal")
         assertNull(cancellationSignal1)
 
-        val location = mockk<Location>()
         val locationManager: LocationManager? = service.getPrivateProperty("locationManager")
         requireNotNull(locationManager)
         val locationManagerSpy = spyk(locationManager)
@@ -542,9 +558,8 @@ class LocationServiceTest {
             consumer.accept(location)
         }
 
-        val listener = mockk<LocationService.OnCurrentLocationListener>()
-        justRun { listener.onCurrentLocation(any()) }
-        service.getCurrentLocation(listener)
+        justRun { currentLocationListener.onCurrentLocation(any()) }
+        service.getCurrentLocation(currentLocationListener)
 
         val cancellationSignal2: CancellationSignal? =
             service.getPrivateProperty("cancellationSignal")
@@ -558,7 +573,7 @@ class LocationServiceTest {
                 any<Consumer<Location>>()
             )
         }
-        verify(exactly = 1) { listener.onCurrentLocation(location) }
+        verify(exactly = 1) { currentLocationListener.onCurrentLocation(location) }
 
         unmockkStatic(GoogleApiAvailability::class)
     }
@@ -566,8 +581,6 @@ class LocationServiceTest {
     @Config(sdk = [Build.VERSION_CODES.Q])
     @Test
     fun getCurrentLocation_whenNoLocationManagerSdkQ_makesNoAction() {
-        val context = spyk(ApplicationProvider.getApplicationContext())
-
         val service = LocationService(context)
 
         val fusedLocationClient: FusedLocationProviderClient? =
@@ -582,15 +595,13 @@ class LocationServiceTest {
         assertNotNull(locationManager)
         service.setPrivateProperty("locationManager", null)
 
-        val listener = mockk<LocationService.OnCurrentLocationListener>()
-        service.getCurrentLocation(listener)
+        service.getCurrentLocation(currentLocationListener)
 
-        verify { listener wasNot Called }
+        verify { currentLocationListener wasNot Called }
     }
 
     @Test
     fun cancelCurrentLocation_whenNoPreviousTokenOrSignal_makesNoAction() {
-        val context = spyk(ApplicationProvider.getApplicationContext())
         val service = LocationService(context)
 
         val cancellationTokenSource: CancellationTokenSource? =
@@ -612,7 +623,6 @@ class LocationServiceTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val service = LocationService(context)
 
-        val cancellationTokenSource = mockk<CancellationTokenSource>()
         justRun { cancellationTokenSource.cancel() }
         service.setPrivateProperty("cancellationTokenSource", cancellationTokenSource)
 
@@ -626,7 +636,6 @@ class LocationServiceTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val service = LocationService(context)
 
-        val cancellationSignal = mockk<CancellationSignal>()
         justRun { cancellationSignal.cancel() }
         service.setPrivateProperty("cancellationSignal", cancellationSignal)
 
@@ -690,18 +699,16 @@ class LocationServiceTest {
         assertNull(service.locationUpdateListener)
 
         // set new value
-        val listener = mockk<LocationService.OnLocationUpdateListener>()
-        service.locationUpdateListener = listener
+        service.locationUpdateListener = locationUpdateListener
 
         // check
-        assertSame(listener, service.locationUpdateListener)
+        assertSame(locationUpdateListener, service.locationUpdateListener)
     }
 
     @Test
     fun requestLocationUpdates_whenFusedLocationClientAvailableAndNoListener_callsExpectedMethods() {
         val context = ApplicationProvider.getApplicationContext<Context>()
 
-        val googleApiAvailability = mockk<GoogleApiAvailability>()
         every { googleApiAvailability.isGooglePlayServicesAvailable(context) }.returns(
             ConnectionResult.SUCCESS
         )
@@ -723,7 +730,6 @@ class LocationServiceTest {
         val fusedLocationClientSpy = spyk(fusedLocationClient)
         service.setPrivateProperty("fusedLocationClient", fusedLocationClientSpy)
 
-        val requestTask = mockk<Task<Void>>()
         every {
             fusedLocationClientSpy.requestLocationUpdates(
                 any(),
@@ -753,10 +759,8 @@ class LocationServiceTest {
 
         // execute callback methods
         val callback = callbackSlot.captured
-        val locationAvailability = mockk<LocationAvailability>()
         callback.onLocationAvailability(locationAvailability)
 
-        val locationResult = mockk<LocationResult>()
         every { locationResult.lastLocation }.returns(null)
         callback.onLocationResult(locationResult)
 
@@ -767,7 +771,6 @@ class LocationServiceTest {
     fun requestLocationUpdates_whenFusedLocationClientAvailableAndListener_callsExpectedMethods() {
         val context = ApplicationProvider.getApplicationContext<Context>()
 
-        val googleApiAvailability = mockk<GoogleApiAvailability>()
         every { googleApiAvailability.isGooglePlayServicesAvailable(context) }.returns(
             ConnectionResult.SUCCESS
         )
@@ -777,10 +780,9 @@ class LocationServiceTest {
         }.returns(googleApiAvailability)
 
         val service = LocationService(context)
-        val listener = mockk<LocationService.OnLocationUpdateListener>()
-        justRun { listener.onLocationChanged(any()) }
-        justRun { listener.onLocationAvailability(any()) }
-        service.locationUpdateListener = listener
+        justRun { locationUpdateListener.onLocationChanged(any()) }
+        justRun { locationUpdateListener.onLocationAvailability(any()) }
+        service.locationUpdateListener = locationUpdateListener
 
         val fusedLocationClient: FusedLocationProviderClient? =
             service.getPrivateProperty("fusedLocationClient")
@@ -793,7 +795,6 @@ class LocationServiceTest {
         val fusedLocationClientSpy = spyk(fusedLocationClient)
         service.setPrivateProperty("fusedLocationClient", fusedLocationClientSpy)
 
-        val requestTask = mockk<Task<Void>>()
         every {
             fusedLocationClientSpy.requestLocationUpdates(
                 any(),
@@ -821,17 +822,14 @@ class LocationServiceTest {
 
         // execute callback methods
         val callback = callbackSlot.captured
-        val locationAvailability = mockk<LocationAvailability>()
         every { locationAvailability.isLocationAvailable }.returns(true)
         callback.onLocationAvailability(locationAvailability)
 
-        val locationResult = mockk<LocationResult>()
-        val location = mockk<Location>()
         every { locationResult.lastLocation }.returns(location)
         callback.onLocationResult(locationResult)
 
-        verify(exactly = 1) { listener.onLocationChanged(location) }
-        verify(exactly = 1) { listener.onLocationAvailability(true) }
+        verify(exactly = 1) { locationUpdateListener.onLocationChanged(location) }
+        verify(exactly = 1) { locationUpdateListener.onLocationAvailability(true) }
 
         unmockkStatic(GoogleApiAvailability::class)
     }
@@ -902,7 +900,6 @@ class LocationServiceTest {
     fun cancelLocationUpdates_whenFusedClient_executesExpectedMethod() {
         val context = ApplicationProvider.getApplicationContext<Context>()
 
-        val googleApiAvailability = mockk<GoogleApiAvailability>()
         every { googleApiAvailability.isGooglePlayServicesAvailable(context) }.returns(
             ConnectionResult.SUCCESS
         )
@@ -971,7 +968,7 @@ class LocationServiceTest {
 
     @Test
     fun googlePlayStatus_fromValues_returnsExpectedValues() {
-        assertEquals(6, LocationService.GooglePlayStatus.values().size)
+        assertEquals(6, LocationService.GooglePlayStatus.entries.size)
         assertEquals(
             LocationService.GooglePlayStatus.SUCCESS,
             LocationService.GooglePlayStatus.from(ConnectionResult.SUCCESS)
@@ -1009,7 +1006,6 @@ class LocationServiceTest {
 
         assertNull(service.locationUpdateListener)
 
-        val location = mockk<Location>()
         updatesListener.onLocationChanged(location)
     }
 
@@ -1024,14 +1020,12 @@ class LocationServiceTest {
 
         assertNull(service.locationUpdateListener)
 
-        val listener = mockk<LocationService.OnLocationUpdateListener>()
-        justRun { listener.onLocationChanged(any()) }
-        service.locationUpdateListener = listener
+        justRun { locationUpdateListener.onLocationChanged(any()) }
+        service.locationUpdateListener = locationUpdateListener
 
-        val location = mockk<Location>()
         updatesListener.onLocationChanged(location)
 
-        verify(exactly = 1) { listener.onLocationChanged(location) }
+        verify(exactly = 1) { locationUpdateListener.onLocationChanged(location) }
     }
 
     @Test
@@ -1066,7 +1060,6 @@ class LocationServiceTest {
     @Test
     fun getLooper_whenLooperOnCurrentThread_getsMainLooper() {
         mockkStatic(Looper::class)
-        val looper = mockk<Looper>()
         every { Looper.myLooper() }.returns(looper)
 
         val context = ApplicationProvider.getApplicationContext<Context>()

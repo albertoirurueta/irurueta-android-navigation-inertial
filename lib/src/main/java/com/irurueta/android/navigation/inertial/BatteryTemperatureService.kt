@@ -26,7 +26,7 @@ import com.irurueta.units.TemperatureUnit
 /**
  * Service to obtain battery temperature.
  *
- * @property context Android contxt.
+ * @property context Android context.
  * @property batteryTemperatureChangedListener listener to be notified each time that battery
  * temperature changes.
  */

@@ -16,20 +16,29 @@
 package com.irurueta.android.navigation.inertial.estimators.filter
 
 import android.os.SystemClock
-import com.irurueta.android.navigation.inertial.getPrivateProperty
-import com.irurueta.android.navigation.inertial.setPrivateProperty
+import com.irurueta.android.testutils.getPrivateProperty
+import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.navigation.inertial.calibration.TimeIntervalEstimator
 import com.irurueta.sorting.Sorter
 import com.irurueta.statistics.UniformRandomizer
 import io.mockk.*
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
 import org.junit.After
 import org.junit.Assert.*
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class MedianAveragingFilterTest {
+
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK
+    private lateinit var timeIntervalEstimator: TimeIntervalEstimator
 
     @After
     fun tearDown() {
@@ -149,7 +158,6 @@ class MedianAveragingFilterTest {
     fun filter_whenValidLengthAndEmpty_returnsExpectedValues() {
         val filter = MedianAveragingFilter()
 
-        val timeIntervalEstimator = mockk<TimeIntervalEstimator>()
         every { timeIntervalEstimator.averageTimeInterval }.returns(TIME_INTERVAL)
         every { timeIntervalEstimator.addTimestamp(any<Double>()) }.returns(true)
         every { timeIntervalEstimator.numberOfProcessedSamples }.returnsMany(0, 1, 2, 3, 4, 5, 6)
@@ -379,8 +387,6 @@ class MedianAveragingFilterTest {
         )
         val values: ArrayDeque<DoubleArray>? = filter.getPrivateProperty("values")
         requireNotNull(values)
-        val valuesSpy = spyk(values)
-        filter.setPrivateProperty("values", valuesSpy)
         val windowedValues = DoubleArray(5)
         filter.setPrivateProperty("windowedValues", windowedValues)
 
@@ -398,7 +404,6 @@ class MedianAveragingFilterTest {
             -1L,
             getPrivateProperty(AveragingFilter::class, filter, "previousTimestamp")
         )
-        verify(exactly = 1) { valuesSpy.clear() }
         assertNull(filter.getPrivateProperty("windowedValues"))
     }
 

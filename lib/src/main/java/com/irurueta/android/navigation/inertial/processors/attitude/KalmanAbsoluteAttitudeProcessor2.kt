@@ -28,11 +28,9 @@ import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorMeasur
 import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorMeasurement
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
-import com.irurueta.android.navigation.inertial.processors.attitude.KalmanAbsoluteAttitudeProcessor.Companion.DEFAULT_ACCELEROMETER_NOISE_STANDARD_DEVIATION
-import com.irurueta.android.navigation.inertial.processors.attitude.KalmanAbsoluteAttitudeProcessor.Companion.DEFAULT_GYROSCOPE_NOISE_PSD
-import com.irurueta.android.navigation.inertial.processors.attitude.KalmanAbsoluteAttitudeProcessor.Companion.DEFAULT_MAGNETOMETER_NOISE_STANDARD_DEVIATION
-import com.irurueta.android.navigation.inertial.processors.attitude.KalmanRelativeAttitudeProcessor.Companion.DEFAULT_ACCELEROMETER_NOISE_STANDARD_DEVIATION
-import com.irurueta.android.navigation.inertial.processors.attitude.KalmanRelativeAttitudeProcessor.Companion.DEFAULT_GYROSCOPE_NOISE_PSD
+import com.irurueta.android.navigation.inertial.processors.attitude.KalmanAbsoluteAttitudeProcessor2.Companion.DEFAULT_ACCELEROMETER_NOISE_STANDARD_DEVIATION
+import com.irurueta.android.navigation.inertial.processors.attitude.KalmanAbsoluteAttitudeProcessor2.Companion.DEFAULT_GYROSCOPE_NOISE_PSD
+import com.irurueta.android.navigation.inertial.processors.attitude.KalmanAbsoluteAttitudeProcessor2.Companion.DEFAULT_MAGNETOMETER_NOISE_STANDARD_DEVIATION
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.inertial.calibration.AccelerationTriad
 import com.irurueta.navigation.inertial.calibration.AngularSpeedTriad
@@ -78,8 +76,6 @@ import kotlin.math.pow
  * rad/s. If not provided [DEFAULT_MAGNETOMETER_NOISE_STANDARD_DEVIATION] will be used.
  * @property quaternionStepIntegratorType type of quaternion step integrator to be used for
  * gyroscope integration.
- * @property gravityNorm Gravity norm at current device location expressed in meters per squared
- * second (m/s^2).
  * @property freeFallThreshold Threshold to consider that device is in free fall. When device is in
  * free fall, accelerometer measurements are considered unreliable and are ignored (only gyroscope
  * predictions are made).
@@ -88,7 +84,7 @@ import kotlin.math.pow
  * numerically unstable and have been reset.
  */
 class KalmanAbsoluteAttitudeProcessor2(
-    val averagingFilter: AveragingFilter = LowPassAveragingFilter(),
+    averagingFilter: AveragingFilter = LowPassAveragingFilter(),
     location: Location? = null,
     adjustGravityNorm: Boolean = true,
     val computeEulerAngles: Boolean = true,
@@ -464,7 +460,7 @@ class KalmanAbsoluteAttitudeProcessor2(
         accelerometerNoiseStandardDeviation * accelerometerNoiseStandardDeviation
 
     /**
-     * Contains magnetoemter variance expressed in T^2.
+     * Contains magnetometer variance expressed in T^2.
      */
     private val magnetometerVariance =
         magnetometerNoiseStandardDeviation * magnetometerNoiseStandardDeviation

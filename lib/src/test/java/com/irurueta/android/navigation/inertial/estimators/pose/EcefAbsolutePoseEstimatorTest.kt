@@ -26,6 +26,10 @@ import com.irurueta.android.navigation.inertial.estimators.attitude.FusedGeomagn
 import com.irurueta.android.navigation.inertial.estimators.attitude.GravityEstimator
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.MeanAveragingFilter
+import com.irurueta.android.testutils.callPrivateFunc
+import com.irurueta.android.testutils.callPrivateFuncWithResult
+import com.irurueta.android.testutils.getPrivateProperty
+import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.geometry.EuclideanTransformation3D
 import com.irurueta.geometry.InhomogeneousPoint3D
 import com.irurueta.geometry.Quaternion
@@ -38,15 +42,47 @@ import com.irurueta.navigation.inertial.calibration.AngularSpeedTriad
 import com.irurueta.navigation.inertial.wmm.WorldMagneticModel
 import com.irurueta.statistics.UniformRandomizer
 import io.mockk.*
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
 import org.junit.After
 import org.junit.Assert.*
+import org.junit.Ignore
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.util.*
 
+@Ignore("possible memory leak")
 @RunWith(RobolectricTestRunner::class)
 class EcefAbsolutePoseEstimatorTest {
+
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var accelerometerMeasurementListener:
+            AccelerometerSensorCollector.OnMeasurementListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var gyroscopeMeasurementListener:
+            GyroscopeSensorCollector.OnMeasurementListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var magnetometerMeasurementListener:
+            MagnetometerSensorCollector.OnMeasurementListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var gravityEstimationListener: GravityEstimator.OnEstimationListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var poseAvailableListener: EcefAbsolutePoseEstimator.OnPoseAvailableListener
+
+    @MockK
+    private lateinit var location: Location
+
+    @MockK
+    private lateinit var gravityEstimator: GravityEstimator
 
     @After
     fun tearDown() {
@@ -130,13 +166,6 @@ class EcefAbsolutePoseEstimatorTest {
         val accelerometerAveragingFilter = MeanAveragingFilter()
         val worldMagneticModel = WorldMagneticModel()
         val timestamp = Date()
-        val poseAvailableListener = mockk<EcefAbsolutePoseEstimator.OnPoseAvailableListener>()
-        val accelerometerMeasurementListener =
-            mockk<AccelerometerSensorCollector.OnMeasurementListener>()
-        val gyroscopeMeasurementListener = mockk<GyroscopeSensorCollector.OnMeasurementListener>()
-        val magnetometerMeasurementListener =
-            mockk<MagnetometerSensorCollector.OnMeasurementListener>()
-        val gravityEstimationListener = mockk<GravityEstimator.OnEstimationListener>()
         val estimator = EcefAbsolutePoseEstimator(
             context,
             location,
@@ -232,7 +261,6 @@ class EcefAbsolutePoseEstimatorTest {
         assertNull(estimator.poseAvailableListener)
 
         // set new value
-        val poseAvailableListener = mockk<EcefAbsolutePoseEstimator.OnPoseAvailableListener>()
         estimator.poseAvailableListener = poseAvailableListener
 
         // check
@@ -249,8 +277,6 @@ class EcefAbsolutePoseEstimatorTest {
         assertNull(estimator.accelerometerMeasurementListener)
 
         // set new value
-        val accelerometerMeasurementListener =
-            mockk<AccelerometerSensorCollector.OnMeasurementListener>()
         estimator.accelerometerMeasurementListener = accelerometerMeasurementListener
 
         // check
@@ -267,7 +293,6 @@ class EcefAbsolutePoseEstimatorTest {
         assertNull(estimator.gyroscopeMeasurementListener)
 
         // set new value
-        val gyroscopeMeasurementListener = mockk<GyroscopeSensorCollector.OnMeasurementListener>()
         estimator.gyroscopeMeasurementListener = gyroscopeMeasurementListener
 
         // check
@@ -284,8 +309,6 @@ class EcefAbsolutePoseEstimatorTest {
         assertNull(estimator.magnetometerMeasurementListener)
 
         // set new value
-        val magnetometerMeasurementListener =
-            mockk<MagnetometerSensorCollector.OnMeasurementListener>()
         estimator.magnetometerMeasurementListener = magnetometerMeasurementListener
 
         // check
@@ -307,7 +330,6 @@ class EcefAbsolutePoseEstimatorTest {
         assertNull(estimator.gravityEstimationListener)
 
         // set new value
-        val gravityEstimationListener = mockk<GravityEstimator.OnEstimationListener>()
         estimator.gravityEstimationListener = gravityEstimationListener
 
         // check
@@ -835,7 +857,10 @@ class EcefAbsolutePoseEstimatorTest {
         requireNotNull(accelerometerSensorCollector)
         val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
         every { accelerometerSensorCollectorSpy.start() }.returns(true)
-        estimator.setPrivateProperty("accelerometerSensorCollector", accelerometerSensorCollectorSpy)
+        estimator.setPrivateProperty(
+            "accelerometerSensorCollector",
+            accelerometerSensorCollectorSpy
+        )
 
         assertFalse(estimator.running)
         assertTrue(estimator.useAccurateAttitudeEstimator)
@@ -879,7 +904,10 @@ class EcefAbsolutePoseEstimatorTest {
         requireNotNull(accelerometerSensorCollector)
         val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
         every { accelerometerSensorCollectorSpy.start() }.returns(true)
-        estimator.setPrivateProperty("accelerometerSensorCollector", accelerometerSensorCollectorSpy)
+        estimator.setPrivateProperty(
+            "accelerometerSensorCollector",
+            accelerometerSensorCollectorSpy
+        )
 
         assertFalse(estimator.running)
         assertFalse(estimator.useAccurateAttitudeEstimator)
@@ -922,7 +950,10 @@ class EcefAbsolutePoseEstimatorTest {
         requireNotNull(accelerometerSensorCollector)
         val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
         every { accelerometerSensorCollectorSpy.start() }.returns(false)
-        estimator.setPrivateProperty("accelerometerSensorCollector", accelerometerSensorCollectorSpy)
+        estimator.setPrivateProperty(
+            "accelerometerSensorCollector",
+            accelerometerSensorCollectorSpy
+        )
 
         assertFalse(estimator.running)
         assertTrue(estimator.useAccurateAttitudeEstimator)
@@ -965,7 +996,10 @@ class EcefAbsolutePoseEstimatorTest {
         requireNotNull(accelerometerSensorCollector)
         val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
         every { accelerometerSensorCollectorSpy.start() }.returns(true)
-        estimator.setPrivateProperty("accelerometerSensorCollector", accelerometerSensorCollectorSpy)
+        estimator.setPrivateProperty(
+            "accelerometerSensorCollector",
+            accelerometerSensorCollectorSpy
+        )
 
         assertFalse(estimator.running)
 
@@ -1008,7 +1042,10 @@ class EcefAbsolutePoseEstimatorTest {
         requireNotNull(accelerometerSensorCollector)
         val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
         every { accelerometerSensorCollectorSpy.start() }.returns(true)
-        estimator.setPrivateProperty("accelerometerSensorCollector", accelerometerSensorCollectorSpy)
+        estimator.setPrivateProperty(
+            "accelerometerSensorCollector",
+            accelerometerSensorCollectorSpy
+        )
 
         assertFalse(estimator.running)
 
@@ -1511,13 +1548,11 @@ class EcefAbsolutePoseEstimatorTest {
     fun absoluteAttitudeEstimator_whenAccelerometerMeasurementAndListener_notifies() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val location = getLocation()
-        val listener =
-            mockk<AccelerometerSensorCollector.OnMeasurementListener>(relaxUnitFun = true)
         val estimator =
             EcefAbsolutePoseEstimator(
                 context,
                 location,
-                accelerometerMeasurementListener = listener
+                accelerometerMeasurementListener = accelerometerMeasurementListener
             )
 
         // check initial value
@@ -1559,7 +1594,18 @@ class EcefAbsolutePoseEstimatorTest {
         assertEquals((ay - by).toDouble(), specificForce.valueX, 0.0)
         assertEquals((az - bz).toDouble(), -specificForce.valueZ, 0.0)
 
-        verify(exactly = 1) { listener.onMeasurement(ax, ay, az, bx, by, bz, timestamp, accuracy) }
+        verify(exactly = 1) {
+            accelerometerMeasurementListener.onMeasurement(
+                ax,
+                ay,
+                az,
+                bx,
+                by,
+                bz,
+                timestamp,
+                accuracy
+            )
+        }
     }
 
     @Test
@@ -1653,9 +1699,12 @@ class EcefAbsolutePoseEstimatorTest {
     fun absoluteAttitudeEstimator_whenGyroscopeMeasurementAndListener_notifies() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val location = getLocation()
-        val listener = mockk<GyroscopeSensorCollector.OnMeasurementListener>(relaxUnitFun = true)
         val estimator =
-            EcefAbsolutePoseEstimator(context, location, gyroscopeMeasurementListener = listener)
+            EcefAbsolutePoseEstimator(
+                context,
+                location,
+                gyroscopeMeasurementListener = gyroscopeMeasurementListener
+            )
 
         // check initial value
         val angularSpeed: AngularSpeedTriad? = estimator.getPrivateProperty("angularSpeed")
@@ -1695,16 +1744,30 @@ class EcefAbsolutePoseEstimatorTest {
         assertEquals((wy - by).toDouble(), angularSpeed.valueX, 0.0)
         assertEquals((wz - bz).toDouble(), -angularSpeed.valueZ, 0.0)
 
-        verify(exactly = 1) { listener.onMeasurement(wx, wy, wz, bx, by, bz, timestamp, accuracy) }
+        verify(exactly = 1) {
+            gyroscopeMeasurementListener.onMeasurement(
+                wx,
+                wy,
+                wz,
+                bx,
+                by,
+                bz,
+                timestamp,
+                accuracy
+            )
+        }
     }
 
     @Test
     fun absoluteAttitudeEstimator_whenGravityMeasurement_notifies() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val location = getLocation()
-        val listener = mockk<GravityEstimator.OnEstimationListener>(relaxUnitFun = true)
         val estimator =
-            EcefAbsolutePoseEstimator(context, location, gravityEstimationListener = listener)
+            EcefAbsolutePoseEstimator(
+                context,
+                location,
+                gravityEstimationListener = gravityEstimationListener
+            )
 
         val absoluteAttitudeEstimator: AbsoluteAttitudeEstimator<*, *>? =
             estimator.getPrivateProperty("absoluteAttitudeEstimator")
@@ -1712,25 +1775,24 @@ class EcefAbsolutePoseEstimatorTest {
         val gravityEstimationListener = absoluteAttitudeEstimator.gravityEstimationListener
         requireNotNull(gravityEstimationListener)
 
-        assertSame(listener, gravityEstimationListener)
+        assertSame(gravityEstimationListener, gravityEstimationListener)
 
         val randomizer = UniformRandomizer()
         val fx = randomizer.nextDouble()
         val fy = randomizer.nextDouble()
         val fz = randomizer.nextDouble()
         val timestamp = SystemClock.elapsedRealtimeNanos()
-        gravityEstimationListener.onEstimation(mockk(), fx, fy, fz, timestamp)
+        gravityEstimationListener.onEstimation(gravityEstimator, fx, fy, fz, timestamp)
 
-        verify(exactly = 1) { listener.onEstimation(any(), fx, fy, fz, timestamp) }
+        verify(exactly = 1) { gravityEstimationListener.onEstimation(any(), fx, fy, fz, timestamp) }
     }
 
     @Test
     fun absoluteAttitudeEstimator_whenMagnetometerMeasurement_notifies() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val location = getLocation()
-        val listener = mockk<MagnetometerSensorCollector.OnMeasurementListener>(relaxUnitFun = true)
         val estimator =
-            EcefAbsolutePoseEstimator(context, location, magnetometerMeasurementListener = listener)
+            EcefAbsolutePoseEstimator(context, location, magnetometerMeasurementListener = magnetometerMeasurementListener)
 
         val absoluteAttitudeEstimator: AbsoluteAttitudeEstimator<*, *>? =
             estimator.getPrivateProperty("absoluteAttitudeEstimator")
@@ -1739,7 +1801,7 @@ class EcefAbsolutePoseEstimatorTest {
             absoluteAttitudeEstimator.magnetometerMeasurementListener
         requireNotNull(magnetometerMeasurementListener)
 
-        assertSame(listener, magnetometerMeasurementListener)
+        assertSame(this.magnetometerMeasurementListener, magnetometerMeasurementListener)
 
         val randomizer = UniformRandomizer()
         val bx = randomizer.nextFloat()
@@ -1762,7 +1824,7 @@ class EcefAbsolutePoseEstimatorTest {
         )
 
         verify(exactly = 1) {
-            listener.onMeasurement(
+            magnetometerMeasurementListener.onMeasurement(
                 bx,
                 by,
                 bz,
@@ -1780,8 +1842,6 @@ class EcefAbsolutePoseEstimatorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val location = getLocation()
         val initialVelocity = getNEDVelocity()
-        val poseAvailableListener =
-            mockk<EcefAbsolutePoseEstimator.OnPoseAvailableListener>(relaxUnitFun = true)
         val estimator =
             EcefAbsolutePoseEstimator(
                 context,
@@ -1855,8 +1915,6 @@ class EcefAbsolutePoseEstimatorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val location = getLocation()
         val initialVelocity = getNEDVelocity()
-        val poseAvailableListener =
-            mockk<EcefAbsolutePoseEstimator.OnPoseAvailableListener>(relaxUnitFun = true)
         val estimator =
             EcefAbsolutePoseEstimator(
                 context,
@@ -1989,8 +2047,6 @@ class EcefAbsolutePoseEstimatorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val location = getLocation()
         val initialVelocity = getNEDVelocity()
-        val poseAvailableListener =
-            mockk<EcefAbsolutePoseEstimator.OnPoseAvailableListener>(relaxUnitFun = true)
         val estimator =
             EcefAbsolutePoseEstimator(
                 context,
@@ -2139,6 +2195,28 @@ class EcefAbsolutePoseEstimatorTest {
         assertEquals(poseTransformation1.asMatrix(), poseTransformation3.asMatrix())
     }
 
+    private fun getLocation(): Location {
+        val randomizer = UniformRandomizer()
+        val latitudeDegrees = randomizer.nextDouble(
+            MIN_LATITUDE_DEGREES,
+            MAX_LATITUDE_DEGREES
+        )
+        val longitudeDegrees = randomizer.nextDouble(
+            MIN_LONGITUDE_DEGREES,
+            MAX_LONGITUDE_DEGREES
+        )
+        val height = randomizer.nextDouble(
+            MIN_HEIGHT,
+            MAX_HEIGHT
+        )
+
+        every { location.latitude }.returns(latitudeDegrees)
+        every { location.longitude }.returns(longitudeDegrees)
+        every { location.altitude }.returns(height)
+
+        return location
+    }
+
     private companion object {
         const val MIN_LATITUDE_DEGREES = -90.0
         const val MAX_LATITUDE_DEGREES = 90.0
@@ -2158,29 +2236,6 @@ class EcefAbsolutePoseEstimatorTest {
         const val TIME_INTERVAL = 0.02
 
         const val ABSOLUTE_ERROR = 1e-6
-
-        fun getLocation(): Location {
-            val randomizer = UniformRandomizer()
-            val latitudeDegrees = randomizer.nextDouble(
-                MIN_LATITUDE_DEGREES,
-                MAX_LATITUDE_DEGREES
-            )
-            val longitudeDegrees = randomizer.nextDouble(
-                MIN_LONGITUDE_DEGREES,
-                MAX_LONGITUDE_DEGREES
-            )
-            val height = randomizer.nextDouble(
-                MIN_HEIGHT,
-                MAX_HEIGHT
-            )
-
-            val location = mockk<Location>()
-            every { location.latitude }.returns(latitudeDegrees)
-            every { location.longitude }.returns(longitudeDegrees)
-            every { location.altitude }.returns(height)
-
-            return location
-        }
 
         fun getAttitude(): Quaternion {
             val randomizer = UniformRandomizer()

@@ -78,15 +78,11 @@ public abstract class MatrixIntegrator {
             final MatrixSingleDimensionFunctionEvaluatorListener listener, final double eps,
             final IntegratorType integratorType,
             final QuadratureType quadratureType) throws WrongSizeException {
-        switch (integratorType) {
-            case ROMBERG:
-                return RombergMatrixIntegrator.create(a, b, listener, eps, quadratureType);
-            case SIMPSON:
-                return SimpsonMatrixIntegrator.create(a, b, listener, eps, quadratureType);
-            case QUADRATURE:
-            default:
-                return QuadratureMatrixIntegrator.create(a, b, listener, eps, quadratureType);
-        }
+        return switch (integratorType) {
+            case ROMBERG -> RombergMatrixIntegrator.create(a, b, listener, eps, quadratureType);
+            case SIMPSON -> SimpsonMatrixIntegrator.create(a, b, listener, eps, quadratureType);
+            default -> QuadratureMatrixIntegrator.create(a, b, listener, eps, quadratureType);
+        };
     }
 
     /**
@@ -109,15 +105,11 @@ public abstract class MatrixIntegrator {
             final MatrixSingleDimensionFunctionEvaluatorListener listener,
             final IntegratorType integratorType,
             final QuadratureType quadratureType) throws WrongSizeException {
-        switch (integratorType) {
-            case ROMBERG:
-                return RombergMatrixIntegrator.create(a, b, listener, quadratureType);
-            case SIMPSON:
-                return SimpsonMatrixIntegrator.create(a, b, listener, quadratureType);
-            case QUADRATURE:
-            default:
-                return QuadratureMatrixIntegrator.create(a, b, listener, quadratureType);
-        }
+        return switch (integratorType) {
+            case ROMBERG -> RombergMatrixIntegrator.create(a, b, listener, quadratureType);
+            case SIMPSON -> SimpsonMatrixIntegrator.create(a, b, listener, quadratureType);
+            default -> QuadratureMatrixIntegrator.create(a, b, listener, quadratureType);
+        };
     }
 
     /**
@@ -137,15 +129,11 @@ public abstract class MatrixIntegrator {
             final double a, final double b,
             final MatrixSingleDimensionFunctionEvaluatorListener listener, final double eps,
             final IntegratorType integratorType) throws WrongSizeException {
-        switch (integratorType) {
-            case ROMBERG:
-                return RombergMatrixIntegrator.create(a, b, listener, eps);
-            case SIMPSON:
-                return SimpsonMatrixIntegrator.create(a, b, listener, eps);
-            case QUADRATURE:
-            default:
-                return QuadratureMatrixIntegrator.create(a, b, listener, eps);
-        }
+        return switch (integratorType) {
+            case ROMBERG -> RombergMatrixIntegrator.create(a, b, listener, eps);
+            case SIMPSON -> SimpsonMatrixIntegrator.create(a, b, listener, eps);
+            default -> QuadratureMatrixIntegrator.create(a, b, listener, eps);
+        };
     }
 
     /**
@@ -165,15 +153,11 @@ public abstract class MatrixIntegrator {
             final double a, final double b,
             final MatrixSingleDimensionFunctionEvaluatorListener listener,
             final IntegratorType integratorType) throws WrongSizeException {
-        switch (integratorType) {
-            case ROMBERG:
-                return RombergMatrixIntegrator.create(a, b, listener);
-            case SIMPSON:
-                return SimpsonMatrixIntegrator.create(a, b, listener);
-            case QUADRATURE:
-            default:
-                return QuadratureMatrixIntegrator.create(a, b, listener);
-        }
+        return switch (integratorType) {
+            case ROMBERG -> RombergMatrixIntegrator.create(a, b, listener);
+            case SIMPSON -> SimpsonMatrixIntegrator.create(a, b, listener);
+            default -> QuadratureMatrixIntegrator.create(a, b, listener);
+        };
     }
 
     /**

@@ -17,7 +17,6 @@ package com.irurueta.android.navigation.inertial.numerical.integration;
 
 import static org.junit.Assert.assertEquals;
 
-import com.irurueta.numerical.SingleDimensionFunctionEvaluatorListener;
 import com.irurueta.numerical.polynomials.Polynomial;
 import com.irurueta.statistics.NormalDist;
 import com.irurueta.statistics.UniformRandomizer;
@@ -93,12 +92,7 @@ public class RombergLowerSquareRootMidPointQuadratureIntegratorTest {
 
         final RombergLowerSquareRootMidPointQuadratureIntegrator integrator =
                 new RombergLowerSquareRootMidPointQuadratureIntegrator(a, b,
-                        new SingleDimensionFunctionEvaluatorListener() {
-                            @Override
-                            public double evaluate(double point) {
-                                return NormalDist.p(point, mu, sigma);
-                            }
-                        });
+                        point -> NormalDist.p(point, mu, sigma));
         final double result = integrator.integrate();
 
         assertEquals(expected, result, ABSOLUTE_ERROR_GAUSSIAN);
@@ -115,12 +109,7 @@ public class RombergLowerSquareRootMidPointQuadratureIntegratorTest {
 
         final RombergLowerSquareRootMidPointQuadratureIntegrator integrator =
                 new RombergLowerSquareRootMidPointQuadratureIntegrator(a, b,
-                        new SingleDimensionFunctionEvaluatorListener() {
-                            @Override
-                            public double evaluate(double point) {
-                                return Math.exp(lambda * point);
-                            }
-                        });
+                        point -> Math.exp(lambda * point));
         final double result = integrator.integrate();
 
         assertEquals(expected, result, ABSOLUTE_ERROR_EXPONENTIAL);
@@ -133,12 +122,7 @@ public class RombergLowerSquareRootMidPointQuadratureIntegratorTest {
 
         final RombergLowerSquareRootMidPointQuadratureIntegrator integrator =
                 new RombergLowerSquareRootMidPointQuadratureIntegrator(0.0, 1.0,
-                        new SingleDimensionFunctionEvaluatorListener() {
-                            @Override
-                            public double evaluate(double point) {
-                                return Math.log(point) * Math.log(1 - point);
-                            }
-                        });
+                        point -> Math.log(point) * Math.log(1 - point));
         final double result = integrator.integrate();
 
         assertEquals(expected, result, ABSOLUTE_ERROR_IMPROPER_1);
@@ -173,12 +157,7 @@ public class RombergLowerSquareRootMidPointQuadratureIntegratorTest {
 
         final RombergLowerSquareRootMidPointQuadratureIntegrator integrator =
                 new RombergLowerSquareRootMidPointQuadratureIntegrator(a, b,
-                        new SingleDimensionFunctionEvaluatorListener() {
-                            @Override
-                            public double evaluate(final double point) {
-                                return polynomial.evaluate(point);
-                            }
-                        });
+                        polynomial::evaluate);
         final double result = integrator.integrate();
 
         assertEquals(expected, result, error);

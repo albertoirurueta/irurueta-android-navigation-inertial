@@ -18,19 +18,10 @@ package com.irurueta.android.navigation.inertial.collectors.interpolators
 import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
 import com.irurueta.statistics.UniformRandomizer
-import io.mockk.clearAllMocks
-import io.mockk.unmockkAll
-import org.junit.After
 import org.junit.Assert.*
 import org.junit.Test
 
 class MagnetometerDirectSensorMeasurementInterpolatorTest {
-
-    @After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-    }
 
     @Test
     fun constructor_createsInstance() {

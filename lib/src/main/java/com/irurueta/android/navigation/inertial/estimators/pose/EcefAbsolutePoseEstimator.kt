@@ -226,7 +226,7 @@ class EcefAbsolutePoseEstimator private constructor(
 
     /**
      * Device frame expressed in NED coordinates for previous set of measurements.
-     * This is rused for performance reasons.
+     * This is used for performance reasons.
      */
     private val previousNedFrame = NEDFrame()
 
@@ -843,7 +843,7 @@ class EcefAbsolutePoseEstimator private constructor(
 
         // current attitude contains body to local frame attitude.
         // ECEF frame contains euclidean position coordinates rotated by body rotation respect ECEF.
-        // we need to transform position coordinates rsspect ECEF to euclidean coordinates respect
+        // we need to transform position coordinates respect ECEF to euclidean coordinates respect
         // local position
         ecefDiffPosition.setInhomogeneousCoordinates(
             currentEcefFrame.x - initialEcefFrame.x,

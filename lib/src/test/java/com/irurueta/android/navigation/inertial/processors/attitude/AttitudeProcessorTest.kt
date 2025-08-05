@@ -21,14 +21,22 @@ import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
 import com.irurueta.geometry.Quaternion
 import com.irurueta.statistics.UniformRandomizer
 import io.mockk.clearAllMocks
-import io.mockk.mockk
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
 import io.mockk.unmockkAll
 import io.mockk.verify
 import org.junit.After
 import org.junit.Assert.*
+import org.junit.Rule
 import org.junit.Test
 
 class AttitudeProcessorTest {
+
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var listener: AttitudeProcessor.OnProcessedListener
 
     @After
     fun tearDown() {
@@ -47,7 +55,6 @@ class AttitudeProcessorTest {
 
     @Test
     fun constructor_whenListener_returnsExpectedValues() {
-        val listener = mockk<AttitudeProcessor.OnProcessedListener>()
         val processor = AttitudeProcessor(listener)
 
         assertSame(listener, processor.processorListener)
@@ -78,7 +85,6 @@ class AttitudeProcessorTest {
 
     @Test
     fun process_whenListener_returnsExpectedValue() {
-        val listener = mockk<AttitudeProcessor.OnProcessedListener>(relaxUnitFun = true)
         val processor = AttitudeProcessor(listener)
 
         val enuAttitude = getAttitude()

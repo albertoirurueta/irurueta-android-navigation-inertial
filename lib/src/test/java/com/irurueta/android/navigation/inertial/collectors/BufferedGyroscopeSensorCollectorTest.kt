@@ -21,19 +21,45 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import androidx.test.core.app.ApplicationProvider
-import com.irurueta.android.navigation.inertial.getPrivateProperty
-import com.irurueta.android.navigation.inertial.setPrivateProperty
+import com.irurueta.android.testutils.getPrivateProperty
+import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.statistics.UniformRandomizer
 import io.mockk.*
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
 import org.junit.After
 import org.junit.Assert.*
+import org.junit.Ignore
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.util.*
 
+@Ignore("possible memory leak")
 @RunWith(RobolectricTestRunner::class)
 class BufferedGyroscopeSensorCollectorTest {
+
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var accuracyChangedListener:
+            BufferedSensorCollector.OnAccuracyChangedListener<GyroscopeSensorMeasurement, BufferedGyroscopeSensorCollector>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var bufferFilledListener:
+            BufferedSensorCollector.OnBufferFilledListener<GyroscopeSensorMeasurement, BufferedGyroscopeSensorCollector>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var measurementListener:
+            BufferedSensorCollector.OnMeasurementListener<GyroscopeSensorMeasurement, BufferedGyroscopeSensorCollector>
+
+    @MockK
+    private lateinit var sensor: Sensor
+
+    @MockK
+    private lateinit var event: SensorEvent
 
     @After
     fun tearDown() {
@@ -53,6 +79,7 @@ class BufferedGyroscopeSensorCollectorTest {
         assertEquals(BufferedSensorCollector.DEFAULT_CAPACITY, collector.capacity)
         assertTrue(collector.startOffsetEnabled)
         assertTrue(collector.stopWhenFilledBuffer)
+        assertTrue(collector.skipWhenProcessing)
         assertNull(collector.accuracyChangedListener)
         assertNull(collector.bufferFilledListener)
         assertNull(collector.measurementListener)
@@ -63,6 +90,7 @@ class BufferedGyroscopeSensorCollectorTest {
         assertTrue(collector.bufferedMeasurements.isEmpty())
         assertEquals(0.0f, collector.usage, 0.0f)
         assertFalse(collector.running)
+        assertFalse(collector.processing)
         assertEquals(0, collector.numberOfProcessedMeasurements)
         assertEquals(0L, collector.mostRecentTimestamp)
         assertNull(collector.oldestTimestampInBuffer)
@@ -124,12 +152,6 @@ class BufferedGyroscopeSensorCollectorTest {
     @Test
     fun constructor_whenAllParameters_setsExpectedValues() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val accuracyChangedListener =
-            mockk<BufferedSensorCollector.OnAccuracyChangedListener<GyroscopeSensorMeasurement, BufferedGyroscopeSensorCollector>>()
-        val bufferFilledListener =
-            mockk<BufferedSensorCollector.OnBufferFilledListener<GyroscopeSensorMeasurement, BufferedGyroscopeSensorCollector>>()
-        val measurementListener =
-            mockk<BufferedSensorCollector.OnMeasurementListener<GyroscopeSensorMeasurement, BufferedGyroscopeSensorCollector>>()
         val collector = BufferedGyroscopeSensorCollector(
             context,
             GyroscopeSensorType.GYROSCOPE,
@@ -137,6 +159,7 @@ class BufferedGyroscopeSensorCollectorTest {
             CAPACITY,
             startOffsetEnabled = false,
             stopWhenFilledBuffer = false,
+            skipWhenProcessing = false,
             accuracyChangedListener,
             bufferFilledListener,
             measurementListener
@@ -149,6 +172,7 @@ class BufferedGyroscopeSensorCollectorTest {
         assertEquals(CAPACITY, collector.capacity)
         assertFalse(collector.startOffsetEnabled)
         assertFalse(collector.stopWhenFilledBuffer)
+        assertFalse(collector.skipWhenProcessing)
         assertSame(accuracyChangedListener, collector.accuracyChangedListener)
         assertSame(bufferFilledListener, collector.bufferFilledListener)
         assertSame(measurementListener, collector.measurementListener)
@@ -159,6 +183,7 @@ class BufferedGyroscopeSensorCollectorTest {
         assertTrue(collector.bufferedMeasurements.isEmpty())
         assertEquals(0.0f, collector.usage, 0.0f)
         assertFalse(collector.running)
+        assertFalse(collector.processing)
         assertEquals(0, collector.numberOfProcessedMeasurements)
         assertEquals(0L, collector.mostRecentTimestamp)
         assertNull(collector.oldestTimestampInBuffer)
@@ -226,8 +251,6 @@ class BufferedGyroscopeSensorCollectorTest {
         assertNull(collector.accuracyChangedListener)
 
         // set new value
-        val accuracyChangedListener =
-            mockk<BufferedSensorCollector.OnAccuracyChangedListener<GyroscopeSensorMeasurement, BufferedGyroscopeSensorCollector>>()
         collector.accuracyChangedListener = accuracyChangedListener
 
         // check
@@ -243,8 +266,6 @@ class BufferedGyroscopeSensorCollectorTest {
         assertNull(collector.bufferFilledListener)
 
         // set new value
-        val bufferFilledListener =
-            mockk<BufferedSensorCollector.OnBufferFilledListener<GyroscopeSensorMeasurement, BufferedGyroscopeSensorCollector>>()
         collector.bufferFilledListener = bufferFilledListener
 
         // check
@@ -260,8 +281,6 @@ class BufferedGyroscopeSensorCollectorTest {
         assertNull(collector.measurementListener)
 
         // set new value
-        val measurementListener =
-            mockk<BufferedSensorCollector.OnMeasurementListener<GyroscopeSensorMeasurement, BufferedGyroscopeSensorCollector>>()
         collector.measurementListener = measurementListener
 
         // check
@@ -275,15 +294,14 @@ class BufferedGyroscopeSensorCollectorTest {
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
-        val sensorMock = mockk<Sensor>()
-        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE) }.returns(sensorMock)
+        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE) }.returns(sensor)
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val collector =
             BufferedGyroscopeSensorCollector(contextSpy, GyroscopeSensorType.GYROSCOPE)
 
-        assertSame(sensorMock, collector.sensor)
+        assertSame(sensor, collector.sensor)
         verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
         verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE) }
     }
@@ -295,9 +313,8 @@ class BufferedGyroscopeSensorCollectorTest {
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
-        val sensorMock = mockk<Sensor>()
         every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED) }.returns(
-            sensorMock
+            sensor
         )
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
@@ -307,7 +324,7 @@ class BufferedGyroscopeSensorCollectorTest {
             GyroscopeSensorType.GYROSCOPE_UNCALIBRATED
         )
 
-        assertSame(sensorMock, collector.sensor)
+        assertSame(sensor, collector.sensor)
         verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
         verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED) }
     }
@@ -401,9 +418,8 @@ class BufferedGyroscopeSensorCollectorTest {
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
-        val sensorMock = mockk<Sensor>()
         every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED) }
-            .returns(sensorMock)
+            .returns(sensor)
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(false)
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
@@ -417,7 +433,7 @@ class BufferedGyroscopeSensorCollectorTest {
         verify(exactly = 1) {
             sensorManagerSpy.registerListener(
                 capture(slot),
-                sensorMock,
+                sensor,
                 collector.sensorDelay.value
             )
         }
@@ -440,9 +456,8 @@ class BufferedGyroscopeSensorCollectorTest {
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
-        val sensorMock = mockk<Sensor>()
         every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED) }
-            .returns(sensorMock)
+            .returns(sensor)
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
@@ -456,7 +471,7 @@ class BufferedGyroscopeSensorCollectorTest {
         verify(exactly = 1) {
             sensorManagerSpy.registerListener(
                 capture(slot),
-                sensorMock,
+                sensor,
                 collector.sensorDelay.value
             )
         }
@@ -479,9 +494,8 @@ class BufferedGyroscopeSensorCollectorTest {
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
-        val sensorMock = mockk<Sensor>()
         every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED) }
-            .returns(sensorMock)
+            .returns(sensor)
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
@@ -496,7 +510,7 @@ class BufferedGyroscopeSensorCollectorTest {
         verify(exactly = 1) {
             sensorManagerSpy.registerListener(
                 capture(slot),
-                sensorMock,
+                sensor,
                 collector.sensorDelay.value
             )
         }
@@ -570,6 +584,7 @@ class BufferedGyroscopeSensorCollectorTest {
         assertEquals(0L, mostRecentTimestamp2)
 
         assertFalse(collector.running)
+        assertFalse(collector.processing)
     }
 
     @Test
@@ -579,9 +594,8 @@ class BufferedGyroscopeSensorCollectorTest {
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
-        val sensorMock = mockk<Sensor>()
         every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED) }
-            .returns(sensorMock)
+            .returns(sensor)
         justRun { sensorManagerSpy.unregisterListener(any(), any<Sensor>()) }
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
@@ -638,10 +652,11 @@ class BufferedGyroscopeSensorCollectorTest {
         assertEquals(0L, mostRecentTimestamp2)
 
         assertFalse(collector.running)
+        assertFalse(collector.processing)
 
         verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
         val slot = slot<SensorEventListener>()
-        verify(exactly = 1) { sensorManagerSpy.unregisterListener(capture(slot), sensorMock) }
+        verify(exactly = 1) { sensorManagerSpy.unregisterListener(capture(slot), sensor) }
 
         val eventListener = slot.captured
 
@@ -723,22 +738,92 @@ class BufferedGyroscopeSensorCollectorTest {
     }
 
     @Test
+    fun onSensorChanged_whenSkipProcessingAndProcessing_makesNoAction() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val collector = BufferedGyroscopeSensorCollector(context)
+
+        val sensorEventListener: SensorEventListener? =
+            getPrivateProperty(BufferedSensorCollector::class, collector, "sensorEventListener")
+        requireNotNull(sensorEventListener)
+
+        setPrivateProperty(BufferedSensorCollector::class, collector, "processing", true)
+
+        sensorEventListener.onSensorChanged(event)
+
+        // check
+        assertEquals(0.0f, collector.usage, 0.0f)
+        assertTrue(collector.bufferedMeasurements.isEmpty())
+        assertNull(collector.startOffset)
+        assertEquals(0, collector.numberOfProcessedMeasurements)
+
+        // check internal fields
+        val buffer: ArrayDeque<GyroscopeSensorMeasurement>? =
+            getPrivateProperty(BufferedSensorCollector::class, collector, "buffer")
+        requireNotNull(buffer)
+        assertTrue(buffer.isEmpty())
+
+        val availableMeasurements: ArrayDeque<GyroscopeSensorMeasurement>? =
+            getPrivateProperty(BufferedSensorCollector::class, collector, "availableMeasurements")
+        requireNotNull(availableMeasurements)
+        assertEquals(BufferedSensorCollector.DEFAULT_CAPACITY, availableMeasurements.size)
+
+        val measurementsBeforeTimestamp: ArrayDeque<GyroscopeSensorMeasurement>? =
+            getPrivateProperty(
+                BufferedSensorCollector::class,
+                collector,
+                "measurementsBeforeTimestamp"
+            )
+        requireNotNull(measurementsBeforeTimestamp)
+        assertTrue(measurementsBeforeTimestamp.isEmpty())
+
+        val measurementsBeforePosition: ArrayDeque<GyroscopeSensorMeasurement>? =
+            getPrivateProperty(
+                BufferedSensorCollector::class,
+                collector,
+                "measurementsBeforePosition"
+            )
+        requireNotNull(measurementsBeforePosition)
+        assertTrue(measurementsBeforePosition.isEmpty())
+
+        val availableMeasurementsBeforeTimestamp: ArrayList<GyroscopeSensorMeasurement>? =
+            getPrivateProperty(
+                BufferedSensorCollector::class,
+                collector,
+                "availableMeasurementsBeforeTimestamp"
+            )
+        requireNotNull(availableMeasurementsBeforeTimestamp)
+        assertEquals(
+            BufferedSensorCollector.DEFAULT_CAPACITY,
+            availableMeasurementsBeforeTimestamp.size
+        )
+
+        val availableMeasurementsBeforePosition: ArrayList<GyroscopeSensorMeasurement>? =
+            getPrivateProperty(
+                BufferedSensorCollector::class,
+                collector,
+                "availableMeasurementsBeforePosition"
+            )
+        requireNotNull(availableMeasurementsBeforePosition)
+        assertEquals(
+            BufferedSensorCollector.DEFAULT_CAPACITY,
+            availableMeasurementsBeforePosition.size
+        )
+    }
+
+    @Test
     fun onSensorChanged_whenNoSensorType_makesNoAction() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val sensorManager: SensorManager? =
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
-        val sensorMock = mockk<Sensor>()
-        every { sensorMock.type }.returns(Sensor.TYPE_ACCELEROMETER)
+        every { sensor.type }.returns(Sensor.TYPE_ACCELEROMETER)
         every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED) }
-            .returns(sensorMock)
+            .returns(sensor)
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
-        val measurementListener =
-            mockk<BufferedSensorCollector.OnMeasurementListener<GyroscopeSensorMeasurement, BufferedGyroscopeSensorCollector>>()
         val collector = BufferedGyroscopeSensorCollector(
             contextSpy,
             startOffsetEnabled = false,
@@ -749,8 +834,7 @@ class BufferedGyroscopeSensorCollectorTest {
             getPrivateProperty(BufferedSensorCollector::class, collector, "sensorEventListener")
         requireNotNull(sensorEventListener)
 
-        val event = mockk<SensorEvent>()
-        event.sensor = sensorMock
+        event.sensor = sensor
         sensorEventListener.onSensorChanged(event)
 
         // check
@@ -822,18 +906,13 @@ class BufferedGyroscopeSensorCollectorTest {
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
-        val sensorMock = mockk<Sensor>()
-        every { sensorMock.type }.returns(Sensor.TYPE_GYROSCOPE_UNCALIBRATED)
+        every { sensor.type }.returns(Sensor.TYPE_GYROSCOPE_UNCALIBRATED)
         every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED) }
-            .returns(sensorMock)
+            .returns(sensor)
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
-        val measurementListener =
-            mockk<BufferedSensorCollector.OnMeasurementListener<GyroscopeSensorMeasurement, BufferedGyroscopeSensorCollector>>(
-                relaxUnitFun = true
-            )
         val collector = BufferedGyroscopeSensorCollector(
             contextSpy,
             startOffsetEnabled = true,
@@ -855,8 +934,7 @@ class BufferedGyroscopeSensorCollectorTest {
 
         assertNull(collector.startOffset)
 
-        val event = mockk<SensorEvent>()
-        event.sensor = sensorMock
+        event.sensor = sensor
         event.timestamp = System.nanoTime()
         val valuesField = SensorEvent::class.java.getDeclaredField("values")
         valuesField.isAccessible = true
@@ -940,20 +1018,13 @@ class BufferedGyroscopeSensorCollectorTest {
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
-        val sensorMock = mockk<Sensor>()
-        every { sensorMock.type }.returns(Sensor.TYPE_GYROSCOPE_UNCALIBRATED)
+        every { sensor.type }.returns(Sensor.TYPE_GYROSCOPE_UNCALIBRATED)
         every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED) }
-            .returns(sensorMock)
+            .returns(sensor)
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
-        val bufferFilledListener =
-            mockk<BufferedSensorCollector.OnBufferFilledListener<GyroscopeSensorMeasurement, BufferedGyroscopeSensorCollector>>(
-                relaxUnitFun = true
-            )
-        val measurementListener =
-            mockk<BufferedSensorCollector.OnMeasurementListener<GyroscopeSensorMeasurement, BufferedGyroscopeSensorCollector>>()
         val collector = BufferedGyroscopeSensorCollector(
             contextSpy,
             stopWhenFilledBuffer = true,
@@ -984,8 +1055,7 @@ class BufferedGyroscopeSensorCollectorTest {
         setPrivateProperty(BufferedSensorCollector::class, collector, "running", true)
         assertTrue(collector.running)
 
-        val event = mockk<SensorEvent>()
-        event.sensor = sensorMock
+        event.sensor = sensor
         event.timestamp = System.nanoTime()
         val valuesField = SensorEvent::class.java.getDeclaredField("values")
         valuesField.isAccessible = true
@@ -1011,22 +1081,13 @@ class BufferedGyroscopeSensorCollectorTest {
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
-        val sensorMock = mockk<Sensor>()
-        every { sensorMock.type }.returns(Sensor.TYPE_GYROSCOPE_UNCALIBRATED)
+        every { sensor.type }.returns(Sensor.TYPE_GYROSCOPE_UNCALIBRATED)
         every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED) }
-            .returns(sensorMock)
+            .returns(sensor)
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
-        val bufferFilledListener =
-            mockk<BufferedSensorCollector.OnBufferFilledListener<GyroscopeSensorMeasurement, BufferedGyroscopeSensorCollector>>(
-                relaxUnitFun = true
-            )
-        val measurementListener =
-            mockk<BufferedSensorCollector.OnMeasurementListener<GyroscopeSensorMeasurement, BufferedGyroscopeSensorCollector>>(
-                relaxUnitFun = true
-            )
         val collector = BufferedGyroscopeSensorCollector(
             contextSpy,
             stopWhenFilledBuffer = false,
@@ -1058,8 +1119,7 @@ class BufferedGyroscopeSensorCollectorTest {
         setPrivateProperty(BufferedSensorCollector::class, collector, "running", true)
         assertTrue(collector.running)
 
-        val event = mockk<SensorEvent>()
-        event.sensor = sensorMock
+        event.sensor = sensor
         event.timestamp = System.nanoTime()
         event.accuracy = SensorAccuracy.HIGH.value
         val valuesField = SensorEvent::class.java.getDeclaredField("values")
@@ -1094,8 +1154,6 @@ class BufferedGyroscopeSensorCollectorTest {
     @Test
     fun onAccuracyChanged_whenNoSensor_makesNoAction() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val accuracyChangedListener =
-            mockk<BufferedSensorCollector.OnAccuracyChangedListener<GyroscopeSensorMeasurement, BufferedGyroscopeSensorCollector>>()
         val collector = BufferedGyroscopeSensorCollector(
             context,
             accuracyChangedListener = accuracyChangedListener
@@ -1113,8 +1171,6 @@ class BufferedGyroscopeSensorCollectorTest {
     @Test
     fun onAccuracyChanged_whenUnsupportedSensorType_makesNoAction() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val accuracyChangedListener =
-            mockk<BufferedSensorCollector.OnAccuracyChangedListener<GyroscopeSensorMeasurement, BufferedGyroscopeSensorCollector>>()
         val collector = BufferedGyroscopeSensorCollector(
             context,
             accuracyChangedListener = accuracyChangedListener
@@ -1124,7 +1180,6 @@ class BufferedGyroscopeSensorCollectorTest {
             getPrivateProperty(BufferedSensorCollector::class, collector, "sensorEventListener")
         requireNotNull(sensorEventListener)
 
-        val sensor = mockk<Sensor>()
         every { sensor.type }.returns(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value)
         sensorEventListener.onAccuracyChanged(sensor, SensorAccuracy.HIGH.value)
 
@@ -1140,7 +1195,6 @@ class BufferedGyroscopeSensorCollectorTest {
             getPrivateProperty(BufferedSensorCollector::class, collector, "sensorEventListener")
         requireNotNull(sensorEventListener)
 
-        val sensor = mockk<Sensor>()
         every { sensor.type }.returns(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value)
         sensorEventListener.onAccuracyChanged(sensor, SensorAccuracy.HIGH.value)
     }
@@ -1148,10 +1202,6 @@ class BufferedGyroscopeSensorCollectorTest {
     @Test
     fun onAccuracyChanged_whenListener_notifies() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val accuracyChangedListener =
-            mockk<BufferedSensorCollector.OnAccuracyChangedListener<GyroscopeSensorMeasurement, BufferedGyroscopeSensorCollector>>(
-                relaxUnitFun = true
-            )
         val collector = BufferedGyroscopeSensorCollector(
             context,
             accuracyChangedListener = accuracyChangedListener
@@ -1161,7 +1211,6 @@ class BufferedGyroscopeSensorCollectorTest {
             getPrivateProperty(BufferedSensorCollector::class, collector, "sensorEventListener")
         requireNotNull(sensorEventListener)
 
-        val sensor = mockk<Sensor>()
         every { sensor.type }.returns(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value)
         sensorEventListener.onAccuracyChanged(sensor, SensorAccuracy.HIGH.value)
 

@@ -67,89 +67,49 @@ public class DoubleExponentialRuleQuadratureIntegratorTest {
 
         final DoubleExponentialRuleQuadratureIntegrator integrator1 =
                 new DoubleExponentialRuleQuadratureIntegrator(a, b, HMAX,
-                        new SingleDimensionFunctionEvaluatorListener() {
-                            @Override
-                            public double evaluate(final double point) {
-                                return 0;
-                            }
-                        }, EPS);
+                        point -> 0, EPS);
 
         assertNotNull(integrator1);
 
         final DoubleExponentialRuleQuadratureIntegrator integrator2 =
                 new DoubleExponentialRuleQuadratureIntegrator(a, b,
-                        new SingleDimensionFunctionEvaluatorListener() {
-                            @Override
-                            public double evaluate(final double point) {
-                                return 0;
-                            }
-                        }, EPS);
+                        point -> 0, EPS);
 
         assertNotNull(integrator2);
 
         final DoubleExponentialRuleQuadratureIntegrator integrator3 =
                 new DoubleExponentialRuleQuadratureIntegrator(a, b, HMAX,
-                        new SingleDimensionFunctionEvaluatorListener() {
-                            @Override
-                            public double evaluate(final double point) {
-                                return 0;
-                            }
-                        });
+                        point -> 0);
 
         assertNotNull(integrator3);
 
         final DoubleExponentialRuleQuadratureIntegrator integrator4 =
                 new DoubleExponentialRuleQuadratureIntegrator(a, b,
-                        new SingleDimensionFunctionEvaluatorListener() {
-                            @Override
-                            public double evaluate(final double point) {
-                                return 0;
-                            }
-                        });
+                        point -> 0);
 
         assertNotNull(integrator4);
 
         final DoubleExponentialRuleQuadratureIntegrator integrator5 =
                 new DoubleExponentialRuleQuadratureIntegrator(a, b, HMAX,
-                        new DoubleExponentialSingleDimensionFunctionEvaluatorListener() {
-                            @Override
-                            public double evaluate(final double point, final double delta) {
-                                return 0;
-                            }
-                        }, EPS);
+                        (point, delta) -> 0, EPS);
 
         assertNotNull(integrator5);
 
         final DoubleExponentialRuleQuadratureIntegrator integrator6 =
                 new DoubleExponentialRuleQuadratureIntegrator(a, b,
-                        new DoubleExponentialSingleDimensionFunctionEvaluatorListener() {
-                            @Override
-                            public double evaluate(final double point, final double delta) {
-                                return 0;
-                            }
-                        }, EPS);
+                        (point, delta) -> 0, EPS);
 
         assertNotNull(integrator6);
 
         final DoubleExponentialRuleQuadratureIntegrator integrator7 =
                 new DoubleExponentialRuleQuadratureIntegrator(a, b, HMAX,
-                        new DoubleExponentialSingleDimensionFunctionEvaluatorListener() {
-                            @Override
-                            public double evaluate(final double point, final double delta) {
-                                return 0;
-                            }
-                        });
+                        (point, delta) -> 0);
 
         assertNotNull(integrator7);
 
         final DoubleExponentialRuleQuadratureIntegrator integrator8 =
                 new DoubleExponentialRuleQuadratureIntegrator(a, b,
-                        new DoubleExponentialSingleDimensionFunctionEvaluatorListener() {
-                            @Override
-                            public double evaluate(final double point, final double delta) {
-                                return 0;
-                            }
-                        });
+                        (point, delta) -> 0);
 
         assertNotNull(integrator8);
     }
@@ -203,12 +163,7 @@ public class DoubleExponentialRuleQuadratureIntegratorTest {
 
         final DoubleExponentialRuleQuadratureIntegrator integrator =
                 new DoubleExponentialRuleQuadratureIntegrator(a, b,
-                        new SingleDimensionFunctionEvaluatorListener() {
-                            @Override
-                            public double evaluate(double point) {
-                                return NormalDist.p(point, mu, sigma);
-                            }
-                        });
+                        point -> NormalDist.p(point, mu, sigma));
         final double result = integrator.integrate();
 
         assertEquals(expected, result, ABSOLUTE_ERROR_GAUSSIAN);
@@ -225,12 +180,7 @@ public class DoubleExponentialRuleQuadratureIntegratorTest {
 
         final DoubleExponentialRuleQuadratureIntegrator integrator =
                 new DoubleExponentialRuleQuadratureIntegrator(a, b,
-                        new SingleDimensionFunctionEvaluatorListener() {
-                            @Override
-                            public double evaluate(double point) {
-                                return Math.exp(lambda * point);
-                            }
-                        });
+                        point -> Math.exp(lambda * point));
         final double result = integrator.integrate();
 
         assertEquals(expected, result, ABSOLUTE_ERROR_EXPONENTIAL);
@@ -244,12 +194,7 @@ public class DoubleExponentialRuleQuadratureIntegratorTest {
 
         final DoubleExponentialRuleQuadratureIntegrator integrator =
                 new DoubleExponentialRuleQuadratureIntegrator(0.0, ALMOST_INFINITY,
-                        new SingleDimensionFunctionEvaluatorListener() {
-                            @Override
-                            public double evaluate(double point) {
-                                return Math.pow(point, -2.0 / 7.0) * Math.exp(-point * point);
-                            }
-                        });
+                        point -> Math.pow(point, -2.0 / 7.0) * Math.exp(-point * point));
         final double result = integrator.integrate();
 
         assertNotEquals(expected, result, ABSOLUTE_ERROR_IMPROPER_3);
@@ -286,12 +231,7 @@ public class DoubleExponentialRuleQuadratureIntegratorTest {
 
         final DoubleExponentialRuleQuadratureIntegrator integrator =
                 new DoubleExponentialRuleQuadratureIntegrator(a, b,
-                        new SingleDimensionFunctionEvaluatorListener() {
-                            @Override
-                            public double evaluate(final double point) {
-                                return polynomial.evaluate(point);
-                            }
-                        });
+                        polynomial::evaluate);
         final double result = integrator.integrate();
 
         assertEquals(expected, result, error);

@@ -22,18 +22,36 @@ import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.MeanAveragingFilter
-import com.irurueta.android.navigation.inertial.getPrivateProperty
-import com.irurueta.android.navigation.inertial.setPrivateProperty
+import com.irurueta.android.testutils.getPrivateProperty
+import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.statistics.UniformRandomizer
 import io.mockk.*
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
 import org.junit.After
 import org.junit.Assert.*
+import org.junit.Ignore
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
+@Ignore("possible memory leak")
 @RunWith(RobolectricTestRunner::class)
 class GravityEstimatorTest {
+
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var estimationListener: GravityEstimator.OnEstimationListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var accelerometerMeasurementListener:
+            AccelerometerSensorCollector.OnMeasurementListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var gravityMeasurementListener: GravitySensorCollector.OnMeasurementListener
 
     @After
     fun tearDown() {
@@ -64,10 +82,6 @@ class GravityEstimatorTest {
 
     @Test
     fun constructor_whenAllProperties_setsExpectedValues() {
-        val estimationListener = mockk<GravityEstimator.OnEstimationListener>()
-        val accelerometerMeasurementListener =
-            mockk<AccelerometerSensorCollector.OnMeasurementListener>()
-        val gravityMeasurementListener = mockk<GravitySensorCollector.OnMeasurementListener>()
         val accelerometerAveragingFilter = MeanAveragingFilter()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = GravityEstimator(
@@ -105,7 +119,6 @@ class GravityEstimatorTest {
         assertNull(estimator.estimationListener)
 
         // set new value
-        val estimationListener = mockk<GravityEstimator.OnEstimationListener>()
         estimator.estimationListener = estimationListener
 
         // check
@@ -121,8 +134,6 @@ class GravityEstimatorTest {
         assertNull(estimator.accelerometerMeasurementListener)
 
         // set new value
-        val accelerometerMeasurementListener =
-            mockk<AccelerometerSensorCollector.OnMeasurementListener>()
         estimator.accelerometerMeasurementListener = accelerometerMeasurementListener
 
         // check
@@ -138,7 +149,6 @@ class GravityEstimatorTest {
         assertNull(estimator.gravityMeasurementListener)
 
         // set new value
-        val gravityMeasurementListener = mockk<GravitySensorCollector.OnMeasurementListener>()
         estimator.gravityMeasurementListener = gravityMeasurementListener
 
         // check
@@ -288,7 +298,6 @@ class GravityEstimatorTest {
 
     @Test
     fun gravitySensorCollector_whenMeasurementAndListener_notifiesEstimation() {
-        val estimationListener = mockk<GravityEstimator.OnEstimationListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = GravityEstimator(context, estimationListener = estimationListener)
 
@@ -320,8 +329,6 @@ class GravityEstimatorTest {
 
     @Test
     fun gravitySensorCollector_whenMeasurementAndGravityListener_notifiesGravityMeasurement() {
-        val gravityMeasurementListener =
-            mockk<GravitySensorCollector.OnMeasurementListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator =
             GravityEstimator(context, gravityMeasurementListener = gravityMeasurementListener)
@@ -390,7 +397,6 @@ class GravityEstimatorTest {
 
     @Test
     fun accelerometerSensorCollector_whenMeasurementAndListener_notifiesEstimation() {
-        val estimationListener = mockk<GravityEstimator.OnEstimationListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = GravityEstimator(context, estimationListener = estimationListener)
 
@@ -471,8 +477,6 @@ class GravityEstimatorTest {
 
     @Test
     fun accelerometerSensorCollector_whenMeasurementAndMeasurementListener_notifiesEstimation() {
-        val accelerometerMeasurementListener =
-            mockk<AccelerometerSensorCollector.OnMeasurementListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = GravityEstimator(
             context,

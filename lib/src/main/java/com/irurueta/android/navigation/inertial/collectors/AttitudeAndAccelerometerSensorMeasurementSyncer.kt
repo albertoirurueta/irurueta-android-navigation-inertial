@@ -47,6 +47,7 @@ import java.util.ArrayDeque
  * consider the measurement as stale so that t is skipped from synced measurement processing and
  * returned back from buffer to cache of measurements.
  * @property staleDetectionEnabled true to enable stale measurement detection, false otherwise.
+ * @property skipWhenProcessing true to skip new measurements when processing a measurement.
  * @property accuracyChangedListener listener to notify changes in accuracy.
  * @property bufferFilledListener listener to notify that some buffer has been filled. This usually
  * happens when consumer of measurements cannot keep up with the rate at which measurements are
@@ -71,6 +72,7 @@ class AttitudeAndAccelerometerSensorMeasurementSyncer(
     stopWhenFilledBuffer: Boolean = true,
     staleOffsetNanos: Long = AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer.DEFAULT_STALE_OFFSET_NANOS,
     staleDetectionEnabled: Boolean = true,
+    skipWhenProcessing: Boolean = true,
     accuracyChangedListener: OnAccuracyChangedListener<AttitudeAndAccelerometerSyncedSensorMeasurement, AttitudeAndAccelerometerSensorMeasurementSyncer>? = null,
     bufferFilledListener: OnBufferFilledListener<AttitudeAndAccelerometerSyncedSensorMeasurement, AttitudeAndAccelerometerSensorMeasurementSyncer>? = null,
     syncedMeasurementListener: OnSyncedMeasurementsListener<AttitudeAndAccelerometerSyncedSensorMeasurement, AttitudeAndAccelerometerSensorMeasurementSyncer>? = null,
@@ -82,6 +84,7 @@ class AttitudeAndAccelerometerSensorMeasurementSyncer(
     stopWhenFilledBuffer,
     staleOffsetNanos,
     staleDetectionEnabled,
+    skipWhenProcessing,
     accuracyChangedListener,
     bufferFilledListener,
     syncedMeasurementListener,
@@ -192,7 +195,13 @@ class AttitudeAndAccelerometerSensorMeasurementSyncer(
             }
         },
         measurementListener = { collector, _, bufferPosition ->
+            if (this.skipWhenProcessing && processing) {
+                return@BufferedAttitudeSensorCollector
+            }
+
             synchronized(this@AttitudeAndAccelerometerSensorMeasurementSyncer) {
+                processing = true
+
                 val measurementsBeforePosition =
                     collector.getMeasurementsBeforePosition(bufferPosition)
                 val lastTimestamp = measurementsBeforePosition.lastOrNull()?.timestamp
@@ -203,6 +212,8 @@ class AttitudeAndAccelerometerSensorMeasurementSyncer(
                     copyToAttitudeMeasurements(measurementsBeforePosition)
                     processMeasurements()
                 }
+
+                processing = false
             }
         }
     )
@@ -235,7 +246,13 @@ class AttitudeAndAccelerometerSensorMeasurementSyncer(
             }
         },
         measurementListener = { collector, _, _ ->
+            if (this.skipWhenProcessing && processing) {
+                return@BufferedAccelerometerSensorCollector
+            }
+
             synchronized(this@AttitudeAndAccelerometerSensorMeasurementSyncer) {
+                processing = true
+
                 val mostRecentTimestamp =
                     this@AttitudeAndAccelerometerSensorMeasurementSyncer.mostRecentTimestamp
                 if (mostRecentTimestamp != null) {
@@ -246,6 +263,8 @@ class AttitudeAndAccelerometerSensorMeasurementSyncer(
                         copyToAccelerometerMeasurements(measurementsBeforeTimestamp)
                     }
                 }
+
+                processing = false
             }
         }
     )
@@ -369,6 +388,7 @@ class AttitudeAndAccelerometerSensorMeasurementSyncer(
     @Synchronized
     override fun stop() {
         stopping = true
+        processing = false
         attitudeSensorCollector.stop()
         accelerometerSensorCollector.stop()
 
@@ -514,6 +534,7 @@ class AttitudeAndAccelerometerSensorMeasurementSyncer(
             // collections are reset at this point to prevent concurrent modifications
             clearCollectionsAndReset()
             stopping = false
+            processing = false
         }
     }
 
@@ -525,6 +546,7 @@ class AttitudeAndAccelerometerSensorMeasurementSyncer(
         mostRecentTimestamp = null
         oldestTimestamp = null
         running = false
+        processing = false
 
         hasPreviousAttitudeMeasurement = false
         hasPreviousAccelerometerMeasurement = false

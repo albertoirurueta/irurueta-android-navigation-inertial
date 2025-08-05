@@ -18,7 +18,6 @@ package com.irurueta.android.navigation.inertial.numerical.integration;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
-import com.irurueta.numerical.SingleDimensionFunctionEvaluatorListener;
 import com.irurueta.numerical.polynomials.Polynomial;
 import com.irurueta.statistics.Gamma;
 import com.irurueta.statistics.UniformRandomizer;
@@ -61,12 +60,7 @@ public class MidPointQuadratureIntegratorTest {
         final double expected = 1.0 / lambda * (Math.exp(lambda * b) - Math.exp(lambda * a));
 
         final MidPointQuadratureIntegrator integrator = new MidPointQuadratureIntegrator(a, b,
-                new SingleDimensionFunctionEvaluatorListener() {
-                    @Override
-                    public double evaluate(double point) {
-                        return Math.exp(lambda * point);
-                    }
-                });
+                point -> Math.exp(lambda * point));
         final double result = integrator.integrate();
 
         assertEquals(expected, result, ABSOLUTE_ERROR_EXPONENTIAL);
@@ -79,12 +73,7 @@ public class MidPointQuadratureIntegratorTest {
 
         final MidPointQuadratureIntegrator integrator =
                 new MidPointQuadratureIntegrator(0.0, 1.0,
-                        new SingleDimensionFunctionEvaluatorListener() {
-                            @Override
-                            public double evaluate(double point) {
-                                return Math.log(point) * Math.log(1 - point);
-                            }
-                        });
+                        point -> Math.log(point) * Math.log(1 - point));
         final double result = integrator.integrate();
 
         assertEquals(expected, result, ABSOLUTE_ERROR_IMPROPER_1);
@@ -98,12 +87,7 @@ public class MidPointQuadratureIntegratorTest {
 
         final MidPointQuadratureIntegrator integrator =
                 new MidPointQuadratureIntegrator(0.0, ALMOST_INFINITY,
-                        new SingleDimensionFunctionEvaluatorListener() {
-                            @Override
-                            public double evaluate(double point) {
-                                return Math.pow(point, -2.0 / 7.0) * Math.exp(-point * point);
-                            }
-                        });
+                        point -> Math.pow(point, -2.0 / 7.0) * Math.exp(-point * point));
         final double result = integrator.integrate();
 
         assertNotEquals(expected, result, ABSOLUTE_ERROR_IMPROPER_3);
@@ -138,12 +122,7 @@ public class MidPointQuadratureIntegratorTest {
 
         final MidPointQuadratureIntegrator integrator =
                 new MidPointQuadratureIntegrator(a, b,
-                        new SingleDimensionFunctionEvaluatorListener() {
-                            @Override
-                            public double evaluate(final double point) {
-                                return polynomial.evaluate(point);
-                            }
-                        });
+                        polynomial::evaluate);
         final double result = integrator.integrate();
 
         assertEquals(expected, result, MidPointQuadratureIntegratorTest.ABSOLUTE_ERROR_1);

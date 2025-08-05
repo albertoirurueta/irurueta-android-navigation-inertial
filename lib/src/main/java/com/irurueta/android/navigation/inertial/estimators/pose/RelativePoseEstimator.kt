@@ -168,7 +168,7 @@ class RelativePoseEstimator private constructor(
     private val initialAttitude = Quaternion()
 
     /**
-     * Average attitude between prvious and current attitudes.
+     * Average attitude between previous and current attitudes.
      */
     private val averageAttitude = Quaternion()
 
@@ -223,7 +223,7 @@ class RelativePoseEstimator private constructor(
     private val transformationPosition = InhomogeneousPoint3D()
 
     /**
-     * Rotation to convert from NED to ENU coordinates and viceversa.
+     * Rotation to convert from NED to ENU coordinates and vice-versa.
      */
     private val conversionRotation = ENUtoNEDConverter.conversionRotation
 

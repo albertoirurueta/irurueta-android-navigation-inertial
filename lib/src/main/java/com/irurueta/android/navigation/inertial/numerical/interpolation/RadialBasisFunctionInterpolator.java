@@ -124,7 +124,7 @@ public class RadialBasisFunctionInterpolator extends BaseRadialBasisFunctionInte
     /**
      * Returns the interpolated function value at a dim-dimensional point pt.
      *
-     * @param pt dim-dimentional point where interpolation must be computed.
+     * @param pt dim-dimensional point where interpolation must be computed.
      * @return result of interpolation.
      * @throws IllegalArgumentException if provided point has an invalid length.
      */

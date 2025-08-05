@@ -17,7 +17,6 @@ package com.irurueta.android.navigation.inertial.numerical.integration;
 
 import static org.junit.Assert.assertEquals;
 
-import com.irurueta.numerical.SingleDimensionFunctionEvaluatorListener;
 import com.irurueta.numerical.polynomials.Polynomial;
 import com.irurueta.statistics.NormalDist;
 import com.irurueta.statistics.UniformRandomizer;
@@ -95,12 +94,7 @@ public class RombergInfinityMidPointQuadratureIntegratorTest {
 
         final RombergInfinityMidPointQuadratureIntegrator integrator =
                 new RombergInfinityMidPointQuadratureIntegrator(a, b,
-                        new SingleDimensionFunctionEvaluatorListener() {
-                            @Override
-                            public double evaluate(double point) {
-                                return NormalDist.p(point, mu, sigma);
-                            }
-                        });
+                        point -> NormalDist.p(point, mu, sigma));
         final double result = integrator.integrate();
 
         assertEquals(expected, result, ABSOLUTE_ERROR_GAUSSIAN);
@@ -112,12 +106,7 @@ public class RombergInfinityMidPointQuadratureIntegratorTest {
 
         final RombergInfinityMidPointQuadratureIntegrator integrator =
                 new RombergInfinityMidPointQuadratureIntegrator(0.0, 1.0,
-                        new SingleDimensionFunctionEvaluatorListener() {
-                            @Override
-                            public double evaluate(double point) {
-                                return Math.log(point) * Math.log(1 - point);
-                            }
-                        });
+                        point -> Math.log(point) * Math.log(1 - point));
         integrator.integrate();
     }
 
@@ -127,12 +116,7 @@ public class RombergInfinityMidPointQuadratureIntegratorTest {
 
         final RombergInfinityMidPointQuadratureIntegrator integrator =
                 new RombergInfinityMidPointQuadratureIntegrator(0.0, ALMOST_INFINITY,
-                        new SingleDimensionFunctionEvaluatorListener() {
-                            @Override
-                            public double evaluate(double point) {
-                                return Math.pow(point, -2.0 / 7.0) * Math.exp(-point * point);
-                            }
-                        });
+                        point -> Math.pow(point, -2.0 / 7.0) * Math.exp(-point * point));
         integrator.integrate();
     }
 
@@ -167,12 +151,7 @@ public class RombergInfinityMidPointQuadratureIntegratorTest {
 
         final RombergInfinityMidPointQuadratureIntegrator integrator =
                 new RombergInfinityMidPointQuadratureIntegrator(a, b,
-                        new SingleDimensionFunctionEvaluatorListener() {
-                            @Override
-                            public double evaluate(final double point) {
-                                return polynomial.evaluate(point);
-                            }
-                        });
+                        polynomial::evaluate);
         final double result = integrator.integrate();
 
         assertEquals(expected, result, error);

@@ -130,23 +130,19 @@ public abstract class QuadratureMatrixIntegrator<T extends MatrixQuadrature>
             final double a, final double b,
             final MatrixSingleDimensionFunctionEvaluatorListener listener, final double eps,
             final QuadratureType quadratureType) throws WrongSizeException {
-        switch (quadratureType) {
-            case TRAPEZOIDAL:
-                return new TrapezoidalQuadratureMatrixIntegrator(a, b, listener, eps);
-            case MID_POINT:
-                return new MidPointQuadratureMatrixIntegrator(a, b, listener, eps);
-            case INFINITY_MID_POINT:
-                return new InfinityMidPointQuadratureMatrixIntegrator(a, b, listener, eps);
-            case LOWER_SQUARE_ROOT_MID_POINT:
-                return new LowerSquareRootMidPointQuadratureMatrixIntegrator(a, b, listener, eps);
-            case UPPER_SQUARE_ROOT_MID_POINT:
-                return new UpperSquareRootMidPointQuadratureMatrixIntegrator(a, b, listener, eps);
-            case DOUBLE_EXPONENTIAL_RULE:
-                return new DoubleExponentialRuleQuadratureMatrixIntegrator(a, b, listener, eps);
-            case EXPONENTIAL_MID_POINT:
-            default:
-                throw new IllegalArgumentException();
-        }
+        return switch (quadratureType) {
+            case TRAPEZOIDAL -> new TrapezoidalQuadratureMatrixIntegrator(a, b, listener, eps);
+            case MID_POINT -> new MidPointQuadratureMatrixIntegrator(a, b, listener, eps);
+            case INFINITY_MID_POINT ->
+                    new InfinityMidPointQuadratureMatrixIntegrator(a, b, listener, eps);
+            case LOWER_SQUARE_ROOT_MID_POINT ->
+                    new LowerSquareRootMidPointQuadratureMatrixIntegrator(a, b, listener, eps);
+            case UPPER_SQUARE_ROOT_MID_POINT ->
+                    new UpperSquareRootMidPointQuadratureMatrixIntegrator(a, b, listener, eps);
+            case DOUBLE_EXPONENTIAL_RULE ->
+                    new DoubleExponentialRuleQuadratureMatrixIntegrator(a, b, listener, eps);
+            default -> throw new IllegalArgumentException();
+        };
     }
 
     /**
@@ -164,23 +160,19 @@ public abstract class QuadratureMatrixIntegrator<T extends MatrixQuadrature>
             final double a, final double b,
             final MatrixSingleDimensionFunctionEvaluatorListener listener,
             final QuadratureType quadratureType) throws WrongSizeException {
-        switch (quadratureType) {
-            case TRAPEZOIDAL:
-                return new TrapezoidalQuadratureMatrixIntegrator(a, b, listener);
-            case MID_POINT:
-                return new MidPointQuadratureMatrixIntegrator(a, b, listener);
-            case INFINITY_MID_POINT:
-                return new InfinityMidPointQuadratureMatrixIntegrator(a, b, listener);
-            case LOWER_SQUARE_ROOT_MID_POINT:
-                return new LowerSquareRootMidPointQuadratureMatrixIntegrator(a, b, listener);
-            case UPPER_SQUARE_ROOT_MID_POINT:
-                return new UpperSquareRootMidPointQuadratureMatrixIntegrator(a, b, listener);
-            case DOUBLE_EXPONENTIAL_RULE:
-                return new DoubleExponentialRuleQuadratureMatrixIntegrator(a, b, listener);
-            case EXPONENTIAL_MID_POINT:
-            default:
-                throw new IllegalArgumentException();
-        }
+        return switch (quadratureType) {
+            case TRAPEZOIDAL -> new TrapezoidalQuadratureMatrixIntegrator(a, b, listener);
+            case MID_POINT -> new MidPointQuadratureMatrixIntegrator(a, b, listener);
+            case INFINITY_MID_POINT ->
+                    new InfinityMidPointQuadratureMatrixIntegrator(a, b, listener);
+            case LOWER_SQUARE_ROOT_MID_POINT ->
+                    new LowerSquareRootMidPointQuadratureMatrixIntegrator(a, b, listener);
+            case UPPER_SQUARE_ROOT_MID_POINT ->
+                    new UpperSquareRootMidPointQuadratureMatrixIntegrator(a, b, listener);
+            case DOUBLE_EXPONENTIAL_RULE ->
+                    new DoubleExponentialRuleQuadratureMatrixIntegrator(a, b, listener);
+            default -> throw new IllegalArgumentException();
+        };
     }
 
     /**

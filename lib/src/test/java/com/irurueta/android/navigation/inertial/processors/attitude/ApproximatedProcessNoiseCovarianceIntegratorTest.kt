@@ -215,7 +215,7 @@ class ApproximatedProcessNoiseCovarianceIntegratorTest {
                 assertTrue(error2 < error)
                 succeeded = true
                 break
-            } catch (ex: IntegrationException) {
+            } catch (_: IntegrationException) {
                 // ignore
             }
         }

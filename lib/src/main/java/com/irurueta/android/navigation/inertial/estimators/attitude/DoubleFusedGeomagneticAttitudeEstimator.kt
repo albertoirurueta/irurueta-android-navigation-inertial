@@ -272,7 +272,7 @@ class DoubleFusedGeomagneticAttitudeEstimator private constructor(
 
     /**
      * Indicates whether world magnetic model is taken into account to adjust attitude yaw angle by
-     * current magnetic declination based on current Wolrd MAgnetic Model, location and timestamp.
+     * current magnetic declination based on current World Magnetic Model, location and timestamp.
      */
     override var useWorldMagneticModel: Boolean = false
         @Throws(IllegalStateException::class)

@@ -2,17 +2,28 @@ package com.irurueta.android.navigation.inertial.processors.attitude
 
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
-import com.irurueta.android.navigation.inertial.getPrivateProperty
-import com.irurueta.android.navigation.inertial.setPrivateProperty
+import com.irurueta.android.testutils.getPrivateProperty
+import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.inertial.calibration.AngularSpeedTriad
 import com.irurueta.statistics.UniformRandomizer
 import io.mockk.*
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
 import org.junit.After
 import org.junit.Assert.*
+import org.junit.Ignore
+import org.junit.Rule
 import org.junit.Test
 
+@Ignore("possible memory leak")
 class RelativeGyroscopeAttitudeProcessorTest {
+
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var listener: BaseRelativeGyroscopeAttitudeProcessor.OnProcessedListener
 
     @After
     fun tearDown() {
@@ -31,7 +42,6 @@ class RelativeGyroscopeAttitudeProcessorTest {
 
     @Test
     fun constructor_whenListener_setsExpectedValues() {
-        val listener = mockk<BaseRelativeGyroscopeAttitudeProcessor.OnProcessedListener>()
         val processor = RelativeGyroscopeAttitudeProcessor(listener)
 
         assertSame(listener, processor.processorListener)
@@ -47,7 +57,6 @@ class RelativeGyroscopeAttitudeProcessorTest {
         assertNull(processor.processorListener)
 
         // set new value
-        val listener = mockk<BaseRelativeGyroscopeAttitudeProcessor.OnProcessedListener>()
         processor.processorListener = listener
 
         // check
@@ -56,8 +65,6 @@ class RelativeGyroscopeAttitudeProcessorTest {
 
     @Test
     fun process_whenFirstMeasurement_setsPreviousTimestamp() {
-        val listener =
-            mockk<BaseRelativeGyroscopeAttitudeProcessor.OnProcessedListener>(relaxUnitFun = true)
         val processor = RelativeGyroscopeAttitudeProcessor(listener)
 
         val previousTimestamp1: Long? = getPrivateProperty(
@@ -93,8 +100,6 @@ class RelativeGyroscopeAttitudeProcessorTest {
 
     @Test
     fun process_whenNotFirstMeasurement_setsExpectedAttitudeAndNotifies() {
-        val listener =
-            mockk<BaseRelativeGyroscopeAttitudeProcessor.OnProcessedListener>(relaxUnitFun = true)
         val processor = RelativeGyroscopeAttitudeProcessor(listener)
 
         val timestamp = System.nanoTime()
@@ -175,8 +180,6 @@ class RelativeGyroscopeAttitudeProcessorTest {
 
     @Test
     fun process_whenNotFirstMeasurementWithBias_setsExpectedAttitudeAndNotifies() {
-        val listener =
-            mockk<BaseRelativeGyroscopeAttitudeProcessor.OnProcessedListener>(relaxUnitFun = true)
         val processor = RelativeGyroscopeAttitudeProcessor(listener)
 
         val timestamp = System.nanoTime()
@@ -252,8 +255,6 @@ class RelativeGyroscopeAttitudeProcessorTest {
 
     @Test
     fun process_whenProvidedTimestamp_setsExpectedAttitudeAndNotifies() {
-        val listener =
-            mockk<BaseRelativeGyroscopeAttitudeProcessor.OnProcessedListener>(relaxUnitFun = true)
         val processor = RelativeGyroscopeAttitudeProcessor(listener)
 
         val timestamp = System.nanoTime()

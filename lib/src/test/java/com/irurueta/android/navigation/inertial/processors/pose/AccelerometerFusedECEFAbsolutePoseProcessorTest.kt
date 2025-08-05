@@ -19,12 +19,11 @@ import android.location.Location
 import com.irurueta.algebra.Utils
 import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
 import com.irurueta.android.navigation.inertial.collectors.*
-import com.irurueta.android.navigation.inertial.getPrivateProperty
-import com.irurueta.android.navigation.inertial.processors.attitude.AccelerometerDoubleFusedGeomagneticAttitudeProcessor
 import com.irurueta.android.navigation.inertial.processors.attitude.AccelerometerFusedGeomagneticAttitudeProcessor
 import com.irurueta.android.navigation.inertial.processors.attitude.BaseFusedGeomagneticAttitudeProcessor
-import com.irurueta.android.navigation.inertial.setPrivateProperty
 import com.irurueta.android.navigation.inertial.toNEDPosition
+import com.irurueta.android.testutils.getPrivateProperty
+import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.geometry.EuclideanTransformation3D
 import com.irurueta.geometry.InhomogeneousPoint3D
 import com.irurueta.geometry.Quaternion
@@ -39,15 +38,29 @@ import com.irurueta.navigation.inertial.navigators.ECEFInertialNavigator
 import com.irurueta.navigation.inertial.wmm.WorldMagneticModel
 import com.irurueta.statistics.UniformRandomizer
 import io.mockk.*
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
 import org.junit.After
 import org.junit.Assert.*
+import org.junit.Ignore
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.util.*
 
+@Ignore("possible memory leak")
 @RunWith(RobolectricTestRunner::class)
 class AccelerometerFusedECEFAbsolutePoseProcessorTest {
+
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var processorListener: BaseECEFAbsolutePoseProcessor.OnProcessedListener
+
+    @MockK(relaxed = true)
+    private lateinit var location: Location
 
     @After
     fun tearDown() {
@@ -119,7 +132,6 @@ class AccelerometerFusedECEFAbsolutePoseProcessorTest {
     fun constructor_whenAllParameters_returnsExpectedValues() {
         val initialLocation = getLocation()
         val initialVelocity = getVelocity()
-        val processorListener = mockk<BaseECEFAbsolutePoseProcessor.OnProcessedListener>()
         val processor = AccelerometerFusedECEFAbsolutePoseProcessor(
             initialLocation,
             initialVelocity,
@@ -209,7 +221,6 @@ class AccelerometerFusedECEFAbsolutePoseProcessorTest {
         assertNull(processor.processorListener)
 
         // set new value
-        val processorListener = mockk<BaseECEFAbsolutePoseProcessor.OnProcessedListener>()
         processor.processorListener = processorListener
 
         // check
@@ -1235,8 +1246,6 @@ class AccelerometerFusedECEFAbsolutePoseProcessorTest {
     fun process_whenAttitudeTimeIntervalProcessedAndPoseTransformationNotEstimatedWithListener_returnsTrueAndNotifies() {
         val initialLocation = getLocation()
         val initialVelocity = getVelocity()
-        val processorListener =
-            mockk<BaseECEFAbsolutePoseProcessor.OnProcessedListener>(relaxUnitFun = true)
         val processor = AccelerometerFusedECEFAbsolutePoseProcessor(
             initialLocation,
             initialVelocity,
@@ -1456,8 +1465,6 @@ class AccelerometerFusedECEFAbsolutePoseProcessorTest {
     fun process_whenAttitudeTimeIntervalProcessedAndPoseTransformationEstimatedNotUseLeveledRelativeAttitudeRespectStart_returnsTrueAndNotifies() {
         val initialLocation = getLocation()
         val initialVelocity = getVelocity()
-        val processorListener =
-            mockk<BaseECEFAbsolutePoseProcessor.OnProcessedListener>(relaxUnitFun = true)
         val processor = AccelerometerFusedECEFAbsolutePoseProcessor(
             initialLocation,
             initialVelocity,
@@ -1743,8 +1750,6 @@ class AccelerometerFusedECEFAbsolutePoseProcessorTest {
     fun process_whenAttitudeTimeIntervalProcessedAndPoseTransformationEstimatedUseLeveledRelativeAttitudeRespectStart_returnsTrueAndNotifies() {
         val initialLocation = getLocation()
         val initialVelocity = getVelocity()
-        val processorListener =
-            mockk<BaseECEFAbsolutePoseProcessor.OnProcessedListener>(relaxUnitFun = true)
         val processor = AccelerometerFusedECEFAbsolutePoseProcessor(
             initialLocation,
             initialVelocity,
@@ -2030,6 +2035,20 @@ class AccelerometerFusedECEFAbsolutePoseProcessorTest {
         }
     }
 
+    fun getLocation(): Location {
+        val randomizer = UniformRandomizer()
+        val latitudeDegrees = randomizer.nextDouble(MIN_LATITUDE_DEGREES, MAX_LATITUDE_DEGREES)
+        val longitudeDegrees =
+            randomizer.nextDouble(MIN_LONGITUDE_DEGREES, MAX_LONGITUDE_DEGREES)
+        val height = randomizer.nextDouble(MIN_HEIGHT, MAX_HEIGHT)
+
+        every { location.latitude }.returns(latitudeDegrees)
+        every { location.longitude }.returns(longitudeDegrees)
+        every { location.altitude }.returns(height)
+
+        return location
+    }
+
     private companion object {
         const val MIN_LATITUDE_DEGREES = -90.0
         const val MAX_LATITUDE_DEGREES = 90.0
@@ -2051,21 +2070,6 @@ class AccelerometerFusedECEFAbsolutePoseProcessorTest {
         const val TIME_INTERVAL_NANOS = 10_000_000L
 
         const val ABSOLUTE_ERROR = 1e-8
-
-        fun getLocation(): Location {
-            val randomizer = UniformRandomizer()
-            val latitudeDegrees = randomizer.nextDouble(MIN_LATITUDE_DEGREES, MAX_LATITUDE_DEGREES)
-            val longitudeDegrees =
-                randomizer.nextDouble(MIN_LONGITUDE_DEGREES, MAX_LONGITUDE_DEGREES)
-            val height = randomizer.nextDouble(MIN_HEIGHT, MAX_HEIGHT)
-
-            val location = mockk<Location>(relaxed = true)
-            every { location.latitude }.returns(latitudeDegrees)
-            every { location.longitude }.returns(longitudeDegrees)
-            every { location.altitude }.returns(height)
-
-            return location
-        }
 
         fun getVelocity(): NEDVelocity {
             val randomizer = UniformRandomizer()

@@ -121,23 +121,19 @@ public abstract class QuadratureIntegrator<T extends Quadrature> extends Integra
             final double a, final double b,
             final SingleDimensionFunctionEvaluatorListener listener, final double eps,
             final QuadratureType quadratureType) {
-        switch (quadratureType) {
-            case TRAPEZOIDAL:
-                return new TrapezoidalQuadratureIntegrator(a, b, listener, eps);
-            case MID_POINT:
-                return new MidPointQuadratureIntegrator(a, b, listener, eps);
-            case INFINITY_MID_POINT:
-                return new InfinityMidPointQuadratureIntegrator(a, b, listener, eps);
-            case LOWER_SQUARE_ROOT_MID_POINT:
-                return new LowerSquareRootMidPointQuadratureIntegrator(a, b, listener, eps);
-            case UPPER_SQUARE_ROOT_MID_POINT:
-                return new UpperSquareRootMidPointQuadratureIntegrator(a, b, listener, eps);
-            case DOUBLE_EXPONENTIAL_RULE:
-                return new DoubleExponentialRuleQuadratureIntegrator(a, b, listener, eps);
-            case EXPONENTIAL_MID_POINT:
-            default:
-                throw new IllegalArgumentException();
-        }
+        return switch (quadratureType) {
+            case TRAPEZOIDAL -> new TrapezoidalQuadratureIntegrator(a, b, listener, eps);
+            case MID_POINT -> new MidPointQuadratureIntegrator(a, b, listener, eps);
+            case INFINITY_MID_POINT ->
+                    new InfinityMidPointQuadratureIntegrator(a, b, listener, eps);
+            case LOWER_SQUARE_ROOT_MID_POINT ->
+                    new LowerSquareRootMidPointQuadratureIntegrator(a, b, listener, eps);
+            case UPPER_SQUARE_ROOT_MID_POINT ->
+                    new UpperSquareRootMidPointQuadratureIntegrator(a, b, listener, eps);
+            case DOUBLE_EXPONENTIAL_RULE ->
+                    new DoubleExponentialRuleQuadratureIntegrator(a, b, listener, eps);
+            default -> throw new IllegalArgumentException();
+        };
     }
 
     /**
@@ -154,23 +150,18 @@ public abstract class QuadratureIntegrator<T extends Quadrature> extends Integra
             final double a, final double b,
             final SingleDimensionFunctionEvaluatorListener listener,
             final QuadratureType quadratureType) {
-        switch (quadratureType) {
-            case TRAPEZOIDAL:
-                return new TrapezoidalQuadratureIntegrator(a, b, listener);
-            case MID_POINT:
-                return new MidPointQuadratureIntegrator(a, b, listener);
-            case INFINITY_MID_POINT:
-                return new InfinityMidPointQuadratureIntegrator(a, b, listener);
-            case LOWER_SQUARE_ROOT_MID_POINT:
-                return new LowerSquareRootMidPointQuadratureIntegrator(a, b, listener);
-            case UPPER_SQUARE_ROOT_MID_POINT:
-                return new UpperSquareRootMidPointQuadratureIntegrator(a, b, listener);
-            case DOUBLE_EXPONENTIAL_RULE:
-                return new DoubleExponentialRuleQuadratureIntegrator(a, b, listener);
-            case EXPONENTIAL_MID_POINT:
-            default:
-                throw new IllegalArgumentException();
-        }
+        return switch (quadratureType) {
+            case TRAPEZOIDAL -> new TrapezoidalQuadratureIntegrator(a, b, listener);
+            case MID_POINT -> new MidPointQuadratureIntegrator(a, b, listener);
+            case INFINITY_MID_POINT -> new InfinityMidPointQuadratureIntegrator(a, b, listener);
+            case LOWER_SQUARE_ROOT_MID_POINT ->
+                    new LowerSquareRootMidPointQuadratureIntegrator(a, b, listener);
+            case UPPER_SQUARE_ROOT_MID_POINT ->
+                    new UpperSquareRootMidPointQuadratureIntegrator(a, b, listener);
+            case DOUBLE_EXPONENTIAL_RULE ->
+                    new DoubleExponentialRuleQuadratureIntegrator(a, b, listener);
+            default -> throw new IllegalArgumentException();
+        };
     }
 
     /**

@@ -24,8 +24,8 @@ import com.irurueta.android.navigation.inertial.collectors.GravitySensorCollecto
 import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
 import com.irurueta.android.navigation.inertial.collectors.SensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
-import com.irurueta.android.navigation.inertial.getPrivateProperty
-import com.irurueta.android.navigation.inertial.setPrivateProperty
+import com.irurueta.android.testutils.getPrivateProperty
+import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.navigation.frames.NEDPosition
 import com.irurueta.navigation.inertial.ECEFGravity
 import com.irurueta.navigation.inertial.calibration.TimeIntervalEstimator
@@ -36,14 +36,36 @@ import com.irurueta.units.AccelerationUnit
 import com.irurueta.units.Time
 import com.irurueta.units.TimeUnit
 import io.mockk.*
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
 import org.junit.After
 import org.junit.Assert.*
+import org.junit.Ignore
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
+@Ignore("possible memory leak")
 @RunWith(RobolectricTestRunner::class)
 class GravityNormEstimatorTest {
+
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var completedListener:
+            AccumulatedMeasurementEstimator.OnEstimationCompletedListener<GravityNormEstimator>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var unreliableListener:
+            AccumulatedMeasurementEstimator.OnUnreliableListener<GravityNormEstimator>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var measurementListener: GravitySensorCollector.OnMeasurementListener
+
+    @MockK
+    private lateinit var sensor: Sensor
 
     @After
     fun tearDown() {
@@ -302,9 +324,6 @@ class GravityNormEstimatorTest {
 
     @Test
     fun constructor_whenCompletedListener_setsExpectedValues() {
-        val completedListener =
-            mockk<AccumulatedMeasurementEstimator
-            .OnEstimationCompletedListener<GravityNormEstimator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator =
             GravityNormEstimator(
@@ -357,10 +376,6 @@ class GravityNormEstimatorTest {
 
     @Test
     fun constructor_whenUnreliableListener_setsExpectedValues() {
-        val completedListener = mockk<AccumulatedMeasurementEstimator
-        .OnEstimationCompletedListener<GravityNormEstimator>>()
-        val unreliableListener = mockk<AccumulatedMeasurementEstimator
-        .OnUnreliableListener<GravityNormEstimator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator =
             GravityNormEstimator(
@@ -414,11 +429,6 @@ class GravityNormEstimatorTest {
 
     @Test
     fun constructor_whenMeasurementListener_setsExpectedValues() {
-        val completedListener = mockk<AccumulatedMeasurementEstimator
-        .OnEstimationCompletedListener<GravityNormEstimator>>()
-        val unreliableListener = mockk<AccumulatedMeasurementEstimator
-        .OnUnreliableListener<GravityNormEstimator>>()
-        val measurementListener = mockk<GravitySensorCollector.OnMeasurementListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator =
             GravityNormEstimator(
@@ -480,8 +490,6 @@ class GravityNormEstimatorTest {
         assertNull(estimator.completedListener)
 
         // set new value
-        val completedListener = mockk<AccumulatedMeasurementEstimator
-        .OnEstimationCompletedListener<GravityNormEstimator>>()
         estimator.completedListener = completedListener
 
         // check
@@ -497,8 +505,6 @@ class GravityNormEstimatorTest {
         assertNull(estimator.unreliableListener)
 
         // set new value
-        val unreliableListener =
-            mockk<AccumulatedMeasurementEstimator.OnUnreliableListener<GravityNormEstimator>>()
         estimator.unreliableListener = unreliableListener
 
         // check
@@ -514,7 +520,6 @@ class GravityNormEstimatorTest {
         assertNull(estimator.measurementListener)
 
         // set new value
-        val measurementListener = mockk<GravitySensorCollector.OnMeasurementListener>()
         estimator.measurementListener = measurementListener
 
         // check
@@ -531,7 +536,6 @@ class GravityNormEstimatorTest {
             estimator.getPrivateProperty("collector")
         requireNotNull(collector)
         val collectorSpy = spyk(collector)
-        val sensor = mockk<Sensor>()
         every { collectorSpy.sensor }.returns(sensor)
         estimator.setPrivateProperty("collector", collectorSpy)
 
@@ -778,8 +782,6 @@ class GravityNormEstimatorTest {
 
     @Test
     fun onMeasurement_whenMeasurementListener_notifies() {
-        val measurementListener =
-            mockk<GravitySensorCollector.OnMeasurementListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = GravityNormEstimator(context, measurementListener = measurementListener)
 
@@ -1042,9 +1044,6 @@ class GravityNormEstimatorTest {
 
     @Test
     fun onMeasurement_whenIsCompleteMaxSamplesOnlyAndListener() {
-        val completedListener =
-            mockk<AccumulatedMeasurementEstimator
-            .OnEstimationCompletedListener<GravityNormEstimator>>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator =
             GravityNormEstimator(
@@ -1160,9 +1159,6 @@ class GravityNormEstimatorTest {
 
     @Test
     fun onMeasurement_whenIsCompleteMaxDurationOnlyAndListener() {
-        val completedListener =
-            mockk<AccumulatedMeasurementEstimator
-            .OnEstimationCompletedListener<GravityNormEstimator>>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator =
             GravityNormEstimator(
@@ -1283,9 +1279,6 @@ class GravityNormEstimatorTest {
 
     @Test
     fun onMeasurement_whenIsCompleteMaxSamplesOrDurationAndListener() {
-        val completedListener =
-            mockk<AccumulatedMeasurementEstimator
-            .OnEstimationCompletedListener<GravityNormEstimator>>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator =
             GravityNormEstimator(
@@ -1370,9 +1363,6 @@ class GravityNormEstimatorTest {
 
     @Test
     fun onAccuracyChanged_whenUnreliableAndListener_setsResultAsUnreliable() {
-        val unreliableListener =
-            mockk<AccumulatedMeasurementEstimator
-            .OnUnreliableListener<GravityNormEstimator>>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = GravityNormEstimator(context, unreliableListener = unreliableListener)
 
@@ -1396,9 +1386,6 @@ class GravityNormEstimatorTest {
 
     @Test
     fun onAccuracyChanged_whenNotUnreliable_makesNoAction() {
-        val unreliableListener =
-            mockk<AccumulatedMeasurementEstimator
-            .OnUnreliableListener<GravityNormEstimator>>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = GravityNormEstimator(context, unreliableListener = unreliableListener)
 

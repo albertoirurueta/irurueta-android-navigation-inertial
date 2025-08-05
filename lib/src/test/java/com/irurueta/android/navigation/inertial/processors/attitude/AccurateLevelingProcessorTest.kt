@@ -25,14 +25,23 @@ import com.irurueta.navigation.inertial.estimators.NEDGravityEstimator
 import com.irurueta.statistics.UniformRandomizer
 import com.irurueta.units.AccelerationUnit
 import io.mockk.*
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
 import org.junit.After
 import org.junit.Assert.*
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class AccurateLevelingProcessorTest {
+
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK
+    private lateinit var listener: BaseLevelingProcessor.OnProcessedListener
 
     @After
     fun tearDown() {
@@ -62,7 +71,6 @@ class AccurateLevelingProcessorTest {
     @Test
     fun constructor_whenAllParameters_returnsExpectedValues() {
         val location = getLocation()
-        val listener = mockk<BaseLevelingProcessor.OnProcessedListener>()
         val processor = AccurateLevelingProcessor(location, listener)
 
         assertSame(location, processor.location)
@@ -88,7 +96,6 @@ class AccurateLevelingProcessorTest {
         assertNull(processor.processorListener)
 
         // set new value
-        val listener = mockk<BaseLevelingProcessor.OnProcessedListener>()
         processor.processorListener = listener
 
         // check

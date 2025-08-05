@@ -21,27 +21,47 @@ import androidx.test.core.app.ApplicationProvider
 import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.MedianAveragingFilter
-import com.irurueta.android.navigation.inertial.getPrivateProperty
-import com.irurueta.android.navigation.inertial.processors.*
 import com.irurueta.android.navigation.inertial.processors.attitude.BaseDoubleFusedGeomagneticAttitudeProcessor
 import com.irurueta.android.navigation.inertial.processors.attitude.BaseFusedGeomagneticAttitudeProcessor
 import com.irurueta.android.navigation.inertial.processors.pose.*
-import com.irurueta.android.navigation.inertial.setPrivateProperty
+import com.irurueta.android.testutils.getPrivateProperty
+import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.geometry.EuclideanTransformation3D
 import com.irurueta.navigation.frames.ECEFFrame
 import com.irurueta.navigation.frames.NEDVelocity
 import com.irurueta.navigation.inertial.wmm.WorldMagneticModel
 import com.irurueta.statistics.UniformRandomizer
 import io.mockk.*
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
 import org.junit.After
 import org.junit.Assert.*
+import org.junit.Ignore
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.util.*
 
+@Ignore("possible memory leak")
 @RunWith(RobolectricTestRunner::class)
 class EcefAbsolutePoseEstimator2Test {
+
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var poseAvailableListener: EcefAbsolutePoseEstimator2.OnPoseAvailableListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var accuracyChangedListener:
+            EcefAbsolutePoseEstimator2.OnAccuracyChangedListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var bufferFilledListener: EcefAbsolutePoseEstimator2.OnBufferFilledListener
+
+    @MockK
+    private lateinit var location: Location
 
     @After
     fun tearDown() {
@@ -95,9 +115,6 @@ class EcefAbsolutePoseEstimator2Test {
         val accelerometerAveragingFilter = MedianAveragingFilter()
         val worldMagneticModel = WorldMagneticModel()
         val timestamp = Date()
-        val poseAvailableListener = mockk<EcefAbsolutePoseEstimator2.OnPoseAvailableListener>()
-        val accuracyChangedListener = mockk<EcefAbsolutePoseEstimator2.OnAccuracyChangedListener>()
-        val bufferFilledListener = mockk<EcefAbsolutePoseEstimator2.OnBufferFilledListener>()
         val estimator = EcefAbsolutePoseEstimator2(
             context,
             initialLocation,
@@ -2619,8 +2636,6 @@ class EcefAbsolutePoseEstimator2Test {
     fun fusedSyncer_whenAccuracyChangedAndListener_notifies() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val initialLocation = getLocation()
-        val accuracyChangedListener =
-            mockk<EcefAbsolutePoseEstimator2.OnAccuracyChangedListener>(relaxUnitFun = true)
         val estimator = EcefAbsolutePoseEstimator2(
             context,
             initialLocation,
@@ -2666,8 +2681,6 @@ class EcefAbsolutePoseEstimator2Test {
     fun fusedSyncer_whenBufferFilledAndListener_notifies() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val initialLocation = getLocation()
-        val bufferFilledListener =
-            mockk<EcefAbsolutePoseEstimator2.OnBufferFilledListener>(relaxUnitFun = true)
         val estimator = EcefAbsolutePoseEstimator2(
             context,
             initialLocation,
@@ -2696,7 +2709,6 @@ class EcefAbsolutePoseEstimator2Test {
     fun fusedSyncer_whenSyncedMeasurementUseDoubleFusedAttitudeAndNotProcessed_makesNoAction() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val initialLocation = getLocation()
-        val poseAvailableListener = mockk<EcefAbsolutePoseEstimator2.OnPoseAvailableListener>()
         val estimator = EcefAbsolutePoseEstimator2(
             context,
             initialLocation,
@@ -2802,8 +2814,6 @@ class EcefAbsolutePoseEstimator2Test {
     fun fusedSyncer_whenSyncedMeasurementUseDoubleFusedAttitudeProcessedNotEstimatePoseTransformationAndListener_makesExpectedCalls() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val initialLocation = getLocation()
-        val poseAvailableListener =
-            mockk<EcefAbsolutePoseEstimator2.OnPoseAvailableListener>(relaxUnitFun = true)
         val estimator = EcefAbsolutePoseEstimator2(
             context,
             initialLocation,
@@ -2859,8 +2869,6 @@ class EcefAbsolutePoseEstimator2Test {
     fun fusedSyncer_whenSyncedMeasurementUseDoubleFusedAttitudeProcessedEstimatePoseTransformationAndListener_makesExpectedCalls() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val initialLocation = getLocation()
-        val poseAvailableListener =
-            mockk<EcefAbsolutePoseEstimator2.OnPoseAvailableListener>(relaxUnitFun = true)
         val estimator = EcefAbsolutePoseEstimator2(
             context,
             initialLocation,
@@ -2918,7 +2926,6 @@ class EcefAbsolutePoseEstimator2Test {
     fun fusedSyncer_whenSyncedMeasurementNotUseDoubleFusedAttitudeAndNotProcessed_makesNoAction() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val initialLocation = getLocation()
-        val poseAvailableListener = mockk<EcefAbsolutePoseEstimator2.OnPoseAvailableListener>()
         val estimator = EcefAbsolutePoseEstimator2(
             context,
             initialLocation,
@@ -3024,8 +3031,6 @@ class EcefAbsolutePoseEstimator2Test {
     fun fusedSyncer_whenSyncedMeasurementNotUseDoubleFusedAttitudeProcessedNotEstimatePoseTransformationAndListener_makesExpectedCalls() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val initialLocation = getLocation()
-        val poseAvailableListener =
-            mockk<EcefAbsolutePoseEstimator2.OnPoseAvailableListener>(relaxUnitFun = true)
         val estimator = EcefAbsolutePoseEstimator2(
             context,
             initialLocation,
@@ -3081,8 +3086,6 @@ class EcefAbsolutePoseEstimator2Test {
     fun fusedSyncer_whenSyncedMeasurementNotUseDoubleFusedAttitudeProcessedEstimatePoseTransformationAndListener_makesExpectedCalls() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val initialLocation = getLocation()
-        val poseAvailableListener =
-            mockk<EcefAbsolutePoseEstimator2.OnPoseAvailableListener>(relaxUnitFun = true)
         val estimator = EcefAbsolutePoseEstimator2(
             context,
             initialLocation,
@@ -3160,8 +3163,6 @@ class EcefAbsolutePoseEstimator2Test {
     fun accelerometerFusedSyncer_whenAccuracyChangedAndListener_notifies() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val initialLocation = getLocation()
-        val accuracyChangedListener =
-            mockk<EcefAbsolutePoseEstimator2.OnAccuracyChangedListener>(relaxUnitFun = true)
         val estimator = EcefAbsolutePoseEstimator2(
             context,
             initialLocation,
@@ -3211,8 +3212,6 @@ class EcefAbsolutePoseEstimator2Test {
     fun accelerometerFusedSyncer_whenBufferFilledAndListener_notifies() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val initialLocation = getLocation()
-        val bufferFilledListener =
-            mockk<EcefAbsolutePoseEstimator2.OnBufferFilledListener>(relaxUnitFun = true)
         val estimator = EcefAbsolutePoseEstimator2(
             context,
             initialLocation,
@@ -3241,7 +3240,6 @@ class EcefAbsolutePoseEstimator2Test {
     fun accelerometerFusedSyncer_whenSyncedMeasurementUseDoubleFusedAttitudeAndNotProcessed_makesNoAction() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val initialLocation = getLocation()
-        val poseAvailableListener = mockk<EcefAbsolutePoseEstimator2.OnPoseAvailableListener>()
         val estimator = EcefAbsolutePoseEstimator2(
             context,
             initialLocation,
@@ -3356,8 +3354,6 @@ class EcefAbsolutePoseEstimator2Test {
     fun accelerometerFusedSyncer_whenSyncedMeasurementUseDoubleFusedAttitudeProcessedNotEstimatePoseTransformationAndListener_makesExpectedCalls() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val initialLocation = getLocation()
-        val poseAvailableListener =
-            mockk<EcefAbsolutePoseEstimator2.OnPoseAvailableListener>(relaxUnitFun = true)
         val estimator = EcefAbsolutePoseEstimator2(
             context,
             initialLocation,
@@ -3416,8 +3412,6 @@ class EcefAbsolutePoseEstimator2Test {
     fun accelerometerFusedSyncer_whenSyncedMeasurementUseDoubleFusedAttitudeProcessedEstimatePoseTransformationAndListener_makesExpectedCalls() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val initialLocation = getLocation()
-        val poseAvailableListener =
-            mockk<EcefAbsolutePoseEstimator2.OnPoseAvailableListener>(relaxUnitFun = true)
         val estimator = EcefAbsolutePoseEstimator2(
             context,
             initialLocation,
@@ -3478,7 +3472,6 @@ class EcefAbsolutePoseEstimator2Test {
     fun accelerometerFusedSyncer_whenSyncedMeasurementNotUseDoubleFusedAttitudeAndNotProcessed_makesNoAction() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val initialLocation = getLocation()
-        val poseAvailableListener = mockk<EcefAbsolutePoseEstimator2.OnPoseAvailableListener>()
         val estimator = EcefAbsolutePoseEstimator2(
             context,
             initialLocation,
@@ -3590,8 +3583,6 @@ class EcefAbsolutePoseEstimator2Test {
     fun accelerometerFusedSyncer_whenSyncedMeasurementNotUseDoubleFusedAttitudeProcessedNotEstimatePoseTransformationAndListener_makesExpectedCalls() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val initialLocation = getLocation()
-        val poseAvailableListener =
-            mockk<EcefAbsolutePoseEstimator2.OnPoseAvailableListener>(relaxUnitFun = true)
         val estimator = EcefAbsolutePoseEstimator2(
             context,
             initialLocation,
@@ -3647,8 +3638,6 @@ class EcefAbsolutePoseEstimator2Test {
     fun accelerometerFusedSyncer_whenSyncedMeasurementNotUseDoubleFusedAttitudeProcessedEstimatePoseTransformationAndListener_makesExpectedCalls() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val initialLocation = getLocation()
-        val poseAvailableListener =
-            mockk<EcefAbsolutePoseEstimator2.OnPoseAvailableListener>(relaxUnitFun = true)
         val estimator = EcefAbsolutePoseEstimator2(
             context,
             initialLocation,
@@ -3726,8 +3715,6 @@ class EcefAbsolutePoseEstimator2Test {
     fun attitudeSyncer_whenAccuracyChangedAndListener_notifies() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val initialLocation = getLocation()
-        val accuracyChangedListener =
-            mockk<EcefAbsolutePoseEstimator2.OnAccuracyChangedListener>(relaxUnitFun = true)
         val estimator = EcefAbsolutePoseEstimator2(
             context,
             initialLocation,
@@ -3777,8 +3764,6 @@ class EcefAbsolutePoseEstimator2Test {
     fun attitudeSyncer_whenBufferFilledAndListener_notifies() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val initialLocation = getLocation()
-        val bufferFilledListener =
-            mockk<EcefAbsolutePoseEstimator2.OnBufferFilledListener>(relaxUnitFun = true)
         val estimator = EcefAbsolutePoseEstimator2(
             context,
             initialLocation,
@@ -3807,7 +3792,6 @@ class EcefAbsolutePoseEstimator2Test {
     fun attitudeSyncer_whenSyncedMeasurementAndNotProcessed_makesNoAction() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val initialLocation = getLocation()
-        val poseAvailableListener = mockk<EcefAbsolutePoseEstimator2.OnPoseAvailableListener>()
         val estimator = EcefAbsolutePoseEstimator2(
             context,
             initialLocation,
@@ -3912,8 +3896,6 @@ class EcefAbsolutePoseEstimator2Test {
     fun attitudeSyncer_whenSyncedMeasurementAttitudeProcessedNotEstimatePoseTransformationAndListener_makesExpectedCalls() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val initialLocation = getLocation()
-        val poseAvailableListener =
-            mockk<EcefAbsolutePoseEstimator2.OnPoseAvailableListener>(relaxUnitFun = true)
         val estimator = EcefAbsolutePoseEstimator2(
             context,
             initialLocation,
@@ -3969,8 +3951,6 @@ class EcefAbsolutePoseEstimator2Test {
     fun attitudeSyncer_whenSyncedMeasurementUseDoubleFusedAttitudeProcessedEstimatePoseTransformationAndListener_makesExpectedCalls() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val initialLocation = getLocation()
-        val poseAvailableListener =
-            mockk<EcefAbsolutePoseEstimator2.OnPoseAvailableListener>(relaxUnitFun = true)
         val estimator = EcefAbsolutePoseEstimator2(
             context,
             initialLocation,
@@ -4024,6 +4004,28 @@ class EcefAbsolutePoseEstimator2Test {
         }
     }
 
+    private fun getLocation(): Location {
+        val randomizer = UniformRandomizer()
+        val latitudeDegrees = randomizer.nextDouble(
+            MIN_LATITUDE_DEGREES,
+            MAX_LATITUDE_DEGREES
+        )
+        val longitudeDegrees = randomizer.nextDouble(
+            MIN_LONGITUDE_DEGREES,
+            MAX_LONGITUDE_DEGREES
+        )
+        val height = randomizer.nextDouble(
+            MIN_HEIGHT,
+            MAX_HEIGHT
+        )
+
+        every { location.latitude }.returns(latitudeDegrees)
+        every { location.longitude }.returns(longitudeDegrees)
+        every { location.altitude }.returns(height)
+
+        return location
+    }
+
     private companion object {
         const val MIN_LATITUDE_DEGREES = -90.0
         const val MAX_LATITUDE_DEGREES = 90.0
@@ -4035,28 +4037,5 @@ class EcefAbsolutePoseEstimator2Test {
         const val MAX_HEIGHT = 4000.0
 
         const val TIME_INTERVAL = 0.02
-
-        fun getLocation(): Location {
-            val randomizer = UniformRandomizer()
-            val latitudeDegrees = randomizer.nextDouble(
-                MIN_LATITUDE_DEGREES,
-                MAX_LATITUDE_DEGREES
-            )
-            val longitudeDegrees = randomizer.nextDouble(
-                MIN_LONGITUDE_DEGREES,
-                MAX_LONGITUDE_DEGREES
-            )
-            val height = randomizer.nextDouble(
-                MIN_HEIGHT,
-                MAX_HEIGHT
-            )
-
-            val location = mockk<Location>()
-            every { location.latitude }.returns(latitudeDegrees)
-            every { location.longitude }.returns(longitudeDegrees)
-            every { location.altitude }.returns(height)
-
-            return location
-        }
     }
 }

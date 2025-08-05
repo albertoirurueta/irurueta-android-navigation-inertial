@@ -99,12 +99,7 @@ public class DoubleExponentialRuleQuadrature extends Quadrature {
     public DoubleExponentialRuleQuadrature(
             final SingleDimensionFunctionEvaluatorListener listener,
             final double a, final double b, final double hmax) {
-        this(new DoubleExponentialSingleDimensionFunctionEvaluatorListener() {
-            @Override
-            public double evaluate(double x, double delta) throws EvaluationException {
-                return listener.evaluate(x);
-            }
-        }, a, b, hmax);
+        this((x, delta) -> listener.evaluate(x), a, b, hmax);
     }
 
     /**

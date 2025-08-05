@@ -230,9 +230,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(com.irurueta.android.navigation.inertial.app.R.layout.activity_main)
 
-        gravityLevelingButton = findViewById(R.id.gravity_leveling_button)
+        gravityLevelingButton =
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.gravity_leveling_button)
         gravityLevelingButton?.setOnClickListener {
             val intent = Intent(this@MainActivity, LevelingEstimatorActivity::class.java)
             intent.putExtra(LevelingEstimatorActivity.USE_ACCELEROMETER, false)
@@ -240,7 +241,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         accelerometerLowPassFilterLevelingButton =
-            findViewById(R.id.accelerometer_low_pass_filter_leveling_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.accelerometer_low_pass_filter_leveling_button)
         accelerometerLowPassFilterLevelingButton?.setOnClickListener {
             val intent = Intent(this@MainActivity, LevelingEstimatorActivity::class.java)
             intent.putExtra(LevelingEstimatorActivity.USE_ACCELEROMETER, true)
@@ -256,7 +257,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         accelerometerMeanFilterLevelingButton =
-            findViewById(R.id.accelerometer_mean_filter_leveling_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.accelerometer_mean_filter_leveling_button)
         accelerometerMeanFilterLevelingButton?.setOnClickListener {
             val intent = Intent(this@MainActivity, LevelingEstimatorActivity::class.java)
             intent.putExtra(LevelingEstimatorActivity.USE_ACCELEROMETER, true)
@@ -272,7 +273,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         accelerometerMedianFilterLevelingButton =
-            findViewById(R.id.accelerometer_median_filter_leveling_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.accelerometer_median_filter_leveling_button)
         accelerometerMedianFilterLevelingButton?.setOnClickListener {
             val intent = Intent(this@MainActivity, LevelingEstimatorActivity::class.java)
             intent.putExtra(LevelingEstimatorActivity.USE_ACCELEROMETER, true)
@@ -288,7 +289,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         accelerometerUncalibratedLowPassFilterLevelingButton =
-            findViewById(R.id.accelerometer_uncalibrated_low_pass_filter_leveling_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.accelerometer_uncalibrated_low_pass_filter_leveling_button)
         accelerometerUncalibratedLowPassFilterLevelingButton?.setOnClickListener {
             val intent = Intent(this@MainActivity, LevelingEstimatorActivity::class.java)
             intent.putExtra(LevelingEstimatorActivity.USE_ACCELEROMETER, true)
@@ -304,7 +305,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         accelerometerUncalibratedMeanFilterLevelingButton =
-            findViewById(R.id.accelerometer_uncalibrated_mean_filter_leveling_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.accelerometer_uncalibrated_mean_filter_leveling_button)
         accelerometerUncalibratedMeanFilterLevelingButton?.setOnClickListener {
             val intent = Intent(this@MainActivity, LevelingEstimatorActivity::class.java)
             intent.putExtra(LevelingEstimatorActivity.USE_ACCELEROMETER, true)
@@ -320,7 +321,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         accelerometerUncalibratedMedianFilterLevelingButton =
-            findViewById(R.id.accelerometer_uncalibrated_median_filter_leveling_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.accelerometer_uncalibrated_median_filter_leveling_button)
         accelerometerUncalibratedMedianFilterLevelingButton?.setOnClickListener {
             val intent = Intent(this@MainActivity, LevelingEstimatorActivity::class.java)
             intent.putExtra(LevelingEstimatorActivity.USE_ACCELEROMETER, true)
@@ -335,7 +336,8 @@ class MainActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
-        gravityAccurateLevelingButton = findViewById(R.id.gravity_accurate_leveling_button)
+        gravityAccurateLevelingButton =
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.gravity_accurate_leveling_button)
         gravityAccurateLevelingButton?.setOnClickListener {
             val intent = Intent(this@MainActivity, AccurateLevelingEstimatorActivity::class.java)
             intent.putExtra(AccurateLevelingEstimatorActivity.USE_ACCELEROMETER, false)
@@ -343,7 +345,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         accelerometerLowPassFilterAccurateLevelingButton =
-            findViewById(R.id.accelerometer_low_pass_filter_accurate_leveling_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.accelerometer_low_pass_filter_accurate_leveling_button)
         accelerometerLowPassFilterAccurateLevelingButton?.setOnClickListener {
             val intent = Intent(this@MainActivity, AccurateLevelingEstimatorActivity::class.java)
             intent.putExtra(AccurateLevelingEstimatorActivity.USE_ACCELEROMETER, true)
@@ -359,7 +361,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         accelerometerMeanFilterAccurateLevelingButton =
-            findViewById(R.id.accelerometer_mean_filter_accurate_leveling_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.accelerometer_mean_filter_accurate_leveling_button)
         accelerometerMeanFilterAccurateLevelingButton?.setOnClickListener {
             val intent = Intent(this@MainActivity, AccurateLevelingEstimatorActivity::class.java)
             intent.putExtra(AccurateLevelingEstimatorActivity.USE_ACCELEROMETER, true)
@@ -375,7 +377,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         accelerometerMedianFilterAccurateLevelingButton =
-            findViewById(R.id.accelerometer_median_filter_accurate_leveling_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.accelerometer_median_filter_accurate_leveling_button)
         accelerometerMedianFilterAccurateLevelingButton?.setOnClickListener {
             val intent = Intent(this@MainActivity, AccurateLevelingEstimatorActivity::class.java)
             intent.putExtra(AccurateLevelingEstimatorActivity.USE_ACCELEROMETER, true)
@@ -391,7 +393,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         accelerometerUncalibratedLowPassFilterAccurateLevelingButton =
-            findViewById(R.id.accelerometer_uncalibrated_low_pass_filter_accurate_leveling_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.accelerometer_uncalibrated_low_pass_filter_accurate_leveling_button)
         accelerometerUncalibratedLowPassFilterAccurateLevelingButton?.setOnClickListener {
             val intent = Intent(this@MainActivity, AccurateLevelingEstimatorActivity::class.java)
             intent.putExtra(AccurateLevelingEstimatorActivity.USE_ACCELEROMETER, true)
@@ -407,7 +409,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         accelerometerUncalibratedMeanFilterAccurateLevelingButton =
-            findViewById(R.id.accelerometer_uncalibrated_mean_filter_accurate_leveling_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.accelerometer_uncalibrated_mean_filter_accurate_leveling_button)
         accelerometerUncalibratedMeanFilterAccurateLevelingButton?.setOnClickListener {
             val intent = Intent(this@MainActivity, AccurateLevelingEstimatorActivity::class.java)
             intent.putExtra(AccurateLevelingEstimatorActivity.USE_ACCELEROMETER, true)
@@ -423,7 +425,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         accelerometerUncalibratedMedianFilterAccurateLevelingButton =
-            findViewById(R.id.accelerometer_uncalibrated_median_filter_accurate_leveling_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.accelerometer_uncalibrated_median_filter_accurate_leveling_button)
         accelerometerUncalibratedMedianFilterAccurateLevelingButton?.setOnClickListener {
             val intent = Intent(this@MainActivity, AccurateLevelingEstimatorActivity::class.java)
             intent.putExtra(AccurateLevelingEstimatorActivity.USE_ACCELEROMETER, true)
@@ -438,7 +440,8 @@ class MainActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
-        relativeGyroscopeAttitudeButton = findViewById(R.id.relative_gyroscope_attitude_button)
+        relativeGyroscopeAttitudeButton =
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.relative_gyroscope_attitude_button)
         relativeGyroscopeAttitudeButton?.setOnClickListener {
             val intent =
                 Intent(this@MainActivity, RelativeGyroscopeAttitudeEstimatorActivity::class.java)
@@ -450,7 +453,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         relativeUncalibratedGyroscopeAttitudeButton =
-            findViewById(R.id.relative_uncalibrated_gyroscope_attitude_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.relative_uncalibrated_gyroscope_attitude_button)
         relativeUncalibratedGyroscopeAttitudeButton?.setOnClickListener {
             val intent =
                 Intent(this@MainActivity, RelativeGyroscopeAttitudeEstimatorActivity::class.java)
@@ -462,7 +465,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         accurateRelativeGyroscopeAttitudeButton =
-            findViewById(R.id.accurate_relative_gyroscope_attitude_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.accurate_relative_gyroscope_attitude_button)
         accurateRelativeGyroscopeAttitudeButton?.setOnClickListener {
             val intent =
                 Intent(
@@ -477,7 +480,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         accurateRelativeUncalibratedGyroscopeAttitudeButton =
-            findViewById(R.id.accurate_relative_uncalibrated_gyroscope_attitude_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.accurate_relative_uncalibrated_gyroscope_attitude_button)
         accurateRelativeUncalibratedGyroscopeAttitudeButton?.setOnClickListener {
             val intent =
                 Intent(
@@ -492,7 +495,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         leveledRelativeAttitudeEstimatorGravityLevelingButton =
-            findViewById(R.id.leveled_relative_attitude_estimator_gravity_leveling_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.leveled_relative_attitude_estimator_gravity_leveling_button)
         leveledRelativeAttitudeEstimatorGravityLevelingButton?.setOnClickListener {
             val intent =
                 Intent(this@MainActivity, LeveledRelativeAttitudeEstimatorActivity::class.java)
@@ -516,7 +519,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         leveledRelativeAttitudeEstimatorAccelerometerLowPassFilterLevelingButton =
-            findViewById(R.id.leveled_relative_attitude_estimator_accelerometer_low_pass_filter_leveling_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.leveled_relative_attitude_estimator_accelerometer_low_pass_filter_leveling_button)
         leveledRelativeAttitudeEstimatorAccelerometerLowPassFilterLevelingButton?.setOnClickListener {
             val intent =
                 Intent(this@MainActivity, LeveledRelativeAttitudeEstimatorActivity::class.java)
@@ -548,7 +551,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         leveledRelativeAttitudeEstimatorAccelerometerMeanFilterLevelingButton =
-            findViewById(R.id.leveled_relative_attitude_estimator_accelerometer_mean_filter_leveling_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.leveled_relative_attitude_estimator_accelerometer_mean_filter_leveling_button)
         leveledRelativeAttitudeEstimatorAccelerometerMeanFilterLevelingButton?.setOnClickListener {
             val intent =
                 Intent(this@MainActivity, LeveledRelativeAttitudeEstimatorActivity::class.java)
@@ -580,7 +583,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         leveledRelativeAttitudeEstimatorAccelerometerMedianFilterLevelingButton =
-            findViewById(R.id.leveled_relative_attitude_estimator_accelerometer_median_filter_leveling_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.leveled_relative_attitude_estimator_accelerometer_median_filter_leveling_button)
         leveledRelativeAttitudeEstimatorAccelerometerMedianFilterLevelingButton?.setOnClickListener {
             val intent =
                 Intent(this@MainActivity, LeveledRelativeAttitudeEstimatorActivity::class.java)
@@ -612,7 +615,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         leveledRelativeAttitudeEstimatorAccelerometerUncalibratedLowPassFilterLevelingButton =
-            findViewById(R.id.leveled_relative_attitude_estimator_accelerometer_uncalibrated_low_pass_filter_leveling_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.leveled_relative_attitude_estimator_accelerometer_uncalibrated_low_pass_filter_leveling_button)
         leveledRelativeAttitudeEstimatorAccelerometerUncalibratedLowPassFilterLevelingButton?.setOnClickListener {
             val intent =
                 Intent(this@MainActivity, LeveledRelativeAttitudeEstimatorActivity::class.java)
@@ -644,7 +647,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         leveledRelativeAttitudeEstimatorAccelerometerUncalibratedMeanFilterLevelingButton =
-            findViewById(R.id.leveled_relative_attitude_estimator_accelerometer_uncalibrated_mean_filter_leveling_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.leveled_relative_attitude_estimator_accelerometer_uncalibrated_mean_filter_leveling_button)
         leveledRelativeAttitudeEstimatorAccelerometerUncalibratedMeanFilterLevelingButton?.setOnClickListener {
             val intent =
                 Intent(this@MainActivity, LeveledRelativeAttitudeEstimatorActivity::class.java)
@@ -676,7 +679,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         leveledRelativeAttitudeEstimatorAccelerometerUncalibratedMedianFilterLevelingButton =
-            findViewById(R.id.leveled_relative_attitude_estimator_accelerometer_uncalibrated_median_filter_leveling_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.leveled_relative_attitude_estimator_accelerometer_uncalibrated_median_filter_leveling_button)
         leveledRelativeAttitudeEstimatorAccelerometerUncalibratedMedianFilterLevelingButton?.setOnClickListener {
             val intent =
                 Intent(this@MainActivity, LeveledRelativeAttitudeEstimatorActivity::class.java)
@@ -708,7 +711,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         leveledRelativeAttitudeEstimatorUncalibratedGyroscopeButton =
-            findViewById(R.id.leveled_relative_attitude_estimator_uncalibrated_gyroscope_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.leveled_relative_attitude_estimator_uncalibrated_gyroscope_button)
         leveledRelativeAttitudeEstimatorUncalibratedGyroscopeButton?.setOnClickListener {
             val intent =
                 Intent(this@MainActivity, LeveledRelativeAttitudeEstimatorActivity::class.java)
@@ -728,7 +731,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         leveledRelativeAttitudeEstimatorGravityAccurateLevelingButton =
-            findViewById(R.id.leveled_relative_attitude_estimator_gravity_accurate_leveling_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.leveled_relative_attitude_estimator_gravity_accurate_leveling_button)
         leveledRelativeAttitudeEstimatorGravityAccurateLevelingButton?.setOnClickListener {
             val intent =
                 Intent(this@MainActivity, LeveledRelativeAttitudeEstimatorActivity::class.java)
@@ -752,7 +755,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         leveledRelativeAttitudeEstimatorAccelerometerLowPassFilterAccurateLevelingButton =
-            findViewById(R.id.leveled_relative_attitude_estimator_accelerometer_low_pass_filter_accurate_leveling_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.leveled_relative_attitude_estimator_accelerometer_low_pass_filter_accurate_leveling_button)
         leveledRelativeAttitudeEstimatorAccelerometerLowPassFilterAccurateLevelingButton?.setOnClickListener {
             val intent =
                 Intent(this@MainActivity, LeveledRelativeAttitudeEstimatorActivity::class.java)
@@ -784,7 +787,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         leveledRelativeAttitudeEstimatorAccelerometerMeanFilterAccurateLevelingButton =
-            findViewById(R.id.leveled_relative_attitude_estimator_accelerometer_mean_filter_accurate_leveling_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.leveled_relative_attitude_estimator_accelerometer_mean_filter_accurate_leveling_button)
         leveledRelativeAttitudeEstimatorAccelerometerMeanFilterAccurateLevelingButton?.setOnClickListener {
             val intent =
                 Intent(this@MainActivity, LeveledRelativeAttitudeEstimatorActivity::class.java)
@@ -816,7 +819,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         leveledRelativeAttitudeEstimatorAccelerometerMedianFilterAccurateLevelingButton =
-            findViewById(R.id.leveled_relative_attitude_estimator_accelerometer_median_filter_accurate_leveling_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.leveled_relative_attitude_estimator_accelerometer_median_filter_accurate_leveling_button)
         leveledRelativeAttitudeEstimatorAccelerometerMedianFilterAccurateLevelingButton?.setOnClickListener {
             val intent =
                 Intent(this@MainActivity, LeveledRelativeAttitudeEstimatorActivity::class.java)
@@ -848,7 +851,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         leveledRelativeAttitudeEstimatorAccelerometerUncalibratedLowPassFilterAccurateLevelingButton =
-            findViewById(R.id.leveled_relative_attitude_estimator_accelerometer_uncalibrated_low_pass_filter_accurate_leveling_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.leveled_relative_attitude_estimator_accelerometer_uncalibrated_low_pass_filter_accurate_leveling_button)
         leveledRelativeAttitudeEstimatorAccelerometerUncalibratedLowPassFilterAccurateLevelingButton?.setOnClickListener {
             val intent =
                 Intent(this@MainActivity, LeveledRelativeAttitudeEstimatorActivity::class.java)
@@ -880,7 +883,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         leveledRelativeAttitudeEstimatorAccelerometerUncalibratedMeanFilterAccurateLevelingButton =
-            findViewById(R.id.leveled_relative_attitude_estimator_accelerometer_uncalibrated_mean_filter_accurate_leveling_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.leveled_relative_attitude_estimator_accelerometer_uncalibrated_mean_filter_accurate_leveling_button)
         leveledRelativeAttitudeEstimatorAccelerometerUncalibratedMeanFilterAccurateLevelingButton?.setOnClickListener {
             val intent =
                 Intent(this@MainActivity, LeveledRelativeAttitudeEstimatorActivity::class.java)
@@ -912,7 +915,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         leveledRelativeAttitudeEstimatorAccelerometerUncalibratedMedianFilterAccurateLevelingButton =
-            findViewById(R.id.leveled_relative_attitude_estimator_accelerometer_uncalibrated_median_filter_accurate_leveling_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.leveled_relative_attitude_estimator_accelerometer_uncalibrated_median_filter_accurate_leveling_button)
         leveledRelativeAttitudeEstimatorAccelerometerUncalibratedMedianFilterAccurateLevelingButton?.setOnClickListener {
             val intent =
                 Intent(this@MainActivity, LeveledRelativeAttitudeEstimatorActivity::class.java)
@@ -944,7 +947,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         leveledRelativeAttitudeEstimatorUncalibratedGyroscopeAccurateLevelingButton =
-            findViewById(R.id.leveled_relative_attitude_estimator_uncalibrated_gyroscope_accurate_leveling_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.leveled_relative_attitude_estimator_uncalibrated_gyroscope_accurate_leveling_button)
         leveledRelativeAttitudeEstimatorUncalibratedGyroscopeAccurateLevelingButton?.setOnClickListener {
             val intent =
                 Intent(this@MainActivity, LeveledRelativeAttitudeEstimatorActivity::class.java)
@@ -964,7 +967,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         leveledRelativeAttitudeEstimatorGravityAccurateAttitudeButton =
-            findViewById(R.id.leveled_relative_attitude_estimator_gravity_accurate_attitude_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.leveled_relative_attitude_estimator_gravity_accurate_attitude_button)
         leveledRelativeAttitudeEstimatorGravityAccurateAttitudeButton?.setOnClickListener {
             val intent =
                 Intent(this@MainActivity, LeveledRelativeAttitudeEstimatorActivity::class.java)
@@ -988,7 +991,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         leveledRelativeAttitudeEstimatorAccelerometerLowPassFilterAccurateAttitudeButton =
-            findViewById(R.id.leveled_relative_attitude_estimator_accelerometer_low_pass_filter_accurate_attitude_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.leveled_relative_attitude_estimator_accelerometer_low_pass_filter_accurate_attitude_button)
         leveledRelativeAttitudeEstimatorAccelerometerLowPassFilterAccurateAttitudeButton?.setOnClickListener {
             val intent =
                 Intent(this@MainActivity, LeveledRelativeAttitudeEstimatorActivity::class.java)
@@ -1020,7 +1023,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         leveledRelativeAttitudeEstimatorAccelerometerMeanFilterAccurateAttitudeButton =
-            findViewById(R.id.leveled_relative_attitude_estimator_accelerometer_mean_filter_accurate_attitude_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.leveled_relative_attitude_estimator_accelerometer_mean_filter_accurate_attitude_button)
         leveledRelativeAttitudeEstimatorAccelerometerMeanFilterAccurateAttitudeButton?.setOnClickListener {
             val intent =
                 Intent(this@MainActivity, LeveledRelativeAttitudeEstimatorActivity::class.java)
@@ -1052,7 +1055,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         leveledRelativeAttitudeEstimatorAccelerometerMedianFilterAccurateAttitudeButton =
-            findViewById(R.id.leveled_relative_attitude_estimator_accelerometer_median_filter_accurate_attitude_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.leveled_relative_attitude_estimator_accelerometer_median_filter_accurate_attitude_button)
         leveledRelativeAttitudeEstimatorAccelerometerMedianFilterAccurateAttitudeButton?.setOnClickListener {
             val intent =
                 Intent(this@MainActivity, LeveledRelativeAttitudeEstimatorActivity::class.java)
@@ -1084,7 +1087,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         leveledRelativeAttitudeEstimatorAccelerometerUncalibratedLowPassFilterAccurateAttitudeButton =
-            findViewById(R.id.leveled_relative_attitude_estimator_accelerometer_uncalibrated_low_pass_filter_accurate_attitude_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.leveled_relative_attitude_estimator_accelerometer_uncalibrated_low_pass_filter_accurate_attitude_button)
         leveledRelativeAttitudeEstimatorAccelerometerUncalibratedLowPassFilterAccurateAttitudeButton?.setOnClickListener {
             val intent =
                 Intent(this@MainActivity, LeveledRelativeAttitudeEstimatorActivity::class.java)
@@ -1116,7 +1119,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         leveledRelativeAttitudeEstimatorAccelerometerUncalibratedMeanFilterAccurateAttitudeButton =
-            findViewById(R.id.leveled_relative_attitude_estimator_accelerometer_uncalibrated_mean_filter_accurate_attitude_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.leveled_relative_attitude_estimator_accelerometer_uncalibrated_mean_filter_accurate_attitude_button)
         leveledRelativeAttitudeEstimatorAccelerometerUncalibratedMeanFilterAccurateAttitudeButton?.setOnClickListener {
             val intent =
                 Intent(this@MainActivity, LeveledRelativeAttitudeEstimatorActivity::class.java)
@@ -1148,7 +1151,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         leveledRelativeAttitudeEstimatorAccelerometerUncalibratedMedianFilterAccurateAttitudeButton =
-            findViewById(R.id.leveled_relative_attitude_estimator_accelerometer_uncalibrated_median_filter_accurate_attitude_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.leveled_relative_attitude_estimator_accelerometer_uncalibrated_median_filter_accurate_attitude_button)
         leveledRelativeAttitudeEstimatorAccelerometerUncalibratedMedianFilterAccurateAttitudeButton?.setOnClickListener {
             val intent =
                 Intent(this@MainActivity, LeveledRelativeAttitudeEstimatorActivity::class.java)
@@ -1180,7 +1183,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         leveledRelativeAttitudeEstimatorUncalibratedGyroscopeAccurateAttitudeButton =
-            findViewById(R.id.leveled_relative_attitude_estimator_uncalibrated_gyroscope_accurate_attitude_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.leveled_relative_attitude_estimator_uncalibrated_gyroscope_accurate_attitude_button)
         leveledRelativeAttitudeEstimatorUncalibratedGyroscopeAccurateAttitudeButton?.setOnClickListener {
             val intent =
                 Intent(this@MainActivity, LeveledRelativeAttitudeEstimatorActivity::class.java)
@@ -1200,7 +1203,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         geomagneticAttitudeEstimatorButton =
-            findViewById(R.id.geomagnetic_attitude_estimator_gravity_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.geomagnetic_attitude_estimator_gravity_button)
         geomagneticAttitudeEstimatorButton?.setOnClickListener {
             val intent = Intent(this@MainActivity, GeomagneticAttitudeEstimatorActivity::class.java)
             intent.putExtra(GeomagneticAttitudeEstimatorActivity.USE_ACCELEROMETER, false)
@@ -1212,7 +1215,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         geomagneticAttitudeEstimatorAccelerometerLowPassFilterButton =
-            findViewById(R.id.geomagnetic_attitude_estimator_accelerometer_low_pass_filter_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.geomagnetic_attitude_estimator_accelerometer_low_pass_filter_button)
         geomagneticAttitudeEstimatorAccelerometerLowPassFilterButton?.setOnClickListener {
             val intent = Intent(this@MainActivity, GeomagneticAttitudeEstimatorActivity::class.java)
             intent.putExtra(GeomagneticAttitudeEstimatorActivity.USE_ACCELEROMETER, true)
@@ -1232,7 +1235,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         geomagneticAttitudeEstimatorAccelerometerMeanFilterButton =
-            findViewById(R.id.geomagnetic_attitude_estimator_accelerometer_mean_filter_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.geomagnetic_attitude_estimator_accelerometer_mean_filter_button)
         geomagneticAttitudeEstimatorAccelerometerMeanFilterButton?.setOnClickListener {
             val intent = Intent(this@MainActivity, GeomagneticAttitudeEstimatorActivity::class.java)
             intent.putExtra(GeomagneticAttitudeEstimatorActivity.USE_ACCELEROMETER, true)
@@ -1252,7 +1255,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         geomagneticAttitudeEstimatorAccelerometerMedianFilterButton =
-            findViewById(R.id.geomagnetic_attitude_estimator_accelerometer_median_filter_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.geomagnetic_attitude_estimator_accelerometer_median_filter_button)
         geomagneticAttitudeEstimatorAccelerometerMedianFilterButton?.setOnClickListener {
             val intent = Intent(this@MainActivity, GeomagneticAttitudeEstimatorActivity::class.java)
             intent.putExtra(GeomagneticAttitudeEstimatorActivity.USE_ACCELEROMETER, true)
@@ -1272,7 +1275,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         geomagneticAttitudeEstimatorAccelerometerUncalibratedLowPassButton =
-            findViewById(R.id.geomagnetic_attitude_estimator_accelerometer_uncalibrated_low_pass_filter_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.geomagnetic_attitude_estimator_accelerometer_uncalibrated_low_pass_filter_button)
         geomagneticAttitudeEstimatorAccelerometerUncalibratedLowPassButton?.setOnClickListener {
             val intent = Intent(this@MainActivity, GeomagneticAttitudeEstimatorActivity::class.java)
             intent.putExtra(GeomagneticAttitudeEstimatorActivity.USE_ACCELEROMETER, true)
@@ -1292,7 +1295,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         geomagneticAttitudeEstimatorAccelerometerUncalibratedMeanFilterButton =
-            findViewById(R.id.geomagnetic_attitude_estimator_accelerometer_uncalibrated_mean_filter_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.geomagnetic_attitude_estimator_accelerometer_uncalibrated_mean_filter_button)
         geomagneticAttitudeEstimatorAccelerometerUncalibratedMeanFilterButton?.setOnClickListener {
             val intent = Intent(this@MainActivity, GeomagneticAttitudeEstimatorActivity::class.java)
             intent.putExtra(GeomagneticAttitudeEstimatorActivity.USE_ACCELEROMETER, true)
@@ -1312,7 +1315,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         geomagneticAttitudeEstimatorAccelerometerUncalibratedMedianFilterButton =
-            findViewById(R.id.geomagnetic_attitude_estimator_accelerometer_uncalibrated_median_filter_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.geomagnetic_attitude_estimator_accelerometer_uncalibrated_median_filter_button)
         geomagneticAttitudeEstimatorAccelerometerUncalibratedMedianFilterButton?.setOnClickListener {
             val intent = Intent(this@MainActivity, GeomagneticAttitudeEstimatorActivity::class.java)
             intent.putExtra(GeomagneticAttitudeEstimatorActivity.USE_ACCELEROMETER, true)
@@ -1332,7 +1335,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         geomagneticAttitudeEstimatorUncalibratedMagnetometerButton =
-            findViewById(R.id.geomagnetic_attitude_estimator_uncalibrated_magnetometer_accurate_attitude_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.geomagnetic_attitude_estimator_uncalibrated_magnetometer_accurate_attitude_button)
         geomagneticAttitudeEstimatorUncalibratedMagnetometerButton?.setOnClickListener {
             val intent = Intent(this@MainActivity, GeomagneticAttitudeEstimatorActivity::class.java)
             intent.putExtra(GeomagneticAttitudeEstimatorActivity.USE_ACCELEROMETER, true)
@@ -1352,7 +1355,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         geomagneticAttitudeEstimatorWorldMagneticModelButton =
-            findViewById(R.id.geomagnetic_attitude_estimator_world_magnetic_model_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.geomagnetic_attitude_estimator_world_magnetic_model_button)
         geomagneticAttitudeEstimatorWorldMagneticModelButton?.setOnClickListener {
             val intent = Intent(this@MainActivity, GeomagneticAttitudeEstimatorActivity::class.java)
             intent.putExtra(GeomagneticAttitudeEstimatorActivity.USE_ACCELEROMETER, true)
@@ -1373,7 +1376,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         fusedGeomagneticAttitudeEstimatorButton =
-            findViewById(R.id.fused_geomagnetic_attitude_estimator_gravity_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.fused_geomagnetic_attitude_estimator_gravity_button)
         fusedGeomagneticAttitudeEstimatorButton?.setOnClickListener {
             val intent =
                 Intent(this@MainActivity, FusedGeomagneticAttitudeEstimatorActivity::class.java)
@@ -1390,7 +1393,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         fusedGeomagneticAttitudeEstimatorAccelerometerLowPassFilterButton =
-            findViewById(R.id.fused_geomagnetic_attitude_estimator_accelerometer_low_pass_filter_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.fused_geomagnetic_attitude_estimator_accelerometer_low_pass_filter_button)
         fusedGeomagneticAttitudeEstimatorAccelerometerLowPassFilterButton?.setOnClickListener {
             val intent =
                 Intent(this@MainActivity, FusedGeomagneticAttitudeEstimatorActivity::class.java)
@@ -1411,7 +1414,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         fusedGeomagneticAttitudeEstimatorAccelerometerMeanFilterButton =
-            findViewById(R.id.fused_geomagnetic_attitude_estimator_accelerometer_mean_filter_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.fused_geomagnetic_attitude_estimator_accelerometer_mean_filter_button)
         fusedGeomagneticAttitudeEstimatorAccelerometerMeanFilterButton?.setOnClickListener {
             val intent =
                 Intent(this@MainActivity, FusedGeomagneticAttitudeEstimatorActivity::class.java)
@@ -1432,7 +1435,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         fusedGeomagneticAttitudeEstimatorAccelerometerMedianFilterButton =
-            findViewById(R.id.fused_geomagnetic_attitude_estimator_accelerometer_median_filter_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.fused_geomagnetic_attitude_estimator_accelerometer_median_filter_button)
         fusedGeomagneticAttitudeEstimatorAccelerometerMedianFilterButton?.setOnClickListener {
             val intent =
                 Intent(this@MainActivity, FusedGeomagneticAttitudeEstimatorActivity::class.java)
@@ -1453,7 +1456,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         fusedGeomagneticAttitudeEstimatorAccelerometerUncalibratedLowPassButton =
-            findViewById(R.id.fused_geomagnetic_attitude_estimator_accelerometer_uncalibrated_low_pass_filter_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.fused_geomagnetic_attitude_estimator_accelerometer_uncalibrated_low_pass_filter_button)
         fusedGeomagneticAttitudeEstimatorAccelerometerUncalibratedLowPassButton?.setOnClickListener {
             val intent =
                 Intent(this@MainActivity, FusedGeomagneticAttitudeEstimatorActivity::class.java)
@@ -1474,7 +1477,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         fusedGeomagneticAttitudeEstimatorAccelerometerUncalibratedMeanFilterButton =
-            findViewById(R.id.fused_geomagnetic_attitude_estimator_accelerometer_uncalibrated_mean_filter_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.fused_geomagnetic_attitude_estimator_accelerometer_uncalibrated_mean_filter_button)
         fusedGeomagneticAttitudeEstimatorAccelerometerUncalibratedMeanFilterButton?.setOnClickListener {
             val intent =
                 Intent(this@MainActivity, FusedGeomagneticAttitudeEstimatorActivity::class.java)
@@ -1495,7 +1498,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         fusedGeomagneticAttitudeEstimatorAccelerometerUncalibratedMedianFilterButton =
-            findViewById(R.id.fused_geomagnetic_attitude_estimator_accelerometer_uncalibrated_median_filter_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.fused_geomagnetic_attitude_estimator_accelerometer_uncalibrated_median_filter_button)
         fusedGeomagneticAttitudeEstimatorAccelerometerUncalibratedMedianFilterButton?.setOnClickListener {
             val intent =
                 Intent(this@MainActivity, FusedGeomagneticAttitudeEstimatorActivity::class.java)
@@ -1516,7 +1519,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         fusedGeomagneticAttitudeEstimatorUncalibratedMagnetometerButton =
-            findViewById(R.id.fused_geomagnetic_attitude_estimator_uncalibrated_magnetometer_accurate_attitude_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.fused_geomagnetic_attitude_estimator_uncalibrated_magnetometer_accurate_attitude_button)
         fusedGeomagneticAttitudeEstimatorUncalibratedMagnetometerButton?.setOnClickListener {
             val intent =
                 Intent(this@MainActivity, FusedGeomagneticAttitudeEstimatorActivity::class.java)
@@ -1537,7 +1540,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         fusedGeomagneticAttitudeEstimatorUncalibratedGyroscopeButton =
-            findViewById(R.id.fused_geomagnetic_attitude_estimator_uncalibrated_gyroscope_accurate_attitude_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.fused_geomagnetic_attitude_estimator_uncalibrated_gyroscope_accurate_attitude_button)
         fusedGeomagneticAttitudeEstimatorUncalibratedGyroscopeButton?.setOnClickListener {
             val intent =
                 Intent(this@MainActivity, FusedGeomagneticAttitudeEstimatorActivity::class.java)
@@ -1562,7 +1565,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         fusedGeomagneticAttitudeEstimatorWorldMagneticModelButton =
-            findViewById(R.id.fused_geomagnetic_attitude_estimator_world_magnetic_model_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.fused_geomagnetic_attitude_estimator_world_magnetic_model_button)
         fusedGeomagneticAttitudeEstimatorWorldMagneticModelButton?.setOnClickListener {
             val intent =
                 Intent(this@MainActivity, FusedGeomagneticAttitudeEstimatorActivity::class.java)
@@ -1587,7 +1590,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         doubleFusedGeomagneticAttitudeEstimatorButton =
-            findViewById(R.id.double_fused_geomagnetic_attitude_estimator_gravity_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.double_fused_geomagnetic_attitude_estimator_gravity_button)
         doubleFusedGeomagneticAttitudeEstimatorButton?.setOnClickListener {
             val intent =
                 Intent(
@@ -1610,7 +1613,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         doubleFusedGeomagneticAttitudeEstimatorAccelerometerLowPassFilterButton =
-            findViewById(R.id.double_fused_geomagnetic_attitude_estimator_accelerometer_low_pass_filter_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.double_fused_geomagnetic_attitude_estimator_accelerometer_low_pass_filter_button)
         doubleFusedGeomagneticAttitudeEstimatorAccelerometerLowPassFilterButton?.setOnClickListener {
             val intent =
                 Intent(
@@ -1634,7 +1637,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         doubleFusedGeomagneticAttitudeEstimatorAccelerometerMeanFilterButton =
-            findViewById(R.id.double_fused_geomagnetic_attitude_estimator_accelerometer_mean_filter_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.double_fused_geomagnetic_attitude_estimator_accelerometer_mean_filter_button)
         doubleFusedGeomagneticAttitudeEstimatorAccelerometerMeanFilterButton?.setOnClickListener {
             val intent =
                 Intent(
@@ -1658,7 +1661,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         doubleFusedGeomagneticAttitudeEstimatorAccelerometerMedianFilterButton =
-            findViewById(R.id.double_fused_geomagnetic_attitude_estimator_accelerometer_median_filter_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.double_fused_geomagnetic_attitude_estimator_accelerometer_median_filter_button)
         doubleFusedGeomagneticAttitudeEstimatorAccelerometerMedianFilterButton?.setOnClickListener {
             val intent =
                 Intent(
@@ -1682,7 +1685,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         doubleFusedGeomagneticAttitudeEstimatorAccelerometerUncalibratedLowPassButton =
-            findViewById(R.id.double_fused_geomagnetic_attitude_estimator_accelerometer_uncalibrated_low_pass_filter_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.double_fused_geomagnetic_attitude_estimator_accelerometer_uncalibrated_low_pass_filter_button)
         doubleFusedGeomagneticAttitudeEstimatorAccelerometerUncalibratedLowPassButton?.setOnClickListener {
             val intent =
                 Intent(
@@ -1706,7 +1709,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         doubleFusedGeomagneticAttitudeEstimatorAccelerometerUncalibratedMeanFilterButton =
-            findViewById(R.id.double_fused_geomagnetic_attitude_estimator_accelerometer_uncalibrated_mean_filter_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.double_fused_geomagnetic_attitude_estimator_accelerometer_uncalibrated_mean_filter_button)
         doubleFusedGeomagneticAttitudeEstimatorAccelerometerUncalibratedMeanFilterButton?.setOnClickListener {
             val intent =
                 Intent(
@@ -1730,7 +1733,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         doubleFusedGeomagneticAttitudeEstimatorAccelerometerUncalibratedMedianFilterButton =
-            findViewById(R.id.double_fused_geomagnetic_attitude_estimator_accelerometer_uncalibrated_median_filter_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.double_fused_geomagnetic_attitude_estimator_accelerometer_uncalibrated_median_filter_button)
         doubleFusedGeomagneticAttitudeEstimatorAccelerometerUncalibratedMedianFilterButton?.setOnClickListener {
             val intent =
                 Intent(
@@ -1754,7 +1757,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         doubleFusedGeomagneticAttitudeEstimatorUncalibratedMagnetometerButton =
-            findViewById(R.id.double_fused_geomagnetic_attitude_estimator_uncalibrated_magnetometer_accurate_attitude_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.double_fused_geomagnetic_attitude_estimator_uncalibrated_magnetometer_accurate_attitude_button)
         doubleFusedGeomagneticAttitudeEstimatorUncalibratedMagnetometerButton?.setOnClickListener {
             val intent =
                 Intent(
@@ -1778,7 +1781,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         doubleFusedGeomagneticAttitudeEstimatorUncalibratedGyroscopeButton =
-            findViewById(R.id.double_fused_geomagnetic_attitude_estimator_uncalibrated_gyroscope_accurate_attitude_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.double_fused_geomagnetic_attitude_estimator_uncalibrated_gyroscope_accurate_attitude_button)
         doubleFusedGeomagneticAttitudeEstimatorUncalibratedGyroscopeButton?.setOnClickListener {
             val intent =
                 Intent(
@@ -1807,7 +1810,7 @@ class MainActivity : AppCompatActivity() {
 
 
         doubleFusedGeomagneticAttitudeEstimatorWorldMagneticModelButton =
-            findViewById(R.id.double_fused_geomagnetic_attitude_estimator_world_magnetic_model_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.double_fused_geomagnetic_attitude_estimator_world_magnetic_model_button)
         doubleFusedGeomagneticAttitudeEstimatorWorldMagneticModelButton?.setOnClickListener {
             val intent =
                 Intent(
@@ -1835,7 +1838,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         androidAbsoluteAttitudeEstimatorButton =
-            findViewById(R.id.android_absolute_attitude_estimator_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.android_absolute_attitude_estimator_button)
         androidAbsoluteAttitudeEstimatorButton?.setOnClickListener {
             val intent = Intent(this@MainActivity, AttitudeEstimatorActivity::class.java)
             intent.putExtra(
@@ -1846,7 +1849,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         androidRelativeAttitudeEstimatorButton =
-            findViewById(R.id.android_relative_attitude_estimator_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.android_relative_attitude_estimator_button)
         androidRelativeAttitudeEstimatorButton?.setOnClickListener {
             val intent = Intent(this@MainActivity, AttitudeEstimatorActivity::class.java)
             intent.putExtra(
@@ -1857,7 +1860,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         kalmanRelativeAttitudeEstimatorButton =
-            findViewById(R.id.kalman_relative_attitude_estimator_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.kalman_relative_attitude_estimator_button)
         kalmanRelativeAttitudeEstimatorButton?.setOnClickListener {
             val intent = Intent(this@MainActivity, KalmanRelativeAttitudeActivity::class.java)
             intent.putExtra(
@@ -1872,7 +1875,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         kalmanAbsoluteAttitudeEstimatorButton =
-            findViewById(R.id.kalman_absolute_attitude_estimator_button)
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.kalman_absolute_attitude_estimator_button)
         kalmanAbsoluteAttitudeEstimatorButton?.setOnClickListener {
             val intent = Intent(this@MainActivity, KalmanAbsoluteAttitudeActivity::class.java)
             intent.putExtra(
@@ -1890,19 +1893,22 @@ class MainActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
-        poseEstimatorButton = findViewById(R.id.pose_estimator_button)
+        poseEstimatorButton =
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.pose_estimator_button)
         poseEstimatorButton?.setOnClickListener {
             val intent = Intent(this@MainActivity, PoseEstimatorActivity::class.java)
             startActivity(intent)
         }
 
-        localPoseEstimatorButton = findViewById(R.id.local_pose_estimator_button)
+        localPoseEstimatorButton =
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.local_pose_estimator_button)
         localPoseEstimatorButton?.setOnClickListener {
             val intent = Intent(this@MainActivity, LocalPoseEstimatorActivity::class.java)
             startActivity(intent)
         }
 
-        relativePoseEstimatorButton = findViewById(R.id.relative_pose_estimator_button)
+        relativePoseEstimatorButton =
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.relative_pose_estimator_button)
         relativePoseEstimatorButton?.setOnClickListener {
             val intent = Intent(this@MainActivity, RelativePoseEstimatorActivity::class.java)
             startActivity(intent)

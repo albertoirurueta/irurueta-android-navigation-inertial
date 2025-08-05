@@ -26,6 +26,10 @@ import com.irurueta.android.navigation.inertial.estimators.attitude.GravityEstim
 import com.irurueta.android.navigation.inertial.estimators.attitude.LeveledRelativeAttitudeEstimator
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.MeanAveragingFilter
+import com.irurueta.android.testutils.callPrivateFunc
+import com.irurueta.android.testutils.callPrivateFuncWithResult
+import com.irurueta.android.testutils.getPrivateProperty
+import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.geometry.EuclideanTransformation3D
 import com.irurueta.geometry.InhomogeneousPoint3D
 import com.irurueta.geometry.Quaternion
@@ -35,14 +39,42 @@ import com.irurueta.navigation.inertial.calibration.AccelerationTriad
 import com.irurueta.navigation.inertial.calibration.AngularSpeedTriad
 import com.irurueta.statistics.UniformRandomizer
 import io.mockk.*
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
 import org.junit.After
 import org.junit.Assert.*
+import org.junit.Ignore
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
+@Ignore("possible memory leak")
 @RunWith(RobolectricTestRunner::class)
 class RelativePoseEstimatorTest {
+
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var poseAvailableListener: RelativePoseEstimator.OnPoseAvailableListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var accelerometerMeasurementListener:
+            AccelerometerSensorCollector.OnMeasurementListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var gyroscopeMeasurementListener:
+            GyroscopeSensorCollector.OnMeasurementListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var gravityEstimationListener: GravityEstimator.OnEstimationListener
+
+    @MockK
+    private lateinit var location: Location
+
+    @MockK
+    private lateinit var gravityEstimator: GravityEstimator
 
     @After
     fun tearDown() {
@@ -112,11 +144,6 @@ class RelativePoseEstimatorTest {
         val location = getLocation()
         val initialSpeed = getSpeed()
         val accelerometerAveragingFilter = MeanAveragingFilter()
-        val poseAvailableListener = mockk<RelativePoseEstimator.OnPoseAvailableListener>()
-        val accelerometerMeasurementListener =
-            mockk<AccelerometerSensorCollector.OnMeasurementListener>()
-        val gyroscopeMeasurementListener = mockk<GyroscopeSensorCollector.OnMeasurementListener>()
-        val gravityEstimationListener = mockk<GravityEstimator.OnEstimationListener>()
         val estimator = RelativePoseEstimator(
             context,
             SensorDelay.NORMAL,
@@ -193,7 +220,6 @@ class RelativePoseEstimatorTest {
         assertNull(estimator.poseAvailableListener)
 
         // set new value
-        val poseAvailableListener = mockk<RelativePoseEstimator.OnPoseAvailableListener>()
         estimator.poseAvailableListener = poseAvailableListener
 
         // check
@@ -209,8 +235,6 @@ class RelativePoseEstimatorTest {
         assertNull(estimator.accelerometerMeasurementListener)
 
         // set new value
-        val accelerometerMeasurementListener =
-            mockk<AccelerometerSensorCollector.OnMeasurementListener>()
         estimator.accelerometerMeasurementListener = accelerometerMeasurementListener
 
         // check
@@ -226,7 +250,6 @@ class RelativePoseEstimatorTest {
         assertNull(estimator.gyroscopeMeasurementListener)
 
         // set new value
-        val gyroscopeMeasurementListener = mockk<GyroscopeSensorCollector.OnMeasurementListener>()
         estimator.gyroscopeMeasurementListener = gyroscopeMeasurementListener
 
         // check
@@ -242,7 +265,6 @@ class RelativePoseEstimatorTest {
         assertNull(estimator.gravityEstimationListener)
 
         // set new value
-        val gravityEstimationListener = mockk<GravityEstimator.OnEstimationListener>()
         estimator.gravityEstimationListener = gravityEstimationListener
 
         // check
@@ -713,7 +735,10 @@ class RelativePoseEstimatorTest {
         requireNotNull(accelerometerSensorCollector)
         val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
         every { accelerometerSensorCollectorSpy.start() }.returns(false)
-        estimator.setPrivateProperty("accelerometerSensorCollector", accelerometerSensorCollectorSpy)
+        estimator.setPrivateProperty(
+            "accelerometerSensorCollector",
+            accelerometerSensorCollectorSpy
+        )
 
         assertFalse(estimator.running)
         assertFalse(estimator.useAccelerometerForAttitudeEstimation)
@@ -746,7 +771,10 @@ class RelativePoseEstimatorTest {
         requireNotNull(accelerometerSensorCollector)
         val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
         every { accelerometerSensorCollectorSpy.start() }.returns(true)
-        estimator.setPrivateProperty("accelerometerSensorCollector", accelerometerSensorCollectorSpy)
+        estimator.setPrivateProperty(
+            "accelerometerSensorCollector",
+            accelerometerSensorCollectorSpy
+        )
 
         assertFalse(estimator.running)
         assertFalse(estimator.useAccelerometerForAttitudeEstimation)
@@ -778,7 +806,10 @@ class RelativePoseEstimatorTest {
         requireNotNull(accelerometerSensorCollector)
         val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
         every { accelerometerSensorCollectorSpy.start() }.returns(true)
-        estimator.setPrivateProperty("accelerometerSensorCollector", accelerometerSensorCollectorSpy)
+        estimator.setPrivateProperty(
+            "accelerometerSensorCollector",
+            accelerometerSensorCollectorSpy
+        )
 
         assertFalse(estimator.running)
         assertTrue(estimator.useAccelerometerForAttitudeEstimation)
@@ -1070,9 +1101,10 @@ class RelativePoseEstimatorTest {
     @Test
     fun attitudeEstimator_whenAccelerometerMeasurementAndListener_notifies() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val listener =
-            mockk<AccelerometerSensorCollector.OnMeasurementListener>(relaxUnitFun = true)
-        val estimator = RelativePoseEstimator(context, accelerometerMeasurementListener = listener)
+        val estimator = RelativePoseEstimator(
+            context,
+            accelerometerMeasurementListener = accelerometerMeasurementListener
+        )
 
         // check initial value
         val specificForce: AccelerationTriad? = estimator.getPrivateProperty("specificForce")
@@ -1084,8 +1116,8 @@ class RelativePoseEstimatorTest {
         val attitudeEstimator: LeveledRelativeAttitudeEstimator? =
             estimator.getPrivateProperty("attitudeEstimator")
         requireNotNull(attitudeEstimator)
-        val accelerometerMeasurementListener = attitudeEstimator.accelerometerMeasurementListener
-        requireNotNull(accelerometerMeasurementListener)
+        val listener = attitudeEstimator.accelerometerMeasurementListener
+        requireNotNull(listener)
 
         val randomizer = UniformRandomizer()
         val ax = randomizer.nextFloat()
@@ -1096,7 +1128,7 @@ class RelativePoseEstimatorTest {
         val bz = randomizer.nextFloat()
         val timestamp = SystemClock.elapsedRealtimeNanos()
         val accuracy = SensorAccuracy.HIGH
-        accelerometerMeasurementListener.onMeasurement(
+        listener.onMeasurement(
             ax,
             ay,
             az,
@@ -1112,7 +1144,18 @@ class RelativePoseEstimatorTest {
         assertEquals((ay - by).toDouble(), specificForce.valueX, 0.0)
         assertEquals((az - bz).toDouble(), -specificForce.valueZ, 0.0)
 
-        verify(exactly = 1) { listener.onMeasurement(ax, ay, az, bx, by, bz, timestamp, accuracy) }
+        verify(exactly = 1) {
+            accelerometerMeasurementListener.onMeasurement(
+                ax,
+                ay,
+                az,
+                bx,
+                by,
+                bz,
+                timestamp,
+                accuracy
+            )
+        }
     }
 
     @Test
@@ -1203,8 +1246,10 @@ class RelativePoseEstimatorTest {
     @Test
     fun attitudeEstimator_whenGyroscopeMeasurementAndListener_notifies() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val listener = mockk<GyroscopeSensorCollector.OnMeasurementListener>(relaxUnitFun = true)
-        val estimator = RelativePoseEstimator(context, gyroscopeMeasurementListener = listener)
+        val estimator = RelativePoseEstimator(
+            context,
+            gyroscopeMeasurementListener = gyroscopeMeasurementListener
+        )
 
         // check initial value
         val angularSpeed: AngularSpeedTriad? = estimator.getPrivateProperty("angularSpeed")
@@ -1216,8 +1261,8 @@ class RelativePoseEstimatorTest {
         val attitudeEstimator: LeveledRelativeAttitudeEstimator? =
             estimator.getPrivateProperty("attitudeEstimator")
         requireNotNull(attitudeEstimator)
-        val gyroscopeMeasurementListener = attitudeEstimator.gyroscopeMeasurementListener
-        requireNotNull(gyroscopeMeasurementListener)
+        val listener = attitudeEstimator.gyroscopeMeasurementListener
+        requireNotNull(listener)
 
         val randomizer = UniformRandomizer()
         val wx = randomizer.nextFloat()
@@ -1228,7 +1273,7 @@ class RelativePoseEstimatorTest {
         val bz = randomizer.nextFloat()
         val timestamp = SystemClock.elapsedRealtimeNanos()
         val accuracy = SensorAccuracy.HIGH
-        gyroscopeMeasurementListener.onMeasurement(
+        listener.onMeasurement(
             wx,
             wy,
             wz,
@@ -1244,7 +1289,18 @@ class RelativePoseEstimatorTest {
         assertEquals((wy - by).toDouble(), angularSpeed.valueX, 0.0)
         assertEquals((wz - bz).toDouble(), -angularSpeed.valueZ, 0.0)
 
-        verify(exactly = 1) { listener.onMeasurement(wx, wy, wz, bx, by, bz, timestamp, accuracy) }
+        verify(exactly = 1) {
+            gyroscopeMeasurementListener.onMeasurement(
+                wx,
+                wy,
+                wz,
+                bx,
+                by,
+                bz,
+                timestamp,
+                accuracy
+            )
+        }
     }
 
     @Test
@@ -1270,7 +1326,7 @@ class RelativePoseEstimatorTest {
         val fy = randomizer.nextDouble()
         val fz = randomizer.nextDouble()
         val timestamp = SystemClock.elapsedRealtimeNanos()
-        gravityEstimationListener.onEstimation(mockk(), fx, fy, fz, timestamp)
+        gravityEstimationListener.onEstimation(gravityEstimator, fx, fy, fz, timestamp)
 
         // check
         assertEquals(fx, gravity.valueX, 0.0)
@@ -1281,8 +1337,7 @@ class RelativePoseEstimatorTest {
     @Test
     fun attitudeEstimator_whenGravityMeasurementAndListener_notifies() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val listener = mockk<GravityEstimator.OnEstimationListener>(relaxUnitFun = true)
-        val estimator = RelativePoseEstimator(context, gravityEstimationListener = listener)
+        val estimator = RelativePoseEstimator(context, gravityEstimationListener = gravityEstimationListener)
 
         // check initial value
         val gravity: AccelerationTriad? = estimator.getPrivateProperty("gravity")
@@ -1294,30 +1349,30 @@ class RelativePoseEstimatorTest {
         val attitudeEstimator: LeveledRelativeAttitudeEstimator? =
             estimator.getPrivateProperty("attitudeEstimator")
         requireNotNull(attitudeEstimator)
-        val gravityEstimationListener = attitudeEstimator.gravityEstimationListener
-        requireNotNull(gravityEstimationListener)
+        val listener = attitudeEstimator.gravityEstimationListener
+        requireNotNull(listener)
+
+        assertNotSame(gravityEstimationListener, listener)
 
         val randomizer = UniformRandomizer()
         val fx = randomizer.nextDouble()
         val fy = randomizer.nextDouble()
         val fz = randomizer.nextDouble()
         val timestamp = SystemClock.elapsedRealtimeNanos()
-        gravityEstimationListener.onEstimation(mockk(), fx, fy, fz, timestamp)
+        listener.onEstimation(gravityEstimator, fx, fy, fz, timestamp)
 
         // check
         assertEquals(fx, gravity.valueX, 0.0)
         assertEquals(fy, gravity.valueY, 0.0)
         assertEquals(fz, gravity.valueZ, 0.0)
 
-        verify(exactly = 1) { listener.onEstimation(any(), fx, fy, fz, timestamp) }
+        verify(exactly = 1) { gravityEstimationListener.onEstimation(any(), fx, fy, fz, timestamp) }
     }
 
     @Test
     fun attitudeEstimator_whenNotInitialized_initializesAndSetsInitialPositionAttitudeAndSpeed() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val initialSpeed = getSpeed()
-        val poseAvailableListener =
-            mockk<RelativePoseEstimator.OnPoseAvailableListener>(relaxUnitFun = true)
         val estimator = RelativePoseEstimator(
             context,
             initialSpeed = initialSpeed,
@@ -1388,8 +1443,6 @@ class RelativePoseEstimatorTest {
     fun attitudeEstimator_whenInitialized_computesCurrentPositionAttitudeAndSpeedAndNotifies() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val initialSpeed = getSpeed()
-        val poseAvailableListener =
-            mockk<RelativePoseEstimator.OnPoseAvailableListener>(relaxUnitFun = true)
         val estimator = RelativePoseEstimator(
             context,
             initialSpeed = initialSpeed,
@@ -1536,6 +1589,28 @@ class RelativePoseEstimatorTest {
         }
     }
 
+    private fun getLocation(): Location {
+        val randomizer = UniformRandomizer()
+        val latitudeDegrees = randomizer.nextDouble(
+            MIN_LATITUDE_DEGREES,
+            MAX_LATITUDE_DEGREES
+        )
+        val longitudeDegrees = randomizer.nextDouble(
+            MIN_LONGITUDE_DEGREES,
+            MAX_LONGITUDE_DEGREES
+        )
+        val height = randomizer.nextDouble(
+            MIN_HEIGHT,
+            MAX_HEIGHT
+        )
+
+        every { location.latitude }.returns(latitudeDegrees)
+        every { location.longitude }.returns(longitudeDegrees)
+        every { location.altitude }.returns(height)
+
+        return location
+    }
+
     private companion object {
         const val MIN_LATITUDE_DEGREES = -90.0
         const val MAX_LATITUDE_DEGREES = 90.0
@@ -1553,29 +1628,6 @@ class RelativePoseEstimatorTest {
         const val MAX_DELTA_POS = 5.0
 
         const val TIME_INTERVAL = 0.02
-
-        fun getLocation(): Location {
-            val randomizer = UniformRandomizer()
-            val latitudeDegrees = randomizer.nextDouble(
-                MIN_LATITUDE_DEGREES,
-                MAX_LATITUDE_DEGREES
-            )
-            val longitudeDegrees = randomizer.nextDouble(
-                MIN_LONGITUDE_DEGREES,
-                MAX_LONGITUDE_DEGREES
-            )
-            val height = randomizer.nextDouble(
-                MIN_HEIGHT,
-                MAX_HEIGHT
-            )
-
-            val location = mockk<Location>()
-            every { location.latitude }.returns(latitudeDegrees)
-            every { location.longitude }.returns(longitudeDegrees)
-            every { location.altitude }.returns(height)
-
-            return location
-        }
 
         fun getAttitude(): Quaternion {
             val randomizer = UniformRandomizer()

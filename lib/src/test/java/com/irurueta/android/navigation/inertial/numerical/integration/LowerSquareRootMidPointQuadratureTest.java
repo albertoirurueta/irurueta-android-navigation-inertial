@@ -19,7 +19,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
 import com.irurueta.numerical.EvaluationException;
-import com.irurueta.numerical.SingleDimensionFunctionEvaluatorListener;
 import com.irurueta.numerical.polynomials.Polynomial;
 import com.irurueta.statistics.UniformRandomizer;
 
@@ -40,12 +39,7 @@ public class LowerSquareRootMidPointQuadratureTest {
         final Polynomial polynomial = buildPolynomial();
 
         final LowerSquareRootMidPointQuadrature quadrature = new LowerSquareRootMidPointQuadrature(
-                a, b, new SingleDimensionFunctionEvaluatorListener() {
-            @Override
-            public double evaluate(final double point) {
-                return polynomial.evaluate(point);
-            }
-        });
+                a, b, polynomial::evaluate);
 
         assertNotEquals(0.0, quadrature.next());
     }

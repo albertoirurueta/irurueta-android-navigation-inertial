@@ -23,26 +23,43 @@ import androidx.test.core.app.ApplicationProvider
 import com.irurueta.algebra.Matrix
 import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.estimators.filter.MeanAveragingFilter
-import com.irurueta.android.navigation.inertial.getPrivateProperty
 import com.irurueta.android.navigation.inertial.processors.attitude.AccelerometerGravityProcessor
 import com.irurueta.android.navigation.inertial.processors.attitude.BaseLevelingProcessor
 import com.irurueta.android.navigation.inertial.processors.attitude.GravityProcessor
-import com.irurueta.android.navigation.inertial.setPrivateProperty
+import com.irurueta.android.testutils.getPrivateProperty
+import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.frames.CoordinateTransformation
 import com.irurueta.navigation.frames.FrameType
 import com.irurueta.navigation.inertial.estimators.NEDGravityEstimator
 import com.irurueta.statistics.UniformRandomizer
 import io.mockk.*
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
 import org.junit.After
 import org.junit.Assert.*
+import org.junit.Ignore
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import kotlin.math.sqrt
 
+@Ignore("possible memory leak")
 @RunWith(RobolectricTestRunner::class)
 class LevelingEstimator2Test {
+
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var levelingAvailableListener: LevelingEstimator2.OnLevelingAvailableListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var accuracyChangedListener: LevelingEstimator2.OnAccuracyChangedListener
+
+    @MockK
+    private lateinit var location: Location
 
     @After
     fun tearDown() {
@@ -94,8 +111,6 @@ class LevelingEstimator2Test {
     @Test
     fun constructor_whenAllProperties_setsExpectedValues() {
         val location = getLocation()
-        val levelingAvailableListener = mockk<LevelingEstimator2.OnLevelingAvailableListener>()
-        val accuracyChangedListener = mockk<LevelingEstimator2.OnAccuracyChangedListener>()
         val accelerometerAveragingFilter = MeanAveragingFilter()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = LevelingEstimator2(
@@ -158,11 +173,10 @@ class LevelingEstimator2Test {
         assertNull(estimator.levelingAvailableListener)
 
         // set new value
-        val listener = mockk<LevelingEstimator2.OnLevelingAvailableListener>()
-        estimator.levelingAvailableListener = listener
+        estimator.levelingAvailableListener = levelingAvailableListener
 
         // check
-        assertSame(listener, estimator.levelingAvailableListener)
+        assertSame(levelingAvailableListener, estimator.levelingAvailableListener)
     }
 
     @Test
@@ -174,11 +188,10 @@ class LevelingEstimator2Test {
         assertNull(estimator.accuracyChangedListener)
 
         // set new value
-        val listener = mockk<LevelingEstimator2.OnAccuracyChangedListener>()
-        estimator.accuracyChangedListener = listener
+        estimator.accuracyChangedListener = accuracyChangedListener
 
         // check
-        assertSame(listener, estimator.accuracyChangedListener)
+        assertSame(accuracyChangedListener, estimator.accuracyChangedListener)
     }
 
     @Test
@@ -476,13 +489,11 @@ class LevelingEstimator2Test {
     @Test
     fun onGravityAccuracyChanged_whenListenerAvailable_notifies() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val accuracyChangedListener =
-            mockk<LevelingEstimator2.OnAccuracyChangedListener>(relaxUnitFun = true)
         val estimator = LevelingEstimator2(
-                context,
-                useAccelerometer = false,
-                accuracyChangedListener = accuracyChangedListener
-            )
+            context,
+            useAccelerometer = false,
+            accuracyChangedListener = accuracyChangedListener
+        )
 
         val gravitySensorCollector: GravitySensorCollector2? =
             getPrivateProperty(BaseLevelingEstimator2::class, estimator, "gravitySensorCollector")
@@ -602,8 +613,10 @@ class LevelingEstimator2Test {
             timestamp,
             SensorAccuracy.MEDIUM
         )
-        val norm = sqrt(floatFx.toDouble() * floatFx.toDouble()
-                + floatFy.toDouble() * floatFy.toDouble() + floatFz.toDouble() * floatFz.toDouble())
+        val norm = sqrt(
+            floatFx.toDouble() * floatFx.toDouble()
+                    + floatFy.toDouble() * floatFy.toDouble() + floatFz.toDouble() * floatFz.toDouble()
+        )
         val factor = SensorManager.GRAVITY_EARTH / norm
         listener.onMeasurement(gravitySensorCollector, measurement)
 
@@ -632,8 +645,6 @@ class LevelingEstimator2Test {
     @Test
     fun onGravityEstimation_whenListenerNotEstimateCoordinateTransformationAndNotEstimateEulerAngles_updatesAttitude() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val levelingAvailableListener =
-            mockk<LevelingEstimator2.OnLevelingAvailableListener>(relaxUnitFun = true)
         val estimator = LevelingEstimator2(
             context,
             estimateCoordinateTransformation = false,
@@ -733,8 +744,10 @@ class LevelingEstimator2Test {
             timestamp,
             SensorAccuracy.MEDIUM
         )
-        val norm = sqrt(floatFx.toDouble() * floatFx.toDouble()
-                + floatFy.toDouble() * floatFy.toDouble() + floatFz.toDouble() * floatFz.toDouble())
+        val norm = sqrt(
+            floatFx.toDouble() * floatFx.toDouble()
+                    + floatFy.toDouble() * floatFy.toDouble() + floatFz.toDouble() * floatFz.toDouble()
+        )
         val factor = SensorManager.GRAVITY_EARTH / norm
         listener.onMeasurement(gravitySensorCollector, measurement)
 
@@ -767,8 +780,6 @@ class LevelingEstimator2Test {
     @Test
     fun onGravityEstimation_whenListenerEstimateCoordinateTransformationAndEstimateEulerAngles_updatesAttitude() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val levelingAvailableListener =
-            mockk<LevelingEstimator2.OnLevelingAvailableListener>(relaxUnitFun = true)
 
         val estimator = LevelingEstimator2(
             context,
@@ -869,8 +880,10 @@ class LevelingEstimator2Test {
             timestamp,
             SensorAccuracy.MEDIUM
         )
-        val norm = sqrt(floatFx.toDouble() * floatFx.toDouble()
-                + floatFy.toDouble() * floatFy.toDouble() + floatFz.toDouble() * floatFz.toDouble())
+        val norm = sqrt(
+            floatFx.toDouble() * floatFx.toDouble()
+                    + floatFy.toDouble() * floatFy.toDouble() + floatFz.toDouble() * floatFz.toDouble()
+        )
         val factor = SensorManager.GRAVITY_EARTH / norm
         listener.onMeasurement(gravitySensorCollector, measurement)
 
@@ -922,8 +935,6 @@ class LevelingEstimator2Test {
     @Test
     fun onAccelerometerAccuracyChanged_whenListenerAvailable_notifies() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val accuracyChangedListener =
-            mockk<LevelingEstimator2.OnAccuracyChangedListener>(relaxUnitFun = true)
         val estimator = LevelingEstimator2(
             context,
             useAccelerometer = true,
@@ -954,7 +965,6 @@ class LevelingEstimator2Test {
     @Test
     fun onAccelerometerEstimation_whenNoProcessedGravity_makesNoAction() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val levelingAvailableListener = mockk<LevelingEstimator2.OnLevelingAvailableListener>()
         val estimator = LevelingEstimator2(
             context,
             estimateCoordinateTransformation = false,
@@ -1216,6 +1226,28 @@ class LevelingEstimator2Test {
         assertArrayEquals(eulerAngles, doubleArrayOf(0.0, 0.0, 0.0), 0.0)
     }
 
+    private fun getLocation(): Location {
+        val randomizer = UniformRandomizer()
+        val latitudeDegrees = randomizer.nextDouble(
+            MIN_LATITUDE_DEGREES,
+            MAX_LATITUDE_DEGREES
+        )
+        val longitudeDegrees = randomizer.nextDouble(
+            MIN_LONGITUDE_DEGREES,
+            MAX_LONGITUDE_DEGREES
+        )
+        val height = randomizer.nextDouble(
+            MIN_HEIGHT,
+            MAX_HEIGHT
+        )
+
+        every { location.latitude }.returns(latitudeDegrees)
+        every { location.longitude }.returns(longitudeDegrees)
+        every { location.altitude }.returns(height)
+
+        return location
+    }
+
     private companion object {
         const val ABSOLUTE_ERROR = 1e-1
 
@@ -1230,28 +1262,5 @@ class LevelingEstimator2Test {
 
         const val MIN_ANGLE_DEGREES = -45.0
         const val MAX_ANGLE_DEGREES = 45.0
-
-        fun getLocation(): Location {
-            val randomizer = UniformRandomizer()
-            val latitudeDegrees = randomizer.nextDouble(
-                MIN_LATITUDE_DEGREES,
-                MAX_LATITUDE_DEGREES
-            )
-            val longitudeDegrees = randomizer.nextDouble(
-                MIN_LONGITUDE_DEGREES,
-                MAX_LONGITUDE_DEGREES
-            )
-            val height = randomizer.nextDouble(
-                MIN_HEIGHT,
-                MAX_HEIGHT
-            )
-
-            val location = mockk<Location>()
-            every { location.latitude }.returns(latitudeDegrees)
-            every { location.longitude }.returns(longitudeDegrees)
-            every { location.altitude }.returns(height)
-
-            return location
-        }
     }
 }

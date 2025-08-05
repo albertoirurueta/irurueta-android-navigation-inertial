@@ -879,7 +879,7 @@ class LocalPoseEstimator private constructor(
     }
 
     /**
-     * Computes 3D metric transformation between procided ECEF frames.
+     * Computes 3D metric transformation between provided ECEF frames.
      *
      * @param initialEcefFrame starting frame.
      * @param currentEcefFrame end frame.

@@ -127,7 +127,7 @@ public class MidPointMatrixQuadrature extends MatrixQuadrature {
     /**
      * Gets current value of integral.
      *
-     * @return current vlaue of integral.
+     * @return current value of integral.
      */
     public Matrix getS() {
         return s;

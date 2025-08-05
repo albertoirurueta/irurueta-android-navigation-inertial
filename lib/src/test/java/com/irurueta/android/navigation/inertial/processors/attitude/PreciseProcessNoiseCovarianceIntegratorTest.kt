@@ -324,8 +324,8 @@ class PreciseProcessNoiseCovarianceIntegratorTest {
                 var bestDuration = Long.MAX_VALUE
                 var bestIntegratorType: IntegratorType? = null
                 var bestQuadratureType: QuadratureType? = null
-                for (integratorType in IntegratorType.values()) {
-                    for (quadratureType in QuadratureType.values()) {
+                for (integratorType in IntegratorType.entries) {
+                    for (quadratureType in QuadratureType.entries) {
                         val integrator =
                             PreciseProcessNoiseCovarianceIntegrator(
                                 q,
@@ -363,7 +363,7 @@ class PreciseProcessNoiseCovarianceIntegratorTest {
                 succeeded = true
                 break
 
-            } catch (ex: IntegrationException) {
+            } catch (_: IntegrationException) {
                 // ignore
             }
         }
@@ -380,7 +380,7 @@ class PreciseProcessNoiseCovarianceIntegratorTest {
 
         const val BG = 1e-6
 
-        const val GYROSCOPE_STANDDARD_DEVIATION = 0.006
+        const val GYROSCOPE_STANDARD_DEVIATION = 0.006
 
         const val ABSOLUTE_ERROR = 1e-6
 
@@ -410,7 +410,7 @@ class PreciseProcessNoiseCovarianceIntegratorTest {
 
             val rg: Matrix =
                 Matrix.identity(AngularSpeedTriad.COMPONENTS, AngularSpeedTriad.COMPONENTS)
-            rg.multiplyByScalar(GYROSCOPE_STANDDARD_DEVIATION * GYROSCOPE_STANDDARD_DEVIATION)
+            rg.multiplyByScalar(GYROSCOPE_STANDARD_DEVIATION * GYROSCOPE_STANDARD_DEVIATION)
 
             val qbg: Matrix =
                 Matrix.identity(AngularSpeedTriad.COMPONENTS, AngularSpeedTriad.COMPONENTS)

@@ -20,13 +20,21 @@ import com.irurueta.navigation.frames.NEDPosition
 import com.irurueta.statistics.UniformRandomizer
 import io.mockk.clearAllMocks
 import io.mockk.every
-import io.mockk.mockk
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
 import io.mockk.unmockkAll
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Rule
 import org.junit.Test
 
 class LocationExtensionsTest {
+
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK
+    private lateinit var location: Location
 
     @After
     fun tearDown() {
@@ -44,7 +52,6 @@ class LocationExtensionsTest {
 
         val height = randomizer.nextDouble(MIN_HEIGHT, MAX_HEIGHT)
 
-        val location = mockk<Location>()
         every { location.latitude }.returns(latitudeDegrees)
         every { location.longitude }.returns(longitudeDegrees)
         every { location.altitude }.returns(height)

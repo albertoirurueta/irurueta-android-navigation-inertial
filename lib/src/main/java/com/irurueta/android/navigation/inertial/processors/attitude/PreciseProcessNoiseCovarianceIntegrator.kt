@@ -69,13 +69,13 @@ class PreciseProcessNoiseCovarianceIntegrator(
     private val listener = object : MatrixSingleDimensionFunctionEvaluatorListener {
         override fun evaluate(t: Double, result: Matrix) {
             // compute integral of: e^(A .* t) * Q * (e^(A .* t))';
-            at.copyFrom(a)
+            at.copyFrom(this@PreciseProcessNoiseCovarianceIntegrator.a)
             at.multiplyByScalar(t)
             exponentialMatrixEstimator.exponential(at, expAt)
             expAt.transpose(transposedExpAt)
 
             integrand.copyFrom(expAt)
-            integrand.multiply(q)
+            integrand.multiply(this@PreciseProcessNoiseCovarianceIntegrator.q)
             integrand.multiply(transposedExpAt)
             result.copyFrom(integrand)
         }

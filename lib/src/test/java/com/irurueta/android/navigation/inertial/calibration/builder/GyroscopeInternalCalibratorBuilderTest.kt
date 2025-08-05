@@ -24,9 +24,6 @@ import com.irurueta.navigation.inertial.calibration.gyroscope.*
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.DefaultGyroscopeQualityScoreMapper
 import com.irurueta.numerical.robust.RobustEstimatorMethod
 import com.irurueta.statistics.UniformRandomizer
-import io.mockk.clearAllMocks
-import io.mockk.unmockkAll
-import org.junit.After
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -35,12 +32,6 @@ import kotlin.math.max
 
 @RunWith(RobolectricTestRunner::class)
 class GyroscopeInternalCalibratorBuilderTest {
-
-    @After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-    }
 
     @Test
     fun constructor_whenRequiredValues_setsExpectedValues() {
@@ -82,10 +73,7 @@ class GyroscopeInternalCalibratorBuilderTest {
             0.0
         )
         assertFalse(builder.isGroundTruthInitialBias)
-        assertEquals(
-            StaticIntervalGyroscopeCalibrator.DEFAULT_USE_COMMON_Z_AXIS,
-            builder.isCommonAxisUsed
-        )
+        assertFalse(builder.isCommonAxisUsed)
         assertNull(builder.initialBiasX)
         assertNull(builder.initialBiasY)
         assertNull(builder.initialBiasZ)
@@ -98,10 +86,7 @@ class GyroscopeInternalCalibratorBuilderTest {
         assertEquals(0.0, builder.initialMyz, 0.0)
         assertEquals(0.0, builder.initialMzx, 0.0)
         assertEquals(0.0, builder.initialMzy, 0.0)
-        assertEquals(
-            StaticIntervalGyroscopeCalibrator.DEFAULT_ESTIMATE_G_DEPENDENT_CROSS_BIASES,
-            builder.isGDependentCrossBiasesEstimated
-        )
+        assertFalse(builder.isGDependentCrossBiasesEstimated)
         assertEquals(
             Matrix(BodyKinematics.COMPONENTS, BodyKinematics.COMPONENTS),
             builder.gyroscopeInitialGg
@@ -312,7 +297,7 @@ class GyroscopeInternalCalibratorBuilderTest {
             emptyList<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>()
         val robustPreliminarySubsetSize = 0
         val minimumRequiredMeasurements =
-            randomizer.nextInt(robustPreliminarySubsetSize, 2 * robustPreliminarySubsetSize)
+            randomizer.nextInt(robustPreliminarySubsetSize, robustPreliminarySubsetSize)
 
         GyroscopeInternalCalibratorBuilder(
             measurements,
@@ -738,19 +723,14 @@ class GyroscopeInternalCalibratorBuilderTest {
         )
 
         // check default value
-        assertEquals(
-            StaticIntervalGyroscopeCalibrator.DEFAULT_USE_COMMON_Z_AXIS,
-            builder.isCommonAxisUsed
-        )
+        assertFalse(builder.isCommonAxisUsed)
 
         // set new value
-        builder.isCommonAxisUsed = !StaticIntervalGyroscopeCalibrator.DEFAULT_USE_COMMON_Z_AXIS
+        builder.isCommonAxisUsed = true
 
         // check
-        assertEquals(
-            !StaticIntervalGyroscopeCalibrator.DEFAULT_USE_COMMON_Z_AXIS,
-            builder.isCommonAxisUsed
-        )
+        @Suppress("KotlinConstantConditions")
+        assertTrue(builder.isCommonAxisUsed)
     }
 
     @Test
@@ -1102,20 +1082,14 @@ class GyroscopeInternalCalibratorBuilderTest {
         )
 
         // check default value
-        assertEquals(
-            StaticIntervalGyroscopeCalibrator.DEFAULT_ESTIMATE_G_DEPENDENT_CROSS_BIASES,
-            builder.isGDependentCrossBiasesEstimated
-        )
+        assertFalse(builder.isGDependentCrossBiasesEstimated)
 
         // set new value
-        builder.isGDependentCrossBiasesEstimated =
-            !StaticIntervalGyroscopeCalibrator.DEFAULT_ESTIMATE_G_DEPENDENT_CROSS_BIASES
+        builder.isGDependentCrossBiasesEstimated = true
 
         // check
-        assertEquals(
-            !StaticIntervalGyroscopeCalibrator.DEFAULT_ESTIMATE_G_DEPENDENT_CROSS_BIASES,
-            builder.isGDependentCrossBiasesEstimated
-        )
+        @Suppress("KotlinConstantConditions")
+        assertTrue(builder.isGDependentCrossBiasesEstimated)
     }
 
     @Test
@@ -1547,7 +1521,7 @@ class GyroscopeInternalCalibratorBuilderTest {
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
         val measurements =
             mutableListOf<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>()
-        for (i in 1..16) {
+        (1..16).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -1618,7 +1592,7 @@ class GyroscopeInternalCalibratorBuilderTest {
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
         val measurements =
             mutableListOf<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>()
-        for (i in 1..16) {
+        (1..16).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -1702,7 +1676,7 @@ class GyroscopeInternalCalibratorBuilderTest {
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
         val measurements =
             mutableListOf<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>()
-        for (i in 1..19) {
+        (1..19).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -1773,7 +1747,7 @@ class GyroscopeInternalCalibratorBuilderTest {
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
         val measurements =
             mutableListOf<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>()
-        for (i in 1..19) {
+        (1..19).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -1857,7 +1831,7 @@ class GyroscopeInternalCalibratorBuilderTest {
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
         val measurements =
             mutableListOf<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>()
-        for (i in 1..16) {
+        (1..16).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -1940,7 +1914,7 @@ class GyroscopeInternalCalibratorBuilderTest {
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
         val measurements =
             mutableListOf<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>()
-        for (i in 1..16) {
+        (1..16).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -2036,7 +2010,7 @@ class GyroscopeInternalCalibratorBuilderTest {
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
         val measurements =
             mutableListOf<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>()
-        for (i in 1..19) {
+        (1..19).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -2119,7 +2093,7 @@ class GyroscopeInternalCalibratorBuilderTest {
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
         val measurements =
             mutableListOf<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>()
-        for (i in 1..19) {
+        (1..19).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -2215,7 +2189,7 @@ class GyroscopeInternalCalibratorBuilderTest {
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
         val measurements =
             mutableListOf<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>()
-        for (i in 1..16) {
+        (1..16).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -2301,7 +2275,7 @@ class GyroscopeInternalCalibratorBuilderTest {
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
         val measurements =
             mutableListOf<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>()
-        for (i in 1..19) {
+        (1..19).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -2387,7 +2361,7 @@ class GyroscopeInternalCalibratorBuilderTest {
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
         val measurements =
             mutableListOf<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>()
-        for (i in 1..19) {
+        (1..19).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -2441,7 +2415,7 @@ class GyroscopeInternalCalibratorBuilderTest {
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
         val measurements =
             mutableListOf<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>()
-        for (i in 1..16) {
+        (1..16).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -2524,7 +2498,7 @@ class GyroscopeInternalCalibratorBuilderTest {
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
         val measurements =
             mutableListOf<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>()
-        for (i in 1..16) {
+        (1..16).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -2620,7 +2594,7 @@ class GyroscopeInternalCalibratorBuilderTest {
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
         val measurements =
             mutableListOf<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>()
-        for (i in 1..19) {
+        (1..19).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -2703,7 +2677,7 @@ class GyroscopeInternalCalibratorBuilderTest {
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
         val measurements =
             mutableListOf<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>()
-        for (i in 1..19) {
+        (1..19).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -2799,7 +2773,7 @@ class GyroscopeInternalCalibratorBuilderTest {
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
         val measurements =
             mutableListOf<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>()
-        for (i in 1..16) {
+        (1..16).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -2885,7 +2859,7 @@ class GyroscopeInternalCalibratorBuilderTest {
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
         val measurements =
             mutableListOf<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>()
-        for (i in 1..19) {
+        (1..19).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -2971,7 +2945,7 @@ class GyroscopeInternalCalibratorBuilderTest {
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
         val measurements =
             mutableListOf<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>()
-        for (i in 1..19) {
+        (1..19).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -3025,7 +2999,7 @@ class GyroscopeInternalCalibratorBuilderTest {
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
         val measurements =
             mutableListOf<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>()
-        for (i in 1..16) {
+        (1..16).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -3109,7 +3083,7 @@ class GyroscopeInternalCalibratorBuilderTest {
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
         val measurements =
             mutableListOf<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>()
-        for (i in 1..16) {
+        (1..16).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -3206,7 +3180,7 @@ class GyroscopeInternalCalibratorBuilderTest {
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
         val measurements =
             mutableListOf<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>()
-        for (i in 1..19) {
+        (1..19).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -3290,7 +3264,7 @@ class GyroscopeInternalCalibratorBuilderTest {
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
         val measurements =
             mutableListOf<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>()
-        for (i in 1..19) {
+        (1..19).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -3387,7 +3361,7 @@ class GyroscopeInternalCalibratorBuilderTest {
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
         val measurements =
             mutableListOf<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>()
-        for (i in 1..16) {
+        (1..16).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -3474,7 +3448,7 @@ class GyroscopeInternalCalibratorBuilderTest {
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
         val measurements =
             mutableListOf<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>()
-        for (i in 1..19) {
+        (1..19).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -3561,7 +3535,7 @@ class GyroscopeInternalCalibratorBuilderTest {
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
         val measurements =
             mutableListOf<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>()
-        for (i in 1..19) {
+        (1..19).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -3615,7 +3589,7 @@ class GyroscopeInternalCalibratorBuilderTest {
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
         val measurements =
             mutableListOf<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>()
-        for (i in 1..16) {
+        (1..16).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -3639,7 +3613,7 @@ class GyroscopeInternalCalibratorBuilderTest {
             measurements,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements,
-            robustMethod = RobustEstimatorMethod.LMedS,
+            robustMethod = RobustEstimatorMethod.LMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = ROBUST_THRESHOLD,
@@ -3698,7 +3672,7 @@ class GyroscopeInternalCalibratorBuilderTest {
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
         val measurements =
             mutableListOf<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>()
-        for (i in 1..16) {
+        (1..16).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -3729,7 +3703,7 @@ class GyroscopeInternalCalibratorBuilderTest {
             measurements,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements,
-            robustMethod = RobustEstimatorMethod.LMedS,
+            robustMethod = RobustEstimatorMethod.LMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = ROBUST_THRESHOLD,
@@ -3794,7 +3768,7 @@ class GyroscopeInternalCalibratorBuilderTest {
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
         val measurements =
             mutableListOf<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>()
-        for (i in 1..19) {
+        (1..19).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -3818,7 +3792,7 @@ class GyroscopeInternalCalibratorBuilderTest {
             measurements,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements,
-            robustMethod = RobustEstimatorMethod.LMedS,
+            robustMethod = RobustEstimatorMethod.LMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = ROBUST_THRESHOLD,
@@ -3877,7 +3851,7 @@ class GyroscopeInternalCalibratorBuilderTest {
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
         val measurements =
             mutableListOf<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>()
-        for (i in 1..19) {
+        (1..19).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -3908,7 +3882,7 @@ class GyroscopeInternalCalibratorBuilderTest {
             measurements,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements,
-            robustMethod = RobustEstimatorMethod.LMedS,
+            robustMethod = RobustEstimatorMethod.LMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = ROBUST_THRESHOLD,
@@ -3973,7 +3947,7 @@ class GyroscopeInternalCalibratorBuilderTest {
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
         val measurements =
             mutableListOf<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>()
-        for (i in 1..16) {
+        (1..16).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -3998,7 +3972,7 @@ class GyroscopeInternalCalibratorBuilderTest {
             measurements,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements,
-            robustMethod = RobustEstimatorMethod.LMedS,
+            robustMethod = RobustEstimatorMethod.LMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = null,
@@ -4064,7 +4038,7 @@ class GyroscopeInternalCalibratorBuilderTest {
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
         val measurements =
             mutableListOf<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>()
-        for (i in 1..19) {
+        (1..19).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -4089,7 +4063,7 @@ class GyroscopeInternalCalibratorBuilderTest {
             measurements,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements,
-            robustMethod = RobustEstimatorMethod.LMedS,
+            robustMethod = RobustEstimatorMethod.LMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = null,
@@ -4155,7 +4129,7 @@ class GyroscopeInternalCalibratorBuilderTest {
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
         val measurements =
             mutableListOf<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>()
-        for (i in 1..19) {
+        (1..19).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -4179,7 +4153,7 @@ class GyroscopeInternalCalibratorBuilderTest {
             measurements,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements,
-            robustMethod = RobustEstimatorMethod.LMedS,
+            robustMethod = RobustEstimatorMethod.LMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = null,
@@ -4210,7 +4184,7 @@ class GyroscopeInternalCalibratorBuilderTest {
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
         val measurements =
             mutableListOf<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>()
-        for (i in 1..16) {
+        (1..16).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -4234,7 +4208,7 @@ class GyroscopeInternalCalibratorBuilderTest {
             measurements,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements,
-            robustMethod = RobustEstimatorMethod.PROMedS,
+            robustMethod = RobustEstimatorMethod.PROMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = ROBUST_THRESHOLD,
@@ -4294,7 +4268,7 @@ class GyroscopeInternalCalibratorBuilderTest {
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
         val measurements =
             mutableListOf<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>()
-        for (i in 1..16) {
+        (1..16).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -4325,7 +4299,7 @@ class GyroscopeInternalCalibratorBuilderTest {
             measurements,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements,
-            robustMethod = RobustEstimatorMethod.PROMedS,
+            robustMethod = RobustEstimatorMethod.PROMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = ROBUST_THRESHOLD,
@@ -4391,7 +4365,7 @@ class GyroscopeInternalCalibratorBuilderTest {
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
         val measurements =
             mutableListOf<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>()
-        for (i in 1..19) {
+        (1..19).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -4415,7 +4389,7 @@ class GyroscopeInternalCalibratorBuilderTest {
             measurements,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements,
-            robustMethod = RobustEstimatorMethod.PROMedS,
+            robustMethod = RobustEstimatorMethod.PROMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = ROBUST_THRESHOLD,
@@ -4475,7 +4449,7 @@ class GyroscopeInternalCalibratorBuilderTest {
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
         val measurements =
             mutableListOf<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>()
-        for (i in 1..19) {
+        (1..19).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -4506,7 +4480,7 @@ class GyroscopeInternalCalibratorBuilderTest {
             measurements,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements,
-            robustMethod = RobustEstimatorMethod.PROMedS,
+            robustMethod = RobustEstimatorMethod.PROMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = ROBUST_THRESHOLD,
@@ -4572,7 +4546,7 @@ class GyroscopeInternalCalibratorBuilderTest {
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
         val measurements =
             mutableListOf<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>()
-        for (i in 1..16) {
+        (1..16).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -4597,7 +4571,7 @@ class GyroscopeInternalCalibratorBuilderTest {
             measurements,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements,
-            robustMethod = RobustEstimatorMethod.PROMedS,
+            robustMethod = RobustEstimatorMethod.PROMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = null,
@@ -4664,7 +4638,7 @@ class GyroscopeInternalCalibratorBuilderTest {
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
         val measurements =
             mutableListOf<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>()
-        for (i in 1..19) {
+        (1..19).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -4689,7 +4663,7 @@ class GyroscopeInternalCalibratorBuilderTest {
             measurements,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements,
-            robustMethod = RobustEstimatorMethod.PROMedS,
+            robustMethod = RobustEstimatorMethod.PROMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = null,
@@ -4756,7 +4730,7 @@ class GyroscopeInternalCalibratorBuilderTest {
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
         val measurements =
             mutableListOf<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>()
-        for (i in 1..19) {
+        (1..19).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -4780,7 +4754,7 @@ class GyroscopeInternalCalibratorBuilderTest {
             measurements,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements,
-            robustMethod = RobustEstimatorMethod.PROMedS,
+            robustMethod = RobustEstimatorMethod.PROMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = null,

@@ -18,7 +18,6 @@ package com.irurueta.android.navigation.inertial.numerical.integration;
 import static org.junit.Assert.*;
 
 import com.irurueta.numerical.EvaluationException;
-import com.irurueta.numerical.SingleDimensionFunctionEvaluatorListener;
 import com.irurueta.numerical.polynomials.Polynomial;
 import com.irurueta.statistics.UniformRandomizer;
 
@@ -40,12 +39,7 @@ public class UpperSquareRootMidPointQuadratureTest {
 
         final UpperSquareRootMidPointQuadrature quadrature =
                 new UpperSquareRootMidPointQuadrature(a, b,
-                        new SingleDimensionFunctionEvaluatorListener() {
-                            @Override
-                            public double evaluate(final double point) {
-                                return polynomial.evaluate(point);
-                            }
-                        });
+                        polynomial::evaluate);
 
         assertNotEquals(0.0, quadrature.next());
     }

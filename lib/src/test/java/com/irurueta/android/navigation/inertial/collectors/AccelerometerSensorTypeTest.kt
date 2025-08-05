@@ -17,9 +17,6 @@ package com.irurueta.android.navigation.inertial.collectors
 
 import android.hardware.Sensor
 import android.os.Build
-import io.mockk.clearAllMocks
-import io.mockk.unmockkAll
-import org.junit.After
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -29,16 +26,10 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 class AccelerometerSensorTypeTest {
 
-    @After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-    }
-
     @Config(sdk = [Build.VERSION_CODES.O])
     @Test
     fun fromValues_whenSdkO_returnsExpected() {
-        assertEquals(2, AccelerometerSensorType.values().size)
+        assertEquals(2, AccelerometerSensorType.entries.size)
         assertEquals(
             AccelerometerSensorType.ACCELEROMETER,
             AccelerometerSensorType.from(Sensor.TYPE_ACCELEROMETER)
@@ -52,7 +43,7 @@ class AccelerometerSensorTypeTest {
     @Config(sdk = [Build.VERSION_CODES.N])
     @Test
     fun fromValues_whenSdkN_returnsExpected() {
-        assertEquals(2, AccelerometerSensorType.values().size)
+        assertEquals(2, AccelerometerSensorType.entries.size)
         assertEquals(
             AccelerometerSensorType.ACCELEROMETER,
             AccelerometerSensorType.from(Sensor.TYPE_ACCELEROMETER)

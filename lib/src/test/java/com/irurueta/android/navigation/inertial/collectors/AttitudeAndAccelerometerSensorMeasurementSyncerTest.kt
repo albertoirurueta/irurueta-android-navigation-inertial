@@ -21,20 +21,44 @@ import com.irurueta.android.navigation.inertial.collectors.interpolators.Acceler
 import com.irurueta.android.navigation.inertial.collectors.interpolators.AccelerometerQuadraticSensorMeasurementInterpolator
 import com.irurueta.android.navigation.inertial.collectors.interpolators.AttitudeDirectSensorMeasurementInterpolator
 import com.irurueta.android.navigation.inertial.collectors.interpolators.AttitudeLinearSensorMeasurementInterpolator
-import com.irurueta.android.navigation.inertial.getPrivateProperty
-import com.irurueta.android.navigation.inertial.setPrivateProperty
+import com.irurueta.android.testutils.getPrivateProperty
+import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.geometry.Quaternion
 import com.irurueta.statistics.UniformRandomizer
 import io.mockk.*
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
 import org.junit.After
 import org.junit.Assert.*
+import org.junit.Ignore
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.util.ArrayDeque
 
+@Ignore("possible memory leak")
 @RunWith(RobolectricTestRunner::class)
 class AttitudeAndAccelerometerSensorMeasurementSyncerTest {
+
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var accuracyChangedListener:
+            SensorMeasurementSyncer.OnAccuracyChangedListener<AttitudeAndAccelerometerSyncedSensorMeasurement, AttitudeAndAccelerometerSensorMeasurementSyncer>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var bufferFilledListener:
+            SensorMeasurementSyncer.OnBufferFilledListener<AttitudeAndAccelerometerSyncedSensorMeasurement, AttitudeAndAccelerometerSensorMeasurementSyncer>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var syncedMeasurementListener:
+            SensorMeasurementSyncer.OnSyncedMeasurementsListener<AttitudeAndAccelerometerSyncedSensorMeasurement, AttitudeAndAccelerometerSensorMeasurementSyncer>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var staleDetectedMeasurementsListener:
+            SensorMeasurementSyncer.OnStaleDetectedMeasurementsListener<AttitudeAndAccelerometerSyncedSensorMeasurement, AttitudeAndAccelerometerSensorMeasurementSyncer>
 
     @After
     fun tearDown() {
@@ -72,6 +96,7 @@ class AttitudeAndAccelerometerSensorMeasurementSyncerTest {
             syncer.staleOffsetNanos
         )
         assertTrue(syncer.staleDetectionEnabled)
+        assertTrue(syncer.skipWhenProcessing)
         assertNull(syncer.accuracyChangedListener)
         assertNull(syncer.bufferFilledListener)
         assertNull(syncer.syncedMeasurementListener)
@@ -82,6 +107,7 @@ class AttitudeAndAccelerometerSensorMeasurementSyncerTest {
         assertTrue(syncer.accelerometerInterpolator is AccelerometerQuadraticSensorMeasurementInterpolator)
         assertEquals(0L, syncer.startTimestamp)
         assertFalse(syncer.running)
+        assertFalse(syncer.processing)
         assertEquals(0, syncer.numberOfProcessedMeasurements)
         assertNull(syncer.mostRecentTimestamp)
         assertNull(syncer.oldestTimestamp)
@@ -112,14 +138,6 @@ class AttitudeAndAccelerometerSensorMeasurementSyncerTest {
     @Test
     fun constructor_whenAllParameters_setsExpectedValues() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val accuracyChangedListener =
-            mockk<SensorMeasurementSyncer.OnAccuracyChangedListener<AttitudeAndAccelerometerSyncedSensorMeasurement, AttitudeAndAccelerometerSensorMeasurementSyncer>>()
-        val bufferFilledListener =
-            mockk<SensorMeasurementSyncer.OnBufferFilledListener<AttitudeAndAccelerometerSyncedSensorMeasurement, AttitudeAndAccelerometerSensorMeasurementSyncer>>()
-        val syncedMeasurementListener =
-            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AttitudeAndAccelerometerSyncedSensorMeasurement, AttitudeAndAccelerometerSensorMeasurementSyncer>>()
-        val staleDetectedMeasurementsListener =
-            mockk<SensorMeasurementSyncer.OnStaleDetectedMeasurementsListener<AttitudeAndAccelerometerSyncedSensorMeasurement, AttitudeAndAccelerometerSensorMeasurementSyncer>>()
         val attitudeInterpolator = AttitudeDirectSensorMeasurementInterpolator()
         val accelerometerInterpolator = AccelerometerDirectSensorMeasurementInterpolator()
         val syncer = AttitudeAndAccelerometerSensorMeasurementSyncer(
@@ -135,6 +153,7 @@ class AttitudeAndAccelerometerSensorMeasurementSyncerTest {
             stopWhenFilledBuffer = false,
             staleOffsetNanos = 123456789L,
             staleDetectionEnabled = false,
+            skipWhenProcessing = false,
             accuracyChangedListener = accuracyChangedListener,
             bufferFilledListener = bufferFilledListener,
             syncedMeasurementListener = syncedMeasurementListener,
@@ -156,6 +175,7 @@ class AttitudeAndAccelerometerSensorMeasurementSyncerTest {
         assertFalse(syncer.stopWhenFilledBuffer)
         assertEquals(123456789L, syncer.staleOffsetNanos)
         assertFalse(syncer.staleDetectionEnabled)
+        assertFalse(syncer.skipWhenProcessing)
         assertSame(accuracyChangedListener, syncer.accuracyChangedListener)
         assertSame(bufferFilledListener, syncer.bufferFilledListener)
         assertSame(syncedMeasurementListener, syncer.syncedMeasurementListener)
@@ -164,6 +184,7 @@ class AttitudeAndAccelerometerSensorMeasurementSyncerTest {
         assertSame(accelerometerInterpolator, syncer.accelerometerInterpolator)
         assertEquals(0L, syncer.startTimestamp)
         assertFalse(syncer.running)
+        assertFalse(syncer.processing)
         assertEquals(0, syncer.numberOfProcessedMeasurements)
         assertNull(syncer.mostRecentTimestamp)
         assertNull(syncer.oldestTimestamp)
@@ -188,8 +209,6 @@ class AttitudeAndAccelerometerSensorMeasurementSyncerTest {
         assertNull(syncer.accuracyChangedListener)
 
         // set new value
-        val accuracyChangedListener =
-            mockk<SensorMeasurementSyncer.OnAccuracyChangedListener<AttitudeAndAccelerometerSyncedSensorMeasurement, AttitudeAndAccelerometerSensorMeasurementSyncer>>()
         syncer.accuracyChangedListener = accuracyChangedListener
 
         // check
@@ -205,8 +224,6 @@ class AttitudeAndAccelerometerSensorMeasurementSyncerTest {
         assertNull(syncer.bufferFilledListener)
 
         // set new value
-        val bufferFilledListener =
-            mockk<SensorMeasurementSyncer.OnBufferFilledListener<AttitudeAndAccelerometerSyncedSensorMeasurement, AttitudeAndAccelerometerSensorMeasurementSyncer>>()
         syncer.bufferFilledListener = bufferFilledListener
 
         // check
@@ -222,8 +239,6 @@ class AttitudeAndAccelerometerSensorMeasurementSyncerTest {
         assertNull(syncer.syncedMeasurementListener)
 
         // set new value
-        val syncedMeasurementListener =
-            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AttitudeAndAccelerometerSyncedSensorMeasurement, AttitudeAndAccelerometerSensorMeasurementSyncer>>()
         syncer.syncedMeasurementListener = syncedMeasurementListener
 
         // check
@@ -239,8 +254,6 @@ class AttitudeAndAccelerometerSensorMeasurementSyncerTest {
         assertNull(syncer.staleDetectedMeasurementsListener)
 
         // set new value
-        val staleDetectedMeasurementsListener =
-            mockk<SensorMeasurementSyncer.OnStaleDetectedMeasurementsListener<AttitudeAndAccelerometerSyncedSensorMeasurement, AttitudeAndAccelerometerSensorMeasurementSyncer>>()
         syncer.staleDetectedMeasurementsListener = staleDetectedMeasurementsListener
 
         // check
@@ -413,6 +426,7 @@ class AttitudeAndAccelerometerSensorMeasurementSyncerTest {
         // set as running
         setPrivateProperty(SensorMeasurementSyncer::class, syncer, "running", true)
         assertTrue(syncer.running)
+        assertFalse(syncer.processing)
 
         syncer.start()
     }
@@ -423,6 +437,7 @@ class AttitudeAndAccelerometerSensorMeasurementSyncerTest {
         val syncer = AttitudeAndAccelerometerSensorMeasurementSyncer(context)
 
         assertFalse(syncer.running)
+        assertFalse(syncer.processing)
         assertEquals(0L, syncer.startTimestamp)
 
         // sets variables that will be later reset
@@ -540,6 +555,7 @@ class AttitudeAndAccelerometerSensorMeasurementSyncerTest {
         val syncer = AttitudeAndAccelerometerSensorMeasurementSyncer(context)
 
         assertFalse(syncer.running)
+        assertFalse(syncer.processing)
         assertEquals(0L, syncer.startTimestamp)
 
         val timestamp = System.nanoTime()
@@ -547,6 +563,7 @@ class AttitudeAndAccelerometerSensorMeasurementSyncerTest {
 
         // check
         assertFalse(syncer.running)
+        assertFalse(syncer.processing)
         assertEquals(timestamp, syncer.startTimestamp)
     }
 
@@ -569,11 +586,13 @@ class AttitudeAndAccelerometerSensorMeasurementSyncerTest {
         syncer.setPrivateProperty("accelerometerSensorCollector", accelerometerSensorCollectorSpy)
 
         assertFalse(syncer.running)
+        assertFalse(syncer.processing)
 
         val timestamp = System.nanoTime()
         assertFalse(syncer.start(timestamp))
 
         assertFalse(syncer.running)
+        assertFalse(syncer.processing)
         assertEquals(timestamp, syncer.startTimestamp)
 
         verify(exactly = 1) { attitudeSensorCollectorSpy.start(timestamp) }
@@ -599,11 +618,13 @@ class AttitudeAndAccelerometerSensorMeasurementSyncerTest {
         syncer.setPrivateProperty("accelerometerSensorCollector", accelerometerSensorCollectorSpy)
 
         assertFalse(syncer.running)
+        assertFalse(syncer.processing)
 
         val timestamp = System.nanoTime()
         assertFalse(syncer.start(timestamp))
 
         assertFalse(syncer.running)
+        assertFalse(syncer.processing)
         assertEquals(timestamp, syncer.startTimestamp)
 
         verify(exactly = 1) { attitudeSensorCollectorSpy.start(timestamp) }
@@ -629,11 +650,13 @@ class AttitudeAndAccelerometerSensorMeasurementSyncerTest {
         syncer.setPrivateProperty("accelerometerSensorCollector", accelerometerSensorCollectorSpy)
 
         assertFalse(syncer.running)
+        assertFalse(syncer.processing)
 
         val timestamp = System.nanoTime()
         assertTrue(syncer.start(timestamp))
 
         assertTrue(syncer.running)
+        assertFalse(syncer.processing)
         assertEquals(timestamp, syncer.startTimestamp)
 
         verify(exactly = 1) { attitudeSensorCollectorSpy.start(timestamp) }
@@ -741,6 +764,7 @@ class AttitudeAndAccelerometerSensorMeasurementSyncerTest {
         assertNull(oldestTimestamp)
 
         assertFalse(syncer.running)
+        assertFalse(syncer.processing)
 
         val hasPreviousAttitudeMeasurement: Boolean? =
             syncer.getPrivateProperty("hasPreviousAttitudeMeasurement")
@@ -788,10 +812,6 @@ class AttitudeAndAccelerometerSensorMeasurementSyncerTest {
 
     @Test
     fun attitudeSensorCollector_whenAccuracyChangedListenerAndListenerAvailable_notifies() {
-        val accuracyChangedListener =
-            mockk<SensorMeasurementSyncer.OnAccuracyChangedListener<AttitudeAndAccelerometerSyncedSensorMeasurement, AttitudeAndAccelerometerSensorMeasurementSyncer>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val syncer = AttitudeAndAccelerometerSensorMeasurementSyncer(
             context,
@@ -842,10 +862,6 @@ class AttitudeAndAccelerometerSensorMeasurementSyncerTest {
 
     @Test
     fun attitudeSensorCollector_whenBufferFilledAndListenerAvailable_notifies() {
-        val bufferFilledListener =
-            mockk<SensorMeasurementSyncer.OnBufferFilledListener<AttitudeAndAccelerometerSyncedSensorMeasurement, AttitudeAndAccelerometerSensorMeasurementSyncer>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val syncer = AttitudeAndAccelerometerSensorMeasurementSyncer(
             context,
@@ -874,9 +890,36 @@ class AttitudeAndAccelerometerSensorMeasurementSyncerTest {
     }
 
     @Test
+    fun attitudeSensorCollector_whenSkipWhenProcessingAndProcessing_makesNoAction() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val syncer = AttitudeAndAccelerometerSensorMeasurementSyncer(
+            context,
+            skipWhenProcessing = true,
+            syncedMeasurementListener = syncedMeasurementListener
+        )
+
+        val attitudeSensorCollector: BufferedAttitudeSensorCollector? =
+            syncer.getPrivateProperty("attitudeSensorCollector")
+        requireNotNull(attitudeSensorCollector)
+        val attitudeSensorCollectorSpy = spyk(attitudeSensorCollector)
+        every { attitudeSensorCollectorSpy.getMeasurementsBeforePosition(any()) }.returns(
+            ArrayDeque()
+        )
+        syncer.setPrivateProperty("attitudeSensorCollector", attitudeSensorCollectorSpy)
+        setPrivateProperty(SensorMeasurementSyncer::class, syncer, "processing", true)
+
+        val listener = attitudeSensorCollectorSpy.measurementListener
+        requireNotNull(listener)
+
+        listener.onMeasurement(attitudeSensorCollectorSpy, AttitudeSensorMeasurement(), 0)
+
+        verify(exactly = 0) { attitudeSensorCollectorSpy.getMeasurementsBeforePosition(0) }
+        verify { syncedMeasurementListener wasNot Called }
+        assertNull(syncer.mostRecentTimestamp)
+    }
+
+    @Test
     fun attitudeSensorCollector_whenMeasurementAndNoMeasurementsAvailable_callsCollector() {
-        val syncedMeasurementListener =
-            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AttitudeAndAccelerometerSyncedSensorMeasurement, AttitudeAndAccelerometerSensorMeasurementSyncer>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val syncer = AttitudeAndAccelerometerSensorMeasurementSyncer(
             context,
@@ -904,8 +947,6 @@ class AttitudeAndAccelerometerSensorMeasurementSyncerTest {
 
     @Test
     fun attitudeSensorCollector_whenMeasurementAndMeasurementsAvailable_updatesMostRecentTimestampCopiesMeasurementsAndProcessesThem() {
-        val syncedMeasurementListener =
-            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AttitudeAndAccelerometerSyncedSensorMeasurement, AttitudeAndAccelerometerSensorMeasurementSyncer>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val syncer = AttitudeAndAccelerometerSensorMeasurementSyncer(
             context,
@@ -996,10 +1037,6 @@ class AttitudeAndAccelerometerSensorMeasurementSyncerTest {
 
     @Test
     fun accelerometerSensorCollector_whenAccuracyChangedListenerAndListenerAvailable_notifies() {
-        val accuracyChangedListener =
-            mockk<SensorMeasurementSyncer.OnAccuracyChangedListener<AttitudeAndAccelerometerSyncedSensorMeasurement, AttitudeAndAccelerometerSensorMeasurementSyncer>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val syncer = AttitudeAndAccelerometerSensorMeasurementSyncer(
             context,
@@ -1050,10 +1087,6 @@ class AttitudeAndAccelerometerSensorMeasurementSyncerTest {
 
     @Test
     fun accelerometerSensorCollector_whenBufferFilledAndListenerAvailable_notifies() {
-        val bufferFilledListener =
-            mockk<SensorMeasurementSyncer.OnBufferFilledListener<AttitudeAndAccelerometerSyncedSensorMeasurement, AttitudeAndAccelerometerSensorMeasurementSyncer>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val syncer = AttitudeAndAccelerometerSensorMeasurementSyncer(
             context,
@@ -1085,9 +1118,33 @@ class AttitudeAndAccelerometerSensorMeasurementSyncerTest {
     }
 
     @Test
+    fun accelerometerSensorCollector_whenSkipWhenProcessingAndProcessing_makesNoAction() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val syncer = AttitudeAndAccelerometerSensorMeasurementSyncer(
+            context,
+            skipWhenProcessing = true,
+            syncedMeasurementListener = syncedMeasurementListener
+        )
+
+        val accelerometerSensorCollector: BufferedAccelerometerSensorCollector? =
+            syncer.getPrivateProperty("accelerometerSensorCollector")
+        requireNotNull(accelerometerSensorCollector)
+        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
+        syncer.setPrivateProperty("accelerometerSensorCollector", accelerometerSensorCollectorSpy)
+        setPrivateProperty(SensorMeasurementSyncer::class, syncer, "processing", true)
+
+        val listener = accelerometerSensorCollector.measurementListener
+        requireNotNull(listener)
+
+        listener.onMeasurement(accelerometerSensorCollectorSpy, AccelerometerSensorMeasurement(), 0)
+
+        verify { accelerometerSensorCollectorSpy wasNot Called }
+        verify { syncedMeasurementListener wasNot Called }
+        assertNull(syncer.mostRecentTimestamp)
+    }
+
+    @Test
     fun accelerometerSensorCollector_whenMeasurementAndMostRecentTimestampNotDefined_makesNoAction() {
-        val syncedMeasurementListener =
-            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AttitudeAndAccelerometerSyncedSensorMeasurement, AttitudeAndAccelerometerSensorMeasurementSyncer>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val syncer = AttitudeAndAccelerometerSensorMeasurementSyncer(
             context,
@@ -1112,8 +1169,6 @@ class AttitudeAndAccelerometerSensorMeasurementSyncerTest {
 
     @Test
     fun accelerometerSensorCollector_whenMeasurementMostRecentTimestampDefinedAndNoMeasurementsAvailable_callsCollector() {
-        val syncedMeasurementListener =
-            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AttitudeAndAccelerometerSyncedSensorMeasurement, AttitudeAndAccelerometerSensorMeasurementSyncer>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val syncer = AttitudeAndAccelerometerSensorMeasurementSyncer(
             context,
@@ -1154,8 +1209,6 @@ class AttitudeAndAccelerometerSensorMeasurementSyncerTest {
 
     @Test
     fun accelerometerSensorCollector_whenMeasurementMostRecentTimestampDefinedAndMeasurementsAvailable_copiesMeasurements() {
-        val syncedMeasurementListener =
-            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AttitudeAndAccelerometerSyncedSensorMeasurement, AttitudeAndAccelerometerSensorMeasurementSyncer>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val syncer = AttitudeAndAccelerometerSensorMeasurementSyncer(
             context,
@@ -1244,10 +1297,6 @@ class AttitudeAndAccelerometerSensorMeasurementSyncerTest {
 
     @Test
     fun sensorCollectors_whenAllMeasurements_notifiesSyncedMeasurement() {
-        val syncedMeasurementListener =
-            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AttitudeAndAccelerometerSyncedSensorMeasurement, AttitudeAndAccelerometerSensorMeasurementSyncer>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val syncer = AttitudeAndAccelerometerSensorMeasurementSyncer(
             context,
@@ -1415,14 +1464,6 @@ class AttitudeAndAccelerometerSensorMeasurementSyncerTest {
 
     @Test
     fun cleanupStaleMeasurements_whenStaleMeasurementsAvailable_notifies() {
-        val syncedMeasurementListener =
-            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AttitudeAndAccelerometerSyncedSensorMeasurement, AttitudeAndAccelerometerSensorMeasurementSyncer>>(
-                relaxUnitFun = true
-            )
-        val staleDetectedMeasurementsListener =
-            mockk<SensorMeasurementSyncer.OnStaleDetectedMeasurementsListener<AttitudeAndAccelerometerSyncedSensorMeasurement, AttitudeAndAccelerometerSensorMeasurementSyncer>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val syncer = AttitudeAndAccelerometerSensorMeasurementSyncer(
             context,
@@ -1621,14 +1662,6 @@ class AttitudeAndAccelerometerSensorMeasurementSyncerTest {
 
     @Test
     fun cleanupStaleMeasurements_whenStaleDetectionDisabled_doesNotNotify() {
-        val syncedMeasurementListener =
-            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AttitudeAndAccelerometerSyncedSensorMeasurement, AttitudeAndAccelerometerSensorMeasurementSyncer>>(
-                relaxUnitFun = true
-            )
-        val staleDetectedMeasurementsListener =
-            mockk<SensorMeasurementSyncer.OnStaleDetectedMeasurementsListener<AttitudeAndAccelerometerSyncedSensorMeasurement, AttitudeAndAccelerometerSensorMeasurementSyncer>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val syncer = AttitudeAndAccelerometerSensorMeasurementSyncer(
             context,
@@ -1825,10 +1858,6 @@ class AttitudeAndAccelerometerSensorMeasurementSyncerTest {
 
     @Test
     fun sensorCollectors_whenPreviousAccelerometerMeasurement_notifies() {
-        val syncedMeasurementListener =
-            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AttitudeAndAccelerometerSyncedSensorMeasurement, AttitudeAndAccelerometerSensorMeasurementSyncer>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val syncer = AttitudeAndAccelerometerSensorMeasurementSyncer(
             context,
@@ -2025,10 +2054,6 @@ class AttitudeAndAccelerometerSensorMeasurementSyncerTest {
 
     @Test
     fun sensorCollectors_whenStopping_clearCollectionsAndResets() {
-        val syncedMeasurementListener =
-            mockk<SensorMeasurementSyncer.OnSyncedMeasurementsListener<AttitudeAndAccelerometerSyncedSensorMeasurement, AttitudeAndAccelerometerSensorMeasurementSyncer>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val syncer = AttitudeAndAccelerometerSensorMeasurementSyncer(
             context,

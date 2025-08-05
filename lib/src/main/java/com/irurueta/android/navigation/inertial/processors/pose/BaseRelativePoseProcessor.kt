@@ -58,7 +58,7 @@ abstract class BaseRelativePoseProcessor(
     private val initialAttitude = Quaternion()
 
     /**
-     * Average attitude between prvious and current attitudes.
+     * Average attitude between previous and current attitudes.
      */
     private val averageAttitude = Quaternion()
 

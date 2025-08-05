@@ -43,7 +43,7 @@ enum class MagnetometerSensorType(val value: Int) {
          * @return corresponding sensor type as an enum or null if value has no match.
          */
         fun from(value: Int): MagnetometerSensorType? {
-            return values().find { it.value == value }
+            return entries.find { it.value == value }
         }
     }
 }

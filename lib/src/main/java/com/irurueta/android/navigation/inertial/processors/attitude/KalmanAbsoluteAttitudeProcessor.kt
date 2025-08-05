@@ -25,8 +25,9 @@ import com.irurueta.android.navigation.inertial.collectors.AccelerometerGyroscop
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorMeasurement
-import com.irurueta.android.navigation.inertial.processors.attitude.KalmanRelativeAttitudeProcessor.Companion.DEFAULT_ACCELEROMETER_NOISE_STANDARD_DEVIATION
-import com.irurueta.android.navigation.inertial.processors.attitude.KalmanRelativeAttitudeProcessor.Companion.DEFAULT_GYROSCOPE_NOISE_PSD
+import com.irurueta.android.navigation.inertial.processors.attitude.KalmanAbsoluteAttitudeProcessor.Companion.DEFAULT_ACCELEROMETER_NOISE_STANDARD_DEVIATION
+import com.irurueta.android.navigation.inertial.processors.attitude.KalmanAbsoluteAttitudeProcessor.Companion.DEFAULT_GYROSCOPE_NOISE_PSD
+import com.irurueta.android.navigation.inertial.processors.attitude.KalmanAbsoluteAttitudeProcessor.Companion.DEFAULT_MAGNETOMETER_NOISE_STANDARD_DEVIATION
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.inertial.calibration.AccelerationTriad
 import com.irurueta.navigation.inertial.calibration.AngularSpeedTriad
@@ -405,7 +406,7 @@ class KalmanAbsoluteAttitudeProcessor(
     private val accelerometerVariance = accelerometerNoiseStandardDeviation * accelerometerNoiseStandardDeviation
 
     /**
-     * Contains magnetoemter variance expressed in T^2.
+     * Contains magnetometer variance expressed in T^2.
      */
     private val magnetometerVariance = magnetometerNoiseStandardDeviation * magnetometerNoiseStandardDeviation
 

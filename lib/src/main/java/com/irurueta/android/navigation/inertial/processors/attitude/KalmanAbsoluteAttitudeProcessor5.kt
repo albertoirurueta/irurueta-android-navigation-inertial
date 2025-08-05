@@ -18,15 +18,11 @@ package com.irurueta.android.navigation.inertial.processors.attitude
 import android.hardware.SensorManager
 import android.location.Location
 import com.irurueta.algebra.Matrix
-import com.irurueta.algebra.Utils
 import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorMeasurement
-import com.irurueta.android.navigation.inertial.numerical.SuhQuaternionStepIntegrator
-import com.irurueta.android.navigation.inertial.numerical.TrawnyQuaternionStepIntegrator
-import com.irurueta.android.navigation.inertial.numerical.YuanQuaternionStepIntegrator
 import com.irurueta.android.navigation.inertial.toNEDPosition
 import com.irurueta.geometry.Quaternion
 import com.irurueta.geometry.Rotation3D
@@ -36,8 +32,8 @@ import com.irurueta.navigation.inertial.NEDGravity
 import com.irurueta.navigation.inertial.calibration.AccelerationTriad
 import com.irurueta.navigation.inertial.calibration.AngularSpeedTriad
 import com.irurueta.navigation.inertial.calibration.MagneticFluxDensityTriad
-import com.irurueta.navigation.inertial.calibration.gyroscope.QuaternionStepIntegrator
 import com.irurueta.navigation.inertial.estimators.NEDGravityEstimator
+import com.irurueta.navigation.inertial.wmm.NEDMagneticFluxDensity
 import com.irurueta.navigation.inertial.wmm.WMMEarthMagneticFluxDensityEstimator
 import com.irurueta.navigation.inertial.wmm.WorldMagneticModel
 import com.irurueta.units.MagneticFluxDensityConverter
@@ -52,6 +48,27 @@ import java.util.GregorianCalendar
  * And:
  * Young Soo Suh. Orientation estimation using a quaternion-based indirect Kalman filter with
  * adaptive estimation of external acceleration.
+ *
+ * @param location current device location or null if location is not known. When location and
+ * [currentDate] are provided, magnetic field dip and declination angles are estimated along with
+ * current gravity norm.
+ * @property currentDate current date. This is used to estimate magnetic field dip and declination
+ * angles and provided location. If null, current date is assumed.
+ * @property computeExternalAcceleration true to compute external acceleration, false otherwise.
+ * @property computeEulerAngles true to compute Euler angles of estimated attitude, false otherwise.
+ * @property computeCovariances true to compute covariances, false otherwise.
+ * @property computeEulerAnglesCovariance true to compute Euler angles covariance, false otherwise.
+ * @param phiMatrixMethod method to compute the matrix exponential to integrate orientation.
+ * @param processNoiseCovarianceMethod method to compute process noise covariance matrix.
+ * @param quaternionStepIntegrator type of integrator to use to compute quaternions.
+ * @property gyroscopeNoisePsd gyroscope noise PSD (Power Spectral Density) expressed in (rad^2/s)/Hz.
+ * @property accelerometerNoiseStandardDeviation accelerometer noise standard deviation expressed in
+ * meters per squared second (m/s^2).
+ * @property magnetometerNoiseStandardDeviation magnetometer noise standard deviation expressed in
+ * Teslas (T).
+ * @πroperty externalAccelerationCovarianceMatrixEstimationMethod method to estimate external
+ * acceleration.
+ * @property processorListener listener to handle events raised by this processor.
  */
 class KalmanAbsoluteAttitudeProcessor5(
     location: Location? = null,
@@ -60,18 +77,21 @@ class KalmanAbsoluteAttitudeProcessor5(
     var computeEulerAngles: Boolean = true,
     var computeCovariances: Boolean = true,
     var computeEulerAnglesCovariance: Boolean = true,
-    val fixMagnetometerMeasurements: Boolean = true,
-    phiMatrixMethod: PhiMatrixMethod = PhiMatrixMethod.APPROXIMATED,
+    phiMatrixMethod: PhiMatrixMethod = PhiMatrixMethod.APPROXIMATED, // could also be PRECISE
     processNoiseCovarianceMethod: ProcessNoiseCovarianceMethod = ProcessNoiseCovarianceMethod.BETTER,
-    quaternionStepIntegrator: QuaternionStepIntegratorType = QuaternionStepIntegratorType.RUNGE_KUTTA,
+    quaternionStepIntegrator: QuaternionStepIntegratorType = QuaternionStepIntegratorType.SUH,
     val gyroscopeNoisePsd: Double = DEFAULT_GYROSCOPE_NOISE_PSD,
     val accelerometerNoiseStandardDeviation: Double = DEFAULT_ACCELEROMETER_NOISE_STANDARD_DEVIATION,
     val magnetometerNoiseStandardDeviation: Double = DEFAULT_MAGNETOMETER_NOISE_STANDARD_DEVIATION,
-    val processorListener: OnProcessedListener? = null
+    externalAccelerationCovarianceMatrixEstimationMethod: ExternalAccelerationCovarianceMatrixEstimationMethod =
+        DEFAULT_EXTERNAL_ACCELERATION_COVARIANCE_MATRIX_ESTIMATION_METHOD,
+    val processorListener: OnProcessedListener? = null,
 ) {
 
     /**
      * Gets or sets current device location.
+     * When location and [currentDate] are provided, magnetic field dip and declination angles are
+     * estimated along with current gravity norm.
      */
     var location: Location? = location
         set(value) {
@@ -122,6 +142,13 @@ class KalmanAbsoluteAttitudeProcessor5(
      * (latitude, longitude and height).
      */
     var magneticDip: Double = 0.0
+        private set
+
+    /**
+     * Returns magnetic flux density at current location expressed in local NED reference system.
+     * This is only available if World Magnetic Model is used, otherwise a zero triad is returned.
+     */
+    var magneticFluxDensity: MagneticFluxDensityTriad = MagneticFluxDensityTriad()
         private set
 
     /**
@@ -229,6 +256,11 @@ class KalmanAbsoluteAttitudeProcessor5(
     val nedAttitude = Quaternion()
 
     /**
+     * Estimated device attitude expressed in body coordinates.
+     */
+    val bodyAttitude = Quaternion()
+
+    /**
      * Euler angles associated to estimated NED attitude.
      * Array contains roll, pitch and yaw angles expressed in radians (rad) and following order
      * indicated here.
@@ -324,21 +356,28 @@ class KalmanAbsoluteAttitudeProcessor5(
     val ba = Matrix(AccelerationTriad.COMPONENTS, 1)
 
     /**
+     * Covariance noise matrix of the gyroscope bias
+     */
+    val qbg: Matrix =
+        Matrix.identity(AngularSpeedTriad.COMPONENTS, AngularSpeedTriad.COMPONENTS)
+
+    /**
+     * Covariance noise matrix of the accelerometer bias
+     */
+    val qba: Matrix =
+        Matrix.identity(AccelerationTriad.COMPONENTS, AccelerationTriad.COMPONENTS)
+
+    /**
+     * Contains magnetic flux density at current location expressed in local NED reference system
+     * used internally.
+     * This is only available if World Magnetic Model is used, otherwise a zero triad is returned.
+     */
+    private val nedMagneticFluxDensity = NEDMagneticFluxDensity()
+
+    /**
      * Column vector representing gravity in local leveled NED coordinates.
      */
     private val nedGravityMatrix: Matrix = Matrix(AccelerationTriad.COMPONENTS, 1)
-
-    /**
-     * Column vector representing gravity in body coordinates taking into account current
-     * orientation.
-     */
-    private val bodyGravityMatrix: Matrix = Matrix(AccelerationTriad.COMPONENTS, 1)
-
-    /**
-     * Skew matrix representation of gravity expressed in body coordinates.
-     */
-    private val skewBodyGravityMatrix: Matrix =
-        Matrix(AccelerationTriad.COMPONENTS, AccelerationTriad.COMPONENTS)
 
     /**
      * Instance to be reused to compute year with fractional part when World Magnetic Model is
@@ -434,39 +473,31 @@ class KalmanAbsoluteAttitudeProcessor5(
         MagneticFluxDensityTriad()
 
     /**
-     * Contains previous gyroscope data expressed in NED coordinates respect to body.
-     */
-    private val previousNedBoyAngularSpeedTriad: AngularSpeedTriad = AngularSpeedTriad()
-
-    /**
      * Timestamp of previous sample expressed in nanoseconds.
      */
     private var previousTimestamp: Long = -1L
 
     /**
-     * Integrates angular speed measurements to compute predicted quaternion variation.
+     * Contains predicted attitude respect to body for next step.
+     * Because rotation is defined respect to body, rotation converts from body coordinates
+     * to leveled local NED coordinates respect to Earth:
+     * pn = previousBodyQ * pb
      */
-    private val quaternionStepIntegrator: QuaternionStepIntegrator by lazy {
-        createQuaternionStepIntegratorType(
-            quaternionStepIntegrator
-        )
-    }
-
-    /**
-     * Contains previous step leveled local NED attitude respect to Earth.
-     */
-    private val previousNedQ: Quaternion = Quaternion()
+    private val predictedBodyQ: Quaternion = Quaternion()
 
     /**
      * Contains predicted leveled local NED attitude respect to Earth for next step.
      * Converts from leveled NED local coordinates to body NED coordinates.
      */
-    private val predictedNedQ: Quaternion = Quaternion()
+//    private val predictedNedQ: Quaternion = Quaternion()
 
     /**
-     * Quaternion containing error component of estimation.
+     * Contains corrected attitude respect to body.
+     * Because rotation is defined respect to body, rotation converts from body coordinates
+     * to leveled local NED coordinates respect to Earth:
+     * pn = previousBodyQ * pb
      */
-    private val errorQ: Quaternion = Quaternion()
+    private val bodyQ: Quaternion = Quaternion()
 
     /**
      * Contains corrected leveled local NED attitude respect to Earth.
@@ -474,39 +505,9 @@ class KalmanAbsoluteAttitudeProcessor5(
     private val nedQ: Quaternion = Quaternion()
 
     /**
-     * NED angular speed represented as a matrix.
+     * Contains corrected ECEF attitude respect to Earth.
      */
-    private val angularSpeedMatrix: Matrix = Matrix(AngularSpeedTriad.COMPONENTS, 1)
-
-    /**
-     * Skew matrix of angular speed.
-     */
-    private val angularSpeedSkewMatrix: Matrix =
-        Matrix(AngularSpeedTriad.COMPONENTS, AngularSpeedTriad.COMPONENTS)
-
-    /**
-     * Process equation matrix relating previous and predicted state in a time continuous space.
-     */
-    private val a: Matrix =
-        Matrix(KALMAN_FILTER_DYNAMIC_PARAMETERS, KALMAN_FILTER_DYNAMIC_PARAMETERS)
-
-    /**
-     * 3x3 identity matrix.
-     */
-    private val identity3: Matrix =
-        Matrix.identity(AngularSpeedTriad.COMPONENTS, AngularSpeedTriad.COMPONENTS)
-
-    /**
-     * Matrix relating previous and predicted state when time sampling.
-     */
-    private val phi: Matrix =
-        Matrix(KALMAN_FILTER_DYNAMIC_PARAMETERS, KALMAN_FILTER_DYNAMIC_PARAMETERS)
-
-    /**
-     * Computes matrix that relates previous and predicted Kalman filter state.
-     */
-    private val phiMatrixEstimator: PhiMatrixEstimator =
-        PhiMatrixEstimator.create(method = phiMatrixMethod)
+    private val ecefQ: Quaternion = Quaternion()
 
     /**
      * Continuous time process noise covariance matrix.
@@ -515,48 +516,167 @@ class KalmanAbsoluteAttitudeProcessor5(
         Matrix(KALMAN_FILTER_DYNAMIC_PARAMETERS, KALMAN_FILTER_DYNAMIC_PARAMETERS)
 
     /**
-     * Covariance measurement matrix of the gyroscope
+     * Covariance measurement matrix of the gyroscope measurements.
      */
     private val rg: Matrix =
         Matrix.identity(AngularSpeedTriad.COMPONENTS, AngularSpeedTriad.COMPONENTS)
 
     /**
-     * Covariance noise matrix of the gyroscope bias
+     * Predicts Kalman filter state using gyroscope measurements.
      */
-    private val qbg: Matrix =
-        Matrix.identity(AngularSpeedTriad.COMPONENTS, AngularSpeedTriad.COMPONENTS)
+    private val gyroscopePredictor = KalmanGyroscopePredictor(
+        phiMatrixMethod,
+        processNoiseCovarianceMethod,
+        quaternionStepIntegrator,
+        gyroscopeNoisePsd
+    )
 
     /**
-     * Covariance noise matrix of the accelerometer bias
+     * Corrects Kalman filter state using accelerometer measurements.
      */
-    private val qba: Matrix =
-        Matrix.identity(AccelerationTriad.COMPONENTS, AccelerationTriad.COMPONENTS)
+    private val accelerometerCorrector = KalmanAccelerometerCorrector(
+        externalAccelerationCovarianceMatrixEstimationMethod
+    )
 
     /**
-     * Integrates continuous time process noise covariance matrix.
+     * Corrects Kalman filter state using magnetometer measurements.
      */
-    private val processNoiseCovarianceIntegrator: ProcessNoiseCovarianceIntegrator =
-        ProcessNoiseCovarianceIntegrator.create(method = processNoiseCovarianceMethod)
+    private val magnetometerCorrector = KalmanMagnetometerCorrector()
+
+    // x_hat__prev_prev
+    /**
+     * Kalman state before prediction step.
+     */
+    private val kalmanStatePrePredicted = Matrix(KALMAN_FILTER_DYNAMIC_PARAMETERS, 1)
 
     /**
-     * Discrete-time process Noise covariance matrix.
+     * Kalman filter state error covariance matrix before prediction step.
      */
-    private val qd: Matrix =
+    private val kalmanErrorCovPrePredicted =
+        Matrix(KALMAN_FILTER_DYNAMIC_PARAMETERS, KALMAN_FILTER_DYNAMIC_PARAMETERS)
+
+    // x_hat__next_prev
+    /**
+     * Kalman state after prediction step.
+     */
+    private val kalmanStatePostPredicted = Matrix(KALMAN_FILTER_DYNAMIC_PARAMETERS, 1)
+
+    /**
+     * Kalman filter state error covariance matrix after prediction step.
+     */
+    private val kalmanErrorCovPostPredicted =
+        Matrix(KALMAN_FILTER_DYNAMIC_PARAMETERS, KALMAN_FILTER_DYNAMIC_PARAMETERS)
+
+    // x_hat_a__next_next
+    /**
+     * Corrected Kalman filter state after processing accelerometer measurement.
+     */
+    private val kalmanStateAccelerometerCorrected = Matrix(KALMAN_FILTER_DYNAMIC_PARAMETERS, 1)
+
+    /**
+     * Kalman filter state error covariance matrix after accelerometer correction.
+     */
+    private val kalmanErrorCovAccelerometerCorrected =
+        Matrix(KALMAN_FILTER_DYNAMIC_PARAMETERS, KALMAN_FILTER_DYNAMIC_PARAMETERS)
+
+    // x_hat__next_next
+    /**
+     * Corrected Kalman filter state after processing magnetometer measurement.
+     */
+    private val kalmanStateCorrected = Matrix(KALMAN_FILTER_DYNAMIC_PARAMETERS, 1)
+
+    /**
+     * Kalman filter state error covariance matrix after magnetometer correction.
+     */
+    private val kalmanErrorCovCorrected =
         Matrix(KALMAN_FILTER_DYNAMIC_PARAMETERS, KALMAN_FILTER_DYNAMIC_PARAMETERS)
 
     /**
-     * Contains predicted NED attitude for next step in matrix form.
+     * Contains corrected NED attitude.
      * Converts from leveled NED local coordinates to body NED coordinates.
      */
-    private val predictedNedRotationMatrix: Matrix =
+    private val nedRotationMatrix: Matrix = Matrix(Rotation3D.INHOM_COORDS, Rotation3D.INHOM_COORDS)
+
+    /**
+     * Contains corrected inverse NED attitude.
+     * Converts from body NED coordinates to leveled NED local coordinates.
+     */
+    private val inverseNedRotationMatrix: Matrix =
         Matrix(Rotation3D.INHOM_COORDS, Rotation3D.INHOM_COORDS)
 
     /**
-     * Contains predicted inverse NED attitude.
-     * Converts from body NED coordinates to leveled NED local coordinates.
+     * Covariance of estimated quaternion axis coordinates error.
      */
-    private val inversePredictedNedRotationMatrix: Matrix =
-        Matrix(Rotation3D.INHOM_COORDS, Rotation3D.INHOM_COORDS)
+    private val qeAxisCovariance: Matrix = Matrix(Quaternion.N_ANGLES, Quaternion.N_ANGLES)
+
+    /**
+     * Jacobian of estimated quaternion axis coordinates error.
+     */
+    private val qeJacobian: Matrix = Matrix(Quaternion.N_PARAMS, Quaternion.N_ANGLES)
+
+    /**
+     * Transposed of [qeJacobian].
+     */
+    private val transposedQeJacobian: Matrix = Matrix(Quaternion.N_ANGLES, Quaternion.N_PARAMS)
+
+    /**
+     * Temporal matrix to estimate error quaternion covariance.
+     */
+    private val tmp1: Matrix = Matrix(Quaternion.N_PARAMS, Quaternion.N_ANGLES)
+
+    /**
+     * Estimated error quaternion covariance.
+     */
+    private val qeCovariance: Matrix = Matrix(Quaternion.N_PARAMS, Quaternion.N_PARAMS)
+
+    /**
+     * Jacobian of [predictedNedQ] respect to estimated error quaternion.
+     */
+    private val predictedNedQJacobian: Matrix = Matrix(Quaternion.N_PARAMS, Quaternion.N_PARAMS)
+
+    /**
+     * Transposed of [predictedNedQJacobian].
+     */
+    private val transposedPredictedNedQJacobian: Matrix =
+        Matrix(Quaternion.N_PARAMS, Quaternion.N_PARAMS)
+
+    /**
+     * Temporal matrix to estimate covariance of leveled local NED attitude.
+     */
+    private val tmp2: Matrix = Matrix(Quaternion.N_PARAMS, Quaternion.N_PARAMS)
+
+    /**
+     * Jacobian of conversion NED quaternion attitude into Euler angles.
+     * This is used for propagation of error covariance uncertainty into euler angles covariance
+     * uncertainty.
+     */
+    private val eulerJacobian = Matrix(Quaternion.N_ANGLES, Quaternion.N_PARAMS)
+
+    /**
+     * Transposed of [eulerJacobian].
+     * This is reused for performance reasons.
+     */
+    private val transposedEulerJacobian = Matrix(Quaternion.N_PARAMS, Quaternion.N_ANGLES)
+
+    /**
+     * Temporal matrix to estimate covariance of euler angles of leveled local NED attitude.
+     */
+    private val tmp3: Matrix = Matrix(Quaternion.N_ANGLES, Quaternion.N_PARAMS)
+
+    /**
+     * Rotation quaternion to convert local NED coordinates to ECEF coordinates.
+     */
+    private val nedToEcefQ = Quaternion()
+
+    /**
+     * Rotation quaternion to convert ECEF coordinates to local NED coordinates.
+     */
+    private val ecefToNedQ = Quaternion()
+
+    /**
+     * Temporary quaternion used internally.
+     */
+    private val tmpQ = Quaternion()
 
     /**
      * Processes provided synced accelerometer, gyroscope and magnetometer measurement to obtain  a
@@ -605,6 +725,7 @@ class KalmanAbsoluteAttitudeProcessor5(
         val isFirst = updateTimeInterval(timestamp)
         processMeasurement(gyroscopeMeasurement, nedBodyAngularSpeedTriad)
         return if (isFirst) {
+            initKalmanErrorCov()
             false
         } else {
             processMeasurement(accelerometerMeasurement, nedBodyAccelerationTriad)
@@ -612,7 +733,9 @@ class KalmanAbsoluteAttitudeProcessor5(
 
             predict()
             correctAccelerometer()
-            correctMagnetometer()
+            //correctMagnetometer()
+
+            //processCovariance()
 
             true
         }
@@ -625,29 +748,40 @@ class KalmanAbsoluteAttitudeProcessor5(
         previousTimestamp = -1L
         timeIntervalSeconds = 0.0
 
-        // reset attitude estimation
-        /*nedQ.a = 1.0
-        nedQ.b = 0.0
-        nedQ.c = 0.0
-        nedQ.d = 0.0
-        previousNedQ.fromQuaternion(nedQ)
-
         // reset Kalman filter matrices
-        kalmanFilter.statePre.initialize(0.0)
-        kalmanFilter.statePost.initialize(0.0)
+        kalmanStatePrePredicted.initialize(0.0)
+        kalmanStatePostPredicted.initialize(0.0)
 
-        kalmanFilter.errorCovPre.initialize(0.0)
-        kalmanFilter.errorCovPost.initialize(0.0)*/
+        kalmanErrorCovPrePredicted.initialize(0.0)
+        kalmanErrorCovPostPredicted.initialize(0.0)
 
-        // reset Kalman filter matrices
-        kalmanStatePre.initialize(0.0)
-        kalmanStatePost.initialize(0.0)
+        kalmanStateCorrected.initialize(0.0)
+        kalmanErrorCovCorrected.initialize(0.0)
 
-        kalmanErrorCovPre.initialize(0.0)
-        kalmanErrorCovPost.initialize(0.0)
+        initKalmanErrorCov()
 
-        qab.initialize(0.0)
-        accelerometerResidual.initialize(0.0)
+        accelerometerCorrector.reset()
+    }
+
+    fun initKalmanErrorCov() {
+        val qErrorVar = 0.2
+        Matrix.identity(kalmanErrorCovCorrected)
+        for (i in 0 until 3) {
+            kalmanErrorCovCorrected.setElementAt(i, i, qErrorVar)
+        }
+
+        val bgVar = 0.0005
+        for (i in 3 until 6) {
+            kalmanErrorCovCorrected.setElementAt(i, i, bgVar)
+        }
+
+        val baVar = 0.05
+        for (i in 6 until 9) {
+            kalmanErrorCovCorrected.setElementAt(i, i, baVar)
+        }
+
+        kalmanErrorCovPrePredicted.copyFrom(kalmanErrorCovCorrected)
+        kalmanErrorCovPostPredicted.copyFrom(kalmanErrorCovCorrected)
     }
 
     /**
@@ -672,212 +806,178 @@ class KalmanAbsoluteAttitudeProcessor5(
      * current gyroscope measurements and current orientation estimation.
      */
     private fun predict() {
-        previousNedQ.fromQuaternion(nedQ)
+        kalmanStatePrePredicted.copyFrom(kalmanStateCorrected)
+        kalmanErrorCovPrePredicted.copyFrom(kalmanErrorCovCorrected)
 
-        // Propagate quaternion using a step integrator
-        val previousWx = previousNedBoyAngularSpeedTriad.valueX
-        val previousWy = previousNedBoyAngularSpeedTriad.valueY
-        val previousWz = previousNedBoyAngularSpeedTriad.valueZ
-        val currentWx = nedBodyAngularSpeedTriad.valueX
-        val currentWy = nedBodyAngularSpeedTriad.valueY
-        val currentWz = nedBodyAngularSpeedTriad.valueZ
-        quaternionStepIntegrator.integrate(
-            previousNedQ,
-            previousWx,
-            previousWy,
-            previousWz,
-            currentWx,
-            currentWy,
-            currentWz,
-            timeIntervalSeconds,
-            predictedNedQ
+        gyroscopePredictor.kalmanStatePrePredicted = kalmanStatePrePredicted
+        gyroscopePredictor.kalmanErrorCovPrePredicted = kalmanErrorCovPrePredicted
+        gyroscopePredictor.previousBodyQ = bodyQ
+//        gyroscopePredictor.nedQ = nedQ
+        gyroscopePredictor.nedBodyAngularSpeedTriad = nedBodyAngularSpeedTriad
+        gyroscopePredictor.timeIntervalSeconds = timeIntervalSeconds
+
+        gyroscopePredictor.predict()
+
+        predictedBodyQ.fromQuaternion(gyroscopePredictor.predictedBodyQ)
+//        predictedNedQ.fromQuaternion(gyroscopePredictor.predictedNedQ)
+        rg.copyFrom(gyroscopePredictor.rg)
+        q.copyFrom(gyroscopePredictor.q)
+        qbg.copyFrom(gyroscopePredictor.qbg)
+        qba.copyFrom(gyroscopePredictor.qba)
+        kalmanStatePostPredicted.copyFrom(gyroscopePredictor.kalmanStatePostPredicted)
+        kalmanErrorCovPostPredicted.copyFrom(gyroscopePredictor.kalmanErrorCovPostPredicted)
+
+        kalmanStateCorrected.copyFrom(kalmanStatePostPredicted)
+        kalmanErrorCovCorrected.copyFrom(kalmanErrorCovPostPredicted)
+        bodyQ.fromQuaternion(predictedBodyQ)
+        bodyQ.inverse(nedQ)
+        nedQ.normalize()
+//        nedQ.fromQuaternion(predictedNedQ)
+        // TODO: we need to notify body attitude and thus the inverse?
+//        nedQ.inverse(nedAttitude)
+        bodyAttitude.fromQuaternion(bodyQ)
+        nedAttitude.fromQuaternion(nedQ)
+//        convertNedToEcef(nedQ, ecefQ)
+//        ecefAttitude.fromQuaternion(ecefQ)
+    }
+
+    /**
+     * Corrects Kalman filter state using accelerometer measurements.
+     */
+    private fun correctAccelerometer() {
+        accelerometerCorrector.accelerometerNoiseStandardDeviation =
+            accelerometerNoiseStandardDeviation
+        accelerometerCorrector.gravityNorm = gravityNorm
+        // TODO: use nedQ before prediction instead of predictedNedQ?
+        accelerometerCorrector.predictedBodyQ = bodyQ
+//        accelerometerCorrector.predictedNedQ = nedQ //predictedNedQ
+        accelerometerCorrector.nedBodyAccelerationTriad = nedBodyAccelerationTriad
+        accelerometerCorrector.kalmanErrorCovPostPredicted = kalmanErrorCovCorrected //kalmanErrorCovPostPredicted
+        accelerometerCorrector.kalmanStatePostPredicted = kalmanStateCorrected //kalmanStatePostPredicted
+
+        accelerometerCorrector.correct()
+
+        // get results
+
+        // Kalman filter state error covariance
+        kalmanErrorCovAccelerometerCorrected.copyFrom(
+            accelerometerCorrector.kalmanErrorCovAccelerometerCorrected
         )
 
-        // Compute the state transition matrix Φ and the discrete-time process noise covariance
-        computePhiAndNoiseCovarianceMatrices()
+        // Kalman filter state
+        kalmanStateAccelerometerCorrected.copyFrom(
+            accelerometerCorrector.kalmanStateAccelerometerCorrected
+        )
 
-        // project the state ahead
-        phi.multiply(kalmanStatePre, kalmanStatePost)
+        kalmanStateCorrected.copyFrom(kalmanStateAccelerometerCorrected)
+        kalmanErrorCovCorrected.copyFrom(kalmanErrorCovAccelerometerCorrected)
 
-        // Project the state covariance matrix ahead
-        // kalmanTemp1 = Phi * P(k)
-        phi.multiply(kalmanErrorCovPost, kalmanErrorCovPre)
-        // P'(k) =  kalmanTemp1 * Phi' + Q
-        phi.transpose(phiTransposed)
-        kalmanErrorCovPre.multiply(phiTransposed)
-        kalmanErrorCovPre.add(q)
+        // attitude
+        bodyQ.fromQuaternion(accelerometerCorrector.bodyQ)
+        bodyQ.inverse(nedQ)
+        nedQ.normalize()
+//        nedQ.fromQuaternion(accelerometerCorrector.nedQ)
+        bodyAttitude.fromQuaternion(bodyQ)
+        nedAttitude.fromQuaternion(nedQ)
+//        convertNedToEcef(nedQ, ecefQ)
+//        ecefAttitude.fromQuaternion(ecefQ)
+
+        // accelerometer bias
+        ba.copyFrom(accelerometerCorrector.ba)
+
+        // gyroscope bias
+        bg.copyFrom(accelerometerCorrector.bg)
+
+        if (computeExternalAcceleration) {
+            // external acceleration in body coordinates
+            /*bodyA.copyFrom(accelerometerCorrector.externalAcceleration)
+
+            // convert boy external acceleration to leveled local NED coordinates respect to Earth
+            nedA.getValuesAsMatrix(bodyAMatrix)
+
+            nedQ.toMatrixRotation(nedRotationMatrix)
+            nedRotationMatrix.transpose(inverseNedRotationMatrix)
+            inverseNedRotationMatrix.multiply(bodyAMatrix, nedAMatrix)
+            nedA.setValueCoordinates(nedAMatrix)
+
+            // convert leveled local NED coordinates to ECEF coordinates respect to Earth
+            nedToEcefMatrix.multiply(nedAMatrix, ecefAMatrix)
+            ecefA.setValueCoordinates(ecefAMatrix)*/
+        }
+
+        if (computeCovariances || computeEulerAngles || computeEulerAnglesCovariance) {
+            //predictedNedQJacobian.copyFrom(accelerometerCorrector.predictedNedQJacobian)
+        }
     }
 
-    private val phiTransposed =
-        Matrix(KALMAN_FILTER_DYNAMIC_PARAMETERS, KALMAN_FILTER_DYNAMIC_PARAMETERS)
-
-    private val kalmanErrorCovPre =
-        Matrix(KALMAN_FILTER_DYNAMIC_PARAMETERS, KALMAN_FILTER_DYNAMIC_PARAMETERS)
-
-    private val kalmanErrorCovPost =
-        Matrix(KALMAN_FILTER_DYNAMIC_PARAMETERS, KALMAN_FILTER_DYNAMIC_PARAMETERS)
-
-    // x_hat__prev_prev
-    private val kalmanStatePre = Matrix(KALMAN_FILTER_DYNAMIC_PARAMETERS, 1)
-
-    // x_hat__next_prev
-    private val kalmanStatePost = Matrix(KALMAN_FILTER_DYNAMIC_PARAMETERS, 1)
-
-    private fun correctAccelerometer() {
-        // compute accelerometer measurement matrix
-        predictedNedQ.normalize()
-        predictedNedQ.toMatrixRotation(predictedNedRotationMatrix)
-        predictedNedRotationMatrix.transpose(inversePredictedNedRotationMatrix)
-
-        predictedNedRotationMatrix.multiply(nedGravityMatrix, bodyGravityMatrix)
-        Utils.skewMatrix(bodyGravityMatrix, skewBodyGravityMatrix)
-        skewBodyGravityMatrix.multiplyByScalar(2.0)
-
-        ha.initialize(0.0)
-        ha.setSubmatrix(0, 0, 2, 2, skewBodyGravityMatrix)
-        Matrix.identity(identity3)
-        ha.setSubmatrix(0, 6, 2, 8, identity3)
-
-        // compute accelerometer measurement error
-        nedBodyAccelerationTriad.getValuesAsMatrix(bodyAccelerationMatrix)
-        bodyAccelerationMatrix.subtract(bodyGravityMatrix, accelerometerMeasurementError)
-
-        // Estimate external acceleration covariance matrix
-        estimateExternalAccelerationCovarianceMatrix()
-
-        /*
-%% 4. Compute accelerometer residual covariance matrix:
-% [Eq. 19a (partial) Suh]
-% S_a: Accelerometer residual covariance matrix
-S_a = H_a * P__next_prev * H_a' + R_a + Q_hat_a_b;
-
-
-
-%% 5. Compute accelerometer Kalman gain:
-% [Eq. 19a Suh]
-% K_a: Accelerometer Kalman gain
-K_a = P__next_prev * H_a' / S_a;
-         */
-    }
-
-    private val ha = Matrix(AccelerationTriad.COMPONENTS, KALMAN_FILTER_DYNAMIC_PARAMETERS)
-
-    private val bodyAccelerationMatrix = Matrix(AccelerationTriad.COMPONENTS, 1)
-
-    //za
-    private val accelerometerMeasurementError = Matrix(AccelerationTriad.COMPONENTS, 1)
-
-    private fun estimateExternalAccelerationCovarianceMatrix() {
-
-        /*
-%% 3. Estimate external acceleration covariance matrix:
-% Q_hat_a_b: Estimated external acceleration covariance matrix
-%
-%   * Method proposed by Suh ([Eq. 34 - 35 Suh]):
-[Q_hat_a_b_SUH, lambda, mu] = estimateExtAccCov_Suh(r_a, lambda, mu, H_a, P__next_prev, R_a);
-%
-% Q_hat_a_b_SUH = Q_hat_a_b; % DEBUG ONLY
-%   * An ALTERNATIVE method, cited by Suh ([Eq. 37 Suh]):
-Q_hat_a_b_SAB = estimateExtAccCov_Sab(y_a__next);       % It DOES WORK as well (ALTERNATIVE method proposed by A. M. Sabatini,
-                                                        % “Quaternion-based extended Kalman filter for determining orientation
-                                                        % by inertial and magnetic sensing,” IEEE Trans. Biomed. Eng., vol. 53,
-                                                        % no. 7, pp. 1346–1356, Jul. 2006.)
-         */
-    }
-
-    private val qab = Matrix(AccelerationTriad.COMPONENTS, AccelerationTriad.COMPONENTS)
-
-    private val accelerometerResiduals = Matrix(AccelerationTriad.COMPONENTS, SUH_M1)
-
-    private fun estimateExternalAccelerationCovarianceMatrixSuh() {
-        // ra
-        accelerometerResiduals.transpose(accelerometerResidualsTransposed)
-
-        // ra * ra'
-        accelerometerResiduals.multiply(accelerometerResidualsTransposed, accelerometerResidualsTemp)
-
-        circularShiftByColumn(lambda, 1)
-        circularShiftByColumn(mu, 1)
-        //predictedNedRotationMatrix
-    }
-
-    private val accelerometerResidualsTransposed = Matrix(SUH_M1, AccelerationTriad.COMPONENTS)
-
-    private val accelerometerResidualsTemp =
-        Matrix(AccelerationTriad.COMPONENTS, AccelerationTriad.COMPONENTS)
-    
-    private fun estimateExternalAccelerationCovarianceMatrixSabatini() {
-
-    }
-
-    private fun estimateExternalAccelerationCovarianceMatrixZeros() {
-        qab.initialize(0.0)
-    }
-
+    /**
+     * Corrects Kalman filter state using magnetometer measurements.
+     */
     private fun correctMagnetometer() {
+        magnetometerCorrector.magnetometerNoiseStandardDeviation =
+            magnetometerNoiseStandardDeviation
+        magnetometerCorrector.correctedBodyQ = bodyQ
+//        magnetometerCorrector.correctedNedQ = nedQ
+        magnetometerCorrector.nedBodyMagneticFluxDensityTriad = nedBodyMagneticFluxDensityTriad
+        magnetometerCorrector.magneticFluxDensity = magneticFluxDensity
+        magnetometerCorrector.kalmanErrorCovAccelerometerCorrected =
+            kalmanErrorCovAccelerometerCorrected
+        magnetometerCorrector.kalmanStateAccelerometerCorrected = kalmanStateAccelerometerCorrected
 
+        magnetometerCorrector.correct()
+
+        // get results
+        kalmanStateCorrected.copyFrom(magnetometerCorrector.kalmanStateMagnetometerCorrected)
+        kalmanErrorCovCorrected.copyFrom(magnetometerCorrector.kalmanErrorCovMagnetometerCorrected)
     }
 
     /**
-     * Compute the state transition matrix Φ and the discrete-time process noise covariance.
+     * Processes covariances of estimated results.
      */
-    private fun computePhiAndNoiseCovarianceMatrices() {
-        computeProcessEquationMatrix()
-        computePhiMatrix()
-        computeProcessNoiseCovarianceMatrix()
-    }
+    private fun processCovariance() {
+        if (computeCovariances || computeEulerAngles || computeEulerAnglesCovariance) {
+            // process covariances
 
-    /**
-     * Computes process equation matrix defining the differential equation system:
-     * d(x(f))/dt = A*x(t) + w
-     */
-    private fun computeProcessEquationMatrix() {
-        nedBodyAngularSpeedTriad.getValuesAsMatrix(angularSpeedMatrix)
-        Utils.skewMatrix(angularSpeedMatrix, angularSpeedSkewMatrix)
-        angularSpeedSkewMatrix.multiplyByScalar(-1.0)
+            // TODO: isPositiveSemiDefinite covariance?
 
-        a.initialize(0.0)
-        a.setSubmatrix(0, 0, 2, 2, angularSpeedSkewMatrix)
+            // take only the part corresponding to ECEF quaternion covariance
+            kalmanErrorCovAccelerometerCorrected.getSubmatrix(0, 0, 2, 2, qeAxisCovariance)
 
-        Matrix.identity(identity3)
-        identity3.multiplyByScalar(-0.5)
-        a.setSubmatrix(0, 3, 2, 5, identity3)
-    }
+            propagateUncertainty(
+                qeAxisCovariance,
+                qeJacobian,
+                tmp1,
+                transposedQeJacobian,
+                qeCovariance
+            )
 
-    /**
-     * Computes matrix that relates previous and predicted Kalman filter state.
-     * Kalman filter state contains:
-     * - quaternion respect to Earth (in local navigation system expressed in NED coordinates).
-     * 4x1 vector
-     * - bias of gyroscope respect to body expressed in NED coordinates. 3x1 vector
-     * - bias of accelerometer respect to body expressed in NED coordinates. 3x1 vector.
-     */
-    private fun computePhiMatrix() {
-        phiMatrixEstimator.a = a
-        phiMatrixEstimator.estimate(timeIntervalSeconds, phi)
-    }
+            predictedNedQJacobian.transpose(transposedPredictedNedQJacobian)
 
-    /**
-     * Computes process noise covariance matrix.
-     */
-    private fun computeProcessNoiseCovarianceMatrix() {
-        updateCovarianceMeasurementMatrix()
+            propagateUncertainty(
+                qeCovariance,
+                predictedNedQJacobian,
+                tmp2,
+                transposedPredictedNedQJacobian,
+                internalNedQCovariance
+            )
 
-        q.initialize(0.0)
-        q.setSubmatrix(0, 0, 2, 2, rg)
-        q.multiplyByScalar(0.25)
-        q.setSubmatrix(3, 3, 5, 5, qbg)
-        q.setSubmatrix(6, 6, 8, 8, qba)
+            if (computeEulerAngles) {
+                if (computeEulerAnglesCovariance) {
+                    nedQ.toEulerAngles(internalEulerAngles, eulerJacobian)
+                    eulerJacobian.transpose(transposedEulerJacobian)
 
-        processNoiseCovarianceIntegrator.a = a
-        processNoiseCovarianceIntegrator.q = q
-        processNoiseCovarianceIntegrator.integrate(timeIntervalSeconds, qd)
-    }
-
-    private fun updateCovarianceMeasurementMatrix() {
-        Matrix.identity(rg)
-        val gyroVariance = gyroscopeNoisePsd / timeIntervalSeconds
-        rg.multiplyByScalar(gyroVariance)
+                    propagateUncertainty(
+                        internalNedQCovariance,
+                        eulerJacobian,
+                        tmp3,
+                        transposedEulerJacobian,
+                        internalEulerCovariance
+                    )
+                } else {
+                    nedQ.toEulerAngles(internalEulerAngles)
+                }
+            }
+        }
     }
 
     /**
@@ -897,6 +997,9 @@ Q_hat_a_b_SAB = estimateExtAccCov_Sab(y_a__next);       % It DOES WORK as well (
                 magneticDeclination = wmmEstimator.getDeclination(
                     nedPosition, year(calendar)
                 )
+
+                wmmEstimator.estimate(nedPosition, year(calendar), nedMagneticFluxDensity)
+                nedMagneticFluxDensity.getCoordinatesAsTriad(magneticFluxDensity)
             }
 
             NEDGravityEstimator.estimateGravity(nedPosition, nedGravity)
@@ -913,6 +1016,10 @@ Q_hat_a_b_SAB = estimateExtAccCov_Sab(y_a__next);       % It DOES WORK as well (
             Matrix.identity(nedToEcefMatrix)
         }
 
+        nedToEcefQ.fromInhomogeneousMatrix(nedToEcefMatrix)
+        nedToEcefQ.normalize()
+        nedToEcefQ.conjugate(ecefToNedQ)
+
         if (wmmEstimator == null) {
             magneticDip = 0.0
             magneticDeclination = 0.0
@@ -920,6 +1027,14 @@ Q_hat_a_b_SAB = estimateExtAccCov_Sab(y_a__next);       % It DOES WORK as well (
 
         nedGravityMatrix.initialize(0.0)
         nedGravityMatrix.setElementAtIndex(2, gravityNorm)
+    }
+
+    /**
+     * Converts quaternion from NED to ECEF coordinates.
+     */
+    private fun convertNedToEcef(nedQuaternion: Quaternion, result: Quaternion) {
+        nedToEcefQ.multiply(nedQuaternion, tmpQ)
+        tmpQ.multiply(ecefToNedQ, result)
     }
 
     /**
@@ -953,48 +1068,6 @@ Q_hat_a_b_SAB = estimateExtAccCov_Sab(y_a__next);       % It DOES WORK as well (
         qeJacobian.transpose(transposedQeJacobian)
     }
 
-    /**
-     * Indicates type of quaternion integrator step. Different types exist with different levels of
-     * accuracy and computation accuracy.
-     */
-    enum class QuaternionStepIntegratorType {
-        /**
-         * Performs quaternion integration using Suh's method, which has a medium accuracy and
-         * computational complexity.
-         */
-        SUH,
-
-        /**
-         * Performs quaternion integration using Trawny's method, which has a medium accuracy and
-         * computational complexity.
-         */
-        TRAWNY,
-
-        /**
-         * Performs quaternion integration using Yuan's meth0d, which has a medium accuracy and
-         * computational complexity.
-         */
-        YUAN,
-
-        /**
-         * Performs quaternion integration using Euler's method, which is the item accurate and has
-         * the smallest computational complexity.
-         */
-        EULER_METHOD,
-
-        /**
-         * Performs quaternion integration using mid-point algorithm, which offers a medium accuracy
-         * an computational complexity.
-         */
-        MID_POINT,
-
-        /**
-         * Performs quaternion integration using Runge-Kutta of 4th order (aka RK4) algorithm, which
-         * offers high accuracy at the expense of higher computational complexity.
-         */
-        RUNGE_KUTTA
-    }
-
     companion object {
         /**
          * Default variance of the gyroscope output per Hz (or variance at 1 Hz).
@@ -1021,6 +1094,12 @@ Q_hat_a_b_SAB = estimateExtAccCov_Sab(y_a__next);       % It DOES WORK as well (
         const val EARTH_GRAVITY = SensorManager.GRAVITY_EARTH.toDouble()
 
         /**
+         * Default external acceleration covariance matrix estimation method.
+         */
+        val DEFAULT_EXTERNAL_ACCELERATION_COVARIANCE_MATRIX_ESTIMATION_METHOD =
+            ExternalAccelerationCovarianceMatrixEstimationMethod.SUH //.ZEROES //.SABATINI //.SUH
+
+        /**
          * Kalman filter's number of dynamic parameters.
          * Filter state contains:
          * - error of orientation quaternion respect to Earth (in local navigation system expressed
@@ -1032,23 +1111,9 @@ Q_hat_a_b_SAB = estimateExtAccCov_Sab(y_a__next);       % It DOES WORK as well (
         private const val KALMAN_FILTER_DYNAMIC_PARAMETERS = 9
 
         /**
-         * Kalman filter's number of measurement parameters.
-         * Filter uses measurements of:
-         * - Accelerometer respect to body expressed in NED coordinates. 3x1 vector.
-         * - Magnetometer respect to body expressed in NED coordinates. 3x1 vector.
-         */
-        private const val KALMAN_FILTER_MEASUREMENT_PARAMETERS = 6
-
-        /**
          * Small value to avoid process noise bias components being stuck.
          */
         private const val BG = 1e-6
-
-        private const val SUH_M1 = 3
-
-        private const val SUH_M2 = 2
-
-        private const val SUH_GAMMA = 0.1
 
         /**
          * Processes an accelerometer measurement, taking into account their biases (if available).
@@ -1135,35 +1200,6 @@ Q_hat_a_b_SAB = estimateExtAccCov_Sab(y_a__next);       % It DOES WORK as well (
         }
 
         /**
-         * Creates a quaternion step integrator to integrate angular speed measurements to predict
-         * a new orientation when new gyroscope measurements arrive.
-         *
-         * @param type type of step integrator to create.
-         * @return created quaternion step integrator.
-         */
-        private fun createQuaternionStepIntegratorType(type: QuaternionStepIntegratorType): QuaternionStepIntegrator {
-            return when (type) {
-                QuaternionStepIntegratorType.SUH -> SuhQuaternionStepIntegrator()
-
-                QuaternionStepIntegratorType.TRAWNY -> TrawnyQuaternionStepIntegrator()
-
-                QuaternionStepIntegratorType.YUAN -> YuanQuaternionStepIntegrator()
-
-                QuaternionStepIntegratorType.EULER_METHOD -> QuaternionStepIntegrator.create(
-                    com.irurueta.navigation.inertial.calibration.gyroscope.QuaternionStepIntegratorType.EULER_METHOD
-                )
-
-                QuaternionStepIntegratorType.MID_POINT -> QuaternionStepIntegrator.create(
-                    com.irurueta.navigation.inertial.calibration.gyroscope.QuaternionStepIntegratorType.MID_POINT
-                )
-
-                QuaternionStepIntegratorType.RUNGE_KUTTA -> QuaternionStepIntegrator.create(
-                    com.irurueta.navigation.inertial.calibration.gyroscope.QuaternionStepIntegratorType.RUNGE_KUTTA
-                )
-            }
-        }
-
-        /**
          * Gets year value with fractional part to be used for estimation using World Magnetic
          * Model.
          *
@@ -1177,20 +1213,27 @@ Q_hat_a_b_SAB = estimateExtAccCov_Sab(y_a__next);       % It DOES WORK as well (
             return WMMEarthMagneticFluxDensityEstimator.convertTime(calendar)
         }
 
-        private fun circularShiftByColumn(matrix: Matrix, shift: Int) {
-            val rows = matrix.rows
-            val columns = matrix.columns
-            for (j in 0 until columns) {
-                val j2 = (j + shift) % columns
-                for (i in 0 until rows) {
-                    val value1 = matrix.getElementAt(i, j)
-                    val value2 = matrix.getElementAt(i, j2)
+        /**
+         * Propagates effects of uncertainty to provided covariance matrix using provided jacobian,
+         * and transposed jacobian.
+         * Uncertainty is propagated as: Cov' = J * Cov * J^T
+         *
+         * @param covariance input covariance whose uncertainty is being propagated
+         * @param jacobian jacobian to propagate uncertainty of covariance.
+         */
+        private fun propagateUncertainty(
+            covariance: Matrix,
+            jacobian: Matrix,
+            tmp: Matrix,
+            transposedJacobian: Matrix,
+            result: Matrix
+        ) {
+            // As defined in: https://en.wikipedia.org/wiki/Propagation_of_uncertainty
+            // covariance propagation for a function converting quaternion to euler angles is:
+            // Cov`= J * Cov * J^T
 
-                    // swap values
-                    matrix.setElementAt(i, j, value2)
-                    matrix.setElementAt(i, j2, value1)
-                }
-            }
+            jacobian.multiply(covariance, tmp)
+            tmp.multiply(transposedJacobian, result)
         }
     }
 

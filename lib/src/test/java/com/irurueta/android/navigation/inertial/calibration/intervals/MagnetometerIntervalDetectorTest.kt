@@ -19,10 +19,10 @@ import android.content.Context
 import android.hardware.Sensor
 import android.os.SystemClock
 import androidx.test.core.app.ApplicationProvider
-import com.irurueta.android.navigation.inertial.callPrivateFuncWithResult
 import com.irurueta.android.navigation.inertial.collectors.*
-import com.irurueta.android.navigation.inertial.getPrivateProperty
-import com.irurueta.android.navigation.inertial.setPrivateProperty
+import com.irurueta.android.testutils.callPrivateFuncWithResult
+import com.irurueta.android.testutils.getPrivateProperty
+import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.navigation.frames.CoordinateTransformation
 import com.irurueta.navigation.frames.FrameType
 import com.irurueta.navigation.frames.NEDPosition
@@ -38,16 +38,58 @@ import com.irurueta.navigation.inertial.wmm.WMMEarthMagneticFluxDensityEstimator
 import com.irurueta.statistics.UniformRandomizer
 import com.irurueta.units.*
 import io.mockk.*
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
 import org.junit.After
 import org.junit.Assert.*
+import org.junit.Ignore
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.util.*
 
-
+@Ignore("possible memory leak")
 @RunWith(RobolectricTestRunner::class)
 class MagnetometerIntervalDetectorTest {
+
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var initializationStartedListener:
+            IntervalDetector.OnInitializationStartedListener<MagnetometerIntervalDetector>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var initializationCompletedListener:
+            IntervalDetector.OnInitializationCompletedListener<MagnetometerIntervalDetector>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var errorListener:
+            IntervalDetector.OnErrorListener<MagnetometerIntervalDetector>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var staticIntervalDetectedListener:
+            IntervalDetector.OnStaticIntervalDetectedListener<MagnetometerIntervalDetector>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var dynamicIntervalDetectedListener:
+            IntervalDetector.OnDynamicIntervalDetectedListener<MagnetometerIntervalDetector>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var resetListener:
+            IntervalDetector.OnResetListener<MagnetometerIntervalDetector>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var measurementListener:
+            MagnetometerSensorCollector.OnMeasurementListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var accuracyChangedListener:
+            SensorCollector.OnAccuracyChangedListener
+
+    @MockK
+    private lateinit var sensor: Sensor
 
     @After
     fun tearDown() {
@@ -649,8 +691,6 @@ class MagnetometerIntervalDetectorTest {
 
     @Test
     fun constructor_whenInitializationStartedListener_setsExpectedValues() {
-        val initializationStartedListener =
-            mockk<IntervalDetector.OnInitializationStartedListener<MagnetometerIntervalDetector>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(
             context,
@@ -851,10 +891,6 @@ class MagnetometerIntervalDetectorTest {
 
     @Test
     fun constructor_whenInitializationCompletedListener_setsExpectedValues() {
-        val initializationStartedListener =
-            mockk<IntervalDetector.OnInitializationStartedListener<MagnetometerIntervalDetector>>()
-        val initializationCompletedListener =
-            mockk<IntervalDetector.OnInitializationCompletedListener<MagnetometerIntervalDetector>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(
             context,
@@ -1056,11 +1092,6 @@ class MagnetometerIntervalDetectorTest {
 
     @Test
     fun constructor_whenErrorListener_setsExpectedValues() {
-        val initializationStartedListener =
-            mockk<IntervalDetector.OnInitializationStartedListener<MagnetometerIntervalDetector>>()
-        val initializationCompletedListener =
-            mockk<IntervalDetector.OnInitializationCompletedListener<MagnetometerIntervalDetector>>()
-        val errorListener = mockk<IntervalDetector.OnErrorListener<MagnetometerIntervalDetector>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(
             context,
@@ -1263,13 +1294,6 @@ class MagnetometerIntervalDetectorTest {
 
     @Test
     fun constructor_whenStaticIntervalDetectedListener_setsExpectedValues() {
-        val initializationStartedListener =
-            mockk<IntervalDetector.OnInitializationStartedListener<MagnetometerIntervalDetector>>()
-        val initializationCompletedListener =
-            mockk<IntervalDetector.OnInitializationCompletedListener<MagnetometerIntervalDetector>>()
-        val errorListener = mockk<IntervalDetector.OnErrorListener<MagnetometerIntervalDetector>>()
-        val staticIntervalDetectedListener =
-            mockk<IntervalDetector.OnStaticIntervalDetectedListener<MagnetometerIntervalDetector>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(
             context,
@@ -1473,15 +1497,6 @@ class MagnetometerIntervalDetectorTest {
 
     @Test
     fun constructor_whenDynamicIntervalDetectedListener_setsExpectedValues() {
-        val initializationStartedListener =
-            mockk<IntervalDetector.OnInitializationStartedListener<MagnetometerIntervalDetector>>()
-        val initializationCompletedListener =
-            mockk<IntervalDetector.OnInitializationCompletedListener<MagnetometerIntervalDetector>>()
-        val errorListener = mockk<IntervalDetector.OnErrorListener<MagnetometerIntervalDetector>>()
-        val staticIntervalDetectedListener =
-            mockk<IntervalDetector.OnStaticIntervalDetectedListener<MagnetometerIntervalDetector>>()
-        val dynamicIntervalDetectedListener =
-            mockk<IntervalDetector.OnDynamicIntervalDetectedListener<MagnetometerIntervalDetector>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(
             context,
@@ -1686,16 +1701,6 @@ class MagnetometerIntervalDetectorTest {
 
     @Test
     fun constructor_whenResetListener_setsExpectedValues() {
-        val initializationStartedListener =
-            mockk<IntervalDetector.OnInitializationStartedListener<MagnetometerIntervalDetector>>()
-        val initializationCompletedListener =
-            mockk<IntervalDetector.OnInitializationCompletedListener<MagnetometerIntervalDetector>>()
-        val errorListener = mockk<IntervalDetector.OnErrorListener<MagnetometerIntervalDetector>>()
-        val staticIntervalDetectedListener =
-            mockk<IntervalDetector.OnStaticIntervalDetectedListener<MagnetometerIntervalDetector>>()
-        val dynamicIntervalDetectedListener =
-            mockk<IntervalDetector.OnDynamicIntervalDetectedListener<MagnetometerIntervalDetector>>()
-        val resetListener = mockk<IntervalDetector.OnResetListener<MagnetometerIntervalDetector>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(
             context,
@@ -1901,17 +1906,6 @@ class MagnetometerIntervalDetectorTest {
 
     @Test
     fun constructor_whenMeasurementListener_setsExpectedValues() {
-        val initializationStartedListener =
-            mockk<IntervalDetector.OnInitializationStartedListener<MagnetometerIntervalDetector>>()
-        val initializationCompletedListener =
-            mockk<IntervalDetector.OnInitializationCompletedListener<MagnetometerIntervalDetector>>()
-        val errorListener = mockk<IntervalDetector.OnErrorListener<MagnetometerIntervalDetector>>()
-        val staticIntervalDetectedListener =
-            mockk<IntervalDetector.OnStaticIntervalDetectedListener<MagnetometerIntervalDetector>>()
-        val dynamicIntervalDetectedListener =
-            mockk<IntervalDetector.OnDynamicIntervalDetectedListener<MagnetometerIntervalDetector>>()
-        val resetListener = mockk<IntervalDetector.OnResetListener<MagnetometerIntervalDetector>>()
-        val measurementListener = mockk<MagnetometerSensorCollector.OnMeasurementListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(
             context,
@@ -2118,18 +2112,6 @@ class MagnetometerIntervalDetectorTest {
 
     @Test
     fun constructor_whenAccuracyChangedListener_setsExpectedValues() {
-        val initializationStartedListener =
-            mockk<IntervalDetector.OnInitializationStartedListener<MagnetometerIntervalDetector>>()
-        val initializationCompletedListener =
-            mockk<IntervalDetector.OnInitializationCompletedListener<MagnetometerIntervalDetector>>()
-        val errorListener = mockk<IntervalDetector.OnErrorListener<MagnetometerIntervalDetector>>()
-        val staticIntervalDetectedListener =
-            mockk<IntervalDetector.OnStaticIntervalDetectedListener<MagnetometerIntervalDetector>>()
-        val dynamicIntervalDetectedListener =
-            mockk<IntervalDetector.OnDynamicIntervalDetectedListener<MagnetometerIntervalDetector>>()
-        val resetListener = mockk<IntervalDetector.OnResetListener<MagnetometerIntervalDetector>>()
-        val measurementListener = mockk<MagnetometerSensorCollector.OnMeasurementListener>()
-        val accuracyChangedListener = mockk<SensorCollector.OnAccuracyChangedListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(
             context,
@@ -2344,8 +2326,6 @@ class MagnetometerIntervalDetectorTest {
         assertNull(detector.initializationStartedListener)
 
         // set new value
-        val initializationStartedListener =
-            mockk<IntervalDetector.OnInitializationStartedListener<MagnetometerIntervalDetector>>()
         detector.initializationStartedListener = initializationStartedListener
 
         // check
@@ -2361,8 +2341,6 @@ class MagnetometerIntervalDetectorTest {
         assertNull(detector.initializationCompletedListener)
 
         // set new value
-        val initializationCompletedListener =
-            mockk<IntervalDetector.OnInitializationCompletedListener<MagnetometerIntervalDetector>>()
         detector.initializationCompletedListener = initializationCompletedListener
 
         // check
@@ -2378,7 +2356,6 @@ class MagnetometerIntervalDetectorTest {
         assertNull(detector.errorListener)
 
         // set new value
-        val errorListener = mockk<IntervalDetector.OnErrorListener<MagnetometerIntervalDetector>>()
         detector.errorListener = errorListener
 
         // check
@@ -2386,7 +2363,7 @@ class MagnetometerIntervalDetectorTest {
     }
 
     @Test
-    fun staticIntervalDetectedlistener_setsExpectedValue() {
+    fun staticIntervalDetectedListener_setsExpectedValue() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context)
 
@@ -2394,8 +2371,6 @@ class MagnetometerIntervalDetectorTest {
         assertNull(detector.staticIntervalDetectedListener)
 
         // sets new value
-        val staticIntervalDetectedListener =
-            mockk<IntervalDetector.OnStaticIntervalDetectedListener<MagnetometerIntervalDetector>>()
         detector.staticIntervalDetectedListener = staticIntervalDetectedListener
 
         // check
@@ -2411,8 +2386,6 @@ class MagnetometerIntervalDetectorTest {
         assertNull(detector.dynamicIntervalDetectedListener)
 
         // sets new value
-        val dynamicIntervalDetectedListener =
-            mockk<IntervalDetector.OnDynamicIntervalDetectedListener<MagnetometerIntervalDetector>>()
         detector.dynamicIntervalDetectedListener = dynamicIntervalDetectedListener
 
         // check
@@ -2428,7 +2401,6 @@ class MagnetometerIntervalDetectorTest {
         assertNull(detector.resetListener)
 
         // set new value
-        val resetListener = mockk<IntervalDetector.OnResetListener<MagnetometerIntervalDetector>>()
         detector.resetListener = resetListener
 
         // check
@@ -2444,7 +2416,6 @@ class MagnetometerIntervalDetectorTest {
         assertNull(detector.measurementListener)
 
         // set new value
-        val measurementListener = mockk<MagnetometerSensorCollector.OnMeasurementListener>()
         detector.measurementListener = measurementListener
 
         // check
@@ -2460,7 +2431,6 @@ class MagnetometerIntervalDetectorTest {
         assertNull(detector.accuracyChangedListener)
 
         // set new value
-        val accuracyChangedListener = mockk<SensorCollector.OnAccuracyChangedListener>()
         detector.accuracyChangedListener = accuracyChangedListener
 
         // check
@@ -2477,7 +2447,6 @@ class MagnetometerIntervalDetectorTest {
         requireNotNull(collector)
 
         val collectorSpy = spyk(collector)
-        val sensor = mockk<Sensor>()
         every { collectorSpy.sensor }.returns(sensor)
         detector.setPrivateProperty("collector", collectorSpy)
 
@@ -3162,10 +3131,6 @@ class MagnetometerIntervalDetectorTest {
 
     @Test
     fun onMeasurement_whenInitializingAndListener_notifies() {
-        val initializationStartedListener =
-            mockk<IntervalDetector.OnInitializationStartedListener<MagnetometerIntervalDetector>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(
             context,
@@ -3306,8 +3271,6 @@ class MagnetometerIntervalDetectorTest {
 
     @Test
     fun onMeasurement_whenMeasurementListener_notifiesMeasurement() {
-        val measurementListener =
-            mockk<MagnetometerSensorCollector.OnMeasurementListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector =
             MagnetometerIntervalDetector(context, measurementListener = measurementListener)
@@ -3390,8 +3353,6 @@ class MagnetometerIntervalDetectorTest {
 
     @Test
     fun onAccuracyChanged_whenUnreliableAndListener_setsResultAsUnreliableAndNotifies() {
-        val errorListener =
-            mockk<IntervalDetector.OnErrorListener<MagnetometerIntervalDetector>>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context, errorListener = errorListener)
 
@@ -3422,8 +3383,6 @@ class MagnetometerIntervalDetectorTest {
 
     @Test
     fun onAccuracyChanged_whenNotUnreliable_makesNoAction() {
-        val errorListener =
-            mockk<IntervalDetector.OnErrorListener<MagnetometerIntervalDetector>>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(context, errorListener = errorListener)
 
@@ -3451,10 +3410,6 @@ class MagnetometerIntervalDetectorTest {
 
     @Test
     fun onAccuracyChanged_whenUnreliableListener_notifiesAccuracyChange() {
-        val accuracyChangedListener =
-            mockk<SensorCollector.OnAccuracyChangedListener>(relaxUnitFun = true)
-        val errorListener =
-            mockk<IntervalDetector.OnErrorListener<MagnetometerIntervalDetector>>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = MagnetometerIntervalDetector(
             context,
@@ -5201,10 +5156,6 @@ class MagnetometerIntervalDetectorTest {
 
     @Test
     fun onInitializationStarted_whenListener_notifies() {
-        val initializationStartedListener =
-            mockk<IntervalDetector.OnInitializationStartedListener<MagnetometerIntervalDetector>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val intervalDetector = MagnetometerIntervalDetector(
             context,
@@ -5242,10 +5193,6 @@ class MagnetometerIntervalDetectorTest {
 
     @Test
     fun onInitializationCompleted_whenListener_notifies() {
-        val initializationCompletedListener =
-            mockk<IntervalDetector.OnInitializationCompletedListener<MagnetometerIntervalDetector>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val intervalDetector = MagnetometerIntervalDetector(
             context,
@@ -5305,8 +5252,6 @@ class MagnetometerIntervalDetectorTest {
 
     @Test
     fun onError_whenListener_stopsAndNotifies() {
-        val errorListener =
-            mockk<IntervalDetector.OnErrorListener<MagnetometerIntervalDetector>>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val intervalDetector = MagnetometerIntervalDetector(context, errorListener = errorListener)
 
@@ -5375,10 +5320,6 @@ class MagnetometerIntervalDetectorTest {
 
     @Test
     fun onStaticIntervalDetected_whenListener_notifies() {
-        val staticIntervalDetectedListener =
-            mockk<IntervalDetector.OnStaticIntervalDetectedListener<MagnetometerIntervalDetector>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val intervalDetector = MagnetometerIntervalDetector(
             context,
@@ -5467,10 +5408,6 @@ class MagnetometerIntervalDetectorTest {
 
     @Test
     fun onDynamicIntervalDetected_whenListener_notifies() {
-        val dynamicIntervalDetectedListener =
-            mockk<IntervalDetector.OnDynamicIntervalDetectedListener<MagnetometerIntervalDetector>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val intervalDetector = MagnetometerIntervalDetector(
             context,
@@ -5550,8 +5487,6 @@ class MagnetometerIntervalDetectorTest {
 
     @Test
     fun onReset_whenListener_notifies() {
-        val resetListener =
-            mockk<IntervalDetector.OnResetListener<MagnetometerIntervalDetector>>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val intervalDetector = MagnetometerIntervalDetector(context, resetListener = resetListener)
 

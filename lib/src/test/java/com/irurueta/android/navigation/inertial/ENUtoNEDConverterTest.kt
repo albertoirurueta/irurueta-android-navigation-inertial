@@ -29,20 +29,11 @@ import com.irurueta.navigation.inertial.calibration.gyroscope.QuaternionStepInte
 import com.irurueta.numerical.JacobianEstimator
 import com.irurueta.numerical.MultiVariateFunctionEvaluatorListener
 import com.irurueta.statistics.UniformRandomizer
-import io.mockk.clearAllMocks
-import io.mockk.unmockkAll
-import org.junit.After
 import org.junit.Assert.*
 import org.junit.Test
 import kotlin.math.sqrt
 
 class ENUtoNEDConverterTest {
-
-    @After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-    }
 
     @Test
     fun convert_whenAccelerationTriad_returnsExpectedResult() {

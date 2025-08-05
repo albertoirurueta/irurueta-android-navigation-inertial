@@ -22,7 +22,7 @@ import com.irurueta.numerical.EvaluationException;
  * Interface to define how matrix (multivariate) single dimension functions can be evaluated in
  * Double Exponential Rule Quadrature function integrators.
  */
-interface DoubleExponentialMatrixSingleDimensionFunctionEvaluatorListener {
+public interface DoubleExponentialMatrixSingleDimensionFunctionEvaluatorListener {
 
     /**
      * Evaluates a single dimension function such as f(x) at provided point and returns the result.

@@ -45,7 +45,7 @@ enum class AttitudeSensorType(val value: Int) {
          * @return attitude sensor type as an enum or null if value has no match.
          */
         fun from(value: Int): AttitudeSensorType? {
-            return values().find { it.value == value }
+            return entries.find { it.value == value }
         }
     }
 }

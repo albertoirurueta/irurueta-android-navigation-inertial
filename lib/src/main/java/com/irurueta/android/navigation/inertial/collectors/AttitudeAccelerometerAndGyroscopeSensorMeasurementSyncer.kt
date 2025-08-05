@@ -54,6 +54,7 @@ import java.util.*
  * consider the measurement as stale so that t is skipped from synced measurement processing and
  * returned back from buffer to cache of measurements.
  * @property staleDetectionEnabled true to enable stale measurement detection, false otherwise.
+ * @property skipWhenProcessing true to skip new measurements when processing a measurement.
  * @property accuracyChangedListener listener to notify changes in accuracy.
  * @property bufferFilledListener listener to notify that some buffer has been filled. This usually
  * happens when consumer of measurements cannot keep up with the rate at which measurements are
@@ -83,6 +84,7 @@ class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer(
     stopWhenFilledBuffer: Boolean = true,
     staleOffsetNanos: Long = DEFAULT_STALE_OFFSET_NANOS,
     staleDetectionEnabled: Boolean = true,
+    skipWhenProcessing: Boolean = true,
     accuracyChangedListener: OnAccuracyChangedListener<AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement, AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer>? = null,
     bufferFilledListener: OnBufferFilledListener<AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement, AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer>? = null,
     syncedMeasurementListener: OnSyncedMeasurementsListener<AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement, AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer>? = null,
@@ -95,6 +97,7 @@ class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer(
     stopWhenFilledBuffer,
     staleOffsetNanos,
     staleDetectionEnabled,
+    skipWhenProcessing,
     accuracyChangedListener,
     bufferFilledListener,
     syncedMeasurementListener,
@@ -243,7 +246,13 @@ class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer(
             }
         },
         measurementListener = { collector, _, bufferPosition ->
+            if (this.skipWhenProcessing && processing) {
+                return@BufferedAttitudeSensorCollector
+            }
+
             synchronized(this@AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer) {
+                processing = true
+
                 val measurementsBeforePosition =
                     collector.getMeasurementsBeforePosition(bufferPosition)
                 val lastTimestamp = measurementsBeforePosition.lastOrNull()?.timestamp
@@ -254,6 +263,8 @@ class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer(
                     copyToAttitudeMeasurements(measurementsBeforePosition)
                     processMeasurements()
                 }
+
+                processing = false
             }
         }
     )
@@ -286,7 +297,13 @@ class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer(
             }
         },
         measurementListener = { collector, _, _ ->
+            if (this.skipWhenProcessing && processing) {
+                return@BufferedAccelerometerSensorCollector
+            }
+
             synchronized(this@AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer) {
+                processing = true
+
                 val mostRecentTimestamp =
                     this@AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer.mostRecentTimestamp
                 if (mostRecentTimestamp != null) {
@@ -297,6 +314,8 @@ class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer(
                         copyToAccelerometerMeasurements(measurementsBeforeTimestamp)
                     }
                 }
+
+                processing = false
             }
         }
     )
@@ -329,7 +348,13 @@ class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer(
             }
         },
         measurementListener = { collector, _, _ ->
+            if (this.skipWhenProcessing && processing) {
+                return@BufferedGyroscopeSensorCollector
+            }
+
             synchronized(this@AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer) {
+                processing = true
+
                 val mostRecentTimestamp =
                     this@AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer.mostRecentTimestamp
                 if (mostRecentTimestamp != null) {
@@ -340,6 +365,8 @@ class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer(
                         copyToGyroscopeMeasurements(measurementsBeforeTimestamp)
                     }
                 }
+
+                processing = false
             }
         }
     )
@@ -503,6 +530,7 @@ class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer(
     @Synchronized
     override fun stop() {
         stopping = true
+        processing = false
         attitudeSensorCollector.stop()
         accelerometerSensorCollector.stop()
         gyroscopeSensorCollector.stop()
@@ -741,7 +769,7 @@ class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer(
             hasPreviousAttitudeMeasurement = true
         }
 
-        if (alreadyProcessedAttitudeMeasurements.size > 0) {
+        if (alreadyProcessedAttitudeMeasurements.isNotEmpty()) {
             // remove processed attitude measurements
             attitudeMeasurements.removeAll(alreadyProcessedAttitudeMeasurements)
         }
@@ -755,6 +783,7 @@ class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer(
             // collections are reset at this point to prevent concurrent modifications
             clearCollectionsAndReset()
             stopping = false
+            processing = false
         }
     }
 
@@ -766,6 +795,7 @@ class AttitudeAccelerometerAndGyroscopeSensorMeasurementSyncer(
         mostRecentTimestamp = null
         oldestTimestamp = null
         running = false
+        processing = false
 
         hasPreviousAttitudeMeasurement = false
         hasPreviousAccelerometerMeasurement = false

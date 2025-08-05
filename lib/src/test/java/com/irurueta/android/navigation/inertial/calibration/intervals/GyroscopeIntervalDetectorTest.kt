@@ -19,10 +19,10 @@ import android.content.Context
 import android.hardware.Sensor
 import android.os.SystemClock
 import androidx.test.core.app.ApplicationProvider
-import com.irurueta.android.navigation.inertial.callPrivateFuncWithResult
 import com.irurueta.android.navigation.inertial.collectors.*
-import com.irurueta.android.navigation.inertial.getPrivateProperty
-import com.irurueta.android.navigation.inertial.setPrivateProperty
+import com.irurueta.android.testutils.callPrivateFuncWithResult
+import com.irurueta.android.testutils.getPrivateProperty
+import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.navigation.frames.*
 import com.irurueta.navigation.frames.converters.NEDtoECEFPositionVelocityConverter
 import com.irurueta.navigation.inertial.BodyKinematics
@@ -36,14 +36,54 @@ import com.irurueta.navigation.inertial.estimators.ECEFKinematicsEstimator
 import com.irurueta.statistics.UniformRandomizer
 import com.irurueta.units.*
 import io.mockk.*
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
 import org.junit.After
 import org.junit.Assert.*
+import org.junit.Ignore
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
+@Ignore("possible memory leak")
 @RunWith(RobolectricTestRunner::class)
 class GyroscopeIntervalDetectorTest {
+
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var initializationStartedListener:
+            IntervalDetector.OnInitializationStartedListener<GyroscopeIntervalDetector>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var initializationCompletedListener:
+            IntervalDetector.OnInitializationCompletedListener<GyroscopeIntervalDetector>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var errorListener: IntervalDetector.OnErrorListener<GyroscopeIntervalDetector>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var staticIntervalDetectedListener:
+            IntervalDetector.OnStaticIntervalDetectedListener<GyroscopeIntervalDetector>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var dynamicIntervalDetectedListener:
+            IntervalDetector.OnDynamicIntervalDetectedListener<GyroscopeIntervalDetector>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var resetListener:
+            IntervalDetector.OnResetListener<GyroscopeIntervalDetector>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var measurementListener: GyroscopeSensorCollector.OnMeasurementListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var accuracyChangedListener: SensorCollector.OnAccuracyChangedListener
+
+    @MockK
+    private lateinit var sensor: Sensor
 
     @After
     fun tearDown() {
@@ -636,8 +676,6 @@ class GyroscopeIntervalDetectorTest {
 
     @Test
     fun constructor_whenInitializationStartedListener_setsDefaultValues() {
-        val initializationStartedListener =
-            mockk<IntervalDetector.OnInitializationStartedListener<GyroscopeIntervalDetector>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(
             context,
@@ -835,10 +873,6 @@ class GyroscopeIntervalDetectorTest {
 
     @Test
     fun constructor_whenInitializationCompletedListener_setsDefaultValues() {
-        val initializationStartedListener =
-            mockk<IntervalDetector.OnInitializationStartedListener<GyroscopeIntervalDetector>>()
-        val initializationCompletedListener =
-            mockk<IntervalDetector.OnInitializationCompletedListener<GyroscopeIntervalDetector>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(
             context,
@@ -1037,11 +1071,6 @@ class GyroscopeIntervalDetectorTest {
 
     @Test
     fun constructor_whenErrorListener_setsDefaultValues() {
-        val initializationStartedListener =
-            mockk<IntervalDetector.OnInitializationStartedListener<GyroscopeIntervalDetector>>()
-        val initializationCompletedListener =
-            mockk<IntervalDetector.OnInitializationCompletedListener<GyroscopeIntervalDetector>>()
-        val errorListener = mockk<IntervalDetector.OnErrorListener<GyroscopeIntervalDetector>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(
             context,
@@ -1241,13 +1270,6 @@ class GyroscopeIntervalDetectorTest {
 
     @Test
     fun constructor_whenStaticIntervalDetectedListener_setsDefaultValues() {
-        val initializationStartedListener =
-            mockk<IntervalDetector.OnInitializationStartedListener<GyroscopeIntervalDetector>>()
-        val initializationCompletedListener =
-            mockk<IntervalDetector.OnInitializationCompletedListener<GyroscopeIntervalDetector>>()
-        val errorListener = mockk<IntervalDetector.OnErrorListener<GyroscopeIntervalDetector>>()
-        val staticIntervalDetectedListener =
-            mockk<IntervalDetector.OnStaticIntervalDetectedListener<GyroscopeIntervalDetector>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(
             context,
@@ -1448,15 +1470,6 @@ class GyroscopeIntervalDetectorTest {
 
     @Test
     fun constructor_whenDynamicIntervalDetectedListener_setsDefaultValues() {
-        val initializationStartedListener =
-            mockk<IntervalDetector.OnInitializationStartedListener<GyroscopeIntervalDetector>>()
-        val initializationCompletedListener =
-            mockk<IntervalDetector.OnInitializationCompletedListener<GyroscopeIntervalDetector>>()
-        val errorListener = mockk<IntervalDetector.OnErrorListener<GyroscopeIntervalDetector>>()
-        val staticIntervalDetectedListener =
-            mockk<IntervalDetector.OnStaticIntervalDetectedListener<GyroscopeIntervalDetector>>()
-        val dynamicIntervalDetectedListener =
-            mockk<IntervalDetector.OnDynamicIntervalDetectedListener<GyroscopeIntervalDetector>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(
             context,
@@ -1658,16 +1671,6 @@ class GyroscopeIntervalDetectorTest {
 
     @Test
     fun constructor_whenResetListener_setsDefaultValues() {
-        val initializationStartedListener =
-            mockk<IntervalDetector.OnInitializationStartedListener<GyroscopeIntervalDetector>>()
-        val initializationCompletedListener =
-            mockk<IntervalDetector.OnInitializationCompletedListener<GyroscopeIntervalDetector>>()
-        val errorListener = mockk<IntervalDetector.OnErrorListener<GyroscopeIntervalDetector>>()
-        val staticIntervalDetectedListener =
-            mockk<IntervalDetector.OnStaticIntervalDetectedListener<GyroscopeIntervalDetector>>()
-        val dynamicIntervalDetectedListener =
-            mockk<IntervalDetector.OnDynamicIntervalDetectedListener<GyroscopeIntervalDetector>>()
-        val resetListener = mockk<IntervalDetector.OnResetListener<GyroscopeIntervalDetector>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(
             context,
@@ -1870,17 +1873,6 @@ class GyroscopeIntervalDetectorTest {
 
     @Test
     fun constructor_whenMeasurementListener_setsDefaultValues() {
-        val initializationStartedListener =
-            mockk<IntervalDetector.OnInitializationStartedListener<GyroscopeIntervalDetector>>()
-        val initializationCompletedListener =
-            mockk<IntervalDetector.OnInitializationCompletedListener<GyroscopeIntervalDetector>>()
-        val errorListener = mockk<IntervalDetector.OnErrorListener<GyroscopeIntervalDetector>>()
-        val staticIntervalDetectedListener =
-            mockk<IntervalDetector.OnStaticIntervalDetectedListener<GyroscopeIntervalDetector>>()
-        val dynamicIntervalDetectedListener =
-            mockk<IntervalDetector.OnDynamicIntervalDetectedListener<GyroscopeIntervalDetector>>()
-        val resetListener = mockk<IntervalDetector.OnResetListener<GyroscopeIntervalDetector>>()
-        val measurementListener = mockk<GyroscopeSensorCollector.OnMeasurementListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(
             context,
@@ -2084,18 +2076,6 @@ class GyroscopeIntervalDetectorTest {
 
     @Test
     fun constructor_whenAccuracyChangedListener_setsDefaultValues() {
-        val initializationStartedListener =
-            mockk<IntervalDetector.OnInitializationStartedListener<GyroscopeIntervalDetector>>()
-        val initializationCompletedListener =
-            mockk<IntervalDetector.OnInitializationCompletedListener<GyroscopeIntervalDetector>>()
-        val errorListener = mockk<IntervalDetector.OnErrorListener<GyroscopeIntervalDetector>>()
-        val staticIntervalDetectedListener =
-            mockk<IntervalDetector.OnStaticIntervalDetectedListener<GyroscopeIntervalDetector>>()
-        val dynamicIntervalDetectedListener =
-            mockk<IntervalDetector.OnDynamicIntervalDetectedListener<GyroscopeIntervalDetector>>()
-        val resetListener = mockk<IntervalDetector.OnResetListener<GyroscopeIntervalDetector>>()
-        val measurementListener = mockk<GyroscopeSensorCollector.OnMeasurementListener>()
-        val accuracyChangedListener = mockk<SensorCollector.OnAccuracyChangedListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(
             context,
@@ -2307,8 +2287,6 @@ class GyroscopeIntervalDetectorTest {
         assertNull(detector.initializationStartedListener)
 
         // set new value
-        val initializationStartedListener =
-            mockk<IntervalDetector.OnInitializationStartedListener<GyroscopeIntervalDetector>>()
         detector.initializationStartedListener = initializationStartedListener
 
         // check
@@ -2324,8 +2302,6 @@ class GyroscopeIntervalDetectorTest {
         assertNull(detector.initializationCompletedListener)
 
         // set new value
-        val initializationCompletedListener =
-            mockk<IntervalDetector.OnInitializationCompletedListener<GyroscopeIntervalDetector>>()
         detector.initializationCompletedListener = initializationCompletedListener
 
         // check
@@ -2341,7 +2317,6 @@ class GyroscopeIntervalDetectorTest {
         assertNull(detector.errorListener)
 
         // set new value
-        val errorListener = mockk<IntervalDetector.OnErrorListener<GyroscopeIntervalDetector>>()
         detector.errorListener = errorListener
 
         // check
@@ -2357,8 +2332,6 @@ class GyroscopeIntervalDetectorTest {
         assertNull(detector.staticIntervalDetectedListener)
 
         // set new value
-        val staticIntervalDetectedListener =
-            mockk<IntervalDetector.OnStaticIntervalDetectedListener<GyroscopeIntervalDetector>>()
         detector.staticIntervalDetectedListener = staticIntervalDetectedListener
 
         // check
@@ -2374,8 +2347,6 @@ class GyroscopeIntervalDetectorTest {
         assertNull(detector.dynamicIntervalDetectedListener)
 
         // set new value
-        val dynamicIntervalDetectedListener =
-            mockk<IntervalDetector.OnDynamicIntervalDetectedListener<GyroscopeIntervalDetector>>()
         detector.dynamicIntervalDetectedListener = dynamicIntervalDetectedListener
 
         // check
@@ -2391,7 +2362,6 @@ class GyroscopeIntervalDetectorTest {
         assertNull(detector.resetListener)
 
         // set new value
-        val resetListener = mockk<IntervalDetector.OnResetListener<GyroscopeIntervalDetector>>()
         detector.resetListener = resetListener
 
         // check
@@ -2407,7 +2377,6 @@ class GyroscopeIntervalDetectorTest {
         assertNull(detector.measurementListener)
 
         // set new value
-        val measurementListener = mockk<GyroscopeSensorCollector.OnMeasurementListener>()
         detector.measurementListener = measurementListener
 
         // check
@@ -2423,7 +2392,6 @@ class GyroscopeIntervalDetectorTest {
         assertNull(detector.accuracyChangedListener)
 
         // set new value
-        val accuracyChangedListener = mockk<SensorCollector.OnAccuracyChangedListener>()
         detector.accuracyChangedListener = accuracyChangedListener
 
         // check
@@ -2440,7 +2408,6 @@ class GyroscopeIntervalDetectorTest {
         requireNotNull(collector)
 
         val collectorSpy = spyk(collector)
-        val sensor = mockk<Sensor>()
         every { collectorSpy.sensor }.returns(sensor)
         detector.setPrivateProperty("collector", collectorSpy)
 
@@ -3101,10 +3068,6 @@ class GyroscopeIntervalDetectorTest {
 
     @Test
     fun onMeasurement_whenInitializingAndListener_notifies() {
-        val initializationStartedListener =
-            mockk<IntervalDetector.OnInitializationStartedListener<GyroscopeIntervalDetector>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector =
             GyroscopeIntervalDetector(
@@ -3237,8 +3200,6 @@ class GyroscopeIntervalDetectorTest {
 
     @Test
     fun onMeasurement_whenMeasurementListener_notifiesMeasurement() {
-        val measurementListener =
-            mockk<GyroscopeSensorCollector.OnMeasurementListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector =
             GyroscopeIntervalDetector(context, measurementListener = measurementListener)
@@ -3312,8 +3273,6 @@ class GyroscopeIntervalDetectorTest {
 
     @Test
     fun onAccuracyChanged_whenUnreliableAndListener_setsResultAsUnreliableAndNotifies() {
-        val errorListener =
-            mockk<IntervalDetector.OnErrorListener<GyroscopeIntervalDetector>>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context, errorListener = errorListener)
 
@@ -3344,8 +3303,6 @@ class GyroscopeIntervalDetectorTest {
 
     @Test
     fun onAccuracyChanged_whenNotUnreliable_makesNoAction() {
-        val errorListener =
-            mockk<IntervalDetector.OnErrorListener<GyroscopeIntervalDetector>>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context, errorListener = errorListener)
 
@@ -3373,10 +3330,6 @@ class GyroscopeIntervalDetectorTest {
 
     @Test
     fun onAccuracyChanged_whenUnreliableListener_notifiesAccuracyChange() {
-        val accuracyChangedListener =
-            mockk<SensorCollector.OnAccuracyChangedListener>(relaxUnitFun = true)
-        val errorListener =
-            mockk<IntervalDetector.OnErrorListener<GyroscopeIntervalDetector>>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(
             context,
@@ -5153,10 +5106,6 @@ class GyroscopeIntervalDetectorTest {
 
     @Test
     fun onInitializationStarted_whenListener_notifies() {
-        val initializationStartedListener =
-            mockk<IntervalDetector.OnInitializationStartedListener<GyroscopeIntervalDetector>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val intervalDetector =
             GyroscopeIntervalDetector(
@@ -5195,10 +5144,6 @@ class GyroscopeIntervalDetectorTest {
 
     @Test
     fun onInitializationCompleted_whenListener_notifies() {
-        val initializationCompletedListener =
-            mockk<IntervalDetector.OnInitializationCompletedListener<GyroscopeIntervalDetector>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val intervalDetector = GyroscopeIntervalDetector(
             context,
@@ -5258,8 +5203,6 @@ class GyroscopeIntervalDetectorTest {
 
     @Test
     fun onError_whenListener_stopsAndNotifies() {
-        val errorListener =
-            mockk<IntervalDetector.OnErrorListener<GyroscopeIntervalDetector>>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val intervalDetector = GyroscopeIntervalDetector(context, errorListener = errorListener)
 
@@ -5328,10 +5271,6 @@ class GyroscopeIntervalDetectorTest {
 
     @Test
     fun onStaticIntervalDetected_whenListener_notifies() {
-        val staticIntervalDetectedListener =
-            mockk<IntervalDetector.OnStaticIntervalDetectedListener<GyroscopeIntervalDetector>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val intervalDetector = GyroscopeIntervalDetector(
             context,
@@ -5419,10 +5358,6 @@ class GyroscopeIntervalDetectorTest {
 
     @Test
     fun onDynamicIntervalDetected_whenListener_notifies() {
-        val dynamicIntervalDetectedListener =
-            mockk<IntervalDetector.OnDynamicIntervalDetectedListener<GyroscopeIntervalDetector>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val intervalDetector = GyroscopeIntervalDetector(
             context,
@@ -5502,8 +5437,6 @@ class GyroscopeIntervalDetectorTest {
 
     @Test
     fun onReset_whenListener_notifies() {
-        val resetListener =
-            mockk<IntervalDetector.OnResetListener<GyroscopeIntervalDetector>>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val intervalDetector = GyroscopeIntervalDetector(context, resetListener = resetListener)
 

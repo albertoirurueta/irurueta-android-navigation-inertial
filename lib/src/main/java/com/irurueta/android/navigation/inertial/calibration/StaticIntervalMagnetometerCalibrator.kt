@@ -1127,7 +1127,7 @@ class StaticIntervalMagnetometerCalibrator private constructor(
      * an outlier when using robust calibration methods.
      * By default this is 3.0 times [magnetometerBaseNoiseLevel], which considering the noise level
      * as the standard deviation of a Gaussian distribution, should account for 99% of the cases.
-     * Any measurement hqving an error greater than tat in the estimated solution, will be
+     * Any measurement having an error greater than tat in the estimated solution, will be
      * considered an outlier and be discarded.
      *
      * @throws IllegalArgumentException if provided value is zero or negative.
@@ -1645,9 +1645,9 @@ class StaticIntervalMagnetometerCalibrator private constructor(
         val initialHardIronY: Double
         val initialHardIronZ: Double
         if (hardIronX != null && hardIronY != null && hardIronZ != null) {
-            initialHardIronX = hardIronX.toDouble()
-            initialHardIronY = hardIronY.toDouble()
-            initialHardIronZ = hardIronZ.toDouble()
+            initialHardIronX = hardIronX
+            initialHardIronY = hardIronY
+            initialHardIronZ = hardIronZ
         } else {
             initialHardIronX = 0.0
             initialHardIronY = 0.0

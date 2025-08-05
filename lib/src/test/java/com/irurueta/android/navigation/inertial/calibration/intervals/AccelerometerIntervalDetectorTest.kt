@@ -20,10 +20,10 @@ import android.hardware.Sensor
 import android.os.SystemClock
 import androidx.test.core.app.ApplicationProvider
 import com.irurueta.android.navigation.inertial.GravityHelper
-import com.irurueta.android.navigation.inertial.callPrivateFuncWithResult
 import com.irurueta.android.navigation.inertial.collectors.*
-import com.irurueta.android.navigation.inertial.getPrivateProperty
-import com.irurueta.android.navigation.inertial.setPrivateProperty
+import com.irurueta.android.testutils.callPrivateFuncWithResult
+import com.irurueta.android.testutils.getPrivateProperty
+import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.navigation.frames.NEDPosition
 import com.irurueta.navigation.inertial.ECEFGravity
 import com.irurueta.navigation.inertial.calibration.AccelerationTriad
@@ -38,14 +38,54 @@ import com.irurueta.units.AccelerationUnit
 import com.irurueta.units.Time
 import com.irurueta.units.TimeUnit
 import io.mockk.*
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
 import org.junit.After
 import org.junit.Assert.*
+import org.junit.Ignore
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
+@Ignore("possible memory leak")
 @RunWith(RobolectricTestRunner::class)
 class AccelerometerIntervalDetectorTest {
+
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var initializationStartedListener:
+            IntervalDetector.OnInitializationStartedListener<AccelerometerIntervalDetector>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var initializationCompletedListener:
+            IntervalDetector.OnInitializationCompletedListener<AccelerometerIntervalDetector>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var errorListener: IntervalDetector.OnErrorListener<AccelerometerIntervalDetector>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var staticIntervalDetectedListener:
+            IntervalDetector.OnStaticIntervalDetectedListener<AccelerometerIntervalDetector>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var dynamicIntervalDetectedListener:
+            IntervalDetector.OnDynamicIntervalDetectedListener<AccelerometerIntervalDetector>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var resetListener:
+            IntervalDetector.OnResetListener<AccelerometerIntervalDetector>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var measurementListener: AccelerometerSensorCollector.OnMeasurementListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var accuracyChangedListener: SensorCollector.OnAccuracyChangedListener
+
+    @MockK
+    private lateinit var sensor: Sensor
 
     @After
     fun tearDown() {
@@ -647,8 +687,6 @@ class AccelerometerIntervalDetectorTest {
 
     @Test
     fun constructor_whenInitializationStartedListener_setsExpectedValues() {
-        val initializationStartedListener =
-            mockk<IntervalDetector.OnInitializationStartedListener<AccelerometerIntervalDetector>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = AccelerometerIntervalDetector(
             context,
@@ -849,10 +887,6 @@ class AccelerometerIntervalDetectorTest {
 
     @Test
     fun constructor_whenInitializationCompletedListener_setsExpectedValues() {
-        val initializationStartedListener =
-            mockk<IntervalDetector.OnInitializationStartedListener<AccelerometerIntervalDetector>>()
-        val initializationCompletedListener =
-            mockk<IntervalDetector.OnInitializationCompletedListener<AccelerometerIntervalDetector>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = AccelerometerIntervalDetector(
             context,
@@ -1054,11 +1088,6 @@ class AccelerometerIntervalDetectorTest {
 
     @Test
     fun constructor_whenErrorListener_setsExpectedValues() {
-        val initializationStartedListener =
-            mockk<IntervalDetector.OnInitializationStartedListener<AccelerometerIntervalDetector>>()
-        val initializationCompletedListener =
-            mockk<IntervalDetector.OnInitializationCompletedListener<AccelerometerIntervalDetector>>()
-        val errorListener = mockk<IntervalDetector.OnErrorListener<AccelerometerIntervalDetector>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = AccelerometerIntervalDetector(
             context,
@@ -1261,13 +1290,6 @@ class AccelerometerIntervalDetectorTest {
 
     @Test
     fun constructor_whenStaticIntervalDetectedListener_setsExpectedValues() {
-        val initializationStartedListener =
-            mockk<IntervalDetector.OnInitializationStartedListener<AccelerometerIntervalDetector>>()
-        val initializationCompletedListener =
-            mockk<IntervalDetector.OnInitializationCompletedListener<AccelerometerIntervalDetector>>()
-        val errorListener = mockk<IntervalDetector.OnErrorListener<AccelerometerIntervalDetector>>()
-        val staticIntervalDetectedListener =
-            mockk<IntervalDetector.OnStaticIntervalDetectedListener<AccelerometerIntervalDetector>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = AccelerometerIntervalDetector(
             context,
@@ -1471,15 +1493,6 @@ class AccelerometerIntervalDetectorTest {
 
     @Test
     fun constructor_whenDynamicIntervalDetectedListener_setsExpectedValues() {
-        val initializationStartedListener =
-            mockk<IntervalDetector.OnInitializationStartedListener<AccelerometerIntervalDetector>>()
-        val initializationCompletedListener =
-            mockk<IntervalDetector.OnInitializationCompletedListener<AccelerometerIntervalDetector>>()
-        val errorListener = mockk<IntervalDetector.OnErrorListener<AccelerometerIntervalDetector>>()
-        val staticIntervalDetectedListener =
-            mockk<IntervalDetector.OnStaticIntervalDetectedListener<AccelerometerIntervalDetector>>()
-        val dynamicIntervalDetectedListener =
-            mockk<IntervalDetector.OnDynamicIntervalDetectedListener<AccelerometerIntervalDetector>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = AccelerometerIntervalDetector(
             context,
@@ -1684,16 +1697,6 @@ class AccelerometerIntervalDetectorTest {
 
     @Test
     fun constructor_whenResetListener_setsExpectedValues() {
-        val initializationStartedListener =
-            mockk<IntervalDetector.OnInitializationStartedListener<AccelerometerIntervalDetector>>()
-        val initializationCompletedListener =
-            mockk<IntervalDetector.OnInitializationCompletedListener<AccelerometerIntervalDetector>>()
-        val errorListener = mockk<IntervalDetector.OnErrorListener<AccelerometerIntervalDetector>>()
-        val staticIntervalDetectedListener =
-            mockk<IntervalDetector.OnStaticIntervalDetectedListener<AccelerometerIntervalDetector>>()
-        val dynamicIntervalDetectedListener =
-            mockk<IntervalDetector.OnDynamicIntervalDetectedListener<AccelerometerIntervalDetector>>()
-        val resetListener = mockk<IntervalDetector.OnResetListener<AccelerometerIntervalDetector>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = AccelerometerIntervalDetector(
             context,
@@ -1899,17 +1902,6 @@ class AccelerometerIntervalDetectorTest {
 
     @Test
     fun constructor_whenMeasurementListener_setsExpectedValues() {
-        val initializationStartedListener =
-            mockk<IntervalDetector.OnInitializationStartedListener<AccelerometerIntervalDetector>>()
-        val initializationCompletedListener =
-            mockk<IntervalDetector.OnInitializationCompletedListener<AccelerometerIntervalDetector>>()
-        val errorListener = mockk<IntervalDetector.OnErrorListener<AccelerometerIntervalDetector>>()
-        val staticIntervalDetectedListener =
-            mockk<IntervalDetector.OnStaticIntervalDetectedListener<AccelerometerIntervalDetector>>()
-        val dynamicIntervalDetectedListener =
-            mockk<IntervalDetector.OnDynamicIntervalDetectedListener<AccelerometerIntervalDetector>>()
-        val resetListener = mockk<IntervalDetector.OnResetListener<AccelerometerIntervalDetector>>()
-        val measurementListener = mockk<AccelerometerSensorCollector.OnMeasurementListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = AccelerometerIntervalDetector(
             context,
@@ -2116,18 +2108,6 @@ class AccelerometerIntervalDetectorTest {
 
     @Test
     fun constructor_whenAccuracyChangedListener_setsExpectedValues() {
-        val initializationStartedListener =
-            mockk<IntervalDetector.OnInitializationStartedListener<AccelerometerIntervalDetector>>()
-        val initializationCompletedListener =
-            mockk<IntervalDetector.OnInitializationCompletedListener<AccelerometerIntervalDetector>>()
-        val errorListener = mockk<IntervalDetector.OnErrorListener<AccelerometerIntervalDetector>>()
-        val staticIntervalDetectedListener =
-            mockk<IntervalDetector.OnStaticIntervalDetectedListener<AccelerometerIntervalDetector>>()
-        val dynamicIntervalDetectedListener =
-            mockk<IntervalDetector.OnDynamicIntervalDetectedListener<AccelerometerIntervalDetector>>()
-        val resetListener = mockk<IntervalDetector.OnResetListener<AccelerometerIntervalDetector>>()
-        val measurementListener = mockk<AccelerometerSensorCollector.OnMeasurementListener>()
-        val accuracyChangedListener = mockk<SensorCollector.OnAccuracyChangedListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = AccelerometerIntervalDetector(
             context,
@@ -2342,8 +2322,6 @@ class AccelerometerIntervalDetectorTest {
         assertNull(detector.initializationStartedListener)
 
         // set new value
-        val initializationStartedListener =
-            mockk<IntervalDetector.OnInitializationStartedListener<AccelerometerIntervalDetector>>()
         detector.initializationStartedListener = initializationStartedListener
 
         // check
@@ -2359,8 +2337,6 @@ class AccelerometerIntervalDetectorTest {
         assertNull(detector.initializationCompletedListener)
 
         // set new value
-        val initializationCompletedListener =
-            mockk<IntervalDetector.OnInitializationCompletedListener<AccelerometerIntervalDetector>>()
         detector.initializationCompletedListener = initializationCompletedListener
 
         // check
@@ -2376,7 +2352,6 @@ class AccelerometerIntervalDetectorTest {
         assertNull(detector.errorListener)
 
         // set new value
-        val errorListener = mockk<IntervalDetector.OnErrorListener<AccelerometerIntervalDetector>>()
         detector.errorListener = errorListener
 
         // check
@@ -2392,8 +2367,6 @@ class AccelerometerIntervalDetectorTest {
         assertNull(detector.staticIntervalDetectedListener)
 
         // set new value
-        val staticIntervalDetectedListener =
-            mockk<IntervalDetector.OnStaticIntervalDetectedListener<AccelerometerIntervalDetector>>()
         detector.staticIntervalDetectedListener = staticIntervalDetectedListener
 
         // check
@@ -2409,8 +2382,6 @@ class AccelerometerIntervalDetectorTest {
         assertNull(detector.dynamicIntervalDetectedListener)
 
         // set new value
-        val dynamicIntervalDetectedListener =
-            mockk<IntervalDetector.OnDynamicIntervalDetectedListener<AccelerometerIntervalDetector>>()
         detector.dynamicIntervalDetectedListener = dynamicIntervalDetectedListener
 
         // check
@@ -2426,7 +2397,6 @@ class AccelerometerIntervalDetectorTest {
         assertNull(detector.resetListener)
 
         // set new value
-        val resetListener = mockk<IntervalDetector.OnResetListener<AccelerometerIntervalDetector>>()
         detector.resetListener = resetListener
 
         // check
@@ -2442,7 +2412,6 @@ class AccelerometerIntervalDetectorTest {
         assertNull(detector.measurementListener)
 
         // set new value
-        val measurementListener = mockk<AccelerometerSensorCollector.OnMeasurementListener>()
         detector.measurementListener = measurementListener
 
         // check
@@ -2458,7 +2427,6 @@ class AccelerometerIntervalDetectorTest {
         assertNull(detector.accuracyChangedListener)
 
         // set new value
-        val accuracyChangedListener = mockk<SensorCollector.OnAccuracyChangedListener>()
         detector.accuracyChangedListener = accuracyChangedListener
 
         // check
@@ -2475,7 +2443,6 @@ class AccelerometerIntervalDetectorTest {
         requireNotNull(collector)
 
         val collectorSpy = spyk(collector)
-        val sensor = mockk<Sensor>()
         every { collectorSpy.sensor }.returns(sensor)
         detector.setPrivateProperty("collector", collectorSpy)
 
@@ -3136,10 +3103,6 @@ class AccelerometerIntervalDetectorTest {
 
     @Test
     fun onMeasurement_whenInitializingAndListener_notifies() {
-        val initializationStartedListener =
-            mockk<IntervalDetector.OnInitializationStartedListener<AccelerometerIntervalDetector>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector =
             AccelerometerIntervalDetector(
@@ -3272,8 +3235,6 @@ class AccelerometerIntervalDetectorTest {
 
     @Test
     fun onMeasurement_whenMeasurementListener_notifiesMeasurement() {
-        val measurementListener =
-            mockk<AccelerometerSensorCollector.OnMeasurementListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector =
             AccelerometerIntervalDetector(context, measurementListener = measurementListener)
@@ -3347,8 +3308,6 @@ class AccelerometerIntervalDetectorTest {
 
     @Test
     fun onAccuracyChanged_whenUnreliableAndListener_setsResultAsUnreliableAndNotifies() {
-        val errorListener =
-            mockk<IntervalDetector.OnErrorListener<AccelerometerIntervalDetector>>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = AccelerometerIntervalDetector(context, errorListener = errorListener)
 
@@ -3379,8 +3338,6 @@ class AccelerometerIntervalDetectorTest {
 
     @Test
     fun onAccuracyChanged_whenNotUnreliable_makesNoAction() {
-        val errorListener =
-            mockk<IntervalDetector.OnErrorListener<AccelerometerIntervalDetector>>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = AccelerometerIntervalDetector(context, errorListener = errorListener)
 
@@ -3408,10 +3365,6 @@ class AccelerometerIntervalDetectorTest {
 
     @Test
     fun onAccuracyChanged_whenUnreliableListener_notifiesAccuracyChange() {
-        val accuracyChangedListener =
-            mockk<SensorCollector.OnAccuracyChangedListener>(relaxUnitFun = true)
-        val errorListener =
-            mockk<IntervalDetector.OnErrorListener<AccelerometerIntervalDetector>>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = AccelerometerIntervalDetector(
             context,
@@ -5188,10 +5141,6 @@ class AccelerometerIntervalDetectorTest {
 
     @Test
     fun onInitializationStarted_whenListener_notifies() {
-        val initializationStartedListener =
-            mockk<IntervalDetector.OnInitializationStartedListener<AccelerometerIntervalDetector>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val intervalDetector =
             AccelerometerIntervalDetector(
@@ -5230,10 +5179,6 @@ class AccelerometerIntervalDetectorTest {
 
     @Test
     fun onInitializationCompleted_whenListener_notifies() {
-        val initializationCompletedListener =
-            mockk<IntervalDetector.OnInitializationCompletedListener<AccelerometerIntervalDetector>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val intervalDetector = AccelerometerIntervalDetector(
             context,
@@ -5293,8 +5238,6 @@ class AccelerometerIntervalDetectorTest {
 
     @Test
     fun onError_whenListener_stopsAndNotifies() {
-        val errorListener =
-            mockk<IntervalDetector.OnErrorListener<AccelerometerIntervalDetector>>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val intervalDetector = AccelerometerIntervalDetector(context, errorListener = errorListener)
 
@@ -5363,10 +5306,6 @@ class AccelerometerIntervalDetectorTest {
 
     @Test
     fun onStaticIntervalDetected_whenListener_notifies() {
-        val staticIntervalDetectedListener =
-            mockk<IntervalDetector.OnStaticIntervalDetectedListener<AccelerometerIntervalDetector>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val intervalDetector = AccelerometerIntervalDetector(
             context,
@@ -5454,10 +5393,6 @@ class AccelerometerIntervalDetectorTest {
 
     @Test
     fun onDynamicIntervalDetected_whenListener_notifies() {
-        val dynamicIntervalDetectedListener =
-            mockk<IntervalDetector.OnDynamicIntervalDetectedListener<AccelerometerIntervalDetector>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val intervalDetector = AccelerometerIntervalDetector(
             context,
@@ -5537,8 +5472,6 @@ class AccelerometerIntervalDetectorTest {
 
     @Test
     fun onReset_whenListener_notifies() {
-        val resetListener =
-            mockk<IntervalDetector.OnResetListener<AccelerometerIntervalDetector>>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val intervalDetector = AccelerometerIntervalDetector(context, resetListener = resetListener)
 

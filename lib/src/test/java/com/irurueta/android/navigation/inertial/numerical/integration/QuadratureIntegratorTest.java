@@ -39,12 +39,7 @@ public class QuadratureIntegratorTest {
         final double b = randomizer.nextDouble(a, MAX_VALUE);
 
         final SingleDimensionFunctionEvaluatorListener listener =
-                new SingleDimensionFunctionEvaluatorListener() {
-                    @Override
-                    public double evaluate(double point) {
-                        return 0.0;
-                    }
-                };
+                point -> 0.0;
 
         QuadratureIntegrator<?> integrator = QuadratureIntegrator.create(a, b, listener, EPS,
                 QuadratureType.TRAPEZOIDAL);
@@ -95,12 +90,7 @@ public class QuadratureIntegratorTest {
         final double b = randomizer.nextDouble(a, MAX_VALUE);
 
         final SingleDimensionFunctionEvaluatorListener listener =
-                new SingleDimensionFunctionEvaluatorListener() {
-                    @Override
-                    public double evaluate(double point) {
-                        return 0.0;
-                    }
-                };
+                point -> 0.0;
 
         QuadratureIntegrator<?> integrator = QuadratureIntegrator.create(a, b, listener,
                 QuadratureType.TRAPEZOIDAL);
@@ -151,12 +141,7 @@ public class QuadratureIntegratorTest {
         final double b = randomizer.nextDouble(a, MAX_VALUE);
 
         final SingleDimensionFunctionEvaluatorListener listener =
-                new SingleDimensionFunctionEvaluatorListener() {
-                    @Override
-                    public double evaluate(double point) {
-                        return 0.0;
-                    }
-                };
+                point -> 0.0;
 
         QuadratureIntegrator<?> integrator = QuadratureIntegrator.create(a, b, listener, EPS);
         assertTrue(integrator instanceof TrapezoidalQuadratureIntegrator);

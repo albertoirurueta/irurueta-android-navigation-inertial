@@ -21,16 +21,27 @@ import android.hardware.SensorManager
 import com.irurueta.statistics.UniformRandomizer
 import io.mockk.clearAllMocks
 import io.mockk.every
-import io.mockk.mockk
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
 import io.mockk.unmockkAll
 import org.junit.After
 import org.junit.Assert.*
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class MagnetometerSensorMeasurementConverterTest {
+
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK
+    private lateinit var sensor: Sensor
+
+    @MockK
+    private lateinit var event: SensorEvent
 
     @After
     fun tearDown() {
@@ -46,9 +57,7 @@ class MagnetometerSensorMeasurementConverterTest {
 
     @Test
     fun convert_whenUnknownSensorType_returnsFalse() {
-        val sensor = mockk<Sensor>()
         every { sensor.type }.returns(Sensor.TYPE_GYROSCOPE)
-        val event = mockk<SensorEvent>()
         event.sensor = sensor
         val measurement = MagnetometerSensorMeasurement()
 
@@ -57,9 +66,7 @@ class MagnetometerSensorMeasurementConverterTest {
 
     @Test
     fun convert_whenMagnetometerSensorTypeWithoutStartOffset_returnsTrue() {
-        val sensor = mockk<Sensor>()
         every { sensor.type }.returns(Sensor.TYPE_MAGNETIC_FIELD)
-        val event = mockk<SensorEvent>()
         event.sensor = sensor
 
         val timestamp = System.nanoTime()
@@ -94,9 +101,7 @@ class MagnetometerSensorMeasurementConverterTest {
 
     @Test
     fun convert_whenMagnetometerUncalibratedSensorTypeWithoutStartOffset_returnsTrue() {
-        val sensor = mockk<Sensor>()
         every { sensor.type }.returns(Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED)
-        val event = mockk<SensorEvent>()
         event.sensor = sensor
 
         val timestamp = System.nanoTime()
@@ -134,9 +139,7 @@ class MagnetometerSensorMeasurementConverterTest {
 
     @Test
     fun convert_whenMagnetometerSensorTypeWithStartOffset_returnsTrue() {
-        val sensor = mockk<Sensor>()
         every { sensor.type }.returns(Sensor.TYPE_MAGNETIC_FIELD)
-        val event = mockk<SensorEvent>()
         event.sensor = sensor
 
         val timestamp = System.nanoTime()
@@ -172,9 +175,7 @@ class MagnetometerSensorMeasurementConverterTest {
 
     @Test
     fun convert_whenMagnetometerUncalibratedSensorTypeWithStartOffset_returnsTrue() {
-        val sensor = mockk<Sensor>()
         every { sensor.type }.returns(Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED)
-        val event = mockk<SensorEvent>()
         event.sensor = sensor
 
         val timestamp = System.nanoTime()

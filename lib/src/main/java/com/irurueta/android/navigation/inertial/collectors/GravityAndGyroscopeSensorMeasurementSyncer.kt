@@ -50,6 +50,7 @@ import java.util.*
  * consider the measurement as stale so that it is skipped from synced measurement processing and
  * returned back from buffer to cache of measurements.
  * @property staleDetectionEnabled true to enable stale measurement detection, false otherwise.
+ * @property skipWhenProcessing true to skip new measurements when processing a measurement.
  * @property accuracyChangedListener listener to notify changes in accuracy.
  * @property bufferFilledListener listener to notify that some buffer has been filled. This usually
  * happens when consumer of measurements cannot keep up with the rate at which measurements are
@@ -73,6 +74,7 @@ class GravityAndGyroscopeSensorMeasurementSyncer(
     stopWhenFilledBuffer: Boolean = true,
     staleOffsetNanos: Long = DEFAULT_STALE_OFFSET_NANOS,
     staleDetectionEnabled: Boolean = true,
+    skipWhenProcessing: Boolean = true,
     accuracyChangedListener: OnAccuracyChangedListener<GravityAndGyroscopeSyncedSensorMeasurement, GravityAndGyroscopeSensorMeasurementSyncer>? = null,
     bufferFilledListener: OnBufferFilledListener<GravityAndGyroscopeSyncedSensorMeasurement, GravityAndGyroscopeSensorMeasurementSyncer>? = null,
     syncedMeasurementListener: OnSyncedMeasurementsListener<GravityAndGyroscopeSyncedSensorMeasurement, GravityAndGyroscopeSensorMeasurementSyncer>? = null,
@@ -84,6 +86,7 @@ class GravityAndGyroscopeSensorMeasurementSyncer(
     stopWhenFilledBuffer,
     staleOffsetNanos,
     staleDetectionEnabled,
+    skipWhenProcessing,
     accuracyChangedListener,
     bufferFilledListener,
     syncedMeasurementListener,
@@ -193,7 +196,13 @@ class GravityAndGyroscopeSensorMeasurementSyncer(
             }
         },
         measurementListener = { collector, _, bufferPosition ->
+            if (this.skipWhenProcessing && processing) {
+                return@BufferedGravitySensorCollector
+            }
+
             synchronized(this@GravityAndGyroscopeSensorMeasurementSyncer) {
+                processing = true
+
                 val measurementsBeforePosition =
                     collector.getMeasurementsBeforePosition(bufferPosition)
                 val lastTimestamp = measurementsBeforePosition.lastOrNull()?.timestamp
@@ -204,6 +213,8 @@ class GravityAndGyroscopeSensorMeasurementSyncer(
                     copyToGravityMeasurements(measurementsBeforePosition)
                     processMeasurements()
                 }
+
+                processing = false
             }
         }
     )
@@ -236,7 +247,13 @@ class GravityAndGyroscopeSensorMeasurementSyncer(
             }
         },
         measurementListener = { collector, _, _ ->
+            if (this.skipWhenProcessing && processing) {
+                return@BufferedGyroscopeSensorCollector
+            }
+
             synchronized(this@GravityAndGyroscopeSensorMeasurementSyncer) {
+                processing = true
+
                 val mostRecentTimestamp =
                     this@GravityAndGyroscopeSensorMeasurementSyncer.mostRecentTimestamp
                 if (mostRecentTimestamp != null) {
@@ -247,6 +264,8 @@ class GravityAndGyroscopeSensorMeasurementSyncer(
                         copyToGyroscopeMeasurements(measurementsBeforeTimestamp)
                     }
                 }
+
+                processing = false
             }
         }
     )
@@ -370,6 +389,7 @@ class GravityAndGyroscopeSensorMeasurementSyncer(
     @Synchronized
     override fun stop() {
         stopping = true
+        processing = false
         gravitySensorCollector.stop()
         gyroscopeSensorCollector.stop()
 
@@ -503,7 +523,7 @@ class GravityAndGyroscopeSensorMeasurementSyncer(
             hasPreviousGravityMeasurement = true
         }
 
-        if (alreadyProcessedGravityMeasurements.size > 0) {
+        if (alreadyProcessedGravityMeasurements.isNotEmpty()) {
             // return processed gravity measurements
             gravityMeasurements.removeAll(alreadyProcessedGravityMeasurements)
         }
@@ -516,6 +536,7 @@ class GravityAndGyroscopeSensorMeasurementSyncer(
             // collections are reset at this point to prevent concurrent modifications
             clearCollectionsAndReset()
             stopping = false
+            processing = false
         }
     }
 
@@ -527,6 +548,7 @@ class GravityAndGyroscopeSensorMeasurementSyncer(
         mostRecentTimestamp = null
         oldestTimestamp = null
         running = false
+        processing = false
 
         hasPreviousGravityMeasurement = false
         hasPreviousGyroscopeMeasurement = false

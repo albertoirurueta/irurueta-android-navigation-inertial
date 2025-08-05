@@ -12,8 +12,8 @@ import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorMe
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorMeasurement
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
-import com.irurueta.android.navigation.inertial.processors.attitude.KalmanRelativeAttitudeProcessor.Companion.DEFAULT_ACCELEROMETER_NOISE_STANDARD_DEVIATION
-import com.irurueta.android.navigation.inertial.processors.attitude.KalmanRelativeAttitudeProcessor.Companion.DEFAULT_GYROSCOPE_NOISE_PSD
+import com.irurueta.android.navigation.inertial.processors.attitude.KalmanRelativeAttitudeProcessor2.Companion.DEFAULT_ACCELEROMETER_NOISE_STANDARD_DEVIATION
+import com.irurueta.android.navigation.inertial.processors.attitude.KalmanRelativeAttitudeProcessor2.Companion.DEFAULT_GYROSCOPE_NOISE_PSD
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.inertial.calibration.AccelerationTriad
 import com.irurueta.navigation.inertial.calibration.AngularSpeedTriad

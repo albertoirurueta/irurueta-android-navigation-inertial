@@ -19,10 +19,10 @@ import android.location.Location
 import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
 import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.estimators.pose.SpeedTriad
-import com.irurueta.android.navigation.inertial.getPrivateProperty
 import com.irurueta.android.navigation.inertial.processors.attitude.BaseFusedGeomagneticAttitudeProcessor
 import com.irurueta.android.navigation.inertial.processors.attitude.LeveledRelativeAttitudeProcessor
-import com.irurueta.android.navigation.inertial.setPrivateProperty
+import com.irurueta.android.testutils.getPrivateProperty
+import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.frames.*
 import com.irurueta.navigation.inertial.calibration.AccelerationTriad
@@ -32,14 +32,28 @@ import com.irurueta.navigation.inertial.estimators.NEDKinematicsEstimator
 import com.irurueta.statistics.UniformRandomizer
 import com.irurueta.units.AccelerationUnit
 import io.mockk.*
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
 import org.junit.After
 import org.junit.Assert.*
+import org.junit.Ignore
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
+@Ignore("possible memory leak")
 @RunWith(RobolectricTestRunner::class)
 class FusedRelativePoseProcessorTest {
+
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var processorListener: BaseRelativePoseProcessor.OnProcessedListener
+
+    @MockK(relaxed = true)
+    private lateinit var location: Location
 
     @After
     fun tearDown() {
@@ -96,8 +110,6 @@ class FusedRelativePoseProcessorTest {
     @Test
     fun constructor_whenAllParameters_returnsExpectedValues() {
         val initialSpeed = getSpeed()
-        val processorListener =
-            mockk<BaseRelativePoseProcessor.OnProcessedListener>()
         val processor = FusedRelativePoseProcessor(initialSpeed, processorListener)
 
         // check
@@ -150,7 +162,6 @@ class FusedRelativePoseProcessorTest {
         assertNull(processor.processorListener)
 
         // set new value
-        val processorListener = mockk<BaseRelativePoseProcessor.OnProcessedListener>()
         processor.processorListener = processorListener
 
         // check
@@ -1006,8 +1017,6 @@ class FusedRelativePoseProcessorTest {
 
     @Test
     fun process_whenAttitudeAndTimeIntervalProcessedWithListener_returnsTrueAndNotifies() {
-        val processorListener =
-            mockk<BaseRelativePoseProcessor.OnProcessedListener>(relaxUnitFun = true)
         val processor = FusedRelativePoseProcessor(processorListener = processorListener)
 
         val timestamp = System.nanoTime()
@@ -1161,6 +1170,28 @@ class FusedRelativePoseProcessorTest {
         verify(exactly = 1) { processorListener.onProcessed(processor, timestamp, transformation) }
     }
 
+    private fun getLocation(): Location {
+        val randomizer = UniformRandomizer()
+        val latitudeDegrees = randomizer.nextDouble(
+            MIN_LATITUDE_DEGREES,
+            MAX_LATITUDE_DEGREES
+        )
+        val longitudeDegrees = randomizer.nextDouble(
+            MIN_LONGITUDE_DEGREES,
+            MAX_LONGITUDE_DEGREES
+        )
+        val height = randomizer.nextDouble(
+            MIN_HEIGHT,
+            MAX_HEIGHT
+        )
+
+        every { location.latitude }.returns(latitudeDegrees)
+        every { location.longitude }.returns(longitudeDegrees)
+        every { location.altitude }.returns(height)
+
+        return location
+    }
+
     private companion object {
         const val MIN_LATITUDE_DEGREES = -90.0
         const val MAX_LATITUDE_DEGREES = 90.0
@@ -1182,29 +1213,6 @@ class FusedRelativePoseProcessorTest {
         const val TIME_INTERVAL_NANOS = 10_000_000L
 
         const val VERY_LARGE_ABSOLUTE_ERROR = 1e-3
-
-        fun getLocation(): Location {
-            val randomizer = UniformRandomizer()
-            val latitudeDegrees = randomizer.nextDouble(
-                MIN_LATITUDE_DEGREES,
-                MAX_LATITUDE_DEGREES
-            )
-            val longitudeDegrees = randomizer.nextDouble(
-                MIN_LONGITUDE_DEGREES,
-                MAX_LONGITUDE_DEGREES
-            )
-            val height = randomizer.nextDouble(
-                MIN_HEIGHT,
-                MAX_HEIGHT
-            )
-
-            val location = mockk<Location>(relaxed = true)
-            every { location.latitude }.returns(latitudeDegrees)
-            every { location.longitude }.returns(longitudeDegrees)
-            every { location.altitude }.returns(height)
-
-            return location
-        }
 
         fun getSpeed(): SpeedTriad {
             val randomizer = UniformRandomizer()

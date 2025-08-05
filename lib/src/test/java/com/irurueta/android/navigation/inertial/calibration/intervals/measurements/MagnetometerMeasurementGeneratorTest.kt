@@ -21,11 +21,11 @@ import android.os.SystemClock
 import androidx.test.core.app.ApplicationProvider
 import com.irurueta.android.navigation.inertial.calibration.intervals.ErrorReason
 import com.irurueta.android.navigation.inertial.calibration.intervals.Status
-import com.irurueta.android.navigation.inertial.callPrivateFunc
-import com.irurueta.android.navigation.inertial.callPrivateFuncWithResult
 import com.irurueta.android.navigation.inertial.collectors.*
-import com.irurueta.android.navigation.inertial.getPrivateProperty
-import com.irurueta.android.navigation.inertial.setPrivateProperty
+import com.irurueta.android.testutils.callPrivateFunc
+import com.irurueta.android.testutils.callPrivateFuncWithResult
+import com.irurueta.android.testutils.getPrivateProperty
+import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.navigation.inertial.BodyKinematicsAndMagneticFluxDensity
 import com.irurueta.navigation.inertial.BodyMagneticFluxDensity
 import com.irurueta.navigation.inertial.calibration.StandardDeviationBodyMagneticFluxDensity
@@ -38,14 +38,75 @@ import com.irurueta.navigation.inertial.calibration.noise.AccumulatedMagneticFlu
 import com.irurueta.statistics.UniformRandomizer
 import com.irurueta.units.*
 import io.mockk.*
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
 import org.junit.After
 import org.junit.Assert.*
+import org.junit.Ignore
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
+@Ignore("possible memory leak")
 @RunWith(RobolectricTestRunner::class)
 class MagnetometerMeasurementGeneratorTest {
+
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var initializationStartedListener:
+            SingleSensorCalibrationMeasurementGenerator.OnInitializationStartedListener<MagnetometerMeasurementGenerator>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var initializationCompletedListener:
+            SingleSensorCalibrationMeasurementGenerator.OnInitializationCompletedListener<MagnetometerMeasurementGenerator>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var errorListener:
+            SingleSensorCalibrationMeasurementGenerator.OnErrorListener<MagnetometerMeasurementGenerator>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var staticIntervalDetectedListener:
+            SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalDetectedListener<MagnetometerMeasurementGenerator>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var dynamicIntervalDetectedListener:
+            SingleSensorCalibrationMeasurementGenerator.OnDynamicIntervalDetectedListener<MagnetometerMeasurementGenerator>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var staticIntervalSkippedListener:
+            SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalSkippedListener<MagnetometerMeasurementGenerator>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var dynamicIntervalSkippedListener:
+            SingleSensorCalibrationMeasurementGenerator.OnDynamicIntervalSkippedListener<MagnetometerMeasurementGenerator>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var generatedMeasurementListener:
+            SingleSensorCalibrationMeasurementGenerator.OnGeneratedMeasurementListener<MagnetometerMeasurementGenerator, StandardDeviationBodyMagneticFluxDensity>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var resetListener:
+            SingleSensorCalibrationMeasurementGenerator.OnResetListener<MagnetometerMeasurementGenerator>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var accelerometerMeasurementListener:
+            AccelerometerSensorCollector.OnMeasurementListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var magnetometerMeasurementListener:
+            MagnetometerSensorCollector.OnMeasurementListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var accuracyChangedListener: SensorCollector.OnAccuracyChangedListener
+
+    @MockK
+    private lateinit var sensor: Sensor
+
+    @MockK
+    private lateinit var internalGenerator: MagnetometerMeasurementsGenerator
 
     @After
     fun tearDown() {
@@ -618,8 +679,6 @@ class MagnetometerMeasurementGeneratorTest {
 
     @Test
     fun constructor_whenInitializationStartedListener_setsExpectedValues() {
-        val initializationStartedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnInitializationStartedListener<MagnetometerMeasurementGenerator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = MagnetometerMeasurementGenerator(
             context,
@@ -736,10 +795,6 @@ class MagnetometerMeasurementGeneratorTest {
 
     @Test
     fun constructor_whenInitializationCompletedListener_setsExpectedValues() {
-        val initializationStartedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnInitializationStartedListener<MagnetometerMeasurementGenerator>>()
-        val initializationCompletedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnInitializationCompletedListener<MagnetometerMeasurementGenerator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = MagnetometerMeasurementGenerator(
             context,
@@ -857,12 +912,6 @@ class MagnetometerMeasurementGeneratorTest {
 
     @Test
     fun constructor_whenErrorListener_setsExpectedValues() {
-        val initializationStartedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnInitializationStartedListener<MagnetometerMeasurementGenerator>>()
-        val initializationCompletedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnInitializationCompletedListener<MagnetometerMeasurementGenerator>>()
-        val errorListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnErrorListener<MagnetometerMeasurementGenerator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = MagnetometerMeasurementGenerator(
             context,
@@ -981,14 +1030,6 @@ class MagnetometerMeasurementGeneratorTest {
 
     @Test
     fun constructor_whenStaticIntervalDetectedListener_setsExpectedValues() {
-        val initializationStartedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnInitializationStartedListener<MagnetometerMeasurementGenerator>>()
-        val initializationCompletedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnInitializationCompletedListener<MagnetometerMeasurementGenerator>>()
-        val errorListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnErrorListener<MagnetometerMeasurementGenerator>>()
-        val staticIntervalDetectedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalDetectedListener<MagnetometerMeasurementGenerator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = MagnetometerMeasurementGenerator(
             context,
@@ -1108,16 +1149,6 @@ class MagnetometerMeasurementGeneratorTest {
 
     @Test
     fun constructor_whenDynamicIntervalDetectedListener_setsExpectedValues() {
-        val initializationStartedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnInitializationStartedListener<MagnetometerMeasurementGenerator>>()
-        val initializationCompletedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnInitializationCompletedListener<MagnetometerMeasurementGenerator>>()
-        val errorListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnErrorListener<MagnetometerMeasurementGenerator>>()
-        val staticIntervalDetectedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalDetectedListener<MagnetometerMeasurementGenerator>>()
-        val dynamicIntervalDetectedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnDynamicIntervalDetectedListener<MagnetometerMeasurementGenerator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = MagnetometerMeasurementGenerator(
             context,
@@ -1238,18 +1269,6 @@ class MagnetometerMeasurementGeneratorTest {
 
     @Test
     fun constructor_whenStaticIntervalSkippedListener_setsExpectedValues() {
-        val initializationStartedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnInitializationStartedListener<MagnetometerMeasurementGenerator>>()
-        val initializationCompletedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnInitializationCompletedListener<MagnetometerMeasurementGenerator>>()
-        val errorListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnErrorListener<MagnetometerMeasurementGenerator>>()
-        val staticIntervalDetectedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalDetectedListener<MagnetometerMeasurementGenerator>>()
-        val dynamicIntervalDetectedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnDynamicIntervalDetectedListener<MagnetometerMeasurementGenerator>>()
-        val staticIntervalSkippedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalSkippedListener<MagnetometerMeasurementGenerator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = MagnetometerMeasurementGenerator(
             context,
@@ -1371,20 +1390,6 @@ class MagnetometerMeasurementGeneratorTest {
 
     @Test
     fun constructor_whenDynamicIntervalSkippedListener_setsExpectedValues() {
-        val initializationStartedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnInitializationStartedListener<MagnetometerMeasurementGenerator>>()
-        val initializationCompletedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnInitializationCompletedListener<MagnetometerMeasurementGenerator>>()
-        val errorListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnErrorListener<MagnetometerMeasurementGenerator>>()
-        val staticIntervalDetectedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalDetectedListener<MagnetometerMeasurementGenerator>>()
-        val dynamicIntervalDetectedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnDynamicIntervalDetectedListener<MagnetometerMeasurementGenerator>>()
-        val staticIntervalSkippedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalSkippedListener<MagnetometerMeasurementGenerator>>()
-        val dynamicIntervalSkippedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnDynamicIntervalSkippedListener<MagnetometerMeasurementGenerator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = MagnetometerMeasurementGenerator(
             context,
@@ -1507,22 +1512,6 @@ class MagnetometerMeasurementGeneratorTest {
 
     @Test
     fun constructor_whenGeneratedMeasurementListener_setsExpectedValues() {
-        val initializationStartedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnInitializationStartedListener<MagnetometerMeasurementGenerator>>()
-        val initializationCompletedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnInitializationCompletedListener<MagnetometerMeasurementGenerator>>()
-        val errorListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnErrorListener<MagnetometerMeasurementGenerator>>()
-        val staticIntervalDetectedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalDetectedListener<MagnetometerMeasurementGenerator>>()
-        val dynamicIntervalDetectedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnDynamicIntervalDetectedListener<MagnetometerMeasurementGenerator>>()
-        val staticIntervalSkippedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalSkippedListener<MagnetometerMeasurementGenerator>>()
-        val dynamicIntervalSkippedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnDynamicIntervalSkippedListener<MagnetometerMeasurementGenerator>>()
-        val generatedMeasurementListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnGeneratedMeasurementListener<MagnetometerMeasurementGenerator, StandardDeviationBodyMagneticFluxDensity>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = MagnetometerMeasurementGenerator(
             context,
@@ -1646,24 +1635,6 @@ class MagnetometerMeasurementGeneratorTest {
 
     @Test
     fun constructor_whenResetListener_setsExpectedValues() {
-        val initializationStartedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnInitializationStartedListener<MagnetometerMeasurementGenerator>>()
-        val initializationCompletedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnInitializationCompletedListener<MagnetometerMeasurementGenerator>>()
-        val errorListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnErrorListener<MagnetometerMeasurementGenerator>>()
-        val staticIntervalDetectedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalDetectedListener<MagnetometerMeasurementGenerator>>()
-        val dynamicIntervalDetectedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnDynamicIntervalDetectedListener<MagnetometerMeasurementGenerator>>()
-        val staticIntervalSkippedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalSkippedListener<MagnetometerMeasurementGenerator>>()
-        val dynamicIntervalSkippedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnDynamicIntervalSkippedListener<MagnetometerMeasurementGenerator>>()
-        val generatedMeasurementListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnGeneratedMeasurementListener<MagnetometerMeasurementGenerator, StandardDeviationBodyMagneticFluxDensity>>()
-        val resetListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnResetListener<MagnetometerMeasurementGenerator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = MagnetometerMeasurementGenerator(
             context,
@@ -1788,26 +1759,6 @@ class MagnetometerMeasurementGeneratorTest {
 
     @Test
     fun constructor_whenAccelerometerMeasurementListener_setsExpectedValues() {
-        val initializationStartedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnInitializationStartedListener<MagnetometerMeasurementGenerator>>()
-        val initializationCompletedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnInitializationCompletedListener<MagnetometerMeasurementGenerator>>()
-        val errorListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnErrorListener<MagnetometerMeasurementGenerator>>()
-        val staticIntervalDetectedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalDetectedListener<MagnetometerMeasurementGenerator>>()
-        val dynamicIntervalDetectedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnDynamicIntervalDetectedListener<MagnetometerMeasurementGenerator>>()
-        val staticIntervalSkippedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalSkippedListener<MagnetometerMeasurementGenerator>>()
-        val dynamicIntervalSkippedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnDynamicIntervalSkippedListener<MagnetometerMeasurementGenerator>>()
-        val generatedMeasurementListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnGeneratedMeasurementListener<MagnetometerMeasurementGenerator, StandardDeviationBodyMagneticFluxDensity>>()
-        val resetListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnResetListener<MagnetometerMeasurementGenerator>>()
-        val accelerometerMeasurementListener =
-            mockk<AccelerometerSensorCollector.OnMeasurementListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = MagnetometerMeasurementGenerator(
             context,
@@ -1933,28 +1884,6 @@ class MagnetometerMeasurementGeneratorTest {
 
     @Test
     fun constructor_whenMagnetometerMeasurementListener_setsExpectedValues() {
-        val initializationStartedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnInitializationStartedListener<MagnetometerMeasurementGenerator>>()
-        val initializationCompletedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnInitializationCompletedListener<MagnetometerMeasurementGenerator>>()
-        val errorListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnErrorListener<MagnetometerMeasurementGenerator>>()
-        val staticIntervalDetectedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalDetectedListener<MagnetometerMeasurementGenerator>>()
-        val dynamicIntervalDetectedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnDynamicIntervalDetectedListener<MagnetometerMeasurementGenerator>>()
-        val staticIntervalSkippedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalSkippedListener<MagnetometerMeasurementGenerator>>()
-        val dynamicIntervalSkippedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnDynamicIntervalSkippedListener<MagnetometerMeasurementGenerator>>()
-        val generatedMeasurementListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnGeneratedMeasurementListener<MagnetometerMeasurementGenerator, StandardDeviationBodyMagneticFluxDensity>>()
-        val resetListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnResetListener<MagnetometerMeasurementGenerator>>()
-        val accelerometerMeasurementListener =
-            mockk<AccelerometerSensorCollector.OnMeasurementListener>()
-        val magnetometerMeasurementListener =
-            mockk<MagnetometerSensorCollector.OnMeasurementListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = MagnetometerMeasurementGenerator(
             context,
@@ -2081,29 +2010,6 @@ class MagnetometerMeasurementGeneratorTest {
 
     @Test
     fun constructor_whenAccuracyChangedListener_setsExpectedValues() {
-        val initializationStartedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnInitializationStartedListener<MagnetometerMeasurementGenerator>>()
-        val initializationCompletedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnInitializationCompletedListener<MagnetometerMeasurementGenerator>>()
-        val errorListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnErrorListener<MagnetometerMeasurementGenerator>>()
-        val staticIntervalDetectedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalDetectedListener<MagnetometerMeasurementGenerator>>()
-        val dynamicIntervalDetectedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnDynamicIntervalDetectedListener<MagnetometerMeasurementGenerator>>()
-        val staticIntervalSkippedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalSkippedListener<MagnetometerMeasurementGenerator>>()
-        val dynamicIntervalSkippedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnDynamicIntervalSkippedListener<MagnetometerMeasurementGenerator>>()
-        val generatedMeasurementListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnGeneratedMeasurementListener<MagnetometerMeasurementGenerator, StandardDeviationBodyMagneticFluxDensity>>()
-        val resetListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnResetListener<MagnetometerMeasurementGenerator>>()
-        val accelerometerMeasurementListener =
-            mockk<AccelerometerSensorCollector.OnMeasurementListener>()
-        val magnetometerMeasurementListener =
-            mockk<MagnetometerSensorCollector.OnMeasurementListener>()
-        val accuracyChangedListener = mockk<SensorCollector.OnAccuracyChangedListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = MagnetometerMeasurementGenerator(
             context,
@@ -2238,8 +2144,6 @@ class MagnetometerMeasurementGeneratorTest {
         assertNull(generator.initializationStartedListener)
 
         // set new value
-        val initializationStartedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnInitializationStartedListener<MagnetometerMeasurementGenerator>>()
         generator.initializationStartedListener = initializationStartedListener
 
         // check
@@ -2255,8 +2159,6 @@ class MagnetometerMeasurementGeneratorTest {
         assertNull(generator.initializationCompletedListener)
 
         // set new value
-        val initializationCompletedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnInitializationCompletedListener<MagnetometerMeasurementGenerator>>()
         generator.initializationCompletedListener = initializationCompletedListener
 
         // check
@@ -2272,8 +2174,6 @@ class MagnetometerMeasurementGeneratorTest {
         assertNull(generator.errorListener)
 
         // set new value
-        val errorListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnErrorListener<MagnetometerMeasurementGenerator>>()
         generator.errorListener = errorListener
 
         // check
@@ -2289,8 +2189,6 @@ class MagnetometerMeasurementGeneratorTest {
         assertNull(generator.staticIntervalDetectedListener)
 
         // set new value
-        val staticIntervalDetectedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalDetectedListener<MagnetometerMeasurementGenerator>>()
         generator.staticIntervalDetectedListener = staticIntervalDetectedListener
 
         // check
@@ -2306,8 +2204,6 @@ class MagnetometerMeasurementGeneratorTest {
         assertNull(generator.dynamicIntervalDetectedListener)
 
         // set new value
-        val dynamicIntervalDetectedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnDynamicIntervalDetectedListener<MagnetometerMeasurementGenerator>>()
         generator.dynamicIntervalDetectedListener = dynamicIntervalDetectedListener
 
         // check
@@ -2323,8 +2219,6 @@ class MagnetometerMeasurementGeneratorTest {
         assertNull(generator.staticIntervalSkippedListener)
 
         // set new value
-        val staticIntervalSkippedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalSkippedListener<MagnetometerMeasurementGenerator>>()
         generator.staticIntervalSkippedListener = staticIntervalSkippedListener
 
         // check
@@ -2343,8 +2237,6 @@ class MagnetometerMeasurementGeneratorTest {
         assertNull(generator.dynamicIntervalSkippedListener)
 
         // set new value
-        val dynamicIntervalSkippedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnDynamicIntervalSkippedListener<MagnetometerMeasurementGenerator>>()
         generator.dynamicIntervalSkippedListener = dynamicIntervalSkippedListener
 
         // check
@@ -2360,8 +2252,6 @@ class MagnetometerMeasurementGeneratorTest {
         assertNull(generator.generatedMeasurementListener)
 
         // set new value
-        val generatedMeasurementListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnGeneratedMeasurementListener<MagnetometerMeasurementGenerator, StandardDeviationBodyMagneticFluxDensity>>()
         generator.generatedMeasurementListener = generatedMeasurementListener
 
         // check
@@ -2377,8 +2267,6 @@ class MagnetometerMeasurementGeneratorTest {
         assertNull(generator.resetListener)
 
         // set new value
-        val resetListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnResetListener<MagnetometerMeasurementGenerator>>()
         generator.resetListener = resetListener
 
         // check
@@ -2394,8 +2282,6 @@ class MagnetometerMeasurementGeneratorTest {
         assertNull(generator.accelerometerMeasurementListener)
 
         // set new value
-        val accelerometerMeasurementListener =
-            mockk<AccelerometerSensorCollector.OnMeasurementListener>()
         generator.accelerometerMeasurementListener = accelerometerMeasurementListener
 
         // check
@@ -2411,8 +2297,6 @@ class MagnetometerMeasurementGeneratorTest {
         assertNull(generator.magnetometerMeasurementListener)
 
         // set new value
-        val magnetometerMeasurementListener =
-            mockk<MagnetometerSensorCollector.OnMeasurementListener>()
         generator.magnetometerMeasurementListener = magnetometerMeasurementListener
 
         // check
@@ -2428,7 +2312,6 @@ class MagnetometerMeasurementGeneratorTest {
         assertNull(generator.accuracyChangedListener)
 
         // set new value
-        val accuracyChangedListener = mockk<SensorCollector.OnAccuracyChangedListener>()
         generator.accuracyChangedListener = accuracyChangedListener
 
         // check
@@ -2451,7 +2334,6 @@ class MagnetometerMeasurementGeneratorTest {
         )
         requireNotNull(accelerometerCollector)
         val accelerometerCollectorSpy = spyk(accelerometerCollector)
-        val sensor = mockk<Sensor>()
         every { accelerometerCollectorSpy.sensor }.returns(sensor)
         setPrivateProperty(
             CalibrationMeasurementGenerator::class,
@@ -2477,7 +2359,6 @@ class MagnetometerMeasurementGeneratorTest {
             generator.getPrivateProperty("magnetometerCollector")
         requireNotNull(magnetometerCollector)
         val magnetometerCollectorSpy = spyk(magnetometerCollector)
-        val sensor = mockk<Sensor>()
         every { magnetometerCollectorSpy.sensor }.returns(sensor)
         generator.setPrivateProperty("magnetometerCollector", magnetometerCollectorSpy)
 
@@ -4009,8 +3890,6 @@ class MagnetometerMeasurementGeneratorTest {
 
     @Test
     fun onAccelerometerMeasurementListener_whenListenerAvailable_notifies() {
-        val accelerometerMeasurementListener =
-            mockk<AccelerometerSensorCollector.OnMeasurementListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = MagnetometerMeasurementGenerator(
             context,
@@ -4156,12 +4035,6 @@ class MagnetometerMeasurementGeneratorTest {
 
     @Test
     fun collectorAccuracyChangedListener_whenUnreliableAndListenersAvailable_setsStopsAndSetsUnreliable() {
-        val errorListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnErrorListener<MagnetometerMeasurementGenerator>>(
-                relaxUnitFun = true
-            )
-        val accuracyChangedListener =
-            mockk<SensorCollector.OnAccuracyChangedListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = MagnetometerMeasurementGenerator(
             context,
@@ -4217,12 +4090,6 @@ class MagnetometerMeasurementGeneratorTest {
 
     @Test
     fun collectorAccuracyChangedListener_whenNotUnreliableAndListenersAvailable_makesNoAction() {
-        val errorListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnErrorListener<MagnetometerMeasurementGenerator>>(
-                relaxUnitFun = true
-            )
-        val accuracyChangedListener =
-            mockk<SensorCollector.OnAccuracyChangedListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = MagnetometerMeasurementGenerator(
             context,
@@ -4704,28 +4571,25 @@ class MagnetometerMeasurementGeneratorTest {
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<MagnetometerMeasurementsGenerator>()
         measurementsGeneratorListener.onInitializationStarted(internalGenerator)
     }
 
     @Test
     fun onInitializationStarted_whenListener_notifies() {
-        val listener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnInitializationStartedListener<MagnetometerMeasurementGenerator>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator =
-            MagnetometerMeasurementGenerator(context, initializationStartedListener = listener)
+            MagnetometerMeasurementGenerator(
+                context,
+                initializationStartedListener = initializationStartedListener
+            )
 
         val measurementsGeneratorListener: MagnetometerMeasurementsGeneratorListener? =
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<MagnetometerMeasurementsGenerator>()
         measurementsGeneratorListener.onInitializationStarted(internalGenerator)
 
-        verify(exactly = 1) { listener.onInitializationStarted(generator) }
+        verify(exactly = 1) { initializationStartedListener.onInitializationStarted(generator) }
     }
 
     @Test
@@ -4737,7 +4601,6 @@ class MagnetometerMeasurementGeneratorTest {
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<MagnetometerMeasurementsGenerator>()
         val randomizer = UniformRandomizer()
         val baseNoiseLevel = randomizer.nextDouble()
         measurementsGeneratorListener.onInitializationCompleted(internalGenerator, baseNoiseLevel)
@@ -4745,24 +4608,27 @@ class MagnetometerMeasurementGeneratorTest {
 
     @Test
     fun onInitializationCompleted_whenListener_notifies() {
-        val listener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnInitializationCompletedListener<MagnetometerMeasurementGenerator>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator =
-            MagnetometerMeasurementGenerator(context, initializationCompletedListener = listener)
+            MagnetometerMeasurementGenerator(
+                context,
+                initializationCompletedListener = initializationCompletedListener
+            )
 
         val measurementsGeneratorListener: MagnetometerMeasurementsGeneratorListener? =
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<MagnetometerMeasurementsGenerator>()
         val randomizer = UniformRandomizer()
         val baseNoiseLevel = randomizer.nextDouble()
         measurementsGeneratorListener.onInitializationCompleted(internalGenerator, baseNoiseLevel)
 
-        verify(exactly = 1) { listener.onInitializationCompleted(generator, baseNoiseLevel) }
+        verify(exactly = 1) {
+            initializationCompletedListener.onInitializationCompleted(
+                generator,
+                baseNoiseLevel
+            )
+        }
     }
 
     @Test
@@ -4774,7 +4640,6 @@ class MagnetometerMeasurementGeneratorTest {
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<MagnetometerMeasurementsGenerator>()
         measurementsGeneratorListener.onError(
             internalGenerator,
             TriadStaticIntervalDetector.ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED
@@ -4783,25 +4648,20 @@ class MagnetometerMeasurementGeneratorTest {
 
     @Test
     fun onError_whenListener_notifies() {
-        val listener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnErrorListener<MagnetometerMeasurementGenerator>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = MagnetometerMeasurementGenerator(context, errorListener = listener)
+        val generator = MagnetometerMeasurementGenerator(context, errorListener = errorListener)
 
         val measurementsGeneratorListener: MagnetometerMeasurementsGeneratorListener? =
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<MagnetometerMeasurementsGenerator>()
         measurementsGeneratorListener.onError(
             internalGenerator,
             TriadStaticIntervalDetector.ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED
         )
 
         verify(exactly = 1) {
-            listener.onError(
+            errorListener.onError(
                 generator,
                 ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
             )
@@ -4817,28 +4677,25 @@ class MagnetometerMeasurementGeneratorTest {
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<MagnetometerMeasurementsGenerator>()
         measurementsGeneratorListener.onStaticIntervalDetected(internalGenerator)
     }
 
     @Test
     fun onStaticIntervalDetected_whenListener_notifies() {
-        val listener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalDetectedListener<MagnetometerMeasurementGenerator>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator =
-            MagnetometerMeasurementGenerator(context, staticIntervalDetectedListener = listener)
+            MagnetometerMeasurementGenerator(
+                context,
+                staticIntervalDetectedListener = staticIntervalDetectedListener
+            )
 
         val measurementsGeneratorListener: MagnetometerMeasurementsGeneratorListener? =
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<MagnetometerMeasurementsGenerator>()
         measurementsGeneratorListener.onStaticIntervalDetected(internalGenerator)
 
-        verify(exactly = 1) { listener.onStaticIntervalDetected(generator) }
+        verify(exactly = 1) { staticIntervalDetectedListener.onStaticIntervalDetected(generator) }
     }
 
     @Test
@@ -4850,28 +4707,25 @@ class MagnetometerMeasurementGeneratorTest {
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<MagnetometerMeasurementsGenerator>()
         measurementsGeneratorListener.onDynamicIntervalDetected(internalGenerator)
     }
 
     @Test
     fun onDynamicIntervalDetected_whenListener_notifies() {
-        val listener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnDynamicIntervalDetectedListener<MagnetometerMeasurementGenerator>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator =
-            MagnetometerMeasurementGenerator(context, dynamicIntervalDetectedListener = listener)
+            MagnetometerMeasurementGenerator(
+                context,
+                dynamicIntervalDetectedListener = dynamicIntervalDetectedListener
+            )
 
         val measurementsGeneratorListener: MagnetometerMeasurementsGeneratorListener? =
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<MagnetometerMeasurementsGenerator>()
         measurementsGeneratorListener.onDynamicIntervalDetected(internalGenerator)
 
-        verify(exactly = 1) { listener.onDynamicIntervalDetected(generator) }
+        verify(exactly = 1) { dynamicIntervalDetectedListener.onDynamicIntervalDetected(generator) }
     }
 
     @Test
@@ -4883,28 +4737,25 @@ class MagnetometerMeasurementGeneratorTest {
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<MagnetometerMeasurementsGenerator>()
         measurementsGeneratorListener.onStaticIntervalSkipped(internalGenerator)
     }
 
     @Test
     fun onStaticIntervalSkipped_whenListener_notifies() {
-        val listener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalSkippedListener<MagnetometerMeasurementGenerator>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator =
-            MagnetometerMeasurementGenerator(context, staticIntervalSkippedListener = listener)
+            MagnetometerMeasurementGenerator(
+                context,
+                staticIntervalSkippedListener = staticIntervalSkippedListener
+            )
 
         val measurementsGeneratorListener: MagnetometerMeasurementsGeneratorListener? =
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<MagnetometerMeasurementsGenerator>()
         measurementsGeneratorListener.onStaticIntervalSkipped(internalGenerator)
 
-        verify(exactly = 1) { listener.onStaticIntervalSkipped(generator) }
+        verify(exactly = 1) { staticIntervalSkippedListener.onStaticIntervalSkipped(generator) }
     }
 
     @Test
@@ -4916,28 +4767,25 @@ class MagnetometerMeasurementGeneratorTest {
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<MagnetometerMeasurementsGenerator>()
         measurementsGeneratorListener.onDynamicIntervalSkipped(internalGenerator)
     }
 
     @Test
     fun onDynamicIntervalSkipped_whenListener_notifies() {
-        val listener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnDynamicIntervalSkippedListener<MagnetometerMeasurementGenerator>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator =
-            MagnetometerMeasurementGenerator(context, dynamicIntervalSkippedListener = listener)
+            MagnetometerMeasurementGenerator(
+                context,
+                dynamicIntervalSkippedListener = dynamicIntervalSkippedListener
+            )
 
         val measurementsGeneratorListener: MagnetometerMeasurementsGeneratorListener? =
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<MagnetometerMeasurementsGenerator>()
         measurementsGeneratorListener.onDynamicIntervalSkipped(internalGenerator)
 
-        verify(exactly = 1) { listener.onDynamicIntervalSkipped(generator) }
+        verify(exactly = 1) { dynamicIntervalSkippedListener.onDynamicIntervalSkipped(generator) }
     }
 
     @Test
@@ -4949,30 +4797,32 @@ class MagnetometerMeasurementGeneratorTest {
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<MagnetometerMeasurementsGenerator>()
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         measurementsGeneratorListener.onGeneratedMeasurement(internalGenerator, measurement)
     }
 
     @Test
     fun onGeneratedMeasurement_whenListener_notifies() {
-        val listener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnGeneratedMeasurementListener<MagnetometerMeasurementGenerator, StandardDeviationBodyMagneticFluxDensity>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator =
-            MagnetometerMeasurementGenerator(context, generatedMeasurementListener = listener)
+            MagnetometerMeasurementGenerator(
+                context,
+                generatedMeasurementListener = generatedMeasurementListener
+            )
 
         val measurementsGeneratorListener: MagnetometerMeasurementsGeneratorListener? =
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<MagnetometerMeasurementsGenerator>()
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         measurementsGeneratorListener.onGeneratedMeasurement(internalGenerator, measurement)
 
-        verify(exactly = 1) { listener.onGeneratedMeasurement(generator, measurement) }
+        verify(exactly = 1) {
+            generatedMeasurementListener.onGeneratedMeasurement(
+                generator,
+                measurement
+            )
+        }
     }
 
     @Test
@@ -4984,27 +4834,21 @@ class MagnetometerMeasurementGeneratorTest {
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<MagnetometerMeasurementsGenerator>()
         measurementsGeneratorListener.onReset(internalGenerator)
     }
 
     @Test
     fun onReset_whenListener_notifies() {
-        val listener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnResetListener<MagnetometerMeasurementGenerator>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = MagnetometerMeasurementGenerator(context, resetListener = listener)
+        val generator = MagnetometerMeasurementGenerator(context, resetListener = resetListener)
 
         val measurementsGeneratorListener: MagnetometerMeasurementsGeneratorListener? =
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<MagnetometerMeasurementsGenerator>()
         measurementsGeneratorListener.onReset(internalGenerator)
 
-        verify(exactly = 1) { listener.onReset(generator) }
+        verify(exactly = 1) { resetListener.onReset(generator) }
     }
 
     @Test
@@ -5058,8 +4902,6 @@ class MagnetometerMeasurementGeneratorTest {
 
     @Test
     fun onMagnetometerMeasurementListener_whenListener_setsAngularRates() {
-        val magnetometerMeasurementListener =
-            mockk<MagnetometerSensorCollector.OnMeasurementListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = MagnetometerMeasurementGenerator(
             context,

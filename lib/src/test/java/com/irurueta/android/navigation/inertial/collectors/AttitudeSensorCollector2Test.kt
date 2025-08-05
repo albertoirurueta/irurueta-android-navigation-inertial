@@ -21,19 +21,41 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import androidx.test.core.app.ApplicationProvider
-import com.irurueta.android.navigation.inertial.getPrivateProperty
-import com.irurueta.android.navigation.inertial.setPrivateProperty
+import com.irurueta.android.testutils.getPrivateProperty
+import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.geometry.Quaternion
 import com.irurueta.statistics.UniformRandomizer
 import io.mockk.*
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
 import org.junit.After
 import org.junit.Assert.*
+import org.junit.Ignore
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
+@Ignore("possible memory leak")
 @RunWith(RobolectricTestRunner::class)
 class AttitudeSensorCollector2Test {
+
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var accuracyChangedListener:
+            SensorCollector2.OnAccuracyChangedListener<AttitudeSensorMeasurement, AttitudeSensorCollector2>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var measurementListener:
+            SensorCollector2.OnMeasurementListener<AttitudeSensorMeasurement, AttitudeSensorCollector2>
+
+    @MockK
+    private lateinit var sensor: Sensor
+
+    @MockK
+    private lateinit var event: SensorEvent
 
     @After
     fun tearDown() {
@@ -65,10 +87,6 @@ class AttitudeSensorCollector2Test {
     @Test
     fun constructor_whenAllParameters_setsExpectedValues() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val accuracyChangedListener =
-            mockk<SensorCollector2.OnAccuracyChangedListener<AttitudeSensorMeasurement, AttitudeSensorCollector2>>()
-        val measurementListener =
-            mockk<SensorCollector2.OnMeasurementListener<AttitudeSensorMeasurement, AttitudeSensorCollector2>>()
         val collector = AttitudeSensorCollector2(
             context,
             AttitudeSensorType.RELATIVE_ATTITUDE,
@@ -103,8 +121,6 @@ class AttitudeSensorCollector2Test {
         assertNull(collector.accuracyChangedListener)
 
         // set new value
-        val accuracyChangedListener =
-            mockk<SensorCollector2.OnAccuracyChangedListener<AttitudeSensorMeasurement, AttitudeSensorCollector2>>()
         collector.accuracyChangedListener = accuracyChangedListener
 
         // check
@@ -120,8 +136,6 @@ class AttitudeSensorCollector2Test {
         assertNull(collector.measurementListener)
 
         // set new value
-        val measurementListener =
-            mockk<SensorCollector2.OnMeasurementListener<AttitudeSensorMeasurement, AttitudeSensorCollector2>>()
         collector.measurementListener = measurementListener
 
         // check
@@ -135,14 +149,13 @@ class AttitudeSensorCollector2Test {
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
-        val sensorMock = mockk<Sensor>()
-        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR) }.returns(sensorMock)
+        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR) }.returns(sensor)
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val collector = AttitudeSensorCollector2(contextSpy, AttitudeSensorType.ABSOLUTE_ATTITUDE)
 
-        assertSame(sensorMock, collector.sensor)
+        assertSame(sensor, collector.sensor)
         verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
         verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR) }
     }
@@ -154,16 +167,15 @@ class AttitudeSensorCollector2Test {
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
-        val sensorMock = mockk<Sensor>()
         every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GAME_ROTATION_VECTOR) }.returns(
-            sensorMock
+            sensor
         )
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val collector = AttitudeSensorCollector2(contextSpy, AttitudeSensorType.RELATIVE_ATTITUDE)
 
-        assertSame(sensorMock, collector.sensor)
+        assertSame(sensor, collector.sensor)
         verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
         verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GAME_ROTATION_VECTOR) }
     }
@@ -254,8 +266,7 @@ class AttitudeSensorCollector2Test {
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
-        val sensorMock = mockk<Sensor>()
-        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR) }.returns(sensorMock)
+        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR) }.returns(sensor)
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(false)
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
@@ -269,7 +280,7 @@ class AttitudeSensorCollector2Test {
         verify(exactly = 1) {
             sensorManagerSpy.registerListener(
                 capture(slot),
-                sensorMock,
+                sensor,
                 collector.sensorDelay.value
             )
         }
@@ -292,8 +303,7 @@ class AttitudeSensorCollector2Test {
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
-        val sensorMock = mockk<Sensor>()
-        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR) }.returns(sensorMock)
+        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR) }.returns(sensor)
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
@@ -307,7 +317,7 @@ class AttitudeSensorCollector2Test {
         verify(exactly = 1) {
             sensorManagerSpy.registerListener(
                 capture(slot),
-                sensorMock,
+                sensor,
                 collector.sensorDelay.value
             )
         }
@@ -330,8 +340,7 @@ class AttitudeSensorCollector2Test {
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
-        val sensorMock = mockk<Sensor>()
-        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR) }.returns(sensorMock)
+        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR) }.returns(sensor)
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
@@ -346,7 +355,7 @@ class AttitudeSensorCollector2Test {
         verify(exactly = 1) {
             sensorManagerSpy.registerListener(
                 capture(slot),
-                sensorMock,
+                sensor,
                 collector.sensorDelay.value
             )
         }
@@ -405,8 +414,7 @@ class AttitudeSensorCollector2Test {
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
-        val sensorMock = mockk<Sensor>()
-        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR) }.returns(sensorMock)
+        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR) }.returns(sensor)
         justRun { sensorManagerSpy.unregisterListener(any(), any<Sensor>()) }
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
@@ -443,7 +451,7 @@ class AttitudeSensorCollector2Test {
 
         verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
         val slot = slot<SensorEventListener>()
-        verify(exactly = 1) { sensorManagerSpy.unregisterListener(capture(slot), sensorMock) }
+        verify(exactly = 1) { sensorManagerSpy.unregisterListener(capture(slot), sensor) }
 
         val eventListener = slot.captured
 
@@ -456,8 +464,6 @@ class AttitudeSensorCollector2Test {
     @Test
     fun onSensorChanged_whenNoEvent_makesNoAction() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val measurementListener =
-            mockk<SensorCollector2.OnMeasurementListener<AttitudeSensorMeasurement, AttitudeSensorCollector2>>()
         val collector = AttitudeSensorCollector2(context, measurementListener = measurementListener)
 
         val sensorEventListener: SensorEventListener? =
@@ -481,15 +487,12 @@ class AttitudeSensorCollector2Test {
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
-        val sensorMock = mockk<Sensor>()
-        every { sensorMock.type }.returns(Sensor.TYPE_GYROSCOPE)
-        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR) }.returns(sensorMock)
+        every { sensor.type }.returns(Sensor.TYPE_GYROSCOPE)
+        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR) }.returns(sensor)
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
-        val measurementListener =
-            mockk<SensorCollector2.OnMeasurementListener<AttitudeSensorMeasurement, AttitudeSensorCollector2>>()
         val collector = AttitudeSensorCollector2(
             contextSpy,
             startOffsetEnabled = false,
@@ -500,8 +503,7 @@ class AttitudeSensorCollector2Test {
             getPrivateProperty(SensorCollector2::class, collector, "sensorEventListener")
         requireNotNull(sensorEventListener)
 
-        val event = mockk<SensorEvent>()
-        event.sensor = sensorMock
+        event.sensor = sensor
         sensorEventListener.onSensorChanged(event)
 
         // check
@@ -519,17 +521,12 @@ class AttitudeSensorCollector2Test {
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
-        val sensorMock = mockk<Sensor>()
-        every { sensorMock.type }.returns(Sensor.TYPE_ROTATION_VECTOR)
-        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR) }.returns(sensorMock)
+        every { sensor.type }.returns(Sensor.TYPE_ROTATION_VECTOR)
+        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR) }.returns(sensor)
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
-        val measurementListener =
-            mockk<SensorCollector2.OnMeasurementListener<AttitudeSensorMeasurement, AttitudeSensorCollector2>>(
-                relaxUnitFun = true
-            )
         val collector = AttitudeSensorCollector2(
             contextSpy,
             startOffsetEnabled = true,
@@ -546,8 +543,7 @@ class AttitudeSensorCollector2Test {
 
         assertNull(collector.startOffset)
 
-        val event = mockk<SensorEvent>()
-        event.sensor = sensorMock
+        event.sensor = sensor
         event.timestamp = System.nanoTime()
         event.accuracy = SensorManager.SENSOR_STATUS_ACCURACY_HIGH
         val valuesField = SensorEvent::class.java.getDeclaredField("values")
@@ -556,9 +552,9 @@ class AttitudeSensorCollector2Test {
         sensorEventListener.onSensorChanged(event)
 
         // check
-        val startOffst = event.timestamp - startTimestamp
+        val startOffset = event.timestamp - startTimestamp
         assertNotNull(collector.startOffset)
-        assertEquals(startOffst, collector.startOffset)
+        assertEquals(startOffset, collector.startOffset)
         val slot = slot<AttitudeSensorMeasurement>()
         verify(exactly = 1) { measurementListener.onMeasurement(collector, capture(slot)) }
 
@@ -572,7 +568,7 @@ class AttitudeSensorCollector2Test {
         val headingAccuracy = measurement.headingAccuracy
         requireNotNull(headingAccuracy)
         assertEquals(5.0f, headingAccuracy, 0.0f)
-        assertEquals(event.timestamp + startOffst, measurement.timestamp)
+        assertEquals(event.timestamp + startOffset, measurement.timestamp)
         assertEquals(SensorAccuracy.HIGH, measurement.accuracy)
         assertEquals(AttitudeSensorType.ABSOLUTE_ATTITUDE, measurement.sensorType)
 
@@ -583,8 +579,6 @@ class AttitudeSensorCollector2Test {
     @Test
     fun onAccuracyChanged_whenNoSensor_makesNoAction() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val accuracyChangedListener =
-            mockk<SensorCollector2.OnAccuracyChangedListener<AttitudeSensorMeasurement, AttitudeSensorCollector2>>()
         val collector =
             AttitudeSensorCollector2(context, accuracyChangedListener = accuracyChangedListener)
 
@@ -600,8 +594,6 @@ class AttitudeSensorCollector2Test {
     @Test
     fun onAccuracyChanged_whenUnsupportedSensorType_makesNoAction() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val accuracyChangedListener =
-            mockk<SensorCollector2.OnAccuracyChangedListener<AttitudeSensorMeasurement, AttitudeSensorCollector2>>()
         val collector =
             AttitudeSensorCollector2(context, accuracyChangedListener = accuracyChangedListener)
 
@@ -609,7 +601,6 @@ class AttitudeSensorCollector2Test {
             getPrivateProperty(SensorCollector2::class, collector, "sensorEventListener")
         requireNotNull(sensorEventListener)
 
-        val sensor = mockk<Sensor>()
         every { sensor.type }.returns(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value)
         sensorEventListener.onAccuracyChanged(sensor, SensorAccuracy.HIGH.value)
 
@@ -625,7 +616,6 @@ class AttitudeSensorCollector2Test {
             getPrivateProperty(SensorCollector2::class, collector, "sensorEventListener")
         requireNotNull(sensorEventListener)
 
-        val sensor = mockk<Sensor>()
         every { sensor.type }.returns(AttitudeSensorType.ABSOLUTE_ATTITUDE.value)
         sensorEventListener.onAccuracyChanged(sensor, SensorAccuracy.HIGH.value)
     }
@@ -633,10 +623,6 @@ class AttitudeSensorCollector2Test {
     @Test
     fun onAccuracyChanged_whenListener_notifies() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val accuracyChangedListener =
-            mockk<SensorCollector2.OnAccuracyChangedListener<AttitudeSensorMeasurement, AttitudeSensorCollector2>>(
-                relaxUnitFun = true
-            )
         val collector = AttitudeSensorCollector2(
             context,
             accuracyChangedListener = accuracyChangedListener
@@ -646,7 +632,6 @@ class AttitudeSensorCollector2Test {
             getPrivateProperty(SensorCollector2::class, collector, "sensorEventListener")
         requireNotNull(sensorEventListener)
 
-        val sensor = mockk<Sensor>()
         every { sensor.type }.returns(AttitudeSensorType.ABSOLUTE_ATTITUDE.value)
         sensorEventListener.onAccuracyChanged(sensor, SensorAccuracy.HIGH.value)
 

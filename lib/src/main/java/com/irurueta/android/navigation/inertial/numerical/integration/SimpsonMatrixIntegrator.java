@@ -140,26 +140,23 @@ public abstract class SimpsonMatrixIntegrator<T extends MatrixQuadrature> extend
             final double a, final double b,
             final MatrixSingleDimensionFunctionEvaluatorListener listener, final double eps,
             final QuadratureType quadratureType) throws WrongSizeException {
-        switch (quadratureType) {
-            case TRAPEZOIDAL:
-                return new SimpsonTrapezoidalQuadratureMatrixIntegrator(a, b, listener, eps);
-            case MID_POINT:
-                return new SimpsonMidPointQuadratureMatrixIntegrator(a, b, listener, eps);
-            case INFINITY_MID_POINT:
-                return new SimpsonInfinityMidPointQuadratureMatrixIntegrator(a, b, listener, eps);
-            case LOWER_SQUARE_ROOT_MID_POINT:
-                return new SimpsonLowerSquareRootMidPointQuadratureMatrixIntegrator(a, b, listener,
-                        eps);
-            case UPPER_SQUARE_ROOT_MID_POINT:
-                return new SimpsonUpperSquareRootMidPointQuadratureMatrixIntegrator(a, b, listener,
-                        eps);
-            case DOUBLE_EXPONENTIAL_RULE:
-                return new SimpsonDoubleExponentialRuleQuadratureMatrixIntegrator(a, b, listener,
-                        eps);
-            case EXPONENTIAL_MID_POINT:
-            default:
-                throw new IllegalArgumentException();
-        }
+        return switch (quadratureType) {
+            case TRAPEZOIDAL ->
+                    new SimpsonTrapezoidalQuadratureMatrixIntegrator(a, b, listener, eps);
+            case MID_POINT -> new SimpsonMidPointQuadratureMatrixIntegrator(a, b, listener, eps);
+            case INFINITY_MID_POINT ->
+                    new SimpsonInfinityMidPointQuadratureMatrixIntegrator(a, b, listener, eps);
+            case LOWER_SQUARE_ROOT_MID_POINT ->
+                    new SimpsonLowerSquareRootMidPointQuadratureMatrixIntegrator(a, b, listener,
+                            eps);
+            case UPPER_SQUARE_ROOT_MID_POINT ->
+                    new SimpsonUpperSquareRootMidPointQuadratureMatrixIntegrator(a, b, listener,
+                            eps);
+            case DOUBLE_EXPONENTIAL_RULE ->
+                    new SimpsonDoubleExponentialRuleQuadratureMatrixIntegrator(a, b, listener,
+                            eps);
+            default -> throw new IllegalArgumentException();
+        };
     }
 
     /**
@@ -177,23 +174,19 @@ public abstract class SimpsonMatrixIntegrator<T extends MatrixQuadrature> extend
             final double a, final double b,
             final MatrixSingleDimensionFunctionEvaluatorListener listener,
             final QuadratureType quadratureType) throws WrongSizeException {
-        switch (quadratureType) {
-            case TRAPEZOIDAL:
-                return new SimpsonTrapezoidalQuadratureMatrixIntegrator(a, b, listener);
-            case MID_POINT:
-                return new SimpsonMidPointQuadratureMatrixIntegrator(a, b, listener);
-            case INFINITY_MID_POINT:
-                return new SimpsonInfinityMidPointQuadratureMatrixIntegrator(a, b, listener);
-            case LOWER_SQUARE_ROOT_MID_POINT:
-                return new SimpsonLowerSquareRootMidPointQuadratureMatrixIntegrator(a, b, listener);
-            case UPPER_SQUARE_ROOT_MID_POINT:
-                return new SimpsonUpperSquareRootMidPointQuadratureMatrixIntegrator(a, b, listener);
-            case DOUBLE_EXPONENTIAL_RULE:
-                return new SimpsonDoubleExponentialRuleQuadratureMatrixIntegrator(a, b, listener);
-            case EXPONENTIAL_MID_POINT:
-            default:
-                throw new IllegalArgumentException();
-        }
+        return switch (quadratureType) {
+            case TRAPEZOIDAL -> new SimpsonTrapezoidalQuadratureMatrixIntegrator(a, b, listener);
+            case MID_POINT -> new SimpsonMidPointQuadratureMatrixIntegrator(a, b, listener);
+            case INFINITY_MID_POINT ->
+                    new SimpsonInfinityMidPointQuadratureMatrixIntegrator(a, b, listener);
+            case LOWER_SQUARE_ROOT_MID_POINT ->
+                    new SimpsonLowerSquareRootMidPointQuadratureMatrixIntegrator(a, b, listener);
+            case UPPER_SQUARE_ROOT_MID_POINT ->
+                    new SimpsonUpperSquareRootMidPointQuadratureMatrixIntegrator(a, b, listener);
+            case DOUBLE_EXPONENTIAL_RULE ->
+                    new SimpsonDoubleExponentialRuleQuadratureMatrixIntegrator(a, b, listener);
+            default -> throw new IllegalArgumentException();
+        };
     }
 
     /**
