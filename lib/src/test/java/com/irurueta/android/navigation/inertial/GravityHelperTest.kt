@@ -23,33 +23,44 @@ import com.irurueta.navigation.frames.NEDVelocity
 import com.irurueta.navigation.frames.converters.NEDtoECEFPositionVelocityConverter
 import com.irurueta.navigation.inertial.estimators.ECEFGravityEstimator
 import com.irurueta.statistics.UniformRandomizer
-import io.mockk.clearAllMocks
-import io.mockk.every
-import io.mockk.impl.annotations.MockK
-import io.mockk.junit4.MockKRule
-import io.mockk.unmockkAll
-import org.junit.After
+//import io.mockk.clearAllMocks
+//import io.mockk.every
+//import io.mockk.impl.annotations.MockK
+//import io.mockk.junit4.MockKRule
+//import io.mockk.unmockkAll
+//import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotSame
+//import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mock
+import org.mockito.junit.MockitoJUnit
+import org.mockito.junit.MockitoRule
+import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 
+//@Ignore("Possible memory leak when running this test")
 @RunWith(RobolectricTestRunner::class)
 class GravityHelperTest {
 
     @get:Rule
-    val mockkRule = MockKRule(this)
+    val mockitoRule: MockitoRule = MockitoJUnit.rule()
 
-    @MockK
+//    @get:Rule
+//    val mockkRule = MockKRule(this)
+
+//    @MockK
+    @Mock
     private lateinit var location: Location
 
-    @After
+    /*@After
     fun tearDown() {
         unmockkAll()
         clearAllMocks()
-    }
+        System.gc()
+    }*/
 
     @Test
     fun getGravityForLocation_returnsExpectedValue() {
@@ -115,9 +126,12 @@ class GravityHelperTest {
         val longitudeDegrees = randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES)
         val height = randomizer.nextDouble(MIN_HEIGHT, MAX_HEIGHT)
 
-        every { location.latitude }.returns(latitudeDegrees)
-        every { location.longitude }.returns(longitudeDegrees)
-        every { location.altitude }.returns(height)
+        whenever(location.latitude).thenReturn(latitudeDegrees)
+//        every { location.latitude }.returns(latitudeDegrees)
+        whenever(location.longitude).thenReturn(longitudeDegrees)
+//        every { location.longitude }.returns(longitudeDegrees)
+        whenever(location.altitude).thenReturn(height)
+//        every { location.altitude }.returns(height)
 
         return location
     }

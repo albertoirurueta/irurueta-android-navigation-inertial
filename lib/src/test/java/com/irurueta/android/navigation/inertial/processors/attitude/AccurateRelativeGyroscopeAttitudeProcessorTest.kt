@@ -23,29 +23,40 @@ import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.inertial.calibration.AngularSpeedTriad
 import com.irurueta.navigation.inertial.calibration.gyroscope.QuaternionStepIntegrator
 import com.irurueta.statistics.UniformRandomizer
-import io.mockk.*
-import io.mockk.impl.annotations.MockK
-import io.mockk.junit4.MockKRule
-import org.junit.After
+//import io.mockk.*
+//import io.mockk.impl.annotations.MockK
+//import io.mockk.junit4.MockKRule
+//import org.junit.After
 import org.junit.Assert.*
-import org.junit.Ignore
+//import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.mockito.Mock
+import org.mockito.junit.MockitoJUnitRunner
+import org.mockito.kotlin.only
+import org.mockito.kotlin.spy
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.verifyNoInteractions
 
-@Ignore("possible memory leak")
+//@Ignore("Possible memory leak when running this test")
+@RunWith(MockitoJUnitRunner::class)
 class AccurateRelativeGyroscopeAttitudeProcessorTest {
 
-    @get:Rule
-    val mockkRule = MockKRule(this)
+//    @get:Rule
+//    val mockkRule = MockKRule(this)
 
-    @MockK(relaxUnitFun = true)
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var listener: BaseRelativeGyroscopeAttitudeProcessor.OnProcessedListener
 
-    @After
+    /*@After
     fun tearDown() {
         unmockkAll()
         clearAllMocks()
-    }
+        System.gc()
+    }*/
 
     @Test
     fun constructor_whenNoParameters_setsDefaultValues() {
@@ -94,7 +105,8 @@ class AccurateRelativeGyroscopeAttitudeProcessorTest {
         val quaternionStepIntegrator: QuaternionStepIntegrator? =
             processor.getPrivateProperty("quaternionStepIntegrator")
         requireNotNull(quaternionStepIntegrator)
-        val quaternionStepIntegratorSpy = spyk(quaternionStepIntegrator)
+        val quaternionStepIntegratorSpy = spy(quaternionStepIntegrator)
+//        val quaternionStepIntegratorSpy = spyk(quaternionStepIntegrator)
         processor.setPrivateProperty("quaternionStepIntegrator", quaternionStepIntegratorSpy)
 
         val randomizer = UniformRandomizer()
@@ -117,8 +129,10 @@ class AccurateRelativeGyroscopeAttitudeProcessorTest {
         assertEquals(Quaternion(), processor.attitude)
         assertEquals(0.0, processor.timeIntervalSeconds, 0.0)
 
-        verify { listener wasNot Called }
-        verify { quaternionStepIntegratorSpy wasNot Called }
+        verifyNoInteractions(listener)
+//        verify { listener wasNot Called }
+        verifyNoInteractions(quaternionStepIntegratorSpy)
+//        verify { quaternionStepIntegratorSpy wasNot Called }
     }
 
     @Test
@@ -140,7 +154,8 @@ class AccurateRelativeGyroscopeAttitudeProcessorTest {
             "triad"
         )
         requireNotNull(triad)
-        val triadSpy = spyk(triad)
+        val triadSpy = spy(triad)
+//        val triadSpy = spyk(triad)
         setPrivateProperty(
             BaseRelativeGyroscopeAttitudeProcessor::class,
             processor,
@@ -151,7 +166,8 @@ class AccurateRelativeGyroscopeAttitudeProcessorTest {
         val quaternionStepIntegrator: QuaternionStepIntegrator? =
             processor.getPrivateProperty("quaternionStepIntegrator")
         requireNotNull(quaternionStepIntegrator)
-        val quaternionStepIntegratorSpy = spyk(quaternionStepIntegrator)
+        val quaternionStepIntegratorSpy = spy(quaternionStepIntegrator)
+//        val quaternionStepIntegratorSpy = spyk(quaternionStepIntegrator)
         processor.setPrivateProperty("quaternionStepIntegrator", quaternionStepIntegratorSpy)
 
         val internalAttitude: Quaternion? = getPrivateProperty(
@@ -178,14 +194,30 @@ class AccurateRelativeGyroscopeAttitudeProcessorTest {
         assertTrue(processor.process(measurement))
 
         // check
-        verify(exactly = 1) {
+        verify(triadSpy, times(1)).setValueCoordinates(
+            wx.toDouble(),
+            wy.toDouble(),
+            wz.toDouble()
+        )
+/*        verify(exactly = 1) {
             triadSpy.setValueCoordinates(
                 wx.toDouble(),
                 wy.toDouble(),
                 wz.toDouble()
             )
-        }
-        verify(exactly = 1) {
+        }*/
+        verify(quaternionStepIntegratorSpy, only()).integrate(
+            internalAttitude,
+            0.0,
+            0.0,
+            0.0,
+            wx.toDouble(),
+            wy.toDouble(),
+            wz.toDouble(),
+            INTERVAL_SECONDS,
+            internalAttitude
+        )
+/*        verify(exactly = 1) {
             quaternionStepIntegratorSpy.integrate(
                 internalAttitude,
                 0.0,
@@ -197,17 +229,22 @@ class AccurateRelativeGyroscopeAttitudeProcessorTest {
                 INTERVAL_SECONDS,
                 internalAttitude
             )
-        }
+        }*/
 
         assertEquals(internalAttitude, processor.attitude)
 
-        verify(exactly = 1) {
+        verify(listener, only()).onProcessed(
+            processor,
+            processor.attitude,
+            SensorAccuracy.HIGH
+        )
+/*        verify(exactly = 1) {
             listener.onProcessed(
                 processor,
                 processor.attitude,
                 SensorAccuracy.HIGH
             )
-        }
+        }*/
     }
 
     @Test
@@ -229,7 +266,8 @@ class AccurateRelativeGyroscopeAttitudeProcessorTest {
             "triad"
         )
         requireNotNull(triad)
-        val triadSpy = spyk(triad)
+        val triadSpy = spy(triad)
+//        val triadSpy = spyk(triad)
         setPrivateProperty(
             BaseRelativeGyroscopeAttitudeProcessor::class,
             processor,
@@ -240,7 +278,8 @@ class AccurateRelativeGyroscopeAttitudeProcessorTest {
         val quaternionStepIntegrator: QuaternionStepIntegrator? =
             processor.getPrivateProperty("quaternionStepIntegrator")
         requireNotNull(quaternionStepIntegrator)
-        val quaternionStepIntegratorSpy = spyk(quaternionStepIntegrator)
+        val quaternionStepIntegratorSpy = spy(quaternionStepIntegrator)
+//        val quaternionStepIntegratorSpy = spyk(quaternionStepIntegrator)
         processor.setPrivateProperty("quaternionStepIntegrator", quaternionStepIntegratorSpy)
 
         val internalAttitude: Quaternion? = getPrivateProperty(
@@ -262,14 +301,30 @@ class AccurateRelativeGyroscopeAttitudeProcessorTest {
         assertTrue(processor.process(measurement))
 
         // check
-        verify(exactly = 1) {
+        verify(triadSpy, times(1)).setValueCoordinates(
+            wx.toDouble() - bx.toDouble(),
+            wy.toDouble() - by.toDouble(),
+            wz.toDouble() - bz.toDouble()
+        )
+/*        verify(exactly = 1) {
             triadSpy.setValueCoordinates(
                 wx.toDouble() - bx.toDouble(),
                 wy.toDouble() - by.toDouble(),
                 wz.toDouble() - bz.toDouble()
             )
-        }
-        verify(exactly = 1) {
+        }*/
+        verify(quaternionStepIntegratorSpy, only()).integrate(
+            internalAttitude,
+            0.0,
+            0.0,
+            0.0,
+            wx.toDouble() - bx.toDouble(),
+            wy.toDouble() - by.toDouble(),
+            wz.toDouble() - bz.toDouble(),
+            INTERVAL_SECONDS,
+            internalAttitude
+        )
+/*        verify(exactly = 1) {
             quaternionStepIntegratorSpy.integrate(
                 internalAttitude,
                 0.0,
@@ -281,17 +336,22 @@ class AccurateRelativeGyroscopeAttitudeProcessorTest {
                 INTERVAL_SECONDS,
                 internalAttitude
             )
-        }
+        }*/
 
         assertEquals(internalAttitude, processor.attitude)
 
-        verify(exactly = 1) {
+        verify(listener, only()).onProcessed(
+            processor,
+            processor.attitude,
+            SensorAccuracy.HIGH
+        )
+/*        verify(exactly = 1) {
             listener.onProcessed(
                 processor,
                 processor.attitude,
                 SensorAccuracy.HIGH
             )
-        }
+        }*/
     }
 
     @Test
@@ -313,7 +373,8 @@ class AccurateRelativeGyroscopeAttitudeProcessorTest {
             "triad"
         )
         requireNotNull(triad)
-        val triadSpy = spyk(triad)
+        val triadSpy = spy(triad)
+//        val triadSpy = spyk(triad)
         setPrivateProperty(
             BaseRelativeGyroscopeAttitudeProcessor::class,
             processor,
@@ -324,7 +385,8 @@ class AccurateRelativeGyroscopeAttitudeProcessorTest {
         val quaternionStepIntegrator: QuaternionStepIntegrator? =
             processor.getPrivateProperty("quaternionStepIntegrator")
         requireNotNull(quaternionStepIntegrator)
-        val quaternionStepIntegratorSpy = spyk(quaternionStepIntegrator)
+        val quaternionStepIntegratorSpy = spy(quaternionStepIntegrator)
+//        val quaternionStepIntegratorSpy = spyk(quaternionStepIntegrator)
         processor.setPrivateProperty("quaternionStepIntegrator", quaternionStepIntegratorSpy)
 
         val internalAttitude: Quaternion? = getPrivateProperty(
@@ -346,14 +408,30 @@ class AccurateRelativeGyroscopeAttitudeProcessorTest {
         assertTrue(processor.process(measurement, timestamp))
 
         // check
-        verify(exactly = 1) {
+        verify(triadSpy, times(1)).setValueCoordinates(
+            wx.toDouble() - bx.toDouble(),
+            wy.toDouble() - by.toDouble(),
+            wz.toDouble() - bz.toDouble()
+        )
+/*        verify(exactly = 1) {
             triadSpy.setValueCoordinates(
                 wx.toDouble() - bx.toDouble(),
                 wy.toDouble() - by.toDouble(),
                 wz.toDouble() - bz.toDouble()
             )
-        }
-        verify(exactly = 1) {
+        }*/
+        verify(quaternionStepIntegratorSpy, only()).integrate(
+            internalAttitude,
+            0.0,
+            0.0,
+            0.0,
+            wx.toDouble() - bx.toDouble(),
+            wy.toDouble() - by.toDouble(),
+            wz.toDouble() - bz.toDouble(),
+            INTERVAL_SECONDS,
+            internalAttitude
+        )
+/*        verify(exactly = 1) {
             quaternionStepIntegratorSpy.integrate(
                 internalAttitude,
                 0.0,
@@ -365,17 +443,22 @@ class AccurateRelativeGyroscopeAttitudeProcessorTest {
                 INTERVAL_SECONDS,
                 internalAttitude
             )
-        }
+        }*/
 
         assertEquals(internalAttitude, processor.attitude)
 
-        verify(exactly = 1) {
+        verify(listener, only()).onProcessed(
+            processor,
+            processor.attitude,
+            SensorAccuracy.HIGH
+        )
+/*        verify(exactly = 1) {
             listener.onProcessed(
                 processor,
                 processor.attitude,
                 SensorAccuracy.HIGH
             )
-        }
+        }*/
     }
 
     @Test

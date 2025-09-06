@@ -37,65 +37,88 @@ import com.irurueta.navigation.inertial.estimators.BodyMagneticFluxDensityEstima
 import com.irurueta.navigation.inertial.wmm.WMMEarthMagneticFluxDensityEstimator
 import com.irurueta.statistics.UniformRandomizer
 import com.irurueta.units.*
-import io.mockk.*
-import io.mockk.impl.annotations.MockK
-import io.mockk.junit4.MockKRule
-import org.junit.After
+//import io.mockk.*
+//import io.mockk.impl.annotations.MockK
+//import io.mockk.junit4.MockKRule
+//import org.junit.After
 import org.junit.Assert.*
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mock
+import org.mockito.junit.MockitoJUnit
+import org.mockito.junit.MockitoRule
+import org.mockito.kotlin.any
+import org.mockito.kotlin.doAnswer
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.never
+import org.mockito.kotlin.only
+import org.mockito.kotlin.spy
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 import java.util.*
 
-@Ignore("possible memory leak")
 @RunWith(RobolectricTestRunner::class)
 class MagnetometerIntervalDetectorTest {
 
     @get:Rule
-    val mockkRule = MockKRule(this)
+    val mockitoRule: MockitoRule = MockitoJUnit.rule()
 
-    @MockK(relaxUnitFun = true)
+//    @get:Rule
+//    val mockkRule = MockKRule(this)
+
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var initializationStartedListener:
             IntervalDetector.OnInitializationStartedListener<MagnetometerIntervalDetector>
 
-    @MockK(relaxUnitFun = true)
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var initializationCompletedListener:
             IntervalDetector.OnInitializationCompletedListener<MagnetometerIntervalDetector>
 
-    @MockK(relaxUnitFun = true)
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var errorListener:
             IntervalDetector.OnErrorListener<MagnetometerIntervalDetector>
 
-    @MockK(relaxUnitFun = true)
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var staticIntervalDetectedListener:
             IntervalDetector.OnStaticIntervalDetectedListener<MagnetometerIntervalDetector>
 
-    @MockK(relaxUnitFun = true)
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var dynamicIntervalDetectedListener:
             IntervalDetector.OnDynamicIntervalDetectedListener<MagnetometerIntervalDetector>
 
-    @MockK(relaxUnitFun = true)
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var resetListener:
             IntervalDetector.OnResetListener<MagnetometerIntervalDetector>
 
-    @MockK(relaxUnitFun = true)
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var measurementListener:
             MagnetometerSensorCollector.OnMeasurementListener
 
-    @MockK(relaxUnitFun = true)
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var accuracyChangedListener:
             SensorCollector.OnAccuracyChangedListener
 
-    @MockK
+//    @MockK
+    @Mock
     private lateinit var sensor: Sensor
 
-    @After
+    /*@After
     fun tearDown() {
         unmockkAll()
         clearAllMocks()
-    }
+        System.gc()
+    }*/
 
     @Test
     fun constructor_whenContext_setsDefaultValues() {
@@ -2446,8 +2469,10 @@ class MagnetometerIntervalDetectorTest {
             detector.getPrivateProperty("collector")
         requireNotNull(collector)
 
-        val collectorSpy = spyk(collector)
-        every { collectorSpy.sensor }.returns(sensor)
+        val collectorSpy = spy(collector)
+        whenever(collectorSpy.sensor).thenReturn(sensor)
+//        val collectorSpy = spyk(collector)
+//        every { collectorSpy.sensor }.returns(sensor)
         detector.setPrivateProperty("collector", collectorSpy)
 
         assertSame(sensor, detector.sensor)
@@ -2719,8 +2744,10 @@ class MagnetometerIntervalDetectorTest {
         assertNotNull(collector.measurementListener)
         assertNotNull(collector.accuracyChangedListener)
 
-        val collectorSpy = spyk(collector)
-        every { collectorSpy.start() }.returns(true)
+        val collectorSpy = spy(collector)
+        doReturn(true).whenever(collectorSpy).start()
+//        val collectorSpy = spyk(collector)
+//        every { collectorSpy.start() }.returns(true)
         detector.setPrivateProperty("collector", collectorSpy)
 
         assertFalse(detector.running)
@@ -2728,7 +2755,8 @@ class MagnetometerIntervalDetectorTest {
         detector.start()
 
         assertTrue(detector.running)
-        verify(exactly = 1) { collectorSpy.start() }
+        verify(collectorSpy, only()).start()
+//        verify(exactly = 1) { collectorSpy.start() }
     }
 
     @Test(expected = IllegalStateException::class)
@@ -2745,8 +2773,10 @@ class MagnetometerIntervalDetectorTest {
         assertNotNull(collector.measurementListener)
         assertNotNull(collector.accuracyChangedListener)
 
-        val collectorSpy = spyk(collector)
-        every { collectorSpy.start() }.returns(false)
+        val collectorSpy = spy(collector)
+        doReturn(false).whenever(collectorSpy).start()
+//        val collectorSpy = spyk(collector)
+//        every { collectorSpy.start() }.returns(false)
         detector.setPrivateProperty("collector", collectorSpy)
 
         assertFalse(detector.running)
@@ -2762,20 +2792,24 @@ class MagnetometerIntervalDetectorTest {
         val collector: MagnetometerSensorCollector? =
             detector.getPrivateProperty("collector")
         requireNotNull(collector)
-        val collectorSpy = spyk(collector)
-        every { collectorSpy.start() }.returns(true)
+        val collectorSpy = spy(collector)
+        doReturn(true).whenever(collectorSpy).start()
+//        val collectorSpy = spyk(collector)
+//        every { collectorSpy.start() }.returns(true)
         detector.setPrivateProperty("collector", collectorSpy)
 
         val internalDetector: MagneticFluxDensityTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
         requireNotNull(internalDetector)
-        val internalDetectorSpy = spyk(internalDetector)
+        val internalDetectorSpy = spy(internalDetector)
+//        val internalDetectorSpy = spyk(internalDetector)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         val timeIntervalEstimator: TimeIntervalEstimator? =
             getPrivateProperty(IntervalDetector::class, detector, "timeIntervalEstimator")
         requireNotNull(timeIntervalEstimator)
-        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
+//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
         setPrivateProperty(
             IntervalDetector::class,
             detector,
@@ -2796,8 +2830,10 @@ class MagnetometerIntervalDetectorTest {
         detector.start()
 
         assertEquals(Integer.MAX_VALUE, timeIntervalEstimatorSpy.totalSamples)
-        verify(exactly = 1) { timeIntervalEstimatorSpy.reset() }
-        verify(exactly = 1) { internalDetectorSpy.reset() }
+        verify(timeIntervalEstimatorSpy, times(1)).reset()
+        verify(internalDetectorSpy, only()).reset()
+//        verify(exactly = 1) { timeIntervalEstimatorSpy.reset() }
+//        verify(exactly = 1) { internalDetectorSpy.reset() }
 
         val unreliable: Boolean? =
             getPrivateProperty(IntervalDetector::class, detector, "unreliable")
@@ -2848,8 +2884,10 @@ class MagnetometerIntervalDetectorTest {
         assertNotNull(collector.measurementListener)
         assertNotNull(collector.accuracyChangedListener)
 
-        val collectorSpy = spyk(collector)
-        every { collectorSpy.start() }.returns(true)
+        val collectorSpy = spy(collector)
+        doReturn(true).whenever(collectorSpy).start()
+//        val collectorSpy = spyk(collector)
+//        every { collectorSpy.start() }.returns(true)
         detector.setPrivateProperty("collector", collectorSpy)
 
         assertFalse(detector.running)
@@ -2857,13 +2895,15 @@ class MagnetometerIntervalDetectorTest {
         detector.start()
 
         assertTrue(detector.running)
-        verify(exactly = 1) { collectorSpy.start() }
+        verify(collectorSpy, only()).start()
+//        verify(exactly = 1) { collectorSpy.start() }
 
         // stop
         detector.stop()
 
         assertFalse(detector.running)
-        verify(exactly = 1) { collectorSpy.stop() }
+        verify(collectorSpy, times(1)).stop()
+//        verify(exactly = 1) { collectorSpy.stop() }
     }
 
     @Test
@@ -2879,7 +2919,8 @@ class MagnetometerIntervalDetectorTest {
         assertNotNull(collector.measurementListener)
         assertNotNull(collector.accuracyChangedListener)
 
-        val collectorSpy = spyk(collector)
+        val collectorSpy = spy(collector)
+//        val collectorSpy = spyk(collector)
         detector.setPrivateProperty("collector", collectorSpy)
 
         assertFalse(detector.running)
@@ -2888,7 +2929,8 @@ class MagnetometerIntervalDetectorTest {
         detector.stop()
 
         assertFalse(detector.running)
-        verify(exactly = 1) { collectorSpy.stop() }
+        verify(collectorSpy, times(1)).stop()
+//        verify(exactly = 1) { collectorSpy.stop() }
     }
 
     @Test
@@ -2950,7 +2992,8 @@ class MagnetometerIntervalDetectorTest {
         val internalDetector: MagneticFluxDensityTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
         requireNotNull(internalDetector)
-        val internalDetectorSpy = spyk(internalDetector)
+        val internalDetectorSpy = spy(internalDetector)
+//        val internalDetectorSpy = spyk(internalDetector)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         // check initial status
@@ -2987,7 +3030,8 @@ class MagnetometerIntervalDetectorTest {
             MagneticFluxDensityUnit.MICROTESLA,
             MagneticFluxDensityUnit.TESLA
         )
-        verify(exactly = 1) { internalDetectorSpy.process(byT, bxT, -bzT) }
+        verify(internalDetectorSpy, times(1)).process(byT, bxT, -bzT)
+//        verify(exactly = 1) { internalDetectorSpy.process(byT, bxT, -bzT) }
         assertEquals(1, detector.numberOfProcessedMeasurements)
         assertEquals(Status.INITIALIZING, detector.status)
     }
@@ -3000,8 +3044,10 @@ class MagnetometerIntervalDetectorTest {
         val internalDetector: MagneticFluxDensityTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
         requireNotNull(internalDetector)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZING)
+        val internalDetectorSpy = spy(internalDetector)
+        whenever(internalDetectorSpy.status).thenReturn(TriadStaticIntervalDetector.Status.INITIALIZING)
+//        val internalDetectorSpy = spyk(internalDetector)
+//        every { internalDetectorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZING)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         // check initial values
@@ -3043,7 +3089,8 @@ class MagnetometerIntervalDetectorTest {
             MagneticFluxDensityUnit.MICROTESLA,
             MagneticFluxDensityUnit.TESLA
         )
-        verify(exactly = 1) { internalDetectorSpy.process(byT, bxT, -bzT) }
+        verify(internalDetectorSpy, times(1)).process(byT, bxT, -bzT)
+//        verify(exactly = 1) { internalDetectorSpy.process(byT, bxT, -bzT) }
         assertEquals(1, detector.numberOfProcessedMeasurements)
         assertEquals(Status.INITIALIZING, detector.status)
 
@@ -3061,8 +3108,10 @@ class MagnetometerIntervalDetectorTest {
         val internalDetector: MagneticFluxDensityTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
         requireNotNull(internalDetector)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZING)
+        val internalDetectorSpy = spy(internalDetector)
+        whenever(internalDetectorSpy.status).thenReturn(TriadStaticIntervalDetector.Status.INITIALIZING)
+        //val internalDetectorSpy = spyk(internalDetector)
+//        every { internalDetectorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZING)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
         setPrivateProperty(IntervalDetector::class, detector, "numberOfProcessedMeasurements", 1)
         val timestamp1 = SystemClock.elapsedRealtimeNanos()
@@ -3071,7 +3120,8 @@ class MagnetometerIntervalDetectorTest {
         val timeIntervalEstimator: TimeIntervalEstimator? =
             getPrivateProperty(IntervalDetector::class, detector, "timeIntervalEstimator")
         requireNotNull(timeIntervalEstimator)
-        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
+//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
         setPrivateProperty(
             IntervalDetector::class,
             detector,
@@ -3103,7 +3153,8 @@ class MagnetometerIntervalDetectorTest {
         measurementListener.onMeasurement(bx, by, bz, null, null, null, timestamp2, accuracy)
 
         // check
-        verify(exactly = 1) { timeIntervalEstimatorSpy.addTimestamp(TIME_INTERVAL_SECONDS) }
+        verify(timeIntervalEstimatorSpy, times(1)).addTimestamp(TIME_INTERVAL_SECONDS)
+//        verify(exactly = 1) { timeIntervalEstimatorSpy.addTimestamp(TIME_INTERVAL_SECONDS) }
         val bxT = MagneticFluxDensityConverter.convert(
             bx.toDouble(),
             MagneticFluxDensityUnit.MICROTESLA,
@@ -3119,7 +3170,8 @@ class MagnetometerIntervalDetectorTest {
             MagneticFluxDensityUnit.MICROTESLA,
             MagneticFluxDensityUnit.TESLA
         )
-        verify(exactly = 1) { internalDetectorSpy.process(byT, bxT, -bzT) }
+        verify(internalDetectorSpy, times(1)).process(byT, bxT, -bzT)
+//        verify(exactly = 1) { internalDetectorSpy.process(byT, bxT, -bzT) }
         assertEquals(2, detector.numberOfProcessedMeasurements)
         assertEquals(Status.INITIALIZING, detector.status)
 
@@ -3140,8 +3192,10 @@ class MagnetometerIntervalDetectorTest {
         val internalDetector: MagneticFluxDensityTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
         requireNotNull(internalDetector)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZING)
+        val internalDetectorSpy = spy(internalDetector)
+        whenever(internalDetectorSpy.status).thenReturn(TriadStaticIntervalDetector.Status.INITIALIZING)
+//        val internalDetectorSpy = spyk(internalDetector)
+//        every { internalDetectorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZING)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
         setPrivateProperty(IntervalDetector::class, detector, "numberOfProcessedMeasurements", 1)
         val timestamp1 = SystemClock.elapsedRealtimeNanos()
@@ -3150,7 +3204,8 @@ class MagnetometerIntervalDetectorTest {
         val timeIntervalEstimator: TimeIntervalEstimator? =
             getPrivateProperty(IntervalDetector::class, detector, "timeIntervalEstimator")
         requireNotNull(timeIntervalEstimator)
-        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
+//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
         setPrivateProperty(
             IntervalDetector::class,
             detector,
@@ -3182,7 +3237,8 @@ class MagnetometerIntervalDetectorTest {
         measurementListener.onMeasurement(bx, by, bz, null, null, null, timestamp2, accuracy)
 
         // check
-        verify(exactly = 1) { timeIntervalEstimatorSpy.addTimestamp(TIME_INTERVAL_SECONDS) }
+        verify(timeIntervalEstimatorSpy, times(1)).addTimestamp(TIME_INTERVAL_SECONDS)
+//        verify(exactly = 1) { timeIntervalEstimatorSpy.addTimestamp(TIME_INTERVAL_SECONDS) }
         val bxT = MagneticFluxDensityConverter.convert(
             bx.toDouble(),
             MagneticFluxDensityUnit.MICROTESLA,
@@ -3198,7 +3254,8 @@ class MagnetometerIntervalDetectorTest {
             MagneticFluxDensityUnit.MICROTESLA,
             MagneticFluxDensityUnit.TESLA
         )
-        verify(exactly = 1) { internalDetectorSpy.process(byT, bxT, -bzT) }
+        verify(internalDetectorSpy, times(1)).process(byT, bxT, -bzT)
+//        verify(exactly = 1) { internalDetectorSpy.process(byT, bxT, -bzT) }
         assertEquals(2, detector.numberOfProcessedMeasurements)
         assertEquals(Status.INITIALIZING, detector.status)
 
@@ -3207,7 +3264,8 @@ class MagnetometerIntervalDetectorTest {
         requireNotNull(initialTimestamp2)
         assertEquals(timestamp1, initialTimestamp2)
 
-        verify(exactly = 1) { initializationStartedListener.onInitializationStarted(detector) }
+        verify(initializationStartedListener, only()).onInitializationStarted(detector)
+//        verify(exactly = 1) { initializationStartedListener.onInitializationStarted(detector) }
     }
 
     @Test
@@ -3218,15 +3276,19 @@ class MagnetometerIntervalDetectorTest {
         val internalDetector: MagneticFluxDensityTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
         requireNotNull(internalDetector)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZATION_COMPLETED)
+        val internalDetectorSpy = spy(internalDetector)
+        whenever(internalDetectorSpy.status).thenReturn(TriadStaticIntervalDetector.Status.INITIALIZATION_COMPLETED)
+//        val internalDetectorSpy = spyk(internalDetector)
+//        every { internalDetectorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZATION_COMPLETED)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         val timeIntervalEstimator: TimeIntervalEstimator? =
             getPrivateProperty(IntervalDetector::class, detector, "timeIntervalEstimator")
         requireNotNull(timeIntervalEstimator)
-        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-        every { timeIntervalEstimatorSpy.averageTimeInterval }.returns(2.0 * TIME_INTERVAL_SECONDS)
+        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
+        whenever(timeIntervalEstimatorSpy.averageTimeInterval).thenReturn(2.0 * TIME_INTERVAL_SECONDS)
+//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+//        every { timeIntervalEstimatorSpy.averageTimeInterval }.returns(2.0 * TIME_INTERVAL_SECONDS)
         setPrivateProperty(
             IntervalDetector::class,
             detector,
@@ -3278,7 +3340,8 @@ class MagnetometerIntervalDetectorTest {
         val internalDetector: MagneticFluxDensityTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
         requireNotNull(internalDetector)
-        val internalDetectorSpy = spyk(internalDetector)
+        val internalDetectorSpy = spy(internalDetector)
+//        val internalDetectorSpy = spyk(internalDetector)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         // check initial status
@@ -3313,7 +3376,17 @@ class MagnetometerIntervalDetectorTest {
         )
 
         // check
-        verify(exactly = 1) {
+        verify(measurementListener, only()).onMeasurement(
+            bx,
+            by,
+            bz,
+            hardIronX,
+            hardIronY,
+            hardIronZ,
+            timestamp,
+            accuracy
+        )
+/*        verify(exactly = 1) {
             measurementListener.onMeasurement(
                 bx,
                 by,
@@ -3324,7 +3397,7 @@ class MagnetometerIntervalDetectorTest {
                 timestamp,
                 accuracy
             )
-        }
+        }*/
     }
 
     @Test
@@ -3373,12 +3446,16 @@ class MagnetometerIntervalDetectorTest {
             getPrivateProperty(IntervalDetector::class, detector, "unreliable")
         requireNotNull(unreliable2)
         assertTrue(unreliable2)
-        verify(exactly = 1) {
+        verify(errorListener, only()).onError(
+            detector,
+            ErrorReason.UNRELIABLE_SENSOR
+        )
+/*        verify(exactly = 1) {
             errorListener.onError(
                 detector,
                 ErrorReason.UNRELIABLE_SENSOR
             )
-        }
+        }*/
     }
 
     @Test
@@ -3403,9 +3480,10 @@ class MagnetometerIntervalDetectorTest {
             getPrivateProperty(IntervalDetector::class, detector, "unreliable")
         requireNotNull(unreliable2)
         assertFalse(unreliable2)
-        verify(exactly = 0) {
+        verify(errorListener, never()).onError(any(), any())
+/*        verify(exactly = 0) {
             errorListener.onError(any(), any())
-        }
+        }*/
     }
 
     @Test
@@ -3434,10 +3512,12 @@ class MagnetometerIntervalDetectorTest {
             getPrivateProperty(IntervalDetector::class, detector, "unreliable")
         requireNotNull(unreliable2)
         assertFalse(unreliable2)
-        verify(exactly = 0) {
+        verify(errorListener, never()).onError(any(), any())
+        verify(accuracyChangedListener, only()).onAccuracyChanged(SensorAccuracy.HIGH)
+/*        verify(exactly = 0) {
             errorListener.onError(any(), any())
-        }
-        verify(exactly = 1) { accuracyChangedListener.onAccuracyChanged(SensorAccuracy.HIGH) }
+        }*/
+//        verify(exactly = 1) { accuracyChangedListener.onAccuracyChanged(SensorAccuracy.HIGH) }
     }
 
     @Test
@@ -3464,8 +3544,10 @@ class MagnetometerIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val baseNoiseLevel1 = randomizer.nextDouble()
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.baseNoiseLevel }.returns(baseNoiseLevel1)
+        val internalDetectorSpy = spy(internalDetector)
+        whenever(internalDetectorSpy.baseNoiseLevel).thenReturn(baseNoiseLevel1)
+//        val internalDetectorSpy = spyk(internalDetector)
+//        every { internalDetectorSpy.baseNoiseLevel }.returns(baseNoiseLevel1)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
@@ -3500,8 +3582,10 @@ class MagnetometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val baseNoiseLevel1 = MagneticFluxDensity(value, MagneticFluxDensityUnit.TESLA)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.baseNoiseLevelAsMeasurement }.returns(baseNoiseLevel1)
+        val internalDetectorSpy = spy(internalDetector)
+        whenever(internalDetectorSpy.baseNoiseLevelAsMeasurement).thenReturn(baseNoiseLevel1)
+//        val internalDetectorSpy = spyk(internalDetector)
+//        every { internalDetectorSpy.baseNoiseLevelAsMeasurement }.returns(baseNoiseLevel1)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
@@ -3535,12 +3619,18 @@ class MagnetometerIntervalDetectorTest {
         requireNotNull(internalDetector)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.getBaseNoiseLevelAsMeasurement(any()) }.answers { answer ->
+        val internalDetectorSpy = spy(internalDetector)
+        doAnswer { invocation ->
+            val result = invocation.getArgument<MagneticFluxDensity>(0)
+            result.value = value
+            result.unit = MagneticFluxDensityUnit.TESLA
+        }.whenever(internalDetectorSpy).getBaseNoiseLevelAsMeasurement(any())
+//        val internalDetectorSpy = spyk(internalDetector)
+/*        every { internalDetectorSpy.getBaseNoiseLevelAsMeasurement(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as MagneticFluxDensity
             result.value = value
             result.unit = MagneticFluxDensityUnit.TESLA
-        }
+        }*/
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
@@ -3575,8 +3665,10 @@ class MagnetometerIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val baseNoiseLevelPsd1 = randomizer.nextDouble()
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.baseNoiseLevelPsd }.returns(baseNoiseLevelPsd1)
+        val internalDetectorSpy = spy(internalDetector)
+        whenever(internalDetectorSpy.baseNoiseLevelPsd).thenReturn(baseNoiseLevelPsd1)
+//        val internalDetectorSpy = spyk(internalDetector)
+//        every { internalDetectorSpy.baseNoiseLevelPsd }.returns(baseNoiseLevelPsd1)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
@@ -3610,8 +3702,10 @@ class MagnetometerIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val baseNoiseLevelRootPsd1 = randomizer.nextDouble()
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.baseNoiseLevelRootPsd }.returns(baseNoiseLevelRootPsd1)
+        val internalDetectorSpy = spy(internalDetector)
+        whenever(internalDetectorSpy.baseNoiseLevelRootPsd).thenReturn(baseNoiseLevelRootPsd1)
+//        val internalDetectorSpy = spyk(internalDetector)
+//        every { internalDetectorSpy.baseNoiseLevelRootPsd }.returns(baseNoiseLevelRootPsd1)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
@@ -3645,8 +3739,10 @@ class MagnetometerIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val threshold1 = randomizer.nextDouble()
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.threshold }.returns(threshold1)
+        val internalDetectorSpy = spy(internalDetector)
+        whenever(internalDetectorSpy.threshold).thenReturn(threshold1)
+//        val internalDetectorSpy = spyk(internalDetector)
+//        every { internalDetectorSpy.threshold }.returns(threshold1)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
@@ -3681,8 +3777,10 @@ class MagnetometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val threshold1 = MagneticFluxDensity(value, MagneticFluxDensityUnit.TESLA)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.thresholdAsMeasurement }.returns(threshold1)
+        val internalDetectorSpy = spy(internalDetector)
+        whenever(internalDetectorSpy.thresholdAsMeasurement).thenReturn(threshold1)
+//        val internalDetectorSpy = spyk(internalDetector)
+//        every { internalDetectorSpy.thresholdAsMeasurement }.returns(threshold1)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
@@ -3717,12 +3815,18 @@ class MagnetometerIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.getThresholdAsMeasurement(any()) }.answers { answer ->
+        val internalDetectorSpy = spy(internalDetector)
+        doAnswer { invocation ->
+            val result = invocation.getArgument<MagneticFluxDensity>(0)
+            result.value = value
+            result.unit = MagneticFluxDensityUnit.TESLA
+        }.whenever(internalDetectorSpy).getThresholdAsMeasurement(any())
+//        val internalDetectorSpy = spyk(internalDetector)
+/*        every { internalDetectorSpy.getThresholdAsMeasurement(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as MagneticFluxDensity
             result.value = value
             result.unit = MagneticFluxDensityUnit.TESLA
-        }
+        }*/
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
@@ -3744,8 +3848,10 @@ class MagnetometerIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.accumulatedAvgX }.returns(value)
+        val internalDetectorSpy = spy(internalDetector)
+        whenever(internalDetectorSpy.accumulatedAvgX).thenReturn(value)
+//        val internalDetectorSpy = spyk(internalDetector)
+//        every { internalDetectorSpy.accumulatedAvgX }.returns(value)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(value, detector.accumulatedAvgX, 0.0)
@@ -3763,8 +3869,10 @@ class MagnetometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val b = MagneticFluxDensity(value, MagneticFluxDensityUnit.TESLA)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.accumulatedAvgXAsMeasurement }.returns(b)
+        val internalDetectorSpy = spy(internalDetector)
+        whenever(internalDetectorSpy.accumulatedAvgXAsMeasurement).thenReturn(b)
+//        val internalDetectorSpy = spyk(internalDetector)
+//        every { internalDetectorSpy.accumulatedAvgXAsMeasurement }.returns(b)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertSame(b, detector.accumulatedAvgXAsMeasurement)
@@ -3782,12 +3890,18 @@ class MagnetometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val result = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.getAccumulatedAvgXAsMeasurement(any()) }.answers { answer ->
+        val internalDetectorSpy = spy(internalDetector)
+        doAnswer { invocation ->
+            val avgX = invocation.getArgument<MagneticFluxDensity>(0)
+            avgX.value = value
+            avgX.unit = MagneticFluxDensityUnit.TESLA
+        }.whenever(internalDetectorSpy).getAccumulatedAvgXAsMeasurement(any())
+//        val internalDetectorSpy = spyk(internalDetector)
+/*        every { internalDetectorSpy.getAccumulatedAvgXAsMeasurement(any()) }.answers { answer ->
             val avgX = answer.invocation.args[0] as MagneticFluxDensity
             avgX.value = value
             avgX.unit = MagneticFluxDensityUnit.TESLA
-        }
+        }*/
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         detector.getAccumulatedAvgXAsMeasurement(result)
@@ -3807,8 +3921,10 @@ class MagnetometerIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.accumulatedAvgY }.returns(value)
+        val internalDetectorSpy = spy(internalDetector)
+        whenever(internalDetectorSpy.accumulatedAvgY).thenReturn(value)
+//        val internalDetectorSpy = spyk(internalDetector)
+//        every { internalDetectorSpy.accumulatedAvgY }.returns(value)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(value, detector.accumulatedAvgY, 0.0)
@@ -3826,8 +3942,10 @@ class MagnetometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val b = MagneticFluxDensity(value, MagneticFluxDensityUnit.TESLA)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.accumulatedAvgYAsMeasurement }.returns(b)
+        val internalDetectorSpy = spy(internalDetector)
+        whenever(internalDetectorSpy.accumulatedAvgYAsMeasurement).thenReturn(b)
+//        val internalDetectorSpy = spyk(internalDetector)
+//        every { internalDetectorSpy.accumulatedAvgYAsMeasurement }.returns(b)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertSame(b, detector.accumulatedAvgYAsMeasurement)
@@ -3845,12 +3963,18 @@ class MagnetometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val result = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.getAccumulatedAvgYAsMeasurement(any()) }.answers { answer ->
+        val internalDetectorSpy = spy(internalDetector)
+        doAnswer { invocation ->
+            val avgY = invocation.getArgument<MagneticFluxDensity>(0)
+            avgY.value = value
+            avgY.unit = MagneticFluxDensityUnit.TESLA
+        }.whenever(internalDetectorSpy).getAccumulatedAvgYAsMeasurement(any())
+//        val internalDetectorSpy = spyk(internalDetector)
+/*        every { internalDetectorSpy.getAccumulatedAvgYAsMeasurement(any()) }.answers { answer ->
             val avgY = answer.invocation.args[0] as MagneticFluxDensity
             avgY.value = value
             avgY.unit = MagneticFluxDensityUnit.TESLA
-        }
+        }*/
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         detector.getAccumulatedAvgYAsMeasurement(result)
@@ -3870,8 +3994,10 @@ class MagnetometerIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.accumulatedAvgZ }.returns(value)
+        val internalDetectorSpy = spy(internalDetector)
+        whenever(internalDetectorSpy.accumulatedAvgZ).thenReturn(value)
+//        val internalDetectorSpy = spyk(internalDetector)
+//        every { internalDetectorSpy.accumulatedAvgZ }.returns(value)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(value, detector.accumulatedAvgZ, 0.0)
@@ -3889,8 +4015,10 @@ class MagnetometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val b = MagneticFluxDensity(value, MagneticFluxDensityUnit.TESLA)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.accumulatedAvgZAsMeasurement }.returns(b)
+        val internalDetectorSpy = spy(internalDetector)
+        whenever(internalDetectorSpy.accumulatedAvgZAsMeasurement).thenReturn(b)
+//        val internalDetectorSpy = spyk(internalDetector)
+//        every { internalDetectorSpy.accumulatedAvgZAsMeasurement }.returns(b)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertSame(b, detector.accumulatedAvgZAsMeasurement)
@@ -3908,12 +4036,18 @@ class MagnetometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val result = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.getAccumulatedAvgZAsMeasurement(any()) }.answers { answer ->
+        val internalDetectorSpy = spy(internalDetector)
+        doAnswer { invocation ->
+            val avgZ = invocation.getArgument<MagneticFluxDensity>(0)
+            avgZ.value = value
+            avgZ.unit = MagneticFluxDensityUnit.TESLA
+        }.whenever(internalDetectorSpy).getAccumulatedAvgZAsMeasurement(any())
+//        val internalDetectorSpy = spyk(internalDetector)
+/*        every { internalDetectorSpy.getAccumulatedAvgZAsMeasurement(any()) }.answers { answer ->
             val avgZ = answer.invocation.args[0] as MagneticFluxDensity
             avgZ.value = value
             avgZ.unit = MagneticFluxDensityUnit.TESLA
-        }
+        }*/
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         detector.getAccumulatedAvgZAsMeasurement(result)
@@ -3936,8 +4070,10 @@ class MagnetometerIntervalDetectorTest {
         val valueY = randomizer.nextDouble()
         val valueZ = randomizer.nextDouble()
         val triad = MagneticFluxDensityTriad(MagneticFluxDensityUnit.TESLA, valueX, valueY, valueZ)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.accumulatedAvgTriad }.returns(triad)
+        val internalDetectorSpy = spy(internalDetector)
+        whenever(internalDetectorSpy.accumulatedAvgTriad).thenReturn(triad)
+//        val internalDetectorSpy = spyk(internalDetector)
+//        every { internalDetectorSpy.accumulatedAvgTriad }.returns(triad)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertSame(triad, detector.accumulatedAvgTriad)
@@ -3957,11 +4093,16 @@ class MagnetometerIntervalDetectorTest {
         val valueY = randomizer.nextDouble()
         val valueZ = randomizer.nextDouble()
         val result = MagneticFluxDensityTriad(MagneticFluxDensityUnit.TESLA)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.getAccumulatedAvgTriad(any()) }.answers { answer ->
+        val internalDetectorSpy = spy(internalDetector)
+        doAnswer { invocation ->
+            val triad = invocation.getArgument<MagneticFluxDensityTriad>(0)
+            triad.setValueCoordinatesAndUnit(valueX, valueY, valueZ, MagneticFluxDensityUnit.TESLA)
+        }.whenever(internalDetectorSpy).getAccumulatedAvgTriad(any())
+//        val internalDetectorSpy = spyk(internalDetector)
+/*        every { internalDetectorSpy.getAccumulatedAvgTriad(any()) }.answers { answer ->
             val triad = answer.invocation.args[0] as MagneticFluxDensityTriad
             triad.setValueCoordinatesAndUnit(valueX, valueY, valueZ, MagneticFluxDensityUnit.TESLA)
-        }
+        }*/
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         detector.getAccumulatedAvgTriad(result)
@@ -3983,8 +4124,10 @@ class MagnetometerIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.accumulatedStdX }.returns(value)
+        val internalDetectorSpy = spy(internalDetector)
+        whenever(internalDetectorSpy.accumulatedStdX).thenReturn(value)
+//        val internalDetectorSpy = spyk(internalDetector)
+//        every { internalDetectorSpy.accumulatedStdX }.returns(value)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(value, detector.accumulatedStdX, 0.0)
@@ -4002,8 +4145,10 @@ class MagnetometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val b = MagneticFluxDensity(value, MagneticFluxDensityUnit.TESLA)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.accumulatedStdXAsMeasurement }.returns(b)
+        val internalDetectorSpy = spy(internalDetector)
+        whenever(internalDetectorSpy.accumulatedStdXAsMeasurement).thenReturn(b)
+//        val internalDetectorSpy = spyk(internalDetector)
+//        every { internalDetectorSpy.accumulatedStdXAsMeasurement }.returns(b)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertSame(b, detector.accumulatedStdXAsMeasurement)
@@ -4021,12 +4166,18 @@ class MagnetometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val result = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.getAccumulatedStdXAsMeasurement(any()) }.answers { answer ->
+        val internalDetectorSpy = spy(internalDetector)
+        doAnswer { invocation ->
+            val stdX = invocation.getArgument<MagneticFluxDensity>(0)
+            stdX.value = value
+            stdX.unit = MagneticFluxDensityUnit.TESLA
+        }.whenever(internalDetectorSpy).getAccumulatedStdXAsMeasurement(any())
+//        val internalDetectorSpy = spyk(internalDetector)
+/*        every { internalDetectorSpy.getAccumulatedStdXAsMeasurement(any()) }.answers { answer ->
             val stdX = answer.invocation.args[0] as MagneticFluxDensity
             stdX.value = value
             stdX.unit = MagneticFluxDensityUnit.TESLA
-        }
+        }*/
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         detector.getAccumulatedStdXAsMeasurement(result)
@@ -4046,8 +4197,10 @@ class MagnetometerIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.accumulatedStdY }.returns(value)
+        val internalDetectorSpy = spy(internalDetector)
+        whenever(internalDetectorSpy.accumulatedStdY).thenReturn(value)
+//        val internalDetectorSpy = spyk(internalDetector)
+//        every { internalDetectorSpy.accumulatedStdY }.returns(value)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(value, detector.accumulatedStdY, 0.0)
@@ -4065,8 +4218,10 @@ class MagnetometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val b = MagneticFluxDensity(value, MagneticFluxDensityUnit.TESLA)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.accumulatedStdYAsMeasurement }.returns(b)
+        val internalDetectorSpy = spy(internalDetector)
+        whenever(internalDetectorSpy.accumulatedStdYAsMeasurement).thenReturn(b)
+//        val internalDetectorSpy = spyk(internalDetector)
+//        every { internalDetectorSpy.accumulatedStdYAsMeasurement }.returns(b)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertSame(b, detector.accumulatedStdYAsMeasurement)
@@ -4084,12 +4239,18 @@ class MagnetometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val result = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.getAccumulatedStdYAsMeasurement(any()) }.answers { answer ->
+        val internalDetectorSpy = spy(internalDetector)
+        doAnswer { invocation ->
+            val stdY = invocation.getArgument<MagneticFluxDensity>(0)
+            stdY.value = value
+            stdY.unit = MagneticFluxDensityUnit.TESLA
+        }.whenever(internalDetectorSpy).getAccumulatedStdYAsMeasurement(any())
+//        val internalDetectorSpy = spyk(internalDetector)
+/*        every { internalDetectorSpy.getAccumulatedStdYAsMeasurement(any()) }.answers { answer ->
             val stdY = answer.invocation.args[0] as MagneticFluxDensity
             stdY.value = value
             stdY.unit = MagneticFluxDensityUnit.TESLA
-        }
+        }*/
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         detector.getAccumulatedStdYAsMeasurement(result)
@@ -4109,8 +4270,10 @@ class MagnetometerIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.accumulatedStdZ }.returns(value)
+        val internalDetectorSpy = spy(internalDetector)
+        whenever(internalDetectorSpy.accumulatedStdZ).thenReturn(value)
+//        val internalDetectorSpy = spyk(internalDetector)
+//        every { internalDetectorSpy.accumulatedStdZ }.returns(value)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(value, detector.accumulatedStdZ, 0.0)
@@ -4128,8 +4291,10 @@ class MagnetometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val b = MagneticFluxDensity(value, MagneticFluxDensityUnit.TESLA)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.accumulatedStdZAsMeasurement }.returns(b)
+        val internalDetectorSpy = spy(internalDetector)
+        whenever(internalDetectorSpy.accumulatedStdZAsMeasurement).thenReturn(b)
+//        val internalDetectorSpy = spyk(internalDetector)
+//        every { internalDetectorSpy.accumulatedStdZAsMeasurement }.returns(b)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertSame(b, detector.accumulatedStdZAsMeasurement)
@@ -4147,12 +4312,18 @@ class MagnetometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val result = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.getAccumulatedStdZAsMeasurement(any()) }.answers { answer ->
+        val internalDetectorSpy = spy(internalDetector)
+        doAnswer { invocation ->
+            val stdZ = invocation.getArgument<MagneticFluxDensity>(0)
+            stdZ.value = value
+            stdZ.unit = MagneticFluxDensityUnit.TESLA
+        }.whenever(internalDetectorSpy).getAccumulatedStdZAsMeasurement(any())
+//        val internalDetectorSpy = spyk(internalDetector)
+/*        every { internalDetectorSpy.getAccumulatedStdZAsMeasurement(any()) }.answers { answer ->
             val stdZ = answer.invocation.args[0] as MagneticFluxDensity
             stdZ.value = value
             stdZ.unit = MagneticFluxDensityUnit.TESLA
-        }
+        }*/
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         detector.getAccumulatedStdZAsMeasurement(result)
@@ -4175,8 +4346,10 @@ class MagnetometerIntervalDetectorTest {
         val valueY = randomizer.nextDouble()
         val valueZ = randomizer.nextDouble()
         val triad = MagneticFluxDensityTriad(MagneticFluxDensityUnit.TESLA, valueX, valueY, valueZ)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.accumulatedStdTriad }.returns(triad)
+        val internalDetectorSpy = spy(internalDetector)
+        whenever(internalDetectorSpy.accumulatedStdTriad).thenReturn(triad)
+//        val internalDetectorSpy = spyk(internalDetector)
+//        every { internalDetectorSpy.accumulatedStdTriad }.returns(triad)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertSame(triad, detector.accumulatedStdTriad)
@@ -4196,11 +4369,16 @@ class MagnetometerIntervalDetectorTest {
         val valueY = randomizer.nextDouble()
         val valueZ = randomizer.nextDouble()
         val result = MagneticFluxDensityTriad(MagneticFluxDensityUnit.TESLA)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.getAccumulatedStdTriad(any()) }.answers { answer ->
+        val internalDetectorSpy = spy(internalDetector)
+        doAnswer { invocation ->
+            val triad = invocation.getArgument<MagneticFluxDensityTriad>(0)
+            triad.setValueCoordinatesAndUnit(valueX, valueY, valueZ, MagneticFluxDensityUnit.TESLA)
+        }.whenever(internalDetectorSpy).getAccumulatedStdTriad(any())
+//        val internalDetectorSpy = spyk(internalDetector)
+/*        every { internalDetectorSpy.getAccumulatedStdTriad(any()) }.answers { answer ->
             val triad = answer.invocation.args[0] as MagneticFluxDensityTriad
             triad.setValueCoordinatesAndUnit(valueX, valueY, valueZ, MagneticFluxDensityUnit.TESLA)
-        }
+        }*/
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         detector.getAccumulatedStdTriad(result)
@@ -4222,8 +4400,10 @@ class MagnetometerIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.instantaneousAvgX }.returns(value)
+        val internalDetectorSpy = spy(internalDetector)
+        whenever(internalDetectorSpy.instantaneousAvgX).thenReturn(value)
+//        val internalDetectorSpy = spyk(internalDetector)
+//        every { internalDetectorSpy.instantaneousAvgX }.returns(value)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(value, detector.instantaneousAvgX, 0.0)
@@ -4241,8 +4421,10 @@ class MagnetometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val b = MagneticFluxDensity(value, MagneticFluxDensityUnit.TESLA)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.instantaneousAvgXAsMeasurement }.returns(b)
+        val internalDetectorSpy = spy(internalDetector)
+        whenever(internalDetectorSpy.instantaneousAvgXAsMeasurement).thenReturn(b)
+//        val internalDetectorSpy = spyk(internalDetector)
+//        every { internalDetectorSpy.instantaneousAvgXAsMeasurement }.returns(b)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertSame(b, detector.instantaneousAvgXAsMeasurement)
@@ -4260,12 +4442,18 @@ class MagnetometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val result = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.getInstantaneousAvgXAsMeasurement(any()) }.answers { answer ->
+        val internalDetectorSpy = spy(internalDetector)
+        doAnswer { invocation ->
+            val avgX = invocation.getArgument<MagneticFluxDensity>(0)
+            avgX.value = value
+            avgX.unit = MagneticFluxDensityUnit.TESLA
+        }.whenever(internalDetectorSpy).getInstantaneousAvgXAsMeasurement(any())
+//        val internalDetectorSpy = spyk(internalDetector)
+/*        every { internalDetectorSpy.getInstantaneousAvgXAsMeasurement(any()) }.answers { answer ->
             val avgX = answer.invocation.args[0] as MagneticFluxDensity
             avgX.value = value
             avgX.unit = MagneticFluxDensityUnit.TESLA
-        }
+        }*/
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         detector.getInstantaneousAvgXAsMeasurement(result)
@@ -4285,8 +4473,10 @@ class MagnetometerIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.instantaneousAvgY }.returns(value)
+        val internalDetectorSpy = spy(internalDetector)
+        whenever(internalDetectorSpy.instantaneousAvgY).thenReturn(value)
+//        val internalDetectorSpy = spyk(internalDetector)
+//        every { internalDetectorSpy.instantaneousAvgY }.returns(value)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(value, detector.instantaneousAvgY, 0.0)
@@ -4304,8 +4494,10 @@ class MagnetometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val b = MagneticFluxDensity(value, MagneticFluxDensityUnit.TESLA)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.instantaneousAvgYAsMeasurement }.returns(b)
+        val internalDetectorSpy = spy(internalDetector)
+        whenever(internalDetectorSpy.instantaneousAvgYAsMeasurement).thenReturn(b)
+//        val internalDetectorSpy = spyk(internalDetector)
+//        every { internalDetectorSpy.instantaneousAvgYAsMeasurement }.returns(b)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertSame(b, detector.instantaneousAvgYAsMeasurement)
@@ -4323,12 +4515,18 @@ class MagnetometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val result = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.getInstantaneousAvgYAsMeasurement(any()) }.answers { answer ->
+        val internalDetectorSpy = spy(internalDetector)
+        doAnswer { invocation ->
+            val avgY = invocation.getArgument<MagneticFluxDensity>(0)
+            avgY.value = value
+            avgY.unit = MagneticFluxDensityUnit.TESLA
+        }.whenever(internalDetectorSpy).getInstantaneousAvgYAsMeasurement(any())
+//        val internalDetectorSpy = spyk(internalDetector)
+/*        every { internalDetectorSpy.getInstantaneousAvgYAsMeasurement(any()) }.answers { answer ->
             val avgY = answer.invocation.args[0] as MagneticFluxDensity
             avgY.value = value
             avgY.unit = MagneticFluxDensityUnit.TESLA
-        }
+        }*/
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         detector.getInstantaneousAvgYAsMeasurement(result)
@@ -4348,8 +4546,10 @@ class MagnetometerIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.instantaneousAvgZ }.returns(value)
+        val internalDetectorSpy = spy(internalDetector)
+        whenever(internalDetectorSpy.instantaneousAvgZ).thenReturn(value)
+//        val internalDetectorSpy = spyk(internalDetector)
+//        every { internalDetectorSpy.instantaneousAvgZ }.returns(value)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(value, detector.instantaneousAvgZ, 0.0)
@@ -4367,8 +4567,10 @@ class MagnetometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val b = MagneticFluxDensity(value, MagneticFluxDensityUnit.TESLA)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.instantaneousAvgZAsMeasurement }.returns(b)
+        val internalDetectorSpy = spy(internalDetector)
+        whenever(internalDetectorSpy.instantaneousAvgZAsMeasurement).thenReturn(b)
+//        val internalDetectorSpy = spyk(internalDetector)
+//        every { internalDetectorSpy.instantaneousAvgZAsMeasurement }.returns(b)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertSame(b, detector.instantaneousAvgZAsMeasurement)
@@ -4386,12 +4588,18 @@ class MagnetometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val result = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.getInstantaneousAvgZAsMeasurement(any()) }.answers { answer ->
+        val internalDetectorSpy = spy(internalDetector)
+        doAnswer { invocation ->
+            val avgZ = invocation.getArgument<MagneticFluxDensity>(0)
+            avgZ.value = value
+            avgZ.unit = MagneticFluxDensityUnit.TESLA
+        }.whenever(internalDetectorSpy).getInstantaneousAvgZAsMeasurement(any())
+//        val internalDetectorSpy = spyk(internalDetector)
+/*        every { internalDetectorSpy.getInstantaneousAvgZAsMeasurement(any()) }.answers { answer ->
             val avgZ = answer.invocation.args[0] as MagneticFluxDensity
             avgZ.value = value
             avgZ.unit = MagneticFluxDensityUnit.TESLA
-        }
+        }*/
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         detector.getInstantaneousAvgZAsMeasurement(result)
@@ -4413,9 +4621,11 @@ class MagnetometerIntervalDetectorTest {
         val valueX = randomizer.nextDouble()
         val valueY = randomizer.nextDouble()
         val valueZ = randomizer.nextDouble()
-        val internalDetectorSpy = spyk(internalDetector)
+        val internalDetectorSpy = spy(internalDetector)
+//        val internalDetectorSpy = spyk(internalDetector)
         val triad = MagneticFluxDensityTriad(MagneticFluxDensityUnit.TESLA, valueX, valueY, valueZ)
-        every { internalDetectorSpy.instantaneousAvgTriad }.returns(triad)
+        whenever(internalDetectorSpy.instantaneousAvgTriad).thenReturn(triad)
+//        every { internalDetectorSpy.instantaneousAvgTriad }.returns(triad)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertSame(triad, detector.instantaneousAvgTriad)
@@ -4435,11 +4645,16 @@ class MagnetometerIntervalDetectorTest {
         val valueY = randomizer.nextDouble()
         val valueZ = randomizer.nextDouble()
         val result = MagneticFluxDensityTriad()
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.getInstantaneousAvgTriad(any()) }.answers { answer ->
+        val internalDetectorSpy = spy(internalDetector)
+        doAnswer { invocation ->
+            val triad = invocation.getArgument<MagneticFluxDensityTriad>(0)
+            triad.setValueCoordinatesAndUnit(valueX, valueY, valueZ, MagneticFluxDensityUnit.TESLA)
+        }.whenever(internalDetectorSpy).getInstantaneousAvgTriad(any())
+//        val internalDetectorSpy = spyk(internalDetector)
+/*        every { internalDetectorSpy.getInstantaneousAvgTriad(any()) }.answers { answer ->
             val triad = answer.invocation.args[0] as MagneticFluxDensityTriad
             triad.setValueCoordinatesAndUnit(valueX, valueY, valueZ, MagneticFluxDensityUnit.TESLA)
-        }
+        }*/
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         detector.getInstantaneousAvgTriad(result)
@@ -4461,8 +4676,10 @@ class MagnetometerIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.instantaneousStdX }.returns(value)
+        val internalDetectorSpy = spy(internalDetector)
+        whenever(internalDetectorSpy.instantaneousStdX).thenReturn(value)
+//        val internalDetectorSpy = spyk(internalDetector)
+//        every { internalDetectorSpy.instantaneousStdX }.returns(value)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(value, detector.instantaneousStdX, 0.0)
@@ -4480,8 +4697,10 @@ class MagnetometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val b = MagneticFluxDensity(value, MagneticFluxDensityUnit.TESLA)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.instantaneousStdXAsMeasurement }.returns(b)
+        val internalDetectorSpy = spy(internalDetector)
+        whenever(internalDetectorSpy.instantaneousStdXAsMeasurement).thenReturn(b)
+//        val internalDetectorSpy = spyk(internalDetector)
+//        every { internalDetectorSpy.instantaneousStdXAsMeasurement }.returns(b)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertSame(b, detector.instantaneousStdXAsMeasurement)
@@ -4499,12 +4718,18 @@ class MagnetometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val result = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.getInstantaneousStdXAsMeasurement(any()) }.answers { answer ->
+        val internalDetectorSpy = spy(internalDetector)
+        doAnswer { invocation ->
+            val stdX = invocation.getArgument<MagneticFluxDensity>(0)
+            stdX.value = value
+            stdX.unit = MagneticFluxDensityUnit.TESLA
+        }.whenever(internalDetectorSpy).getInstantaneousStdXAsMeasurement(any())
+//        val internalDetectorSpy = spyk(internalDetector)
+/*        every { internalDetectorSpy.getInstantaneousStdXAsMeasurement(any()) }.answers { answer ->
             val stdX = answer.invocation.args[0] as MagneticFluxDensity
             stdX.value = value
             stdX.unit = MagneticFluxDensityUnit.TESLA
-        }
+        }*/
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         detector.getInstantaneousStdXAsMeasurement(result)
@@ -4524,8 +4749,10 @@ class MagnetometerIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.instantaneousStdY }.returns(value)
+        val internalDetectorSpy = spy(internalDetector)
+        whenever(internalDetectorSpy.instantaneousStdY).thenReturn(value)
+//        val internalDetectorSpy = spyk(internalDetector)
+//        every { internalDetectorSpy.instantaneousStdY }.returns(value)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(value, detector.instantaneousStdY, 0.0)
@@ -4543,8 +4770,10 @@ class MagnetometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val b = MagneticFluxDensity(value, MagneticFluxDensityUnit.TESLA)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.instantaneousStdYAsMeasurement }.returns(b)
+        val internalDetectorSpy = spy(internalDetector)
+        whenever(internalDetectorSpy.instantaneousStdYAsMeasurement).thenReturn(b)
+//        val internalDetectorSpy = spyk(internalDetector)
+//        every { internalDetectorSpy.instantaneousStdYAsMeasurement }.returns(b)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertSame(b, detector.instantaneousStdYAsMeasurement)
@@ -4562,12 +4791,18 @@ class MagnetometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val result = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.getInstantaneousStdYAsMeasurement(any()) }.answers { answer ->
+        val internalDetectorSpy = spy(internalDetector)
+        doAnswer { invocation ->
+            val stdY = invocation.getArgument<MagneticFluxDensity>(0)
+            stdY.value = value
+            stdY.unit = MagneticFluxDensityUnit.TESLA
+        }.whenever(internalDetectorSpy).getInstantaneousStdYAsMeasurement(any())
+//        val internalDetectorSpy = spyk(internalDetector)
+/*        every { internalDetectorSpy.getInstantaneousStdYAsMeasurement(any()) }.answers { answer ->
             val stdY = answer.invocation.args[0] as MagneticFluxDensity
             stdY.value = value
             stdY.unit = MagneticFluxDensityUnit.TESLA
-        }
+        }*/
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         detector.getInstantaneousStdYAsMeasurement(result)
@@ -4587,8 +4822,10 @@ class MagnetometerIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.instantaneousStdZ }.returns(value)
+        val internalDetectorSpy = spy(internalDetector)
+        whenever(internalDetectorSpy.instantaneousStdZ).thenReturn(value)
+//        val internalDetectorSpy = spyk(internalDetector)
+//        every { internalDetectorSpy.instantaneousStdZ }.returns(value)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
     }
 
@@ -4604,8 +4841,10 @@ class MagnetometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val b = MagneticFluxDensity(value, MagneticFluxDensityUnit.TESLA)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.instantaneousStdZAsMeasurement }.returns(b)
+        val internalDetectorSpy = spy(internalDetector)
+        whenever(internalDetectorSpy.instantaneousStdZAsMeasurement).thenReturn(b)
+//        val internalDetectorSpy = spyk(internalDetector)
+//        every { internalDetectorSpy.instantaneousStdZAsMeasurement }.returns(b)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertSame(b, detector.instantaneousStdZAsMeasurement)
@@ -4623,12 +4862,18 @@ class MagnetometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val result = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.getInstantaneousStdZAsMeasurement(any()) }.answers { answer ->
+        val internalDetectorSpy = spy(internalDetector)
+        doAnswer { invocation ->
+            val stdZ = invocation.getArgument<MagneticFluxDensity>(0)
+            stdZ.value = value
+            stdZ.unit = MagneticFluxDensityUnit.TESLA
+        }.whenever(internalDetectorSpy).getInstantaneousStdZAsMeasurement(any())
+//        val internalDetectorSpy = spyk(internalDetector)
+/*        every { internalDetectorSpy.getInstantaneousStdZAsMeasurement(any()) }.answers { answer ->
             val stdZ = answer.invocation.args[0] as MagneticFluxDensity
             stdZ.value = value
             stdZ.unit = MagneticFluxDensityUnit.TESLA
-        }
+        }*/
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         detector.getInstantaneousStdZAsMeasurement(result)
@@ -4650,9 +4895,11 @@ class MagnetometerIntervalDetectorTest {
         val valueX = randomizer.nextDouble()
         val valueY = randomizer.nextDouble()
         val valueZ = randomizer.nextDouble()
-        val internalDetectorSpy = spyk(internalDetector)
+        val internalDetectorSpy = spy(internalDetector)
+//        val internalDetectorSpy = spyk(internalDetector)
         val triad = MagneticFluxDensityTriad(MagneticFluxDensityUnit.TESLA, valueX, valueY, valueZ)
-        every { internalDetectorSpy.instantaneousStdTriad }.returns(triad)
+        whenever(internalDetectorSpy.instantaneousStdTriad).thenReturn(triad)
+//        every { internalDetectorSpy.instantaneousStdTriad }.returns(triad)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertSame(triad, detector.instantaneousStdTriad)
@@ -4672,11 +4919,16 @@ class MagnetometerIntervalDetectorTest {
         val valueY = randomizer.nextDouble()
         val valueZ = randomizer.nextDouble()
         val result = MagneticFluxDensityTriad()
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.getInstantaneousStdTriad(any()) }.answers { answer ->
+        val internalDetectorSpy = spy(internalDetector)
+        doAnswer { invocation ->
+            val triad = invocation.getArgument<MagneticFluxDensityTriad>(0)
+            triad.setValueCoordinatesAndUnit(valueX, valueY, valueZ, MagneticFluxDensityUnit.TESLA)
+        }.whenever(internalDetectorSpy).getInstantaneousStdTriad(any())
+//        val internalDetectorSpy = spyk(internalDetector)
+/*        every { internalDetectorSpy.getInstantaneousStdTriad(any()) }.answers { answer ->
             val triad = answer.invocation.args[0] as MagneticFluxDensityTriad
             triad.setValueCoordinatesAndUnit(valueX, valueY, valueZ, MagneticFluxDensityUnit.TESLA)
-        }
+        }*/
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         detector.getInstantaneousStdTriad(result)
@@ -4711,8 +4963,10 @@ class MagnetometerIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val averageTimeInterval1 = randomizer.nextDouble()
-        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-        every { timeIntervalEstimatorSpy.averageTimeInterval }.returns(averageTimeInterval1)
+        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
+        whenever(timeIntervalEstimatorSpy.averageTimeInterval).thenReturn(averageTimeInterval1)
+//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+//        every { timeIntervalEstimatorSpy.averageTimeInterval }.returns(averageTimeInterval1)
         setPrivateProperty(
             IntervalDetector::class,
             detector,
@@ -4752,8 +5006,10 @@ class MagnetometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val averageTimeInterval1 = Time(value, TimeUnit.SECOND)
-        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-        every { timeIntervalEstimatorSpy.averageTimeIntervalAsTime }.returns(averageTimeInterval1)
+        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
+        whenever(timeIntervalEstimatorSpy.averageTimeIntervalAsTime).thenReturn(averageTimeInterval1)
+//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+//        every { timeIntervalEstimatorSpy.averageTimeIntervalAsTime }.returns(averageTimeInterval1)
         setPrivateProperty(
             IntervalDetector::class,
             detector,
@@ -4793,12 +5049,18 @@ class MagnetometerIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-        every { timeIntervalEstimatorSpy.getAverageTimeIntervalAsTime(any()) }.answers { answer ->
+        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
+        doAnswer { invocation ->
+            val result = invocation.getArgument<Time>(0)
+            result.value = value
+            result.unit = TimeUnit.SECOND
+        }.whenever(timeIntervalEstimatorSpy).getAverageTimeIntervalAsTime(any())
+//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+/*        every { timeIntervalEstimatorSpy.getAverageTimeIntervalAsTime(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as Time
             result.value = value
             result.unit = TimeUnit.SECOND
-        }
+        }*/
         setPrivateProperty(
             IntervalDetector::class,
             detector,
@@ -4839,8 +5101,10 @@ class MagnetometerIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val timeIntervalVariance1 = randomizer.nextDouble()
-        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-        every { timeIntervalEstimatorSpy.timeIntervalVariance }.returns(timeIntervalVariance1)
+        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
+        whenever(timeIntervalEstimatorSpy.timeIntervalVariance).thenReturn(timeIntervalVariance1)
+//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+//        every { timeIntervalEstimatorSpy.timeIntervalVariance }.returns(timeIntervalVariance1)
         setPrivateProperty(
             IntervalDetector::class,
             detector,
@@ -4879,10 +5143,12 @@ class MagnetometerIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val timeIntervalStandardDeviation1 = randomizer.nextDouble()
-        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-        every { timeIntervalEstimatorSpy.timeIntervalStandardDeviation }.returns(
+        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
+        whenever(timeIntervalEstimatorSpy.timeIntervalStandardDeviation).thenReturn(timeIntervalStandardDeviation1)
+//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+/*        every { timeIntervalEstimatorSpy.timeIntervalStandardDeviation }.returns(
             timeIntervalStandardDeviation1
-        )
+        )*/
         setPrivateProperty(
             IntervalDetector::class,
             detector,
@@ -4922,10 +5188,12 @@ class MagnetometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val timeIntervalStd1 = Time(value, TimeUnit.SECOND)
-        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-        every { timeIntervalEstimatorSpy.timeIntervalStandardDeviationAsTime }.returns(
+        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
+        whenever(timeIntervalEstimatorSpy.timeIntervalStandardDeviationAsTime).thenReturn(timeIntervalStd1)
+//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+/*        every { timeIntervalEstimatorSpy.timeIntervalStandardDeviationAsTime }.returns(
             timeIntervalStd1
-        )
+        )*/
         setPrivateProperty(
             IntervalDetector::class,
             detector,
@@ -4965,12 +5233,18 @@ class MagnetometerIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-        every { timeIntervalEstimatorSpy.getTimeIntervalStandardDeviationAsTime(any()) }.answers { answer ->
+        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
+        doAnswer { invocation ->
+            val result = invocation.getArgument<Time>(0)
+            result.value = value
+            result.unit = TimeUnit.SECOND
+        }.whenever(timeIntervalEstimatorSpy).getTimeIntervalStandardDeviationAsTime(any())
+//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+/*        every { timeIntervalEstimatorSpy.getTimeIntervalStandardDeviationAsTime(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as Time
             result.value = value
             result.unit = TimeUnit.SECOND
-        }
+        }*/
         setPrivateProperty(
             IntervalDetector::class,
             detector,
@@ -5010,8 +5284,10 @@ class MagnetometerIntervalDetectorTest {
         val internalDetector: MagneticFluxDensityTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
         requireNotNull(internalDetector)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.status }.returns(TriadStaticIntervalDetector.Status.IDLE)
+        val internalDetectorSpy = spy(internalDetector)
+        whenever(internalDetectorSpy.status).thenReturn(TriadStaticIntervalDetector.Status.IDLE)
+//        val internalDetectorSpy = spyk(internalDetector)
+//        every { internalDetectorSpy.status }.returns(TriadStaticIntervalDetector.Status.IDLE)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(Status.IDLE, detector.status)
@@ -5029,8 +5305,10 @@ class MagnetometerIntervalDetectorTest {
         val internalDetector: MagneticFluxDensityTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
         requireNotNull(internalDetector)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZING)
+        val internalDetectorSpy = spy(internalDetector)
+        whenever(internalDetectorSpy.status).thenReturn(TriadStaticIntervalDetector.Status.INITIALIZING)
+//        val internalDetectorSpy = spyk(internalDetector)
+//        every { internalDetectorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZING)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(Status.INITIALIZING, detector.status)
@@ -5049,9 +5327,11 @@ class MagnetometerIntervalDetectorTest {
         val internalDetector: MagneticFluxDensityTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
         requireNotNull(internalDetector)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.status }
-            .returns(TriadStaticIntervalDetector.Status.INITIALIZATION_COMPLETED)
+        val internalDetectorSpy = spy(internalDetector)
+        whenever(internalDetectorSpy.status).thenReturn(TriadStaticIntervalDetector.Status.INITIALIZATION_COMPLETED)
+//        val internalDetectorSpy = spyk(internalDetector)
+/*        every { internalDetectorSpy.status }
+            .returns(TriadStaticIntervalDetector.Status.INITIALIZATION_COMPLETED)*/
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(Status.INITIALIZATION_COMPLETED, detector.status)
@@ -5070,9 +5350,11 @@ class MagnetometerIntervalDetectorTest {
         val internalDetector: MagneticFluxDensityTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
         requireNotNull(internalDetector)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.status }
-            .returns(TriadStaticIntervalDetector.Status.STATIC_INTERVAL)
+        val internalDetectorSpy = spy(internalDetector)
+        whenever(internalDetectorSpy.status).thenReturn(TriadStaticIntervalDetector.Status.STATIC_INTERVAL)
+//        val internalDetectorSpy = spyk(internalDetector)
+/*        every { internalDetectorSpy.status }
+            .returns(TriadStaticIntervalDetector.Status.STATIC_INTERVAL)*/
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(Status.STATIC_INTERVAL, detector.status)
@@ -5091,9 +5373,11 @@ class MagnetometerIntervalDetectorTest {
         val internalDetector: MagneticFluxDensityTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
         requireNotNull(internalDetector)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.status }
-            .returns(TriadStaticIntervalDetector.Status.DYNAMIC_INTERVAL)
+        val internalDetectorSpy = spy(internalDetector)
+        whenever(internalDetectorSpy.status).thenReturn(TriadStaticIntervalDetector.Status.DYNAMIC_INTERVAL)
+//        val internalDetectorSpy = spyk(internalDetector)
+/*        every { internalDetectorSpy.status }
+            .returns(TriadStaticIntervalDetector.Status.DYNAMIC_INTERVAL)*/
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(Status.DYNAMIC_INTERVAL, detector.status)
@@ -5112,8 +5396,10 @@ class MagnetometerIntervalDetectorTest {
         val internalDetector: MagneticFluxDensityTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
         requireNotNull(internalDetector)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.status }.returns(TriadStaticIntervalDetector.Status.FAILED)
+        val internalDetectorSpy = spy(internalDetector)
+        whenever(internalDetectorSpy.status).thenReturn(TriadStaticIntervalDetector.Status.FAILED)
+//        val internalDetectorSpy = spyk(internalDetector)
+//        every { internalDetectorSpy.status }.returns(TriadStaticIntervalDetector.Status.FAILED)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(Status.FAILED, detector.status)
@@ -5132,8 +5418,10 @@ class MagnetometerIntervalDetectorTest {
         val internalDetector: MagneticFluxDensityTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
         requireNotNull(internalDetector)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.status }.returns(null)
+        val internalDetectorSpy = spy(internalDetector)
+        whenever(internalDetectorSpy.status).thenReturn(null)
+//        val internalDetectorSpy = spyk(internalDetector)
+//        every { internalDetectorSpy.status }.returns(null)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(Status.IDLE, detector.status)
@@ -5171,7 +5459,8 @@ class MagnetometerIntervalDetectorTest {
         requireNotNull(internalDetector)
         internalDetectorListener.onInitializationStarted(internalDetector)
 
-        verify(exactly = 1) { initializationStartedListener.onInitializationStarted(intervalDetector) }
+        verify(initializationStartedListener, only()).onInitializationStarted(intervalDetector)
+//        verify(exactly = 1) { initializationStartedListener.onInitializationStarted(intervalDetector) }
     }
 
     @Test
@@ -5210,12 +5499,16 @@ class MagnetometerIntervalDetectorTest {
         val baseNoiseLevel = randomizer.nextDouble()
         internalDetectorListener.onInitializationCompleted(internalDetector, baseNoiseLevel)
 
-        verify(exactly = 1) {
+        verify(initializationCompletedListener, only()).onInitializationCompleted(
+            intervalDetector,
+            baseNoiseLevel
+        )
+/*        verify(exactly = 1) {
             initializationCompletedListener.onInitializationCompleted(
                 intervalDetector,
                 baseNoiseLevel
             )
-        }
+        }*/
     }
 
     @Test
@@ -5237,7 +5530,8 @@ class MagnetometerIntervalDetectorTest {
         val collector: MagnetometerSensorCollector? =
             intervalDetector.getPrivateProperty("collector")
         requireNotNull(collector)
-        val collectorSpy = spyk(collector)
+        val collectorSpy = spy(collector)
+//        val collectorSpy = spyk(collector)
         intervalDetector.setPrivateProperty("collector", collectorSpy)
 
         internalDetectorListener.onError(
@@ -5247,7 +5541,8 @@ class MagnetometerIntervalDetectorTest {
             TriadStaticIntervalDetector.ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED
         )
 
-        verify(exactly = 1) { collectorSpy.stop() }
+        verify(collectorSpy, times(1)).stop()
+//        verify(exactly = 1) { collectorSpy.stop() }
     }
 
     @Test
@@ -5269,7 +5564,8 @@ class MagnetometerIntervalDetectorTest {
         val collector: MagnetometerSensorCollector? =
             intervalDetector.getPrivateProperty("collector")
         requireNotNull(collector)
-        val collectorSpy = spyk(collector)
+        val collectorSpy = spy(collector)
+//        val collectorSpy = spyk(collector)
         intervalDetector.setPrivateProperty("collector", collectorSpy)
 
         internalDetectorListener.onError(
@@ -5279,13 +5575,18 @@ class MagnetometerIntervalDetectorTest {
             TriadStaticIntervalDetector.ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED
         )
 
-        verify(exactly = 1) { collectorSpy.stop() }
-        verify(exactly = 1) {
+        verify(collectorSpy, times(1)).stop()
+        verify(errorListener, only()).onError(
+            intervalDetector,
+            ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
+        )
+//        verify(exactly = 1) { collectorSpy.stop() }
+/*        verify(exactly = 1) {
             errorListener.onError(
                 intervalDetector,
                 ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
             )
-        }
+        }*/
     }
 
     @Test
@@ -5351,7 +5652,16 @@ class MagnetometerIntervalDetectorTest {
             instantaneousStdZ
         )
 
-        verify(exactly = 1) {
+        verify(staticIntervalDetectedListener, only()).onStaticIntervalDetected(
+            intervalDetector,
+            instantaneousAvgX,
+            instantaneousAvgY,
+            instantaneousAvgZ,
+            instantaneousStdX,
+            instantaneousStdY,
+            instantaneousStdZ
+        )
+/*        verify(exactly = 1) {
             staticIntervalDetectedListener.onStaticIntervalDetected(
                 intervalDetector,
                 instantaneousAvgX,
@@ -5361,7 +5671,7 @@ class MagnetometerIntervalDetectorTest {
                 instantaneousStdY,
                 instantaneousStdZ
             )
-        }
+        }*/
     }
 
     @Test
@@ -5450,7 +5760,22 @@ class MagnetometerIntervalDetectorTest {
             accumulatedStdZ
         )
 
-        verify(exactly = 1) {
+        verify(dynamicIntervalDetectedListener, only()).onDynamicIntervalDetected(
+            intervalDetector,
+            instantaneousAvgX,
+            instantaneousAvgY,
+            instantaneousAvgZ,
+            instantaneousStdX,
+            instantaneousStdY,
+            instantaneousStdZ,
+            accumulatedAvgX,
+            accumulatedAvgY,
+            accumulatedAvgZ,
+            accumulatedStdX,
+            accumulatedStdY,
+            accumulatedStdZ
+        )
+/*        verify(exactly = 1) {
             dynamicIntervalDetectedListener.onDynamicIntervalDetected(
                 intervalDetector,
                 instantaneousAvgX,
@@ -5466,7 +5791,7 @@ class MagnetometerIntervalDetectorTest {
                 accumulatedStdY,
                 accumulatedStdZ
             )
-        }
+        }*/
     }
 
     @Test
@@ -5500,7 +5825,8 @@ class MagnetometerIntervalDetectorTest {
 
         internalDetectorListener.onReset(internalDetector)
 
-        verify(exactly = 1) { resetListener.onReset(intervalDetector) }
+        verify(resetListener, only()).onReset(intervalDetector)
+//        verify(exactly = 1) { resetListener.onReset(intervalDetector) }
     }
 
     private fun getMagneticFluxDensity(): BodyMagneticFluxDensity {

@@ -26,17 +26,20 @@ import com.irurueta.navigation.inertial.wmm.WMMEarthMagneticFluxDensityEstimator
 import com.irurueta.navigation.inertial.wmm.WorldMagneticModel
 import com.irurueta.numerical.robust.RobustEstimatorMethod
 import com.irurueta.statistics.UniformRandomizer
-import io.mockk.clearAllMocks
-import io.mockk.every
-import io.mockk.impl.annotations.MockK
-import io.mockk.junit4.MockKRule
-import io.mockk.mockk
-import io.mockk.unmockkAll
-import org.junit.After
+//import io.mockk.clearAllMocks
+//import io.mockk.every
+//import io.mockk.impl.annotations.MockK
+//import io.mockk.junit4.MockKRule
+//import io.mockk.unmockkAll
+//import org.junit.After
 import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mock
+import org.mockito.junit.MockitoJUnit
+import org.mockito.junit.MockitoRule
+import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 import java.util.*
 
@@ -44,16 +47,25 @@ import java.util.*
 class MagnetometerInternalCalibratorBuilderTest {
 
     @get:Rule
-    val mockkRule = MockKRule(this)
+    val mockitoRule: MockitoRule = MockitoJUnit.rule()
 
-    @MockK
+//    @get:Rule
+//    val mockkRule = MockKRule(this)
+
+    //    @MockK
+    @Mock
     private lateinit var measurement: StandardDeviationBodyMagneticFluxDensity
 
-    @After
+    //    @MockK
+    @Mock
+    private lateinit var location: Location
+
+    /*@After
     fun tearDown() {
         unmockkAll()
         clearAllMocks()
-    }
+        System.gc()
+    }*/
 
     @Test
     fun constructor_whenRequiredValues_setsExpectedValues() {
@@ -2681,9 +2693,12 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROSACGroundTruthHardIronNotSetAndNoCommonAxis_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+        whenever(measurement.magneticFluxDensityStandardDeviation).thenReturn(
             magneticFluxDensityStandardDeviation
         )
+        /*        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+                    magneticFluxDensityStandardDeviation
+                )*/
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
         (1..13).forEach { _ ->
             measurements.add(measurement)
@@ -2762,9 +2777,12 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROSACGroundTruthHardIronNotSetAndCommonAxis_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+        whenever(measurement.magneticFluxDensityStandardDeviation).thenReturn(
             magneticFluxDensityStandardDeviation
         )
+        /*        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+                    magneticFluxDensityStandardDeviation
+                )*/
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
         (1..13).forEach { _ ->
             measurements.add(measurement)
@@ -2843,9 +2861,12 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROSACGroundTruthHardIronSetAndNoCommonAxis_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+        whenever(measurement.magneticFluxDensityStandardDeviation).thenReturn(
             magneticFluxDensityStandardDeviation
         )
+        /*        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+                    magneticFluxDensityStandardDeviation
+                )*/
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
         (1..13).forEach { _ ->
             measurements.add(measurement)
@@ -2930,9 +2951,12 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROSACGroundTruthHardIronSetAndCommonAxis_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+        whenever(measurement.magneticFluxDensityStandardDeviation).thenReturn(
             magneticFluxDensityStandardDeviation
         )
+        /*        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+                    magneticFluxDensityStandardDeviation
+                )*/
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
         (1..13).forEach { _ ->
             measurements.add(measurement)
@@ -3017,9 +3041,12 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROSACGroundTruthHardIronNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+        whenever(measurement.magneticFluxDensityStandardDeviation).thenReturn(
             magneticFluxDensityStandardDeviation
         )
+        /*        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+                    magneticFluxDensityStandardDeviation
+                )*/
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
         (1..13).forEach { _ ->
             measurements.add(measurement)
@@ -3100,9 +3127,12 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROSACGroundTruthHardIronSetAndNoRobustThreshold_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+        whenever(measurement.magneticFluxDensityStandardDeviation).thenReturn(
             magneticFluxDensityStandardDeviation
         )
+        /*        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+                    magneticFluxDensityStandardDeviation
+                )*/
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
         (1..13).forEach { _ ->
             measurements.add(measurement)
@@ -3183,9 +3213,12 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROSACGroundTruthHardIronNotSetNoRobustThresholdAndMissingBaseNoiseLevel_throwsIllegalStateException() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+        whenever(measurement.magneticFluxDensityStandardDeviation).thenReturn(
             magneticFluxDensityStandardDeviation
         )
+        /*        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+                    magneticFluxDensityStandardDeviation
+                )*/
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
         (1..13).forEach { _ ->
             measurements.add(measurement)
@@ -3234,9 +3267,12 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROSACGroundTruthHardIronSetNoRobustThresholdAndMissingBaseNoiseLevel_throwsIllegalStateException() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+        whenever(measurement.magneticFluxDensityStandardDeviation).thenReturn(
             magneticFluxDensityStandardDeviation
         )
+        /*        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+                    magneticFluxDensityStandardDeviation
+                )*/
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
         (1..13).forEach { _ ->
             measurements.add(measurement)
@@ -3877,9 +3913,12 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROMedSGroundTruthHardIronNotSetAndNoCommonAxis_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+        whenever(measurement.magneticFluxDensityStandardDeviation).thenReturn(
             magneticFluxDensityStandardDeviation
         )
+        /*        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+                    magneticFluxDensityStandardDeviation
+                )*/
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
         (1..13).forEach { _ ->
             measurements.add(measurement)
@@ -3958,9 +3997,12 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROMedSGroundTruthHardIronNotSetAndCommonAxis_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+        whenever(measurement.magneticFluxDensityStandardDeviation).thenReturn(
             magneticFluxDensityStandardDeviation
         )
+        /*        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+                    magneticFluxDensityStandardDeviation
+                )*/
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
         (1..13).forEach { _ ->
             measurements.add(measurement)
@@ -4039,9 +4081,12 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROMedSGroundTruthHardIronSetAndNoCommonAxis_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+        whenever(measurement.magneticFluxDensityStandardDeviation).thenReturn(
             magneticFluxDensityStandardDeviation
         )
+        /*        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+                    magneticFluxDensityStandardDeviation
+                )*/
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
         (1..13).forEach { _ ->
             measurements.add(measurement)
@@ -4126,9 +4171,12 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROMedSGroundTruthHardIronSetAndCommonAxis_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+        whenever(measurement.magneticFluxDensityStandardDeviation).thenReturn(
             magneticFluxDensityStandardDeviation
         )
+        /*        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+                    magneticFluxDensityStandardDeviation
+                )*/
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
         (1..13).forEach { _ ->
             measurements.add(measurement)
@@ -4213,9 +4261,12 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROMedSGroundTruthHardIronNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+        whenever(measurement.magneticFluxDensityStandardDeviation).thenReturn(
             magneticFluxDensityStandardDeviation
         )
+        /*        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+                    magneticFluxDensityStandardDeviation
+                )*/
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
         (1..13).forEach { _ ->
             measurements.add(measurement)
@@ -4301,9 +4352,12 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROMedSGroundTruthHardIronSetAndNoRobustThreshold_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+        whenever(measurement.magneticFluxDensityStandardDeviation).thenReturn(
             magneticFluxDensityStandardDeviation
         )
+        /*        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+                    magneticFluxDensityStandardDeviation
+                )*/
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
         (1..13).forEach { _ ->
             measurements.add(measurement)
@@ -4389,9 +4443,12 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROMedSGroundTruthHardIronNotSetNoRobustThresholdAndMissingBaseNoiseLevel_throwsIllegalStateException() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+        whenever(measurement.magneticFluxDensityStandardDeviation).thenReturn(
             magneticFluxDensityStandardDeviation
         )
+        /*        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+                    magneticFluxDensityStandardDeviation
+                )*/
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
         (1..13).forEach { _ ->
             measurements.add(measurement)
@@ -4440,9 +4497,12 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROMedSGroundTruthHardIronSetNoRobustThresholdAndMissingBaseNoiseLevel_throwsIllegalStateException() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+        whenever(measurement.magneticFluxDensityStandardDeviation).thenReturn(
             magneticFluxDensityStandardDeviation
         )
+        /*        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+                    magneticFluxDensityStandardDeviation
+                )*/
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
         (1..13).forEach { _ ->
             measurements.add(measurement)
@@ -6087,9 +6147,12 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROSACGroundTruthHardIronNotSetAndNoCommonAxisWithLocation_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+        whenever(measurement.magneticFluxDensityStandardDeviation).thenReturn(
             magneticFluxDensityStandardDeviation
         )
+        /*        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+                    magneticFluxDensityStandardDeviation
+                )*/
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
         (1..13).forEach { _ ->
             measurements.add(measurement)
@@ -6176,9 +6239,12 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROSACGroundTruthHardIronNotSetAndCommonAxisWithLocation_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+        whenever(measurement.magneticFluxDensityStandardDeviation).thenReturn(
             magneticFluxDensityStandardDeviation
         )
+        /*        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+                    magneticFluxDensityStandardDeviation
+                )*/
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
         (1..13).forEach { _ ->
             measurements.add(measurement)
@@ -6265,9 +6331,12 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROSACGroundTruthHardIronSetAndNoCommonAxisWithLocation_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+        whenever(measurement.magneticFluxDensityStandardDeviation).thenReturn(
             magneticFluxDensityStandardDeviation
         )
+        /*        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+                    magneticFluxDensityStandardDeviation
+                )*/
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
         (1..13).forEach { _ ->
             measurements.add(measurement)
@@ -6360,9 +6429,12 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROSACGroundTruthHardIronSetAndCommonAxisWithLocation_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+        whenever(measurement.magneticFluxDensityStandardDeviation).thenReturn(
             magneticFluxDensityStandardDeviation
         )
+        /*        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+                    magneticFluxDensityStandardDeviation
+                )*/
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
         (1..13).forEach { _ ->
             measurements.add(measurement)
@@ -6455,9 +6527,12 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROSACGroundTruthHardIronNotSetAndNoRobustThresholdWithLocation_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+        whenever(measurement.magneticFluxDensityStandardDeviation).thenReturn(
             magneticFluxDensityStandardDeviation
         )
+        /*        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+                    magneticFluxDensityStandardDeviation
+                )*/
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
         (1..13).forEach { _ ->
             measurements.add(measurement)
@@ -6546,9 +6621,12 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROSACGroundTruthHardIronSetAndNoRobustThresholdWithLocation_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+        whenever(measurement.magneticFluxDensityStandardDeviation).thenReturn(
             magneticFluxDensityStandardDeviation
         )
+        /*        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+                    magneticFluxDensityStandardDeviation
+                )*/
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
         (1..13).forEach { _ ->
             measurements.add(measurement)
@@ -6637,9 +6715,12 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROSACGroundTruthHardIronNotSetNoRobustThresholdAndMissingBaseNoiseLevelWithLocation_throwsIllegalStateException() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+        whenever(measurement.magneticFluxDensityStandardDeviation).thenReturn(
             magneticFluxDensityStandardDeviation
         )
+        /*        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+                    magneticFluxDensityStandardDeviation
+                )*/
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
         (1..13).forEach { _ ->
             measurements.add(measurement)
@@ -6692,9 +6773,12 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROSACGroundTruthHardIronSetNoRobustThresholdAndMissingBaseNoiseLevelWithLocation_throwsIllegalStateException() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+        whenever(measurement.magneticFluxDensityStandardDeviation).thenReturn(
             magneticFluxDensityStandardDeviation
         )
+        /*        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+                    magneticFluxDensityStandardDeviation
+                )*/
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
         (1..13).forEach { _ ->
             measurements.add(measurement)
@@ -7395,9 +7479,12 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROMedSGroundTruthHardIronNotSetAndNoCommonAxisWithLocation_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+        whenever(measurement.magneticFluxDensityStandardDeviation).thenReturn(
             magneticFluxDensityStandardDeviation
         )
+        /*        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+                    magneticFluxDensityStandardDeviation
+                )*/
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
         (1..13).forEach { _ ->
             measurements.add(measurement)
@@ -7484,9 +7571,12 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROMedSGroundTruthHardIronNotSetAndCommonAxisWithLocation_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+        whenever(measurement.magneticFluxDensityStandardDeviation).thenReturn(
             magneticFluxDensityStandardDeviation
         )
+        /*        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+                    magneticFluxDensityStandardDeviation
+                )*/
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
         (1..13).forEach { _ ->
             measurements.add(measurement)
@@ -7573,9 +7663,12 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROMedSGroundTruthHardIronSetAndNoCommonAxisWithLocation_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+        whenever(measurement.magneticFluxDensityStandardDeviation).thenReturn(
             magneticFluxDensityStandardDeviation
         )
+        /*        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+                    magneticFluxDensityStandardDeviation
+                )*/
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
         (1..13).forEach { _ ->
             measurements.add(measurement)
@@ -7668,9 +7761,12 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROMedSGroundTruthHardIronSetAndCommonAxisWithLocation_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+        whenever(measurement.magneticFluxDensityStandardDeviation).thenReturn(
             magneticFluxDensityStandardDeviation
         )
+        /*        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+                    magneticFluxDensityStandardDeviation
+                )*/
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
         (1..13).forEach { _ ->
             measurements.add(measurement)
@@ -7763,9 +7859,12 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROMedSGroundTruthHardIronNotSetAndNoRobustThresholdWithLocation_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+        whenever(measurement.magneticFluxDensityStandardDeviation).thenReturn(
             magneticFluxDensityStandardDeviation
         )
+        /*        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+                    magneticFluxDensityStandardDeviation
+                )*/
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
         (1..13).forEach { _ ->
             measurements.add(measurement)
@@ -7859,9 +7958,12 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROMedSGroundTruthHardIronSetAndNoRobustThresholdWithLocation_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+        whenever(measurement.magneticFluxDensityStandardDeviation).thenReturn(
             magneticFluxDensityStandardDeviation
         )
+        /*        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+                    magneticFluxDensityStandardDeviation
+                )*/
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
         (1..13).forEach { _ ->
             measurements.add(measurement)
@@ -7955,9 +8057,12 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROMedSGroundTruthHardIronNotSetNoRobustThresholdAndMissingBaseNoiseLevelWithLocation_throwsIllegalStateException() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+        whenever(measurement.magneticFluxDensityStandardDeviation).thenReturn(
             magneticFluxDensityStandardDeviation
         )
+        /*        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+                    magneticFluxDensityStandardDeviation
+                )*/
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
         (1..13).forEach { _ ->
             measurements.add(measurement)
@@ -8010,9 +8115,12 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROMedSGroundTruthHardIronSetNoRobustThresholdAndMissingBaseNoiseLevelWithLocation_throwsIllegalStateException() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+        whenever(measurement.magneticFluxDensityStandardDeviation).thenReturn(
             magneticFluxDensityStandardDeviation
         )
+        /*        every { measurement.magneticFluxDensityStandardDeviation }.returns(
+                    magneticFluxDensityStandardDeviation
+                )*/
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
         (1..13).forEach { _ ->
             measurements.add(measurement)
@@ -8061,6 +8169,23 @@ class MagnetometerInternalCalibratorBuilderTest {
         builder.build()
     }
 
+    private fun getLocation(): Location {
+        val randomizer = UniformRandomizer()
+        val latitudeDegrees = randomizer.nextDouble(MIN_LATITUDE_DEGREES, MAX_LATITUDE_DEGREES)
+        val longitudeDegrees =
+            randomizer.nextDouble(MIN_LONGITUDE_DEGREES, MAX_LONGITUDE_DEGREES)
+        val height = randomizer.nextDouble(MIN_HEIGHT, MAX_HEIGHT)
+
+        whenever(location.latitude).thenReturn(latitudeDegrees)
+        whenever(location.longitude).thenReturn(longitudeDegrees)
+        whenever(location.altitude).thenReturn(height)
+//        every { location.latitude }.returns(latitudeDegrees)
+//        every { location.longitude }.returns(longitudeDegrees)
+//        every { location.altitude }.returns(height)
+
+        return location
+    }
+
     private companion object {
         const val MIN_LATITUDE_DEGREES = -90.0
         const val MAX_LATITUDE_DEGREES = 90.0
@@ -8084,20 +8209,5 @@ class MagnetometerInternalCalibratorBuilderTest {
         const val ROBUST_STOP_THRESHOLD_FACTOR = 1e-3
 
         const val ABSOLUTE_ERROR = 1e-6
-
-        fun getLocation(): Location {
-            val randomizer = UniformRandomizer()
-            val latitudeDegrees = randomizer.nextDouble(MIN_LATITUDE_DEGREES, MAX_LATITUDE_DEGREES)
-            val longitudeDegrees =
-                randomizer.nextDouble(MIN_LONGITUDE_DEGREES, MAX_LONGITUDE_DEGREES)
-            val height = randomizer.nextDouble(MIN_HEIGHT, MAX_HEIGHT)
-
-            val location = mockk<Location>()
-            every { location.latitude }.returns(latitudeDegrees)
-            every { location.longitude }.returns(longitudeDegrees)
-            every { location.altitude }.returns(height)
-
-            return location
-        }
     }
 }

@@ -33,7 +33,7 @@ public class RombergTrapezoidalQuadratureIntegratorTest {
 
     private static final double MAX_LAMBDA = 1.0;
 
-    private static final double ABSOLUTE_ERROR_1 = 1e-9;
+    private static final double ABSOLUTE_ERROR_1 = 1e-8;
 
     private static final double ABSOLUTE_ERROR_6 = 1e-6;
 

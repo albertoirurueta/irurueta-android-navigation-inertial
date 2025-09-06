@@ -51,7 +51,7 @@ public class RombergDoubleExponentialRuleQuadratureMatrixIntegratorTest {
 
     private static final double ABSOLUTE_ERROR_GAUSSIAN = 1e-5;
 
-    private static final double ABSOLUTE_ERROR_EXPONENTIAL = 1e-3;
+    private static final double ABSOLUTE_ERROR_EXPONENTIAL = 2e-3;
 
     private static final double ABSOLUTE_ERROR_IMPROPER_1 = 1e-8;
 

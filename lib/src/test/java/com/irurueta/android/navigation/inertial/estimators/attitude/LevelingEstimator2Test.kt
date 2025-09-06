@@ -33,39 +33,58 @@ import com.irurueta.navigation.frames.CoordinateTransformation
 import com.irurueta.navigation.frames.FrameType
 import com.irurueta.navigation.inertial.estimators.NEDGravityEstimator
 import com.irurueta.statistics.UniformRandomizer
-import io.mockk.*
-import io.mockk.impl.annotations.MockK
-import io.mockk.junit4.MockKRule
-import org.junit.After
+//import io.mockk.*
+//import io.mockk.impl.annotations.MockK
+//import io.mockk.junit4.MockKRule
+//import org.junit.After
 import org.junit.Assert.*
-import org.junit.Ignore
+//import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mock
+import org.mockito.junit.MockitoJUnit
+import org.mockito.junit.MockitoRule
+import org.mockito.kotlin.any
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.never
+import org.mockito.kotlin.only
+import org.mockito.kotlin.spy
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.verifyNoInteractions
+import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 import kotlin.math.sqrt
 
-@Ignore("possible memory leak")
+//@Ignore("Possible memory leak when running this test")
 @RunWith(RobolectricTestRunner::class)
 class LevelingEstimator2Test {
 
     @get:Rule
-    val mockkRule = MockKRule(this)
+    val mockitoRule: MockitoRule = MockitoJUnit.rule()
 
-    @MockK(relaxUnitFun = true)
+//    @get:Rule
+//    val mockkRule = MockKRule(this)
+
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var levelingAvailableListener: LevelingEstimator2.OnLevelingAvailableListener
 
-    @MockK(relaxUnitFun = true)
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var accuracyChangedListener: LevelingEstimator2.OnAccuracyChangedListener
 
-    @MockK
+//    @MockK
+    @Mock
     private lateinit var location: Location
 
-    @After
+    /*@After
     fun tearDown() {
         unmockkAll()
         clearAllMocks()
-    }
+        System.gc()
+    }*/
 
     @Test
     fun constructor_whenRequiredProperties_setsDefaultValues() {
@@ -268,8 +287,10 @@ class LevelingEstimator2Test {
                 "accelerometerSensorCollector"
             )
         requireNotNull(accelerometerSensorCollector)
-        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
-        every { accelerometerSensorCollectorSpy.running }.returns(true)
+        val accelerometerSensorCollectorSpy = spy(accelerometerSensorCollector)
+//        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
+        doReturn(true).whenever(accelerometerSensorCollectorSpy).running
+//        every { accelerometerSensorCollectorSpy.running }.returns(true)
         setPrivateProperty(
             BaseLevelingEstimator2::class,
             estimator,
@@ -280,7 +301,8 @@ class LevelingEstimator2Test {
         val gravitySensorCollector: GravitySensorCollector2? =
             getPrivateProperty(BaseLevelingEstimator2::class, estimator, "gravitySensorCollector")
         requireNotNull(gravitySensorCollector)
-        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
+        val gravitySensorCollectorSpy = spy(gravitySensorCollector)
+//        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
         setPrivateProperty(
             BaseLevelingEstimator2::class,
             estimator,
@@ -289,8 +311,10 @@ class LevelingEstimator2Test {
         )
 
         assertTrue(estimator.running)
-        verify(exactly = 1) { accelerometerSensorCollectorSpy.running }
-        verify { gravitySensorCollectorSpy wasNot Called }
+        verify(accelerometerSensorCollectorSpy, only()).running
+//        verify(exactly = 1) { accelerometerSensorCollectorSpy.running }
+        verifyNoInteractions(gravitySensorCollectorSpy)
+//        verify { gravitySensorCollectorSpy wasNot Called }
     }
 
     @Test
@@ -305,7 +329,8 @@ class LevelingEstimator2Test {
                 "accelerometerSensorCollector"
             )
         requireNotNull(accelerometerSensorCollector)
-        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
+        val accelerometerSensorCollectorSpy = spy(accelerometerSensorCollector)
+//        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
         setPrivateProperty(
             BaseLevelingEstimator2::class,
             estimator,
@@ -316,8 +341,10 @@ class LevelingEstimator2Test {
         val gravitySensorCollector: GravitySensorCollector2? =
             getPrivateProperty(BaseLevelingEstimator2::class, estimator, "gravitySensorCollector")
         requireNotNull(gravitySensorCollector)
-        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
-        every { gravitySensorCollectorSpy.running }.returns(true)
+        val gravitySensorCollectorSpy = spy(gravitySensorCollector)
+//        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
+        doReturn(true).whenever(gravitySensorCollectorSpy).running
+//        every { gravitySensorCollectorSpy.running }.returns(true)
         setPrivateProperty(
             BaseLevelingEstimator2::class,
             estimator,
@@ -326,8 +353,10 @@ class LevelingEstimator2Test {
         )
 
         assertTrue(estimator.running)
-        verify(exactly = 1) { accelerometerSensorCollectorSpy.running }
-        verify(exactly = 1) { gravitySensorCollectorSpy.running }
+        verify(accelerometerSensorCollectorSpy, only()).running
+//        verify(exactly = 1) { accelerometerSensorCollectorSpy.running }
+        verify(gravitySensorCollectorSpy, only()).running
+//        verify(exactly = 1) { gravitySensorCollectorSpy.running }
     }
 
     @Test
@@ -342,8 +371,10 @@ class LevelingEstimator2Test {
                 "accelerometerSensorCollector"
             )
         requireNotNull(accelerometerSensorCollector)
-        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
-        every { accelerometerSensorCollectorSpy.start() }.returns(true)
+        val accelerometerSensorCollectorSpy = spy(accelerometerSensorCollector)
+//        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
+        doReturn(true).whenever(accelerometerSensorCollectorSpy).start()
+//        every { accelerometerSensorCollectorSpy.start() }.returns(true)
         setPrivateProperty(
             BaseLevelingEstimator2::class,
             estimator,
@@ -354,7 +385,8 @@ class LevelingEstimator2Test {
         val gravitySensorCollector: GravitySensorCollector2? =
             getPrivateProperty(BaseLevelingEstimator2::class, estimator, "gravitySensorCollector")
         requireNotNull(gravitySensorCollector)
-        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
+        val gravitySensorCollectorSpy = spy(gravitySensorCollector)
+//        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
         setPrivateProperty(
             BaseLevelingEstimator2::class,
             estimator,
@@ -364,10 +396,14 @@ class LevelingEstimator2Test {
 
         assertTrue(estimator.start())
 
-        verify(exactly = 1) { accelerometerSensorCollectorSpy.running }
-        verify(exactly = 1) { gravitySensorCollectorSpy.running }
-        verify(exactly = 1) { accelerometerSensorCollectorSpy.start() }
-        verify(exactly = 0) { gravitySensorCollectorSpy.start() }
+        verify(accelerometerSensorCollectorSpy, times(1)).running
+//        verify(exactly = 1) { accelerometerSensorCollectorSpy.running }
+        verify(gravitySensorCollectorSpy, only()).running
+//        verify(exactly = 1) { gravitySensorCollectorSpy.running }
+        verify(accelerometerSensorCollectorSpy, times(1)).start()
+//        verify(exactly = 1) { accelerometerSensorCollectorSpy.start() }
+        verify(gravitySensorCollectorSpy, never()).start()
+//        verify(exactly = 0) { gravitySensorCollectorSpy.start() }
     }
 
     @Test
@@ -382,7 +418,8 @@ class LevelingEstimator2Test {
                 "accelerometerSensorCollector"
             )
         requireNotNull(accelerometerSensorCollector)
-        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
+        val accelerometerSensorCollectorSpy = spy(accelerometerSensorCollector)
+//        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
         setPrivateProperty(
             BaseLevelingEstimator2::class,
             estimator,
@@ -393,8 +430,10 @@ class LevelingEstimator2Test {
         val gravitySensorCollector: GravitySensorCollector2? =
             getPrivateProperty(BaseLevelingEstimator2::class, estimator, "gravitySensorCollector")
         requireNotNull(gravitySensorCollector)
-        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
-        every { gravitySensorCollectorSpy.start() }.returns(true)
+        val gravitySensorCollectorSpy = spy(gravitySensorCollector)
+//        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
+        doReturn(true).whenever(gravitySensorCollectorSpy).start()
+//        every { gravitySensorCollectorSpy.start() }.returns(true)
         setPrivateProperty(
             BaseLevelingEstimator2::class,
             estimator,
@@ -404,10 +443,14 @@ class LevelingEstimator2Test {
 
         assertTrue(estimator.start())
 
-        verify(exactly = 1) { accelerometerSensorCollectorSpy.running }
-        verify(exactly = 1) { gravitySensorCollectorSpy.running }
-        verify(exactly = 1) { gravitySensorCollectorSpy.start() }
-        verify(exactly = 0) { accelerometerSensorCollectorSpy.start() }
+        verify(accelerometerSensorCollectorSpy, only()).running
+//        verify(exactly = 1) { accelerometerSensorCollectorSpy.running }
+        verify(gravitySensorCollectorSpy, times(1)).running
+//        verify(exactly = 1) { gravitySensorCollectorSpy.running }
+        verify(gravitySensorCollectorSpy, times(1)).start()
+//        verify(exactly = 1) { gravitySensorCollectorSpy.start() }
+        verify(accelerometerSensorCollectorSpy, never()).start()
+//        verify(exactly = 0) { accelerometerSensorCollectorSpy.start() }
     }
 
     @Test(expected = IllegalStateException::class)
@@ -422,8 +465,10 @@ class LevelingEstimator2Test {
                 "accelerometerSensorCollector"
             )
         requireNotNull(accelerometerSensorCollector)
-        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
-        every { accelerometerSensorCollectorSpy.running }.returns(true)
+        val accelerometerSensorCollectorSpy = spy(accelerometerSensorCollector)
+//        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
+        doReturn(true).whenever(accelerometerSensorCollectorSpy).running
+//        every { accelerometerSensorCollectorSpy.running }.returns(true)
         setPrivateProperty(
             BaseLevelingEstimator2::class,
             estimator,
@@ -447,7 +492,8 @@ class LevelingEstimator2Test {
                 "accelerometerSensorCollector"
             )
         requireNotNull(accelerometerSensorCollector)
-        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
+        val accelerometerSensorCollectorSpy = spy(accelerometerSensorCollector)
+//        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
         setPrivateProperty(
             BaseLevelingEstimator2::class,
             estimator,
@@ -458,7 +504,8 @@ class LevelingEstimator2Test {
         val gravitySensorCollector: GravitySensorCollector2? =
             getPrivateProperty(BaseLevelingEstimator2::class, estimator, "gravitySensorCollector")
         requireNotNull(gravitySensorCollector)
-        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
+        val gravitySensorCollectorSpy = spy(gravitySensorCollector)
+//        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
         setPrivateProperty(
             BaseLevelingEstimator2::class,
             estimator,
@@ -468,8 +515,10 @@ class LevelingEstimator2Test {
 
         estimator.stop()
 
-        verify(exactly = 1) { accelerometerSensorCollectorSpy.stop() }
-        verify(exactly = 1) { gravitySensorCollectorSpy.stop() }
+        verify(accelerometerSensorCollectorSpy, times(1)).stop()
+//        verify(exactly = 1) { accelerometerSensorCollectorSpy.stop() }
+        verify(gravitySensorCollectorSpy, times(1)).stop()
+//        verify(exactly = 1) { gravitySensorCollectorSpy.stop() }
     }
 
     @Test
@@ -503,13 +552,18 @@ class LevelingEstimator2Test {
         requireNotNull(listener)
         listener.onAccuracyChanged(gravitySensorCollector, SensorAccuracy.HIGH)
 
-        verify(exactly = 1) {
+        verify(accuracyChangedListener, only()).onAccuracyChanged(
+            estimator,
+            SensorType.GRAVITY,
+            SensorAccuracy.HIGH
+        )
+/*        verify(exactly = 1) {
             accuracyChangedListener.onAccuracyChanged(
                 estimator,
                 SensorType.GRAVITY,
                 SensorAccuracy.HIGH
             )
-        }
+        }*/
     }
 
     @Test
@@ -524,7 +578,8 @@ class LevelingEstimator2Test {
         val attitude: Quaternion? =
             getPrivateProperty(BaseLevelingEstimator2::class, estimator, "attitude")
         requireNotNull(attitude)
-        val attitudeSpy = spyk(attitude)
+        val attitudeSpy = spy(attitude)
+//        val attitudeSpy = spyk(attitude)
         setPrivateProperty(BaseLevelingEstimator2::class, estimator, "attitude", attitudeSpy)
 
         val eulerAngles: DoubleArray? =
@@ -539,7 +594,8 @@ class LevelingEstimator2Test {
             FrameType.LOCAL_NAVIGATION_FRAME,
             coordinateTransformation.destinationType
         )
-        val coordinateTransformationSpy = spyk(coordinateTransformation)
+        val coordinateTransformationSpy = spy(coordinateTransformation)
+//        val coordinateTransformationSpy = spyk(coordinateTransformation)
         setPrivateProperty(
             BaseLevelingEstimator2::class,
             estimator,
@@ -591,7 +647,8 @@ class LevelingEstimator2Test {
         val gravityProcessor: GravityProcessor? =
             getPrivateProperty(BaseLevelingEstimator2::class, estimator, "gravityProcessor")
         requireNotNull(gravityProcessor)
-        val gravityProcessorSpy = spyk(gravityProcessor)
+        val gravityProcessorSpy = spy(gravityProcessor)
+//        val gravityProcessorSpy = spyk(gravityProcessor)
         setPrivateProperty(
             BaseLevelingEstimator2::class,
             estimator,
@@ -602,7 +659,8 @@ class LevelingEstimator2Test {
         val levelingProcessor: BaseLevelingProcessor? =
             getPrivateProperty(BaseLevelingEstimator2::class, estimator, "levelingProcessor")
         requireNotNull(levelingProcessor)
-        val levelingProcessorSpy = spyk(levelingProcessor)
+        val levelingProcessorSpy = spy(levelingProcessor)
+//        val levelingProcessorSpy = spyk(levelingProcessor)
         estimator.setPrivateProperty("levelingProcessor", levelingProcessorSpy)
 
         val timestamp = SystemClock.elapsedRealtimeNanos()
@@ -620,15 +678,22 @@ class LevelingEstimator2Test {
         val factor = SensorManager.GRAVITY_EARTH / norm
         listener.onMeasurement(gravitySensorCollector, measurement)
 
-        verify(exactly = 1) { gravityProcessorSpy.process(measurement) }
-        verify(exactly = 1) {
+        verify(gravityProcessorSpy, times(1)).process(measurement)
+//        verify(exactly = 1) { gravityProcessorSpy.process(measurement) }
+        verify(levelingProcessorSpy, times(1)).process(
+            floatFx.toDouble() * factor,
+            floatFy.toDouble() * factor,
+            floatFz.toDouble() * factor
+        )
+/*        verify(exactly = 1) {
             levelingProcessorSpy.process(
                 floatFx.toDouble() * factor,
                 floatFy.toDouble() * factor,
                 floatFz.toDouble() * factor
             )
-        }
-        verify(exactly = 1) { attitudeSpy.fromQuaternion(levelingProcessor.attitude) }
+        }*/
+        verify(attitudeSpy, only()).fromQuaternion(levelingProcessor.attitude)
+//        verify(exactly = 1) { attitudeSpy.fromQuaternion(levelingProcessor.attitude) }
 
         val attitude2 = Quaternion()
         bodyC.asRotation(attitude2)
@@ -637,7 +702,8 @@ class LevelingEstimator2Test {
         attitude2.normalize()
         assertTrue(attitudeSpy.equals(attitude2, ABSOLUTE_ERROR))
 
-        verify { coordinateTransformationSpy wasNot Called }
+        verifyNoInteractions(coordinateTransformationSpy)
+//        verify { coordinateTransformationSpy wasNot Called }
 
         assertArrayEquals(eulerAngles, doubleArrayOf(0.0, 0.0, 0.0), 0.0)
     }
@@ -655,7 +721,8 @@ class LevelingEstimator2Test {
         val attitude: Quaternion? =
             getPrivateProperty(BaseLevelingEstimator2::class, estimator, "attitude")
         requireNotNull(attitude)
-        val attitudeSpy = spyk(attitude)
+        val attitudeSpy = spy(attitude)
+//        val attitudeSpy = spyk(attitude)
         setPrivateProperty(BaseLevelingEstimator2::class, estimator, "attitude", attitudeSpy)
 
         val eulerAngles: DoubleArray? =
@@ -670,7 +737,8 @@ class LevelingEstimator2Test {
             FrameType.LOCAL_NAVIGATION_FRAME,
             coordinateTransformation.destinationType
         )
-        val coordinateTransformationSpy = spyk(coordinateTransformation)
+        val coordinateTransformationSpy = spy(coordinateTransformation)
+//        val coordinateTransformationSpy = spyk(coordinateTransformation)
         setPrivateProperty(
             BaseLevelingEstimator2::class,
             estimator,
@@ -722,7 +790,8 @@ class LevelingEstimator2Test {
         val gravityProcessor: GravityProcessor? =
             getPrivateProperty(BaseLevelingEstimator2::class, estimator, "gravityProcessor")
         requireNotNull(gravityProcessor)
-        val gravityProcessorSpy = spyk(gravityProcessor)
+        val gravityProcessorSpy = spy(gravityProcessor)
+//        val gravityProcessorSpy = spyk(gravityProcessor)
         setPrivateProperty(
             BaseLevelingEstimator2::class,
             estimator,
@@ -733,7 +802,8 @@ class LevelingEstimator2Test {
         val levelingProcessor: BaseLevelingProcessor? =
             getPrivateProperty(BaseLevelingEstimator2::class, estimator, "levelingProcessor")
         requireNotNull(levelingProcessor)
-        val levelingProcessorSpy = spyk(levelingProcessor)
+        val levelingProcessorSpy = spy(levelingProcessor)
+//        val levelingProcessorSpy = spyk(levelingProcessor)
         estimator.setPrivateProperty("levelingProcessor", levelingProcessorSpy)
 
         val timestamp = SystemClock.elapsedRealtimeNanos()
@@ -751,21 +821,37 @@ class LevelingEstimator2Test {
         val factor = SensorManager.GRAVITY_EARTH / norm
         listener.onMeasurement(gravitySensorCollector, measurement)
 
-        verify(exactly = 1) { gravityProcessorSpy.process(measurement) }
-        verify(exactly = 1) {
+        verify(gravityProcessorSpy, times(1)).process(measurement)
+//        verify(exactly = 1) { gravityProcessorSpy.process(measurement) }
+        verify(levelingProcessorSpy, times(1)).process(
+            floatFx.toDouble() * factor,
+            floatFy.toDouble() * factor,
+            floatFz.toDouble() * factor
+        )
+/*        verify(exactly = 1) {
             levelingProcessorSpy.process(
                 floatFx.toDouble() * factor,
                 floatFy.toDouble() * factor,
                 floatFz.toDouble() * factor
             )
-        }
-        verify(exactly = 1) { attitudeSpy.fromQuaternion(levelingProcessor.attitude) }
+        }*/
+        verify(attitudeSpy, only()).fromQuaternion(levelingProcessor.attitude)
+//        verify(exactly = 1) { attitudeSpy.fromQuaternion(levelingProcessor.attitude) }
 
-        verify { coordinateTransformationSpy wasNot Called }
+        verifyNoInteractions(coordinateTransformationSpy)
+//        verify { coordinateTransformationSpy wasNot Called }
 
         assertArrayEquals(eulerAngles, doubleArrayOf(0.0, 0.0, 0.0), 0.0)
 
-        verify(exactly = 1) {
+        verify(levelingAvailableListener, only()).onLevelingAvailable(
+            estimator,
+            attitudeSpy,
+            timestamp,
+            null,
+            null,
+            null
+        )
+/*        verify(exactly = 1) {
             levelingAvailableListener.onLevelingAvailable(
                 estimator,
                 attitudeSpy,
@@ -774,7 +860,7 @@ class LevelingEstimator2Test {
                 null,
                 null
             )
-        }
+        }*/
     }
 
     @Test
@@ -791,7 +877,8 @@ class LevelingEstimator2Test {
         val attitude: Quaternion? =
             getPrivateProperty(BaseLevelingEstimator2::class, estimator, "attitude")
         requireNotNull(attitude)
-        val attitudeSpy = spyk(attitude)
+        val attitudeSpy = spy(attitude)
+//        val attitudeSpy = spyk(attitude)
         setPrivateProperty(BaseLevelingEstimator2::class, estimator, "attitude", attitudeSpy)
 
         val eulerAngles: DoubleArray? =
@@ -806,7 +893,8 @@ class LevelingEstimator2Test {
             FrameType.LOCAL_NAVIGATION_FRAME,
             coordinateTransformation.destinationType
         )
-        val coordinateTransformationSpy = spyk(coordinateTransformation)
+        val coordinateTransformationSpy = spy(coordinateTransformation)
+//        val coordinateTransformationSpy = spyk(coordinateTransformation)
         setPrivateProperty(
             BaseLevelingEstimator2::class,
             estimator,
@@ -858,7 +946,8 @@ class LevelingEstimator2Test {
         val gravityProcessor: GravityProcessor? =
             getPrivateProperty(BaseLevelingEstimator2::class, estimator, "gravityProcessor")
         requireNotNull(gravityProcessor)
-        val gravityProcessorSpy = spyk(gravityProcessor)
+        val gravityProcessorSpy = spy(gravityProcessor)
+//        val gravityProcessorSpy = spyk(gravityProcessor)
         setPrivateProperty(
             BaseLevelingEstimator2::class,
             estimator,
@@ -869,7 +958,8 @@ class LevelingEstimator2Test {
         val levelingProcessor: BaseLevelingProcessor? =
             getPrivateProperty(BaseLevelingEstimator2::class, estimator, "levelingProcessor")
         requireNotNull(levelingProcessor)
-        val levelingProcessorSpy = spyk(levelingProcessor)
+        val levelingProcessorSpy = spy(levelingProcessor)
+//        val levelingProcessorSpy = spyk(levelingProcessor)
         estimator.setPrivateProperty("levelingProcessor", levelingProcessorSpy)
 
         val timestamp = SystemClock.elapsedRealtimeNanos()
@@ -887,22 +977,39 @@ class LevelingEstimator2Test {
         val factor = SensorManager.GRAVITY_EARTH / norm
         listener.onMeasurement(gravitySensorCollector, measurement)
 
-        verify(exactly = 1) { gravityProcessorSpy.process(measurement) }
-        verify(exactly = 1) {
+        verify(gravityProcessorSpy, times(1)).process(measurement)
+//        verify(exactly = 1) { gravityProcessorSpy.process(measurement) }
+        verify(levelingProcessorSpy, times(1)).process(
+            floatFx.toDouble() * factor,
+            floatFy.toDouble() * factor,
+            floatFz.toDouble() * factor
+        )
+/*        verify(exactly = 1) {
             levelingProcessorSpy.process(
                 floatFx.toDouble() * factor,
                 floatFy.toDouble() * factor,
                 floatFz.toDouble() * factor
             )
-        }
-        verify(exactly = 1) { attitudeSpy.fromQuaternion(levelingProcessor.attitude) }
-        verify(exactly = 1) { coordinateTransformationSpy.fromRotation(attitudeSpy) }
-        verify(exactly = 1) { attitudeSpy.toEulerAngles(eulerAngles) }
+        }*/
+        verify(attitudeSpy, times(1)).fromQuaternion(levelingProcessor.attitude)
+//        verify(exactly = 1) { attitudeSpy.fromQuaternion(levelingProcessor.attitude) }
+        verify(coordinateTransformationSpy, only()).fromRotation(attitudeSpy)
+//        verify(exactly = 1) { coordinateTransformationSpy.fromRotation(attitudeSpy) }
+        verify(attitudeSpy, times(1)).toEulerAngles(eulerAngles)
+//        verify(exactly = 1) { attitudeSpy.toEulerAngles(eulerAngles) }
 
         val displayRoll = eulerAngles[0]
         val displayPitch = eulerAngles[1]
 
-        verify(exactly = 1) {
+        verify(levelingAvailableListener, only()).onLevelingAvailable(
+            estimator,
+            attitudeSpy,
+            timestamp,
+            displayRoll,
+            displayPitch,
+            coordinateTransformationSpy
+        )
+/*        verify(exactly = 1) {
             levelingAvailableListener.onLevelingAvailable(
                 estimator,
                 attitudeSpy,
@@ -911,7 +1018,7 @@ class LevelingEstimator2Test {
                 displayPitch,
                 coordinateTransformationSpy
             )
-        }
+        }*/
     }
 
     @Test
@@ -953,13 +1060,18 @@ class LevelingEstimator2Test {
         requireNotNull(listener)
         listener.onAccuracyChanged(accelerometerSensorCollector, SensorAccuracy.HIGH)
 
-        verify(exactly = 1) {
+        verify(accuracyChangedListener, only()).onAccuracyChanged(
+            estimator,
+            SensorType.ACCELEROMETER_UNCALIBRATED,
+            SensorAccuracy.HIGH
+        )
+/*        verify(exactly = 1) {
             accuracyChangedListener.onAccuracyChanged(
                 estimator,
                 SensorType.ACCELEROMETER_UNCALIBRATED,
                 SensorAccuracy.HIGH
             )
-        }
+        }*/
     }
 
     @Test
@@ -975,7 +1087,8 @@ class LevelingEstimator2Test {
         val attitude: Quaternion? =
             getPrivateProperty(BaseLevelingEstimator2::class, estimator, "attitude")
         requireNotNull(attitude)
-        val attitudeSpy = spyk(attitude)
+        val attitudeSpy = spy(attitude)
+//        val attitudeSpy = spyk(attitude)
         setPrivateProperty(BaseLevelingEstimator2::class, estimator, "attitude", attitudeSpy)
 
         val eulerAngles: DoubleArray? =
@@ -990,7 +1103,8 @@ class LevelingEstimator2Test {
             FrameType.LOCAL_NAVIGATION_FRAME,
             coordinateTransformation.destinationType
         )
-        val coordinateTransformationSpy = spyk(coordinateTransformation)
+        val coordinateTransformationSpy = spy(coordinateTransformation)
+//        val coordinateTransformationSpy = spyk(coordinateTransformation)
         setPrivateProperty(
             BaseLevelingEstimator2::class,
             estimator,
@@ -1050,7 +1164,8 @@ class LevelingEstimator2Test {
                 "accelerometerGravityProcessor"
             )
         requireNotNull(accelerometerGravityProcessor)
-        val accelerometerGravityProcessorSpy = spyk(accelerometerGravityProcessor)
+        val accelerometerGravityProcessorSpy = spy(accelerometerGravityProcessor)
+//        val accelerometerGravityProcessorSpy = spyk(accelerometerGravityProcessor)
         setPrivateProperty(
             BaseLevelingEstimator2::class,
             estimator,
@@ -1061,7 +1176,8 @@ class LevelingEstimator2Test {
         val levelingProcessor: BaseLevelingProcessor? =
             getPrivateProperty(BaseLevelingEstimator2::class, estimator, "levelingProcessor")
         requireNotNull(levelingProcessor)
-        val levelingProcessorSpy = spyk(levelingProcessor)
+        val levelingProcessorSpy = spy(levelingProcessor)
+//        val levelingProcessorSpy = spyk(levelingProcessor)
         estimator.setPrivateProperty("levelingProcessor", levelingProcessorSpy)
 
         val timestamp = SystemClock.elapsedRealtimeNanos()
@@ -1077,11 +1193,16 @@ class LevelingEstimator2Test {
         )
         listener.onMeasurement(accelerometerSensorCollector, measurement)
 
-        verify(exactly = 1) { accelerometerGravityProcessorSpy.process(measurement) }
-        verify { levelingProcessorSpy wasNot Called }
-        verify { attitudeSpy wasNot Called }
-        verify { coordinateTransformationSpy wasNot Called }
-        verify { levelingAvailableListener wasNot Called }
+        verify(accelerometerGravityProcessorSpy, only()).process(measurement)
+//        verify(exactly = 1) { accelerometerGravityProcessorSpy.process(measurement) }
+        verifyNoInteractions(levelingProcessorSpy)
+//        verify { levelingProcessorSpy wasNot Called }
+        verifyNoInteractions(attitudeSpy)
+//        verify { attitudeSpy wasNot Called }
+        verifyNoInteractions(coordinateTransformationSpy)
+//        verify { coordinateTransformationSpy wasNot Called }
+        verifyNoInteractions(levelingAvailableListener)
+//        verify { levelingAvailableListener wasNot Called }
 
         assertArrayEquals(eulerAngles, doubleArrayOf(0.0, 0.0, 0.0), 0.0)
     }
@@ -1098,7 +1219,8 @@ class LevelingEstimator2Test {
         val attitude: Quaternion? =
             getPrivateProperty(BaseLevelingEstimator2::class, estimator, "attitude")
         requireNotNull(attitude)
-        val attitudeSpy = spyk(attitude)
+        val attitudeSpy = spy(attitude)
+//        val attitudeSpy = spyk(attitude)
         setPrivateProperty(BaseLevelingEstimator2::class, estimator, "attitude", attitudeSpy)
 
         val eulerAngles: DoubleArray? =
@@ -1113,7 +1235,8 @@ class LevelingEstimator2Test {
             FrameType.LOCAL_NAVIGATION_FRAME,
             coordinateTransformation.destinationType
         )
-        val coordinateTransformationSpy = spyk(coordinateTransformation)
+        val coordinateTransformationSpy = spy(coordinateTransformation)
+//        val coordinateTransformationSpy = spyk(coordinateTransformation)
         setPrivateProperty(
             BaseLevelingEstimator2::class,
             estimator,
@@ -1173,11 +1296,16 @@ class LevelingEstimator2Test {
                 "accelerometerGravityProcessor"
             )
         requireNotNull(accelerometerGravityProcessor)
-        val accelerometerGravityProcessorSpy = spyk(accelerometerGravityProcessor)
-        every { accelerometerGravityProcessorSpy.process(any(), any()) }.returns(true)
-        every { accelerometerGravityProcessorSpy.gx }.returns(floatFx.toDouble())
-        every { accelerometerGravityProcessorSpy.gy }.returns(floatFy.toDouble())
-        every { accelerometerGravityProcessorSpy.gz }.returns(floatFz.toDouble())
+        val accelerometerGravityProcessorSpy = spy(accelerometerGravityProcessor)
+//        val accelerometerGravityProcessorSpy = spyk(accelerometerGravityProcessor)
+        doReturn(true).whenever(accelerometerGravityProcessorSpy).process(any(), any())
+//        every { accelerometerGravityProcessorSpy.process(any(), any()) }.returns(true)
+        doReturn(floatFx.toDouble()).whenever(accelerometerGravityProcessorSpy).gx
+//        every { accelerometerGravityProcessorSpy.gx }.returns(floatFx.toDouble())
+        doReturn(floatFy.toDouble()).whenever(accelerometerGravityProcessorSpy).gy
+//        every { accelerometerGravityProcessorSpy.gy }.returns(floatFy.toDouble())
+        doReturn(floatFz.toDouble()).whenever(accelerometerGravityProcessorSpy).gz
+//        every { accelerometerGravityProcessorSpy.gz }.returns(floatFz.toDouble())
         setPrivateProperty(
             BaseLevelingEstimator2::class,
             estimator,
@@ -1188,7 +1316,8 @@ class LevelingEstimator2Test {
         val levelingProcessor: BaseLevelingProcessor? =
             getPrivateProperty(BaseLevelingEstimator2::class, estimator, "levelingProcessor")
         requireNotNull(levelingProcessor)
-        val levelingProcessorSpy = spyk(levelingProcessor)
+        val levelingProcessorSpy = spy(levelingProcessor)
+//        val levelingProcessorSpy = spyk(levelingProcessor)
         estimator.setPrivateProperty("levelingProcessor", levelingProcessorSpy)
 
         val timestamp = SystemClock.elapsedRealtimeNanos()
@@ -1204,15 +1333,22 @@ class LevelingEstimator2Test {
         )
         listener.onMeasurement(accelerometerSensorCollector, measurement)
 
-        verify(exactly = 1) { accelerometerGravityProcessorSpy.process(measurement) }
-        verify(exactly = 1) {
+        verify(accelerometerGravityProcessorSpy, times(1)).process(measurement)
+//        verify(exactly = 1) { accelerometerGravityProcessorSpy.process(measurement) }
+        verify(levelingProcessorSpy, times(1)).process(
+            floatFx.toDouble(),
+            floatFy.toDouble(),
+            floatFz.toDouble()
+        )
+/*        verify(exactly = 1) {
             levelingProcessorSpy.process(
                 floatFx.toDouble(),
                 floatFy.toDouble(),
                 floatFz.toDouble()
             )
-        }
-        verify(exactly = 1) { attitudeSpy.fromQuaternion(levelingProcessor.attitude) }
+        }*/
+        verify(attitudeSpy, only()).fromQuaternion(levelingProcessor.attitude)
+//        verify(exactly = 1) { attitudeSpy.fromQuaternion(levelingProcessor.attitude) }
 
         val attitude2 = Quaternion()
         bodyC.asRotation(attitude2)
@@ -1221,7 +1357,8 @@ class LevelingEstimator2Test {
         attitude2.normalize()
         assertTrue(attitudeSpy.equals(attitude2, ABSOLUTE_ERROR))
 
-        verify { coordinateTransformationSpy wasNot Called }
+        verifyNoInteractions(coordinateTransformationSpy)
+//        verify { coordinateTransformationSpy wasNot Called }
 
         assertArrayEquals(eulerAngles, doubleArrayOf(0.0, 0.0, 0.0), 0.0)
     }
@@ -1241,9 +1378,12 @@ class LevelingEstimator2Test {
             MAX_HEIGHT
         )
 
-        every { location.latitude }.returns(latitudeDegrees)
-        every { location.longitude }.returns(longitudeDegrees)
-        every { location.altitude }.returns(height)
+        whenever(location.latitude).thenReturn(latitudeDegrees)
+//        every { location.latitude }.returns(latitudeDegrees)
+        whenever(location.longitude).thenReturn(longitudeDegrees)
+//        every { location.longitude }.returns(longitudeDegrees)
+        whenever(location.altitude).thenReturn(height)
+//        every { location.altitude }.returns(height)
 
         return location
     }

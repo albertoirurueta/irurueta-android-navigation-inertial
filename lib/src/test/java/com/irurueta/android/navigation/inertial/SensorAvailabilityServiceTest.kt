@@ -21,41 +21,54 @@ import android.hardware.SensorManager
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import com.irurueta.android.navigation.inertial.collectors.SensorType
-import io.mockk.*
-import io.mockk.impl.annotations.SpyK
-import io.mockk.junit4.MockKRule
-import org.junit.After
+//import io.mockk.*
+//import io.mockk.impl.annotations.SpyK
+//import io.mockk.junit4.MockKRule
+//import org.junit.After
 import org.junit.Assert.*
-import org.junit.Ignore
+//import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Spy
+import org.mockito.junit.MockitoJUnit
+import org.mockito.junit.MockitoRule
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.only
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-@Ignore("possible memory leak")
+//@Ignore("Possible memory leak when running this test")
 @RunWith(RobolectricTestRunner::class)
 class SensorAvailabilityServiceTest {
 
     @get:Rule
-    val mockkRule = MockKRule(this)
+    val mockitoRule: MockitoRule = MockitoJUnit.rule()
+
+//    @get:Rule
+//    val mockkRule = MockKRule(this)
 
     private val context = ApplicationProvider.getApplicationContext<Context>()
     private val sensorManager: SensorManager? =
         context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
 
-    @SpyK
+//    @SpyK
+    @Spy
     private var sensorManagerSpy = sensorManager!!
 
-    @SpyK
+//    @SpyK
+    @Spy
     private var contextSpy = context
 
-
-    @After
+    /*@After
     fun tearDown() {
         unmockkAll()
         clearAllMocks()
-    }
+        System.gc()
+    }*/
 
     @Config(sdk = [Build.VERSION_CODES.O])
     @Test
@@ -98,99 +111,123 @@ class SensorAvailabilityServiceTest {
     @Config(sdk = [Build.VERSION_CODES.O])
     @Test
     fun hasSensor_whenSdkO_returnsExpectedValues() {
-        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
+        doReturn(sensorManagerSpy).whenever(contextSpy).getSystemService(Context.SENSOR_SERVICE)
+//        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val service = SensorAvailabilityService(contextSpy)
 
         assertFalse(service.hasSensor(SensorType.ACCELEROMETER))
-        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) }
+        verify(sensorManagerSpy, times(1)).getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+//        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) }
 
         assertFalse(service.hasSensor(SensorType.LINEAR_ACCELERATION))
-        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION) }
+        verify(sensorManagerSpy, times(1)).getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION)
+//        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION) }
 
         assertFalse(
             service.hasSensor(SensorType.ACCELEROMETER_UNCALIBRATED
             )
         )
-        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(TYPE_ACCELEROMETER_UNCALIBRATED) }
+        verify(sensorManagerSpy, times(1)).getDefaultSensor(TYPE_ACCELEROMETER_UNCALIBRATED)
+//        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(TYPE_ACCELEROMETER_UNCALIBRATED) }
 
         assertFalse(service.hasSensor(SensorType.GYROSCOPE))
-        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE) }
+        verify(sensorManagerSpy, times(1)).getDefaultSensor(Sensor.TYPE_GYROSCOPE)
+//        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE) }
 
         assertFalse(service.hasSensor(SensorType.GYROSCOPE_UNCALIBRATED))
-        verify(exactly = 1) {
+        verify(sensorManagerSpy, times(1)).getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED)
+/*        verify(exactly = 1) {
             sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED)
-        }
+        }*/
 
         assertFalse(service.hasSensor(SensorType.MAGNETOMETER))
-        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD) }
+        verify(sensorManagerSpy, times(1)).getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)
+//        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD) }
 
         assertFalse(
             service.hasSensor(SensorType.MAGNETOMETER_UNCALIBRATED
             )
         )
-        verify(exactly = 1) {
+        verify(sensorManagerSpy, times(1)).getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED)
+/*        verify(exactly = 1) {
             sensorManagerSpy.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED)
-        }
+        }*/
 
         assertFalse(service.hasSensor(SensorType.GRAVITY))
-        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GRAVITY) }
+        verify(sensorManagerSpy, times(1)).getDefaultSensor(Sensor.TYPE_GRAVITY)
+//        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GRAVITY) }
 
         assertFalse(service.hasSensor(SensorType.ABSOLUTE_ATTITUDE))
-        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR) }
+        verify(sensorManagerSpy, times(1)).getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
+//        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR) }
 
         assertFalse(service.hasSensor(SensorType.RELATIVE_ATTITUDE))
-        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GAME_ROTATION_VECTOR) }
+        verify(sensorManagerSpy, times(1)).getDefaultSensor(Sensor.TYPE_GAME_ROTATION_VECTOR)
+//        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GAME_ROTATION_VECTOR) }
 
-        verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
+        verify(contextSpy, only()).getSystemService(Context.SENSOR_SERVICE)
+//        verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
     }
 
     @Config(sdk = [Build.VERSION_CODES.N])
     @Test
     fun hasSensor_whenSdkN_returnsExpectedValues() {
-        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
+        doReturn(sensorManagerSpy).whenever(contextSpy).getSystemService(Context.SENSOR_SERVICE)
+//        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val service = SensorAvailabilityService(contextSpy)
 
         assertFalse(service.hasSensor(SensorType.ACCELEROMETER))
-        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) }
+        verify(sensorManagerSpy, times(1)).getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+//        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) }
 
         assertFalse(service.hasSensor(SensorType.LINEAR_ACCELERATION))
-        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION) }
+        verify(sensorManagerSpy, times(1)).getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION)
+//        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION) }
 
         assertFalse(
             service.hasSensor(SensorType.ACCELEROMETER_UNCALIBRATED)
         )
-        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(TYPE_ACCELEROMETER_UNCALIBRATED) }
+        verify(sensorManagerSpy, times(1)).getDefaultSensor(TYPE_ACCELEROMETER_UNCALIBRATED)
+//        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(TYPE_ACCELEROMETER_UNCALIBRATED) }
 
         assertFalse(service.hasSensor(SensorType.GYROSCOPE))
-        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE) }
+        verify(sensorManagerSpy, times(1)).getDefaultSensor(Sensor.TYPE_GYROSCOPE)
+//        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE) }
 
         assertFalse(service.hasSensor(SensorType.GYROSCOPE_UNCALIBRATED))
-        verify(exactly = 1) {
+        verify(sensorManagerSpy, times(1)).getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED)
+/*        verify(exactly = 1) {
             sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED)
-        }
+        }*/
 
         assertFalse(service.hasSensor(SensorType.MAGNETOMETER))
-        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD) }
+        verify(sensorManagerSpy, times(1)).getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)
+//        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD) }
 
         assertFalse(
             service.hasSensor(SensorType.MAGNETOMETER_UNCALIBRATED)
         )
-        verify(exactly = 1) {
+        verify(sensorManagerSpy, times(1)).getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED)
+/*        verify(exactly = 1) {
             sensorManagerSpy.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED)
-        }
+        }*/
 
         assertFalse(service.hasSensor(SensorType.GRAVITY))
-        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GRAVITY) }
+        verify(sensorManagerSpy, times(1)).getDefaultSensor(Sensor.TYPE_GRAVITY)
+//        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GRAVITY) }
 
         assertFalse(service.hasSensor(SensorType.ABSOLUTE_ATTITUDE))
-        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR) }
+        verify(sensorManagerSpy, times(1)).getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
+//        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR) }
 
         assertFalse(service.hasSensor(SensorType.RELATIVE_ATTITUDE))
-        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GAME_ROTATION_VECTOR) }
+        verify(sensorManagerSpy, times(1)).getDefaultSensor(Sensor.TYPE_GAME_ROTATION_VECTOR)
+//        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GAME_ROTATION_VECTOR) }
 
-        verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
+        verify(contextSpy, only()).getSystemService(Context.SENSOR_SERVICE)
+//        verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
     }
 
     companion object {

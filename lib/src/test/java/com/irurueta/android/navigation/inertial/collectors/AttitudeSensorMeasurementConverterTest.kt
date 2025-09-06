@@ -20,35 +20,47 @@ import android.hardware.SensorEvent
 import android.hardware.SensorManager
 import com.irurueta.geometry.Quaternion
 import com.irurueta.statistics.UniformRandomizer
-import io.mockk.clearAllMocks
-import io.mockk.every
-import io.mockk.impl.annotations.MockK
-import io.mockk.junit4.MockKRule
-import io.mockk.unmockkAll
-import org.junit.After
+//import io.mockk.clearAllMocks
+//import io.mockk.every
+//import io.mockk.impl.annotations.MockK
+//import io.mockk.junit4.MockKRule
+//import io.mockk.unmockkAll
+//import org.junit.After
 import org.junit.Assert.*
+//import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mock
+import org.mockito.junit.MockitoJUnit
+import org.mockito.junit.MockitoRule
+import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 
+//@Ignore("Possible memory leak when running this test")
 @RunWith(RobolectricTestRunner::class)
 class AttitudeSensorMeasurementConverterTest {
 
     @get:Rule
-    val mockkRule = MockKRule(this)
+    val mockitoRule: MockitoRule = MockitoJUnit.rule()
 
-    @MockK
+//    @get:Rule
+//    val mockkRule = MockKRule(this)
+
+//    @MockK
+    @Mock
     private lateinit var sensor: Sensor
 
-    @MockK
+//    @MockK
+    @Mock
     private lateinit var event: SensorEvent
 
-    @After
+    /*@After
     fun tearDown() {
         unmockkAll()
         clearAllMocks()
-    }
+        System.gc()
+    }*/
 
     @Test
     fun convert_whenNoSensorEvent_returnsFalse() {
@@ -58,7 +70,8 @@ class AttitudeSensorMeasurementConverterTest {
 
     @Test
     fun convert_whenUnknownSensorType_returnsFalse() {
-        every { sensor.type }.returns(Sensor.TYPE_GYROSCOPE)
+        whenever(sensor.type).thenReturn(Sensor.TYPE_GYROSCOPE)
+//        every { sensor.type }.returns(Sensor.TYPE_GYROSCOPE)
         event.sensor = sensor
         val measurement = AttitudeSensorMeasurement()
 
@@ -67,7 +80,8 @@ class AttitudeSensorMeasurementConverterTest {
 
     @Test
     fun convert_whenAbsoluteAttitudeNoHeadingAccuracyAndNoStartOffset_returnsTrue() {
-        every { sensor.type }.returns(Sensor.TYPE_ROTATION_VECTOR)
+        whenever(sensor.type).thenReturn(Sensor.TYPE_ROTATION_VECTOR)
+//        every { sensor.type }.returns(Sensor.TYPE_ROTATION_VECTOR)
         event.sensor = sensor
 
         val timestamp = System.nanoTime()
@@ -105,7 +119,8 @@ class AttitudeSensorMeasurementConverterTest {
 
     @Test
     fun convert_whenAbsoluteAttitudeHeadingAccuracyAndNoStartOffset_returnsTrue() {
-        every { sensor.type }.returns(Sensor.TYPE_ROTATION_VECTOR)
+        whenever(sensor.type).thenReturn(Sensor.TYPE_ROTATION_VECTOR)
+//        every { sensor.type }.returns(Sensor.TYPE_ROTATION_VECTOR)
         event.sensor = sensor
 
         val timestamp = System.nanoTime()
@@ -145,7 +160,8 @@ class AttitudeSensorMeasurementConverterTest {
 
     @Test
     fun convert_whenAbsoluteAttitudeNoHeadingAccuracyAndStartOffset_returnsTrue() {
-        every { sensor.type }.returns(Sensor.TYPE_ROTATION_VECTOR)
+        whenever(sensor.type).thenReturn(Sensor.TYPE_ROTATION_VECTOR)
+//        every { sensor.type }.returns(Sensor.TYPE_ROTATION_VECTOR)
         event.sensor = sensor
 
         val timestamp = System.nanoTime()
@@ -184,7 +200,8 @@ class AttitudeSensorMeasurementConverterTest {
 
     @Test
     fun convert_whenAbsoluteAttitudeHeadingAccuracyAndStartOffset_returnsTrue() {
-        every { sensor.type }.returns(Sensor.TYPE_ROTATION_VECTOR)
+        whenever(sensor.type).thenReturn(Sensor.TYPE_ROTATION_VECTOR)
+//        every { sensor.type }.returns(Sensor.TYPE_ROTATION_VECTOR)
         event.sensor = sensor
 
         val timestamp = System.nanoTime()
@@ -225,7 +242,8 @@ class AttitudeSensorMeasurementConverterTest {
 
     @Test
     fun convert_whenRelativeAttitudeNoHeadingAccuracyAndNoStartOffset_returnsTrue() {
-        every { sensor.type }.returns(Sensor.TYPE_GAME_ROTATION_VECTOR)
+        whenever(sensor.type).thenReturn(Sensor.TYPE_GAME_ROTATION_VECTOR)
+//        every { sensor.type }.returns(Sensor.TYPE_GAME_ROTATION_VECTOR)
         event.sensor = sensor
 
         val timestamp = System.nanoTime()
@@ -263,7 +281,8 @@ class AttitudeSensorMeasurementConverterTest {
 
     @Test
     fun convert_whenRelativeAttitudeHeadingAccuracyAndNoStartOffset_returnsTrue() {
-        every { sensor.type }.returns(Sensor.TYPE_GAME_ROTATION_VECTOR)
+        whenever(sensor.type).thenReturn(Sensor.TYPE_GAME_ROTATION_VECTOR)
+//        every { sensor.type }.returns(Sensor.TYPE_GAME_ROTATION_VECTOR)
         event.sensor = sensor
 
         val timestamp = System.nanoTime()
@@ -303,7 +322,8 @@ class AttitudeSensorMeasurementConverterTest {
 
     @Test
     fun convert_whenRelativeAttitudeNoHeadingAccuracyAndStartOffset_returnsTrue() {
-        every { sensor.type }.returns(Sensor.TYPE_GAME_ROTATION_VECTOR)
+        whenever(sensor.type).thenReturn(Sensor.TYPE_GAME_ROTATION_VECTOR)
+//        every { sensor.type }.returns(Sensor.TYPE_GAME_ROTATION_VECTOR)
         event.sensor = sensor
 
         val timestamp = System.nanoTime()
@@ -342,7 +362,8 @@ class AttitudeSensorMeasurementConverterTest {
 
     @Test
     fun convert_whenRelativeAttitudeHeadingAccuracyAndStartOffset_returnsTrue() {
-        every { sensor.type }.returns(Sensor.TYPE_GAME_ROTATION_VECTOR)
+        whenever(sensor.type).thenReturn(Sensor.TYPE_GAME_ROTATION_VECTOR)
+//        every { sensor.type }.returns(Sensor.TYPE_GAME_ROTATION_VECTOR)
         event.sensor = sensor
 
         val timestamp = System.nanoTime()

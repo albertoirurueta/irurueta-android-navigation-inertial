@@ -21,30 +21,43 @@ import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.navigation.inertial.calibration.TimeIntervalEstimator
 import com.irurueta.sorting.Sorter
 import com.irurueta.statistics.UniformRandomizer
-import io.mockk.*
-import io.mockk.impl.annotations.MockK
-import io.mockk.junit4.MockKRule
-import org.junit.After
+//import io.mockk.*
+//import io.mockk.impl.annotations.MockK
+//import io.mockk.junit4.MockKRule
+//import org.junit.After
 import org.junit.Assert.*
+//import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mock
+import org.mockito.junit.MockitoJUnit
+import org.mockito.junit.MockitoRule
+import org.mockito.kotlin.any
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 
+//@Ignore("Possible memory leak when running this test")
 @RunWith(RobolectricTestRunner::class)
 class MedianAveragingFilterTest {
 
     @get:Rule
-    val mockkRule = MockKRule(this)
+    val mockitoRule: MockitoRule = MockitoJUnit.rule()
 
-    @MockK
+//    @get:Rule
+//    val mockkRule = MockKRule(this)
+
+//    @MockK
+    @Mock
     private lateinit var timeIntervalEstimator: TimeIntervalEstimator
 
-    @After
+    /*@After
     fun tearDown() {
         unmockkAll()
         clearAllMocks()
-    }
+        System.gc()
+    }*/
 
     @Test
     fun constructor_whenTimeConstant_setsExpectedParameters() {
@@ -158,9 +171,12 @@ class MedianAveragingFilterTest {
     fun filter_whenValidLengthAndEmpty_returnsExpectedValues() {
         val filter = MedianAveragingFilter()
 
-        every { timeIntervalEstimator.averageTimeInterval }.returns(TIME_INTERVAL)
-        every { timeIntervalEstimator.addTimestamp(any<Double>()) }.returns(true)
-        every { timeIntervalEstimator.numberOfProcessedSamples }.returnsMany(0, 1, 2, 3, 4, 5, 6)
+        whenever(timeIntervalEstimator.averageTimeInterval).thenReturn(TIME_INTERVAL)
+//        every { timeIntervalEstimator.averageTimeInterval }.returns(TIME_INTERVAL)
+        doReturn(true).whenever(timeIntervalEstimator).addTimestamp(any<Double>())
+//        every { timeIntervalEstimator.addTimestamp(any<Double>()) }.returns(true)
+        whenever(timeIntervalEstimator.numberOfProcessedSamples).thenReturn(0, 1, 2, 3, 4, 5, 6)
+//        every { timeIntervalEstimator.numberOfProcessedSamples }.returnsMany(0, 1, 2, 3, 4, 5, 6)
         setPrivateProperty(
             AveragingFilter::class,
             filter,

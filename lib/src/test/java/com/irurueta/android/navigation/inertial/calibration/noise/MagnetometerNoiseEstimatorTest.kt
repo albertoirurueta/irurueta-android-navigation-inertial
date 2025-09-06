@@ -33,44 +33,61 @@ import com.irurueta.navigation.inertial.wmm.NEDMagneticFluxDensity
 import com.irurueta.navigation.inertial.wmm.WMMEarthMagneticFluxDensityEstimator
 import com.irurueta.statistics.UniformRandomizer
 import com.irurueta.units.*
-import io.mockk.*
-import io.mockk.impl.annotations.MockK
-import io.mockk.junit4.MockKRule
-import org.junit.After
+//import io.mockk.*
+//import io.mockk.impl.annotations.MockK
+//import io.mockk.junit4.MockKRule
+//import org.junit.After
 import org.junit.Assert.*
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mock
+import org.mockito.junit.MockitoJUnit
+import org.mockito.junit.MockitoRule
+import org.mockito.kotlin.any
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.never
+import org.mockito.kotlin.only
+import org.mockito.kotlin.spy
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 import java.util.*
 
-@Ignore("possible memory leak")
 @RunWith(RobolectricTestRunner::class)
 class MagnetometerNoiseEstimatorTest {
 
     @get:Rule
-    val mockkRule = MockKRule(this)
+    val mockitoRule: MockitoRule = MockitoJUnit.rule()
 
-    @MockK(relaxUnitFun = true)
+//    @get:Rule
+//    val mockkRule = MockKRule(this)
+
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var completedListener:
             AccumulatedTriadEstimator.OnEstimationCompletedListener<MagnetometerNoiseEstimator>
 
-    @MockK(relaxUnitFun = true)
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var unreliableListener:
             AccumulatedTriadEstimator.OnUnreliableListener<MagnetometerNoiseEstimator>
 
-    @MockK(relaxUnitFun = true)
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var measurementListener: MagnetometerSensorCollector.OnMeasurementListener
 
-    @MockK
+//    @MockK
+    @Mock
     private lateinit var sensor: Sensor
 
-    @After
+    /*@After
     fun tearDown() {
         unmockkAll()
         clearAllMocks()
-    }
+        System.gc()
+    }*/
 
     @Test
     fun constructor_whenContext_setsDefaultValues() {
@@ -936,8 +953,10 @@ class MagnetometerNoiseEstimatorTest {
         val collector: MagnetometerSensorCollector? =
             estimator.getPrivateProperty("collector")
         requireNotNull(collector)
-        val collectorSpy = spyk(collector)
-        every { collectorSpy.sensor }.returns(sensor)
+        val collectorSpy = spy(collector)
+        whenever(collectorSpy.sensor).thenReturn(sensor)
+//        val collectorSpy = spyk(collector)
+//        every { collectorSpy.sensor }.returns(sensor)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         assertSame(sensor, estimator.sensor)
@@ -957,8 +976,10 @@ class MagnetometerNoiseEstimatorTest {
         assertNotNull(collector.measurementListener)
         assertNotNull(collector.accuracyChangedListener)
 
-        val collectorSpy = spyk(collector)
-        every { collectorSpy.start() }.returns(true)
+        val collectorSpy = spy(collector)
+        doReturn(true).whenever(collectorSpy).start()
+//        val collectorSpy = spyk(collector)
+//        every { collectorSpy.start() }.returns(true)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         assertFalse(estimator.running)
@@ -966,7 +987,8 @@ class MagnetometerNoiseEstimatorTest {
         estimator.start()
 
         assertTrue(estimator.running)
-        verify(exactly = 1) { collectorSpy.start() }
+        verify(collectorSpy, only()).start()
+//        verify(exactly = 1) { collectorSpy.start() }
     }
 
     @Test(expected = IllegalStateException::class)
@@ -983,8 +1005,10 @@ class MagnetometerNoiseEstimatorTest {
         assertNotNull(collector.measurementListener)
         assertNotNull(collector.accuracyChangedListener)
 
-        val collectorSpy = spyk(collector)
-        every { collectorSpy.start() }.returns(false)
+        val collectorSpy = spy(collector)
+        doReturn(false).whenever(collectorSpy).start()
+//        val collectorSpy = spyk(collector)
+//        every { collectorSpy.start() }.returns(false)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         assertFalse(estimator.running)
@@ -1000,20 +1024,24 @@ class MagnetometerNoiseEstimatorTest {
         val noiseEstimator: AccumulatedMagneticFluxDensityTriadNoiseEstimator? =
             estimator.getPrivateProperty("noiseEstimator")
         requireNotNull(noiseEstimator)
-        val noiseEstimatorSpy = spyk(noiseEstimator)
+        val noiseEstimatorSpy = spy(noiseEstimator)
+//        val noiseEstimatorSpy = spyk(noiseEstimator)
         estimator.setPrivateProperty("noiseEstimator", noiseEstimatorSpy)
 
         val collector: MagnetometerSensorCollector? =
             estimator.getPrivateProperty("collector")
         requireNotNull(collector)
-        val collectorSpy = spyk(collector)
-        every { collectorSpy.start() }.returns(true)
+        val collectorSpy = spy(collector)
+        doReturn(true).whenever(collectorSpy).start()
+//        val collectorSpy = spyk(collector)
+//        every { collectorSpy.start() }.returns(true)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         val timeIntervalEstimator: TimeIntervalEstimator? =
             getPrivateProperty(BaseAccumulatedEstimator::class, estimator, "timeIntervalEstimator")
         requireNotNull(timeIntervalEstimator)
-        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
+//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
         setPrivateProperty(
             BaseAccumulatedEstimator::class,
             estimator,
@@ -1027,10 +1055,12 @@ class MagnetometerNoiseEstimatorTest {
 
         assertTrue(estimator.running)
 
-        verify(exactly = 1) { noiseEstimatorSpy.reset() }
+        verify(noiseEstimatorSpy, times(1)).reset()
+//        verify(exactly = 1) { noiseEstimatorSpy.reset() }
         assertEquals(0.0, noiseEstimatorSpy.timeInterval, 0.0)
 
-        verify(exactly = 1) { timeIntervalEstimatorSpy.reset() }
+        verify(timeIntervalEstimatorSpy, times(1)).reset()
+//        verify(exactly = 1) { timeIntervalEstimatorSpy.reset() }
         assertEquals(estimator.maxSamples, timeIntervalEstimatorSpy.totalSamples)
     }
 
@@ -1042,20 +1072,24 @@ class MagnetometerNoiseEstimatorTest {
         val noiseEstimator: AccumulatedMagneticFluxDensityTriadNoiseEstimator? =
             estimator.getPrivateProperty("noiseEstimator")
         requireNotNull(noiseEstimator)
-        val noiseEstimatorSpy = spyk(noiseEstimator)
+        val noiseEstimatorSpy = spy(noiseEstimator)
+//        val noiseEstimatorSpy = spyk(noiseEstimator)
         estimator.setPrivateProperty("noiseEstimator", noiseEstimatorSpy)
 
         val collector: MagnetometerSensorCollector? =
             estimator.getPrivateProperty("collector")
         requireNotNull(collector)
-        val collectorSpy = spyk(collector)
-        every { collectorSpy.start() }.returns(true)
+        val collectorSpy = spy(collector)
+        doReturn(true).whenever(collectorSpy).start()
+//        val collectorSpy = spyk(collector)
+//        every { collectorSpy.start() }.returns(true)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         val timeIntervalEstimator: TimeIntervalEstimator? =
             getPrivateProperty(BaseAccumulatedEstimator::class, estimator, "timeIntervalEstimator")
         requireNotNull(timeIntervalEstimator)
-        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
+//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
         setPrivateProperty(
             BaseAccumulatedEstimator::class,
             estimator,
@@ -1069,10 +1103,12 @@ class MagnetometerNoiseEstimatorTest {
 
         assertTrue(estimator.running)
 
-        verify(exactly = 1) { noiseEstimatorSpy.reset() }
+        verify(noiseEstimatorSpy, times(1)).reset()
+//        verify(exactly = 1) { noiseEstimatorSpy.reset() }
         assertEquals(0.0, noiseEstimatorSpy.timeInterval, 0.0)
 
-        verify(exactly = 1) { timeIntervalEstimatorSpy.reset() }
+        verify(timeIntervalEstimatorSpy, times(1)).reset()
+//        verify(exactly = 1) { timeIntervalEstimatorSpy.reset() }
         assertEquals(Integer.MAX_VALUE, timeIntervalEstimatorSpy.totalSamples)
     }
 
@@ -1084,8 +1120,10 @@ class MagnetometerNoiseEstimatorTest {
         val collector: MagnetometerSensorCollector? =
             estimator.getPrivateProperty("collector")
         requireNotNull(collector)
-        val collectorSpy = spyk(collector)
-        every { collectorSpy.start() }.returns(true)
+        val collectorSpy = spy(collector)
+        doReturn(true).whenever(collectorSpy).start()
+//        val collectorSpy = spyk(collector)
+//        every { collectorSpy.start() }.returns(true)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         setPrivateProperty(BaseAccumulatedEstimator::class, estimator, "resultUnreliable", true)
@@ -1129,8 +1167,10 @@ class MagnetometerNoiseEstimatorTest {
         assertNotNull(collector.measurementListener)
         assertNotNull(collector.accuracyChangedListener)
 
-        val collectorSpy = spyk(collector)
-        every { collectorSpy.start() }.returns(true)
+        val collectorSpy = spy(collector)
+        doReturn(true).whenever(collectorSpy).start()
+//        val collectorSpy = spyk(collector)
+//        every { collectorSpy.start() }.returns(true)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         assertFalse(estimator.running)
@@ -1138,13 +1178,15 @@ class MagnetometerNoiseEstimatorTest {
         estimator.start()
 
         assertTrue(estimator.running)
-        verify(exactly = 1) { collectorSpy.start() }
+        verify(collectorSpy, only()).start()
+//        verify(exactly = 1) { collectorSpy.start() }
 
         // stop
         estimator.stop()
 
         assertFalse(estimator.running)
-        verify(exactly = 1) { collectorSpy.stop() }
+        verify(collectorSpy, times(1)).stop()
+//        verify(exactly = 1) { collectorSpy.stop() }
     }
 
     @Test
@@ -1161,7 +1203,8 @@ class MagnetometerNoiseEstimatorTest {
         assertNotNull(collector.measurementListener)
         assertNotNull(collector.accuracyChangedListener)
 
-        val collectorSpy = spyk(collector)
+        val collectorSpy = spy(collector)
+//        val collectorSpy = spyk(collector)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         assertFalse(estimator.running)
@@ -1170,7 +1213,8 @@ class MagnetometerNoiseEstimatorTest {
         estimator.stop()
 
         assertFalse(estimator.running)
-        verify(exactly = 1) { collectorSpy.stop() }
+        verify(collectorSpy, times(1)).stop()
+//        verify(exactly = 1) { collectorSpy.stop() }
     }
 
     @Test
@@ -1205,7 +1249,17 @@ class MagnetometerNoiseEstimatorTest {
             accuracy
         )
 
-        verify(exactly = 1) {
+        verify(measurementListener, only()).onMeasurement(
+            bx,
+            by,
+            bz,
+            hardIronX,
+            hardIronY,
+            hardIronZ,
+            timestamp,
+            accuracy
+        )
+/*        verify(exactly = 1) {
             measurementListener.onMeasurement(
                 bx,
                 by,
@@ -1216,7 +1270,7 @@ class MagnetometerNoiseEstimatorTest {
                 timestamp,
                 accuracy
             )
-        }
+        }*/
     }
 
     @Test
@@ -1292,13 +1346,15 @@ class MagnetometerNoiseEstimatorTest {
         val noiseEstimator: AccumulatedMagneticFluxDensityTriadNoiseEstimator? =
             estimator.getPrivateProperty("noiseEstimator")
         requireNotNull(noiseEstimator)
-        val noiseEstimatorSpy = spyk(noiseEstimator)
+        val noiseEstimatorSpy = spy(noiseEstimator)
+//        val noiseEstimatorSpy = spyk(noiseEstimator)
         estimator.setPrivateProperty("noiseEstimator", noiseEstimatorSpy)
 
         val timeIntervalEstimator: TimeIntervalEstimator? =
             getPrivateProperty(BaseAccumulatedEstimator::class, estimator, "timeIntervalEstimator")
         requireNotNull(timeIntervalEstimator)
-        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
+//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
         setPrivateProperty(
             BaseAccumulatedEstimator::class,
             estimator,
@@ -1324,15 +1380,19 @@ class MagnetometerNoiseEstimatorTest {
         val bxT = MagneticFluxDensityConverter.microTeslaToTesla(bx.toDouble())
         val byT = MagneticFluxDensityConverter.microTeslaToTesla(by.toDouble())
         val bzT = MagneticFluxDensityConverter.microTeslaToTesla(bz.toDouble())
-        verify(exactly = 1) { noiseEstimatorSpy.addTriad(byT, bxT, -bzT) }
-        verify(exactly = 0) { timeIntervalEstimatorSpy.addTimestamp(any<Double>()) }
+        verify(noiseEstimatorSpy, times(1)).addTriad(byT, bxT, -bzT)
+        verify(timeIntervalEstimatorSpy, never()).addTimestamp(any<Double>())
+//        verify(exactly = 1) { noiseEstimatorSpy.addTriad(byT, bxT, -bzT) }
+//        verify(exactly = 0) { timeIntervalEstimatorSpy.addTimestamp(any<Double>()) }
 
         // set another measurement
         val timestamp2 = timestamp1 + TIME_INTERVAL_MILLIS * MILLIS_TO_NANOS
         measurementListener.onMeasurement(bx, by, bz, null, null, null, timestamp2, accuracy)
 
-        verify(exactly = 2) { noiseEstimatorSpy.addTriad(byT, bxT, -bzT) }
-        verify(exactly = 1) { timeIntervalEstimatorSpy.addTimestamp(any<Double>()) }
+        verify(noiseEstimatorSpy, times(2)).addTriad(byT, bxT, -bzT)
+        verify(timeIntervalEstimatorSpy, times(1)).addTimestamp(any<Double>())
+//        verify(exactly = 2) { noiseEstimatorSpy.addTriad(byT, bxT, -bzT) }
+//        verify(exactly = 1) { timeIntervalEstimatorSpy.addTimestamp(any<Double>()) }
 
         assertEquals(earthB.norm, b.norm, 0.0)
     }
@@ -1403,7 +1463,8 @@ class MagnetometerNoiseEstimatorTest {
         val collector: MagnetometerSensorCollector? =
             estimator.getPrivateProperty("collector")
         requireNotNull(collector)
-        val collectorSpy = spyk(collector)
+        val collectorSpy = spy(collector)
+//        val collectorSpy = spyk(collector)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         val maxSamples = estimator.maxSamples
@@ -1441,7 +1502,8 @@ class MagnetometerNoiseEstimatorTest {
         assertEquals(maxSamples, estimator.numberOfProcessedMeasurements)
 
         // check that after completion, collector was stopped
-        verify(exactly = 1) { collectorSpy.stop() }
+        verify(collectorSpy, times(1)).stop()
+//        verify(exactly = 1) { collectorSpy.stop() }
 
         // check result
         checkResultMaxSamples(estimator, b)
@@ -1459,7 +1521,8 @@ class MagnetometerNoiseEstimatorTest {
         val collector: MagnetometerSensorCollector? =
             estimator.getPrivateProperty("collector")
         requireNotNull(collector)
-        val collectorSpy = spyk(collector)
+        val collectorSpy = spy(collector)
+//        val collectorSpy = spyk(collector)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         val maxSamples = estimator.maxSamples
@@ -1498,8 +1561,10 @@ class MagnetometerNoiseEstimatorTest {
         assertTrue(estimator.resultAvailable)
 
         // check that after completion, collector was stopped
-        verify(exactly = 1) { collectorSpy.stop() }
-        verify(exactly = 1) { completedListener.onEstimationCompleted(estimator) }
+        verify(collectorSpy, times(1)).stop()
+        verify(completedListener, only()).onEstimationCompleted(estimator)
+//        verify(exactly = 1) { collectorSpy.stop() }
+//        verify(exactly = 1) { completedListener.onEstimationCompleted(estimator) }
 
         // check result
         checkResultMaxSamples(estimator, b)
@@ -1513,7 +1578,8 @@ class MagnetometerNoiseEstimatorTest {
         val collector: MagnetometerSensorCollector? =
             estimator.getPrivateProperty("collector")
         requireNotNull(collector)
-        val collectorSpy = spyk(collector)
+        val collectorSpy = spy(collector)
+//        val collectorSpy = spyk(collector)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         val maxDurationMillis = estimator.maxDurationMillis
@@ -1553,7 +1619,8 @@ class MagnetometerNoiseEstimatorTest {
         assertTrue(estimator.resultAvailable)
 
         // check that after completion, collector was stopped
-        verify(exactly = 1) { collectorSpy.stop() }
+        verify(collectorSpy, times(1)).stop()
+//        verify(exactly = 1) { collectorSpy.stop() }
 
         // check result
         checkResultMaxDuration(estimator, b)
@@ -1571,7 +1638,8 @@ class MagnetometerNoiseEstimatorTest {
         val collector: MagnetometerSensorCollector? =
             estimator.getPrivateProperty("collector")
         requireNotNull(collector)
-        val collectorSpy = spyk(collector)
+        val collectorSpy = spy(collector)
+//        val collectorSpy = spyk(collector)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         val maxDurationMillis = estimator.maxDurationMillis
@@ -1611,10 +1679,12 @@ class MagnetometerNoiseEstimatorTest {
         assertTrue(estimator.resultAvailable)
 
         // check that after completion, collector was stopped
-        verify(exactly = 1) { collectorSpy.stop() }
+        verify(collectorSpy, times(1)).stop()
+//        verify(exactly = 1) { collectorSpy.stop() }
 
         // check that listener was called
-        verify(exactly = 1) { completedListener.onEstimationCompleted(estimator) }
+        verify(completedListener, only()).onEstimationCompleted(estimator)
+//        verify(exactly = 1) { completedListener.onEstimationCompleted(estimator) }
 
         // check result
         checkResultMaxDuration(estimator, b)
@@ -1629,7 +1699,8 @@ class MagnetometerNoiseEstimatorTest {
         val collector: MagnetometerSensorCollector? =
             estimator.getPrivateProperty("collector")
         requireNotNull(collector)
-        val collectorSpy = spyk(collector)
+        val collectorSpy = spy(collector)
+//        val collectorSpy = spyk(collector)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         val maxDurationMillis = estimator.maxDurationMillis
@@ -1669,7 +1740,8 @@ class MagnetometerNoiseEstimatorTest {
         assertTrue(estimator.resultAvailable)
 
         // check that after completion, collector was stopped
-        verify(exactly = 1) { collectorSpy.stop() }
+        verify(collectorSpy, times(1)).stop()
+//        verify(exactly = 1) { collectorSpy.stop() }
 
         // check result
         checkResultMaxDuration(estimator, b)
@@ -1688,7 +1760,8 @@ class MagnetometerNoiseEstimatorTest {
         val collector: MagnetometerSensorCollector? =
             estimator.getPrivateProperty("collector")
         requireNotNull(collector)
-        val collectorSpy = spyk(collector)
+        val collectorSpy = spy(collector)
+//        val collectorSpy = spyk(collector)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         val maxDurationMillis = estimator.maxDurationMillis
@@ -1728,10 +1801,12 @@ class MagnetometerNoiseEstimatorTest {
         assertTrue(estimator.resultAvailable)
 
         // check that after completion, collector was stopped
-        verify(exactly = 1) { collectorSpy.stop() }
+        verify(collectorSpy, times(1)).stop()
+//        verify(exactly = 1) { collectorSpy.stop() }
 
         // check that listener was called
-        verify(exactly = 1) { completedListener.onEstimationCompleted(estimator) }
+        verify(completedListener, only()).onEstimationCompleted(estimator)
+//        verify(exactly = 1) { completedListener.onEstimationCompleted(estimator) }
 
         // check result
         checkResultMaxDuration(estimator, b)
@@ -1781,7 +1856,8 @@ class MagnetometerNoiseEstimatorTest {
 
         // check
         assertTrue(estimator.resultUnreliable)
-        verify(exactly = 1) { unreliableListener.onUnreliable(estimator) }
+        verify(unreliableListener, only()).onUnreliable(estimator)
+//        verify(exactly = 1) { unreliableListener.onUnreliable(estimator) }
     }
 
     @Test
@@ -1805,7 +1881,8 @@ class MagnetometerNoiseEstimatorTest {
 
         // check
         assertFalse(estimator.resultUnreliable)
-        verify(exactly = 0) { unreliableListener.onUnreliable(estimator) }
+        verify(unreliableListener, never()).onUnreliable(estimator)
+//        verify(exactly = 0) { unreliableListener.onUnreliable(estimator) }
     }
 
     private fun checkResultMaxSamples(

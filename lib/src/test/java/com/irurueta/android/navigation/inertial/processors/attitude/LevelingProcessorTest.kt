@@ -23,27 +23,44 @@ import com.irurueta.navigation.inertial.calibration.AccelerationTriad
 import com.irurueta.navigation.inertial.estimators.NEDGravityEstimator
 import com.irurueta.statistics.UniformRandomizer
 import com.irurueta.units.AccelerationUnit
-import io.mockk.*
-import io.mockk.impl.annotations.MockK
-import io.mockk.junit4.MockKRule
-import org.junit.After
+//import io.mockk.*
+//import io.mockk.impl.annotations.MockK
+//import io.mockk.junit4.MockKRule
+//import org.junit.After
 import org.junit.Assert.*
+//import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.mockito.ArgumentCaptor
+import org.mockito.Captor
+import org.mockito.Mock
+import org.mockito.junit.MockitoJUnitRunner
+import org.mockito.kotlin.capture
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.only
+import org.mockito.kotlin.verify
 
+//@Ignore("Possible memory leak when running this test")
+@RunWith(MockitoJUnitRunner::class)
 class LevelingProcessorTest {
 
-    @get:Rule
-    val mockkRule = MockKRule(this)
+//    @get:Rule
+//    val mockkRule = MockKRule(this)
 
-    @MockK(relaxUnitFun = true)
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var listener: BaseLevelingProcessor.OnProcessedListener
 
-    @After
+    @Captor
+    private lateinit var quaternionCaptor: ArgumentCaptor<Quaternion>
+
+    /*@After
     fun tearDown() {
         unmockkAll()
         clearAllMocks()
-    }
+        System.gc()
+    }*/
 
     @Test
     fun constructor_whenNoParameters_returnsExpectedValues() {
@@ -137,10 +154,12 @@ class LevelingProcessorTest {
 
         processor.process(fx, fy, fz)
 
-        val slot = slot<Quaternion>()
-        verify(exactly = 1) { listener.onProcessed(processor, capture(slot)) }
+        verify(listener, only()).onProcessed(eq(processor), capture(quaternionCaptor))
+/*        val slot = slot<Quaternion>()
+        verify(exactly = 1) { listener.onProcessed(processor, capture(slot)) }*/
 
-        val capturedAttitude = slot.captured
+        val capturedAttitude = quaternionCaptor.value
+//        val capturedAttitude = slot.captured
         assertEquals(expectedAttitude, capturedAttitude)
         assertEquals(expectedAttitude, processor.attitude)
 

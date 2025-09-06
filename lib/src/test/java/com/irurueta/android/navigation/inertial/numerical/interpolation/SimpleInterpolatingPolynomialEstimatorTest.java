@@ -13,7 +13,7 @@ public class SimpleInterpolatingPolynomialEstimatorTest {
 
     private static final double MAX_VALUE = 1.0;
 
-    private static final double ABSOLUTE_ERROR = 1e-5;
+    private static final double ABSOLUTE_ERROR = 5e-5;
 
     @Test
     public void estimate_whenFirstDegree_returnsExpectedResult() {

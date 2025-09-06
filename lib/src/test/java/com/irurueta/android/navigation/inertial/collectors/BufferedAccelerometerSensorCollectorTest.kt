@@ -25,49 +25,81 @@ import androidx.test.core.app.ApplicationProvider
 import com.irurueta.android.testutils.getPrivateProperty
 import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.statistics.UniformRandomizer
-import io.mockk.*
-import io.mockk.impl.annotations.MockK
-import io.mockk.junit4.MockKRule
-import org.junit.After
+//import io.mockk.*
+//import io.mockk.impl.annotations.MockK
+//import io.mockk.junit4.MockKRule
+//import org.junit.After
 import org.junit.Assert.*
-import org.junit.Ignore
+//import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.ArgumentCaptor
+import org.mockito.Captor
+import org.mockito.Mock
+import org.mockito.junit.MockitoJUnit
+import org.mockito.junit.MockitoRule
+import org.mockito.kotlin.any
+import org.mockito.kotlin.capture
+import org.mockito.kotlin.doNothing
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.never
+import org.mockito.kotlin.only
+import org.mockito.kotlin.spy
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.verifyNoInteractions
+import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import java.util.*
 
-@Ignore("possible memory leak")
+//@Ignore("Possible memory leak when running this test")
 @RunWith(RobolectricTestRunner::class)
 class BufferedAccelerometerSensorCollectorTest {
 
     @get:Rule
-    val mockkRule = MockKRule(this)
+    val mockitoRule: MockitoRule = MockitoJUnit.rule()
 
-    @MockK(relaxUnitFun = true)
+//    @get:Rule
+//    val mockkRule = MockKRule(this)
+
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var accuracyChangedListener:
             BufferedSensorCollector.OnAccuracyChangedListener<AccelerometerSensorMeasurement, BufferedAccelerometerSensorCollector>
 
-    @MockK(relaxUnitFun = true)
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var bufferFilledListener:
             BufferedSensorCollector.OnBufferFilledListener<AccelerometerSensorMeasurement, BufferedAccelerometerSensorCollector>
 
-    @MockK(relaxUnitFun = true)
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var measurementListener:
             BufferedSensorCollector.OnMeasurementListener<AccelerometerSensorMeasurement, BufferedAccelerometerSensorCollector>
 
-    @MockK
+//    @MockK
+    @Mock
     private lateinit var sensor: Sensor
 
-    @MockK
+//    @MockK
+    @Mock
     private lateinit var event: SensorEvent
 
-    @After
+    @Captor
+    private lateinit var sensorEventListenerCaptor: ArgumentCaptor<SensorEventListener>
+
+    @Captor
+    private lateinit var accelerometerSensorMeasurementCaptor: ArgumentCaptor<AccelerometerSensorMeasurement>
+
+    /*@After
     fun tearDown() {
         unmockkAll()
         clearAllMocks()
-    }
+        System.gc()
+    }*/
 
     @Test
     fun constructor_whenRequiredParameters_setsDefaultValues() {
@@ -295,17 +327,23 @@ class BufferedAccelerometerSensorCollectorTest {
         val sensorManager: SensorManager? =
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
-        val sensorManagerSpy = spyk(sensorManager)
-        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) }.returns(sensor)
-        val contextSpy = spyk(context)
-        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
+        val sensorManagerSpy = spy(sensorManager)
+//        val sensorManagerSpy = spyk(sensorManager)
+        doReturn(sensor).whenever(sensorManagerSpy).getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+//        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) }.returns(sensor)
+        val contextSpy = spy(context)
+//        val contextSpy = spyk(context)
+        doReturn(sensorManagerSpy).whenever(contextSpy).getSystemService(Context.SENSOR_SERVICE)
+//        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val collector =
             BufferedAccelerometerSensorCollector(contextSpy, AccelerometerSensorType.ACCELEROMETER)
 
         assertSame(sensor, collector.sensor)
-        verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
-        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) }
+        verify(contextSpy, only()).getSystemService(Context.SENSOR_SERVICE)
+//        verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
+        verify(sensorManagerSpy, only()).getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+//        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) }
     }
 
     @Test
@@ -314,12 +352,16 @@ class BufferedAccelerometerSensorCollectorTest {
         val sensorManager: SensorManager? =
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
-        val sensorManagerSpy = spyk(sensorManager)
-        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED) }.returns(
+        val sensorManagerSpy = spy(sensorManager)
+//        val sensorManagerSpy = spyk(sensorManager)
+        doReturn(sensor).whenever(sensorManagerSpy).getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED)
+/*        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED) }.returns(
             sensor
-        )
-        val contextSpy = spyk(context)
-        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
+        )*/
+        val contextSpy = spy(context)
+//        val contextSpy = spyk(context)
+        doReturn(sensorManagerSpy).whenever(contextSpy).getSystemService(Context.SENSOR_SERVICE)
+//        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val collector = BufferedAccelerometerSensorCollector(
             contextSpy,
@@ -327,8 +369,10 @@ class BufferedAccelerometerSensorCollectorTest {
         )
 
         assertSame(sensor, collector.sensor)
-        verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
-        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED) }
+        verify(contextSpy, only()).getSystemService(Context.SENSOR_SERVICE)
+//        verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
+        verify(sensorManagerSpy, only()).getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED)
+//        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED) }
     }
 
     @Test
@@ -337,16 +381,21 @@ class BufferedAccelerometerSensorCollectorTest {
         val sensorManager: SensorManager? =
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
-        val sensorManagerSpy = spyk(sensorManager)
-        val contextSpy = spyk(context)
-        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
+        val sensorManagerSpy = spy(sensorManager)
+//        val sensorManagerSpy = spyk(sensorManager)
+        val contextSpy = spy(context)
+//        val contextSpy = spyk(context)
+        doReturn(sensorManagerSpy).whenever(contextSpy).getSystemService(Context.SENSOR_SERVICE)
+//        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val collector =
             BufferedAccelerometerSensorCollector(contextSpy, AccelerometerSensorType.ACCELEROMETER)
 
         assertFalse(collector.sensorAvailable)
-        verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
-        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) }
+        verify(contextSpy, only()).getSystemService(Context.SENSOR_SERVICE)
+//        verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
+        verify(sensorManagerSpy, times(1)).getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+//        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) }
     }
 
     @Config(sdk = [Build.VERSION_CODES.O])
@@ -356,11 +405,15 @@ class BufferedAccelerometerSensorCollectorTest {
         val sensorManager: SensorManager? =
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
-        val sensorManagerSpy = spyk(sensorManager)
-        every { sensorManagerSpy.getDefaultSensor(Constants.TYPE_ACCELEROMETER_UNCALIBRATED) }
-            .returns(sensor)
-        val contextSpy = spyk(context)
-        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
+        val sensorManagerSpy = spy(sensorManager)
+//        val sensorManagerSpy = spyk(sensorManager)
+        doReturn(sensor).whenever(sensorManagerSpy).getDefaultSensor(Constants.TYPE_ACCELEROMETER_UNCALIBRATED)
+/*        every { sensorManagerSpy.getDefaultSensor(Constants.TYPE_ACCELEROMETER_UNCALIBRATED) }
+            .returns(sensor)*/
+        val contextSpy = spy(context)
+//        val contextSpy = spyk(context)
+        doReturn(sensorManagerSpy).whenever(contextSpy).getSystemService(Context.SENSOR_SERVICE)
+//        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val collector = BufferedAccelerometerSensorCollector(
             contextSpy,
@@ -368,8 +421,10 @@ class BufferedAccelerometerSensorCollectorTest {
         )
 
         assertTrue(collector.sensorAvailable)
-        verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
-        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Constants.TYPE_ACCELEROMETER_UNCALIBRATED) }
+        verify(contextSpy, only()).getSystemService(Context.SENSOR_SERVICE)
+//        verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
+        verify(sensorManagerSpy, only()).getDefaultSensor(Constants.TYPE_ACCELEROMETER_UNCALIBRATED)
+//        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Constants.TYPE_ACCELEROMETER_UNCALIBRATED) }
     }
 
     @Config(sdk = [Build.VERSION_CODES.N])
@@ -379,11 +434,15 @@ class BufferedAccelerometerSensorCollectorTest {
         val sensorManager: SensorManager? =
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
-        val sensorManagerSpy = spyk(sensorManager)
-        every { sensorManagerSpy.getDefaultSensor(Constants.TYPE_ACCELEROMETER_UNCALIBRATED) }
-            .returns(sensor)
-        val contextSpy = spyk(context)
-        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
+        val sensorManagerSpy = spy(sensorManager)
+//        val sensorManagerSpy = spyk(sensorManager)
+        doReturn(sensor).whenever(sensorManagerSpy).getDefaultSensor(Constants.TYPE_ACCELEROMETER_UNCALIBRATED)
+/*        every { sensorManagerSpy.getDefaultSensor(Constants.TYPE_ACCELEROMETER_UNCALIBRATED) }
+            .returns(sensor)*/
+        val contextSpy = spy(context)
+//        val contextSpy = spyk(context)
+        doReturn(sensorManagerSpy).whenever(contextSpy).getSystemService(Context.SENSOR_SERVICE)
+//        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val collector = BufferedAccelerometerSensorCollector(
             contextSpy,
@@ -391,21 +450,26 @@ class BufferedAccelerometerSensorCollectorTest {
         )
 
         assertFalse(collector.sensorAvailable)
-        verify(exactly = 0) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
-        verify(exactly = 0) { sensorManagerSpy.getDefaultSensor(Constants.TYPE_ACCELEROMETER_UNCALIBRATED) }
+        verify(contextSpy, never()).getSystemService(Context.SENSOR_SERVICE)
+//        verify(exactly = 0) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
+        verify(sensorManagerSpy, never()).getDefaultSensor(Constants.TYPE_ACCELEROMETER_UNCALIBRATED)
+//        verify(exactly = 0) { sensorManagerSpy.getDefaultSensor(Constants.TYPE_ACCELEROMETER_UNCALIBRATED) }
     }
 
     @Test
     fun start_whenNoSensorManager_returnsFalse() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val contextSpy = spyk(context)
-        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(null)
+        val contextSpy = spy(context)
+//        val contextSpy = spyk(context)
+        doReturn(null).whenever(contextSpy).getSystemService(Context.SENSOR_SERVICE)
+//        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(null)
 
         val collector = BufferedAccelerometerSensorCollector(contextSpy)
         assertEquals(0L, collector.startTimestamp)
         assertFalse(collector.start())
 
-        verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
+        verify(contextSpy, only()).getSystemService(Context.SENSOR_SERVICE)
+//        verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
 
         assertFalse(collector.running)
         assertEquals(0L, collector.startTimestamp)
@@ -417,25 +481,36 @@ class BufferedAccelerometerSensorCollectorTest {
         val sensorManager: SensorManager? =
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
-        val sensorManagerSpy = spyk(sensorManager)
-        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED) }
-            .returns(null)
-        every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
-        val contextSpy = spyk(context)
-        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
+        val sensorManagerSpy = spy(sensorManager)
+//        val sensorManagerSpy = spyk(sensorManager)
+        doReturn(null).whenever(sensorManagerSpy).getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED)
+/*        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED) }
+            .returns(null)*/
+        doReturn(true).whenever(sensorManagerSpy).registerListener(any(), any<Sensor>(), any())
+//        every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
+        val contextSpy = spy(context)
+//        val contextSpy = spyk(context)
+        doReturn(sensorManagerSpy).whenever(contextSpy).getSystemService(Context.SENSOR_SERVICE)
+//        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val collector = BufferedAccelerometerSensorCollector(contextSpy)
         assertEquals(0L, collector.startTimestamp)
         assertFalse(collector.start())
 
-        verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
-        verify(exactly = 0) {
+        verify(contextSpy, only()).getSystemService(Context.SENSOR_SERVICE)
+//        verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
+        verify(sensorManagerSpy, never()).registerListener(
+            any(),
+            any<Sensor>(),
+            eq(collector.sensorDelay.value)
+        )
+/*        verify(exactly = 0) {
             sensorManagerSpy.registerListener(
                 any(),
                 any<Sensor>(),
                 collector.sensorDelay.value
             )
-        }
+        }*/
 
         assertFalse(collector.running)
         assertEquals(0L, collector.startTimestamp)
@@ -447,28 +522,40 @@ class BufferedAccelerometerSensorCollectorTest {
         val sensorManager: SensorManager? =
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
-        val sensorManagerSpy = spyk(sensorManager)
-        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED) }
-            .returns(sensor)
-        every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(false)
-        val contextSpy = spyk(context)
-        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
+        val sensorManagerSpy = spy(sensorManager)
+//        val sensorManagerSpy = spyk(sensorManager)
+        doReturn(sensor).whenever(sensorManagerSpy).getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED)
+/*        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED) }
+            .returns(sensor)*/
+        doReturn(false).whenever(sensorManagerSpy).registerListener(any(), any<Sensor>(), any())
+//        every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(false)
+        val contextSpy = spy(context)
+//        val contextSpy = spyk(context)
+        doReturn(sensorManagerSpy).whenever(contextSpy).getSystemService(Context.SENSOR_SERVICE)
+//        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val collector = BufferedAccelerometerSensorCollector(contextSpy)
         assertEquals(0L, collector.startTimestamp)
         assertFalse(collector.start())
 
-        verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
-        val slot = slot<SensorEventListener>()
+        verify(contextSpy, only()).getSystemService(Context.SENSOR_SERVICE)
+//        verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
+        verify(sensorManagerSpy, times(1)).registerListener(
+            capture(sensorEventListenerCaptor),
+            eq(sensor),
+            eq(collector.sensorDelay.value)
+        )
+/*        val slot = slot<SensorEventListener>()
         verify(exactly = 1) {
             sensorManagerSpy.registerListener(
                 capture(slot),
                 sensor,
                 collector.sensorDelay.value
             )
-        }
+        }*/
 
-        val eventListener = slot.captured
+        val eventListener = sensorEventListenerCaptor.value
+//        val eventListener = slot.captured
 
         val sensorEventListener: SensorEventListener? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "sensorEventListener")
@@ -485,28 +572,40 @@ class BufferedAccelerometerSensorCollectorTest {
         val sensorManager: SensorManager? =
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
-        val sensorManagerSpy = spyk(sensorManager)
-        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED) }
-            .returns(sensor)
-        every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
-        val contextSpy = spyk(context)
-        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
+        val sensorManagerSpy = spy(sensorManager)
+//        val sensorManagerSpy = spyk(sensorManager)
+        doReturn(sensor).whenever(sensorManagerSpy).getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED)
+/*        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED) }
+            .returns(sensor)*/
+        doReturn(true).whenever(sensorManagerSpy).registerListener(any(), any<Sensor>(), any())
+//        every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
+        val contextSpy = spy(context)
+//        val contextSpy = spyk(context)
+        doReturn(sensorManagerSpy).whenever(contextSpy).getSystemService(Context.SENSOR_SERVICE)
+//        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val collector = BufferedAccelerometerSensorCollector(contextSpy)
         assertEquals(0L, collector.startTimestamp)
         assertTrue(collector.start())
 
-        verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
-        val slot = slot<SensorEventListener>()
+        verify(contextSpy, only()).getSystemService(Context.SENSOR_SERVICE)
+//        verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
+        verify(sensorManagerSpy, times(1)).registerListener(
+            capture(sensorEventListenerCaptor),
+            eq(sensor),
+            eq(collector.sensorDelay.value)
+        )
+/*        val slot = slot<SensorEventListener>()
         verify(exactly = 1) {
             sensorManagerSpy.registerListener(
                 capture(slot),
                 sensor,
                 collector.sensorDelay.value
             )
-        }
+        }*/
 
-        val eventListener = slot.captured
+        val eventListener = sensorEventListenerCaptor.value
+//        val eventListener = slot.captured
 
         val sensorEventListener: SensorEventListener? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "sensorEventListener")
@@ -523,29 +622,41 @@ class BufferedAccelerometerSensorCollectorTest {
         val sensorManager: SensorManager? =
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
-        val sensorManagerSpy = spyk(sensorManager)
-        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED) }
-            .returns(sensor)
-        every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
-        val contextSpy = spyk(context)
-        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
+        val sensorManagerSpy = spy(sensorManager)
+//        val sensorManagerSpy = spyk(sensorManager)
+        doReturn(sensor).whenever(sensorManagerSpy).getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED)
+/*        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED) }
+            .returns(sensor)*/
+        doReturn(true).whenever(sensorManagerSpy).registerListener(any(), any<Sensor>(), any())
+//        every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
+        val contextSpy = spy(context)
+//        val contextSpy = spyk(context)
+        doReturn(sensorManagerSpy).whenever(contextSpy).getSystemService(Context.SENSOR_SERVICE)
+//        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val collector = BufferedAccelerometerSensorCollector(contextSpy)
         assertEquals(0L, collector.startTimestamp)
         val startTimestamp = System.nanoTime()
         assertTrue(collector.start(startTimestamp))
 
-        verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
-        val slot = slot<SensorEventListener>()
+        verify(contextSpy, only()).getSystemService(Context.SENSOR_SERVICE)
+//        verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
+        verify(sensorManagerSpy, times(1)).registerListener(
+            capture(sensorEventListenerCaptor),
+            eq(sensor),
+            eq(collector.sensorDelay.value)
+        )
+/*        val slot = slot<SensorEventListener>()
         verify(exactly = 1) {
             sensorManagerSpy.registerListener(
                 capture(slot),
                 sensor,
                 collector.sensorDelay.value
             )
-        }
+        }*/
 
-        val eventListener = slot.captured
+        val eventListener = sensorEventListenerCaptor.value
+//        val eventListener = slot.captured
 
         val sensorEventListener: SensorEventListener? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "sensorEventListener")
@@ -559,8 +670,10 @@ class BufferedAccelerometerSensorCollectorTest {
     @Test
     fun stop_whenNoSensorManager_resetsParameters() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val contextSpy = spyk(context)
-        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(null)
+        val contextSpy = spy(context)
+//        val contextSpy = spyk(context)
+        doReturn(null).whenever(contextSpy).getSystemService(Context.SENSOR_SERVICE)
+//        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(null)
 
         val collector = BufferedAccelerometerSensorCollector(contextSpy)
 
@@ -623,12 +736,17 @@ class BufferedAccelerometerSensorCollectorTest {
         val sensorManager: SensorManager? =
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
-        val sensorManagerSpy = spyk(sensorManager)
-        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED) }
-            .returns(sensor)
-        justRun { sensorManagerSpy.unregisterListener(any(), any<Sensor>()) }
-        val contextSpy = spyk(context)
-        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
+        val sensorManagerSpy = spy(sensorManager)
+//        val sensorManagerSpy = spyk(sensorManager)
+        doReturn(sensor).whenever(sensorManagerSpy).getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED)
+/*        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED) }
+            .returns(sensor)*/
+        doNothing().whenever(sensorManagerSpy).unregisterListener(any(), any<Sensor>())
+//        justRun { sensorManagerSpy.unregisterListener(any(), any<Sensor>()) }
+        val contextSpy = spy(context)
+//        val contextSpy = spyk(context)
+        doReturn(sensorManagerSpy).whenever(contextSpy).getSystemService(Context.SENSOR_SERVICE)
+//        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val collector = BufferedAccelerometerSensorCollector(contextSpy)
 
@@ -684,11 +802,14 @@ class BufferedAccelerometerSensorCollectorTest {
         assertFalse(collector.running)
         assertFalse(collector.processing)
 
-        verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
-        val slot = slot<SensorEventListener>()
-        verify(exactly = 1) { sensorManagerSpy.unregisterListener(capture(slot), sensor) }
+        verify(contextSpy, only()).getSystemService(Context.SENSOR_SERVICE)
+//        verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
+        verify(sensorManagerSpy, times(1)).unregisterListener(capture(sensorEventListenerCaptor), eq(sensor))
+//        val slot = slot<SensorEventListener>()
+//        verify(exactly = 1) { sensorManagerSpy.unregisterListener(capture(slot), sensor) }
 
-        val eventListener = slot.captured
+        val eventListener = sensorEventListenerCaptor.value
+//        val eventListener = slot.captured
 
         val sensorEventListener: SensorEventListener? =
             getPrivateProperty(BufferedSensorCollector::class, collector, "sensorEventListener")
@@ -846,13 +967,19 @@ class BufferedAccelerometerSensorCollectorTest {
         val sensorManager: SensorManager? =
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
-        val sensorManagerSpy = spyk(sensorManager)
-        every { sensor.type }.returns(Sensor.TYPE_GYROSCOPE)
-        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED) }
-            .returns(sensor)
-        every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
-        val contextSpy = spyk(context)
-        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
+        val sensorManagerSpy = spy(sensorManager)
+//        val sensorManagerSpy = spyk(sensorManager)
+        whenever(sensor.type).thenReturn(Sensor.TYPE_GYROSCOPE)
+//        every { sensor.type }.returns(Sensor.TYPE_GYROSCOPE)
+        doReturn(sensor).whenever(sensorManagerSpy).getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED)
+/*        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED) }
+            .returns(sensor)*/
+        doReturn(true).whenever(sensorManagerSpy).registerListener(any(), any<Sensor>(), any())
+//        every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
+        val contextSpy = spy(context)
+//        val contextSpy = spyk(context)
+        doReturn(sensorManagerSpy).whenever(contextSpy).getSystemService(Context.SENSOR_SERVICE)
+//        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val collector = BufferedAccelerometerSensorCollector(
             contextSpy,
@@ -868,7 +995,8 @@ class BufferedAccelerometerSensorCollectorTest {
         sensorEventListener.onSensorChanged(event)
 
         // check
-        verify { measurementListener wasNot Called }
+        verifyNoInteractions(measurementListener)
+//        verify { measurementListener wasNot Called }
 
         assertEquals(0.0f, collector.usage, 0.0f)
         assertTrue(collector.bufferedMeasurements.isEmpty())
@@ -935,13 +1063,19 @@ class BufferedAccelerometerSensorCollectorTest {
         val sensorManager: SensorManager? =
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
-        val sensorManagerSpy = spyk(sensorManager)
-        every { sensor.type }.returns(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED)
-        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED) }
-            .returns(sensor)
-        every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
-        val contextSpy = spyk(context)
-        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
+        val sensorManagerSpy = spy(sensorManager)
+//        val sensorManagerSpy = spyk(sensorManager)
+        whenever(sensor.type).thenReturn(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED)
+//        every { sensor.type }.returns(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED)
+        doReturn(sensor).whenever(sensorManagerSpy).getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED)
+/*        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED) }
+            .returns(sensor)*/
+        doReturn(true).whenever(sensorManagerSpy).registerListener(any(), any<Sensor>(), any())
+//        every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
+        val contextSpy = spy(context)
+//        val contextSpy = spyk(context)
+        doReturn(sensorManagerSpy).whenever(contextSpy).getSystemService(Context.SENSOR_SERVICE)
+//        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val collector = BufferedAccelerometerSensorCollector(
             contextSpy,
@@ -975,10 +1109,12 @@ class BufferedAccelerometerSensorCollectorTest {
         val startOffset = event.timestamp - startTimestamp
         assertNotNull(collector.startOffset)
         assertEquals(startOffset, collector.startOffset)
-        val slot = slot<AccelerometerSensorMeasurement>()
-        verify(exactly = 1) { measurementListener.onMeasurement(collector, capture(slot), 0) }
+        verify(measurementListener, only()).onMeasurement(eq(collector), capture(accelerometerSensorMeasurementCaptor), eq(0))
+//        val slot = slot<AccelerometerSensorMeasurement>()
+//        verify(exactly = 1) { measurementListener.onMeasurement(collector, capture(slot), 0) }
 
-        val measurement = slot.captured
+        val measurement = accelerometerSensorMeasurementCaptor.value
+//        val measurement = slot.captured
 
         assertNotEquals(0.0f, collector.usage, 0.0f)
         assertEquals(1, collector.bufferedMeasurements.size)
@@ -1047,13 +1183,19 @@ class BufferedAccelerometerSensorCollectorTest {
         val sensorManager: SensorManager? =
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
-        val sensorManagerSpy = spyk(sensorManager)
-        every { sensor.type }.returns(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED)
-        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED) }
-            .returns(sensor)
-        every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
-        val contextSpy = spyk(context)
-        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
+        val sensorManagerSpy = spy(sensorManager)
+//        val sensorManagerSpy = spyk(sensorManager)
+        whenever(sensor.type).thenReturn(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED)
+//        every { sensor.type }.returns(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED)
+        doReturn(sensor).whenever(sensorManagerSpy).getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED)
+/*        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED) }
+            .returns(sensor)*/
+        doReturn(true).whenever(sensorManagerSpy).registerListener(any(), any<Sensor>(), any())
+//        every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
+        val contextSpy = spy(context)
+//        val contextSpy = spyk(context)
+        doReturn(sensorManagerSpy).whenever(contextSpy).getSystemService(Context.SENSOR_SERVICE)
+//        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val collector = BufferedAccelerometerSensorCollector(
             contextSpy,
@@ -1093,8 +1235,10 @@ class BufferedAccelerometerSensorCollectorTest {
         sensorEventListener.onSensorChanged(event)
 
         // check
-        verify { measurementListener wasNot Called }
-        verify(exactly = 1) { bufferFilledListener.onBufferFilled(collector) }
+        verifyNoInteractions(measurementListener)
+//        verify { measurementListener wasNot Called }
+        verify(bufferFilledListener, only()).onBufferFilled(collector)
+//        verify(exactly = 1) { bufferFilledListener.onBufferFilled(collector) }
 
         assertTrue(buffer.isEmpty())
         assertEquals(BufferedSensorCollector.DEFAULT_CAPACITY, availableMeasurements.size)
@@ -1110,13 +1254,19 @@ class BufferedAccelerometerSensorCollectorTest {
         val sensorManager: SensorManager? =
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
-        val sensorManagerSpy = spyk(sensorManager)
-        every { sensor.type }.returns(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED)
-        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED) }
-            .returns(sensor)
-        every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
-        val contextSpy = spyk(context)
-        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
+        val sensorManagerSpy = spy(sensorManager)
+//        val sensorManagerSpy = spyk(sensorManager)
+        whenever(sensor.type).thenReturn(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED)
+//        every { sensor.type }.returns(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED)
+        doReturn(sensor).whenever(sensorManagerSpy).getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED)
+/*        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED) }
+            .returns(sensor)*/
+        doReturn(true).whenever(sensorManagerSpy).registerListener(any(), any<Sensor>(), any())
+//        every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
+        val contextSpy = spy(context)
+//        val contextSpy = spyk(context)
+        doReturn(sensorManagerSpy).whenever(contextSpy).getSystemService(Context.SENSOR_SERVICE)
+//        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val collector = BufferedAccelerometerSensorCollector(
             contextSpy,
@@ -1158,11 +1308,14 @@ class BufferedAccelerometerSensorCollectorTest {
         sensorEventListener.onSensorChanged(event)
 
         // check
-        verify(exactly = 1) { bufferFilledListener.onBufferFilled(collector) }
-        val slot = slot<AccelerometerSensorMeasurement>()
-        verify { measurementListener.onMeasurement(collector, capture(slot), buffer.size - 1) }
+        verify(bufferFilledListener, only()).onBufferFilled(collector)
+//        verify(exactly = 1) { bufferFilledListener.onBufferFilled(collector) }
+        verify(measurementListener, only()).onMeasurement(eq(collector), capture(accelerometerSensorMeasurementCaptor), eq(buffer.size - 1))
+//        val slot = slot<AccelerometerSensorMeasurement>()
+//        verify { measurementListener.onMeasurement(collector, capture(slot), buffer.size - 1) }
 
-        val measurement = slot.captured
+        val measurement = accelerometerSensorMeasurementCaptor.value
+//        val measurement = slot.captured
         assertEquals(1.0f, measurement.ax, 0.0f)
         assertEquals(2.0f, measurement.ay, 0.0f)
         assertEquals(3.0f, measurement.az, 0.0f)
@@ -1195,7 +1348,8 @@ class BufferedAccelerometerSensorCollectorTest {
 
         sensorEventListener.onAccuracyChanged(null, SensorAccuracy.HIGH.value)
 
-        verify { accuracyChangedListener wasNot Called }
+        verifyNoInteractions(accuracyChangedListener)
+//        verify { accuracyChangedListener wasNot Called }
     }
 
     @Test
@@ -1210,10 +1364,12 @@ class BufferedAccelerometerSensorCollectorTest {
             getPrivateProperty(BufferedSensorCollector::class, collector, "sensorEventListener")
         requireNotNull(sensorEventListener)
 
-        every { sensor.type }.returns(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value)
+        whenever(sensor.type).thenReturn(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value)
+//        every { sensor.type }.returns(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value)
         sensorEventListener.onAccuracyChanged(sensor, SensorAccuracy.HIGH.value)
 
-        verify { accuracyChangedListener wasNot Called }
+        verifyNoInteractions(accuracyChangedListener)
+//        verify { accuracyChangedListener wasNot Called }
     }
 
     @Test
@@ -1225,7 +1381,8 @@ class BufferedAccelerometerSensorCollectorTest {
             getPrivateProperty(BufferedSensorCollector::class, collector, "sensorEventListener")
         requireNotNull(sensorEventListener)
 
-        every { sensor.type }.returns(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value)
+        whenever(sensor.type).thenReturn(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value)
+//        every { sensor.type }.returns(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value)
         sensorEventListener.onAccuracyChanged(sensor, SensorAccuracy.HIGH.value)
     }
 
@@ -1241,15 +1398,20 @@ class BufferedAccelerometerSensorCollectorTest {
             getPrivateProperty(BufferedSensorCollector::class, collector, "sensorEventListener")
         requireNotNull(sensorEventListener)
 
-        every { sensor.type }.returns(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value)
+        whenever(sensor.type).thenReturn(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value)
+//        every { sensor.type }.returns(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value)
         sensorEventListener.onAccuracyChanged(sensor, SensorAccuracy.HIGH.value)
 
-        verify(exactly = 1) {
+        verify(accuracyChangedListener, only()).onAccuracyChanged(
+            collector,
+            SensorAccuracy.HIGH
+        )
+/*        verify(exactly = 1) {
             accuracyChangedListener.onAccuracyChanged(
                 collector,
                 SensorAccuracy.HIGH
             )
-        }
+        }*/
     }
 
     @Test

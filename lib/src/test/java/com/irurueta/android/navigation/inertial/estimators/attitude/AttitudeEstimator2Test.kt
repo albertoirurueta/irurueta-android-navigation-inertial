@@ -26,35 +26,52 @@ import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.frames.CoordinateTransformation
 import com.irurueta.navigation.frames.FrameType
 import com.irurueta.statistics.UniformRandomizer
-import io.mockk.*
-import io.mockk.impl.annotations.MockK
-import io.mockk.junit4.MockKRule
-import org.junit.After
+//import io.mockk.*
+//import io.mockk.impl.annotations.MockK
+//import io.mockk.junit4.MockKRule
+//import org.junit.After
 import org.junit.Assert.*
-import org.junit.Ignore
+//import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mock
+import org.mockito.junit.MockitoJUnit
+import org.mockito.junit.MockitoRule
+import org.mockito.kotlin.any
+import org.mockito.kotlin.doNothing
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.only
+import org.mockito.kotlin.spy
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 
-@Ignore("possible memory leak")
+//@Ignore("Possible memory leak when running this test")
 @RunWith(RobolectricTestRunner::class)
 class AttitudeEstimator2Test {
 
     @get:Rule
-    val mockkRule = MockKRule(this)
+    val mockitoRule: MockitoRule = MockitoJUnit.rule()
 
-    @MockK(relaxUnitFun = true)
+//    @get:Rule
+//    val mockkRule = MockKRule(this)
+
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var attitudeAvailableListener: AttitudeEstimator2.OnAttitudeAvailableListener
 
-    @MockK(relaxUnitFun = true)
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var accuracyChangedListener: AttitudeEstimator2.OnAccuracyChangedListener
 
-    @After
+    /*@After
     fun tearDown() {
         unmockkAll()
         clearAllMocks()
-    }
+        System.gc()
+    }*/
 
     @Test
     fun constructor_whenRequiredProperties_setsDefaultValues() {
@@ -150,15 +167,18 @@ class AttitudeEstimator2Test {
         val attitudeSensorCollector: AttitudeSensorCollector2? =
             estimator.getPrivateProperty("attitudeSensorCollector")
         requireNotNull(attitudeSensorCollector)
-        val attitudeSensorCollectorSpy = spyk(attitudeSensorCollector)
-        every { attitudeSensorCollectorSpy.start(any()) }.returns(true)
+        val attitudeSensorCollectorSpy = spy(attitudeSensorCollector)
+//        val attitudeSensorCollectorSpy = spyk(attitudeSensorCollector)
+        doReturn(true).whenever(attitudeSensorCollectorSpy).start(any())
+//        every { attitudeSensorCollectorSpy.start(any()) }.returns(true)
         estimator.setPrivateProperty("attitudeSensorCollector", attitudeSensorCollectorSpy)
 
 
         val startTimestamp = System.nanoTime()
         assertTrue(estimator.start(startTimestamp))
 
-        verify(exactly = 1) { attitudeSensorCollectorSpy.start(startTimestamp) }
+        verify(attitudeSensorCollectorSpy, only()).start(startTimestamp)
+//        verify(exactly = 1) { attitudeSensorCollectorSpy.start(startTimestamp) }
     }
 
     @Test
@@ -170,8 +190,10 @@ class AttitudeEstimator2Test {
         val attitudeSensorCollector: AttitudeSensorCollector2? =
             estimator.getPrivateProperty("attitudeSensorCollector")
         requireNotNull(attitudeSensorCollector)
-        val attitudeSensorCollectorSpy = spyk(attitudeSensorCollector)
-        justRun { attitudeSensorCollectorSpy.stop() }
+        val attitudeSensorCollectorSpy = spy(attitudeSensorCollector)
+//        val attitudeSensorCollectorSpy = spyk(attitudeSensorCollector)
+        doNothing().whenever(attitudeSensorCollectorSpy).stop()
+//        justRun { attitudeSensorCollectorSpy.stop() }
         estimator.setPrivateProperty("attitudeSensorCollector", attitudeSensorCollectorSpy)
 
         // set as running
@@ -183,7 +205,8 @@ class AttitudeEstimator2Test {
 
         // check
         assertFalse(estimator.running)
-        verify(exactly = 1) { attitudeSensorCollectorSpy.stop() }
+        verify(attitudeSensorCollectorSpy, only()).stop()
+//        verify(exactly = 1) { attitudeSensorCollectorSpy.stop() }
     }
 
     @Test
@@ -214,13 +237,18 @@ class AttitudeEstimator2Test {
         requireNotNull(listener)
         listener.onAccuracyChanged(attitudeSensorCollector, SensorAccuracy.HIGH)
 
-        verify(exactly = 1) {
+        verify(accuracyChangedListener, only()).onAccuracyChanged(
+            estimator,
+            SensorType.ABSOLUTE_ATTITUDE,
+            SensorAccuracy.HIGH
+        )
+/*        verify(exactly = 1) {
             accuracyChangedListener.onAccuracyChanged(
                 estimator,
                 SensorType.ABSOLUTE_ATTITUDE,
                 SensorAccuracy.HIGH
             )
-        }
+        }*/
     }
 
     @Test
@@ -246,7 +274,8 @@ class AttitudeEstimator2Test {
         val attitudeProcessor: AttitudeProcessor? =
             estimator.getPrivateProperty("attitudeProcessor")
         requireNotNull(attitudeProcessor)
-        val attitudeProcessorSpy = spyk(attitudeProcessor)
+        val attitudeProcessorSpy = spy(attitudeProcessor)
+//        val attitudeProcessorSpy = spyk(attitudeProcessor)
         estimator.setPrivateProperty("attitudeProcessor", attitudeProcessorSpy)
 
         // check default value
@@ -276,7 +305,8 @@ class AttitudeEstimator2Test {
             ), attitude
         )
 
-        verify(exactly = 1) { attitudeProcessorSpy.process(measurement) }
+        verify(attitudeProcessorSpy, times(1)).process(measurement)
+//        verify(exactly = 1) { attitudeProcessorSpy.process(measurement) }
 
         val coordinateTransformation: CoordinateTransformation? =
             estimator.getPrivateProperty("coordinateTransformation")
@@ -315,7 +345,8 @@ class AttitudeEstimator2Test {
         val attitudeProcessor: AttitudeProcessor? =
             estimator.getPrivateProperty("attitudeProcessor")
         requireNotNull(attitudeProcessor)
-        val attitudeProcessorSpy = spyk(attitudeProcessor)
+        val attitudeProcessorSpy = spy(attitudeProcessor)
+//        val attitudeProcessorSpy = spyk(attitudeProcessor)
         estimator.setPrivateProperty("attitudeProcessor", attitudeProcessorSpy)
 
         // check default value
@@ -345,7 +376,8 @@ class AttitudeEstimator2Test {
             )
         assertEquals(expectedAttitude, attitude)
 
-        verify(exactly = 1) { attitudeProcessorSpy.process(measurement) }
+        verify(attitudeProcessorSpy, times(1)).process(measurement)
+//        verify(exactly = 1) { attitudeProcessorSpy.process(measurement) }
 
         val coordinateTransformation: CoordinateTransformation? =
             estimator.getPrivateProperty("coordinateTransformation")
@@ -359,7 +391,17 @@ class AttitudeEstimator2Test {
         val eulerAngles: DoubleArray? = estimator.getPrivateProperty("eulerAngles")
         assertArrayEquals(DoubleArray(Quaternion.N_ANGLES), eulerAngles, 0.0)
 
-        verify(exactly = 1) {
+        verify(attitudeAvailableListener, only()).onAttitudeAvailable(
+            estimator,
+            expectedAttitude,
+            timestamp,
+            headingAccuracy,
+            null,
+            null,
+            null,
+            null
+        )
+/*        verify(exactly = 1) {
             attitudeAvailableListener.onAttitudeAvailable(
                 estimator,
                 expectedAttitude,
@@ -370,7 +412,7 @@ class AttitudeEstimator2Test {
                 null,
                 null
             )
-        }
+        }*/
     }
 
     @Test
@@ -397,7 +439,8 @@ class AttitudeEstimator2Test {
         val attitudeProcessor: AttitudeProcessor? =
             estimator.getPrivateProperty("attitudeProcessor")
         requireNotNull(attitudeProcessor)
-        val attitudeProcessorSpy = spyk(attitudeProcessor)
+        val attitudeProcessorSpy = spy(attitudeProcessor)
+//        val attitudeProcessorSpy = spyk(attitudeProcessor)
         estimator.setPrivateProperty("attitudeProcessor", attitudeProcessorSpy)
 
         // check default value
@@ -422,7 +465,8 @@ class AttitudeEstimator2Test {
         val expectedAttitude = ENUtoNEDConverter.convertAndReturnNew(measurementAttitude)
         assertEquals(expectedAttitude, attitude)
 
-        verify(exactly = 1) { attitudeProcessorSpy.process(measurement) }
+        verify(attitudeProcessorSpy, times(1)).process(measurement)
+//        verify(exactly = 1) { attitudeProcessorSpy.process(measurement) }
 
         val expectedCoordinateTransformation = CoordinateTransformation(
             expectedAttitude,
@@ -437,7 +481,17 @@ class AttitudeEstimator2Test {
         val eulerAngles: DoubleArray? = estimator.getPrivateProperty("eulerAngles")
         assertArrayEquals(expectedEulerAngles, eulerAngles, 0.0)
 
-        verify(exactly = 1) {
+        verify(attitudeAvailableListener, only()).onAttitudeAvailable(
+            estimator,
+            expectedAttitude,
+            timestamp,
+            headingAccuracy,
+            expectedEulerAngles[0],
+            expectedEulerAngles[1],
+            expectedEulerAngles[2],
+            expectedCoordinateTransformation
+        )
+/*        verify(exactly = 1) {
             attitudeAvailableListener.onAttitudeAvailable(
                 estimator,
                 expectedAttitude,
@@ -448,7 +502,7 @@ class AttitudeEstimator2Test {
                 expectedEulerAngles[2],
                 expectedCoordinateTransformation
             )
-        }
+        }*/
     }
 
     private companion object {

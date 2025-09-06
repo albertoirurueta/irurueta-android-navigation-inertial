@@ -27,40 +27,60 @@ import com.irurueta.android.testutils.getPrivateProperty
 import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.geometry.EuclideanTransformation3D
 import com.irurueta.statistics.UniformRandomizer
-import io.mockk.*
-import io.mockk.impl.annotations.MockK
-import io.mockk.junit4.MockKRule
-import org.junit.After
+//import io.mockk.*
+//import io.mockk.impl.annotations.MockK
+//import io.mockk.junit4.MockKRule
+//import org.junit.After
 import org.junit.Assert.*
-import org.junit.Ignore
+//import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mock
+import org.mockito.junit.MockitoJUnit
+import org.mockito.junit.MockitoRule
+import org.mockito.kotlin.any
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.only
+import org.mockito.kotlin.spy
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.verifyNoInteractions
+import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 
-@Ignore("possible memory leak")
+//@Ignore("Possible memory leak when running this test")
+@RunWith(RobolectricTestRunner::class)
 class RelativePoseEstimator2Test {
 
     @get:Rule
-    val mockkRule = MockKRule(this)
+    val mockitoRule: MockitoRule = MockitoJUnit.rule()
 
-    @MockK(relaxUnitFun = true)
+//    @get:Rule
+//    val mockkRule = MockKRule(this)
+
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var poseAvailableListener: RelativePoseEstimator2.OnPoseAvailableListener
 
-    @MockK(relaxUnitFun = true)
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var accuracyChangedListener: RelativePoseEstimator2.OnAccuracyChangedListener
 
-    @MockK(relaxUnitFun = true)
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var bufferFilledListener: RelativePoseEstimator2.OnBufferFilledListener
 
-    @MockK
+//    @MockK
+    @Mock
     private lateinit var location: Location
 
-    @After
+    /*@After
     fun tearDown() {
         clearAllMocks()
         unmockkAll()
-    }
+        System.gc()
+    }*/
 
     @Test
     fun constructor_whenRequiredProperties_setsDefaultValues() {
@@ -196,27 +216,33 @@ class RelativePoseEstimator2Test {
         val fusedProcessor: FusedRelativePoseProcessor? =
             estimator.getPrivateProperty("fusedProcessor")
         requireNotNull(fusedProcessor)
-        val fusedProcessorSpy = spyk(fusedProcessor)
+        val fusedProcessorSpy = spy(fusedProcessor)
+//        val fusedProcessorSpy = spyk(fusedProcessor)
         estimator.setPrivateProperty("fusedProcessor", fusedProcessorSpy)
 
         val accelerometerFusedProcessor: AccelerometerFusedRelativePoseProcessor? =
             estimator.getPrivateProperty("accelerometerFusedProcessor")
         requireNotNull(accelerometerFusedProcessor)
-        val accelerometerFusedProcessorSpy = spyk(accelerometerFusedProcessor)
+        val accelerometerFusedProcessorSpy = spy(accelerometerFusedProcessor)
+//        val accelerometerFusedProcessorSpy = spyk(accelerometerFusedProcessor)
         estimator.setPrivateProperty("accelerometerFusedProcessor", accelerometerFusedProcessorSpy)
 
         val attitudeProcessor: AttitudeRelativePoseProcessor? =
             estimator.getPrivateProperty("attitudeProcessor")
         requireNotNull(attitudeProcessor)
-        val attitudeProcessorSpy = spyk(attitudeProcessor)
+        val attitudeProcessorSpy = spy(attitudeProcessor)
+//        val attitudeProcessorSpy = spyk(attitudeProcessor)
         estimator.setPrivateProperty("attitudeProcessor", attitudeProcessorSpy)
 
         // check
         assertSame(initialSpeed, estimator.initialSpeed)
 
-        verify(exactly = 1) { attitudeProcessorSpy.initialSpeed }
-        verify { fusedProcessorSpy wasNot Called }
-        verify { accelerometerFusedProcessorSpy wasNot Called }
+        verify(attitudeProcessorSpy, only()).initialSpeed
+//        verify(exactly = 1) { attitudeProcessorSpy.initialSpeed }
+        verifyNoInteractions(fusedProcessorSpy)
+//        verify { fusedProcessorSpy wasNot Called }
+        verifyNoInteractions(accelerometerFusedProcessorSpy)
+//        verify { accelerometerFusedProcessorSpy wasNot Called }
 
         assertSame(initialSpeed, attitudeProcessor.initialSpeed)
         assertSame(initialSpeed, fusedProcessor.initialSpeed)
@@ -237,27 +263,33 @@ class RelativePoseEstimator2Test {
         val fusedProcessor: FusedRelativePoseProcessor? =
             estimator.getPrivateProperty("fusedProcessor")
         requireNotNull(fusedProcessor)
-        val fusedProcessorSpy = spyk(fusedProcessor)
+        val fusedProcessorSpy = spy(fusedProcessor)
+//        val fusedProcessorSpy = spyk(fusedProcessor)
         estimator.setPrivateProperty("fusedProcessor", fusedProcessorSpy)
 
         val accelerometerFusedProcessor: AccelerometerFusedRelativePoseProcessor? =
             estimator.getPrivateProperty("accelerometerFusedProcessor")
         requireNotNull(accelerometerFusedProcessor)
-        val accelerometerFusedProcessorSpy = spyk(accelerometerFusedProcessor)
+        val accelerometerFusedProcessorSpy = spy(accelerometerFusedProcessor)
+//        val accelerometerFusedProcessorSpy = spyk(accelerometerFusedProcessor)
         estimator.setPrivateProperty("accelerometerFusedProcessor", accelerometerFusedProcessorSpy)
 
         val attitudeProcessor: AttitudeRelativePoseProcessor? =
             estimator.getPrivateProperty("attitudeProcessor")
         requireNotNull(attitudeProcessor)
-        val attitudeProcessorSpy = spyk(attitudeProcessor)
+        val attitudeProcessorSpy = spy(attitudeProcessor)
+//        val attitudeProcessorSpy = spyk(attitudeProcessor)
         estimator.setPrivateProperty("attitudeProcessor", attitudeProcessorSpy)
 
         // check
         assertSame(initialSpeed, estimator.initialSpeed)
 
-        verify(exactly = 1) { accelerometerFusedProcessorSpy.initialSpeed }
-        verify { fusedProcessorSpy wasNot Called }
-        verify { attitudeProcessorSpy wasNot Called }
+        verify(accelerometerFusedProcessorSpy, only()).initialSpeed
+//        verify(exactly = 1) { accelerometerFusedProcessorSpy.initialSpeed }
+        verifyNoInteractions(fusedProcessorSpy)
+//        verify { fusedProcessorSpy wasNot Called }
+        verifyNoInteractions(attitudeProcessorSpy)
+//        verify { attitudeProcessorSpy wasNot Called }
 
         assertSame(initialSpeed, attitudeProcessor.initialSpeed)
         assertSame(initialSpeed, fusedProcessor.initialSpeed)
@@ -278,27 +310,33 @@ class RelativePoseEstimator2Test {
         val fusedProcessor: FusedRelativePoseProcessor? =
             estimator.getPrivateProperty("fusedProcessor")
         requireNotNull(fusedProcessor)
-        val fusedProcessorSpy = spyk(fusedProcessor)
+        val fusedProcessorSpy = spy(fusedProcessor)
+//        val fusedProcessorSpy = spyk(fusedProcessor)
         estimator.setPrivateProperty("fusedProcessor", fusedProcessorSpy)
 
         val accelerometerFusedProcessor: AccelerometerFusedRelativePoseProcessor? =
             estimator.getPrivateProperty("accelerometerFusedProcessor")
         requireNotNull(accelerometerFusedProcessor)
-        val accelerometerFusedProcessorSpy = spyk(accelerometerFusedProcessor)
+        val accelerometerFusedProcessorSpy = spy(accelerometerFusedProcessor)
+//        val accelerometerFusedProcessorSpy = spyk(accelerometerFusedProcessor)
         estimator.setPrivateProperty("accelerometerFusedProcessor", accelerometerFusedProcessorSpy)
 
         val attitudeProcessor: AttitudeRelativePoseProcessor? =
             estimator.getPrivateProperty("attitudeProcessor")
         requireNotNull(attitudeProcessor)
-        val attitudeProcessorSpy = spyk(attitudeProcessor)
+        val attitudeProcessorSpy = spy(attitudeProcessor)
+//        val attitudeProcessorSpy = spyk(attitudeProcessor)
         estimator.setPrivateProperty("attitudeProcessor", attitudeProcessorSpy)
 
         // check
         assertSame(initialSpeed, estimator.initialSpeed)
 
-        verify(exactly = 1) { fusedProcessorSpy.initialSpeed }
-        verify { accelerometerFusedProcessorSpy wasNot Called }
-        verify { attitudeProcessorSpy wasNot Called }
+        verify(fusedProcessorSpy, only()).initialSpeed
+//        verify(exactly = 1) { fusedProcessorSpy.initialSpeed }
+        verifyNoInteractions(accelerometerFusedProcessorSpy)
+//        verify { accelerometerFusedProcessorSpy wasNot Called }
+        verifyNoInteractions(attitudeProcessorSpy)
+//        verify { attitudeProcessorSpy wasNot Called }
 
         assertSame(initialSpeed, attitudeProcessor.initialSpeed)
         assertSame(initialSpeed, fusedProcessor.initialSpeed)
@@ -335,13 +373,15 @@ class RelativePoseEstimator2Test {
         val fusedProcessor: FusedRelativePoseProcessor? =
             estimator.getPrivateProperty("fusedProcessor")
         requireNotNull(fusedProcessor)
-        val fusedProcessorSpy = spyk(fusedProcessor)
+        val fusedProcessorSpy = spy(fusedProcessor)
+//        val fusedProcessorSpy = spyk(fusedProcessor)
         estimator.setPrivateProperty("fusedProcessor", fusedProcessorSpy)
 
         val accelerometerFusedProcessor: AccelerometerFusedRelativePoseProcessor? =
             estimator.getPrivateProperty("accelerometerFusedProcessor")
         requireNotNull(accelerometerFusedProcessor)
-        val accelerometerFusedProcessorSpy = spyk(accelerometerFusedProcessor)
+        val accelerometerFusedProcessorSpy = spy(accelerometerFusedProcessor)
+//        val accelerometerFusedProcessorSpy = spyk(accelerometerFusedProcessor)
         estimator.setPrivateProperty("accelerometerFusedProcessor", accelerometerFusedProcessorSpy)
 
         assertTrue(fusedProcessor.useIndirectAttitudeInterpolation)
@@ -352,10 +392,12 @@ class RelativePoseEstimator2Test {
 
         // check
         assertFalse(estimator.useIndirectAttitudeInterpolation)
-        verify(exactly = 1) { fusedProcessorSpy.useIndirectAttitudeInterpolation = false }
-        verify(exactly = 1) {
+        verify(fusedProcessorSpy, times(1)).useIndirectAttitudeInterpolation = false
+//        verify(exactly = 1) { fusedProcessorSpy.useIndirectAttitudeInterpolation = false }
+        verify(accelerometerFusedProcessorSpy, times(1)).useIndirectAttitudeInterpolation = false
+/*        verify(exactly = 1) {
             accelerometerFusedProcessorSpy.useIndirectAttitudeInterpolation = false
-        }
+        }*/
     }
 
     @Test
@@ -373,13 +415,15 @@ class RelativePoseEstimator2Test {
         val fusedProcessor: FusedRelativePoseProcessor? =
             estimator.getPrivateProperty("fusedProcessor")
         requireNotNull(fusedProcessor)
-        val fusedProcessorSpy = spyk(fusedProcessor)
+        val fusedProcessorSpy = spy(fusedProcessor)
+//        val fusedProcessorSpy = spyk(fusedProcessor)
         estimator.setPrivateProperty("fusedProcessor", fusedProcessorSpy)
 
         val accelerometerFusedProcessor: AccelerometerFusedRelativePoseProcessor? =
             estimator.getPrivateProperty("accelerometerFusedProcessor")
         requireNotNull(accelerometerFusedProcessor)
-        val accelerometerFusedProcessorSpy = spyk(accelerometerFusedProcessor)
+        val accelerometerFusedProcessorSpy = spy(accelerometerFusedProcessor)
+//        val accelerometerFusedProcessorSpy = spyk(accelerometerFusedProcessor)
         estimator.setPrivateProperty("accelerometerFusedProcessor", accelerometerFusedProcessorSpy)
 
         assertEquals(
@@ -400,12 +444,14 @@ class RelativePoseEstimator2Test {
 
         // check
         assertEquals(attitudeInterpolationValue, estimator.attitudeInterpolationValue, 0.0)
-        verify(exactly = 1) {
+        verify(fusedProcessorSpy, times(1)).attitudeInterpolationValue = attitudeInterpolationValue
+/*        verify(exactly = 1) {
             fusedProcessorSpy.attitudeInterpolationValue = attitudeInterpolationValue
-        }
-        verify(exactly = 1) {
+        }*/
+        verify(accelerometerFusedProcessorSpy, times(1)).attitudeInterpolationValue = attitudeInterpolationValue
+/*        verify(exactly = 1) {
             accelerometerFusedProcessorSpy.attitudeInterpolationValue = attitudeInterpolationValue
-        }
+        }*/
     }
 
     @Test
@@ -423,13 +469,15 @@ class RelativePoseEstimator2Test {
         val fusedProcessor: FusedRelativePoseProcessor? =
             estimator.getPrivateProperty("fusedProcessor")
         requireNotNull(fusedProcessor)
-        val fusedProcessorSpy = spyk(fusedProcessor)
+        val fusedProcessorSpy = spy(fusedProcessor)
+//        val fusedProcessorSpy = spyk(fusedProcessor)
         estimator.setPrivateProperty("fusedProcessor", fusedProcessorSpy)
 
         val accelerometerFusedProcessor: AccelerometerFusedRelativePoseProcessor? =
             estimator.getPrivateProperty("accelerometerFusedProcessor")
         requireNotNull(accelerometerFusedProcessor)
-        val accelerometerFusedProcessorSpy = spyk(accelerometerFusedProcessor)
+        val accelerometerFusedProcessorSpy = spy(accelerometerFusedProcessor)
+//        val accelerometerFusedProcessorSpy = spyk(accelerometerFusedProcessor)
         estimator.setPrivateProperty("accelerometerFusedProcessor", accelerometerFusedProcessorSpy)
 
         assertEquals(
@@ -454,14 +502,18 @@ class RelativePoseEstimator2Test {
             estimator.attitudeIndirectInterpolationWeight,
             0.0
         )
-        verify(exactly = 1) {
+        verify(fusedProcessorSpy, times(1)).attitudeIndirectInterpolationWeight =
+            attitudeIndirectInterpolationWeight
+/*        verify(exactly = 1) {
             fusedProcessorSpy.attitudeIndirectInterpolationWeight =
                 attitudeIndirectInterpolationWeight
-        }
-        verify(exactly = 1) {
+        }*/
+        verify(accelerometerFusedProcessorSpy, times(1)).attitudeIndirectInterpolationWeight =
+            attitudeIndirectInterpolationWeight
+/*        verify(exactly = 1) {
             accelerometerFusedProcessorSpy.attitudeIndirectInterpolationWeight =
                 attitudeIndirectInterpolationWeight
-        }
+        }*/
     }
 
     @Test
@@ -479,13 +531,15 @@ class RelativePoseEstimator2Test {
         val fusedProcessor: FusedRelativePoseProcessor? =
             estimator.getPrivateProperty("fusedProcessor")
         requireNotNull(fusedProcessor)
-        val fusedProcessorSpy = spyk(fusedProcessor)
+        val fusedProcessorSpy = spy(fusedProcessor)
+//        val fusedProcessorSpy = spyk(fusedProcessor)
         estimator.setPrivateProperty("fusedProcessor", fusedProcessorSpy)
 
         val accelerometerFusedProcessor: AccelerometerFusedRelativePoseProcessor? =
             estimator.getPrivateProperty("accelerometerFusedProcessor")
         requireNotNull(accelerometerFusedProcessor)
-        val accelerometerFusedProcessorSpy = spyk(accelerometerFusedProcessor)
+        val accelerometerFusedProcessorSpy = spy(accelerometerFusedProcessor)
+//        val accelerometerFusedProcessorSpy = spyk(accelerometerFusedProcessor)
         estimator.setPrivateProperty("accelerometerFusedProcessor", accelerometerFusedProcessorSpy)
 
         assertEquals(
@@ -510,12 +564,14 @@ class RelativePoseEstimator2Test {
             estimator.attitudeOutlierThreshold,
             0.0
         )
-        verify(exactly = 1) {
+        verify(fusedProcessorSpy, times(1)).attitudeOutlierThreshold = attitudeOutlierThreshold
+/*        verify(exactly = 1) {
             fusedProcessorSpy.attitudeOutlierThreshold = attitudeOutlierThreshold
-        }
-        verify(exactly = 1) {
+        }*/
+        verify(accelerometerFusedProcessorSpy, times(1)).attitudeOutlierThreshold = attitudeOutlierThreshold
+/*        verify(exactly = 1) {
             accelerometerFusedProcessorSpy.attitudeOutlierThreshold = attitudeOutlierThreshold
-        }
+        }*/
     }
 
     @Test
@@ -533,13 +589,15 @@ class RelativePoseEstimator2Test {
         val fusedProcessor: FusedRelativePoseProcessor? =
             estimator.getPrivateProperty("fusedProcessor")
         requireNotNull(fusedProcessor)
-        val fusedProcessorSpy = spyk(fusedProcessor)
+        val fusedProcessorSpy = spy(fusedProcessor)
+//        val fusedProcessorSpy = spyk(fusedProcessor)
         estimator.setPrivateProperty("fusedProcessor", fusedProcessorSpy)
 
         val accelerometerFusedProcessor: AccelerometerFusedRelativePoseProcessor? =
             estimator.getPrivateProperty("accelerometerFusedProcessor")
         requireNotNull(accelerometerFusedProcessor)
-        val accelerometerFusedProcessorSpy = spyk(accelerometerFusedProcessor)
+        val accelerometerFusedProcessorSpy = spy(accelerometerFusedProcessor)
+//        val accelerometerFusedProcessorSpy = spyk(accelerometerFusedProcessor)
         estimator.setPrivateProperty("accelerometerFusedProcessor", accelerometerFusedProcessorSpy)
 
         assertEquals(
@@ -564,13 +622,16 @@ class RelativePoseEstimator2Test {
             estimator.attitudeOutlierPanicThreshold,
             0.0
         )
-        verify(exactly = 1) {
+        verify(fusedProcessorSpy, times(1)).attitudeOutlierPanicThreshold = attitudeOutlierPanicThreshold
+/*        verify(exactly = 1) {
             fusedProcessorSpy.attitudeOutlierPanicThreshold = attitudeOutlierPanicThreshold
-        }
-        verify(exactly = 1) {
+        }*/
+        verify(accelerometerFusedProcessorSpy, times(1)).attitudeOutlierPanicThreshold =
+            attitudeOutlierPanicThreshold
+/*        verify(exactly = 1) {
             accelerometerFusedProcessorSpy.attitudeOutlierPanicThreshold =
                 attitudeOutlierPanicThreshold
-        }
+        }*/
     }
 
     @Test
@@ -587,13 +648,15 @@ class RelativePoseEstimator2Test {
         val fusedProcessor: FusedRelativePoseProcessor? =
             estimator.getPrivateProperty("fusedProcessor")
         requireNotNull(fusedProcessor)
-        val fusedProcessorSpy = spyk(fusedProcessor)
+        val fusedProcessorSpy = spy(fusedProcessor)
+//        val fusedProcessorSpy = spyk(fusedProcessor)
         estimator.setPrivateProperty("fusedProcessor", fusedProcessorSpy)
 
         val accelerometerFusedProcessor: AccelerometerFusedRelativePoseProcessor? =
             estimator.getPrivateProperty("accelerometerFusedProcessor")
         requireNotNull(accelerometerFusedProcessor)
-        val accelerometerFusedProcessorSpy = spyk(accelerometerFusedProcessor)
+        val accelerometerFusedProcessorSpy = spy(accelerometerFusedProcessor)
+//        val accelerometerFusedProcessorSpy = spyk(accelerometerFusedProcessor)
         estimator.setPrivateProperty("accelerometerFusedProcessor", accelerometerFusedProcessorSpy)
 
         assertEquals(
@@ -612,13 +675,16 @@ class RelativePoseEstimator2Test {
 
         // check
         assertEquals(attitudePanicCounterThreshold, estimator.attitudePanicCounterThreshold)
-        verify(exactly = 1) {
+        verify(fusedProcessorSpy, times(1)).attitudePanicCounterThreshold = attitudePanicCounterThreshold
+/*        verify(exactly = 1) {
             fusedProcessorSpy.attitudePanicCounterThreshold = attitudePanicCounterThreshold
-        }
-        verify(exactly = 1) {
+        }*/
+        verify(accelerometerFusedProcessorSpy, times(1)).attitudePanicCounterThreshold =
+            attitudePanicCounterThreshold
+/*        verify(exactly = 1) {
             accelerometerFusedProcessorSpy.attitudePanicCounterThreshold =
                 attitudePanicCounterThreshold
-        }
+        }*/
     }
 
     @Test
@@ -629,25 +695,30 @@ class RelativePoseEstimator2Test {
         val fusedProcessor: FusedRelativePoseProcessor? =
             estimator.getPrivateProperty("fusedProcessor")
         requireNotNull(fusedProcessor)
-        val fusedProcessorSpy = spyk(fusedProcessor)
+        val fusedProcessorSpy = spy(fusedProcessor)
+//        val fusedProcessorSpy = spyk(fusedProcessor)
         estimator.setPrivateProperty("fusedProcessor", fusedProcessorSpy)
 
         val accelerometerFusedProcessor: AccelerometerFusedRelativePoseProcessor? =
             estimator.getPrivateProperty("accelerometerFusedProcessor")
         requireNotNull(accelerometerFusedProcessor)
-        val accelerometerFusedProcessorSpy = spyk(accelerometerFusedProcessor)
+        val accelerometerFusedProcessorSpy = spy(accelerometerFusedProcessor)
+//        val accelerometerFusedProcessorSpy = spyk(accelerometerFusedProcessor)
         estimator.setPrivateProperty("accelerometerFusedProcessor", accelerometerFusedProcessorSpy)
 
         val attitudeProcessor: AttitudeRelativePoseProcessor? =
             estimator.getPrivateProperty("attitudeProcessor")
         requireNotNull(attitudeProcessor)
-        val attitudeProcessorSpy = spyk(attitudeProcessor)
+        val attitudeProcessorSpy = spy(attitudeProcessor)
+//        val attitudeProcessorSpy = spyk(attitudeProcessor)
         estimator.setPrivateProperty("attitudeProcessor", attitudeProcessorSpy)
 
         assertNull(estimator.timeIntervalSeconds)
 
-        verify { fusedProcessorSpy wasNot Called }
-        verify { accelerometerFusedProcessorSpy wasNot Called }
+        verifyNoInteractions(fusedProcessorSpy)
+//        verify { fusedProcessorSpy wasNot Called }
+        verifyNoInteractions(accelerometerFusedProcessorSpy)
+//        verify { accelerometerFusedProcessorSpy wasNot Called }
     }
 
     @Test
@@ -662,28 +733,34 @@ class RelativePoseEstimator2Test {
         val fusedProcessor: FusedRelativePoseProcessor? =
             estimator.getPrivateProperty("fusedProcessor")
         requireNotNull(fusedProcessor)
-        val fusedProcessorSpy = spyk(fusedProcessor)
+        val fusedProcessorSpy = spy(fusedProcessor)
+//        val fusedProcessorSpy = spyk(fusedProcessor)
         estimator.setPrivateProperty("fusedProcessor", fusedProcessorSpy)
 
         val accelerometerFusedProcessor: AccelerometerFusedRelativePoseProcessor? =
             estimator.getPrivateProperty("accelerometerFusedProcessor")
         requireNotNull(accelerometerFusedProcessor)
-        val accelerometerFusedProcessorSpy = spyk(accelerometerFusedProcessor)
-        every { accelerometerFusedProcessorSpy.timeIntervalSeconds }.returns(TIME_INTERVAL)
+        val accelerometerFusedProcessorSpy = spy(accelerometerFusedProcessor)
+//        val accelerometerFusedProcessorSpy = spyk(accelerometerFusedProcessor)
+        doReturn(TIME_INTERVAL).whenever(accelerometerFusedProcessorSpy).timeIntervalSeconds
+//        every { accelerometerFusedProcessorSpy.timeIntervalSeconds }.returns(TIME_INTERVAL)
         estimator.setPrivateProperty("accelerometerFusedProcessor", accelerometerFusedProcessorSpy)
 
         val attitudeProcessor: AttitudeRelativePoseProcessor? =
             estimator.getPrivateProperty("attitudeProcessor")
         requireNotNull(attitudeProcessor)
-        val attitudeProcessorSpy = spyk(attitudeProcessor)
+        val attitudeProcessorSpy = spy(attitudeProcessor)
+//        val attitudeProcessorSpy = spyk(attitudeProcessor)
         estimator.setPrivateProperty("attitudeProcessor", attitudeProcessorSpy)
 
         val timeIntervalSeconds = estimator.timeIntervalSeconds
         requireNotNull(timeIntervalSeconds)
         assertEquals(TIME_INTERVAL, timeIntervalSeconds, 0.0)
 
-        verify { fusedProcessorSpy wasNot Called }
-        verify(exactly = 1) { accelerometerFusedProcessorSpy.timeIntervalSeconds }
+        verifyNoInteractions(fusedProcessorSpy)
+//        verify { fusedProcessorSpy wasNot Called }
+        verify(accelerometerFusedProcessorSpy, only()).timeIntervalSeconds
+//        verify(exactly = 1) { accelerometerFusedProcessorSpy.timeIntervalSeconds }
     }
 
     @Test
@@ -698,28 +775,34 @@ class RelativePoseEstimator2Test {
         val fusedProcessor: FusedRelativePoseProcessor? =
             estimator.getPrivateProperty("fusedProcessor")
         requireNotNull(fusedProcessor)
-        val fusedProcessorSpy = spyk(fusedProcessor)
-        every { fusedProcessorSpy.timeIntervalSeconds }.returns(TIME_INTERVAL)
+        val fusedProcessorSpy = spy(fusedProcessor)
+//        val fusedProcessorSpy = spyk(fusedProcessor)
+        doReturn(TIME_INTERVAL).whenever(fusedProcessorSpy).timeIntervalSeconds
+//        every { fusedProcessorSpy.timeIntervalSeconds }.returns(TIME_INTERVAL)
         estimator.setPrivateProperty("fusedProcessor", fusedProcessorSpy)
 
         val accelerometerFusedProcessor: AccelerometerFusedRelativePoseProcessor? =
             estimator.getPrivateProperty("accelerometerFusedProcessor")
         requireNotNull(accelerometerFusedProcessor)
-        val accelerometerFusedProcessorSpy = spyk(accelerometerFusedProcessor)
+        val accelerometerFusedProcessorSpy = spy(accelerometerFusedProcessor)
+//        val accelerometerFusedProcessorSpy = spyk(accelerometerFusedProcessor)
         estimator.setPrivateProperty("accelerometerFusedProcessor", accelerometerFusedProcessorSpy)
 
         val attitudeProcessor: AttitudeRelativePoseProcessor? =
             estimator.getPrivateProperty("attitudeProcessor")
         requireNotNull(attitudeProcessor)
-        val attitudeProcessorSpy = spyk(attitudeProcessor)
+        val attitudeProcessorSpy = spy(attitudeProcessor)
+//        val attitudeProcessorSpy = spyk(attitudeProcessor)
         estimator.setPrivateProperty("attitudeProcessor", attitudeProcessorSpy)
 
         val timeIntervalSeconds = estimator.timeIntervalSeconds
         requireNotNull(timeIntervalSeconds)
         assertEquals(TIME_INTERVAL, timeIntervalSeconds, 0.0)
 
-        verify { accelerometerFusedProcessorSpy wasNot Called }
-        verify(exactly = 1) { fusedProcessorSpy.timeIntervalSeconds }
+        verifyNoInteractions(accelerometerFusedProcessorSpy)
+//        verify { accelerometerFusedProcessorSpy wasNot Called }
+        verify(fusedProcessorSpy, only()).timeIntervalSeconds
+//        verify(exactly = 1) { fusedProcessorSpy.timeIntervalSeconds }
     }
 
     @Test
@@ -815,49 +898,62 @@ class RelativePoseEstimator2Test {
         val fusedProcessor: FusedRelativePoseProcessor? =
             estimator.getPrivateProperty("fusedProcessor")
         requireNotNull(fusedProcessor)
-        val fusedProcessorSpy = spyk(fusedProcessor)
+        val fusedProcessorSpy = spy(fusedProcessor)
+//        val fusedProcessorSpy = spyk(fusedProcessor)
         estimator.setPrivateProperty("fusedProcessor", fusedProcessorSpy)
 
         val accelerometerFusedProcessor: AccelerometerFusedRelativePoseProcessor? =
             estimator.getPrivateProperty("accelerometerFusedProcessor")
         requireNotNull(accelerometerFusedProcessor)
-        val accelerometerFusedProcessorSpy = spyk(accelerometerFusedProcessor)
+        val accelerometerFusedProcessorSpy = spy(accelerometerFusedProcessor)
+//        val accelerometerFusedProcessorSpy = spyk(accelerometerFusedProcessor)
         estimator.setPrivateProperty("accelerometerFusedProcessor", accelerometerFusedProcessorSpy)
 
         val attitudeProcessor: AttitudeRelativePoseProcessor? =
             estimator.getPrivateProperty("attitudeProcessor")
         requireNotNull(attitudeProcessor)
-        val attitudeProcessorSpy = spyk(attitudeProcessor)
+        val attitudeProcessorSpy = spy(attitudeProcessor)
+//        val attitudeProcessorSpy = spyk(attitudeProcessor)
         estimator.setPrivateProperty("attitudeProcessor", attitudeProcessorSpy)
 
         val fusedSyncer: AccelerometerGravityAndGyroscopeSensorMeasurementSyncer? =
             estimator.getPrivateProperty("fusedSyncer")
         requireNotNull(fusedSyncer)
-        val fusedSyncerSpy = spyk(fusedSyncer)
+        val fusedSyncerSpy = spy(fusedSyncer)
+//        val fusedSyncerSpy = spyk(fusedSyncer)
         estimator.setPrivateProperty("fusedSyncer", fusedSyncerSpy)
 
         val accelerometerFusedSyncer: AccelerometerAndGyroscopeSensorMeasurementSyncer? =
             estimator.getPrivateProperty("accelerometerFusedSyncer")
         requireNotNull(accelerometerFusedSyncer)
-        val accelerometerFusedSyncerSpy = spyk(accelerometerFusedSyncer)
+        val accelerometerFusedSyncerSpy = spy(accelerometerFusedSyncer)
+//        val accelerometerFusedSyncerSpy = spyk(accelerometerFusedSyncer)
         estimator.setPrivateProperty("accelerometerFusedSyncer", accelerometerFusedSyncerSpy)
 
         val attitudeSyncer: AttitudeAndAccelerometerSensorMeasurementSyncer? =
             estimator.getPrivateProperty("attitudeSyncer")
         requireNotNull(attitudeSyncer)
-        val attitudeSyncerSpy = spyk(attitudeSyncer)
-        every { attitudeSyncerSpy.start(startTimestamp) }.returns(true)
+        val attitudeSyncerSpy = spy(attitudeSyncer)
+//        val attitudeSyncerSpy = spyk(attitudeSyncer)
+        doReturn(true).whenever(attitudeSyncerSpy).start(startTimestamp)
+//        every { attitudeSyncerSpy.start(startTimestamp) }.returns(true)
         estimator.setPrivateProperty("attitudeSyncer", attitudeSyncerSpy)
 
         assertTrue(estimator.start(startTimestamp))
         assertTrue(estimator.running)
 
-        verify { attitudeProcessorSpy.reset() }
-        verify(exactly = 1) { attitudeSyncerSpy.start(startTimestamp) }
-        verify { accelerometerFusedProcessorSpy wasNot Called }
-        verify { accelerometerFusedSyncerSpy wasNot Called }
-        verify { fusedProcessorSpy wasNot Called }
-        verify { fusedSyncerSpy wasNot Called }
+        verify(attitudeProcessorSpy, only()).reset()
+//        verify { attitudeProcessorSpy.reset() }
+        verify(attitudeSyncerSpy, only()).start(startTimestamp)
+//        verify(exactly = 1) { attitudeSyncerSpy.start(startTimestamp) }
+        verifyNoInteractions(accelerometerFusedProcessorSpy)
+//        verify { accelerometerFusedProcessorSpy wasNot Called }
+        verifyNoInteractions(accelerometerFusedSyncerSpy)
+//        verify { accelerometerFusedSyncerSpy wasNot Called }
+        verifyNoInteractions(fusedProcessorSpy)
+//        verify { fusedProcessorSpy wasNot Called }
+        verifyNoInteractions(fusedSyncerSpy)
+//        verify { fusedSyncerSpy wasNot Called }
     }
 
     @Test
@@ -874,49 +970,62 @@ class RelativePoseEstimator2Test {
         val fusedProcessor: FusedRelativePoseProcessor? =
             estimator.getPrivateProperty("fusedProcessor")
         requireNotNull(fusedProcessor)
-        val fusedProcessorSpy = spyk(fusedProcessor)
+        val fusedProcessorSpy = spy(fusedProcessor)
+//        val fusedProcessorSpy = spyk(fusedProcessor)
         estimator.setPrivateProperty("fusedProcessor", fusedProcessorSpy)
 
         val accelerometerFusedProcessor: AccelerometerFusedRelativePoseProcessor? =
             estimator.getPrivateProperty("accelerometerFusedProcessor")
         requireNotNull(accelerometerFusedProcessor)
-        val accelerometerFusedProcessorSpy = spyk(accelerometerFusedProcessor)
+        val accelerometerFusedProcessorSpy = spy(accelerometerFusedProcessor)
+//        val accelerometerFusedProcessorSpy = spyk(accelerometerFusedProcessor)
         estimator.setPrivateProperty("accelerometerFusedProcessor", accelerometerFusedProcessorSpy)
 
         val attitudeProcessor: AttitudeRelativePoseProcessor? =
             estimator.getPrivateProperty("attitudeProcessor")
         requireNotNull(attitudeProcessor)
-        val attitudeProcessorSpy = spyk(attitudeProcessor)
+        val attitudeProcessorSpy = spy(attitudeProcessor)
+//        val attitudeProcessorSpy = spyk(attitudeProcessor)
         estimator.setPrivateProperty("attitudeProcessor", attitudeProcessorSpy)
 
         val fusedSyncer: AccelerometerGravityAndGyroscopeSensorMeasurementSyncer? =
             estimator.getPrivateProperty("fusedSyncer")
         requireNotNull(fusedSyncer)
-        val fusedSyncerSpy = spyk(fusedSyncer)
+        val fusedSyncerSpy = spy(fusedSyncer)
+//        val fusedSyncerSpy = spyk(fusedSyncer)
         estimator.setPrivateProperty("fusedSyncer", fusedSyncerSpy)
 
         val accelerometerFusedSyncer: AccelerometerAndGyroscopeSensorMeasurementSyncer? =
             estimator.getPrivateProperty("accelerometerFusedSyncer")
         requireNotNull(accelerometerFusedSyncer)
-        val accelerometerFusedSyncerSpy = spyk(accelerometerFusedSyncer)
-        every { accelerometerFusedSyncerSpy.start(startTimestamp) }.returns(true)
+        val accelerometerFusedSyncerSpy = spy(accelerometerFusedSyncer)
+//        val accelerometerFusedSyncerSpy = spyk(accelerometerFusedSyncer)
+        doReturn(true).whenever(accelerometerFusedSyncerSpy).start(startTimestamp)
+//        every { accelerometerFusedSyncerSpy.start(startTimestamp) }.returns(true)
         estimator.setPrivateProperty("accelerometerFusedSyncer", accelerometerFusedSyncerSpy)
 
         val attitudeSyncer: AttitudeAndAccelerometerSensorMeasurementSyncer? =
             estimator.getPrivateProperty("attitudeSyncer")
         requireNotNull(attitudeSyncer)
-        val attitudeSyncerSpy = spyk(attitudeSyncer)
+        val attitudeSyncerSpy = spy(attitudeSyncer)
+//        val attitudeSyncerSpy = spyk(attitudeSyncer)
         estimator.setPrivateProperty("attitudeSyncer", attitudeSyncerSpy)
 
         assertTrue(estimator.start(startTimestamp))
         assertTrue(estimator.running)
 
-        verify { accelerometerFusedProcessorSpy.reset() }
-        verify(exactly = 1) { accelerometerFusedSyncerSpy.start(startTimestamp) }
-        verify { attitudeProcessorSpy wasNot Called }
-        verify { attitudeSyncerSpy wasNot Called }
-        verify { fusedProcessorSpy wasNot Called }
-        verify { fusedSyncerSpy wasNot Called }
+        verify(accelerometerFusedProcessorSpy, times(1)).reset()
+//        verify { accelerometerFusedProcessorSpy.reset() }
+        verify(accelerometerFusedSyncerSpy, only()).start(startTimestamp)
+//        verify(exactly = 1) { accelerometerFusedSyncerSpy.start(startTimestamp) }
+        verifyNoInteractions(attitudeProcessorSpy)
+//        verify { attitudeProcessorSpy wasNot Called }
+        verifyNoInteractions(attitudeSyncerSpy)
+//        verify { attitudeSyncerSpy wasNot Called }
+        verifyNoInteractions(fusedProcessorSpy)
+//        verify { fusedProcessorSpy wasNot Called }
+        verifyNoInteractions(fusedSyncerSpy)
+//        verify { fusedSyncerSpy wasNot Called }
     }
 
     @Test
@@ -933,49 +1042,62 @@ class RelativePoseEstimator2Test {
         val fusedProcessor: FusedRelativePoseProcessor? =
             estimator.getPrivateProperty("fusedProcessor")
         requireNotNull(fusedProcessor)
-        val fusedProcessorSpy = spyk(fusedProcessor)
+        val fusedProcessorSpy = spy(fusedProcessor)
+//        val fusedProcessorSpy = spyk(fusedProcessor)
         estimator.setPrivateProperty("fusedProcessor", fusedProcessorSpy)
 
         val accelerometerFusedProcessor: AccelerometerFusedRelativePoseProcessor? =
             estimator.getPrivateProperty("accelerometerFusedProcessor")
         requireNotNull(accelerometerFusedProcessor)
-        val accelerometerFusedProcessorSpy = spyk(accelerometerFusedProcessor)
+        val accelerometerFusedProcessorSpy = spy(accelerometerFusedProcessor)
+//        val accelerometerFusedProcessorSpy = spyk(accelerometerFusedProcessor)
         estimator.setPrivateProperty("accelerometerFusedProcessor", accelerometerFusedProcessorSpy)
 
         val attitudeProcessor: AttitudeRelativePoseProcessor? =
             estimator.getPrivateProperty("attitudeProcessor")
         requireNotNull(attitudeProcessor)
-        val attitudeProcessorSpy = spyk(attitudeProcessor)
+        val attitudeProcessorSpy = spy(attitudeProcessor)
+//        val attitudeProcessorSpy = spyk(attitudeProcessor)
         estimator.setPrivateProperty("attitudeProcessor", attitudeProcessorSpy)
 
         val fusedSyncer: AccelerometerGravityAndGyroscopeSensorMeasurementSyncer? =
             estimator.getPrivateProperty("fusedSyncer")
         requireNotNull(fusedSyncer)
-        val fusedSyncerSpy = spyk(fusedSyncer)
-        every { fusedSyncerSpy.start(startTimestamp) }.returns(true)
+        val fusedSyncerSpy = spy(fusedSyncer)
+//        val fusedSyncerSpy = spyk(fusedSyncer)
+        doReturn(true).whenever(fusedSyncerSpy).start(startTimestamp)
+//        every { fusedSyncerSpy.start(startTimestamp) }.returns(true)
         estimator.setPrivateProperty("fusedSyncer", fusedSyncerSpy)
 
         val accelerometerFusedSyncer: AccelerometerAndGyroscopeSensorMeasurementSyncer? =
             estimator.getPrivateProperty("accelerometerFusedSyncer")
         requireNotNull(accelerometerFusedSyncer)
-        val accelerometerFusedSyncerSpy = spyk(accelerometerFusedSyncer)
+        val accelerometerFusedSyncerSpy = spy(accelerometerFusedSyncer)
+//        val accelerometerFusedSyncerSpy = spyk(accelerometerFusedSyncer)
         estimator.setPrivateProperty("accelerometerFusedSyncer", accelerometerFusedSyncerSpy)
 
         val attitudeSyncer: AttitudeAndAccelerometerSensorMeasurementSyncer? =
             estimator.getPrivateProperty("attitudeSyncer")
         requireNotNull(attitudeSyncer)
-        val attitudeSyncerSpy = spyk(attitudeSyncer)
+        val attitudeSyncerSpy = spy(attitudeSyncer)
+//        val attitudeSyncerSpy = spyk(attitudeSyncer)
         estimator.setPrivateProperty("attitudeSyncer", attitudeSyncerSpy)
 
         assertTrue(estimator.start(startTimestamp))
         assertTrue(estimator.running)
 
-        verify { fusedProcessorSpy.reset() }
-        verify(exactly = 1) { fusedSyncerSpy.start(startTimestamp) }
-        verify { attitudeProcessorSpy wasNot Called }
-        verify { attitudeSyncerSpy wasNot Called }
-        verify { accelerometerFusedProcessorSpy wasNot Called }
-        verify { accelerometerFusedSyncerSpy wasNot Called }
+        verify(fusedProcessorSpy, times(1)).reset()
+//        verify { fusedProcessorSpy.reset() }
+        verify(fusedSyncerSpy, only()).start(startTimestamp)
+//        verify(exactly = 1) { fusedSyncerSpy.start(startTimestamp) }
+        verifyNoInteractions(attitudeProcessorSpy)
+//        verify { attitudeProcessorSpy wasNot Called }
+        verifyNoInteractions(attitudeSyncerSpy)
+//        verify { attitudeSyncerSpy wasNot Called }
+        verifyNoInteractions(accelerometerFusedProcessorSpy)
+//        verify { accelerometerFusedProcessorSpy wasNot Called }
+        verifyNoInteractions(accelerometerFusedSyncerSpy)
+//        verify { accelerometerFusedSyncerSpy wasNot Called }
     }
 
     @Test
@@ -988,28 +1110,35 @@ class RelativePoseEstimator2Test {
         val fusedSyncer: AccelerometerGravityAndGyroscopeSensorMeasurementSyncer? =
             estimator.getPrivateProperty("fusedSyncer")
         requireNotNull(fusedSyncer)
-        val fusedSyncerSpy = spyk(fusedSyncer)
-        every { fusedSyncerSpy.start(startTimestamp) }.returns(true)
+        val fusedSyncerSpy = spy(fusedSyncer)
+//        val fusedSyncerSpy = spyk(fusedSyncer)
+        doReturn(true).whenever(fusedSyncerSpy).start(startTimestamp)
+//        every { fusedSyncerSpy.start(startTimestamp) }.returns(true)
         estimator.setPrivateProperty("fusedSyncer", fusedSyncerSpy)
 
         val accelerometerFusedSyncer: AccelerometerAndGyroscopeSensorMeasurementSyncer? =
             estimator.getPrivateProperty("accelerometerFusedSyncer")
         requireNotNull(accelerometerFusedSyncer)
-        val accelerometerFusedSyncerSpy = spyk(accelerometerFusedSyncer)
+        val accelerometerFusedSyncerSpy = spy(accelerometerFusedSyncer)
+//        val accelerometerFusedSyncerSpy = spyk(accelerometerFusedSyncer)
         estimator.setPrivateProperty("accelerometerFusedSyncer", accelerometerFusedSyncerSpy)
 
         val attitudeSyncer: AttitudeAndAccelerometerSensorMeasurementSyncer? =
             estimator.getPrivateProperty("attitudeSyncer")
         requireNotNull(attitudeSyncer)
-        val attitudeSyncerSpy = spyk(attitudeSyncer)
+        val attitudeSyncerSpy = spy(attitudeSyncer)
+//        val attitudeSyncerSpy = spyk(attitudeSyncer)
         estimator.setPrivateProperty("attitudeSyncer", attitudeSyncerSpy)
 
         // stop
         estimator.stop()
 
-        verify(exactly = 1) { fusedSyncerSpy.stop() }
-        verify(exactly = 1) { accelerometerFusedSyncerSpy.stop() }
-        verify(exactly = 1) { attitudeSyncerSpy.stop() }
+        verify(fusedSyncerSpy, times(1)).stop()
+//        verify(exactly = 1) { fusedSyncerSpy.stop() }
+        verify(accelerometerFusedSyncerSpy, times(1)).stop()
+//        verify(exactly = 1) { accelerometerFusedSyncerSpy.stop() }
+        verify(attitudeSyncerSpy, times(1)).stop()
+//        verify(exactly = 1) { attitudeSyncerSpy.stop() }
     }
 
     @Test
@@ -1045,13 +1174,18 @@ class RelativePoseEstimator2Test {
         listener.onAccuracyChanged(fusedSyncer, SensorType.ABSOLUTE_ATTITUDE, SensorAccuracy.HIGH)
 
         // check
-        verify(exactly = 1) {
+        verify(accuracyChangedListener, only()).onAccuracyChanged(
+            estimator,
+            SensorType.ABSOLUTE_ATTITUDE,
+            SensorAccuracy.HIGH
+        )
+/*        verify(exactly = 1) {
             accuracyChangedListener.onAccuracyChanged(
                 estimator,
                 SensorType.ABSOLUTE_ATTITUDE,
                 SensorAccuracy.HIGH
             )
-        }
+        }*/
     }
 
     @Test
@@ -1087,12 +1221,16 @@ class RelativePoseEstimator2Test {
         listener.onBufferFilled(fusedSyncer, SensorType.ABSOLUTE_ATTITUDE)
 
         // check
-        verify(exactly = 1) {
+        verify(bufferFilledListener, only()).onBufferFilled(
+            estimator,
+            SensorType.ABSOLUTE_ATTITUDE
+        )
+/*        verify(exactly = 1) {
             bufferFilledListener.onBufferFilled(
                 estimator,
                 SensorType.ABSOLUTE_ATTITUDE
             )
-        }
+        }*/
     }
 
     @Test
@@ -1112,8 +1250,10 @@ class RelativePoseEstimator2Test {
         val fusedProcessor: FusedRelativePoseProcessor? =
             estimator.getPrivateProperty("fusedProcessor")
         requireNotNull(fusedProcessor)
-        val fusedProcessorSpy = spyk(fusedProcessor)
-        every { fusedProcessorSpy.process(any()) }.returns(false)
+        val fusedProcessorSpy = spy(fusedProcessor)
+//        val fusedProcessorSpy = spyk(fusedProcessor)
+        doReturn(false).whenever(fusedProcessorSpy).process(any())
+//        every { fusedProcessorSpy.process(any()) }.returns(false)
         estimator.setPrivateProperty("fusedProcessor", fusedProcessorSpy)
 
         // notify measurement
@@ -1121,8 +1261,10 @@ class RelativePoseEstimator2Test {
         listener.onSyncedMeasurements(fusedSyncer, measurement)
 
         // check
-        verify(exactly = 1) { fusedProcessorSpy.process(measurement) }
-        verify { poseAvailableListener wasNot Called }
+        verify(fusedProcessorSpy, only()).process(measurement)
+//        verify(exactly = 1) { fusedProcessorSpy.process(measurement) }
+        verifyNoInteractions(poseAvailableListener)
+//        verify { poseAvailableListener wasNot Called }
     }
 
     @Test
@@ -1139,8 +1281,10 @@ class RelativePoseEstimator2Test {
         val fusedProcessor: FusedRelativePoseProcessor? =
             estimator.getPrivateProperty("fusedProcessor")
         requireNotNull(fusedProcessor)
-        val fusedProcessorSpy = spyk(fusedProcessor)
-        every { fusedProcessorSpy.process(any()) }.returns(true)
+        val fusedProcessorSpy = spy(fusedProcessor)
+//        val fusedProcessorSpy = spyk(fusedProcessor)
+        doReturn(true).whenever(fusedProcessorSpy).process(any())
+//        every { fusedProcessorSpy.process(any()) }.returns(true)
         estimator.setPrivateProperty("fusedProcessor", fusedProcessorSpy)
 
         // notify measurement
@@ -1148,8 +1292,10 @@ class RelativePoseEstimator2Test {
         listener.onSyncedMeasurements(fusedSyncer, measurement)
 
         // check
-        verify(exactly = 1) { fusedProcessorSpy.process(measurement) }
-        verify(exactly = 1) { fusedProcessorSpy.poseTransformation }
+        verify(fusedProcessorSpy, times(1)).process(measurement)
+//        verify(exactly = 1) { fusedProcessorSpy.process(measurement) }
+        verify(fusedProcessorSpy, times(1)).poseTransformation
+//        verify(exactly = 1) { fusedProcessorSpy.poseTransformation }
     }
 
     @Test
@@ -1169,10 +1315,13 @@ class RelativePoseEstimator2Test {
         val fusedProcessor: FusedRelativePoseProcessor? =
             estimator.getPrivateProperty("fusedProcessor")
         requireNotNull(fusedProcessor)
-        val fusedProcessorSpy = spyk(fusedProcessor)
-        every { fusedProcessorSpy.process(any()) }.returns(true)
+        val fusedProcessorSpy = spy(fusedProcessor)
+//        val fusedProcessorSpy = spyk(fusedProcessor)
+        doReturn(true).whenever(fusedProcessorSpy).process(any())
+//        every { fusedProcessorSpy.process(any()) }.returns(true)
         val poseTransformation = EuclideanTransformation3D()
-        every { fusedProcessorSpy.poseTransformation }.returns(poseTransformation)
+        doReturn(poseTransformation).whenever(fusedProcessorSpy).poseTransformation
+//        every { fusedProcessorSpy.poseTransformation }.returns(poseTransformation)
         estimator.setPrivateProperty("fusedProcessor", fusedProcessorSpy)
 
         // notify measurement
@@ -1182,15 +1331,22 @@ class RelativePoseEstimator2Test {
         listener.onSyncedMeasurements(fusedSyncer, measurement)
 
         // check
-        verify(exactly = 1) { fusedProcessorSpy.process(measurement) }
-        verify(exactly = 1) { fusedProcessorSpy.poseTransformation }
-        verify(exactly = 1) {
+        verify(fusedProcessorSpy, times(1)).process(measurement)
+//        verify(exactly = 1) { fusedProcessorSpy.process(measurement) }
+        verify(fusedProcessorSpy, times(1)).poseTransformation
+//        verify(exactly = 1) { fusedProcessorSpy.poseTransformation }
+        verify(poseAvailableListener, only()).onPoseAvailable(
+            estimator,
+            timestamp,
+            poseTransformation
+        )
+/*        verify(exactly = 1) {
             poseAvailableListener.onPoseAvailable(
                 estimator,
                 timestamp,
                 poseTransformation
             )
-        }
+        }*/
     }
 
     @Test
@@ -1234,13 +1390,18 @@ class RelativePoseEstimator2Test {
         )
 
         // check
-        verify(exactly = 1) {
+        verify(accuracyChangedListener, only()).onAccuracyChanged(
+            estimator,
+            SensorType.ABSOLUTE_ATTITUDE,
+            SensorAccuracy.HIGH
+        )
+/*        verify(exactly = 1) {
             accuracyChangedListener.onAccuracyChanged(
                 estimator,
                 SensorType.ABSOLUTE_ATTITUDE,
                 SensorAccuracy.HIGH
             )
-        }
+        }*/
     }
 
     @Test
@@ -1276,12 +1437,16 @@ class RelativePoseEstimator2Test {
         listener.onBufferFilled(accelerometerFusedSyncer, SensorType.ABSOLUTE_ATTITUDE)
 
         // check
-        verify(exactly = 1) {
+        verify(bufferFilledListener, only()).onBufferFilled(
+            estimator,
+            SensorType.ABSOLUTE_ATTITUDE
+        )
+/*        verify(exactly = 1) {
             bufferFilledListener.onBufferFilled(
                 estimator,
                 SensorType.ABSOLUTE_ATTITUDE
             )
-        }
+        }*/
     }
 
     @Test
@@ -1301,8 +1466,10 @@ class RelativePoseEstimator2Test {
         val accelerometerFusedProcessor: AccelerometerFusedRelativePoseProcessor? =
             estimator.getPrivateProperty("accelerometerFusedProcessor")
         requireNotNull(accelerometerFusedProcessor)
-        val accelerometerFusedProcessorSpy = spyk(accelerometerFusedProcessor)
-        every { accelerometerFusedProcessorSpy.process(any()) }.returns(false)
+        val accelerometerFusedProcessorSpy = spy(accelerometerFusedProcessor)
+//        val accelerometerFusedProcessorSpy = spyk(accelerometerFusedProcessor)
+        doReturn(false).whenever(accelerometerFusedProcessorSpy).process(any())
+//        every { accelerometerFusedProcessorSpy.process(any()) }.returns(false)
         estimator.setPrivateProperty(
             "accelerometerFusedProcessor",
             accelerometerFusedProcessorSpy
@@ -1313,8 +1480,10 @@ class RelativePoseEstimator2Test {
         listener.onSyncedMeasurements(accelerometerFusedSyncer, measurement)
 
         // check
-        verify(exactly = 1) { accelerometerFusedProcessorSpy.process(measurement) }
-        verify { poseAvailableListener wasNot Called }
+        verify(accelerometerFusedProcessorSpy, only()).process(measurement)
+//        verify(exactly = 1) { accelerometerFusedProcessorSpy.process(measurement) }
+        verifyNoInteractions(poseAvailableListener)
+//        verify { poseAvailableListener wasNot Called }
     }
 
     @Test
@@ -1331,8 +1500,10 @@ class RelativePoseEstimator2Test {
         val accelerometerFusedProcessor: AccelerometerFusedRelativePoseProcessor? =
             estimator.getPrivateProperty("accelerometerFusedProcessor")
         requireNotNull(accelerometerFusedProcessor)
-        val accelerometerFusedProcessorSpy = spyk(accelerometerFusedProcessor)
-        every { accelerometerFusedProcessorSpy.process(any()) }.returns(true)
+        val accelerometerFusedProcessorSpy = spy(accelerometerFusedProcessor)
+//        val accelerometerFusedProcessorSpy = spyk(accelerometerFusedProcessor)
+        doReturn(true).whenever(accelerometerFusedProcessorSpy).process(any())
+//        every { accelerometerFusedProcessorSpy.process(any()) }.returns(true)
         estimator.setPrivateProperty("accelerometerFusedProcessor", accelerometerFusedProcessorSpy)
 
         // notify measurement
@@ -1340,8 +1511,10 @@ class RelativePoseEstimator2Test {
         listener.onSyncedMeasurements(accelerometerFusedSyncer, measurement)
 
         // check
-        verify(exactly = 1) { accelerometerFusedProcessorSpy.process(measurement) }
-        verify(exactly = 1) { accelerometerFusedProcessorSpy.poseTransformation }
+        verify(accelerometerFusedProcessorSpy, times(1)).process(measurement)
+//        verify(exactly = 1) { accelerometerFusedProcessorSpy.process(measurement) }
+        verify(accelerometerFusedProcessorSpy, times(1)).poseTransformation
+//        verify(exactly = 1) { accelerometerFusedProcessorSpy.poseTransformation }
     }
 
     @Test
@@ -1361,10 +1534,13 @@ class RelativePoseEstimator2Test {
         val accelerometerFusedProcessor: AccelerometerFusedRelativePoseProcessor? =
             estimator.getPrivateProperty("accelerometerFusedProcessor")
         requireNotNull(accelerometerFusedProcessor)
-        val accelerometerFusedProcessorSpy = spyk(accelerometerFusedProcessor)
-        every { accelerometerFusedProcessorSpy.process(any()) }.returns(true)
+        val accelerometerFusedProcessorSpy = spy(accelerometerFusedProcessor)
+//        val accelerometerFusedProcessorSpy = spyk(accelerometerFusedProcessor)
+        doReturn(true).whenever(accelerometerFusedProcessorSpy).process(any())
+//        every { accelerometerFusedProcessorSpy.process(any()) }.returns(true)
         val poseTransformation = EuclideanTransformation3D()
-        every { accelerometerFusedProcessorSpy.poseTransformation }.returns(poseTransformation)
+        doReturn(poseTransformation).whenever(accelerometerFusedProcessorSpy).poseTransformation
+//        every { accelerometerFusedProcessorSpy.poseTransformation }.returns(poseTransformation)
         estimator.setPrivateProperty("accelerometerFusedProcessor", accelerometerFusedProcessorSpy)
 
         // notify measurement
@@ -1374,15 +1550,22 @@ class RelativePoseEstimator2Test {
         listener.onSyncedMeasurements(accelerometerFusedSyncer, measurement)
 
         // check
-        verify(exactly = 1) { accelerometerFusedProcessorSpy.process(measurement) }
-        verify(exactly = 1) { accelerometerFusedProcessorSpy.poseTransformation }
-        verify(exactly = 1) {
+        verify(accelerometerFusedProcessorSpy, times(1)).process(measurement)
+//        verify(exactly = 1) { accelerometerFusedProcessorSpy.process(measurement) }
+        verify(accelerometerFusedProcessorSpy, times(1)).poseTransformation
+//        verify(exactly = 1) { accelerometerFusedProcessorSpy.poseTransformation }
+        verify(poseAvailableListener, only()).onPoseAvailable(
+            estimator,
+            timestamp,
+            poseTransformation
+        )
+/*        verify(exactly = 1) {
             poseAvailableListener.onPoseAvailable(
                 estimator,
                 timestamp,
                 poseTransformation
             )
-        }
+        }*/
     }
 
     @Test
@@ -1426,13 +1609,18 @@ class RelativePoseEstimator2Test {
         )
 
         // check
-        verify(exactly = 1) {
+        verify(accuracyChangedListener, only()).onAccuracyChanged(
+            estimator,
+            SensorType.ABSOLUTE_ATTITUDE,
+            SensorAccuracy.HIGH
+        )
+/*        verify(exactly = 1) {
             accuracyChangedListener.onAccuracyChanged(
                 estimator,
                 SensorType.ABSOLUTE_ATTITUDE,
                 SensorAccuracy.HIGH
             )
-        }
+        }*/
     }
 
     @Test
@@ -1468,12 +1656,16 @@ class RelativePoseEstimator2Test {
         listener.onBufferFilled(attitudeSyncer, SensorType.ABSOLUTE_ATTITUDE)
 
         // check
-        verify(exactly = 1) {
+        verify(bufferFilledListener, only()).onBufferFilled(
+            estimator,
+            SensorType.ABSOLUTE_ATTITUDE
+        )
+/*        verify(exactly = 1) {
             bufferFilledListener.onBufferFilled(
                 estimator,
                 SensorType.ABSOLUTE_ATTITUDE
             )
-        }
+        }*/
     }
 
     @Test
@@ -1493,8 +1685,10 @@ class RelativePoseEstimator2Test {
         val attitudeProcessor: AttitudeRelativePoseProcessor? =
             estimator.getPrivateProperty("attitudeProcessor")
         requireNotNull(attitudeProcessor)
-        val attitudeProcessorSpy = spyk(attitudeProcessor)
-        every { attitudeProcessorSpy.process(any()) }.returns(false)
+        val attitudeProcessorSpy = spy(attitudeProcessor)
+//        val attitudeProcessorSpy = spyk(attitudeProcessor)
+        doReturn(false).whenever(attitudeProcessorSpy).process(any())
+//        every { attitudeProcessorSpy.process(any()) }.returns(false)
         estimator.setPrivateProperty("attitudeProcessor", attitudeProcessorSpy)
 
         // notify measurement
@@ -1502,8 +1696,10 @@ class RelativePoseEstimator2Test {
         listener.onSyncedMeasurements(attitudeSyncer, measurement)
 
         // check
-        verify(exactly = 1) { attitudeProcessorSpy.process(measurement) }
-        verify { poseAvailableListener wasNot Called }
+        verify(attitudeProcessorSpy, only()).process(measurement)
+//        verify(exactly = 1) { attitudeProcessorSpy.process(measurement) }
+        verifyNoInteractions(poseAvailableListener)
+//        verify { poseAvailableListener wasNot Called }
     }
 
     @Test
@@ -1520,8 +1716,10 @@ class RelativePoseEstimator2Test {
         val attitudeProcessor: AttitudeRelativePoseProcessor? =
             estimator.getPrivateProperty("attitudeProcessor")
         requireNotNull(attitudeProcessor)
-        val attitudeProcessorSpy = spyk(attitudeProcessor)
-        every { attitudeProcessorSpy.process(any()) }.returns(true)
+        val attitudeProcessorSpy = spy(attitudeProcessor)
+//        val attitudeProcessorSpy = spyk(attitudeProcessor)
+        doReturn(true).whenever(attitudeProcessorSpy).process(any())
+//        every { attitudeProcessorSpy.process(any()) }.returns(true)
         estimator.setPrivateProperty("attitudeProcessor", attitudeProcessorSpy)
 
         // notify measurement
@@ -1529,8 +1727,10 @@ class RelativePoseEstimator2Test {
         listener.onSyncedMeasurements(attitudeSyncer, measurement)
 
         // check
-        verify(exactly = 1) { attitudeProcessorSpy.process(measurement) }
-        verify(exactly = 1) { attitudeProcessorSpy.poseTransformation }
+        verify(attitudeProcessorSpy, times(1)).process(measurement)
+//        verify(exactly = 1) { attitudeProcessorSpy.process(measurement) }
+        verify(attitudeProcessorSpy, times(1)).poseTransformation
+//        verify(exactly = 1) { attitudeProcessorSpy.poseTransformation }
     }
 
     @Test
@@ -1550,10 +1750,13 @@ class RelativePoseEstimator2Test {
         val attitudeProcessor: AttitudeRelativePoseProcessor? =
             estimator.getPrivateProperty("attitudeProcessor")
         requireNotNull(attitudeProcessor)
-        val attitudeProcessorSpy = spyk(attitudeProcessor)
-        every { attitudeProcessorSpy.process(any()) }.returns(true)
+        val attitudeProcessorSpy = spy(attitudeProcessor)
+//        val attitudeProcessorSpy = spyk(attitudeProcessor)
+        doReturn(true).whenever(attitudeProcessorSpy).process(any())
+//        every { attitudeProcessorSpy.process(any()) }.returns(true)
         val poseTransformation = EuclideanTransformation3D()
-        every { attitudeProcessorSpy.poseTransformation }.returns(poseTransformation)
+        doReturn(poseTransformation).whenever(attitudeProcessorSpy).poseTransformation
+//        every { attitudeProcessorSpy.poseTransformation }.returns(poseTransformation)
         estimator.setPrivateProperty("attitudeProcessor", attitudeProcessorSpy)
 
         // notify measurement
@@ -1563,15 +1766,22 @@ class RelativePoseEstimator2Test {
         listener.onSyncedMeasurements(attitudeSyncer, measurement)
 
         // check
-        verify(exactly = 1) { attitudeProcessorSpy.process(measurement) }
-        verify(exactly = 1) { attitudeProcessorSpy.poseTransformation }
-        verify(exactly = 1) {
+        verify(attitudeProcessorSpy, times(1)).process(measurement)
+//        verify(exactly = 1) { attitudeProcessorSpy.process(measurement) }
+        verify(attitudeProcessorSpy, times(1)).poseTransformation
+//        verify(exactly = 1) { attitudeProcessorSpy.poseTransformation }
+        verify(poseAvailableListener, only()).onPoseAvailable(
+            estimator,
+            timestamp,
+            poseTransformation
+        )
+/*        verify(exactly = 1) {
             poseAvailableListener.onPoseAvailable(
                 estimator,
                 timestamp,
                 poseTransformation
             )
-        }
+        }*/
     }
 
     private fun getLocation(): Location {
@@ -1589,9 +1799,12 @@ class RelativePoseEstimator2Test {
             MAX_HEIGHT
         )
 
-        every { location.latitude }.returns(latitudeDegrees)
-        every { location.longitude }.returns(longitudeDegrees)
-        every { location.altitude }.returns(height)
+        whenever(location.latitude).thenReturn(latitudeDegrees)
+//        every { location.latitude }.returns(latitudeDegrees)
+        whenever(location.longitude).thenReturn(longitudeDegrees)
+//        every { location.longitude }.returns(longitudeDegrees)
+        whenever(location.altitude).thenReturn(height)
+//        every { location.altitude }.returns(height)
 
         return location
     }

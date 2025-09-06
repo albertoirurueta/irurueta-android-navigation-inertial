@@ -32,6 +32,7 @@ import com.irurueta.navigation.frames.*
 import com.irurueta.navigation.frames.converters.NEDtoECEFFrameConverter
 import com.irurueta.navigation.inertial.BodyKinematics
 import com.irurueta.navigation.inertial.calibration.*
+import com.irurueta.navigation.inertial.calibration.CalibrationException
 import com.irurueta.navigation.inertial.calibration.gyroscope.*
 import com.irurueta.navigation.inertial.calibration.intervals.TriadStaticIntervalDetector
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.QualityScoreMapper
@@ -39,97 +40,130 @@ import com.irurueta.navigation.inertial.estimators.ECEFKinematicsEstimator
 import com.irurueta.numerical.robust.RobustEstimatorMethod
 import com.irurueta.statistics.UniformRandomizer
 import com.irurueta.units.*
-import io.mockk.*
-import io.mockk.impl.annotations.MockK
-import io.mockk.junit4.MockKRule
-import org.junit.After
+//import io.mockk.*
+//import io.mockk.impl.annotations.MockK
+//import io.mockk.junit4.MockKRule
+//import org.junit.After
 import org.junit.Assert.*
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mock
+import org.mockito.junit.MockitoJUnit
+import org.mockito.junit.MockitoRule
+import org.mockito.kotlin.any
+import org.mockito.kotlin.doAnswer
+import org.mockito.kotlin.doNothing
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.doThrow
+import org.mockito.kotlin.only
+import org.mockito.kotlin.spy
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.verifyNoInteractions
+import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 import java.lang.reflect.InvocationTargetException
 import java.util.*
 import kotlin.math.sqrt
 
-@Ignore("possible memory leak")
 @RunWith(RobolectricTestRunner::class)
 class StaticIntervalGyroscopeCalibratorTest {
 
     @get:Rule
-    val mockkRule = MockKRule(this)
+    val mockitoRule: MockitoRule = MockitoJUnit.rule()
 
-    @MockK(relaxUnitFun = true)
+//    @get:Rule
+//    val mockkRule = MockKRule(this)
+
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var initializationStartedListener:
             StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalGyroscopeCalibrator>
 
-    @MockK(relaxUnitFun = true)
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var initializationCompletedListener:
             StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalGyroscopeCalibrator>
 
-    @MockK(relaxUnitFun = true)
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var errorListener:
             StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalGyroscopeCalibrator>
 
-    @MockK(relaxUnitFun = true)
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var staticIntervalDetectedListener:
             StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<StaticIntervalGyroscopeCalibrator>
 
-    @MockK(relaxUnitFun = true)
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var dynamicIntervalDetectedListener:
             StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener<StaticIntervalGyroscopeCalibrator>
 
-    @MockK(relaxUnitFun = true)
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var staticIntervalSkippedListener:
             StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalSkippedListener<StaticIntervalGyroscopeCalibrator>
 
-    @MockK(relaxUnitFun = true)
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var dynamicIntervalSkippedListener:
             StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalSkippedListener<StaticIntervalGyroscopeCalibrator>
 
-    @MockK(relaxUnitFun = true)
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var generatedGyroscopeMeasurementListener:
             StaticIntervalGyroscopeCalibrator.OnGeneratedGyroscopeMeasurementListener
 
-    @MockK(relaxUnitFun = true)
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var readyToSolveCalibrationListener:
             StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener<StaticIntervalGyroscopeCalibrator>
 
-    @MockK(relaxUnitFun = true)
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var calibrationSolvingStartedListener:
             StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalGyroscopeCalibrator>
 
-    @MockK(relaxUnitFun = true)
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var calibrationCompletedListener:
             StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<StaticIntervalGyroscopeCalibrator>
 
-    @MockK(relaxUnitFun = true)
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var stoppedListener:
             StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalGyroscopeCalibrator>
 
-    @MockK(relaxUnitFun = true)
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var initialGyroscopeBiasAvailableListener:
             StaticIntervalGyroscopeCalibrator.OnInitialGyroscopeBiasAvailableListener
 
-    @MockK
+//    @MockK
+    @Mock
     private lateinit var accuracyChangedListener: SensorCollector.OnAccuracyChangedListener
 
-    @MockK
+//    @MockK
+    @Mock
     private lateinit var gyroscopeQualityScoreMapper:
             QualityScoreMapper<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>
 
-    @MockK
+//    @MockK
+    @Mock
     private lateinit var generator: GyroscopeMeasurementGenerator
 
-    @MockK
+//    @MockK
+    @Mock
     private lateinit var internalCalibrator: GyroscopeNonLinearCalibrator
 
-    @After
+    /*@After
     fun tearDown() {
         unmockkAll()
         clearAllMocks()
-    }
+        System.gc()
+    }*/
 
     @Test
     fun constructor_whenContext_returnsDefaultValues() {
@@ -8702,7 +8736,8 @@ class StaticIntervalGyroscopeCalibratorTest {
 
         generatorInitializationStartedListener.onInitializationStarted(generator)
 
-        verify(exactly = 1) { initializationStartedListener.onInitializationStarted(calibrator) }
+        verify(initializationStartedListener, only()).onInitializationStarted(calibrator)
+//        verify(exactly = 1) { initializationStartedListener.onInitializationStarted(calibrator) }
     }
 
     @Test
@@ -8741,7 +8776,8 @@ class StaticIntervalGyroscopeCalibratorTest {
             baseNoiseLevel
         )
 
-        verify(exactly = 1) { initializationCompletedListener.onInitializationCompleted(calibrator) }
+        verify(initializationCompletedListener, only()).onInitializationCompleted(calibrator)
+//        verify(exactly = 1) { initializationCompletedListener.onInitializationCompleted(calibrator) }
     }
 
     @Test
@@ -8760,7 +8796,8 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
+        val generatorSpy = spy(generator)
+//        val generatorSpy = spyk(generator)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val generatorErrorListener: SingleSensorCalibrationMeasurementGenerator.OnErrorListener<GyroscopeMeasurementGenerator>? =
@@ -8771,7 +8808,8 @@ class StaticIntervalGyroscopeCalibratorTest {
 
         // check
         assertFalse(calibrator.running)
-        verify(exactly = 1) { generatorSpy.stop() }
+        verify(generatorSpy, times(1)).stop()
+//        verify(exactly = 1) { generatorSpy.stop() }
     }
 
     @Test
@@ -8794,7 +8832,8 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
+        val generatorSpy = spy(generator)
+//        val generatorSpy = spyk(generator)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val generatorErrorListener: SingleSensorCalibrationMeasurementGenerator.OnErrorListener<GyroscopeMeasurementGenerator>? =
@@ -8805,14 +8844,20 @@ class StaticIntervalGyroscopeCalibratorTest {
 
         // check
         assertFalse(calibrator.running)
-        verify(exactly = 1) { generatorSpy.stop() }
-        verify(exactly = 1) {
+        verify(generatorSpy, times(1)).stop()
+//        verify(exactly = 1) { generatorSpy.stop() }
+        verify(errorListener, only()).onError(
+            calibrator,
+            CalibratorErrorReason.UNRELIABLE_SENSOR
+        )
+/*        verify(exactly = 1) {
             errorListener.onError(
                 calibrator,
                 CalibratorErrorReason.UNRELIABLE_SENSOR
             )
-        }
-        verify(exactly = 1) { stoppedListener.onStopped(calibrator) }
+        }*/
+        verify(stoppedListener, only()).onStopped(calibrator)
+//        verify(exactly = 1) { stoppedListener.onStopped(calibrator) }
     }
 
     @Test
@@ -8841,7 +8886,8 @@ class StaticIntervalGyroscopeCalibratorTest {
 
         generatorStaticIntervalDetectedListener.onStaticIntervalDetected(generator)
 
-        verify(exactly = 1) { staticIntervalDetectedListener.onStaticIntervalDetected(calibrator) }
+        verify(staticIntervalDetectedListener, only()).onStaticIntervalDetected(calibrator)
+//        verify(exactly = 1) { staticIntervalDetectedListener.onStaticIntervalDetected(calibrator) }
     }
 
     @Test
@@ -8870,7 +8916,8 @@ class StaticIntervalGyroscopeCalibratorTest {
 
         generatorDynamicIntervalDetectedListener.onDynamicIntervalDetected(generator)
 
-        verify(exactly = 1) { dynamicIntervalDetectedListener.onDynamicIntervalDetected(calibrator) }
+        verify(dynamicIntervalDetectedListener, only()).onDynamicIntervalDetected(calibrator)
+//        verify(exactly = 1) { dynamicIntervalDetectedListener.onDynamicIntervalDetected(calibrator) }
     }
 
     @Test
@@ -8899,7 +8946,8 @@ class StaticIntervalGyroscopeCalibratorTest {
 
         generatorStaticIntervalSkippedListener.onStaticIntervalSkipped(generator)
 
-        verify(exactly = 1) { staticIntervalSkippedListener.onStaticIntervalSkipped(calibrator) }
+        verify(staticIntervalSkippedListener, only()).onStaticIntervalSkipped(calibrator)
+//        verify(exactly = 1) { staticIntervalSkippedListener.onStaticIntervalSkipped(calibrator) }
     }
 
     @Test
@@ -8928,7 +8976,8 @@ class StaticIntervalGyroscopeCalibratorTest {
 
         generatorDynamicIntervalSkippedListener.onDynamicIntervalSkipped(generator)
 
-        verify(exactly = 1) { dynamicIntervalSkippedListener.onDynamicIntervalSkipped(calibrator) }
+        verify(dynamicIntervalSkippedListener, only()).onDynamicIntervalSkipped(calibrator)
+//        verify(exactly = 1) { dynamicIntervalSkippedListener.onDynamicIntervalSkipped(calibrator) }
     }
 
     @Test
@@ -8969,14 +9018,20 @@ class StaticIntervalGyroscopeCalibratorTest {
         assertEquals(1, calibrator.gyroscopeMeasurements.size)
         assertSame(measurement, calibrator.gyroscopeMeasurements[0])
 
-        verify(exactly = 1) {
+        verify(generatedGyroscopeMeasurementListener, only()).onGeneratedGyroscopeMeasurement(
+            calibrator,
+            measurement,
+            1,
+            StaticIntervalGyroscopeCalibrator.GYROSCOPE_UNKNOWN_BIAS_MINIMUM_SEQUENCES_GENERAL,
+        )
+/*        verify(exactly = 1) {
             generatedGyroscopeMeasurementListener.onGeneratedGyroscopeMeasurement(
                 calibrator,
                 measurement,
                 1,
                 StaticIntervalGyroscopeCalibrator.GYROSCOPE_UNKNOWN_BIAS_MINIMUM_SEQUENCES_GENERAL,
             )
-        }
+        }*/
     }
 
     @Test
@@ -9003,7 +9058,8 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
+        val generatorSpy = spy(generator)
+//        val generatorSpy = spyk(generator)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         var gyroscopeInternalCalibrator: GyroscopeNonLinearCalibrator? =
@@ -9016,7 +9072,8 @@ class StaticIntervalGyroscopeCalibratorTest {
 
         generatorGeneratedMeasurementListener.onGeneratedMeasurement(generatorSpy, measurement)
 
-        verify(exactly = 1) { generatorSpy.stop() }
+        verify(generatorSpy, times(1)).stop()
+//        verify(exactly = 1) { generatorSpy.stop() }
 
         gyroscopeInternalCalibrator =
             calibrator.getPrivateProperty("gyroscopeInternalCalibrator")
@@ -9048,7 +9105,8 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
+        val generatorSpy = spy(generator)
+//        val generatorSpy = spyk(generator)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         var gyroscopeInternalCalibrator: GyroscopeNonLinearCalibrator? =
@@ -9061,8 +9119,10 @@ class StaticIntervalGyroscopeCalibratorTest {
 
         generatorGeneratedMeasurementListener.onGeneratedMeasurement(generatorSpy, measurement)
 
-        verify(exactly = 1) { readyToSolveCalibrationListener.onReadyToSolveCalibration(calibrator) }
-        verify(exactly = 1) { generatorSpy.stop() }
+        verify(readyToSolveCalibrationListener, only()).onReadyToSolveCalibration(calibrator)
+        verify(generatorSpy, times(1)).stop()
+//        verify(exactly = 1) { readyToSolveCalibrationListener.onReadyToSolveCalibration(calibrator) }
+//        verify(exactly = 1) { generatorSpy.stop() }
 
         gyroscopeInternalCalibrator =
             calibrator.getPrivateProperty("gyroscopeInternalCalibrator")
@@ -9297,7 +9357,8 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
+        val generatorSpy = spy(generator)
+//        val generatorSpy = spyk(generator)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         var gyroscopeInternalCalibrator: GyroscopeNonLinearCalibrator? =
@@ -9312,7 +9373,8 @@ class StaticIntervalGyroscopeCalibratorTest {
             BodyKinematicsSequence(calibrator.gyroscopeMeasurements.last())
         generatorGeneratedMeasurementListener.onGeneratedMeasurement(generatorSpy, measurement)
 
-        verify(exactly = 1) { generatorSpy.stop() }
+        verify(generatorSpy, times(1)).stop()
+//        verify(exactly = 1) { generatorSpy.stop() }
 
         gyroscopeInternalCalibrator =
             calibrator.getPrivateProperty("gyroscopeInternalCalibrator")
@@ -9581,7 +9643,8 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
+        val generatorSpy = spy(generator)
+//        val generatorSpy = spyk(generator)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         var gyroscopeInternalCalibrator: GyroscopeNonLinearCalibrator? =
@@ -9596,7 +9659,8 @@ class StaticIntervalGyroscopeCalibratorTest {
             BodyKinematicsSequence(calibrator.gyroscopeMeasurements.last())
         generatorGeneratedMeasurementListener.onGeneratedMeasurement(generatorSpy, measurement)
 
-        verify(exactly = 1) { generatorSpy.stop() }
+        verify(generatorSpy, times(1)).stop()
+//        verify(exactly = 1) { generatorSpy.stop() }
 
         gyroscopeInternalCalibrator =
             calibrator.getPrivateProperty("gyroscopeInternalCalibrator")
@@ -9631,15 +9695,22 @@ class StaticIntervalGyroscopeCalibratorTest {
         assertTrue(calibrator.getEstimatedGyroscopeBiasAsTriad(triad))
         assertNotNull(calibrator.estimatedGyroscopeBiasStandardDeviationNorm)
 
-        verify(exactly = 1) { readyToSolveCalibrationListener.onReadyToSolveCalibration(calibrator) }
-        verify(exactly = 1) { stoppedListener.onStopped(calibrator) }
-        verify(exactly = 1) {
+        verify(readyToSolveCalibrationListener, only()).onReadyToSolveCalibration(calibrator)
+        verify(stoppedListener, only()).onStopped(calibrator)
+//        verify(exactly = 1) { readyToSolveCalibrationListener.onReadyToSolveCalibration(calibrator) }
+//        verify(exactly = 1) { stoppedListener.onStopped(calibrator) }
+        verify(calibrationSolvingStartedListener, only()).onCalibrationSolvingStarted(
+            calibrator
+        )
+/*        verify(exactly = 1) {
             calibrationSolvingStartedListener.onCalibrationSolvingStarted(
                 calibrator
             )
-        }
-        verify(exactly = 1) { calibrationCompletedListener.onCalibrationCompleted(calibrator) }
-        verify { errorListener wasNot Called }
+        }*/
+        verify(calibrationCompletedListener, only()).onCalibrationCompleted(calibrator)
+//        verify(exactly = 1) { calibrationCompletedListener.onCalibrationCompleted(calibrator) }
+        verifyNoInteractions(errorListener)
+//        verify { errorListener wasNot Called }
     }
 
     @Test
@@ -9669,8 +9740,10 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
-        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(0)
+        val generatorSpy = spy(generator)
+//        val generatorSpy = spyk(generator)
+        doReturn(0).whenever(generatorSpy).numberOfProcessedAccelerometerMeasurements
+//        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(0)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val generatorAccelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
@@ -9767,8 +9840,10 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
-        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(0)
+        val generatorSpy = spy(generator)
+//        val generatorSpy = spyk(generator)
+        doReturn(0).whenever(generatorSpy).numberOfProcessedAccelerometerMeasurements
+//        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(0)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val generatorAccelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
@@ -9864,8 +9939,10 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
-        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(0)
+        val generatorSpy = spy(generator)
+//        val generatorSpy = spyk(generator)
+        doReturn(0).whenever(generatorSpy).numberOfProcessedAccelerometerMeasurements
+//        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(0)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val generatorAccelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
@@ -9961,8 +10038,10 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
-        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(0)
+        val generatorSpy = spy(generator)
+//        val generatorSpy = spyk(generator)
+        doReturn(0).whenever(generatorSpy).numberOfProcessedAccelerometerMeasurements
+//        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(0)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val generatorAccelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
@@ -10068,8 +10147,10 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
-        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(0)
+        val generatorSpy = spy(generator)
+        doReturn(0).whenever(generatorSpy).numberOfProcessedAccelerometerMeasurements
+//        val generatorSpy = spyk(generator)
+//        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(0)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val generatorAccelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
@@ -10165,8 +10246,10 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
-        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(2)
+        val generatorSpy = spy(generator)
+//        val generatorSpy = spyk(generator)
+        doReturn(2).whenever(generatorSpy).numberOfProcessedAccelerometerMeasurements
+//        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(2)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val generatorAccelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
@@ -10221,8 +10304,10 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
-        every { generatorSpy.numberOfProcessedGyroscopeMeasurements }.returns(0)
+        val generatorSpy = spy(generator)
+//        val generatorSpy = spyk(generator)
+        doReturn(0).whenever(generatorSpy).numberOfProcessedGyroscopeMeasurements
+//        every { generatorSpy.numberOfProcessedGyroscopeMeasurements }.returns(0)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val generatorGyroscopeMeasurementListener: GyroscopeSensorCollector.OnMeasurementListener? =
@@ -10272,8 +10357,10 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
-        every { generatorSpy.numberOfProcessedGyroscopeMeasurements }.returns(0)
+        val generatorSpy = spy(generator)
+//        val generatorSpy = spyk(generator)
+        doReturn(0).whenever(generatorSpy).numberOfProcessedGyroscopeMeasurements
+//        every { generatorSpy.numberOfProcessedGyroscopeMeasurements }.returns(0)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val generatorGyroscopeMeasurementListener: GyroscopeSensorCollector.OnMeasurementListener? =
@@ -10322,8 +10409,10 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
-        every { generatorSpy.numberOfProcessedGyroscopeMeasurements }.returns(0)
+        val generatorSpy = spy(generator)
+        doReturn(0).whenever(generatorSpy).numberOfProcessedGyroscopeMeasurements
+//        val generatorSpy = spyk(generator)
+//        every { generatorSpy.numberOfProcessedGyroscopeMeasurements }.returns(0)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val generatorGyroscopeMeasurementListener: GyroscopeSensorCollector.OnMeasurementListener? =
@@ -10372,8 +10461,10 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
-        every { generatorSpy.numberOfProcessedGyroscopeMeasurements }.returns(0)
+        val generatorSpy = spy(generator)
+        doReturn(0).whenever(generatorSpy).numberOfProcessedGyroscopeMeasurements
+//        val generatorSpy = spyk(generator)
+//        every { generatorSpy.numberOfProcessedGyroscopeMeasurements }.returns(0)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val generatorGyroscopeMeasurementListener: GyroscopeSensorCollector.OnMeasurementListener? =
@@ -10425,8 +10516,10 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
-        every { generatorSpy.numberOfProcessedGyroscopeMeasurements }.returns(0)
+        val generatorSpy = spy(generator)
+        doReturn(0).whenever(generatorSpy).numberOfProcessedGyroscopeMeasurements
+//        val generatorSpy = spyk(generator)
+//        every { generatorSpy.numberOfProcessedGyroscopeMeasurements }.returns(0)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val generatorGyroscopeMeasurementListener: GyroscopeSensorCollector.OnMeasurementListener? =
@@ -10463,14 +10556,20 @@ class StaticIntervalGyroscopeCalibratorTest {
         assertEquals(bx.toDouble(), initialBiasY, 0.0)
         assertEquals(-bz.toDouble(), initialBiasZ, 0.0)
 
-        verify(exactly = 1) {
+        verify(initialGyroscopeBiasAvailableListener, only()).onInitialBiasAvailable(
+            calibrator,
+            initialBiasX,
+            initialBiasY,
+            initialBiasZ
+        )
+/*        verify(exactly = 1) {
             initialGyroscopeBiasAvailableListener.onInitialBiasAvailable(
                 calibrator,
                 initialBiasX,
                 initialBiasY,
                 initialBiasZ
             )
-        }
+        }*/
     }
 
     @Test
@@ -10488,8 +10587,10 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
-        every { generatorSpy.numberOfProcessedGyroscopeMeasurements }.returns(2)
+        val generatorSpy = spy(generator)
+        doReturn(2).whenever(generatorSpy).numberOfProcessedGyroscopeMeasurements
+//        val generatorSpy = spyk(generator)
+//        every { generatorSpy.numberOfProcessedGyroscopeMeasurements }.returns(2)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val generatorGyroscopeMeasurementListener: GyroscopeSensorCollector.OnMeasurementListener? =
@@ -10520,7 +10621,8 @@ class StaticIntervalGyroscopeCalibratorTest {
         assertNull(calibrator.gyroscopeInitialBiasY)
         assertNull(calibrator.gyroscopeInitialBiasZ)
 
-        verify { initialGyroscopeBiasAvailableListener wasNot Called }
+        verifyNoInteractions(initialGyroscopeBiasAvailableListener)
+//        verify { initialGyroscopeBiasAvailableListener wasNot Called }
     }
 
     @Test
@@ -10531,15 +10633,18 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
+        val generatorSpy = spy(generator)
+//        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val baseNoiseLevel = randomizer.nextDouble()
-        every { generatorSpy.gyroscopeBaseNoiseLevel }.returns(baseNoiseLevel)
+        doReturn(baseNoiseLevel).whenever(generatorSpy).gyroscopeBaseNoiseLevel
+//        every { generatorSpy.gyroscopeBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(baseNoiseLevel, calibrator.gyroscopeBaseNoiseLevel)
 
-        verify(exactly = 1) { generatorSpy.gyroscopeBaseNoiseLevel }
+        verify(generatorSpy, only()).gyroscopeBaseNoiseLevel
+//        verify(exactly = 1) { generatorSpy.gyroscopeBaseNoiseLevel }
     }
 
     @Test
@@ -10550,17 +10655,20 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
+        val generatorSpy = spy(generator)
+//        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val baseNoiseLevel1 = AngularSpeed(value, AngularSpeedUnit.RADIANS_PER_SECOND)
-        every { generatorSpy.gyroscopeBaseNoiseLevelAsMeasurement }.returns(baseNoiseLevel1)
+        doReturn(baseNoiseLevel1).whenever(generatorSpy).gyroscopeBaseNoiseLevelAsMeasurement
+//        every { generatorSpy.gyroscopeBaseNoiseLevelAsMeasurement }.returns(baseNoiseLevel1)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val baseNoiseLevel2 = calibrator.gyroscopeBaseNoiseLevelAsMeasurement
         assertSame(baseNoiseLevel1, baseNoiseLevel2)
 
-        verify(exactly = 1) { generatorSpy.gyroscopeBaseNoiseLevelAsMeasurement }
+        verify(generatorSpy, only()).gyroscopeBaseNoiseLevelAsMeasurement
+//        verify(exactly = 1) { generatorSpy.gyroscopeBaseNoiseLevelAsMeasurement }
     }
 
     @Test
@@ -10574,15 +10682,22 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
+        val generatorSpy = spy(generator)
+//        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        every { generatorSpy.getGyroscopeBaseNoiseLevelAsMeasurement(any()) }.answers { answer ->
+        doAnswer { invocation ->
+            val result = invocation.getArgument<AngularSpeed>(0)
+            result.value = value
+            result.unit = AngularSpeedUnit.RADIANS_PER_SECOND
+            return@doAnswer true
+        }.whenever(generatorSpy).getGyroscopeBaseNoiseLevelAsMeasurement(any())
+/*        every { generatorSpy.getGyroscopeBaseNoiseLevelAsMeasurement(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as AngularSpeed
             result.value = value
             result.unit = AngularSpeedUnit.RADIANS_PER_SECOND
             return@answers true
-        }
+        }*/
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertTrue(calibrator.getGyroscopeBaseNoiseLevelAsMeasurement(w))
@@ -10590,7 +10705,8 @@ class StaticIntervalGyroscopeCalibratorTest {
         // check
         assertEquals(value, w.value.toDouble(), 0.0)
         assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, w.unit)
-        verify(exactly = 1) { generatorSpy.getGyroscopeBaseNoiseLevelAsMeasurement(w) }
+        verify(generatorSpy, only()).getGyroscopeBaseNoiseLevelAsMeasurement(w)
+//        verify(exactly = 1) { generatorSpy.getGyroscopeBaseNoiseLevelAsMeasurement(w) }
     }
 
     @Test
@@ -10601,15 +10717,18 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
+        val generatorSpy = spy(generator)
+//        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val baseNoiseLevel = randomizer.nextDouble()
-        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        doReturn(baseNoiseLevel).whenever(generatorSpy).accelerometerBaseNoiseLevel
+//        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(baseNoiseLevel, calibrator.accelerometerBaseNoiseLevel)
 
-        verify(exactly = 1) { generatorSpy.accelerometerBaseNoiseLevel }
+        verify(generatorSpy, only()).accelerometerBaseNoiseLevel
+//        verify(exactly = 1) { generatorSpy.accelerometerBaseNoiseLevel }
     }
 
     @Test
@@ -10620,17 +10739,20 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
+        val generatorSpy = spy(generator)
+//        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val baseNoiseLevel = randomizer.nextDouble()
         val baseNoiseLevel1 =
             Acceleration(baseNoiseLevel, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        every { generatorSpy.accelerometerBaseNoiseLevelAsMeasurement }.returns(baseNoiseLevel1)
+        doReturn(baseNoiseLevel1).whenever(generatorSpy).accelerometerBaseNoiseLevelAsMeasurement
+//        every { generatorSpy.accelerometerBaseNoiseLevelAsMeasurement }.returns(baseNoiseLevel1)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val baseNoiseLevel2 = calibrator.accelerometerBaseNoiseLevelAsMeasurement
         assertSame(baseNoiseLevel1, baseNoiseLevel2)
-        verify(exactly = 1) { generatorSpy.accelerometerBaseNoiseLevelAsMeasurement }
+        verify(generatorSpy, only()).accelerometerBaseNoiseLevelAsMeasurement
+//        verify(exactly = 1) { generatorSpy.accelerometerBaseNoiseLevelAsMeasurement }
     }
 
     @Test
@@ -10645,15 +10767,22 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
+        val generatorSpy = spy(generator)
+//        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val baseNoiseLevel = randomizer.nextDouble()
-        every { generatorSpy.getAccelerometerBaseNoiseLevelAsMeasurement(any()) }.answers { answer ->
+        doAnswer { invocation ->
+            val result = invocation.getArgument<Acceleration>(0)
+            result.value = baseNoiseLevel
+            result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
+            return@doAnswer true
+        }.whenever(generatorSpy).getAccelerometerBaseNoiseLevelAsMeasurement(any())
+/*        every { generatorSpy.getAccelerometerBaseNoiseLevelAsMeasurement(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as Acceleration
             result.value = baseNoiseLevel
             result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
             return@answers true
-        }
+        }*/
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertTrue(calibrator.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration))
@@ -10661,7 +10790,8 @@ class StaticIntervalGyroscopeCalibratorTest {
         // check
         assertEquals(baseNoiseLevel, acceleration.value.toDouble(), 0.0)
         assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, acceleration.unit)
-        verify(exactly = 1) { generatorSpy.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration) }
+        verify(generatorSpy, only()).getAccelerometerBaseNoiseLevelAsMeasurement(acceleration)
+//        verify(exactly = 1) { generatorSpy.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration) }
     }
 
     @Test
@@ -10672,14 +10802,17 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
+        val generatorSpy = spy(generator)
+//        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val baseNoiseLevelPsd = randomizer.nextDouble()
-        every { generatorSpy.accelerometerBaseNoiseLevelPsd }.returns(baseNoiseLevelPsd)
+        doReturn(baseNoiseLevelPsd).whenever(generatorSpy).accelerometerBaseNoiseLevelPsd
+//        every { generatorSpy.accelerometerBaseNoiseLevelPsd }.returns(baseNoiseLevelPsd)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(baseNoiseLevelPsd, calibrator.accelerometerBaseNoiseLevelPsd)
-        verify(exactly = 1) { generatorSpy.accelerometerBaseNoiseLevelPsd }
+        verify(generatorSpy, only()).accelerometerBaseNoiseLevelPsd
+//        verify(exactly = 1) { generatorSpy.accelerometerBaseNoiseLevelPsd }
     }
 
     @Test
@@ -10690,14 +10823,17 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
+        val generatorSpy = spy(generator)
+//        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val baseNoiseLevelRootPsd = randomizer.nextDouble()
-        every { generatorSpy.accelerometerBaseNoiseLevelRootPsd }.returns(baseNoiseLevelRootPsd)
+        doReturn(baseNoiseLevelRootPsd).whenever(generatorSpy).accelerometerBaseNoiseLevelRootPsd
+//        every { generatorSpy.accelerometerBaseNoiseLevelRootPsd }.returns(baseNoiseLevelRootPsd)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(baseNoiseLevelRootPsd, calibrator.accelerometerBaseNoiseLevelRootPsd)
-        verify(exactly = 1) { generatorSpy.accelerometerBaseNoiseLevelRootPsd }
+        verify(generatorSpy, only()).accelerometerBaseNoiseLevelRootPsd
+//        verify(exactly = 1) { generatorSpy.accelerometerBaseNoiseLevelRootPsd }
     }
 
     @Test
@@ -10711,14 +10847,17 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
+        val generatorSpy = spy(generator)
+//        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val threshold = randomizer.nextDouble()
-        every { generatorSpy.threshold }.returns(threshold)
+        doReturn(threshold).whenever(generatorSpy).threshold
+//        every { generatorSpy.threshold }.returns(threshold)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(threshold, calibrator.threshold)
-        verify(exactly = 1) { generatorSpy.threshold }
+        verify(generatorSpy, only()).threshold
+//        verify(exactly = 1) { generatorSpy.threshold }
     }
 
     @Test
@@ -10732,15 +10871,18 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
+        val generatorSpy = spy(generator)
+//        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val threshold = randomizer.nextDouble()
         val acceleration = Acceleration(threshold, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        every { generatorSpy.thresholdAsMeasurement }.returns(acceleration)
+        doReturn(acceleration).whenever(generatorSpy).thresholdAsMeasurement
+//        every { generatorSpy.thresholdAsMeasurement }.returns(acceleration)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertSame(acceleration, calibrator.thresholdAsMeasurement)
-        verify(exactly = 1) { generatorSpy.thresholdAsMeasurement }
+        verify(generatorSpy, only()).thresholdAsMeasurement
+//        verify(exactly = 1) { generatorSpy.thresholdAsMeasurement }
     }
 
     @Test
@@ -10755,21 +10897,29 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
+        val generatorSpy = spy(generator)
+//        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val threshold = randomizer.nextDouble()
-        every { generatorSpy.getThresholdAsMeasurement(any()) }.answers { answer ->
+        doAnswer { invocation ->
+            val result = invocation.getArgument<Acceleration>(0)
+            result.value = threshold
+            result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
+            return@doAnswer true
+        }.whenever(generatorSpy).getThresholdAsMeasurement(any())
+/*        every { generatorSpy.getThresholdAsMeasurement(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as Acceleration
             result.value = threshold
             result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
             return@answers true
-        }
+        }*/
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertTrue(calibrator.getThresholdAsMeasurement(acceleration))
         assertEquals(threshold, acceleration.value.toDouble(), 0.0)
         assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, acceleration.unit)
-        verify(exactly = 1) { generatorSpy.getThresholdAsMeasurement(acceleration) }
+        verify(generatorSpy, only()).getThresholdAsMeasurement(acceleration)
+//        verify(exactly = 1) { generatorSpy.getThresholdAsMeasurement(acceleration) }
     }
 
     @Test
@@ -10780,14 +10930,17 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
+//        val generatorSpy = spyk(generator)
+        val generatorSpy = spy(generator)
         val randomizer = UniformRandomizer()
         val processedStaticSamples = randomizer.nextInt()
-        every { generatorSpy.processedStaticSamples }.returns(processedStaticSamples)
+        doReturn(processedStaticSamples).whenever(generatorSpy).processedStaticSamples
+//        every { generatorSpy.processedStaticSamples }.returns(processedStaticSamples)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(processedStaticSamples, calibrator.processedStaticSamples)
-        verify(exactly = 1) { generatorSpy.processedStaticSamples }
+        verify(generatorSpy, only()).processedStaticSamples
+//        verify(exactly = 1) { generatorSpy.processedStaticSamples }
     }
 
     @Test
@@ -10798,14 +10951,17 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
+        val generatorSpy = spy(generator)
+//        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val processedDynamicSamples = randomizer.nextInt()
-        every { generatorSpy.processedDynamicSamples }.returns(processedDynamicSamples)
+        doReturn(processedDynamicSamples).whenever(generatorSpy).processedDynamicSamples
+//        every { generatorSpy.processedDynamicSamples }.returns(processedDynamicSamples)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(processedDynamicSamples, calibrator.processedDynamicSamples)
-        verify(exactly = 1) { generatorSpy.processedDynamicSamples }
+        verify(generatorSpy, only()).processedDynamicSamples
+//        verify(exactly = 1) { generatorSpy.processedDynamicSamples }
     }
 
     @Test
@@ -10816,12 +10972,15 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
-        every { generatorSpy.isStaticIntervalSkipped }.returns(true)
+//        val generatorSpy = spyk(generator)
+        val generatorSpy = spy(generator)
+        doReturn(true).whenever(generatorSpy).isStaticIntervalSkipped
+//        every { generatorSpy.isStaticIntervalSkipped }.returns(true)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertTrue(calibrator.isStaticIntervalSkipped)
-        verify(exactly = 1) { generatorSpy.isStaticIntervalSkipped }
+        verify(generatorSpy, only()).isStaticIntervalSkipped
+//        verify(exactly = 1) { generatorSpy.isStaticIntervalSkipped }
     }
 
     @Test
@@ -10832,12 +10991,15 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
-        every { generatorSpy.isDynamicIntervalSkipped }.returns(true)
+        val generatorSpy = spy(generator)
+        doReturn(true).whenever(generatorSpy).isDynamicIntervalSkipped
+//        val generatorSpy = spyk(generator)
+//        every { generatorSpy.isDynamicIntervalSkipped }.returns(true)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertTrue(calibrator.isDynamicIntervalSkipped)
-        verify(exactly = 1) { generatorSpy.isDynamicIntervalSkipped }
+        verify(generatorSpy, only()).isDynamicIntervalSkipped
+//        verify(exactly = 1) { generatorSpy.isDynamicIntervalSkipped }
     }
 
     @Test
@@ -10848,14 +11010,17 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
+        val generatorSpy = spy(generator)
+//        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val averageTimeInterval = randomizer.nextDouble()
-        every { generatorSpy.accelerometerAverageTimeInterval }.returns(averageTimeInterval)
+        doReturn(averageTimeInterval).whenever(generatorSpy).accelerometerAverageTimeInterval
+//        every { generatorSpy.accelerometerAverageTimeInterval }.returns(averageTimeInterval)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(averageTimeInterval, calibrator.accelerometerAverageTimeInterval)
-        verify(exactly = 1) { generatorSpy.accelerometerAverageTimeInterval }
+        verify(generatorSpy, only()).accelerometerAverageTimeInterval
+//        verify(exactly = 1) { generatorSpy.accelerometerAverageTimeInterval }
     }
 
     @Test
@@ -10866,15 +11031,18 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
+        val generatorSpy = spy(generator)
+//        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val averageTimeInterval = randomizer.nextDouble()
         val time = Time(averageTimeInterval, TimeUnit.SECOND)
-        every { generatorSpy.accelerometerAverageTimeIntervalAsTime }.returns(time)
+        doReturn(time).whenever(generatorSpy).accelerometerAverageTimeIntervalAsTime
+//        every { generatorSpy.accelerometerAverageTimeIntervalAsTime }.returns(time)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertSame(time, calibrator.accelerometerAverageTimeIntervalAsTime)
-        verify(exactly = 1) { generatorSpy.accelerometerAverageTimeIntervalAsTime }
+        verify(generatorSpy, only()).accelerometerAverageTimeIntervalAsTime
+//        verify(exactly = 1) { generatorSpy.accelerometerAverageTimeIntervalAsTime }
     }
 
     @Test
@@ -10889,21 +11057,29 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
+        val generatorSpy = spy(generator)
+//        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val averageTimeInterval = randomizer.nextDouble()
-        every { generatorSpy.getAccelerometerAverageTimeIntervalAsTime(any()) }.answers { answer ->
+        doAnswer { invocation ->
+            val result = invocation.getArgument<Time>(0)
+            result.value = averageTimeInterval
+            result.unit = TimeUnit.SECOND
+            return@doAnswer true
+        }.whenever(generatorSpy).getAccelerometerAverageTimeIntervalAsTime(any())
+/*        every { generatorSpy.getAccelerometerAverageTimeIntervalAsTime(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as Time
             result.value = averageTimeInterval
             result.unit = TimeUnit.SECOND
             return@answers true
-        }
+        }*/
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertTrue(calibrator.getAccelerometerAverageTimeIntervalAsTime(time))
         assertEquals(averageTimeInterval, time.value.toDouble(), 0.0)
         assertEquals(TimeUnit.SECOND, time.unit)
-        verify(exactly = 1) { generatorSpy.getAccelerometerAverageTimeIntervalAsTime(time) }
+        verify(generatorSpy, only()).getAccelerometerAverageTimeIntervalAsTime(time)
+//        verify(exactly = 1) { generatorSpy.getAccelerometerAverageTimeIntervalAsTime(time) }
     }
 
     @Test
@@ -10917,14 +11093,17 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
+        val generatorSpy = spy(generator)
+//        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val timeIntervalVariance = randomizer.nextDouble()
-        every { generatorSpy.accelerometerTimeIntervalVariance }.returns(timeIntervalVariance)
+        doReturn(timeIntervalVariance).whenever(generatorSpy).accelerometerTimeIntervalVariance
+//        every { generatorSpy.accelerometerTimeIntervalVariance }.returns(timeIntervalVariance)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(timeIntervalVariance, calibrator.accelerometerTimeIntervalVariance)
-        verify(exactly = 1) { generatorSpy.accelerometerTimeIntervalVariance }
+        verify(generatorSpy, only()).accelerometerTimeIntervalVariance
+//        verify(exactly = 1) { generatorSpy.accelerometerTimeIntervalVariance }
     }
 
     @Test
@@ -10938,19 +11117,22 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
+        val generatorSpy = spy(generator)
+//        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val timeIntervalStandardDeviation = randomizer.nextDouble()
-        every { generatorSpy.accelerometerTimeIntervalStandardDeviation }.returns(
+        doReturn(timeIntervalStandardDeviation).whenever(generatorSpy).accelerometerTimeIntervalStandardDeviation
+/*        every { generatorSpy.accelerometerTimeIntervalStandardDeviation }.returns(
             timeIntervalStandardDeviation
-        )
+        )*/
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(
             timeIntervalStandardDeviation,
             calibrator.accelerometerTimeIntervalStandardDeviation
         )
-        verify(exactly = 1) { generatorSpy.accelerometerTimeIntervalStandardDeviation }
+        verify(generatorSpy, only()).accelerometerTimeIntervalStandardDeviation
+//        verify(exactly = 1) { generatorSpy.accelerometerTimeIntervalStandardDeviation }
     }
 
     @Test
@@ -10961,15 +11143,18 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
+        val generatorSpy = spy(generator)
+//        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val time = Time(value, TimeUnit.SECOND)
-        every { generatorSpy.accelerometerTimeIntervalStandardDeviationAsTime }.returns(time)
+        doReturn(time).whenever(generatorSpy).accelerometerTimeIntervalStandardDeviationAsTime
+//        every { generatorSpy.accelerometerTimeIntervalStandardDeviationAsTime }.returns(time)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertSame(time, calibrator.accelerometerTimeIntervalStandardDeviationAsTime)
-        verify(exactly = 1) { generatorSpy.accelerometerTimeIntervalStandardDeviationAsTime }
+        verify(generatorSpy, only()).accelerometerTimeIntervalStandardDeviationAsTime
+//        verify(exactly = 1) { generatorSpy.accelerometerTimeIntervalStandardDeviationAsTime }
     }
 
     @Test
@@ -10984,21 +11169,29 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
+        val generatorSpy = spy(generator)
+//        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        every { generatorSpy.getAccelerometerTimeIntervalStandardDeviationAsTime(any()) }.answers { answer ->
+        doAnswer { invocation ->
+            val result = invocation.getArgument<Time>(0)
+            result.value = value
+            result.unit = TimeUnit.SECOND
+            return@doAnswer true
+        }.whenever(generatorSpy).getAccelerometerTimeIntervalStandardDeviationAsTime(any())
+/*        every { generatorSpy.getAccelerometerTimeIntervalStandardDeviationAsTime(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as Time
             result.value = value
             result.unit = TimeUnit.SECOND
             return@answers true
-        }
+        }*/
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertTrue(calibrator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(value, time.value.toDouble(), 0.0)
         assertEquals(TimeUnit.SECOND, time.unit)
-        verify(exactly = 1) { generatorSpy.getAccelerometerTimeIntervalStandardDeviationAsTime(time) }
+        verify(generatorSpy, only()).getAccelerometerTimeIntervalStandardDeviationAsTime(time)
+//        verify(exactly = 1) { generatorSpy.getAccelerometerTimeIntervalStandardDeviationAsTime(time) }
     }
 
     @Test
@@ -11009,12 +11202,14 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
+        val generatorSpy = spy(generator)
+//        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val numberOfProcessedGyroscopeMeasurements = randomizer.nextInt()
-        every { generatorSpy.numberOfProcessedGyroscopeMeasurements }.returns(
+        doReturn(numberOfProcessedGyroscopeMeasurements).whenever(generatorSpy).numberOfProcessedGyroscopeMeasurements
+/*        every { generatorSpy.numberOfProcessedGyroscopeMeasurements }.returns(
             numberOfProcessedGyroscopeMeasurements
-        )
+        )*/
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(
@@ -11022,7 +11217,8 @@ class StaticIntervalGyroscopeCalibratorTest {
             calibrator.numberOfProcessedGyroscopeMeasurements
         )
 
-        verify(exactly = 1) { generatorSpy.numberOfProcessedGyroscopeMeasurements }
+        verify(generatorSpy, only()).numberOfProcessedGyroscopeMeasurements
+//        verify(exactly = 1) { generatorSpy.numberOfProcessedGyroscopeMeasurements }
     }
 
     @Test
@@ -11033,13 +11229,15 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
+        val generatorSpy = spy(generator)
+//        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
 
         val numberOfProcessedAccelerometerMeasurements = randomizer.nextInt()
-        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(
+        doReturn(numberOfProcessedAccelerometerMeasurements).whenever(generatorSpy).numberOfProcessedAccelerometerMeasurements
+/*        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(
             numberOfProcessedAccelerometerMeasurements
-        )
+        )*/
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(
@@ -11047,7 +11245,8 @@ class StaticIntervalGyroscopeCalibratorTest {
             calibrator.numberOfProcessedAccelerometerMeasurements
         )
 
-        verify(exactly = 1) { generatorSpy.numberOfProcessedAccelerometerMeasurements }
+        verify(generatorSpy, only()).numberOfProcessedAccelerometerMeasurements
+//        verify(exactly = 1) { generatorSpy.numberOfProcessedAccelerometerMeasurements }
     }
 
     @Test
@@ -11291,8 +11490,10 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
-        justRun { generatorSpy.start() }
+        val generatorSpy = spy(generator)
+        doNothing().whenever(generatorSpy).start()
+//        val generatorSpy = spyk(generator)
+//        justRun { generatorSpy.start() }
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         calibrator.start()
@@ -11305,7 +11506,8 @@ class StaticIntervalGyroscopeCalibratorTest {
 
         assertTrue(calibrator.running)
 
-        verify(exactly = 1) { generatorSpy.start() }
+        verify(generatorSpy, only()).start()
+//        verify(exactly = 1) { generatorSpy.start() }
     }
 
     @Test(expected = IllegalStateException::class)
@@ -11330,8 +11532,10 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
-        justRun { generatorSpy.stop() }
+        val generatorSpy = spy(generator)
+        doNothing().whenever(generatorSpy).stop()
+//        val generatorSpy = spyk(generator)
+//        justRun { generatorSpy.stop() }
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         setPrivateProperty(
@@ -11345,7 +11549,8 @@ class StaticIntervalGyroscopeCalibratorTest {
         calibrator.stop()
 
         assertFalse(calibrator.running)
-        verify(exactly = 1) { generatorSpy.stop() }
+        verify(generatorSpy, only()).stop()
+//        verify(exactly = 1) { generatorSpy.stop() }
     }
 
     @Test
@@ -11359,8 +11564,10 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
-        justRun { generatorSpy.stop() }
+        val generatorSpy = spy(generator)
+        doNothing().whenever(generatorSpy).stop()
+//        val generatorSpy = spyk(generator)
+//        justRun { generatorSpy.stop() }
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         setPrivateProperty(
@@ -11374,8 +11581,10 @@ class StaticIntervalGyroscopeCalibratorTest {
         calibrator.stop()
 
         assertFalse(calibrator.running)
-        verify(exactly = 1) { generatorSpy.stop() }
-        verify(exactly = 1) { stoppedListener.onStopped(calibrator) }
+        verify(generatorSpy, only()).stop()
+        verify(stoppedListener, only()).onStopped(calibrator)
+//        verify(exactly = 1) { generatorSpy.stop() }
+//        verify(exactly = 1) { stoppedListener.onStopped(calibrator) }
     }
 
     @Test(expected = IllegalStateException::class)
@@ -11436,18 +11645,23 @@ class StaticIntervalGyroscopeCalibratorTest {
         assertTrue(calibrator.isReadyToSolveCalibration)
         assertFalse(calibrator.running)
 
-        justRun { internalCalibrator.calibrate() }
+        doNothing().whenever(internalCalibrator).calibrate()
+//        justRun { internalCalibrator.calibrate() }
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibrator)
 
         assertTrue(calibrator.calibrate())
 
         assertFalse(calibrator.running)
-        verify(exactly = 1) {
+        verify(calibrationSolvingStartedListener, only()).onCalibrationSolvingStarted(
+            calibrator
+        )
+/*        verify(exactly = 1) {
             calibrationSolvingStartedListener.onCalibrationSolvingStarted(
                 calibrator
             )
-        }
-        verify(exactly = 1) { calibrationCompletedListener.onCalibrationCompleted(calibrator) }
+        }*/
+        verify(calibrationCompletedListener, only()).onCalibrationCompleted(calibrator)
+//        verify(exactly = 1) { calibrationCompletedListener.onCalibrationCompleted(calibrator) }
     }
 
     @Test
@@ -11463,7 +11677,8 @@ class StaticIntervalGyroscopeCalibratorTest {
         assertTrue(calibrator.isReadyToSolveCalibration)
         assertFalse(calibrator.running)
 
-        every { internalCalibrator.calibrate() }.throws(NavigationException())
+        doThrow(CalibrationException()).whenever(internalCalibrator).calibrate()
+//        every { internalCalibrator.calibrate() }.throws(NavigationException())
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibrator)
 
         assertFalse(calibrator.calibrate())
@@ -11487,18 +11702,23 @@ class StaticIntervalGyroscopeCalibratorTest {
         assertTrue(calibrator.isReadyToSolveCalibration)
         assertFalse(calibrator.running)
 
-        every { internalCalibrator.calibrate() }.throws(NavigationException())
+        doThrow(CalibrationException()).whenever(internalCalibrator).calibrate()
+//        every { internalCalibrator.calibrate() }.throws(NavigationException())
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibrator)
 
         assertFalse(calibrator.calibrate())
 
         assertFalse(calibrator.running)
-        verify(exactly = 1) {
+        verify(errorListener, only()).onError(
+            calibrator,
+            CalibratorErrorReason.NUMERICAL_INSTABILITY_DURING_CALIBRATION
+        )
+/*        verify(exactly = 1) {
             errorListener.onError(
                 calibrator,
                 CalibratorErrorReason.NUMERICAL_INSTABILITY_DURING_CALIBRATION
             )
-        }
+        }*/
     }
 
     @Test
@@ -11515,10 +11735,12 @@ class StaticIntervalGyroscopeCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
-        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
+        val internalCalibratorSpy = spy(EasyGyroscopeCalibrator())
+//        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasX = randomizer.nextDouble()
-        every { internalCalibratorSpy.estimatedBiasX }.returns(estimatedBiasX)
+        doReturn(estimatedBiasX).whenever(internalCalibratorSpy).estimatedBiasX
+//        every { internalCalibratorSpy.estimatedBiasX }.returns(estimatedBiasX)
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
 
         assertEquals(estimatedBiasX, calibrator.estimatedGyroscopeBiasX)
@@ -11529,10 +11751,12 @@ class StaticIntervalGyroscopeCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
-        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
+        val internalCalibratorSpy = spy(KnownBiasEasyGyroscopeCalibrator())
+//        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasX = randomizer.nextDouble()
-        every { internalCalibratorSpy.biasX }.returns(estimatedBiasX)
+        doReturn(estimatedBiasX).whenever(internalCalibratorSpy).biasX
+//        every { internalCalibratorSpy.biasX }.returns(estimatedBiasX)
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
 
         assertEquals(estimatedBiasX, calibrator.estimatedGyroscopeBiasX)
@@ -11552,10 +11776,12 @@ class StaticIntervalGyroscopeCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
-        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
+        val internalCalibratorSpy = spy(EasyGyroscopeCalibrator())
+//        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasY = randomizer.nextDouble()
-        every { internalCalibratorSpy.estimatedBiasY }.returns(estimatedBiasY)
+        doReturn(estimatedBiasY).whenever(internalCalibratorSpy).estimatedBiasY
+//        every { internalCalibratorSpy.estimatedBiasY }.returns(estimatedBiasY)
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
 
         assertEquals(estimatedBiasY, calibrator.estimatedGyroscopeBiasY)
@@ -11566,10 +11792,12 @@ class StaticIntervalGyroscopeCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
-        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
+        val internalCalibratorSpy = spy(KnownBiasEasyGyroscopeCalibrator())
+//        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasY = randomizer.nextDouble()
-        every { internalCalibratorSpy.biasY }.returns(estimatedBiasY)
+        doReturn(estimatedBiasY).whenever(internalCalibratorSpy).biasY
+//        every { internalCalibratorSpy.biasY }.returns(estimatedBiasY)
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
 
         assertEquals(estimatedBiasY, calibrator.estimatedGyroscopeBiasY)
@@ -11589,10 +11817,12 @@ class StaticIntervalGyroscopeCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
-        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
+        val internalCalibratorSpy = spy(EasyGyroscopeCalibrator())
+//        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasZ = randomizer.nextDouble()
-        every { internalCalibratorSpy.estimatedBiasZ }.returns(estimatedBiasZ)
+        doReturn(estimatedBiasZ).whenever(internalCalibratorSpy).estimatedBiasZ
+//        every { internalCalibratorSpy.estimatedBiasZ }.returns(estimatedBiasZ)
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
 
         assertEquals(estimatedBiasZ, calibrator.estimatedGyroscopeBiasZ)
@@ -11603,10 +11833,12 @@ class StaticIntervalGyroscopeCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
-        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
+        val internalCalibratorSpy = spy(KnownBiasEasyGyroscopeCalibrator())
+//        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasZ = randomizer.nextDouble()
-        every { internalCalibratorSpy.biasZ }.returns(estimatedBiasZ)
+        doReturn(estimatedBiasZ).whenever(internalCalibratorSpy).biasZ
+//        every { internalCalibratorSpy.biasZ }.returns(estimatedBiasZ)
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
 
         assertEquals(estimatedBiasZ, calibrator.estimatedGyroscopeBiasZ)
@@ -11626,11 +11858,13 @@ class StaticIntervalGyroscopeCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
-        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
+        val internalCalibratorSpy = spy(EasyGyroscopeCalibrator())
+//        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasX = randomizer.nextDouble()
         val w = AngularSpeed(estimatedBiasX, AngularSpeedUnit.RADIANS_PER_SECOND)
-        every { internalCalibratorSpy.estimatedBiasAngularSpeedX }.returns(w)
+        doReturn(w).whenever(internalCalibratorSpy).estimatedBiasAngularSpeedX
+//        every { internalCalibratorSpy.estimatedBiasAngularSpeedX }.returns(w)
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
 
         assertEquals(w, calibrator.estimatedGyroscopeBiasXAsMeasurement)
@@ -11641,11 +11875,13 @@ class StaticIntervalGyroscopeCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
-        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
+        val internalCalibratorSpy = spy(KnownBiasEasyGyroscopeCalibrator())
+//        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasX = randomizer.nextDouble()
         val w = AngularSpeed(estimatedBiasX, AngularSpeedUnit.RADIANS_PER_SECOND)
-        every { internalCalibratorSpy.biasAngularSpeedX }.returns(w)
+        doReturn(w).whenever(internalCalibratorSpy).biasAngularSpeedX
+//        every { internalCalibratorSpy.biasAngularSpeedX }.returns(w)
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
 
         assertEquals(w, calibrator.estimatedGyroscopeBiasXAsMeasurement)
@@ -11666,15 +11902,22 @@ class StaticIntervalGyroscopeCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
-        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
+        val internalCalibratorSpy = spy(EasyGyroscopeCalibrator())
+//        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasX = randomizer.nextDouble()
-        every { internalCalibratorSpy.getEstimatedBiasAngularSpeedX(any()) }.answers { answer ->
+        doAnswer { invocation ->
+            val result = invocation.getArgument<AngularSpeed>(0)
+            result.value = estimatedBiasX
+            result.unit = AngularSpeedUnit.RADIANS_PER_SECOND
+            return@doAnswer true
+        }.whenever(internalCalibratorSpy).getEstimatedBiasAngularSpeedX(any())
+/*        every { internalCalibratorSpy.getEstimatedBiasAngularSpeedX(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as AngularSpeed
             result.value = estimatedBiasX
             result.unit = AngularSpeedUnit.RADIANS_PER_SECOND
             return@answers true
-        }
+        }*/
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
 
         val w = AngularSpeed(estimatedBiasX, AngularSpeedUnit.RADIANS_PER_SECOND)
@@ -11689,14 +11932,20 @@ class StaticIntervalGyroscopeCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
-        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
+        val internalCalibratorSpy = spy(KnownBiasEasyGyroscopeCalibrator())
+//        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasX = randomizer.nextDouble()
-        every { internalCalibratorSpy.getBiasAngularSpeedX(any()) }.answers { answer ->
+        doAnswer { invocation ->
+            val result = invocation.getArgument<AngularSpeed>(0)
+            result.value = estimatedBiasX
+            result.unit = AngularSpeedUnit.RADIANS_PER_SECOND
+        }.whenever(internalCalibratorSpy).getBiasAngularSpeedX(any())
+/*        every { internalCalibratorSpy.getBiasAngularSpeedX(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as AngularSpeed
             result.value = estimatedBiasX
             result.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-        }
+        }*/
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
 
         val w = AngularSpeed(estimatedBiasX, AngularSpeedUnit.RADIANS_PER_SECOND)
@@ -11720,11 +11969,13 @@ class StaticIntervalGyroscopeCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
-        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
+        val internalCalibratorSpy = spy(EasyGyroscopeCalibrator())
+//        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasY = randomizer.nextDouble()
         val w = AngularSpeed(estimatedBiasY, AngularSpeedUnit.RADIANS_PER_SECOND)
-        every { internalCalibratorSpy.estimatedBiasAngularSpeedY }.returns(w)
+        doReturn(w).whenever(internalCalibratorSpy).estimatedBiasAngularSpeedY
+//        every { internalCalibratorSpy.estimatedBiasAngularSpeedY }.returns(w)
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
 
         assertEquals(w, calibrator.estimatedGyroscopeBiasYAsMeasurement)
@@ -11735,11 +11986,13 @@ class StaticIntervalGyroscopeCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
-        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
+        val internalCalibratorSpy = spy(KnownBiasEasyGyroscopeCalibrator())
+//        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasY = randomizer.nextDouble()
         val w = AngularSpeed(estimatedBiasY, AngularSpeedUnit.RADIANS_PER_SECOND)
-        every { internalCalibratorSpy.biasAngularSpeedY }.returns(w)
+        doReturn(w).whenever(internalCalibratorSpy).biasAngularSpeedY
+//        every { internalCalibratorSpy.biasAngularSpeedY }.returns(w)
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
 
         assertEquals(w, calibrator.estimatedGyroscopeBiasYAsMeasurement)
@@ -11760,15 +12013,22 @@ class StaticIntervalGyroscopeCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
-        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
+        val internalCalibratorSpy = spy(EasyGyroscopeCalibrator())
+//        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasY = randomizer.nextDouble()
-        every { internalCalibratorSpy.getEstimatedBiasAngularSpeedY(any()) }.answers { answer ->
+        doAnswer { invocation ->
+            val result = invocation.getArgument<AngularSpeed>(0)
+            result.value = estimatedBiasY
+            result.unit = AngularSpeedUnit.RADIANS_PER_SECOND
+            return@doAnswer true
+        }.whenever(internalCalibratorSpy).getEstimatedBiasAngularSpeedY(any())
+/*        every { internalCalibratorSpy.getEstimatedBiasAngularSpeedY(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as AngularSpeed
             result.value = estimatedBiasY
             result.unit = AngularSpeedUnit.RADIANS_PER_SECOND
             return@answers true
-        }
+        }*/
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
 
         val w = AngularSpeed(estimatedBiasY, AngularSpeedUnit.RADIANS_PER_SECOND)
@@ -11783,14 +12043,20 @@ class StaticIntervalGyroscopeCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
-        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
+        val internalCalibratorSpy = spy(KnownBiasEasyGyroscopeCalibrator())
+//        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasY = randomizer.nextDouble()
-        every { internalCalibratorSpy.getBiasAngularSpeedY(any()) }.answers { answer ->
+        doAnswer { invocation ->
+            val result = invocation.getArgument<AngularSpeed>(0)
+            result.value = estimatedBiasY
+            result.unit = AngularSpeedUnit.RADIANS_PER_SECOND
+        }.whenever(internalCalibratorSpy).getBiasAngularSpeedY(any())
+/*        every { internalCalibratorSpy.getBiasAngularSpeedY(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as AngularSpeed
             result.value = estimatedBiasY
             result.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-        }
+        }*/
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
 
         val w = AngularSpeed(estimatedBiasY, AngularSpeedUnit.RADIANS_PER_SECOND)
@@ -11814,11 +12080,13 @@ class StaticIntervalGyroscopeCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
-        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
+        val internalCalibratorSpy = spy(EasyGyroscopeCalibrator())
+//        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasZ = randomizer.nextDouble()
         val w = AngularSpeed(estimatedBiasZ, AngularSpeedUnit.RADIANS_PER_SECOND)
-        every { internalCalibratorSpy.estimatedBiasAngularSpeedZ }.returns(w)
+        doReturn(w).whenever(internalCalibratorSpy).estimatedBiasAngularSpeedZ
+//        every { internalCalibratorSpy.estimatedBiasAngularSpeedZ }.returns(w)
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
 
         assertEquals(w, calibrator.estimatedGyroscopeBiasZAsMeasurement)
@@ -11829,11 +12097,13 @@ class StaticIntervalGyroscopeCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
-        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
+        val internalCalibratorSpy = spy(KnownBiasEasyGyroscopeCalibrator())
+//        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasZ = randomizer.nextDouble()
         val w = AngularSpeed(estimatedBiasZ, AngularSpeedUnit.RADIANS_PER_SECOND)
-        every { internalCalibratorSpy.biasAngularSpeedZ }.returns(w)
+        doReturn(w).whenever(internalCalibratorSpy).biasAngularSpeedZ
+//        every { internalCalibratorSpy.biasAngularSpeedZ }.returns(w)
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
 
         assertEquals(w, calibrator.estimatedGyroscopeBiasZAsMeasurement)
@@ -11854,15 +12124,22 @@ class StaticIntervalGyroscopeCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
-        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
+        val internalCalibratorSpy = spy(EasyGyroscopeCalibrator())
+//        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasZ = randomizer.nextDouble()
-        every { internalCalibratorSpy.getEstimatedBiasAngularSpeedZ(any()) }.answers { answer ->
+        doAnswer { invocation ->
+            val result = invocation.getArgument<AngularSpeed>(0)
+            result.value = estimatedBiasZ
+            result.unit = AngularSpeedUnit.RADIANS_PER_SECOND
+            return@doAnswer true
+        }.whenever(internalCalibratorSpy).getEstimatedBiasAngularSpeedZ(any())
+/*        every { internalCalibratorSpy.getEstimatedBiasAngularSpeedZ(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as AngularSpeed
             result.value = estimatedBiasZ
             result.unit = AngularSpeedUnit.RADIANS_PER_SECOND
             return@answers true
-        }
+        }*/
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
 
         val w = AngularSpeed(estimatedBiasZ, AngularSpeedUnit.RADIANS_PER_SECOND)
@@ -11877,14 +12154,20 @@ class StaticIntervalGyroscopeCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
-        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
+        val internalCalibratorSpy = spy(KnownBiasEasyGyroscopeCalibrator())
+//        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasZ = randomizer.nextDouble()
-        every { internalCalibratorSpy.getBiasAngularSpeedZ(any()) }.answers { answer ->
+        doAnswer { invocation ->
+            val result = invocation.getArgument<AngularSpeed>(0)
+            result.value = estimatedBiasZ
+            result.unit = AngularSpeedUnit.RADIANS_PER_SECOND
+        }.whenever(internalCalibratorSpy).getBiasAngularSpeedZ(any())
+/*        every { internalCalibratorSpy.getBiasAngularSpeedZ(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as AngularSpeed
             result.value = estimatedBiasZ
             result.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-        }
+        }*/
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
 
         val w = AngularSpeed(estimatedBiasZ, AngularSpeedUnit.RADIANS_PER_SECOND)
@@ -11908,7 +12191,8 @@ class StaticIntervalGyroscopeCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
-        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
+        val internalCalibratorSpy = spy(EasyGyroscopeCalibrator())
+//        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasX = randomizer.nextDouble()
         val estimatedBiasY = randomizer.nextDouble()
@@ -11919,7 +12203,8 @@ class StaticIntervalGyroscopeCalibratorTest {
             estimatedBiasY,
             estimatedBiasZ
         )
-        every { internalCalibratorSpy.estimatedBiasAsTriad }.returns(triad)
+        doReturn(triad).whenever(internalCalibratorSpy).estimatedBiasAsTriad
+//        every { internalCalibratorSpy.estimatedBiasAsTriad }.returns(triad)
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
 
         assertSame(triad, calibrator.estimatedGyroscopeBiasAsTriad)
@@ -11930,7 +12215,8 @@ class StaticIntervalGyroscopeCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
-        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
+        val internalCalibratorSpy = spy(KnownBiasEasyGyroscopeCalibrator())
+//        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasX = randomizer.nextDouble()
         val estimatedBiasY = randomizer.nextDouble()
@@ -11941,9 +12227,12 @@ class StaticIntervalGyroscopeCalibratorTest {
             estimatedBiasY,
             estimatedBiasZ
         )
-        every { internalCalibratorSpy.biasX }.returns(estimatedBiasX)
-        every { internalCalibratorSpy.biasY }.returns(estimatedBiasY)
-        every { internalCalibratorSpy.biasZ }.returns(estimatedBiasZ)
+        doReturn(estimatedBiasX).whenever(internalCalibratorSpy).biasX
+//        every { internalCalibratorSpy.biasX }.returns(estimatedBiasX)
+        doReturn(estimatedBiasY).whenever(internalCalibratorSpy).biasY
+//        every { internalCalibratorSpy.biasY }.returns(estimatedBiasY)
+        doReturn(estimatedBiasZ).whenever(internalCalibratorSpy).biasZ
+//        every { internalCalibratorSpy.biasZ }.returns(estimatedBiasZ)
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
 
         assertEquals(triad, calibrator.estimatedGyroscopeBiasAsTriad)
@@ -11964,12 +12253,23 @@ class StaticIntervalGyroscopeCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
-        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
+        val internalCalibratorSpy = spy(EasyGyroscopeCalibrator())
+//        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasX = randomizer.nextDouble()
         val estimatedBiasY = randomizer.nextDouble()
         val estimatedBiasZ = randomizer.nextDouble()
-        every { internalCalibratorSpy.getEstimatedBiasAsTriad(any()) }.answers { answer ->
+        doAnswer { invocation ->
+            val result = invocation.getArgument<AngularSpeedTriad>(0)
+            result.setValueCoordinatesAndUnit(
+                estimatedBiasX,
+                estimatedBiasY,
+                estimatedBiasZ,
+                AngularSpeedUnit.RADIANS_PER_SECOND
+            )
+            return@doAnswer true
+        }.whenever(internalCalibratorSpy).getEstimatedBiasAsTriad(any())
+/*        every { internalCalibratorSpy.getEstimatedBiasAsTriad(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as AngularSpeedTriad
             result.setValueCoordinatesAndUnit(
                 estimatedBiasX,
@@ -11978,7 +12278,7 @@ class StaticIntervalGyroscopeCalibratorTest {
                 AngularSpeedUnit.RADIANS_PER_SECOND
             )
             return@answers true
-        }
+        }*/
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
 
         val triad = AngularSpeedTriad(
@@ -12000,14 +12300,18 @@ class StaticIntervalGyroscopeCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalGyroscopeCalibrator(context)
 
-        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
+        val internalCalibratorSpy = spy(KnownBiasEasyGyroscopeCalibrator())
+//        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasX = randomizer.nextDouble()
         val estimatedBiasY = randomizer.nextDouble()
         val estimatedBiasZ = randomizer.nextDouble()
-        every { internalCalibratorSpy.biasX }.returns(estimatedBiasX)
-        every { internalCalibratorSpy.biasY }.returns(estimatedBiasY)
-        every { internalCalibratorSpy.biasZ }.returns(estimatedBiasZ)
+        doReturn(estimatedBiasX).whenever(internalCalibratorSpy).biasX
+//        every { internalCalibratorSpy.biasX }.returns(estimatedBiasX)
+        doReturn(estimatedBiasY).whenever(internalCalibratorSpy).biasY
+//        every { internalCalibratorSpy.biasY }.returns(estimatedBiasY)
+        doReturn(estimatedBiasZ).whenever(internalCalibratorSpy).biasZ
+//        every { internalCalibratorSpy.biasZ }.returns(estimatedBiasZ)
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
 
         val triad = AngularSpeedTriad(
@@ -12857,9 +13161,11 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
+        val generatorSpy = spy(generator)
+//        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        every { generatorSpy.gyroscopeBaseNoiseLevel }.returns(baseNoiseLevel)
+        doReturn(baseNoiseLevel).whenever(generatorSpy).gyroscopeBaseNoiseLevel
+//        every { generatorSpy.gyroscopeBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.RANSAC, calibrator.gyroscopeRobustMethod)
@@ -12961,9 +13267,11 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
+        val generatorSpy = spy(generator)
+//        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        every { generatorSpy.gyroscopeBaseNoiseLevel }.returns(baseNoiseLevel)
+        doReturn(baseNoiseLevel).whenever(generatorSpy).gyroscopeBaseNoiseLevel
+//        every { generatorSpy.gyroscopeBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.RANSAC, calibrator.gyroscopeRobustMethod)
@@ -13559,9 +13867,11 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
+        val generatorSpy = spy(generator)
+//        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        every { generatorSpy.gyroscopeBaseNoiseLevel }.returns(baseNoiseLevel)
+        doReturn(baseNoiseLevel).whenever(generatorSpy).gyroscopeBaseNoiseLevel
+//        every { generatorSpy.gyroscopeBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.MSAC, calibrator.gyroscopeRobustMethod)
@@ -13663,9 +13973,11 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
+        val generatorSpy = spy(generator)
+//        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        every { generatorSpy.gyroscopeBaseNoiseLevel }.returns(baseNoiseLevel)
+        doReturn(baseNoiseLevel).whenever(generatorSpy).gyroscopeBaseNoiseLevel
+//        every { generatorSpy.gyroscopeBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.MSAC, calibrator.gyroscopeRobustMethod)
@@ -14265,9 +14577,11 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
+        val generatorSpy = spy(generator)
+//        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        every { generatorSpy.gyroscopeBaseNoiseLevel }.returns(baseNoiseLevel)
+        doReturn(baseNoiseLevel).whenever(generatorSpy).gyroscopeBaseNoiseLevel
+//        every { generatorSpy.gyroscopeBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.PROSAC, calibrator.gyroscopeRobustMethod)
@@ -14370,9 +14684,11 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
+        val generatorSpy = spy(generator)
+//        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        every { generatorSpy.gyroscopeBaseNoiseLevel }.returns(baseNoiseLevel)
+        doReturn(baseNoiseLevel).whenever(generatorSpy).gyroscopeBaseNoiseLevel
+//        every { generatorSpy.gyroscopeBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.PROSAC, calibrator.gyroscopeRobustMethod)
@@ -14970,9 +15286,11 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
+        val generatorSpy = spy(generator)
+//        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        every { generatorSpy.gyroscopeBaseNoiseLevel }.returns(baseNoiseLevel)
+        doReturn(baseNoiseLevel).whenever(generatorSpy).gyroscopeBaseNoiseLevel
+//        every { generatorSpy.gyroscopeBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.LMEDS, calibrator.gyroscopeRobustMethod)
@@ -15079,9 +15397,11 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
+        val generatorSpy = spy(generator)
+//        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        every { generatorSpy.gyroscopeBaseNoiseLevel }.returns(baseNoiseLevel)
+        doReturn(baseNoiseLevel).whenever(generatorSpy).gyroscopeBaseNoiseLevel
+//        every { generatorSpy.gyroscopeBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.LMEDS, calibrator.gyroscopeRobustMethod)
@@ -15686,9 +16006,11 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
+        val generatorSpy = spy(generator)
+//        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        every { generatorSpy.gyroscopeBaseNoiseLevel }.returns(baseNoiseLevel)
+        doReturn(baseNoiseLevel).whenever(generatorSpy).gyroscopeBaseNoiseLevel
+//        every { generatorSpy.gyroscopeBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.PROMEDS, calibrator.gyroscopeRobustMethod)
@@ -15796,9 +16118,11 @@ class StaticIntervalGyroscopeCalibratorTest {
         val generator: GyroscopeMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spyk(generator)
+        val generatorSpy = spy(generator)
+//        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        every { generatorSpy.gyroscopeBaseNoiseLevel }.returns(baseNoiseLevel)
+        doReturn(baseNoiseLevel).whenever(generatorSpy).gyroscopeBaseNoiseLevel
+//        every { generatorSpy.gyroscopeBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.PROMEDS, calibrator.gyroscopeRobustMethod)

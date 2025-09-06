@@ -28,33 +28,57 @@ import com.irurueta.navigation.inertial.calibration.AccelerationTriad
 import com.irurueta.navigation.inertial.estimators.NEDGravityEstimator
 import com.irurueta.statistics.UniformRandomizer
 import com.irurueta.units.AccelerationUnit
-import io.mockk.*
-import io.mockk.impl.annotations.MockK
-import io.mockk.junit4.MockKRule
-import org.junit.After
+import io.mockk.Called
+//import io.mockk.*
+//import io.mockk.impl.annotations.MockK
+//import io.mockk.junit4.MockKRule
+//import org.junit.After
 import org.junit.Assert.*
-import org.junit.Ignore
+//import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
+import org.mockito.ArgumentCaptor
+import org.mockito.Captor
+import org.mockito.Mock
+import org.mockito.junit.MockitoJUnit
+import org.mockito.junit.MockitoRule
+import org.mockito.kotlin.any
+import org.mockito.kotlin.capture
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.only
+import org.mockito.kotlin.spy
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.verifyNoInteractions
+import org.mockito.kotlin.whenever
 
-@Ignore("possible memory leak")
+//@Ignore("Possible memory leak when running this test")
 class AccelerometerGravityProcessorTest {
 
     @get:Rule
-    val mockkRule = MockKRule(this)
+    val mockitoRule: MockitoRule = MockitoJUnit.rule()
 
-    @MockK(relaxUnitFun = true)
+//    @get:Rule
+//    val mockkRule = MockKRule(this)
+
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var listener:
             BaseGravityProcessor.OnProcessedListener<AccelerometerSensorMeasurement>
 
-    @MockK
+//    @MockK
+    @Mock
     private lateinit var location: Location
 
-    @After
+    @Captor
+    private lateinit var doubleArrayCaptor: ArgumentCaptor<DoubleArray>
+
+    /*@After
     fun tearDown() {
         unmockkAll()
         clearAllMocks()
-    }
+        System.gc()
+    }*/
 
     @Test
     fun constructor_whenNoParameters_returnsExpectedValues() {
@@ -168,7 +192,8 @@ class AccelerometerGravityProcessorTest {
 
     @Test
     fun process_whenNotEnoughMeasurements_doesNotSetsExpectedValuesOrNotifies() {
-        val averagingFilter = spyk(LowPassAveragingFilter())
+        val averagingFilter = spy(LowPassAveragingFilter())
+//        val averagingFilter = spyk(LowPassAveragingFilter())
         val processor = AccelerometerGravityProcessor(
             averagingFilter,
             adjustGravityNorm = false,
@@ -188,7 +213,14 @@ class AccelerometerGravityProcessorTest {
 
         assertFalse(processor.process(measurement))
 
-        val slot = slot<DoubleArray>()
+        verify(averagingFilter, only()).filter(
+            eq(ax.toDouble() - bx.toDouble()),
+            eq(ay.toDouble() - by.toDouble()),
+            eq(az.toDouble() - bz.toDouble()),
+            capture(doubleArrayCaptor),
+            eq(timestamp)
+        )
+/*        val slot = slot<DoubleArray>()
         verify(exactly = 1) {
             averagingFilter.filter(
                 ax.toDouble() - bx.toDouble(),
@@ -197,9 +229,10 @@ class AccelerometerGravityProcessorTest {
                 capture(slot),
                 timestamp
             )
-        }
+        }*/
 
-        verify { listener wasNot Called }
+        verifyNoInteractions(listener)
+//        verify { listener wasNot Called }
 
         // check
         assertEquals(0.0, processor.gx, 0.0)
@@ -216,7 +249,8 @@ class AccelerometerGravityProcessorTest {
 
     @Test
     fun process_whenEnoughMeasurementsAndBiasAvailable_setsExpectedValuesAndNotifies() {
-        val averagingFilter = spyk(MeanAveragingFilter())
+        val averagingFilter = spy(MeanAveragingFilter())
+//        val averagingFilter = spyk(MeanAveragingFilter())
         val processor = AccelerometerGravityProcessor(
             averagingFilter,
             adjustGravityNorm = false,
@@ -244,7 +278,14 @@ class AccelerometerGravityProcessorTest {
 
         assertTrue(processor.process(measurement2, timestamp2))
 
-        verify(exactly = 1) {
+        verify(averagingFilter, times(1)).filter(
+            eq(ax.toDouble() - bx.toDouble()),
+            eq(ay.toDouble() - by.toDouble()),
+            eq(az.toDouble() - bz.toDouble()),
+            any(),
+            eq(timestamp1)
+        )
+/*        verify(exactly = 1) {
             averagingFilter.filter(
                 ax.toDouble() - bx.toDouble(),
                 ay.toDouble() - by.toDouble(),
@@ -252,9 +293,16 @@ class AccelerometerGravityProcessorTest {
                 any(),
                 timestamp1
             )
-        }
+        }*/
 
-        val slot = MutableList(size = 2) { DoubleArray(3) }
+        verify(averagingFilter, times(1)).filter(
+            eq(ax.toDouble() - bx.toDouble()),
+            eq(ay.toDouble() - by.toDouble()),
+            eq(az.toDouble() - bz.toDouble()),
+            capture(doubleArrayCaptor),
+            eq(timestamp2)
+        )
+/*        val slot = MutableList(size = 2) { DoubleArray(3) }
         verify(exactly = 1) {
             averagingFilter.filter(
                 ax.toDouble() - bx.toDouble(),
@@ -263,9 +311,18 @@ class AccelerometerGravityProcessorTest {
                 capture(slot),
                 timestamp2
             )
-        }
+        }*/
 
-        val array = slot.last()
+        val array = doubleArrayCaptor.allValues.last()
+        verify(listener, only()).onProcessed(
+            processor,
+            array[1],
+            array[0],
+            -array[2],
+            timestamp2,
+            SensorAccuracy.HIGH
+        )
+/*        val array = slot.last()
         verify(exactly = 1) {
             listener.onProcessed(
                 processor,
@@ -275,7 +332,7 @@ class AccelerometerGravityProcessorTest {
                 timestamp2,
                 SensorAccuracy.HIGH
             )
-        }
+        }*/
 
         // check
         assertEquals(array[1], processor.gx, 0.0)
@@ -297,7 +354,8 @@ class AccelerometerGravityProcessorTest {
 
     @Test
     fun process_whenEnoughMeasurementsAndBiasNotAvailable_setsExpectedValuesAndNotifies() {
-        val averagingFilter = spyk(MeanAveragingFilter())
+        val averagingFilter = spy(MeanAveragingFilter())
+//        val averagingFilter = spyk(MeanAveragingFilter())
         val processor = AccelerometerGravityProcessor(
             averagingFilter,
             adjustGravityNorm = false,
@@ -338,7 +396,14 @@ class AccelerometerGravityProcessorTest {
 
         assertTrue(processor.process(measurement2))
 
-        verify(exactly = 1) {
+        verify(averagingFilter, times(1)).filter(
+            eq(ax.toDouble()),
+            eq(ay.toDouble()),
+            eq(az.toDouble()),
+            any(),
+            eq(timestamp1)
+        )
+/*        verify(exactly = 1) {
             averagingFilter.filter(
                 ax.toDouble(),
                 ay.toDouble(),
@@ -346,9 +411,16 @@ class AccelerometerGravityProcessorTest {
                 any(),
                 timestamp1
             )
-        }
+        }*/
 
-        val slot = MutableList(size = 2) { DoubleArray(3) }
+        verify(averagingFilter, times(1)).filter(
+            eq(ax.toDouble()),
+            eq(ay.toDouble()),
+            eq(az.toDouble()),
+            capture(doubleArrayCaptor),
+            eq(timestamp2)
+        )
+/*        val slot = MutableList(size = 2) { DoubleArray(3) }
         verify(exactly = 1) {
             averagingFilter.filter(
                 ax.toDouble(),
@@ -357,9 +429,18 @@ class AccelerometerGravityProcessorTest {
                 capture(slot),
                 timestamp2
             )
-        }
+        }*/
 
-        val array = slot.last()
+        val array = doubleArrayCaptor.allValues.last()
+        verify(listener, only()).onProcessed(
+            processor,
+            array[1],
+            array[0],
+            -array[2],
+            timestamp2,
+            SensorAccuracy.HIGH
+        )
+/*        val array = slot.last()
         verify(exactly = 1) {
             listener.onProcessed(
                 processor,
@@ -369,7 +450,7 @@ class AccelerometerGravityProcessorTest {
                 timestamp2,
                 SensorAccuracy.HIGH
             )
-        }
+        }*/
 
         // check
         assertEquals(array[1], processor.gx, 0.0)
@@ -391,7 +472,8 @@ class AccelerometerGravityProcessorTest {
 
     @Test
     fun process_whenGravityNormAdjustedAndNoLocation_setsExpectedValuesAndNotifies() {
-        val averagingFilter = spyk(MeanAveragingFilter())
+        val averagingFilter = spy(MeanAveragingFilter())
+//        val averagingFilter = spyk(MeanAveragingFilter())
         val processor = AccelerometerGravityProcessor(
             averagingFilter,
             adjustGravityNorm = true,
@@ -419,7 +501,14 @@ class AccelerometerGravityProcessorTest {
 
         assertTrue(processor.process(measurement2, timestamp2))
 
-        verify(exactly = 1) {
+        verify(averagingFilter, times(1)).filter(
+            eq(ax.toDouble() - bx.toDouble()),
+            eq(ay.toDouble() - by.toDouble()),
+            eq(az.toDouble() - bz.toDouble()),
+            any(),
+            eq(timestamp1)
+        )
+/*        verify(exactly = 1) {
             averagingFilter.filter(
                 ax.toDouble() - bx.toDouble(),
                 ay.toDouble() - by.toDouble(),
@@ -427,9 +516,16 @@ class AccelerometerGravityProcessorTest {
                 any(),
                 timestamp1
             )
-        }
+        }*/
 
-        val slot = MutableList(size = 2) { DoubleArray(3) }
+        verify(averagingFilter, times(1)).filter(
+            eq(ax.toDouble() - bx.toDouble()),
+            eq(ay.toDouble() - by.toDouble()),
+            eq(az.toDouble() - bz.toDouble()),
+            capture(doubleArrayCaptor),
+            eq(timestamp2)
+        )
+/*        val slot = MutableList(size = 2) { DoubleArray(3) }
         verify(exactly = 1) {
             averagingFilter.filter(
                 ax.toDouble() - bx.toDouble(),
@@ -438,13 +534,22 @@ class AccelerometerGravityProcessorTest {
                 capture(slot),
                 timestamp2
             )
-        }
+        }*/
 
-        val array = slot.last()
+        val array = doubleArrayCaptor.allValues.last()
+//        val array = slot.last()
         val norm = Utils.normF(array)
         val factor = SensorManager.GRAVITY_EARTH / norm
 
-        verify(exactly = 1) {
+        verify(listener, only()).onProcessed(
+            processor,
+            array[1] * factor,
+            array[0] * factor,
+            -array[2] * factor,
+            timestamp2,
+            SensorAccuracy.HIGH
+        )
+/*        verify(exactly = 1) {
             listener.onProcessed(
                 processor,
                 array[1] * factor,
@@ -453,7 +558,7 @@ class AccelerometerGravityProcessorTest {
                 timestamp2,
                 SensorAccuracy.HIGH
             )
-        }
+        }*/
 
         // check
         assertEquals(array[1] * factor, processor.gx, 0.0)
@@ -476,7 +581,8 @@ class AccelerometerGravityProcessorTest {
     @Test
     fun process_whenGravityNormAdjustedAndLocation_setsExpectedValuesAndNotifies() {
         val location = getLocation()
-        val averagingFilter = spyk(MeanAveragingFilter())
+        val averagingFilter = spy(MeanAveragingFilter())
+//        val averagingFilter = spyk(MeanAveragingFilter())
         val processor = AccelerometerGravityProcessor(
             averagingFilter,
             location = location,
@@ -505,7 +611,14 @@ class AccelerometerGravityProcessorTest {
 
         assertTrue(processor.process(measurement2, timestamp2))
 
-        verify(exactly = 1) {
+        verify(averagingFilter, times(1)).filter(
+            eq(ax.toDouble() - bx.toDouble()),
+            eq(ay.toDouble() - by.toDouble()),
+            eq(az.toDouble() - bz.toDouble()),
+            any(),
+            eq(timestamp1)
+        )
+/*        verify(exactly = 1) {
             averagingFilter.filter(
                 ax.toDouble() - bx.toDouble(),
                 ay.toDouble() - by.toDouble(),
@@ -513,9 +626,16 @@ class AccelerometerGravityProcessorTest {
                 any(),
                 timestamp1
             )
-        }
+        }*/
 
-        val slot = MutableList(size = 2) { DoubleArray(3) }
+        verify(averagingFilter, times(1)).filter(
+            eq(ax.toDouble() - bx.toDouble()),
+            eq(ay.toDouble() - by.toDouble()),
+            eq(az.toDouble() - bz.toDouble()),
+            capture(doubleArrayCaptor),
+            eq(timestamp2)
+        )
+/*        val slot = MutableList(size = 2) { DoubleArray(3) }
         verify(exactly = 1) {
             averagingFilter.filter(
                 ax.toDouble() - bx.toDouble(),
@@ -524,14 +644,23 @@ class AccelerometerGravityProcessorTest {
                 capture(slot),
                 timestamp2
             )
-        }
+        }*/
 
-        val array = slot.last()
+        val array = doubleArrayCaptor.allValues.last()
+//        val array = slot.last()
         val norm = Utils.normF(array)
         val factor =
             NEDGravityEstimator.estimateGravityAndReturnNew(location.toNEDPosition()).norm / norm
 
-        verify(exactly = 1) {
+        verify(listener, only()).onProcessed(
+            processor,
+            array[1] * factor,
+            array[0] * factor,
+            -array[2] * factor,
+            timestamp2,
+            SensorAccuracy.HIGH
+        )
+/*        verify(exactly = 1) {
             listener.onProcessed(
                 processor,
                 array[1] * factor,
@@ -540,7 +669,7 @@ class AccelerometerGravityProcessorTest {
                 timestamp2,
                 SensorAccuracy.HIGH
             )
-        }
+        }*/
 
         // check
         assertEquals(array[1] * factor, processor.gx, 0.0)
@@ -562,7 +691,8 @@ class AccelerometerGravityProcessorTest {
 
     @Test
     fun process_whenProvidedTimestamp_setsExpectedValuesAndNotifies() {
-        val averagingFilter = spyk(MeanAveragingFilter())
+        val averagingFilter = spy(MeanAveragingFilter())
+//        val averagingFilter = spyk(MeanAveragingFilter())
         val processor = AccelerometerGravityProcessor(
             averagingFilter,
             adjustGravityNorm = false,
@@ -590,7 +720,14 @@ class AccelerometerGravityProcessorTest {
 
         assertTrue(processor.process(measurement2, timestamp2))
 
-        verify(exactly = 1) {
+        verify(averagingFilter, times(1)).filter(
+            eq(ax.toDouble() - bx.toDouble()),
+            eq(ay.toDouble() - by.toDouble()),
+            eq(az.toDouble() - bz.toDouble()),
+            any(),
+            eq(timestamp1)
+        )
+/*        verify(exactly = 1) {
             averagingFilter.filter(
                 ax.toDouble() - bx.toDouble(),
                 ay.toDouble() - by.toDouble(),
@@ -598,9 +735,16 @@ class AccelerometerGravityProcessorTest {
                 any(),
                 timestamp1
             )
-        }
+        }*/
 
-        val slot = MutableList(size = 2) { DoubleArray(3) }
+        verify(averagingFilter, times(1)).filter(
+            eq(ax.toDouble() - bx.toDouble()),
+            eq(ay.toDouble() - by.toDouble()),
+            eq(az.toDouble() - bz.toDouble()),
+            capture(doubleArrayCaptor),
+            eq(timestamp2)
+        )
+/*        val slot = MutableList(size = 2) { DoubleArray(3) }
         verify(exactly = 1) {
             averagingFilter.filter(
                 ax.toDouble() - bx.toDouble(),
@@ -609,9 +753,18 @@ class AccelerometerGravityProcessorTest {
                 capture(slot),
                 timestamp2
             )
-        }
+        }*/
 
-        val array = slot.last()
+        val array = doubleArrayCaptor.allValues.last()
+        verify(listener, only()).onProcessed(
+            processor,
+            array[1],
+            array[0],
+            -array[2],
+            timestamp2,
+            SensorAccuracy.HIGH
+        )
+/*        val array = slot.last()
         verify(exactly = 1) {
             listener.onProcessed(
                 processor,
@@ -621,7 +774,7 @@ class AccelerometerGravityProcessorTest {
                 timestamp2,
                 SensorAccuracy.HIGH
             )
-        }
+        }*/
 
         // check
         assertEquals(array[1], processor.gx, 0.0)
@@ -643,7 +796,8 @@ class AccelerometerGravityProcessorTest {
 
     @Test
     fun reset_setsInitialValue() {
-        val averagingFilter = spyk(MeanAveragingFilter())
+        val averagingFilter = spy(MeanAveragingFilter())
+//        val averagingFilter = spyk(MeanAveragingFilter())
         val processor = AccelerometerGravityProcessor(
             averagingFilter,
             adjustGravityNorm = false,
@@ -684,7 +838,14 @@ class AccelerometerGravityProcessorTest {
 
         assertTrue(processor.process(measurement2, timestamp2))
 
-        verify(exactly = 1) {
+        verify(averagingFilter, times(1)).filter(
+            eq(ax.toDouble()),
+            eq(ay.toDouble()),
+            eq(az.toDouble()),
+            any(),
+            eq(timestamp1)
+        )
+/*        verify(exactly = 1) {
             averagingFilter.filter(
                 ax.toDouble(),
                 ay.toDouble(),
@@ -692,9 +853,16 @@ class AccelerometerGravityProcessorTest {
                 any(),
                 timestamp1
             )
-        }
+        }*/
 
-        val slot = MutableList(size = 2) { DoubleArray(3) }
+        verify(averagingFilter, times(1)).filter(
+            eq(ax.toDouble()),
+            eq(ay.toDouble()),
+            eq(az.toDouble()),
+            capture(doubleArrayCaptor),
+            eq(timestamp2)
+        )
+/*        val slot = MutableList(size = 2) { DoubleArray(3) }
         verify(exactly = 1) {
             averagingFilter.filter(
                 ax.toDouble(),
@@ -703,9 +871,18 @@ class AccelerometerGravityProcessorTest {
                 capture(slot),
                 timestamp2
             )
-        }
+        }*/
 
-        val array = slot.last()
+        val array = doubleArrayCaptor.allValues.last()
+        verify(listener, only()).onProcessed(
+            processor,
+            array[1],
+            array[0],
+            -array[2],
+            timestamp2,
+            SensorAccuracy.HIGH
+        )
+/*        val array = slot.last()
         verify(exactly = 1) {
             listener.onProcessed(
                 processor,
@@ -715,7 +892,7 @@ class AccelerometerGravityProcessorTest {
                 timestamp2,
                 SensorAccuracy.HIGH
             )
-        }
+        }*/
 
         // check
         assertEquals(array[1], processor.gx, 0.0)
@@ -780,9 +957,12 @@ class AccelerometerGravityProcessorTest {
             MAX_HEIGHT
         )
 
-        every { location.latitude }.returns(latitudeDegrees)
-        every { location.longitude }.returns(longitudeDegrees)
-        every { location.altitude }.returns(height)
+        whenever(location.latitude).thenReturn(latitudeDegrees)
+//        every { location.latitude }.returns(latitudeDegrees)
+        whenever(location.longitude).thenReturn(longitudeDegrees)
+//        every { location.longitude }.returns(longitudeDegrees)
+        whenever(location.altitude).thenReturn(height)
+//        every { location.altitude }.returns(height)
 
         return location
     }

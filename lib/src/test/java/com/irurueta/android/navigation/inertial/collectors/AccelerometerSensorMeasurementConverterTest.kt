@@ -19,35 +19,47 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorManager
 import com.irurueta.statistics.UniformRandomizer
-import io.mockk.clearAllMocks
-import io.mockk.every
-import io.mockk.impl.annotations.MockK
-import io.mockk.junit4.MockKRule
-import io.mockk.unmockkAll
-import org.junit.After
+//import io.mockk.clearAllMocks
+//import io.mockk.every
+//import io.mockk.impl.annotations.MockK
+//import io.mockk.junit4.MockKRule
+//import io.mockk.unmockkAll
+//import org.junit.After
 import org.junit.Assert.*
+//import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mock
+import org.mockito.junit.MockitoJUnit
+import org.mockito.junit.MockitoRule
+import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 
+//@Ignore("Possible memory leak when running this test")
 @RunWith(RobolectricTestRunner::class)
 class AccelerometerSensorMeasurementConverterTest {
 
     @get:Rule
-    val mockkRule = MockKRule(this)
+    val mockitoRule: MockitoRule = MockitoJUnit.rule()
 
-    @MockK
+//    @get:Rule
+//    val mockkRule = MockKRule(this)
+
+//    @MockK
+    @Mock
     private lateinit var sensor: Sensor
 
-    @MockK
+//    @MockK
+    @Mock
     private lateinit var event: SensorEvent
 
-    @After
+    /*@After
     fun tearDown() {
         unmockkAll()
         clearAllMocks()
-    }
+        System.gc()
+    }*/
 
     @Test
     fun convert_whenNoSensorEvent_returnsFalse() {
@@ -57,7 +69,8 @@ class AccelerometerSensorMeasurementConverterTest {
 
     @Test
     fun convert_whenUnknownSensorType_returnsFalse() {
-        every { sensor.type }.returns(Sensor.TYPE_GYROSCOPE)
+        whenever(sensor.type).thenReturn(Sensor.TYPE_GYROSCOPE)
+//        every { sensor.type }.returns(Sensor.TYPE_GYROSCOPE)
         event.sensor = sensor
         val measurement = AccelerometerSensorMeasurement()
 
@@ -66,7 +79,8 @@ class AccelerometerSensorMeasurementConverterTest {
 
     @Test
     fun convert_whenAccelerometerSensorTypeWithoutStartOffset_returnsTrue() {
-        every { sensor.type }.returns(Sensor.TYPE_ACCELEROMETER)
+        whenever(sensor.type).thenReturn(Sensor.TYPE_ACCELEROMETER)
+//        every { sensor.type }.returns(Sensor.TYPE_ACCELEROMETER)
         event.sensor = sensor
 
         val timestamp = System.nanoTime()
@@ -101,7 +115,8 @@ class AccelerometerSensorMeasurementConverterTest {
 
     @Test
     fun convert_whenAccelerometerUncalibratedSensorTypeWithoutStartOffset_returnsTrue() {
-        every { sensor.type }.returns(Constants.TYPE_ACCELEROMETER_UNCALIBRATED)
+        whenever(sensor.type).thenReturn(Constants.TYPE_ACCELEROMETER_UNCALIBRATED)
+//        every { sensor.type }.returns(Constants.TYPE_ACCELEROMETER_UNCALIBRATED)
         event.sensor = sensor
 
         val timestamp = System.nanoTime()
@@ -139,7 +154,8 @@ class AccelerometerSensorMeasurementConverterTest {
 
     @Test
     fun convert_whenAccelerometerSensorTypeWithStartOffset_returnsTrue() {
-        every { sensor.type }.returns(Sensor.TYPE_ACCELEROMETER)
+        whenever(sensor.type).thenReturn(Sensor.TYPE_ACCELEROMETER)
+//        every { sensor.type }.returns(Sensor.TYPE_ACCELEROMETER)
         event.sensor = sensor
 
         val timestamp = System.nanoTime()
@@ -175,7 +191,8 @@ class AccelerometerSensorMeasurementConverterTest {
 
     @Test
     fun convert_whenAccelerometerUncalibratedSensorTypeWithStartOffset_returnsTrue() {
-        every { sensor.type }.returns(Constants.TYPE_ACCELEROMETER_UNCALIBRATED)
+        whenever(sensor.type).thenReturn(Constants.TYPE_ACCELEROMETER_UNCALIBRATED)
+//        every { sensor.type }.returns(Constants.TYPE_ACCELEROMETER_UNCALIBRATED)
         event.sensor = sensor
 
         val timestamp = System.nanoTime()

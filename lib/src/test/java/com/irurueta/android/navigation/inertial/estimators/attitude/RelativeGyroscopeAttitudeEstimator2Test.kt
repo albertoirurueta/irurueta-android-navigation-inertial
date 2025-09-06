@@ -26,37 +26,61 @@ import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.frames.CoordinateTransformation
 import com.irurueta.navigation.frames.FrameType
 import com.irurueta.statistics.UniformRandomizer
-import io.mockk.*
-import io.mockk.impl.annotations.MockK
-import io.mockk.junit4.MockKRule
-import org.junit.After
+//import io.mockk.*
+//import io.mockk.impl.annotations.MockK
+//import io.mockk.junit4.MockKRule
+//import org.junit.After
 import org.junit.Assert.*
-import org.junit.Ignore
+//import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.ArgumentCaptor
+import org.mockito.Captor
+import org.mockito.Mock
+import org.mockito.junit.MockitoJUnit
+import org.mockito.junit.MockitoRule
+import org.mockito.kotlin.any
+import org.mockito.kotlin.capture
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.only
+import org.mockito.kotlin.spy
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.verifyNoInteractions
+import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 
-@Ignore("possible memory leak")
+//@Ignore("Possible memory leak when running this test")
 @RunWith(RobolectricTestRunner::class)
 class RelativeGyroscopeAttitudeEstimator2Test {
 
     @get:Rule
-    val mockkRule = MockKRule(this)
+    val mockitoRule: MockitoRule = MockitoJUnit.rule()
 
-    @MockK(relaxUnitFun = true)
+//    @get:Rule
+//    val mockkRule = MockKRule(this)
+
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var attitudeAvailableListener:
             RelativeGyroscopeAttitudeEstimator2.OnAttitudeAvailableListener
 
-    @MockK(relaxUnitFun = true)
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var accuracyChangedListener:
             RelativeGyroscopeAttitudeEstimator2.OnAccuracyChangedListener
 
-    @After
+    @Captor
+    private lateinit var quaternionCaptor: ArgumentCaptor<Quaternion>
+
+    /*@After
     fun tearDown() {
         unmockkAll()
         clearAllMocks()
-    }
+        System.gc()
+    }*/
 
     @Test
     fun constructor_whenRequiredProperties_setsDefaultValues() {
@@ -144,10 +168,12 @@ class RelativeGyroscopeAttitudeEstimator2Test {
             "gyroscopeSensorCollector"
         )
         requireNotNull(gyroscopeSensorCollector)
-        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
+        val gyroscopeSensorCollectorSpy = spy(gyroscopeSensorCollector)
+//        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
         val randomizer = UniformRandomizer()
         val startOffset = randomizer.nextLong()
-        every { gyroscopeSensorCollectorSpy.startOffset }.returns(startOffset)
+        doReturn(startOffset).whenever(gyroscopeSensorCollectorSpy).startOffset
+//        every { gyroscopeSensorCollectorSpy.startOffset }.returns(startOffset)
         setPrivateProperty(
             BaseRelativeGyroscopeAttitudeEstimator2::class,
             estimator,
@@ -156,7 +182,8 @@ class RelativeGyroscopeAttitudeEstimator2Test {
         )
 
         assertEquals(startOffset, estimator.startOffset)
-        verify(exactly = 1) { gyroscopeSensorCollectorSpy.startOffset }
+        verify(gyroscopeSensorCollectorSpy, only()).startOffset
+//        verify(exactly = 1) { gyroscopeSensorCollectorSpy.startOffset }
     }
 
     @Test
@@ -170,8 +197,10 @@ class RelativeGyroscopeAttitudeEstimator2Test {
             "gyroscopeSensorCollector"
         )
         requireNotNull(gyroscopeSensorCollector)
-        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
-        every { gyroscopeSensorCollectorSpy.running }.returns(true)
+        val gyroscopeSensorCollectorSpy = spy(gyroscopeSensorCollector)
+//        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
+        doReturn(true).whenever(gyroscopeSensorCollectorSpy).running
+//        every { gyroscopeSensorCollectorSpy.running }.returns(true)
         setPrivateProperty(
             BaseRelativeGyroscopeAttitudeEstimator2::class,
             estimator,
@@ -180,7 +209,8 @@ class RelativeGyroscopeAttitudeEstimator2Test {
         )
 
         assertTrue(estimator.running)
-        verify(exactly = 1) { gyroscopeSensorCollectorSpy.running }
+        verify(gyroscopeSensorCollectorSpy, only()).running
+//        verify(exactly = 1) { gyroscopeSensorCollectorSpy.running }
     }
 
     @Test
@@ -191,12 +221,15 @@ class RelativeGyroscopeAttitudeEstimator2Test {
         val processor: RelativeGyroscopeAttitudeProcessor? =
             estimator.getPrivateProperty("processor")
         requireNotNull(processor)
-        val processorSpy = spyk(processor)
-        every { processorSpy.timeIntervalSeconds }.returns(INTERVAL_SECONDS)
+        val processorSpy = spy(processor)
+//        val processorSpy = spyk(processor)
+        doReturn(INTERVAL_SECONDS).whenever(processorSpy).timeIntervalSeconds
+//        every { processorSpy.timeIntervalSeconds }.returns(INTERVAL_SECONDS)
         estimator.setPrivateProperty("processor", processorSpy)
 
         assertEquals(INTERVAL_SECONDS, estimator.timeIntervalSeconds, 0.0)
-        verify(exactly = 1) { processorSpy.timeIntervalSeconds }
+        verify(processorSpy, only()).timeIntervalSeconds
+//        verify(exactly = 1) { processorSpy.timeIntervalSeconds }
     }
 
     @Test
@@ -207,7 +240,8 @@ class RelativeGyroscopeAttitudeEstimator2Test {
         val processor: RelativeGyroscopeAttitudeProcessor? =
             estimator.getPrivateProperty("processor")
         requireNotNull(processor)
-        val processorSpy = spyk(processor)
+        val processorSpy = spy(processor)
+//        val processorSpy = spyk(processor)
         estimator.setPrivateProperty("processor", processorSpy)
 
         val gyroscopeSensorCollector: GyroscopeSensorCollector2? = getPrivateProperty(
@@ -216,8 +250,10 @@ class RelativeGyroscopeAttitudeEstimator2Test {
             "gyroscopeSensorCollector"
         )
         requireNotNull(gyroscopeSensorCollector)
-        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
-        every { gyroscopeSensorCollectorSpy.start() }.returns(true)
+        val gyroscopeSensorCollectorSpy = spy(gyroscopeSensorCollector)
+//        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
+        doReturn(true).whenever(gyroscopeSensorCollectorSpy).start()
+//        every { gyroscopeSensorCollectorSpy.start() }.returns(true)
         setPrivateProperty(
             BaseRelativeGyroscopeAttitudeEstimator2::class,
             estimator,
@@ -226,8 +262,10 @@ class RelativeGyroscopeAttitudeEstimator2Test {
         )
 
         assertTrue(estimator.start())
-        verify(exactly = 1) { processorSpy.reset() }
-        verify(exactly = 1) { gyroscopeSensorCollectorSpy.start() }
+        verify(processorSpy, only()).reset()
+//        verify(exactly = 1) { processorSpy.reset() }
+        verify(gyroscopeSensorCollectorSpy, times(1)).start()
+//        verify(exactly = 1) { gyroscopeSensorCollectorSpy.start() }
     }
 
     @Test(expected = IllegalStateException::class)
@@ -241,8 +279,10 @@ class RelativeGyroscopeAttitudeEstimator2Test {
             "gyroscopeSensorCollector"
         )
         requireNotNull(gyroscopeSensorCollector)
-        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
-        every { gyroscopeSensorCollectorSpy.running }.returns(true)
+        val gyroscopeSensorCollectorSpy = spy(gyroscopeSensorCollector)
+//        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
+        doReturn(true).whenever(gyroscopeSensorCollectorSpy).running
+//        every { gyroscopeSensorCollectorSpy.running }.returns(true)
         setPrivateProperty(
             BaseRelativeGyroscopeAttitudeEstimator2::class,
             estimator,
@@ -265,7 +305,8 @@ class RelativeGyroscopeAttitudeEstimator2Test {
             "gyroscopeSensorCollector"
         )
         requireNotNull(gyroscopeSensorCollector)
-        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
+        val gyroscopeSensorCollectorSpy = spy(gyroscopeSensorCollector)
+//        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
         setPrivateProperty(
             BaseRelativeGyroscopeAttitudeEstimator2::class,
             estimator,
@@ -275,7 +316,8 @@ class RelativeGyroscopeAttitudeEstimator2Test {
 
         estimator.stop()
 
-        verify(exactly = 1) { gyroscopeSensorCollectorSpy.stop() }
+        verify(gyroscopeSensorCollectorSpy, times(1)).stop()
+//        verify(exactly = 1) { gyroscopeSensorCollectorSpy.stop() }
     }
 
     @Test
@@ -314,12 +356,16 @@ class RelativeGyroscopeAttitudeEstimator2Test {
         requireNotNull(listener)
         listener.onAccuracyChanged(gyroscopeSensorCollector, SensorAccuracy.HIGH)
 
-        verify(exactly = 1) {
+        verify(accuracyChangedListener, only()).onAccuracyChanged(
+            estimator,
+            SensorAccuracy.HIGH
+        )
+/*        verify(exactly = 1) {
             accuracyChangedListener.onAccuracyChanged(
                 estimator,
                 SensorAccuracy.HIGH
             )
-        }
+        }*/
     }
 
     @Test
@@ -333,8 +379,10 @@ class RelativeGyroscopeAttitudeEstimator2Test {
         val processor: RelativeGyroscopeAttitudeProcessor? =
             estimator.getPrivateProperty("processor")
         requireNotNull(processor)
-        val processorSpy = spyk(processor)
-        every { processorSpy.process(any()) }.returns(false)
+        val processorSpy = spy(processor)
+//        val processorSpy = spyk(processor)
+        doReturn(false).whenever(processorSpy).process(any(), any())
+//        every { processorSpy.process(any()) }.returns(false)
         estimator.setPrivateProperty("processor", processorSpy)
 
         val gyroscopeSensorCollector: GyroscopeSensorCollector2? = getPrivateProperty(
@@ -356,8 +404,10 @@ class RelativeGyroscopeAttitudeEstimator2Test {
             GyroscopeSensorMeasurement(wx, wy, wz, null, null, null, timestamp, SensorAccuracy.HIGH)
         listener.onMeasurement(gyroscopeSensorCollector, measurement)
 
-        verify(exactly = 1) { processorSpy.process(measurement) }
-        verify { attitudeAvailableListener wasNot Called }
+        verify(processorSpy, only()).process(measurement)
+//        verify(exactly = 1) { processorSpy.process(measurement) }
+        verifyNoInteractions(attitudeAvailableListener)
+//        verify { attitudeAvailableListener wasNot Called }
     }
 
     @Test
@@ -372,15 +422,18 @@ class RelativeGyroscopeAttitudeEstimator2Test {
         val processor: RelativeGyroscopeAttitudeProcessor? =
             estimator.getPrivateProperty("processor")
         requireNotNull(processor)
-        val processorSpy = spyk(processor)
-        every { processorSpy.process(any(), any()) }.returns(true)
+        val processorSpy = spy(processor)
+//        val processorSpy = spyk(processor)
+        doReturn(true).whenever(processorSpy).process(any(), any())
+//        every { processorSpy.process(any(), any()) }.returns(true)
 
         val randomizer = UniformRandomizer()
         val roll = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
         val pitch = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
         val yaw = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
         val attitude = Quaternion(roll, pitch, yaw)
-        every { processorSpy.attitude }.returns(attitude)
+        doReturn(attitude).whenever(processorSpy).attitude
+//        every { processorSpy.attitude }.returns(attitude)
         estimator.setPrivateProperty("processor", processorSpy)
 
         val gyroscopeSensorCollector: GyroscopeSensorCollector2? = getPrivateProperty(
@@ -409,7 +462,8 @@ class RelativeGyroscopeAttitudeEstimator2Test {
         requireNotNull(attitude2)
         assertEquals(attitude, attitude2)
 
-        verify(exactly = 1) { processorSpy.process(measurement) }
+        verify(processorSpy, times(1)).process(measurement)
+//        verify(exactly = 1) { processorSpy.process(measurement) }
     }
 
     @Test
@@ -425,15 +479,18 @@ class RelativeGyroscopeAttitudeEstimator2Test {
         val processor: RelativeGyroscopeAttitudeProcessor? =
             estimator.getPrivateProperty("processor")
         requireNotNull(processor)
-        val processorSpy = spyk(processor)
-        every { processorSpy.process(any(), any()) }.returns(true)
+        val processorSpy = spy(processor)
+//        val processorSpy = spyk(processor)
+        doReturn(true).whenever(processorSpy).process(any(), any())
+//        every { processorSpy.process(any(), any()) }.returns(true)
 
         val randomizer = UniformRandomizer()
         val roll = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
         val pitch = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
         val yaw = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
         val attitude = Quaternion(roll, pitch, yaw)
-        every { processorSpy.attitude }.returns(attitude)
+        doReturn(attitude).whenever(processorSpy).attitude
+//        every { processorSpy.attitude }.returns(attitude)
         estimator.setPrivateProperty("processor", processorSpy)
 
         val gyroscopeSensorCollector: GyroscopeSensorCollector2? = getPrivateProperty(
@@ -454,7 +511,16 @@ class RelativeGyroscopeAttitudeEstimator2Test {
             GyroscopeSensorMeasurement(wx, wy, wz, null, null, null, timestamp, SensorAccuracy.HIGH)
         listener.onMeasurement(gyroscopeSensorCollector, measurement)
 
-        val slot = slot<Quaternion>()
+        verify(attitudeAvailableListener, only()).onAttitudeAvailable(
+            eq(estimator),
+            capture(quaternionCaptor),
+            eq(timestamp),
+            eq(null),
+            eq(null),
+            eq(null),
+            eq(null)
+        )
+/*        val slot = slot<Quaternion>()
         verify(exactly = 1) {
             attitudeAvailableListener.onAttitudeAvailable(
                 estimator,
@@ -465,12 +531,14 @@ class RelativeGyroscopeAttitudeEstimator2Test {
                 null,
                 null
             )
-        }
+        }*/
 
-        val capturedAttitude = slot.captured
+        val capturedAttitude = quaternionCaptor.value
+//        val capturedAttitude = slot.captured
         assertEquals(attitude, capturedAttitude)
 
-        verify(exactly = 1) { processorSpy.process(measurement) }
+        verify(processorSpy, times(1)).process(measurement)
+//        verify(exactly = 1) { processorSpy.process(measurement) }
     }
 
     @Test
@@ -486,15 +554,18 @@ class RelativeGyroscopeAttitudeEstimator2Test {
         val processor: RelativeGyroscopeAttitudeProcessor? =
             estimator.getPrivateProperty("processor")
         requireNotNull(processor)
-        val processorSpy = spyk(processor)
-        every { processorSpy.process(any(), any()) }.returns(true)
+        val processorSpy = spy(processor)
+//        val processorSpy = spyk(processor)
+        doReturn(true).whenever(processorSpy).process(any(), any())
+//        every { processorSpy.process(any(), any()) }.returns(true)
 
         val randomizer = UniformRandomizer()
         val roll = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
         val pitch = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
         val yaw = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
         val processorAttitude = Quaternion(roll, pitch, yaw)
-        every { processorSpy.attitude }.returns(processorAttitude)
+        doReturn(processorAttitude).whenever(processorSpy).attitude
+//        every { processorSpy.attitude }.returns(processorAttitude)
         estimator.setPrivateProperty("processor", processorSpy)
 
         val gyroscopeSensorCollector: GyroscopeSensorCollector2? = getPrivateProperty(
@@ -516,7 +587,8 @@ class RelativeGyroscopeAttitudeEstimator2Test {
             FrameType.LOCAL_NAVIGATION_FRAME,
             coordinateTransformation.destinationType
         )
-        val coordinateTransformationSpy = spyk(coordinateTransformation)
+        val coordinateTransformationSpy = spy(coordinateTransformation)
+//        val coordinateTransformationSpy = spyk(coordinateTransformation)
         setPrivateProperty(
             BaseRelativeGyroscopeAttitudeEstimator2::class,
             estimator,
@@ -530,7 +602,8 @@ class RelativeGyroscopeAttitudeEstimator2Test {
             "attitude"
         )
         requireNotNull(attitude)
-        val attitudeSpy = spyk(attitude)
+        val attitudeSpy = spy(attitude)
+//        val attitudeSpy = spyk(attitude)
         setPrivateProperty(
             BaseRelativeGyroscopeAttitudeEstimator2::class,
             estimator,
@@ -556,9 +629,20 @@ class RelativeGyroscopeAttitudeEstimator2Test {
             GyroscopeSensorMeasurement(wx, wy, wz, null, null, null, timestamp, SensorAccuracy.HIGH)
         listener.onMeasurement(gyroscopeSensorCollector, measurement)
 
-        verify(exactly = 1) { attitudeSpy.fromQuaternion(processorAttitude) }
-        verify(exactly = 1) { coordinateTransformationSpy.fromRotation(attitudeSpy) }
-        verify(exactly = 1) {
+        verify(attitudeSpy, times(1)).fromQuaternion(processorAttitude)
+//        verify(exactly = 1) { attitudeSpy.fromQuaternion(processorAttitude) }
+        verify(coordinateTransformationSpy, only()).fromRotation(attitudeSpy)
+//        verify(exactly = 1) { coordinateTransformationSpy.fromRotation(attitudeSpy) }
+        verify(attitudeAvailableListener, only()).onAttitudeAvailable(
+            estimator,
+            attitudeSpy,
+            timestamp,
+            eulerAngles[0],
+            eulerAngles[1],
+            eulerAngles[2],
+            coordinateTransformationSpy
+        )
+/*        verify(exactly = 1) {
             attitudeAvailableListener.onAttitudeAvailable(
                 estimator,
                 attitudeSpy,
@@ -568,8 +652,9 @@ class RelativeGyroscopeAttitudeEstimator2Test {
                 eulerAngles[2],
                 coordinateTransformationSpy
             )
-        }
-        verify(exactly = 1) { processorSpy.process(measurement) }
+        }*/
+        verify(processorSpy, times(1)).process(measurement)
+//        verify(exactly = 1) { processorSpy.process(measurement) }
     }
 
     private companion object {

@@ -35,78 +35,106 @@ import com.irurueta.navigation.inertial.calibration.generators.MeasurementsGener
 import com.irurueta.navigation.inertial.calibration.intervals.TriadStaticIntervalDetector
 import com.irurueta.statistics.UniformRandomizer
 import com.irurueta.units.*
-import io.mockk.*
-import io.mockk.impl.annotations.MockK
-import io.mockk.junit4.MockKRule
-import org.junit.After
+//import io.mockk.*
+//import io.mockk.impl.annotations.MockK
+//import io.mockk.junit4.MockKRule
+//import org.junit.After
 import org.junit.Assert.*
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.ArgumentCaptor
+import org.mockito.Mock
+import org.mockito.junit.MockitoJUnit
+import org.mockito.junit.MockitoRule
+import org.mockito.kotlin.any
+import org.mockito.kotlin.doAnswer
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.only
+import org.mockito.kotlin.spy
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.verifyNoInteractions
+import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 
-@Ignore("possible memory leak")
 @RunWith(RobolectricTestRunner::class)
 class AccelerometerMeasurementGeneratorTest {
 
     @get:Rule
-    val mockkRule = MockKRule(this)
+    val mockitoRule: MockitoRule = MockitoJUnit.rule()
 
-    @MockK(relaxUnitFun = true)
+//    @get:Rule
+//    val mockkRule = MockKRule(this)
+
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var initializationStartedListener:
             SingleSensorCalibrationMeasurementGenerator.OnInitializationStartedListener<AccelerometerMeasurementGenerator>
 
-    @MockK(relaxUnitFun = true)
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var initializationCompletedListener:
             SingleSensorCalibrationMeasurementGenerator.OnInitializationCompletedListener<AccelerometerMeasurementGenerator>
 
-    @MockK(relaxUnitFun = true)
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var errorListener:
             SingleSensorCalibrationMeasurementGenerator.OnErrorListener<AccelerometerMeasurementGenerator>
 
-    @MockK(relaxUnitFun = true)
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var staticIntervalDetectedListener:
             SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalDetectedListener<AccelerometerMeasurementGenerator>
 
-    @MockK(relaxUnitFun = true)
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var dynamicIntervalDetectedListener:
             SingleSensorCalibrationMeasurementGenerator.OnDynamicIntervalDetectedListener<AccelerometerMeasurementGenerator>
 
-    @MockK(relaxUnitFun = true)
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var staticIntervalSkippedListener:
             SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalSkippedListener<AccelerometerMeasurementGenerator>
 
-    @MockK(relaxUnitFun = true)
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var dynamicIntervalSkippedListener:
             SingleSensorCalibrationMeasurementGenerator.OnDynamicIntervalSkippedListener<AccelerometerMeasurementGenerator>
 
-    @MockK(relaxUnitFun = true)
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var generatedMeasurementListener:
             SingleSensorCalibrationMeasurementGenerator.OnGeneratedMeasurementListener<AccelerometerMeasurementGenerator, StandardDeviationBodyKinematics>
 
-    @MockK(relaxUnitFun = true)
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var resetListener:
             SingleSensorCalibrationMeasurementGenerator.OnResetListener<AccelerometerMeasurementGenerator>
 
-    @MockK(relaxUnitFun = true)
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var accelerometerMeasurementListener:
             AccelerometerSensorCollector.OnMeasurementListener
 
-    @MockK(relaxUnitFun = true)
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var accuracyChangedListener: SensorCollector.OnAccuracyChangedListener
 
-    @MockK
+//    @MockK
+    @Mock
     private lateinit var sensor: Sensor
 
-    @MockK
+//    @MockK
+    @Mock
     private lateinit var internalGenerator: AccelerometerMeasurementsGenerator
 
-    @After
+    /*@After
     fun tearDown() {
         unmockkAll()
         clearAllMocks()
-    }
+        System.gc()
+    }*/
 
     @Test
     fun constructor_whenContext_setsDefaultValues() {
@@ -1637,8 +1665,10 @@ class AccelerometerMeasurementGeneratorTest {
             "accelerometerCollector"
         )
         requireNotNull(accelerometerCollector)
-        val accelerometerCollectorSpy = spyk(accelerometerCollector)
-        every { accelerometerCollectorSpy.sensor }.returns(sensor)
+        val accelerometerCollectorSpy = spy(accelerometerCollector)
+        whenever(accelerometerCollectorSpy.sensor).thenReturn(sensor)
+//        val accelerometerCollectorSpy = spyk(accelerometerCollector)
+//        every { accelerometerCollectorSpy.sensor }.returns(sensor)
         setPrivateProperty(
             CalibrationMeasurementGenerator::class,
             generator,
@@ -2058,8 +2088,10 @@ class AccelerometerMeasurementGeneratorTest {
         requireNotNull(measurementsGenerator)
         val randomizer = UniformRandomizer()
         val baseNoiseLevel1 = randomizer.nextDouble()
-        val measurementsGeneratorSpy = spyk(measurementsGenerator)
-        every { measurementsGeneratorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel1)
+        val measurementsGeneratorSpy = spy(measurementsGenerator)
+        whenever(measurementsGeneratorSpy.accelerometerBaseNoiseLevel).thenReturn(baseNoiseLevel1)
+//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+//        every { measurementsGeneratorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel1)
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         assertNull(generator.accelerometerBaseNoiseLevel)
@@ -2097,10 +2129,12 @@ class AccelerometerMeasurementGeneratorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val baseNoiseLevel1 = Acceleration(value, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        val measurementsGeneratorSpy = spyk(measurementsGenerator)
-        every { measurementsGeneratorSpy.accelerometerBaseNoiseLevelAsMeasurement }.returns(
+        val measurementsGeneratorSpy = spy(measurementsGenerator)
+        whenever(measurementsGeneratorSpy.accelerometerBaseNoiseLevelAsMeasurement).thenReturn(baseNoiseLevel1)
+//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+/*        every { measurementsGeneratorSpy.accelerometerBaseNoiseLevelAsMeasurement }.returns(
             baseNoiseLevel1
-        )
+        )*/
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         assertNull(generator.accelerometerBaseNoiseLevelAsMeasurement)
@@ -2138,12 +2172,18 @@ class AccelerometerMeasurementGeneratorTest {
         requireNotNull(measurementsGenerator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val measurementsGeneratorSpy = spyk(measurementsGenerator)
-        every { measurementsGeneratorSpy.getAccelerometerBaseNoiseLevelAsMeasurement(any()) }.answers { answer ->
+        val measurementsGeneratorSpy = spy(measurementsGenerator)
+        doAnswer { invocation ->
+            val result = invocation.getArgument<Acceleration>(0)
+            result.value = value
+            result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
+        }.whenever(measurementsGeneratorSpy).getAccelerometerBaseNoiseLevelAsMeasurement(any())
+//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+/*        every { measurementsGeneratorSpy.getAccelerometerBaseNoiseLevelAsMeasurement(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as Acceleration
             result.value = value
             result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-        }
+        }*/
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         val baseNoiseLevel = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
@@ -2186,8 +2226,10 @@ class AccelerometerMeasurementGeneratorTest {
         requireNotNull(measurementsGenerator)
         val randomizer = UniformRandomizer()
         val baseNoiseLevelPsd1 = randomizer.nextDouble()
-        val measurementsGeneratorSpy = spyk(measurementsGenerator)
-        every { measurementsGeneratorSpy.accelerometerBaseNoiseLevelPsd }.returns(baseNoiseLevelPsd1)
+        val measurementsGeneratorSpy = spy(measurementsGenerator)
+        whenever(measurementsGeneratorSpy.accelerometerBaseNoiseLevelPsd).thenReturn(baseNoiseLevelPsd1)
+//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+//        every { measurementsGeneratorSpy.accelerometerBaseNoiseLevelPsd }.returns(baseNoiseLevelPsd1)
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         assertNull(generator.accelerometerBaseNoiseLevelPsd)
@@ -2224,10 +2266,12 @@ class AccelerometerMeasurementGeneratorTest {
         requireNotNull(measurementsGenerator)
         val randomizer = UniformRandomizer()
         val baseNoiseLevelRootPsd1 = randomizer.nextDouble()
-        val measurementsGeneratorSpy = spyk(measurementsGenerator)
-        every { measurementsGeneratorSpy.accelerometerBaseNoiseLevelRootPsd }.returns(
+        val measurementsGeneratorSpy = spy(measurementsGenerator)
+        whenever(measurementsGeneratorSpy.accelerometerBaseNoiseLevelRootPsd).thenReturn(baseNoiseLevelRootPsd1)
+//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+/*        every { measurementsGeneratorSpy.accelerometerBaseNoiseLevelRootPsd }.returns(
             baseNoiseLevelRootPsd1
-        )
+        )*/
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         assertNull(generator.accelerometerBaseNoiseLevelRootPsd)
@@ -2264,8 +2308,10 @@ class AccelerometerMeasurementGeneratorTest {
         requireNotNull(measurementsGenerator)
         val randomizer = UniformRandomizer()
         val threshold1 = randomizer.nextDouble()
-        val measurementsGeneratorSpy = spyk(measurementsGenerator)
-        every { measurementsGeneratorSpy.threshold }.returns(threshold1)
+        val measurementsGeneratorSpy = spy(measurementsGenerator)
+        whenever(measurementsGeneratorSpy.threshold).thenReturn(threshold1)
+//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+//        every { measurementsGeneratorSpy.threshold }.returns(threshold1)
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         assertNull(generator.threshold)
@@ -2303,8 +2349,10 @@ class AccelerometerMeasurementGeneratorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val threshold1 = Acceleration(value, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        val measurementsGeneratorSpy = spyk(measurementsGenerator)
-        every { measurementsGeneratorSpy.thresholdAsMeasurement }.returns(threshold1)
+        val measurementsGeneratorSpy = spy(measurementsGenerator)
+        whenever(measurementsGeneratorSpy.thresholdAsMeasurement).thenReturn(threshold1)
+//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+//        every { measurementsGeneratorSpy.thresholdAsMeasurement }.returns(threshold1)
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         assertNull(generator.thresholdAsMeasurement)
@@ -2345,12 +2393,18 @@ class AccelerometerMeasurementGeneratorTest {
         requireNotNull(measurementsGenerator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val measurementsGeneratorSpy = spyk(measurementsGenerator)
-        every { measurementsGeneratorSpy.getThresholdAsMeasurement(any()) }.answers { answer ->
+        val measurementsGeneratorSpy = spy(measurementsGenerator)
+        doAnswer { invocation ->
+            val result = invocation.getArgument<Acceleration>(0)
+            result.value = value
+            result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
+        }.whenever(measurementsGeneratorSpy).getThresholdAsMeasurement(any())
+//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+/*        every { measurementsGeneratorSpy.getThresholdAsMeasurement(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as Acceleration
             result.value = value
             result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-        }
+        }*/
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         val threshold = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
@@ -2380,13 +2434,16 @@ class AccelerometerMeasurementGeneratorTest {
         requireNotNull(measurementsGenerator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextInt()
-        val measurementsGeneratorSpy = spyk(measurementsGenerator)
-        every { measurementsGeneratorSpy.processedStaticSamples }.returns(value)
+        val measurementsGeneratorSpy = spy(measurementsGenerator)
+        whenever(measurementsGeneratorSpy.processedStaticSamples).thenReturn(value)
+//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+//        every { measurementsGeneratorSpy.processedStaticSamples }.returns(value)
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         // check
         assertEquals(value, generator.processedStaticSamples)
-        verify(exactly = 1) { measurementsGeneratorSpy.processedStaticSamples }
+        verify(measurementsGeneratorSpy, only()).processedStaticSamples
+//        verify(exactly = 1) { measurementsGeneratorSpy.processedStaticSamples }
     }
 
     @Test
@@ -2402,13 +2459,16 @@ class AccelerometerMeasurementGeneratorTest {
         requireNotNull(measurementsGenerator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextInt()
-        val measurementsGeneratorSpy = spyk(measurementsGenerator)
-        every { measurementsGeneratorSpy.processedDynamicSamples }.returns(value)
+        val measurementsGeneratorSpy = spy(measurementsGenerator)
+        whenever(measurementsGeneratorSpy.processedDynamicSamples).thenReturn(value)
+//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+//        every { measurementsGeneratorSpy.processedDynamicSamples }.returns(value)
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         // check
         assertEquals(value, generator.processedDynamicSamples)
-        verify(exactly = 1) { measurementsGeneratorSpy.processedDynamicSamples }
+        verify(measurementsGeneratorSpy, only()).processedDynamicSamples
+//        verify(exactly = 1) { measurementsGeneratorSpy.processedDynamicSamples }
     }
 
     @Test
@@ -2422,13 +2482,16 @@ class AccelerometerMeasurementGeneratorTest {
         val measurementsGenerator: AccelerometerMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
-        val measurementsGeneratorSpy = spyk(measurementsGenerator)
-        every { measurementsGeneratorSpy.isStaticIntervalSkipped }.returns(true)
+        val measurementsGeneratorSpy = spy(measurementsGenerator)
+        whenever(measurementsGeneratorSpy.isStaticIntervalSkipped).thenReturn(true)
+//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+//        every { measurementsGeneratorSpy.isStaticIntervalSkipped }.returns(true)
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         // check
         assertTrue(generator.isStaticIntervalSkipped)
-        verify(exactly = 1) { measurementsGeneratorSpy.isStaticIntervalSkipped }
+        verify(measurementsGeneratorSpy, only()).isStaticIntervalSkipped
+//        verify(exactly = 1) { measurementsGeneratorSpy.isStaticIntervalSkipped }
     }
 
     @Test
@@ -2442,13 +2505,16 @@ class AccelerometerMeasurementGeneratorTest {
         val measurementsGenerator: AccelerometerMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
-        val measurementsGeneratorSpy = spyk(measurementsGenerator)
-        every { measurementsGeneratorSpy.isDynamicIntervalSkipped }.returns(true)
+        val measurementsGeneratorSpy = spy(measurementsGenerator)
+        whenever(measurementsGeneratorSpy.isDynamicIntervalSkipped).thenReturn(true)
+//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+//        every { measurementsGeneratorSpy.isDynamicIntervalSkipped }.returns(true)
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         // check
         assertTrue(generator.isDynamicIntervalSkipped)
-        verify(exactly = 1) { measurementsGeneratorSpy.isDynamicIntervalSkipped }
+        verify(measurementsGeneratorSpy, only()).isDynamicIntervalSkipped
+//        verify(exactly = 1) { measurementsGeneratorSpy.isDynamicIntervalSkipped }
     }
 
     @Test
@@ -2477,8 +2543,10 @@ class AccelerometerMeasurementGeneratorTest {
         requireNotNull(timeIntervalEstimator)
         val randomizer = UniformRandomizer()
         val value1 = randomizer.nextDouble()
-        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-        every { timeIntervalEstimatorSpy.averageTimeInterval }.returns(value1)
+        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
+        whenever(timeIntervalEstimatorSpy.averageTimeInterval).thenReturn(value1)
+//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+//        every { timeIntervalEstimatorSpy.averageTimeInterval }.returns(value1)
         setPrivateProperty(
             CalibrationMeasurementGenerator::class,
             generator,
@@ -2524,8 +2592,10 @@ class AccelerometerMeasurementGeneratorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val time1 = Time(value, TimeUnit.SECOND)
-        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-        every { timeIntervalEstimatorSpy.averageTimeIntervalAsTime }.returns(time1)
+        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
+        whenever(timeIntervalEstimatorSpy.averageTimeIntervalAsTime).thenReturn(time1)
+//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+//        every { timeIntervalEstimatorSpy.averageTimeIntervalAsTime }.returns(time1)
         setPrivateProperty(
             CalibrationMeasurementGenerator::class,
             generator,
@@ -2571,12 +2641,18 @@ class AccelerometerMeasurementGeneratorTest {
         requireNotNull(timeIntervalEstimator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-        every { timeIntervalEstimatorSpy.getAverageTimeIntervalAsTime(any()) }.answers { answer ->
+        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
+        doAnswer { invocation ->
+            val result = invocation.getArgument<Time>(0)
+            result.value = value
+            result.unit = TimeUnit.SECOND
+        }.whenever(timeIntervalEstimatorSpy).getAverageTimeIntervalAsTime(any())
+//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+/*        every { timeIntervalEstimatorSpy.getAverageTimeIntervalAsTime(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as Time
             result.value = value
             result.unit = TimeUnit.SECOND
-        }
+        }*/
         setPrivateProperty(
             CalibrationMeasurementGenerator::class,
             generator,
@@ -2626,8 +2702,10 @@ class AccelerometerMeasurementGeneratorTest {
         requireNotNull(timeIntervalEstimator)
         val randomizer = UniformRandomizer()
         val value1 = randomizer.nextDouble()
-        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-        every { timeIntervalEstimatorSpy.timeIntervalVariance }.returns(value1)
+        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
+        whenever(timeIntervalEstimatorSpy.timeIntervalVariance).thenReturn(value1)
+//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+//        every { timeIntervalEstimatorSpy.timeIntervalVariance }.returns(value1)
         setPrivateProperty(
             CalibrationMeasurementGenerator::class,
             generator,
@@ -2672,8 +2750,10 @@ class AccelerometerMeasurementGeneratorTest {
         requireNotNull(timeIntervalEstimator)
         val randomizer = UniformRandomizer()
         val value1 = randomizer.nextDouble()
-        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-        every { timeIntervalEstimatorSpy.timeIntervalStandardDeviation }.returns(value1)
+        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
+        whenever(timeIntervalEstimatorSpy.timeIntervalStandardDeviation).thenReturn(value1)
+//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+//        every { timeIntervalEstimatorSpy.timeIntervalStandardDeviation }.returns(value1)
         setPrivateProperty(
             CalibrationMeasurementGenerator::class,
             generator,
@@ -2719,8 +2799,10 @@ class AccelerometerMeasurementGeneratorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val time1 = Time(value, TimeUnit.SECOND)
-        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-        every { timeIntervalEstimatorSpy.timeIntervalStandardDeviationAsTime }.returns(time1)
+        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
+        whenever(timeIntervalEstimatorSpy.timeIntervalStandardDeviationAsTime).thenReturn(time1)
+//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+//        every { timeIntervalEstimatorSpy.timeIntervalStandardDeviationAsTime }.returns(time1)
         setPrivateProperty(
             CalibrationMeasurementGenerator::class,
             generator,
@@ -2766,12 +2848,18 @@ class AccelerometerMeasurementGeneratorTest {
         requireNotNull(timeIntervalEstimator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-        every { timeIntervalEstimatorSpy.getTimeIntervalStandardDeviationAsTime(any()) }.answers { answer ->
+        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
+        doAnswer { invocation ->
+            val result = invocation.getArgument<Time>(0)
+            result.value = value
+            result.unit = TimeUnit.SECOND
+        }.whenever(timeIntervalEstimatorSpy).getTimeIntervalStandardDeviationAsTime(any())
+//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+/*        every { timeIntervalEstimatorSpy.getTimeIntervalStandardDeviationAsTime(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as Time
             result.value = value
             result.unit = TimeUnit.SECOND
-        }
+        }*/
         setPrivateProperty(
             CalibrationMeasurementGenerator::class,
             generator,
@@ -2818,8 +2906,10 @@ class AccelerometerMeasurementGeneratorTest {
         val measurementsGenerator: AccelerometerMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
-        val measurementsGeneratorSpy = spyk(measurementsGenerator)
-        every { measurementsGeneratorSpy.status }.returns(TriadStaticIntervalDetector.Status.IDLE)
+        val measurementsGeneratorSpy = spy(measurementsGenerator)
+        whenever(measurementsGeneratorSpy.status).thenReturn(TriadStaticIntervalDetector.Status.IDLE)
+//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+//        every { measurementsGeneratorSpy.status }.returns(TriadStaticIntervalDetector.Status.IDLE)
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         assertEquals(Status.IDLE, generator.status)
@@ -2838,8 +2928,10 @@ class AccelerometerMeasurementGeneratorTest {
         val measurementsGenerator: AccelerometerMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
-        val measurementsGeneratorSpy = spyk(measurementsGenerator)
-        every { measurementsGeneratorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZING)
+        val measurementsGeneratorSpy = spy(measurementsGenerator)
+        whenever(measurementsGeneratorSpy.status).thenReturn(TriadStaticIntervalDetector.Status.INITIALIZING)
+//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+//        every { measurementsGeneratorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZING)
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         assertEquals(Status.INITIALIZING, generator.status)
@@ -2858,8 +2950,10 @@ class AccelerometerMeasurementGeneratorTest {
         val measurementsGenerator: AccelerometerMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
-        val measurementsGeneratorSpy = spyk(measurementsGenerator)
-        every { measurementsGeneratorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZATION_COMPLETED)
+        val measurementsGeneratorSpy = spy(measurementsGenerator)
+        whenever(measurementsGeneratorSpy.status).thenReturn(TriadStaticIntervalDetector.Status.INITIALIZATION_COMPLETED)
+//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+//        every { measurementsGeneratorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZATION_COMPLETED)
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         assertEquals(Status.INITIALIZATION_COMPLETED, generator.status)
@@ -2878,8 +2972,10 @@ class AccelerometerMeasurementGeneratorTest {
         val measurementsGenerator: AccelerometerMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
-        val measurementsGeneratorSpy = spyk(measurementsGenerator)
-        every { measurementsGeneratorSpy.status }.returns(TriadStaticIntervalDetector.Status.STATIC_INTERVAL)
+        val measurementsGeneratorSpy = spy(measurementsGenerator)
+        whenever(measurementsGeneratorSpy.status).thenReturn(TriadStaticIntervalDetector.Status.STATIC_INTERVAL)
+//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+//        every { measurementsGeneratorSpy.status }.returns(TriadStaticIntervalDetector.Status.STATIC_INTERVAL)
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         assertEquals(Status.STATIC_INTERVAL, generator.status)
@@ -2898,8 +2994,10 @@ class AccelerometerMeasurementGeneratorTest {
         val measurementsGenerator: AccelerometerMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
-        val measurementsGeneratorSpy = spyk(measurementsGenerator)
-        every { measurementsGeneratorSpy.status }.returns(TriadStaticIntervalDetector.Status.DYNAMIC_INTERVAL)
+        val measurementsGeneratorSpy = spy(measurementsGenerator)
+        whenever(measurementsGeneratorSpy.status).thenReturn(TriadStaticIntervalDetector.Status.DYNAMIC_INTERVAL)
+//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+//        every { measurementsGeneratorSpy.status }.returns(TriadStaticIntervalDetector.Status.DYNAMIC_INTERVAL)
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         assertEquals(Status.DYNAMIC_INTERVAL, generator.status)
@@ -2918,8 +3016,10 @@ class AccelerometerMeasurementGeneratorTest {
         val measurementsGenerator: AccelerometerMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
-        val measurementsGeneratorSpy = spyk(measurementsGenerator)
-        every { measurementsGeneratorSpy.status }.returns(TriadStaticIntervalDetector.Status.FAILED)
+        val measurementsGeneratorSpy = spy(measurementsGenerator)
+        whenever(measurementsGeneratorSpy.status).thenReturn(TriadStaticIntervalDetector.Status.FAILED)
+//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+//        every { measurementsGeneratorSpy.status }.returns(TriadStaticIntervalDetector.Status.FAILED)
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         assertEquals(Status.FAILED, generator.status)
@@ -2948,7 +3048,8 @@ class AccelerometerMeasurementGeneratorTest {
             "accelerometerTimeIntervalEstimator"
         )
         requireNotNull(accelerometerTimeIntervalEstimator)
-        val accelerometerTimeIntervalEstimatorSpy = spyk(accelerometerTimeIntervalEstimator)
+        val accelerometerTimeIntervalEstimatorSpy = spy(accelerometerTimeIntervalEstimator)
+//        val accelerometerTimeIntervalEstimatorSpy = spyk(accelerometerTimeIntervalEstimator)
         setPrivateProperty(
             CalibrationMeasurementGenerator::class,
             generator,
@@ -2959,8 +3060,10 @@ class AccelerometerMeasurementGeneratorTest {
         val measurementsGenerator: AccelerometerMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
-        val measurementsGeneratorSpy = spyk(measurementsGenerator)
-        every { measurementsGeneratorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZING)
+        val measurementsGeneratorSpy = spy(measurementsGenerator)
+        whenever(measurementsGeneratorSpy.status).thenReturn(TriadStaticIntervalDetector.Status.INITIALIZING)
+//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+//        every { measurementsGeneratorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZING)
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         assertEquals(Status.INITIALIZING, generator.status)
@@ -2985,10 +3088,13 @@ class AccelerometerMeasurementGeneratorTest {
         requireNotNull(initialAccelerometerTimestamp)
         assertEquals(timestamp, initialAccelerometerTimestamp)
         assertEquals(1, generator.numberOfProcessedAccelerometerMeasurements)
-        val slot = slot<BodyKinematics>()
-        verify(exactly = 1) { measurementsGeneratorSpy.process(capture(slot)) }
+        val captor = ArgumentCaptor.captor<BodyKinematics>()
+        verify(measurementsGeneratorSpy, times(1)).process(captor.capture())
+//        val slot = slot<BodyKinematics>()
+//        verify(exactly = 1) { measurementsGeneratorSpy.process(capture(slot)) }
 
-        val bodyKinematics = slot.captured
+        val bodyKinematics = captor.value
+//        val bodyKinematics = slot.captured
         assertEquals(ay.toDouble(), bodyKinematics.fx, 0.0)
         assertEquals(ax.toDouble(), bodyKinematics.fy, 0.0)
         assertEquals(-az.toDouble(), bodyKinematics.fz, 0.0)
@@ -2996,7 +3102,8 @@ class AccelerometerMeasurementGeneratorTest {
         assertEquals(0.0, bodyKinematics.angularRateY, 0.0)
         assertEquals(0.0, bodyKinematics.angularRateZ, 0.0)
 
-        verify { accelerometerTimeIntervalEstimatorSpy wasNot Called }
+        verifyNoInteractions(accelerometerTimeIntervalEstimatorSpy)
+//        verify { accelerometerTimeIntervalEstimatorSpy wasNot Called }
     }
 
     @Test
@@ -3022,7 +3129,8 @@ class AccelerometerMeasurementGeneratorTest {
             "accelerometerTimeIntervalEstimator"
         )
         requireNotNull(accelerometerTimeIntervalEstimator)
-        val accelerometerTimeIntervalEstimatorSpy = spyk(accelerometerTimeIntervalEstimator)
+        val accelerometerTimeIntervalEstimatorSpy = spy(accelerometerTimeIntervalEstimator)
+//        val accelerometerTimeIntervalEstimatorSpy = spyk(accelerometerTimeIntervalEstimator)
         setPrivateProperty(
             CalibrationMeasurementGenerator::class,
             generator,
@@ -3033,8 +3141,10 @@ class AccelerometerMeasurementGeneratorTest {
         val measurementsGenerator: AccelerometerMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
-        val measurementsGeneratorSpy = spyk(measurementsGenerator)
-        every { measurementsGeneratorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZING)
+        val measurementsGeneratorSpy = spy(measurementsGenerator)
+        whenever(measurementsGeneratorSpy.status).thenReturn(TriadStaticIntervalDetector.Status.INITIALIZING)
+//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+//        every { measurementsGeneratorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZING)
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         setPrivateProperty(
@@ -3059,14 +3169,18 @@ class AccelerometerMeasurementGeneratorTest {
         listener.onMeasurement(ax, ay, az, bx, by, bz, timestamp, accuracy)
 
         val seconds = TimeConverter.nanosecondToSecond(timestamp.toDouble())
-        verify(exactly = 1) { accelerometerTimeIntervalEstimatorSpy.addTimestamp(seconds) }
+        verify(accelerometerTimeIntervalEstimatorSpy, times(1)).addTimestamp(seconds)
+//        verify(exactly = 1) { accelerometerTimeIntervalEstimatorSpy.addTimestamp(seconds) }
 
         assertEquals(2, generator.numberOfProcessedAccelerometerMeasurements)
 
-        val slot = slot<BodyKinematics>()
-        verify(exactly = 1) { measurementsGeneratorSpy.process(capture(slot)) }
+        val captor = ArgumentCaptor.captor<BodyKinematics>()
+        verify(measurementsGeneratorSpy, times(1)).process(captor.capture())
+//        val slot = slot<BodyKinematics>()
+//        verify(exactly = 1) { measurementsGeneratorSpy.process(capture(slot)) }
 
-        val bodyKinematics = slot.captured
+        val bodyKinematics = captor.value
+//        val bodyKinematics = slot.captured
         assertEquals(ay.toDouble(), bodyKinematics.fx, 0.0)
         assertEquals(ax.toDouble(), bodyKinematics.fy, 0.0)
         assertEquals(-az.toDouble(), bodyKinematics.fz, 0.0)
@@ -3098,10 +3212,12 @@ class AccelerometerMeasurementGeneratorTest {
             "accelerometerTimeIntervalEstimator"
         )
         requireNotNull(accelerometerTimeIntervalEstimator)
-        val accelerometerTimeIntervalEstimatorSpy = spyk(accelerometerTimeIntervalEstimator)
+        val accelerometerTimeIntervalEstimatorSpy = spy(accelerometerTimeIntervalEstimator)
+//        val accelerometerTimeIntervalEstimatorSpy = spyk(accelerometerTimeIntervalEstimator)
         val randomizer = UniformRandomizer()
         val timeInterval = randomizer.nextDouble()
-        every { accelerometerTimeIntervalEstimatorSpy.averageTimeInterval }.returns(timeInterval)
+        whenever(accelerometerTimeIntervalEstimatorSpy.averageTimeInterval).thenReturn(timeInterval)
+//        every { accelerometerTimeIntervalEstimatorSpy.averageTimeInterval }.returns(timeInterval)
         setPrivateProperty(
             CalibrationMeasurementGenerator::class,
             generator,
@@ -3112,10 +3228,12 @@ class AccelerometerMeasurementGeneratorTest {
         val measurementsGenerator: AccelerometerMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
-        val measurementsGeneratorSpy = spyk(measurementsGenerator)
-        every { measurementsGeneratorSpy.status }.returns(
+        val measurementsGeneratorSpy = spy(measurementsGenerator)
+        whenever(measurementsGeneratorSpy.status).thenReturn(TriadStaticIntervalDetector.Status.INITIALIZATION_COMPLETED)
+//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+/*        every { measurementsGeneratorSpy.status }.returns(
             TriadStaticIntervalDetector.Status.INITIALIZATION_COMPLETED
-        )
+        )*/
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         assertEquals(Status.INITIALIZATION_COMPLETED, generator.status)
@@ -3131,10 +3249,13 @@ class AccelerometerMeasurementGeneratorTest {
         val accuracy = SensorAccuracy.HIGH
         listener.onMeasurement(ax, ay, az, bx, by, bz, timestamp, accuracy)
 
-        val slot = slot<BodyKinematics>()
-        verify(exactly = 1) { measurementsGeneratorSpy.process(capture(slot)) }
+        val captor = ArgumentCaptor.captor<BodyKinematics>()
+        verify(measurementsGeneratorSpy, times(1)).process(captor.capture())
+//        val slot = slot<BodyKinematics>()
+//        verify(exactly = 1) { measurementsGeneratorSpy.process(capture(slot)) }
 
-        val bodyKinematics = slot.captured
+        val bodyKinematics = captor.value
+//        val bodyKinematics = slot.captured
         assertEquals(ay.toDouble(), bodyKinematics.fx, 0.0)
         assertEquals(ax.toDouble(), bodyKinematics.fy, 0.0)
         assertEquals(-az.toDouble(), bodyKinematics.fz, 0.0)
@@ -3142,8 +3263,10 @@ class AccelerometerMeasurementGeneratorTest {
         assertEquals(0.0, bodyKinematics.angularRateY, 0.0)
         assertEquals(0.0, bodyKinematics.angularRateZ, 0.0)
 
-        verify(exactly = 1) { accelerometerTimeIntervalEstimatorSpy.averageTimeInterval }
-        verify(exactly = 1) { measurementsGeneratorSpy.timeInterval = timeInterval }
+        verify(accelerometerTimeIntervalEstimatorSpy, only()).averageTimeInterval
+        verify(measurementsGeneratorSpy, times(1)).timeInterval = timeInterval
+//        verify(exactly = 1) { accelerometerTimeIntervalEstimatorSpy.averageTimeInterval }
+//        verify(exactly = 1) { measurementsGeneratorSpy.timeInterval = timeInterval }
 
         val initialized: Boolean? =
             getPrivateProperty(CalibrationMeasurementGenerator::class, generator, "initialized")
@@ -3177,7 +3300,8 @@ class AccelerometerMeasurementGeneratorTest {
             "accelerometerTimeIntervalEstimator"
         )
         requireNotNull(accelerometerTimeIntervalEstimator)
-        val accelerometerTimeIntervalEstimatorSpy = spyk(accelerometerTimeIntervalEstimator)
+        val accelerometerTimeIntervalEstimatorSpy = spy(accelerometerTimeIntervalEstimator)
+//        val accelerometerTimeIntervalEstimatorSpy = spyk(accelerometerTimeIntervalEstimator)
         setPrivateProperty(
             CalibrationMeasurementGenerator::class,
             generator,
@@ -3188,8 +3312,10 @@ class AccelerometerMeasurementGeneratorTest {
         val measurementsGenerator: AccelerometerMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
-        val measurementsGeneratorSpy = spyk(measurementsGenerator)
-        every { measurementsGeneratorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZING)
+        val measurementsGeneratorSpy = spy(measurementsGenerator)
+        whenever(measurementsGeneratorSpy.status).thenReturn(TriadStaticIntervalDetector.Status.INITIALIZING)
+//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+//        every { measurementsGeneratorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZING)
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         assertEquals(Status.INITIALIZING, generator.status)
@@ -3214,10 +3340,13 @@ class AccelerometerMeasurementGeneratorTest {
         requireNotNull(initialAccelerometerTimestamp)
         assertEquals(timestamp, initialAccelerometerTimestamp)
         assertEquals(1, generator.numberOfProcessedAccelerometerMeasurements)
-        val slot = slot<BodyKinematics>()
-        verify(exactly = 1) { measurementsGeneratorSpy.process(capture(slot)) }
+        val captor = ArgumentCaptor.captor<BodyKinematics>()
+        verify(measurementsGeneratorSpy, times(1)).process(captor.capture())
+//        val slot = slot<BodyKinematics>()
+//        verify(exactly = 1) { measurementsGeneratorSpy.process(capture(slot)) }
 
-        val bodyKinematics = slot.captured
+        val bodyKinematics = captor.value
+//        val bodyKinematics = slot.captured
         assertEquals(ay.toDouble(), bodyKinematics.fx, 0.0)
         assertEquals(ax.toDouble(), bodyKinematics.fy, 0.0)
         assertEquals(-az.toDouble(), bodyKinematics.fz, 0.0)
@@ -3225,8 +3354,19 @@ class AccelerometerMeasurementGeneratorTest {
         assertEquals(0.0, bodyKinematics.angularRateY, 0.0)
         assertEquals(0.0, bodyKinematics.angularRateZ, 0.0)
 
-        verify { accelerometerTimeIntervalEstimatorSpy wasNot Called }
-        verify(exactly = 1) {
+        verifyNoInteractions(accelerometerTimeIntervalEstimatorSpy)
+        verify(accelerometerMeasurementListener, only()).onMeasurement(
+            ax,
+            ay,
+            az,
+            bx,
+            by,
+            bz,
+            timestamp,
+            accuracy
+        )
+//        verify { accelerometerTimeIntervalEstimatorSpy wasNot Called }
+/*        verify(exactly = 1) {
             accelerometerMeasurementListener.onMeasurement(
                 ax,
                 ay,
@@ -3237,7 +3377,7 @@ class AccelerometerMeasurementGeneratorTest {
                 timestamp,
                 accuracy
             )
-        }
+        }*/
     }
 
     @Test
@@ -3251,7 +3391,8 @@ class AccelerometerMeasurementGeneratorTest {
             "accelerometerCollector"
         )
         requireNotNull(accelerometerCollector)
-        val accelerometerCollectorSpy = spyk(accelerometerCollector)
+        val accelerometerCollectorSpy = spy(accelerometerCollector)
+//        val accelerometerCollectorSpy = spyk(accelerometerCollector)
         setPrivateProperty(
             CalibrationMeasurementGenerator::class,
             generator,
@@ -3279,7 +3420,8 @@ class AccelerometerMeasurementGeneratorTest {
         requireNotNull(unreliable2)
         assertTrue(unreliable2)
 
-        verify(exactly = 1) { accelerometerCollectorSpy.stop() }
+        verify(accelerometerCollectorSpy, times(1)).stop()
+//        verify(exactly = 1) { accelerometerCollectorSpy.stop() }
     }
 
     @Test
@@ -3297,7 +3439,8 @@ class AccelerometerMeasurementGeneratorTest {
             "accelerometerCollector"
         )
         requireNotNull(accelerometerCollector)
-        val accelerometerCollectorSpy = spyk(accelerometerCollector)
+        val accelerometerCollectorSpy = spy(accelerometerCollector)
+//        val accelerometerCollectorSpy = spyk(accelerometerCollector)
         setPrivateProperty(
             CalibrationMeasurementGenerator::class,
             generator,
@@ -3325,9 +3468,12 @@ class AccelerometerMeasurementGeneratorTest {
         requireNotNull(unreliable2)
         assertTrue(unreliable2)
 
-        verify(exactly = 1) { accelerometerCollectorSpy.stop() }
-        verify(exactly = 1) { errorListener.onError(generator, ErrorReason.UNRELIABLE_SENSOR) }
-        verify(exactly = 1) { accuracyChangedListener.onAccuracyChanged(SensorAccuracy.UNRELIABLE) }
+        verify(accelerometerCollectorSpy, times(1)).stop()
+        verify(errorListener, only()).onError(generator, ErrorReason.UNRELIABLE_SENSOR)
+        verify(accuracyChangedListener, only()).onAccuracyChanged(SensorAccuracy.UNRELIABLE)
+//        verify(exactly = 1) { accelerometerCollectorSpy.stop() }
+//        verify(exactly = 1) { errorListener.onError(generator, ErrorReason.UNRELIABLE_SENSOR) }
+//        verify(exactly = 1) { accuracyChangedListener.onAccuracyChanged(SensorAccuracy.UNRELIABLE) }
     }
 
     @Test
@@ -3349,8 +3495,10 @@ class AccelerometerMeasurementGeneratorTest {
 
         collectorAccuracyChangedListener.onAccuracyChanged(SensorAccuracy.HIGH)
 
-        verify { errorListener wasNot Called }
-        verify(exactly = 1) { accuracyChangedListener.onAccuracyChanged(SensorAccuracy.HIGH) }
+        verifyNoInteractions(errorListener)
+        verify(accuracyChangedListener, only()).onAccuracyChanged(SensorAccuracy.HIGH)
+//        verify { errorListener wasNot Called }
+//        verify(exactly = 1) { accuracyChangedListener.onAccuracyChanged(SensorAccuracy.HIGH) }
     }
 
     @Test
@@ -3364,7 +3512,8 @@ class AccelerometerMeasurementGeneratorTest {
             "accelerometerTimeIntervalEstimator"
         )
         requireNotNull(accelerometerTimeIntervalEstimator)
-        val accelerometerTimeIntervalEstimatorSpy = spyk(accelerometerTimeIntervalEstimator)
+        val accelerometerTimeIntervalEstimatorSpy = spy(accelerometerTimeIntervalEstimator)
+//        val accelerometerTimeIntervalEstimatorSpy = spyk(accelerometerTimeIntervalEstimator)
         setPrivateProperty(
             CalibrationMeasurementGenerator::class,
             generator,
@@ -3375,7 +3524,8 @@ class AccelerometerMeasurementGeneratorTest {
         val measurementsGenerator: AccelerometerMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
-        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+        val measurementsGeneratorSpy = spy(measurementsGenerator)
+//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         val accelerometerCollector: AccelerometerSensorCollector? = getPrivateProperty(
@@ -3384,8 +3534,10 @@ class AccelerometerMeasurementGeneratorTest {
             "accelerometerCollector"
         )
         requireNotNull(accelerometerCollector)
-        val accelerometerCollectorSpy = spyk(accelerometerCollector)
-        every { accelerometerCollectorSpy.start() }.returns(true)
+        val accelerometerCollectorSpy = spy(accelerometerCollector)
+        doReturn(true).whenever(accelerometerCollectorSpy).start()
+//        val accelerometerCollectorSpy = spyk(accelerometerCollector)
+//        every { accelerometerCollectorSpy.start() }.returns(true)
         setPrivateProperty(
             CalibrationMeasurementGenerator::class,
             generator,
@@ -3398,12 +3550,15 @@ class AccelerometerMeasurementGeneratorTest {
         // start
         generator.start()
 
-        verify(exactly = 1) { accelerometerTimeIntervalEstimatorSpy.reset() }
-        verify(exactly = 1) { measurementsGeneratorSpy.reset() }
+        verify(accelerometerTimeIntervalEstimatorSpy, times(1)).reset()
+        verify(measurementsGeneratorSpy, only()).reset()
+//        verify(exactly = 1) { accelerometerTimeIntervalEstimatorSpy.reset() }
+//        verify(exactly = 1) { measurementsGeneratorSpy.reset() }
 
         assertTrue(generator.running)
 
-        verify(exactly = 1) { accelerometerCollectorSpy.start() }
+        verify(accelerometerCollectorSpy, only()).start()
+//        verify(exactly = 1) { accelerometerCollectorSpy.start() }
     }
 
     @Test
@@ -3417,7 +3572,8 @@ class AccelerometerMeasurementGeneratorTest {
             "accelerometerTimeIntervalEstimator"
         )
         requireNotNull(accelerometerTimeIntervalEstimator)
-        val accelerometerTimeIntervalEstimatorSpy = spyk(accelerometerTimeIntervalEstimator)
+        val accelerometerTimeIntervalEstimatorSpy = spy(accelerometerTimeIntervalEstimator)
+//        val accelerometerTimeIntervalEstimatorSpy = spyk(accelerometerTimeIntervalEstimator)
         setPrivateProperty(
             CalibrationMeasurementGenerator::class,
             generator,
@@ -3428,7 +3584,8 @@ class AccelerometerMeasurementGeneratorTest {
         val measurementsGenerator: AccelerometerMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
-        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+        val measurementsGeneratorSpy = spy(measurementsGenerator)
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         val accelerometerCollector: AccelerometerSensorCollector? = getPrivateProperty(
@@ -3437,8 +3594,10 @@ class AccelerometerMeasurementGeneratorTest {
             "accelerometerCollector"
         )
         requireNotNull(accelerometerCollector)
-        val accelerometerCollectorSpy = spyk(accelerometerCollector)
-        every { accelerometerCollectorSpy.start() }.returns(false)
+        val accelerometerCollectorSpy = spy(accelerometerCollector)
+        doReturn(false).whenever(accelerometerCollectorSpy).start()
+//        val accelerometerCollectorSpy = spyk(accelerometerCollector)
+//        every { accelerometerCollectorSpy.start() }.returns(false)
         setPrivateProperty(
             CalibrationMeasurementGenerator::class,
             generator,
@@ -3451,13 +3610,15 @@ class AccelerometerMeasurementGeneratorTest {
         // start
         assertThrows(IllegalStateException::class.java) { generator.start() }
 
-
-        verify(exactly = 1) { accelerometerTimeIntervalEstimatorSpy.reset() }
-        verify(exactly = 1) { measurementsGeneratorSpy.reset() }
+        verify(accelerometerTimeIntervalEstimatorSpy, times(1)).reset()
+        verify(measurementsGeneratorSpy, only()).reset()
+//        verify(exactly = 1) { accelerometerTimeIntervalEstimatorSpy.reset() }
+//        verify(exactly = 1) { measurementsGeneratorSpy.reset() }
 
         assertFalse(generator.running)
 
-        verify(exactly = 1) { accelerometerCollectorSpy.start() }
+        verify(accelerometerCollectorSpy, only()).start()
+//        verify(exactly = 1) { accelerometerCollectorSpy.start() }
     }
 
     @Test
@@ -3473,7 +3634,8 @@ class AccelerometerMeasurementGeneratorTest {
             "accelerometerTimeIntervalEstimator"
         )
         requireNotNull(accelerometerTimeIntervalEstimator)
-        val accelerometerTimeIntervalEstimatorSpy = spyk(accelerometerTimeIntervalEstimator)
+        val accelerometerTimeIntervalEstimatorSpy = spy(accelerometerTimeIntervalEstimator)
+//        val accelerometerTimeIntervalEstimatorSpy = spyk(accelerometerTimeIntervalEstimator)
         setPrivateProperty(
             CalibrationMeasurementGenerator::class,
             generator,
@@ -3484,7 +3646,8 @@ class AccelerometerMeasurementGeneratorTest {
         val measurementsGenerator: AccelerometerMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
-        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+        val measurementsGeneratorSpy = spy(measurementsGenerator)
+//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         val accelerometerCollector: AccelerometerSensorCollector? = getPrivateProperty(
@@ -3493,7 +3656,8 @@ class AccelerometerMeasurementGeneratorTest {
             "accelerometerCollector"
         )
         requireNotNull(accelerometerCollector)
-        val accelerometerCollectorSpy = spyk(accelerometerCollector)
+        val accelerometerCollectorSpy = spy(accelerometerCollector)
+//        val accelerometerCollectorSpy = spyk(accelerometerCollector)
         setPrivateProperty(
             CalibrationMeasurementGenerator::class,
             generator,
@@ -3504,9 +3668,12 @@ class AccelerometerMeasurementGeneratorTest {
         // start
         assertThrows(IllegalStateException::class.java) { generator.start() }
 
-        verify { accelerometerTimeIntervalEstimatorSpy wasNot Called }
-        verify { measurementsGeneratorSpy wasNot Called }
-        verify { accelerometerCollectorSpy wasNot Called }
+        verifyNoInteractions(accelerometerTimeIntervalEstimatorSpy)
+        verifyNoInteractions(measurementsGeneratorSpy)
+        verifyNoInteractions(accelerometerCollectorSpy)
+//        verify { accelerometerTimeIntervalEstimatorSpy wasNot Called }
+//        verify { measurementsGeneratorSpy wasNot Called }
+//        verify { accelerometerCollectorSpy wasNot Called }
     }
 
     @Test
@@ -3520,7 +3687,8 @@ class AccelerometerMeasurementGeneratorTest {
             "accelerometerCollector"
         )
         requireNotNull(accelerometerCollector)
-        val accelerometerCollectorSpy = spyk(accelerometerCollector)
+        val accelerometerCollectorSpy = spy(accelerometerCollector)
+//        val accelerometerCollectorSpy = spyk(accelerometerCollector)
         setPrivateProperty(
             CalibrationMeasurementGenerator::class,
             generator,
@@ -3536,7 +3704,8 @@ class AccelerometerMeasurementGeneratorTest {
 
         // check
         assertFalse(generator.running)
-        verify(exactly = 1) { accelerometerCollectorSpy.stop() }
+        verify(accelerometerCollectorSpy, times(1)).stop()
+//        verify(exactly = 1) { accelerometerCollectorSpy.stop() }
     }
 
     @Test
@@ -3550,7 +3719,8 @@ class AccelerometerMeasurementGeneratorTest {
             "accelerometerTimeIntervalEstimator"
         )
         requireNotNull(accelerometerTimeIntervalEstimator)
-        val accelerometerTimeIntervalEstimatorSpy = spyk(accelerometerTimeIntervalEstimator)
+        val accelerometerTimeIntervalEstimatorSpy = spy(accelerometerTimeIntervalEstimator)
+//        val accelerometerTimeIntervalEstimatorSpy = spyk(accelerometerTimeIntervalEstimator)
         setPrivateProperty(
             CalibrationMeasurementGenerator::class,
             generator,
@@ -3561,7 +3731,8 @@ class AccelerometerMeasurementGeneratorTest {
         val measurementsGenerator: AccelerometerMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
-        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+        val measurementsGeneratorSpy = spy(measurementsGenerator)
+//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         setPrivateProperty(CalibrationMeasurementGenerator::class, generator, "unreliable", true)
@@ -3588,8 +3759,10 @@ class AccelerometerMeasurementGeneratorTest {
         callPrivateFunc(SingleSensorCalibrationMeasurementGenerator::class, generator, "reset")
 
         assertEquals(Integer.MAX_VALUE, accelerometerTimeIntervalEstimatorSpy.totalSamples)
-        verify(exactly = 1) { accelerometerTimeIntervalEstimatorSpy.reset() }
-        verify(exactly = 1) { measurementsGeneratorSpy.reset() }
+        verify(accelerometerTimeIntervalEstimatorSpy, times(1)).reset()
+        verify(measurementsGeneratorSpy, only()).reset()
+//        verify(exactly = 1) { accelerometerTimeIntervalEstimatorSpy.reset() }
+//        verify(exactly = 1) { measurementsGeneratorSpy.reset() }
         val unreliable: Boolean? =
             getPrivateProperty(CalibrationMeasurementGenerator::class, generator, "unreliable")
         requireNotNull(unreliable)
@@ -3696,7 +3869,8 @@ class AccelerometerMeasurementGeneratorTest {
 
         measurementsGeneratorListener.onInitializationStarted(internalGenerator)
 
-        verify(exactly = 1) { initializationStartedListener.onInitializationStarted(generator) }
+        verify(initializationStartedListener, only()).onInitializationStarted(generator)
+//        verify(exactly = 1) { initializationStartedListener.onInitializationStarted(generator) }
     }
 
     @Test
@@ -3730,12 +3904,16 @@ class AccelerometerMeasurementGeneratorTest {
         val baseNoiseLevel = randomizer.nextDouble()
         measurementsGeneratorListener.onInitializationCompleted(internalGenerator, baseNoiseLevel)
 
-        verify(exactly = 1) {
+        verify(initializationCompletedListener, only()).onInitializationCompleted(
+            generator,
+            baseNoiseLevel
+        )
+/*        verify(exactly = 1) {
             initializationCompletedListener.onInitializationCompleted(
                 generator,
                 baseNoiseLevel
             )
-        }
+        }*/
     }
 
     @Test
@@ -3767,12 +3945,16 @@ class AccelerometerMeasurementGeneratorTest {
             TriadStaticIntervalDetector.ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED
         )
 
-        verify(exactly = 1) {
+        verify(errorListener, only()).onError(
+            generator,
+            ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
+        )
+/*        verify(exactly = 1) {
             errorListener.onError(
                 generator,
                 ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
             )
-        }
+        }*/
     }
 
     @Test
@@ -3802,7 +3984,8 @@ class AccelerometerMeasurementGeneratorTest {
 
         measurementsGeneratorListener.onStaticIntervalDetected(internalGenerator)
 
-        verify(exactly = 1) { staticIntervalDetectedListener.onStaticIntervalDetected(generator) }
+        verify(staticIntervalDetectedListener, only()).onStaticIntervalDetected(generator)
+//        verify(exactly = 1) { staticIntervalDetectedListener.onStaticIntervalDetected(generator) }
     }
 
     @Test
@@ -3832,7 +4015,8 @@ class AccelerometerMeasurementGeneratorTest {
 
         measurementsGeneratorListener.onDynamicIntervalDetected(internalGenerator)
 
-        verify(exactly = 1) { dynamicIntervalDetectedListener.onDynamicIntervalDetected(generator) }
+        verify(dynamicIntervalDetectedListener, only()).onDynamicIntervalDetected(generator)
+//        verify(exactly = 1) { dynamicIntervalDetectedListener.onDynamicIntervalDetected(generator) }
     }
 
     @Test
@@ -3862,7 +4046,8 @@ class AccelerometerMeasurementGeneratorTest {
 
         measurementsGeneratorListener.onStaticIntervalSkipped(internalGenerator)
 
-        verify(exactly = 1) { staticIntervalSkippedListener.onStaticIntervalSkipped(generator) }
+        verify(staticIntervalSkippedListener, only()).onStaticIntervalSkipped(generator)
+//        verify(exactly = 1) { staticIntervalSkippedListener.onStaticIntervalSkipped(generator) }
     }
 
     @Test
@@ -3892,7 +4077,8 @@ class AccelerometerMeasurementGeneratorTest {
 
         measurementsGeneratorListener.onDynamicIntervalSkipped(internalGenerator)
 
-        verify(exactly = 1) { dynamicIntervalSkippedListener.onDynamicIntervalSkipped(generator) }
+        verify(dynamicIntervalSkippedListener, only()).onDynamicIntervalSkipped(generator)
+//        verify(exactly = 1) { dynamicIntervalSkippedListener.onDynamicIntervalSkipped(generator) }
     }
 
     @Test
@@ -3924,12 +4110,16 @@ class AccelerometerMeasurementGeneratorTest {
         val measurement = StandardDeviationBodyKinematics()
         measurementsGeneratorListener.onGeneratedMeasurement(internalGenerator, measurement)
 
-        verify(exactly = 1) {
+        verify(generatedMeasurementListener, only()).onGeneratedMeasurement(
+            generator,
+            measurement
+        )
+/*        verify(exactly = 1) {
             generatedMeasurementListener.onGeneratedMeasurement(
                 generator,
                 measurement
             )
-        }
+        }*/
     }
 
     @Test
@@ -3955,7 +4145,8 @@ class AccelerometerMeasurementGeneratorTest {
 
         measurementsGeneratorListener.onReset(internalGenerator)
 
-        verify(exactly = 1) { resetListener.onReset(generator) }
+        verify(resetListener, only()).onReset(generator)
+//        verify(exactly = 1) { resetListener.onReset(generator) }
     }
 
     private companion object {

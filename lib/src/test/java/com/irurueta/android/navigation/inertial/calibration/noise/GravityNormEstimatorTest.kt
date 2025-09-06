@@ -35,43 +35,61 @@ import com.irurueta.units.Acceleration
 import com.irurueta.units.AccelerationUnit
 import com.irurueta.units.Time
 import com.irurueta.units.TimeUnit
-import io.mockk.*
-import io.mockk.impl.annotations.MockK
-import io.mockk.junit4.MockKRule
-import org.junit.After
+//import io.mockk.every
+//import io.mockk.*
+//import io.mockk.impl.annotations.MockK
+//import io.mockk.junit4.MockKRule
+//import org.junit.After
 import org.junit.Assert.*
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mock
+import org.mockito.junit.MockitoJUnit
+import org.mockito.junit.MockitoRule
+import org.mockito.kotlin.any
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.never
+import org.mockito.kotlin.only
+import org.mockito.kotlin.spy
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 
-@Ignore("possible memory leak")
 @RunWith(RobolectricTestRunner::class)
 class GravityNormEstimatorTest {
 
     @get:Rule
-    val mockkRule = MockKRule(this)
+    val mockitoRule: MockitoRule = MockitoJUnit.rule()
 
-    @MockK(relaxUnitFun = true)
+//    @get:Rule
+//    val mockkRule = MockKRule(this)
+
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var completedListener:
             AccumulatedMeasurementEstimator.OnEstimationCompletedListener<GravityNormEstimator>
 
-    @MockK(relaxUnitFun = true)
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var unreliableListener:
             AccumulatedMeasurementEstimator.OnUnreliableListener<GravityNormEstimator>
 
-    @MockK(relaxUnitFun = true)
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var measurementListener: GravitySensorCollector.OnMeasurementListener
 
-    @MockK
+//    @MockK
+    @Mock
     private lateinit var sensor: Sensor
 
-    @After
+    /*@After
     fun tearDown() {
         unmockkAll()
         clearAllMocks()
-    }
+        System.gc()
+    }*/
 
     @Test
     fun constructor_whenContext_setsDefaultValues() {
@@ -535,8 +553,10 @@ class GravityNormEstimatorTest {
         val collector: GravitySensorCollector? =
             estimator.getPrivateProperty("collector")
         requireNotNull(collector)
-        val collectorSpy = spyk(collector)
-        every { collectorSpy.sensor }.returns(sensor)
+        val collectorSpy = spy(collector)
+        whenever(collectorSpy.sensor).thenReturn(sensor)
+//        val collectorSpy = spyk(collector)
+//        every { collectorSpy.sensor }.returns(sensor)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         assertSame(sensor, estimator.sensor)
@@ -555,8 +575,10 @@ class GravityNormEstimatorTest {
         assertNotNull(collector.measurementListener)
         assertNotNull(collector.accuracyChangedListener)
 
-        val collectorSpy = spyk(collector)
-        every { collectorSpy.start() }.returns(true)
+        val collectorSpy = spy(collector)
+        doReturn(true).whenever(collectorSpy).start()
+//        val collectorSpy = spyk(collector)
+//        every { collectorSpy.start() }.returns(true)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         assertFalse(estimator.running)
@@ -564,7 +586,8 @@ class GravityNormEstimatorTest {
         estimator.start()
 
         assertTrue(estimator.running)
-        verify(exactly = 1) { collectorSpy.start() }
+        verify(collectorSpy, only()).start()
+//        verify(exactly = 1) { collectorSpy.start() }
     }
 
     @Test(expected = IllegalStateException::class)
@@ -580,8 +603,10 @@ class GravityNormEstimatorTest {
         assertNotNull(collector.measurementListener)
         assertNotNull(collector.accuracyChangedListener)
 
-        val collectorSpy = spyk(collector)
-        every { collectorSpy.start() }.returns(false)
+        val collectorSpy = spy(collector)
+        doReturn(false).whenever(collectorSpy).start()
+//        val collectorSpy = spyk(collector)
+//        every { collectorSpy.start() }.returns(false)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         assertFalse(estimator.running)
@@ -597,14 +622,17 @@ class GravityNormEstimatorTest {
         val noiseEstimator: AccumulatedAccelerationMeasurementNoiseEstimator? =
             estimator.getPrivateProperty("noiseEstimator")
         requireNotNull(noiseEstimator)
-        val noiseEstimatorSpy = spyk(noiseEstimator)
+        val noiseEstimatorSpy = spy(noiseEstimator)
+//        val noiseEstimatorSpy = spyk(noiseEstimator)
         estimator.setPrivateProperty("noiseEstimator", noiseEstimatorSpy)
 
         val collector: GravitySensorCollector? =
             estimator.getPrivateProperty("collector")
         requireNotNull(collector)
-        val collectorSpy = spyk(collector)
-        every { collectorSpy.start() }.returns(true)
+        val collectorSpy = spy(collector)
+        doReturn(true).whenever(collectorSpy).start()
+//        val collectorSpy = spyk(collector)
+//        every { collectorSpy.start() }.returns(true)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         val timeIntervalEstimator: TimeIntervalEstimator? = getPrivateProperty(
@@ -613,7 +641,8 @@ class GravityNormEstimatorTest {
             "timeIntervalEstimator"
         )
         requireNotNull(timeIntervalEstimator)
-        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
+//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
         setPrivateProperty(
             BaseAccumulatedEstimator::class,
             estimator,
@@ -627,10 +656,12 @@ class GravityNormEstimatorTest {
 
         assertTrue(estimator.running)
 
-        verify(exactly = 1) { noiseEstimatorSpy.reset() }
+        verify(noiseEstimatorSpy, times(1)).reset()
+//        verify(exactly = 1) { noiseEstimatorSpy.reset() }
         assertEquals(0.0, noiseEstimatorSpy.timeInterval, 0.0)
 
-        verify(exactly = 1) { timeIntervalEstimatorSpy.reset() }
+        verify(timeIntervalEstimatorSpy, times(1)).reset()
+//        verify(exactly = 1) { timeIntervalEstimatorSpy.reset() }
         assertEquals(estimator.maxSamples, timeIntervalEstimatorSpy.totalSamples)
     }
 
@@ -645,21 +676,25 @@ class GravityNormEstimatorTest {
         val noiseEstimator: AccumulatedAccelerationMeasurementNoiseEstimator? =
             estimator.getPrivateProperty("noiseEstimator")
         requireNotNull(noiseEstimator)
-        val noiseEstimatorSpy = spyk(noiseEstimator)
+        val noiseEstimatorSpy = spy(noiseEstimator)
+//        val noiseEstimatorSpy = spyk(noiseEstimator)
         estimator.setPrivateProperty("noiseEstimator", noiseEstimatorSpy)
 
         val collector: GravitySensorCollector? =
             estimator.getPrivateProperty("collector")
         requireNotNull(collector)
-        val collectorSpy = spyk(collector)
-        every { collectorSpy.start() }.returns(true)
+        val collectorSpy = spy(collector)
+        doReturn(true).whenever(collectorSpy).start()
+//        val collectorSpy = spyk(collector)
+//        every { collectorSpy.start() }.returns(true)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         val timeIntervalEstimator: TimeIntervalEstimator? = getPrivateProperty(
             BaseAccumulatedEstimator::class, estimator, "timeIntervalEstimator"
         )
         requireNotNull(timeIntervalEstimator)
-        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
+//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
         setPrivateProperty(
             BaseAccumulatedEstimator::class,
             estimator,
@@ -673,10 +708,12 @@ class GravityNormEstimatorTest {
 
         assertTrue(estimator.running)
 
-        verify(exactly = 1) { noiseEstimatorSpy.reset() }
+        verify(noiseEstimatorSpy, times(1)).reset()
+//        verify(exactly = 1) { noiseEstimatorSpy.reset() }
         assertEquals(0.0, noiseEstimatorSpy.timeInterval, 0.0)
 
-        verify(exactly = 1) { timeIntervalEstimatorSpy.reset() }
+        verify(timeIntervalEstimatorSpy, times(1)).reset()
+//        verify(exactly = 1) { timeIntervalEstimatorSpy.reset() }
         assertEquals(Integer.MAX_VALUE, timeIntervalEstimatorSpy.totalSamples)
     }
 
@@ -688,8 +725,10 @@ class GravityNormEstimatorTest {
         val collector: GravitySensorCollector? =
             estimator.getPrivateProperty("collector")
         requireNotNull(collector)
-        val collectorSpy = spyk(collector)
-        every { collectorSpy.start() }.returns(true)
+        val collectorSpy = spy(collector)
+        doReturn(true).whenever(collectorSpy).start()
+//        val collectorSpy = spyk(collector)
+//        every { collectorSpy.start() }.returns(true)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         setPrivateProperty(
@@ -737,8 +776,10 @@ class GravityNormEstimatorTest {
         assertNotNull(collector.measurementListener)
         assertNotNull(collector.accuracyChangedListener)
 
-        val collectorSpy = spyk(collector)
-        every { collectorSpy.start() }.returns(true)
+        val collectorSpy = spy(collector)
+        doReturn(true).whenever(collectorSpy).start()
+//        val collectorSpy = spyk(collector)
+//        every { collectorSpy.start() }.returns(true)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         assertFalse(estimator.running)
@@ -746,13 +787,15 @@ class GravityNormEstimatorTest {
         estimator.start()
 
         assertTrue(estimator.running)
-        verify(exactly = 1) { collectorSpy.start() }
+        verify(collectorSpy, only()).start()
+//        verify(exactly = 1) { collectorSpy.start() }
 
         // stop
         estimator.stop()
 
         assertFalse(estimator.running)
-        verify(exactly = 1) { collectorSpy.stop() }
+        verify(collectorSpy, times(1)).stop()
+//        verify(exactly = 1) { collectorSpy.stop() }
     }
 
     @Test
@@ -768,7 +811,8 @@ class GravityNormEstimatorTest {
         assertNotNull(collector.measurementListener)
         assertNotNull(collector.accuracyChangedListener)
 
-        val collectorSpy = spyk(collector)
+        val collectorSpy = spy(collector)
+//        val collectorSpy = spyk(collector)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         assertFalse(estimator.running)
@@ -777,7 +821,8 @@ class GravityNormEstimatorTest {
         estimator.stop()
 
         assertFalse(estimator.running)
-        verify(exactly = 1) { collectorSpy.stop() }
+        verify(collectorSpy, times(1)).stop()
+//        verify(exactly = 1) { collectorSpy.stop() }
     }
 
     @Test
@@ -799,7 +844,8 @@ class GravityNormEstimatorTest {
 
         gravityMeasurementListener.onMeasurement(gx, gy, gz, g, timestamp, accuracy)
 
-        verify(exactly = 1) { measurementListener.onMeasurement(gx, gy, gz, g, timestamp, accuracy) }
+        verify(measurementListener, only()).onMeasurement(gx, gy, gz, g, timestamp, accuracy)
+//        verify(exactly = 1) { measurementListener.onMeasurement(gx, gy, gz, g, timestamp, accuracy) }
     }
 
     @Test
@@ -883,7 +929,8 @@ class GravityNormEstimatorTest {
         val noiseEstimator: AccumulatedAccelerationMeasurementNoiseEstimator? =
             estimator.getPrivateProperty("noiseEstimator")
         requireNotNull(noiseEstimator)
-        val noiseEstimatorSpy = spyk(noiseEstimator)
+        val noiseEstimatorSpy = spy(noiseEstimator)
+//        val noiseEstimatorSpy = spyk(noiseEstimator)
         estimator.setPrivateProperty("noiseEstimator", noiseEstimatorSpy)
 
         val timeIntervalEstimator: TimeIntervalEstimator? =
@@ -893,7 +940,8 @@ class GravityNormEstimatorTest {
                 "timeIntervalEstimator"
             )
         requireNotNull(timeIntervalEstimator)
-        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
+//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
         setPrivateProperty(
             BaseAccumulatedEstimator::class,
             estimator,
@@ -916,15 +964,19 @@ class GravityNormEstimatorTest {
         // set measurement
         measurementListener.onMeasurement(gx, gy, gz, g, timestamp1, accuracy)
 
-        verify(exactly = 1) { noiseEstimatorSpy.addMeasurement(g) }
-        verify(exactly = 0) { timeIntervalEstimatorSpy.addTimestamp(any<Double>()) }
+        verify(noiseEstimatorSpy, times(1)).addMeasurement(g)
+        verify(timeIntervalEstimatorSpy, never()).addTimestamp(any<Double>())
+//        verify(exactly = 1) { noiseEstimatorSpy.addMeasurement(g) }
+//        verify(exactly = 0) { timeIntervalEstimatorSpy.addTimestamp(any<Double>()) }
 
         // set another measurement
         val timestamp2 = timestamp1 + TIME_INTERVAL_MILLIS * MILLIS_TO_NANOS
         measurementListener.onMeasurement(gx, gy, gz, g, timestamp2, accuracy)
 
-        verify(exactly = 2) { noiseEstimatorSpy.addMeasurement(g) }
-        verify(exactly = 1) { timeIntervalEstimatorSpy.addTimestamp(any<Double>()) }
+        verify(noiseEstimatorSpy, times(2)).addMeasurement(g)
+        verify(timeIntervalEstimatorSpy, times(1)).addTimestamp(any<Double>())
+//        verify(exactly = 2) { noiseEstimatorSpy.addMeasurement(g) }
+//        verify(exactly = 1) { timeIntervalEstimatorSpy.addTimestamp(any<Double>()) }
     }
 
     @Test
@@ -1000,7 +1052,8 @@ class GravityNormEstimatorTest {
         val collector: GravitySensorCollector? =
             estimator.getPrivateProperty("collector")
         requireNotNull(collector)
-        val collectorSpy = spyk(collector)
+        val collectorSpy = spy(collector)
+//        val collectorSpy = spyk(collector)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         val maxSamples = estimator.maxSamples
@@ -1036,7 +1089,8 @@ class GravityNormEstimatorTest {
         assertEquals(maxSamples, estimator.numberOfProcessedMeasurements)
 
         // check that after completion, collector was stopped
-        verify(exactly = 1) { collectorSpy.stop() }
+        verify(collectorSpy, times(1)).stop()
+//        verify(exactly = 1) { collectorSpy.stop() }
 
         // check result
         checkResultMaxSamples(estimator, g)
@@ -1055,7 +1109,8 @@ class GravityNormEstimatorTest {
         val collector: GravitySensorCollector? =
             estimator.getPrivateProperty("collector")
         requireNotNull(collector)
-        val collectorSpy = spyk(collector)
+        val collectorSpy = spy(collector)
+//        val collectorSpy = spyk(collector)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         val maxSamples = estimator.maxSamples
@@ -1092,8 +1147,10 @@ class GravityNormEstimatorTest {
         assertTrue(estimator.resultAvailable)
 
         // check that after completion, collector was stopped
-        verify(exactly = 1) { collectorSpy.stop() }
-        verify(exactly = 1) { completedListener.onEstimationCompleted(estimator) }
+        verify(collectorSpy, times(1)).stop()
+        verify(completedListener, only()).onEstimationCompleted(estimator)
+//        verify(exactly = 1) { collectorSpy.stop() }
+//        verify(exactly = 1) { completedListener.onEstimationCompleted(estimator) }
 
         // check result
         checkResultMaxSamples(estimator, g)
@@ -1111,7 +1168,8 @@ class GravityNormEstimatorTest {
         val collector: GravitySensorCollector? =
             estimator.getPrivateProperty("collector")
         requireNotNull(collector)
-        val collectorSpy = spyk(collector)
+        val collectorSpy = spy(collector)
+//        val collectorSpy = spyk(collector)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         val maxDurationMillis = estimator.maxDurationMillis
@@ -1151,7 +1209,8 @@ class GravityNormEstimatorTest {
         assertTrue(estimator.resultAvailable)
 
         // check that after completion, collector was stopped
-        verify(exactly = 1) { collectorSpy.stop() }
+        verify(collectorSpy, times(1)).stop()
+//        verify(exactly = 1) { collectorSpy.stop() }
 
         // check result
         checkResultMaxDuration(estimator, g)
@@ -1170,7 +1229,8 @@ class GravityNormEstimatorTest {
         val collector: GravitySensorCollector? =
             estimator.getPrivateProperty("collector")
         requireNotNull(collector)
-        val collectorSpy = spyk(collector)
+        val collectorSpy = spy(collector)
+//        val collectorSpy = spyk(collector)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         val maxDurationMillis = estimator.maxDurationMillis
@@ -1210,10 +1270,12 @@ class GravityNormEstimatorTest {
         assertTrue(estimator.resultAvailable)
 
         // check that after completion, collector was stopped
-        verify(exactly = 1) { collectorSpy.stop() }
+        verify(collectorSpy, times(1)).stop()
+//        verify(exactly = 1) { collectorSpy.stop() }
 
         // check that listener was called
-        verify(exactly = 1) { completedListener.onEstimationCompleted(estimator) }
+        verify(completedListener, only()).onEstimationCompleted(estimator)
+//        verify(exactly = 1) { completedListener.onEstimationCompleted(estimator) }
 
         // check result
         checkResultMaxDuration(estimator, g)
@@ -1231,7 +1293,8 @@ class GravityNormEstimatorTest {
         val collector: GravitySensorCollector? =
             estimator.getPrivateProperty("collector")
         requireNotNull(collector)
-        val collectorSpy = spyk(collector)
+        val collectorSpy = spy(collector)
+//        val collectorSpy = spyk(collector)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         val maxDurationMillis = estimator.maxDurationMillis
@@ -1271,7 +1334,8 @@ class GravityNormEstimatorTest {
         assertTrue(estimator.resultAvailable)
 
         // check that after completion, collector was stopped
-        verify(exactly = 1) { collectorSpy.stop() }
+        verify(collectorSpy, times(1)).stop()
+//        verify(exactly = 1) { collectorSpy.stop() }
 
         // check result
         checkResultMaxDuration(estimator, g)
@@ -1290,7 +1354,8 @@ class GravityNormEstimatorTest {
         val collector: GravitySensorCollector? =
             estimator.getPrivateProperty("collector")
         requireNotNull(collector)
-        val collectorSpy = spyk(collector)
+        val collectorSpy = spy(collector)
+//        val collectorSpy = spyk(collector)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         val maxDurationMillis = estimator.maxDurationMillis
@@ -1330,10 +1395,12 @@ class GravityNormEstimatorTest {
         assertTrue(estimator.resultAvailable)
 
         // check that after completion, collector was stopped
-        verify(exactly = 1) { collectorSpy.stop() }
+        verify(collectorSpy, times(1)).stop()
+//        verify(exactly = 1) { collectorSpy.stop() }
 
         // check that listener was called
-        verify(exactly = 1) { completedListener.onEstimationCompleted(estimator) }
+        verify(completedListener, only()).onEstimationCompleted(estimator)
+//        verify(exactly = 1) { completedListener.onEstimationCompleted(estimator) }
 
         // check result
         checkResultMaxDuration(estimator, g)
@@ -1381,7 +1448,8 @@ class GravityNormEstimatorTest {
 
         // check
         assertTrue(estimator.resultUnreliable)
-        verify(exactly = 1) { unreliableListener.onUnreliable(estimator) }
+        verify(unreliableListener, only()).onUnreliable(estimator)
+//        verify(exactly = 1) { unreliableListener.onUnreliable(estimator) }
     }
 
     @Test
@@ -1404,7 +1472,8 @@ class GravityNormEstimatorTest {
 
         // check
         assertFalse(estimator.resultUnreliable)
-        verify(exactly = 0) { unreliableListener.onUnreliable(estimator) }
+        verify(unreliableListener, never()).onUnreliable(estimator)
+//        verify(exactly = 0) { unreliableListener.onUnreliable(estimator) }
     }
 
     private fun checkResultMaxSamples(estimator: GravityNormEstimator, g: Double) {

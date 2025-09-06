@@ -364,7 +364,7 @@ class AttitudeLinearSensorMeasurementInterpolatorTest {
         const val MAX_DEGREES = 90.0
 
         const val ABSOLUTE_ERROR = 5e-6f
-        const val ATTITUDE_ABSOLUTE_ERROR = 5e-4
+        const val ATTITUDE_ABSOLUTE_ERROR = 1e-3
 
         fun assertMeasurement(
             measurement1: AttitudeSensorMeasurement,

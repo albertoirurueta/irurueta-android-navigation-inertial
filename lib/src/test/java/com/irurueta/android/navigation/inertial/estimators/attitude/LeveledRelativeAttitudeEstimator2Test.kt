@@ -28,44 +28,63 @@ import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.frames.CoordinateTransformation
 import com.irurueta.navigation.frames.FrameType
 import com.irurueta.statistics.UniformRandomizer
-import io.mockk.*
-import io.mockk.impl.annotations.MockK
-import io.mockk.junit4.MockKRule
-import org.junit.After
+//import io.mockk.every
+//import io.mockk.*
+//import io.mockk.impl.annotations.MockK
+//import io.mockk.junit4.MockKRule
+//import org.junit.After
 import org.junit.Assert.*
-import org.junit.Ignore
+//import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mock
+import org.mockito.junit.MockitoJUnit
+import org.mockito.junit.MockitoRule
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.only
+import org.mockito.kotlin.spy
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.verifyNoInteractions
+import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 
-@Ignore("possible memory leak")
+//@Ignore("Possible memory leak when running this test")
 @RunWith(RobolectricTestRunner::class)
 class LeveledRelativeAttitudeEstimator2Test {
 
     @get:Rule
-    val mockkRule = MockKRule(this)
+    val mockitoRule: MockitoRule = MockitoJUnit.rule()
 
-    @MockK(relaxUnitFun = true)
+//    @get:Rule
+//    val mockkRule = MockKRule(this)
+
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var attitudeAvailableListener:
             LeveledRelativeAttitudeEstimator2.OnAttitudeAvailableListener
 
-    @MockK(relaxUnitFun = true)
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var accuracyChangedListener:
             LeveledRelativeAttitudeEstimator2.OnAccuracyChangedListener
 
-    @MockK(relaxUnitFun = true)
+//    @MockK(relaxUnitFun = true)
+    @Mock
     private lateinit var bufferFilledListener:
             LeveledRelativeAttitudeEstimator2.OnBufferFilledListener
 
-    @MockK
+//    @MockK
+    @Mock
     private lateinit var location: Location
 
-    @After
+    /*@After
     fun tearDown() {
         unmockkAll()
         clearAllMocks()
-    }
+        System.gc()
+    }*/
 
     @Test
     fun constructor_whenRequiredProperties_setsDefaultValues() {
@@ -705,12 +724,15 @@ class LeveledRelativeAttitudeEstimator2Test {
         val accelerometerProcessor: AccelerometerLeveledRelativeAttitudeProcessor? =
             estimator.getPrivateProperty("accelerometerProcessor")
         requireNotNull(accelerometerProcessor)
-        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
-        every { accelerometerProcessorSpy.timeIntervalSeconds }.returns(TIME_INTERVAL)
+        val accelerometerProcessorSpy = spy(accelerometerProcessor)
+//        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
+        doReturn(TIME_INTERVAL).whenever(accelerometerProcessorSpy).timeIntervalSeconds
+//        every { accelerometerProcessorSpy.timeIntervalSeconds }.returns(TIME_INTERVAL)
         estimator.setPrivateProperty("accelerometerProcessor", accelerometerProcessorSpy)
 
         assertEquals(TIME_INTERVAL, estimator.gyroscopeTimeIntervalSeconds, 0.0)
-        verify(exactly = 1) { accelerometerProcessorSpy.timeIntervalSeconds }
+        verify(accelerometerProcessorSpy, only()).timeIntervalSeconds
+//        verify(exactly = 1) { accelerometerProcessorSpy.timeIntervalSeconds }
     }
 
     @Test
@@ -721,12 +743,15 @@ class LeveledRelativeAttitudeEstimator2Test {
         val gravityProcessor: LeveledRelativeAttitudeProcessor? =
             estimator.getPrivateProperty("gravityProcessor")
         requireNotNull(gravityProcessor)
-        val gravityProcessorSpy = spyk(gravityProcessor)
-        every { gravityProcessorSpy.timeIntervalSeconds }.returns(TIME_INTERVAL)
+        val gravityProcessorSpy = spy(gravityProcessor)
+//        val gravityProcessorSpy = spyk(gravityProcessor)
+        doReturn(TIME_INTERVAL).whenever(gravityProcessorSpy).timeIntervalSeconds
+//        every { gravityProcessorSpy.timeIntervalSeconds }.returns(TIME_INTERVAL)
         estimator.setPrivateProperty("gravityProcessor", gravityProcessorSpy)
 
         assertEquals(TIME_INTERVAL, estimator.gyroscopeTimeIntervalSeconds, 0.0)
-        verify(exactly = 1) { gravityProcessorSpy.timeIntervalSeconds }
+        verify(gravityProcessorSpy, only()).timeIntervalSeconds
+//        verify(exactly = 1) { gravityProcessorSpy.timeIntervalSeconds }
     }
 
     @Test(expected = IllegalStateException::class)
@@ -963,20 +988,24 @@ class LeveledRelativeAttitudeEstimator2Test {
         val accelerometerProcessor: AccelerometerLeveledRelativeAttitudeProcessor? =
             estimator.getPrivateProperty("accelerometerProcessor")
         requireNotNull(accelerometerProcessor)
-        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
+        val accelerometerProcessorSpy = spy(accelerometerProcessor)
+//        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
         estimator.setPrivateProperty("accelerometerProcessor", accelerometerProcessorSpy)
 
         val gravityProcessor: LeveledRelativeAttitudeProcessor? =
             estimator.getPrivateProperty("gravityProcessor")
         requireNotNull(gravityProcessor)
-        val gravityProcessorSpy = spyk(gravityProcessor)
+        val gravityProcessorSpy = spy(gravityProcessor)
+//        val gravityProcessorSpy = spyk(gravityProcessor)
         estimator.setPrivateProperty("gravityProcessor", gravityProcessorSpy)
 
         val accelerometerAndGyroscopeSyncer: AccelerometerAndGyroscopeSensorMeasurementSyncer? =
             estimator.getPrivateProperty("accelerometerAndGyroscopeSyncer")
         requireNotNull(accelerometerAndGyroscopeSyncer)
-        val accelerometerAndGyroscopeSyncerSpy = spyk(accelerometerAndGyroscopeSyncer)
-        every { accelerometerAndGyroscopeSyncerSpy.start(timestamp) }.returns(true)
+        val accelerometerAndGyroscopeSyncerSpy = spy(accelerometerAndGyroscopeSyncer)
+//        val accelerometerAndGyroscopeSyncerSpy = spyk(accelerometerAndGyroscopeSyncer)
+        doReturn(true).whenever(accelerometerAndGyroscopeSyncerSpy).start(timestamp)
+//        every { accelerometerAndGyroscopeSyncerSpy.start(timestamp) }.returns(true)
         estimator.setPrivateProperty(
             "accelerometerAndGyroscopeSyncer",
             accelerometerAndGyroscopeSyncerSpy
@@ -985,17 +1014,22 @@ class LeveledRelativeAttitudeEstimator2Test {
         val gravityAndGyroscopeSyncer: GravityAndGyroscopeSensorMeasurementSyncer? =
             estimator.getPrivateProperty("gravityAndGyroscopeSyncer")
         requireNotNull(gravityAndGyroscopeSyncer)
-        val gravityAndGyroscopeSyncerSpy = spyk(gravityAndGyroscopeSyncer)
+        val gravityAndGyroscopeSyncerSpy = spy(gravityAndGyroscopeSyncer)
+//        val gravityAndGyroscopeSyncerSpy = spyk(gravityAndGyroscopeSyncer)
         estimator.setPrivateProperty("gravityAndGyroscopeSyncer", gravityAndGyroscopeSyncerSpy)
 
         assertFalse(estimator.running)
 
         assertTrue(estimator.start(timestamp))
 
-        verify(exactly = 1) { accelerometerProcessorSpy.reset() }
-        verify(exactly = 1) { accelerometerAndGyroscopeSyncerSpy.start(timestamp) }
-        verify { gravityProcessorSpy wasNot Called }
-        verify { gravityAndGyroscopeSyncerSpy wasNot Called }
+        verify(accelerometerProcessorSpy, times(1)).reset()
+//        verify(exactly = 1) { accelerometerProcessorSpy.reset() }
+        verify(accelerometerAndGyroscopeSyncerSpy, only()).start(timestamp)
+//        verify(exactly = 1) { accelerometerAndGyroscopeSyncerSpy.start(timestamp) }
+        verifyNoInteractions(gravityProcessorSpy)
+//        verify { gravityProcessorSpy wasNot Called }
+        verifyNoInteractions(gravityAndGyroscopeSyncerSpy)
+//        verify { gravityAndGyroscopeSyncerSpy wasNot Called }
     }
 
     @Test
@@ -1008,19 +1042,22 @@ class LeveledRelativeAttitudeEstimator2Test {
         val accelerometerProcessor: AccelerometerLeveledRelativeAttitudeProcessor? =
             estimator.getPrivateProperty("accelerometerProcessor")
         requireNotNull(accelerometerProcessor)
-        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
+        val accelerometerProcessorSpy = spy(accelerometerProcessor)
+//        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
         estimator.setPrivateProperty("accelerometerProcessor", accelerometerProcessorSpy)
 
         val gravityProcessor: LeveledRelativeAttitudeProcessor? =
             estimator.getPrivateProperty("gravityProcessor")
         requireNotNull(gravityProcessor)
-        val gravityProcessorSpy = spyk(gravityProcessor)
+        val gravityProcessorSpy = spy(gravityProcessor)
+//        val gravityProcessorSpy = spyk(gravityProcessor)
         estimator.setPrivateProperty("gravityProcessor", gravityProcessorSpy)
 
         val accelerometerAndGyroscopeSyncer: AccelerometerAndGyroscopeSensorMeasurementSyncer? =
             estimator.getPrivateProperty("accelerometerAndGyroscopeSyncer")
         requireNotNull(accelerometerAndGyroscopeSyncer)
-        val accelerometerAndGyroscopeSyncerSpy = spyk(accelerometerAndGyroscopeSyncer)
+        val accelerometerAndGyroscopeSyncerSpy = spy(accelerometerAndGyroscopeSyncer)
+//        val accelerometerAndGyroscopeSyncerSpy = spyk(accelerometerAndGyroscopeSyncer)
         estimator.setPrivateProperty(
             "accelerometerAndGyroscopeSyncer",
             accelerometerAndGyroscopeSyncerSpy
@@ -1029,18 +1066,24 @@ class LeveledRelativeAttitudeEstimator2Test {
         val gravityAndGyroscopeSyncer: GravityAndGyroscopeSensorMeasurementSyncer? =
             estimator.getPrivateProperty("gravityAndGyroscopeSyncer")
         requireNotNull(gravityAndGyroscopeSyncer)
-        val gravityAndGyroscopeSyncerSpy = spyk(gravityAndGyroscopeSyncer)
-        every { gravityAndGyroscopeSyncerSpy.start(timestamp) }.returns(true)
+        val gravityAndGyroscopeSyncerSpy = spy(gravityAndGyroscopeSyncer)
+//        val gravityAndGyroscopeSyncerSpy = spyk(gravityAndGyroscopeSyncer)
+        doReturn(true).whenever(gravityAndGyroscopeSyncerSpy).start(timestamp)
+//        every { gravityAndGyroscopeSyncerSpy.start(timestamp) }.returns(true)
         estimator.setPrivateProperty("gravityAndGyroscopeSyncer", gravityAndGyroscopeSyncerSpy)
 
         assertFalse(estimator.running)
 
         assertTrue(estimator.start(timestamp))
 
-        verify(exactly = 1) { gravityProcessorSpy.reset() }
-        verify(exactly = 1) { gravityAndGyroscopeSyncerSpy.start(timestamp) }
-        verify { accelerometerProcessorSpy wasNot Called }
-        verify { accelerometerAndGyroscopeSyncerSpy wasNot Called }
+        verify(gravityProcessorSpy, times(1)).reset()
+//        verify(exactly = 1) { gravityProcessorSpy.reset() }
+        verify(gravityAndGyroscopeSyncerSpy, only()).start(timestamp)
+//        verify(exactly = 1) { gravityAndGyroscopeSyncerSpy.start(timestamp) }
+        verifyNoInteractions(accelerometerProcessorSpy)
+//        verify { accelerometerProcessorSpy wasNot Called }
+        verifyNoInteractions(accelerometerAndGyroscopeSyncerSpy)
+//        verify { accelerometerAndGyroscopeSyncerSpy wasNot Called }
     }
 
     @Test
@@ -1052,7 +1095,8 @@ class LeveledRelativeAttitudeEstimator2Test {
         val accelerometerAndGyroscopeSyncer: AccelerometerAndGyroscopeSensorMeasurementSyncer? =
             estimator.getPrivateProperty("accelerometerAndGyroscopeSyncer")
         requireNotNull(accelerometerAndGyroscopeSyncer)
-        val accelerometerAndGyroscopeSyncerSpy = spyk(accelerometerAndGyroscopeSyncer)
+        val accelerometerAndGyroscopeSyncerSpy = spy(accelerometerAndGyroscopeSyncer)
+//        val accelerometerAndGyroscopeSyncerSpy = spyk(accelerometerAndGyroscopeSyncer)
         estimator.setPrivateProperty(
             "accelerometerAndGyroscopeSyncer",
             accelerometerAndGyroscopeSyncerSpy
@@ -1061,7 +1105,8 @@ class LeveledRelativeAttitudeEstimator2Test {
         val gravityAndGyroscopeSyncer: GravityAndGyroscopeSensorMeasurementSyncer? =
             estimator.getPrivateProperty("gravityAndGyroscopeSyncer")
         requireNotNull(gravityAndGyroscopeSyncer)
-        val gravityAndGyroscopeSyncerSpy = spyk(gravityAndGyroscopeSyncer)
+        val gravityAndGyroscopeSyncerSpy = spy(gravityAndGyroscopeSyncer)
+//        val gravityAndGyroscopeSyncerSpy = spyk(gravityAndGyroscopeSyncer)
         estimator.setPrivateProperty("gravityAndGyroscopeSyncer", gravityAndGyroscopeSyncerSpy)
 
         // set as running
@@ -1073,8 +1118,10 @@ class LeveledRelativeAttitudeEstimator2Test {
 
         // check
         assertFalse(estimator.running)
-        verify(exactly = 1) { accelerometerAndGyroscopeSyncerSpy.stop() }
-        verify(exactly = 1) { gravityAndGyroscopeSyncerSpy.stop() }
+        verify(accelerometerAndGyroscopeSyncerSpy, times(1)).stop()
+//        verify(exactly = 1) { accelerometerAndGyroscopeSyncerSpy.stop() }
+        verify(gravityAndGyroscopeSyncerSpy, times(1)).stop()
+//        verify(exactly = 1) { gravityAndGyroscopeSyncerSpy.stop() }
     }
 
     @Test
@@ -1116,13 +1163,18 @@ class LeveledRelativeAttitudeEstimator2Test {
         )
 
         // check
-        verify(exactly = 1) {
+        verify(accuracyChangedListener, only()).onAccuracyChanged(
+            estimator,
+            SensorType.GRAVITY,
+            SensorAccuracy.MEDIUM
+        )
+/*        verify(exactly = 1) {
             accuracyChangedListener.onAccuracyChanged(
                 estimator,
                 SensorType.GRAVITY,
                 SensorAccuracy.MEDIUM
             )
-        }
+        }*/
     }
 
     @Test
@@ -1162,12 +1214,16 @@ class LeveledRelativeAttitudeEstimator2Test {
         )
 
         // check
-        verify(exactly = 1) {
+        verify(bufferFilledListener, only()).onBufferFilled(
+            estimator,
+            SensorType.GRAVITY
+        )
+/*        verify(exactly = 1) {
             bufferFilledListener.onBufferFilled(
                 estimator,
                 SensorType.GRAVITY
             )
-        }
+        }*/
     }
 
     @Test
@@ -1187,15 +1243,18 @@ class LeveledRelativeAttitudeEstimator2Test {
         val gravityProcessor: LeveledRelativeAttitudeProcessor? =
             estimator.getPrivateProperty("gravityProcessor")
         requireNotNull(gravityProcessor)
-        val gravityProcessorSpy = spyk(gravityProcessor)
-        every { gravityProcessorSpy.process(measurement) }.returns(false)
+        val gravityProcessorSpy = spy(gravityProcessor)
+//        val gravityProcessorSpy = spyk(gravityProcessor)
+        doReturn(false).whenever(gravityProcessorSpy).process(measurement)
+//        every { gravityProcessorSpy.process(measurement) }.returns(false)
         estimator.setPrivateProperty("gravityProcessor", gravityProcessorSpy)
 
         val listener = gravityAndGyroscopeSyncer.syncedMeasurementListener
         requireNotNull(listener)
         listener.onSyncedMeasurements(gravityAndGyroscopeSyncer, measurement)
 
-        verify { attitudeAvailableListener wasNot Called }
+        verifyNoInteractions(attitudeAvailableListener)
+//        verify { attitudeAvailableListener wasNot Called }
     }
 
     @Test
@@ -1213,9 +1272,12 @@ class LeveledRelativeAttitudeEstimator2Test {
         val gravityProcessor: LeveledRelativeAttitudeProcessor? =
             estimator.getPrivateProperty("gravityProcessor")
         requireNotNull(gravityProcessor)
-        val gravityProcessorSpy = spyk(gravityProcessor)
-        every { gravityProcessorSpy.process(measurement) }.returns(true)
-        every { gravityProcessorSpy.fusedAttitude }.returns(fusedAttitude1)
+        val gravityProcessorSpy = spy(gravityProcessor)
+//        val gravityProcessorSpy = spyk(gravityProcessor)
+        doReturn(true).whenever(gravityProcessorSpy).process(measurement)
+//        every { gravityProcessorSpy.process(measurement) }.returns(true)
+        doReturn(fusedAttitude1).whenever(gravityProcessorSpy).fusedAttitude
+//        every { gravityProcessorSpy.fusedAttitude }.returns(fusedAttitude1)
         estimator.setPrivateProperty("gravityProcessor", gravityProcessorSpy)
 
         val listener = gravityAndGyroscopeSyncer.syncedMeasurementListener
@@ -1248,9 +1310,12 @@ class LeveledRelativeAttitudeEstimator2Test {
         val gravityProcessor: LeveledRelativeAttitudeProcessor? =
             estimator.getPrivateProperty("gravityProcessor")
         requireNotNull(gravityProcessor)
-        val gravityProcessorSpy = spyk(gravityProcessor)
-        every { gravityProcessorSpy.process(measurement) }.returns(true)
-        every { gravityProcessorSpy.fusedAttitude }.returns(fusedAttitude1)
+        val gravityProcessorSpy = spy(gravityProcessor)
+//        val gravityProcessorSpy = spyk(gravityProcessor)
+        doReturn(true).whenever(gravityProcessorSpy).process(measurement)
+//        every { gravityProcessorSpy.process(measurement) }.returns(true)
+        doReturn(fusedAttitude1).whenever(gravityProcessorSpy).fusedAttitude
+//        every { gravityProcessorSpy.fusedAttitude }.returns(fusedAttitude1)
         estimator.setPrivateProperty("gravityProcessor", gravityProcessorSpy)
 
         val listener = gravityAndGyroscopeSyncer.syncedMeasurementListener
@@ -1261,7 +1326,16 @@ class LeveledRelativeAttitudeEstimator2Test {
         requireNotNull(fusedAttitude2)
         assertEquals(fusedAttitude1, fusedAttitude2)
 
-        verify(exactly = 1) {
+        verify(attitudeAvailableListener, only()).onAttitudeAvailable(
+            estimator,
+            fusedAttitude2,
+            timestamp,
+            null,
+            null,
+            null,
+            null
+        )
+/*        verify(exactly = 1) {
             attitudeAvailableListener.onAttitudeAvailable(
                 estimator,
                 fusedAttitude2,
@@ -1271,7 +1345,7 @@ class LeveledRelativeAttitudeEstimator2Test {
                 null,
                 null
             )
-        }
+        }*/
     }
 
     @Test
@@ -1295,9 +1369,12 @@ class LeveledRelativeAttitudeEstimator2Test {
         val gravityProcessor: LeveledRelativeAttitudeProcessor? =
             estimator.getPrivateProperty("gravityProcessor")
         requireNotNull(gravityProcessor)
-        val gravityProcessorSpy = spyk(gravityProcessor)
-        every { gravityProcessorSpy.process(measurement) }.returns(true)
-        every { gravityProcessorSpy.fusedAttitude }.returns(fusedAttitude1)
+        val gravityProcessorSpy = spy(gravityProcessor)
+//        val gravityProcessorSpy = spyk(gravityProcessor)
+        doReturn(true).whenever(gravityProcessorSpy).process(measurement)
+//        every { gravityProcessorSpy.process(measurement) }.returns(true)
+        doReturn(fusedAttitude1).whenever(gravityProcessorSpy).fusedAttitude
+//        every { gravityProcessorSpy.fusedAttitude }.returns(fusedAttitude1)
         estimator.setPrivateProperty("gravityProcessor", gravityProcessorSpy)
 
         val listener = gravityAndGyroscopeSyncer.syncedMeasurementListener
@@ -1324,7 +1401,16 @@ class LeveledRelativeAttitudeEstimator2Test {
         val eulerAngles2 = fusedAttitude1.toEulerAngles()
         assertArrayEquals(eulerAngles1, eulerAngles2, 0.0)
 
-        verify(exactly = 1) {
+        verify(attitudeAvailableListener, only()).onAttitudeAvailable(
+            estimator,
+            fusedAttitude2,
+            timestamp,
+            eulerAngles2[0],
+            eulerAngles2[1],
+            eulerAngles2[2],
+            coordinateTransformation
+        )
+/*        verify(exactly = 1) {
             attitudeAvailableListener.onAttitudeAvailable(
                 estimator,
                 fusedAttitude2,
@@ -1334,7 +1420,7 @@ class LeveledRelativeAttitudeEstimator2Test {
                 eulerAngles2[2],
                 coordinateTransformation
             )
-        }
+        }*/
     }
 
     @Test
@@ -1376,13 +1462,18 @@ class LeveledRelativeAttitudeEstimator2Test {
         )
 
         // check
-        verify(exactly = 1) {
+        verify(accuracyChangedListener, only()).onAccuracyChanged(
+            estimator,
+            SensorType.GRAVITY,
+            SensorAccuracy.MEDIUM
+        )
+/*        verify(exactly = 1) {
             accuracyChangedListener.onAccuracyChanged(
                 estimator,
                 SensorType.GRAVITY,
                 SensorAccuracy.MEDIUM
             )
-        }
+        }*/
     }
 
     @Test
@@ -1422,12 +1513,16 @@ class LeveledRelativeAttitudeEstimator2Test {
         )
 
         // check
-        verify(exactly = 1) {
+        verify(bufferFilledListener, only()).onBufferFilled(
+            estimator,
+            SensorType.GRAVITY
+        )
+/*        verify(exactly = 1) {
             bufferFilledListener.onBufferFilled(
                 estimator,
                 SensorType.GRAVITY
             )
-        }
+        }*/
     }
 
     @Test
@@ -1447,15 +1542,18 @@ class LeveledRelativeAttitudeEstimator2Test {
         val accelerometerProcessor: AccelerometerLeveledRelativeAttitudeProcessor? =
             estimator.getPrivateProperty("accelerometerProcessor")
         requireNotNull(accelerometerProcessor)
-        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
-        every { accelerometerProcessorSpy.process(measurement) }.returns(false)
+        val accelerometerProcessorSpy = spy(accelerometerProcessor)
+//        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
+        doReturn(false).whenever(accelerometerProcessorSpy).process(measurement)
+//        every { accelerometerProcessorSpy.process(measurement) }.returns(false)
         estimator.setPrivateProperty("accelerometerProcessor", accelerometerProcessorSpy)
 
         val listener = accelerometerAndGyroscopeSyncer.syncedMeasurementListener
         requireNotNull(listener)
         listener.onSyncedMeasurements(accelerometerAndGyroscopeSyncer, measurement)
 
-        verify { attitudeAvailableListener wasNot Called }
+        verifyNoInteractions(attitudeAvailableListener)
+//        verify { attitudeAvailableListener wasNot Called }
     }
 
     @Test
@@ -1473,9 +1571,12 @@ class LeveledRelativeAttitudeEstimator2Test {
         val accelerometerProcessor: AccelerometerLeveledRelativeAttitudeProcessor? =
             estimator.getPrivateProperty("accelerometerProcessor")
         requireNotNull(accelerometerProcessor)
-        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
-        every { accelerometerProcessorSpy.process(measurement) }.returns(true)
-        every { accelerometerProcessorSpy.fusedAttitude }.returns(fusedAttitude1)
+        val accelerometerProcessorSpy = spy(accelerometerProcessor)
+//        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
+        doReturn(true).whenever(accelerometerProcessorSpy).process(measurement)
+//        every { accelerometerProcessorSpy.process(measurement) }.returns(true)
+        doReturn(fusedAttitude1).whenever(accelerometerProcessorSpy).fusedAttitude
+//        every { accelerometerProcessorSpy.fusedAttitude }.returns(fusedAttitude1)
         estimator.setPrivateProperty("accelerometerProcessor", accelerometerProcessorSpy)
 
         val listener = accelerometerAndGyroscopeSyncer.syncedMeasurementListener
@@ -1508,9 +1609,12 @@ class LeveledRelativeAttitudeEstimator2Test {
         val accelerometerProcessor: AccelerometerLeveledRelativeAttitudeProcessor? =
             estimator.getPrivateProperty("accelerometerProcessor")
         requireNotNull(accelerometerProcessor)
-        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
-        every { accelerometerProcessorSpy.process(measurement) }.returns(true)
-        every { accelerometerProcessorSpy.fusedAttitude }.returns(fusedAttitude1)
+        val accelerometerProcessorSpy = spy(accelerometerProcessor)
+//        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
+        doReturn(true).whenever(accelerometerProcessorSpy).process(measurement)
+//        every { accelerometerProcessorSpy.process(measurement) }.returns(true)
+        doReturn(fusedAttitude1).whenever(accelerometerProcessorSpy).fusedAttitude
+//        every { accelerometerProcessorSpy.fusedAttitude }.returns(fusedAttitude1)
         estimator.setPrivateProperty("accelerometerProcessor", accelerometerProcessorSpy)
 
         val listener = accelerometerAndGyroscopeSyncer.syncedMeasurementListener
@@ -1521,7 +1625,16 @@ class LeveledRelativeAttitudeEstimator2Test {
         requireNotNull(fusedAttitude2)
         assertEquals(fusedAttitude1, fusedAttitude2)
 
-        verify(exactly = 1) {
+        verify(attitudeAvailableListener, only()).onAttitudeAvailable(
+            estimator,
+            fusedAttitude2,
+            timestamp,
+            null,
+            null,
+            null,
+            null
+        )
+/*        verify(exactly = 1) {
             attitudeAvailableListener.onAttitudeAvailable(
                 estimator,
                 fusedAttitude2,
@@ -1531,7 +1644,7 @@ class LeveledRelativeAttitudeEstimator2Test {
                 null,
                 null
             )
-        }
+        }*/
     }
 
     @Test
@@ -1555,9 +1668,12 @@ class LeveledRelativeAttitudeEstimator2Test {
         val accelerometerProcessor: AccelerometerLeveledRelativeAttitudeProcessor? =
             estimator.getPrivateProperty("accelerometerProcessor")
         requireNotNull(accelerometerProcessor)
-        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
-        every { accelerometerProcessorSpy.process(measurement) }.returns(true)
-        every { accelerometerProcessorSpy.fusedAttitude }.returns(fusedAttitude1)
+        val accelerometerProcessorSpy = spy(accelerometerProcessor)
+//        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
+        doReturn(true).whenever(accelerometerProcessorSpy).process(measurement)
+//        every { accelerometerProcessorSpy.process(measurement) }.returns(true)
+        doReturn(fusedAttitude1).whenever(accelerometerProcessorSpy).fusedAttitude
+//        every { accelerometerProcessorSpy.fusedAttitude }.returns(fusedAttitude1)
         estimator.setPrivateProperty("accelerometerProcessor", accelerometerProcessorSpy)
 
         val listener = accelerometerAndGyroscopeSyncer.syncedMeasurementListener
@@ -1584,7 +1700,16 @@ class LeveledRelativeAttitudeEstimator2Test {
         val eulerAngles2 = fusedAttitude1.toEulerAngles()
         assertArrayEquals(eulerAngles1, eulerAngles2, 0.0)
 
-        verify(exactly = 1) {
+        verify(attitudeAvailableListener, only()).onAttitudeAvailable(
+            estimator,
+            fusedAttitude2,
+            timestamp,
+            eulerAngles2[0],
+            eulerAngles2[1],
+            eulerAngles2[2],
+            coordinateTransformation
+        )
+/*        verify(exactly = 1) {
             attitudeAvailableListener.onAttitudeAvailable(
                 estimator,
                 fusedAttitude2,
@@ -1594,7 +1719,7 @@ class LeveledRelativeAttitudeEstimator2Test {
                 eulerAngles2[2],
                 coordinateTransformation
             )
-        }
+        }*/
     }
 
     private fun getLocation(): Location {
@@ -1612,9 +1737,12 @@ class LeveledRelativeAttitudeEstimator2Test {
             MAX_HEIGHT
         )
 
-        every { location.latitude }.returns(latitudeDegrees)
-        every { location.longitude }.returns(longitudeDegrees)
-        every { location.altitude }.returns(height)
+        whenever(location.latitude).thenReturn(latitudeDegrees)
+//        every { location.latitude }.returns(latitudeDegrees)
+        whenever(location.longitude).thenReturn(longitudeDegrees)
+//        every { location.longitude }.returns(longitudeDegrees)
+        whenever(location.altitude).thenReturn(height)
+//        every { location.altitude }.returns(height)
 
         return location
     }
